@@ -60,7 +60,7 @@ public class DBManager
 		{
 			ServerUserDB.getInstance();	//saved whenever its changed
 			RegionDB.getInstance(appicon);	//never changed
-			GlobalVariableDB.getInstance();	//saved whenever its changed
+			dbAutosaveList.add(GlobalVariableDB.getInstance());
 			dbAutosaveList.add(PartnerDB.getInstance());
 			dbAutosaveList.add(ServerChildDB.getInstance());
 			dbAutosaveList.add(ServerChildWishDB.getInstance());
@@ -70,7 +70,7 @@ public class DBManager
 			dbAutosaveList.add(ServerDeliveryDB.getInstance());
 			dbAutosaveList.add(ServerWishCatalog.getInstance());
 			dbAutosaveList.add(ServerWishDetailDB.getInstance());
-			PriorYearDB.getInstance();	//never changed once created each season
+			dbAutosaveList.add(PriorYearDB.getInstance());	//never changed once created each season
 		}
 		catch (FileNotFoundException fnf) 
 		{
@@ -121,7 +121,8 @@ public class DBManager
 				dbYear.setLock(true);
 			
 			//add the new year to the list of db years
-			dbYearList.add(new DBYear(currentYear, false));	//add a new db year to the list
+//			dbYearList.add(new DBYear(currentYear, false));	//add a new db year to the list
+			dbYearList.add(new DBYear(currentYear, true));	//add a new db year to the list - DEBUG LOCKED
 			
 			//now add a new component year to each of the component data bases. We can
 			//conveniently use the dbAutosaveList to help with 9 of the 11 component
@@ -129,25 +130,11 @@ public class DBManager
 			for(ONCServerDB componentDB: dbAutosaveList)
 				componentDB.createNewYear(currentYear);
 			
-			//need to create new years in the GlobalVariable and PriorYear DB's as well
-			GlobalVariableDB gDB = null;
-			PriorYearDB pyDB = null;
-			try {
-				gDB = GlobalVariableDB.getInstance();
-				pyDB = PriorYearDB.getInstance();
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if(gDB != null)
-				gDB.createNewYear(currentYear);
-			if(pyDB != null)
-				pyDB.createNewYear(currentYear);
-			
-			return "ADDED_NEW_YEAR";
+			//return the DBYear list to the originating client
+			Gson gson = new Gson();
+			Type listOfDBs = new TypeToken<ArrayList<DBYear>>(){}.getType();
+				
+			return "ADDED_NEW_YEAR" + gson.toJson(dbYearList, listOfDBs);
 		}
 		else
 			return "ADD_NEW_YEAR_FAILED";
@@ -183,6 +170,8 @@ public class DBManager
     		String error = String.format("%s file is empty", name);
     		JOptionPane.showMessageDialog(null, error,  name + " Empty", JOptionPane.ERROR_MESSAGE);
     	}
+    	
+    	reader.close();
 	}
 
 	private class SaveTimerListener implements ActionListener

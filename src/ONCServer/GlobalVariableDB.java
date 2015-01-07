@@ -125,7 +125,7 @@ public class GlobalVariableDB extends ONCServerDB
 		
 		gvDBYear.setServerGVs(reqObj);
 		gvDBYear.setChanged(true);
-		save(year);		//Server GV's are persistently stored immediately when changed
+//		save(year);		//Server GV's are persistently stored immediately when changed -- NOT Anymore 1-7-15
 		
 		return "UPDATED_GLOBALS" + json;
 	}
@@ -174,7 +174,6 @@ public class GlobalVariableDB extends ONCServerDB
 		globalDB.add(newGVDBYear);
 		newGVDBYear.setChanged(true);
 		
-		save(newYear);		//Server GV's are persistently stored immediately when changed
 	}
 
 	@Override

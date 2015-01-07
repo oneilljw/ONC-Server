@@ -4,9 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.google.gson.Gson;
-
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
 import OurNeighborsChild.ONCFamily;
@@ -252,14 +250,7 @@ public class PriorYearDB extends ONCServerDB
 //		System.out.println(String.format("Number of %d children retained: %d", 2014, nRetained));
 //		System.out.println(String.format("Number of %d children new to prior year: %d", 2014, nNew));
 		
-		//Now that we have the new prior year children added to the priroyearChild Data Base
-		//save the new year to persistent store
-		String[] header = {"PY Child ID", "Last Name", "Gender", "DoB",
-		 					"Last Year Wish 1", "Last Year Wish 2", "Last Year Wish 3",
-		 					"Previous Year Wish 1", "Previous Year Wish 2", "Previous Year Wish 3"};
-		String path = String.format("%s/%d DB/PriorYearChildDB.csv", System.getProperty("user.dir"), newYear);
-		exportDBToCSV(newPYCDBYear.getList(), header, path);
-		
+		newPYCDBYear.setChanged(true);	//mark this db for persistent saving on the next save event	
 	}
 		
 	 /******************************************************************************************
@@ -322,8 +313,20 @@ public class PriorYearDB extends ONCServerDB
     }
 
 	@Override
-	void save(int year) {
-		// TODO Auto-generated method stub
+	void save(int year)
+	{
+		String[] header = {"PY Child ID", "Last Name", "Gender", "DoB",
+							"Last Year Wish 1", "Last Year Wish 2", "Last Year Wish 3",
+							"Previous Year Wish 1", "Previous Year Wish 2", "Previous Year Wish 3"};
 		
+		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_YEAR);
+		
+		if(pycDBYear.isUnsaved())
+		{
+			//	System.out.println(String.format("FamilyDB saveDB - Saving Family DB"));
+			String path = String.format("%s/%dDB/PriorYearChildDB.csv", System.getProperty("user.dir"), year);
+			exportDBToCSV(pycDBYear.getList(), header, path);
+			pycDBYear.setChanged(false);
+		}
 	}
 }
