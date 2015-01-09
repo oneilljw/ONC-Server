@@ -109,32 +109,36 @@ public class DBManager
 		//2015, the 2015 data base can not be created.
 		
 		Calendar today = Calendar.getInstance();
-		int currentYear = today.get(Calendar.YEAR);
+		int newYear = today.get(Calendar.YEAR);
 		
 		//check to see if current year is in data base, it would have to be the last one
 		//if its not create a new DBYear and add it to the dbYearList
 		DBYear lastDBYear = dbYearList.get(dbYearList.size()-1);
-		if(lastDBYear.getYear() < currentYear)
+		if(lastDBYear.getYear() < newYear)
 		{
 			//Lock all prior years
 			for(DBYear dbYear: dbYearList)
 				dbYear.setLock(true);
 			
 			//add the new year to the list of db years
-//			dbYearList.add(new DBYear(currentYear, false));	//add a new db year to the list
-			dbYearList.add(new DBYear(currentYear, true));	//add a new db year to the list - DEBUG LOCKED
+//			DBYear newDBYear = new DBYear(currentYear, false);	//add a new db year to the list
+			DBYear newDBYear = new DBYear(newYear, true); //add a new db year to the list - DEBUG LOCKED
+			dbYearList.add(newDBYear);	
 			
 			//now add a new component year to each of the component data bases. We can
-			//conveniently use the dbAutosaveList to help with 9 of the 11 component
-			//data bases that need to have a year created.
-			for(ONCServerDB componentDB: dbAutosaveList)
-				componentDB.createNewYear(currentYear);
+			//conveniently use the dbAutosaveList to accomplish this. First however, we
+			//need to create the directory that the files will be written to
 			
-			//return the DBYear list to the originating client
+			//create the directory
+			
+			
+			//create and save the db component files
+			for(ONCServerDB componentDB: dbAutosaveList)
+				componentDB.createNewYear(newYear);
+			
+			//return the new DBYear json
 			Gson gson = new Gson();
-			Type listOfDBs = new TypeToken<ArrayList<DBYear>>(){}.getType();
-				
-			return "ADDED_NEW_YEAR" + gson.toJson(dbYearList, listOfDBs);
+			return "ADDED_NEW_YEAR" + gson.toJson(newDBYear, DBYear.class);
 		}
 		else
 			return "ADD_NEW_YEAR_FAILED";

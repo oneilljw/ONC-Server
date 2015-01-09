@@ -503,7 +503,7 @@ public class Client extends Thread
                 	String response = dbManager.createNewYear();
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_globals>"))
                 {

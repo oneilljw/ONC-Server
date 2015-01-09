@@ -3,6 +3,7 @@ package ONCServer;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -131,7 +132,7 @@ public class PartnerDB extends ONCServerDB
 		//If partner is located, replace the current partner with the update. Check to 
 		//ensure the partner status isn't confirmed with gifts assigned. If so, deny the change. 
 		if(index == oAL.size() || (reqOrg.getStatus() != STATUS_CONFIRMED && 
-									oAL.get(index).getNumberOfOrnammentsAssigned() > 0)) 
+									oAL.get(index).getNumberOfOrnamentsAssigned() > 0)) 
 		{
 			
 			return "UPDATE_FAILED";
@@ -232,7 +233,7 @@ public class PartnerDB extends ONCServerDB
 		
 		//partner must be present and have no ornaments assigned to be deleted
 		if(index < oAL.size() && oAL.get(index).getStatus() != STATUS_CONFIRMED &&
-				oAL.get(index).getNumberOfOrnammentsAssigned() == 0)
+				oAL.get(index).getNumberOfOrnamentsAssigned() == 0)
 		{
 			oAL.remove(index);
 			partnerDBYear.setChanged(true);
@@ -333,7 +334,7 @@ public class PartnerDB extends ONCServerDB
 	{
 		//create a new partner data base year for the year provided in the newYear parameter
 		//Then copy the prior years partners to the newly created partner db year list.
-		//Reset each partners status to NOT_CONTACTED_YET
+		//Reset each partners status to NO_ACTION_YET
 		//Mark the newly created WishCatlogDBYear for saving during the next save event
 				
 		//get a reference to the prior years wish catalog
@@ -351,7 +352,7 @@ public class PartnerDB extends ONCServerDB
 			newPartner.setNumberOfOrnamentsRequested(0);	//reset requested to 0
 			newPartner.setNumberOfOrnamentsAssigned(0);	//reset assigned to 0
 			newPartner.setNumberOfOrnamentsReceived(0);	//reset received to 0
-			newPartner.setPriorYearRequested(lyPartner.getNumberOfOrnammentsAssigned());
+			newPartner.setPriorYearRequested(lyPartner.getNumberOfOrnamentsRequested());
 			partnerDBYear.add(newPartner);
 		}
 		
@@ -384,13 +385,23 @@ public class PartnerDB extends ONCServerDB
 			e.printStackTrace();
 		}
 	
-		//get prior year performance list and iterate thru each wish in the list
-		//updating counts for each partner accordingly
-		for(PriorYearPartnerPerformance pyPerf: serverChildWishDB.getPriorYearPartnerPerformanceList(newYear))
+		//iterate thru the list of prior year performance objects updating counts for each partner 
+		//accordingly. The list contains one object for each wish from the prior year. Each object 
+		//contains an assigned ID and a receivedID indicating which partner was responsible for
+		//fulfilling the wish and who ONC actually received the fulfilled wish (gift) from
+		SimpleDateFormat sdf = new SimpleDateFormat("M:d:yyyy H:m:s");
+		List<PriorYearPartnerPerformance> pyPartnerPerformanceList = serverChildWishDB.getPriorYearPartnerPerformanceList(newYear);
+		for(PriorYearPartnerPerformance pyPerf: pyPartnerPerformanceList)
 		{
-			//find the assigned to partner and increment their prior year assigned count
+			//find the partner the wish was assigned to and increment their prior year assigned count
+			Organization wishAssigneePartner = getPartner(newYear, pyPerf.getPYPartnerWishAssigneeID());
+			if(wishAssigneePartner != null)
+				wishAssigneePartner.incrementPYAssigned();
 			
-			//find the received partner and increment their prior year received count
+			//find the partner the wish was received from and increment their prior year received count
+			Organization wishReceivedPartner = getPartner(newYear, pyPerf.getPYPartnerWishReceivedID());
+			if(wishReceivedPartner != null)
+				wishReceivedPartner.incrementPYReceived();
 		}
 	}
 	

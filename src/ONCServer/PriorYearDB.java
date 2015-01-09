@@ -153,8 +153,6 @@ public class PriorYearDB extends ONCServerDB
 	@Override
 	void createNewYear(int newYear) 
 	{
-		System.out.println("GlobalVariableDB: createNewYear");
-		
 		//before creating and adding a new PriorYearChildDBYear to the data base, get last years
 		//prior year child data base list. It will be the last in the list. It is used later in
 		//the method to begin to populate the new prior year children list for the new year

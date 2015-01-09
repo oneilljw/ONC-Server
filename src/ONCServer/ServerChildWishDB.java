@@ -4,15 +4,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
-
 import OurNeighborsChild.HistoryRequest;
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
 import OurNeighborsChild.ONCWish;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -31,25 +31,6 @@ public class ServerChildWishDB extends ONCServerDB
 	
 	private ServerChildWishDB() throws FileNotFoundException, IOException
 	{
-		//create the child data bases for TOTAL_YEARS number of years
-//		childwishDB = new ArrayList<ChildWishDBYear>();
-//		
-//		childwishAL = new ArrayList<List<ONCChildWish>>();
-//		nextID = new ArrayList<Integer>();
-//						
-//		for(int year = BASE_YEAR; year < BASE_YEAR + TOTAL_YEARS; year++)
-//		{
-//			childwishAL.add(new ArrayList<ONCChildWish>());
-//			
-//			importDB(year, String.format("%s/%d DB/ChildWishDB.csv",
-//						System.getProperty("user.dir"),
-//							year), "Child Wish DB", CHILD_WISH_DB_HEADER_LENGTH);
-//							
-//			nextID.add(setNextID(childwishAL.get(year - BASE_YEAR)));
-//		}
-		
-		//***********************************************
-		//NEW FUNCTIONALITY COMBINING ALL YEAR DATA INTO A SINGLE OBJECT
 		//create the child wish data base
 		childwishDB = new ArrayList<ChildWishDBYear>();
 						
@@ -289,6 +270,9 @@ public class ServerChildWishDB extends ONCServerDB
 		//create the list to be returned
 		List<PriorYearPartnerPerformance> pyPerformanceList = new ArrayList<PriorYearPartnerPerformance>();
 		
+		//get a Calendar object gifts received deadline
+		Calendar pyDateGiftsReceivedBy = Calendar.getInstance();
+		
 		//get the receive gift deadline for the prior year
 		GlobalVariableDB gvDB = null;
 		try {
@@ -300,10 +284,13 @@ public class ServerChildWishDB extends ONCServerDB
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Date pyDateGiftsReceivedBy = gvDB.getDateGiftsRecivedBy(newYear-1);
-				
+		
+		//set the received gift deadline. All gifts must be received prior to this date/time
+		pyDateGiftsReceivedBy.setTime(gvDB.getDateGiftsRecivedBy(newYear-1));
+		
 		//set up variables for each of the parameters of interest
 		int pyPartnerReceivedID, pyPartnerAssignedID;
+//		Calendar pyPartnerReceivedTS, pyPartnerAssignedTS;
 		
 		//for each child wish, get the prior year wish history for the child's wish 
 		for(ONCChild pyc: childDB.getList(newYear-1))
@@ -312,58 +299,47 @@ public class ServerChildWishDB extends ONCServerDB
 				//reset the assigned and received partner ID's
 				pyPartnerReceivedID = -1;
 				pyPartnerAssignedID = -1;
+//				pyPartnerReceivedTS = Calendar.getInstance();
+//				pyPartnerAssignedTS = Calendar.getInstance();
 				
 				//get the prior year wish history for the child and wish number
 				List<ONCChildWish> pycWH = getChildWishHistory(newYear-1, pyc.getID(), wn);
-			
-				//work dow the list from most recent to oldest. Save each of the partners who
-				//the wish was received from and assigned to prior to the deadline for
-				//receiving gifts from donor partners
+				
+				//work down the list from earliest wishes to most recent. For all wishes that were
+				//created prior to the gifts received deadline, record the ID's of the partner who
+				//the wish was last received from and last assigned to prior to the deadline. Each
+				//id is recorded, however, as a newer id is found, the older id is overwritten
 				int index = 0;
 				while(index < pycWH.size() &&
 						pycWH.get(index).getChildWishDateChanged().before(pyDateGiftsReceivedBy))
 				{
 					if(pycWH.get(index).getChildWishStatus() == CHILD_WISH_STATUS_ASSIGNED)
+					{
 						pyPartnerAssignedID = pycWH.get(index).getChildWishAssigneeID();
+//						pyPartnerAssignedTS = pycWH.get(index).getChildWishDateChanged();
+					}
 					
 					else if(pycWH.get(index).getChildWishStatus() == CHILD_WISH_STATUS_RECEIVED)
+					{
 						pyPartnerReceivedID = pycWH.get(index).getChildWishAssigneeID();
+//						pyPartnerReceivedTS = pycWH.get(index).getChildWishDateChanged();
+					}
 				
 					index++;
 				}
 				
-				//create a new pyPartnerPerformance object and add it to the list
-				pyPerformanceList.add(new PriorYearPartnerPerformance(pyc.getID(), wn, pyPartnerAssignedID,
-																		pyPartnerReceivedID));
-			
+				//create a new pyPartnerPerformance object if either the AssignedID or the Received
+				//From ID is an actual partner ID and not -1 or 0 
+				if(pyPartnerAssignedID > 0 || pyPartnerReceivedID > 0)
+//					pyPerformanceList.add(new PriorYearPartnerPerformance(pyc.getID(), wn, pyPartnerAssignedID,
+//							pyPartnerAssignedTS.getTime(), pyPartnerReceivedID, pyPartnerReceivedTS.getTime()));
+					pyPerformanceList.add(new PriorYearPartnerPerformance(pyc.getID(), wn, pyPartnerAssignedID,
+											pyPartnerReceivedID));
 			}
 		
 		return pyPerformanceList;
 	}
-/*	
-	void exportFamilyDBToCSV(ArrayList<ONCChildWish>eAL, String path)
-    {	
-	    try 
-	    {
-	    	CSVWriter writer = new CSVWriter(new FileWriter(path));
-	    		
-	    	String[] header = {"Child Wish ID", "Child ID", "Wish ID", "Base", "Detail",
-		 			"Wish #", "Restrictions", "Status",
-		 			"Changed By", "Time Stamp", "Org ID", "Org Name"};
-	    	writer.writeNext(header);
-	    	    
-	    	for(ONCChildWish cw:eAL)
-	    		writer.writeNext(cw.getDBExportRow());	//Get family object row
-	    	 
-	    	writer.close();
-	    	       	    
-	    } 
-	    catch (IOException x)
-	    {
-	    		System.err.format("IO Exception: %s%n", x);
-	    }
-    }
-*/
+
 	@Override
 	void addObject(int year, String[] nextLine) 
 	{
@@ -388,7 +364,7 @@ public class ServerChildWishDB extends ONCServerDB
 		@Override
 		public int compare(ONCChildWish cw1, ONCChildWish cw2)
 		{
-			return cw2.getChildWishDateChanged().compareTo(cw1.getChildWishDateChanged());
+			return cw1.getChildWishDateChanged().compareTo(cw2.getChildWishDateChanged());
 		}
 	}
 	
