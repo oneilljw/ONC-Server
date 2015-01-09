@@ -2,8 +2,10 @@ package ONCServer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -18,7 +20,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import OurNeighborsChild.DBYear;
+import OurNeighborsChild.ONCObject;
 import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 public class DBManager 
 {	
@@ -104,10 +108,11 @@ public class DBManager
 	
 	String createNewYear()
 	{
+		String response = "ADD_NEW_YEAR_FAILED";
+		
 		//determine the year. See if it already exists. If it doesn't create it.
 		//Only the current year can be created. For example, if the current date is not in 
 		//2015, the 2015 data base can not be created.
-		
 		Calendar today = Calendar.getInstance();
 		int newYear = today.get(Calendar.YEAR);
 		
@@ -129,23 +134,53 @@ public class DBManager
 			//conveniently use the dbAutosaveList to accomplish this. First however, we
 			//need to create the directory that the files will be written to
 			
-			//create the directory
+			//create the directory in the file structure for the new database, it shouldn't exist
+			String directoryPath = String.format("%s/%dDB", System.getProperty("user.dir"), newYear);
+			if(new File(directoryPath).mkdir())
+			{
+				//if directory was update the DBYears file and create the db component files
+				exportDBYearsList();
+				
+				//for each component database, ask it to create the new year
+				for(ONCServerDB componentDB: dbAutosaveList)
+					componentDB.createNewYear(newYear);
 			
-			
-			//create and save the db component files
-			for(ONCServerDB componentDB: dbAutosaveList)
-				componentDB.createNewYear(newYear);
-			
-			//return the new DBYear json
-			Gson gson = new Gson();
-			return "ADDED_NEW_YEAR" + gson.toJson(newDBYear, DBYear.class);
+				//return the new DBYear json
+				Gson gson = new Gson();
+				response = "ADDED_NEW_YEAR" + gson.toJson(newDBYear, DBYear.class);
+			}
 		}
-		else
-			return "ADD_NEW_YEAR_FAILED";
+		
+		return response;
 	}
 	
 	static int getNumberOfYears() { return dbYearList.size(); }
 	
+	void exportDBYearsList()
+	{
+		String[] header = {"Year", "Locked?"};
+		String path = String.format("%s/dbyears.csv", System.getProperty("user.dir"));
+		 try 
+		    {
+		    	CSVWriter writer = new CSVWriter(new FileWriter(path));
+		    	writer.writeNext(header);
+		    	
+		    	String[] exportRow = new String[header.length];
+		    	for(DBYear dbYear:dbYearList)
+		    	{
+		    		exportRow[0] = Integer.toString(dbYear.getYear());
+		    		exportRow[1] = dbYear.isLocked() ? "yes" : "no";
+		    		writer.writeNext(exportRow);	//Get family object row
+		    	}
+		    	
+		    	writer.close();
+		    	       	    
+		    } 
+		    catch (IOException x)
+		    {
+		    	System.err.format("IO Exception: %s%n", x);
+		    }
+	}
 	void importDBYears(String path, String name) throws FileNotFoundException, IOException
 	{
     	CSVReader reader = new CSVReader(new FileReader(path));
