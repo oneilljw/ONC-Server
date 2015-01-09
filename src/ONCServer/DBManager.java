@@ -127,7 +127,7 @@ public class DBManager
 			
 			//add the new year to the list of db years
 //			DBYear newDBYear = new DBYear(currentYear, false);	//add a new db year to the list
-			DBYear newDBYear = new DBYear(newYear, true); //add a new db year to the list - DEBUG LOCKED
+			DBYear newDBYear = new DBYear(newYear, false); //add a new db year to the list
 			dbYearList.add(newDBYear);	
 			
 			//now add a new component year to each of the component data bases. We can
@@ -149,7 +149,11 @@ public class DBManager
 				Gson gson = new Gson();
 				response = "ADDED_NEW_YEAR" + gson.toJson(newDBYear, DBYear.class);
 			}
+			else
+				response.concat(String.format("% data base directory creating failed", newYear));
 		}
+		else
+			response.concat(String.format("% data base already exists", newYear));
 		
 		return response;
 	}
