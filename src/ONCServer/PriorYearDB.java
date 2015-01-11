@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 import com.google.gson.Gson;
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
@@ -325,6 +326,30 @@ public class PriorYearDB extends ONCServerDB
 			String path = String.format("%s/%dDB/PriorYearChildDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(pycDBYear.getList(), header, path);
 			pycDBYear.setChanged(false);
+		}
+	}
+	
+	void updateDOBs()
+	{
+		//get time zone at GMT
+		TimeZone localTZ = TimeZone.getDefault();
+		
+		//for each year in the data base, update the dob's
+		for(int year=2012; year < 2014; year++)
+		{
+			PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_YEAR);
+			System.out.println(String.format("Processing %d Prior Year Child DB", year));
+			//for each prior year child, update their dob by calculating their dob time zone
+			//offset to GMT and adding it to their local time zone DOB that was previously saved
+			for(ONCPriorYearChild pyc : pycDBYear.getList())
+			{
+				long currDOB = pyc.getDOB();
+				int gmtOffset = localTZ.getOffset(currDOB);
+				pyc.setDOB(currDOB + gmtOffset);
+			}
+		
+			//mark the db for saving to persistent store
+			pycDBYear.setChanged(true);
 		}
 	}
 }

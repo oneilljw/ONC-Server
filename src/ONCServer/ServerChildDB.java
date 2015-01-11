@@ -5,10 +5,9 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.TimeZone;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
 
@@ -336,6 +335,31 @@ public class ServerChildDB extends ONCServerDB
 			String path = String.format("%s/%dDB/ChildDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(cDBYear.getList(),  header, path);
 			cDBYear.setChanged(false);
+		}
+	}
+	
+	void updateDOBs()
+	{
+		//get time zone at GMT
+		TimeZone localTZ = TimeZone.getDefault();
+		
+		//for each year in the data base, update the dob's
+		for(int year=2012; year < 2014; year++)
+		{
+			ChildDBYear cDBYear = childDB.get(year - BASE_YEAR);
+			System.out.println(String.format("Processing %d Child Year DB", year));
+			
+			//for each child, update their dob by calculating their dob time zone
+			//offset to GMT and adding it to their local time zone DOB that was previously saved
+			for(ONCChild c : cDBYear.getList())
+			{
+				long currDOB = c.getChildDateOfBirth();
+				int gmtOffset = localTZ.getOffset(currDOB);
+				c.setChildDateOfBirth(currDOB + gmtOffset);
+			}
+		
+			//mark the db for saving to persistent store
+			cDBYear.setChanged(true);
 		}
 	}
 }

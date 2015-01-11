@@ -24,7 +24,7 @@ public class ONCServer
 	 */
 	
 	private static final String APPNAME = "Our Neighbor's Child Server";
-	private static final String ONC_SERVER_VERSION = "Our Neighbor's Child Server Version 1.17\n";
+	private static final String ONC_SERVER_VERSION = "Our Neighbor's Child Server Version 1.18\n";
 	private static final String ONC_COPYRIGHT = "\u00A92015 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
@@ -117,7 +117,7 @@ public class ONCServer
     private void createandshowGUI()
 	{
     	serverMenuBar = new ServerMenuBar();
-    	serverMenuBar.convertChildWishesMI.addActionListener(new MenuBarListener());
+    	serverMenuBar.convertPYChildMI.addActionListener(new MenuBarListener());
     	serverUI = ServerUI.getInstance();
     	
     	oncFrame =  new JFrame(APPNAME);
@@ -205,11 +205,13 @@ public class ONCServer
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
-			if(e.getSource() == serverMenuBar.convertChildWishesMI)
+			if(e.getSource() == serverMenuBar.convertPYChildMI)
 			{
-				ServerChildWishDB cwDB = null;
+				PriorYearDB pyDB = null;
+				ServerChildDB cDB = null;
 				try {
-					cwDB = ServerChildWishDB.getInstance();
+					pyDB = PriorYearDB.getInstance();
+					cDB = ServerChildDB.getInstance();
 				} catch (FileNotFoundException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -218,10 +220,10 @@ public class ONCServer
 					e1.printStackTrace();
 				}
 				
-				cwDB.updateWishIDs();
+				pyDB.updateDOBs();
+				cDB.updateDOBs();
 			}
 			
 		}
-    	
     }
 }
