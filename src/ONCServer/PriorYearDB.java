@@ -13,7 +13,7 @@ import OurNeighborsChild.ONCPriorYearChild;
 public class PriorYearDB extends ONCServerDB
 {
 	private static final int PY_CHILD_DB_HEADER_LENGTH = 10;
-	private static final int ONC_MAX_CHILD_AGE = 24; //Used for sorting children into array lists
+//	private static final int ONC_MAX_CHILD_AGE = 24; //Used for sorting children into array lists
 	
 	private static PriorYearDB instance = null;
 	private List<PriorYearChildDBYear> pycDB;
@@ -92,7 +92,7 @@ public class PriorYearDB extends ONCServerDB
 		while(index < pycList.size() && !pycList.get(index).isMatch(c.getChildFirstName(),
 																	c.getChildLastName(),
 																	c.getChildGender(),
-																	c.getChildDOB()))													 
+																	c.getChildDateOfBirth()))													 
 			index++;
 		
 		if(index == pycList.size())
@@ -263,7 +263,7 @@ public class PriorYearDB extends ONCServerDB
      * method checks for this and if a birth year greater than 23 years ago is found, it lumps
      * that prior year child into the oldest prior year array list.
      * @return - an Array List of Array Lists containing prior year children by age
-     ******************************************************************************************/
+     ******************************************************************************************
     List<List<ONCPriorYearChild>> buildPriorYearByAgeArrayList(int year)
     {
     	//get a reference to the new year db being added
@@ -293,7 +293,7 @@ public class PriorYearDB extends ONCServerDB
 
 	    return pycbyAgeAL;
     }
-    
+*/    
     private class PriorYearChildDBYear extends ServerDBYear
     {
     	private List<ONCPriorYearChild> pycList;
