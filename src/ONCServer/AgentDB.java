@@ -93,7 +93,6 @@ public class AgentDB extends ONCServerDB
 		
 		//get the agent list for the requested year
 		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
-		agentDBYear.setChanged(true);
 		List<Agent> agtAL = agentDBYear.getList();
 		
 		//check to see if the agent already exists by name. If so, don't create a new
@@ -110,11 +109,13 @@ public class AgentDB extends ONCServerDB
 		{
 			//found a name match. Update the remaining agent into and return. Check to see that
 			//the new data field isn't blank
-			if(!reqAddAgt.getAgentOrg().trim().isEmpty()) {agtAL.get(index).setAgentOrg(reqAddAgt.getAgentOrg().trim()); }
-			if(!reqAddAgt.getAgentTitle().trim().isEmpty()) {agtAL.get(index).setAgentTitle(reqAddAgt.getAgentTitle().trim()); }
-			if(!reqAddAgt.getAgentEmail().trim().isEmpty()) {agtAL.get(index).setAgentEmail(reqAddAgt.getAgentEmail().trim()); }
-			if(!reqAddAgt.getAgentPhone().trim().isEmpty()) {agtAL.get(index).setAgentPhone(reqAddAgt.getAgentPhone().trim()); }
-			return "UPDATED_AGENT" + gson.toJson(agtAL.get(index), Agent.class);
+			Agent existingAgent = agtAL.get(index);
+			if(!reqAddAgt.getAgentOrg().trim().isEmpty()) {existingAgent.setAgentOrg(reqAddAgt.getAgentOrg().trim()); }
+			if(!reqAddAgt.getAgentTitle().trim().isEmpty()) {existingAgent.setAgentTitle(reqAddAgt.getAgentTitle().trim()); }
+			if(!reqAddAgt.getAgentEmail().trim().isEmpty()) {existingAgent.setAgentEmail(reqAddAgt.getAgentEmail().trim()); }
+			if(!reqAddAgt.getAgentPhone().trim().isEmpty()) {existingAgent.setAgentPhone(reqAddAgt.getAgentPhone().trim()); }
+			agentDBYear.setChanged(true);
+			return "UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class);
 		}
 		else
 		{
@@ -122,7 +123,7 @@ public class AgentDB extends ONCServerDB
 			//set the new ID for the catalog wish
 			reqAddAgt.setID(agentDBYear.getNextID());
 			agentDBYear.add(reqAddAgt);
-		
+			agentDBYear.setChanged(true);
 			return "ADDED_AGENT" + gson.toJson(reqAddAgt, Agent.class);	
 		}
 	}

@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import OurNeighborsChild.DBYear;
+import OurNeighborsChild.ONCFamily;
 import OurNeighborsChild.ONCObject;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -147,7 +148,8 @@ public class DBManager
 			
 				//return the new DBYear json
 				Gson gson = new Gson();
-				response = "ADDED_NEW_YEAR" + gson.toJson(newDBYear, DBYear.class);
+				Type listOfDBYears = new TypeToken<ArrayList<DBYear>>(){}.getType();
+				response = "ADDED_NEW_YEAR" + gson.toJson(dbYearList, listOfDBYears);
 			}
 			else
 				response.concat(String.format("% data base directory creating failed", newYear));
