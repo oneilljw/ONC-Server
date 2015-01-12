@@ -26,7 +26,7 @@ public class Client extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 2.30f;
+	private static final float MINIMUM_CLIENT_VERSION = 2.32f;
 	
 	private int id;
 	private String version;
