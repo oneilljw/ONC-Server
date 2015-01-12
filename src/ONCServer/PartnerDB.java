@@ -424,13 +424,14 @@ public class PartnerDB extends ONCServerDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Org ID", "Status", "Type", "Name", "Orn Delivered", "Street #",
-	 			"Street", "Unit", "City", "Zip", "Region", "Phone",
+		String[] header = {"Org ID", "Status", "Type", "Gift Collection","Name", "Orn Delivered",
+				"Street #", "Street", "Unit", "City", "Zip", "Region", "Phone",
 	 			"Orn Requested", "Orn Assigned", "Gifts Received", "Other",
 	 			"Deliver To", "Special Notes",
 	 			"Contact", "Contact Email", "Contact Phone",
 	 			"Contact2", "Contact2 Email", "Contact2 Phone",
-	 			"Time Stamp", "Changed By", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B"};
+	 			"Time Stamp", "Changed By", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B",
+	 			"Prior Year Requested",	"Prior Year Assigned", "Prior Year Received"};
 		
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		if(partnerDBYear.isUnsaved())
