@@ -291,7 +291,7 @@ public class ServerChildDB extends ONCServerDB
 	void addObject(int year, String[] nextLine)
 	{
 		ChildDBYear childDBYear = childDB.get(year-BASE_YEAR);
-		childDBYear.add(new ONCChild(nextLine));	
+		childDBYear.add(new ONCChild(year, nextLine));	
 	}
 
 	@Override

@@ -6,10 +6,8 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
 import OurNeighborsChild.Organization;
 import OurNeighborsChild.DataChange;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
