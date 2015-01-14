@@ -291,6 +291,8 @@ public class Client extends Thread
                 		output.println("NO_CHANGES");
                 	else
                 	{
+                		//bundle the change q into a list of strings and send it
+                		//to the client
                 		Gson gson = new Gson();
                 		List<String> qContents = new ArrayList<String>();
                 		Type listOfChanges = new TypeToken<ArrayList<String>>(){}.getType();
