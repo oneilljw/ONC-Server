@@ -157,7 +157,7 @@ public class ServerUserDB extends ONCServerDB
 	    	writer.writeNext(header);
 	    	
 	    	for(ONCUser u: userAL)
-	    		writer.writeNext(u.getDBExportRow());	//Write user row
+	    		writer.writeNext(u.getExportRow());	//Write user row
 	    	
 	    	writer.close();
 	    } 

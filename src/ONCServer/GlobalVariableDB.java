@@ -197,7 +197,7 @@ public class GlobalVariableDB extends ONCServerDB
 	    	{
 	    		CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
 	    	    writer.writeNext(header);
-	    	    writer.writeNext(gvDBYear.getServerGVs().getDBExportRow());	//Write server gv row
+	    	    writer.writeNext(gvDBYear.getServerGVs().getExportRow());	//Write server gv row
 	    	    writer.close();
 	    	    
 	    	    gvDBYear.setChanged(false);

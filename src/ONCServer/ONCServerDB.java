@@ -70,7 +70,7 @@ public abstract class ONCServerDB
 	    	for(int index=0; index < list.size(); index++)
 	    	{
 	    		ONCObject oncObj = (ONCObject)list.get(index);
-	    		writer.writeNext(oncObj.getDBExportRow());	//Get family object row
+	    		writer.writeNext(oncObj.getExportRow());	//Get family object row
 	    	}
 	    	
 	    	writer.close();
