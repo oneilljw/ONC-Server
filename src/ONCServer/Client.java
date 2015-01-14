@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import OurNeighborsChild.Login;
@@ -18,6 +19,7 @@ import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
 import OurNeighborsChild.ONCServerUser;
 import OurNeighborsChild.ONCUser;
+import OurNeighborsChild.Organization;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -289,7 +291,16 @@ public class Client extends Thread
                 		output.println("NO_CHANGES");
                 	else
                 	{
-                		String response = changeQ.poll();
+                		Gson gson = new Gson();
+                		List<String> qContents = new ArrayList<String>();
+                		Type listOfChanges = new TypeToken<ArrayList<String>>(){}.getType();
+                		
+                		while(!changeQ.isEmpty())
+	                		qContents.add(changeQ.remove());
+                		
+                		String response = gson.toJson(qContents, listOfChanges);
+       
+//                		String response = changeQ.poll();
                 		output.println(response);
                 		clientMgr.addLogMessage("GET<changes> Response: " + response);
                 	}
