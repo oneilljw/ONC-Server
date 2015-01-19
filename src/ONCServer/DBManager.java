@@ -11,17 +11,12 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import OurNeighborsChild.DBYear;
-import OurNeighborsChild.ONCFamily;
-import OurNeighborsChild.ONCObject;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -107,6 +102,30 @@ public class DBManager
 		return response;		
 	}
 	
+	String updateDBYear(int year, String json)
+	{
+		Gson gson = new Gson();
+		DBYear updatedDBYear = gson.fromJson(json, DBYear.class);
+		
+		//find the year in the dbYearList and update the lock status
+		int index=0;
+		while(index < dbYearList.size() && dbYearList.get(index).getYear() != updatedDBYear.getYear())
+			index++;
+		
+		if(index < dbYearList.size())
+		{
+			dbYearList.get(index).setLock(updatedDBYear.isLocked());
+			exportDBYearsList();
+			return "UPDATED_DBYEAR" + gson.toJson(dbYearList.get(index));
+		}
+		else
+			return "UPDATE_FAILED";
+	}
+	
+	void processUpdatedDBYear()
+	{
+		
+	}
 	String createNewYear()
 	{
 		String response = "ADD_NEW_YEAR_FAILED";

@@ -13,14 +13,11 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-
 import OurNeighborsChild.Login;
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
 import OurNeighborsChild.ONCServerUser;
 import OurNeighborsChild.ONCUser;
-import OurNeighborsChild.Organization;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -522,6 +519,14 @@ public class Client extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = globalvariableDB.update(year, command.substring(20));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<update_dbyear>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = dbManager.updateDBYear(year, command.substring(19));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
