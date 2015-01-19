@@ -169,7 +169,7 @@ public class PriorYearDB extends ONCServerDB
 		
 		//retain all prior year children from last year who only had last year wishes.
 		//do not retain those with only prior year wishes
-		int nRetained = 0;
+//		int nRetained = 0;
 //		for(int i=lypycAL.size()-1; i>=0; i--)
 		for(ONCPriorYearChild lypyc : lypycList)
 			if(lypyc.hasLastYearWishes())
@@ -178,7 +178,7 @@ public class PriorYearDB extends ONCServerDB
 				//This overloaded add method uses a PriorYearChild constructor that converts 
 				//last year wishes to prior year wishes and leaves last year wishes blank
 				add(newYear, lypyc);
-		    	nRetained++;
+//		    	nRetained++;
 		    }
 //		System.out.println("Number of 2014 Prior Year Children retained: " + nRetained);
 //		System.out.println(String.format("Resultant size of 2015 Prior Year Child list: %d", pycAL.size()));
@@ -208,8 +208,8 @@ public class PriorYearDB extends ONCServerDB
 		//for each child from last year, if they were in an eligible family
 		//determine if the child's prior year history was retained already.
 		//If it was, add last years wishes. If not, add a new prior year child.
-		nRetained = 0;
-		int nNew = 0;
+//		nRetained = 0;
+//		int nNew = 0;
 		for(ONCChild lyc:lycList)
 		{
 			ONCFamily lyfam = familyDB.getFamily(newYear-1, lyc.getFamID());
@@ -235,13 +235,13 @@ public class PriorYearDB extends ONCServerDB
 					ONCPriorYearChild pyc = getPriorYearChild(newYear, id);
 					pyc.addChildWishes(lyWish1, lyWish2, lyWish3);
 					
-					nRetained++;
+//					nRetained++;
 				}
 				else //if id == -1 or search returned null, the child wasn't retained,
 				{
 					//they don't have a history, so create a new history entry for them and add it
 					add(newYear, lyc, lyWish1, lyWish2, lyWish3);
-					nNew++;
+//					nNew++;
 				}
 			}
 		}

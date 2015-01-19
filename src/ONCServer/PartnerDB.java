@@ -3,7 +3,6 @@ package ONCServer;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import OurNeighborsChild.Organization;
@@ -387,7 +386,7 @@ public class PartnerDB extends ONCServerDB
 		//accordingly. The list contains one object for each wish from the prior year. Each object 
 		//contains an assigned ID and a receivedID indicating which partner was responsible for
 		//fulfilling the wish and who ONC actually received the fulfilled wish (gift) from
-		SimpleDateFormat sdf = new SimpleDateFormat("M:d:yyyy H:m:s");
+//		SimpleDateFormat sdf = new SimpleDateFormat("M:d:yyyy H:m:s");
 		List<PriorYearPartnerPerformance> pyPartnerPerformanceList = serverChildWishDB.getPriorYearPartnerPerformanceList(newYear);
 		for(PriorYearPartnerPerformance pyPerf: pyPartnerPerformanceList)
 		{
