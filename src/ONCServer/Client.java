@@ -707,6 +707,8 @@ public class Client extends Thread
     	int yr = Integer.parseInt(dbYear);
     	year = (yr >  BASE_YEAR) ? yr : BASE_YEAR;
     	
+    	getClientUser().setClientYear(year);
+    	
     	return "YEAR" + Integer.toString(year);
 
     }
