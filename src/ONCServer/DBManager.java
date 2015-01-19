@@ -128,7 +128,7 @@ public class DBManager
 	}
 	String createNewYear()
 	{
-		String response = "ADD_NEW_YEAR_FAILED";
+		String response = "ADD_DBYEAR_FAILED";
 		
 		//determine the year. See if it already exists. If it doesn't create it.
 		//Only the current year can be created. For example, if the current date is not in 
@@ -168,7 +168,7 @@ public class DBManager
 				//return the new DBYear json
 				Gson gson = new Gson();
 				Type listOfDBYears = new TypeToken<ArrayList<DBYear>>(){}.getType();
-				response = "ADDED_NEW_YEAR" + gson.toJson(dbYearList, listOfDBYears);
+				response = "ADDED_DBYEAR" + gson.toJson(dbYearList, listOfDBYears);
 			}
 			else
 				response.concat(String.format("% data base directory creating failed", newYear));

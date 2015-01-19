@@ -509,7 +509,6 @@ public class Client extends Thread
                 else if(command.startsWith("POST<add_newseason>"))
                 {
                 	clientMgr.addLogMessage(command);
-//                	String response = prioryearDB.createNewSeason(year);
                 	String response = dbManager.createNewYear();
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
