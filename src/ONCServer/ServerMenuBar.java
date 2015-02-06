@@ -10,7 +10,7 @@ public class ServerMenuBar extends JMenuBar
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public JMenuItem showLogMI, convertPYChildMI;
+	public JMenuItem showLogMI, countsMI;
 
 	public ServerMenuBar()
 	{
@@ -24,8 +24,8 @@ public class ServerMenuBar extends JMenuBar
 	    showLogMI = new JMenuItem("Show Log");
 	    menuLog.add(showLogMI);
 	    
-	    convertPYChildMI = new JMenuItem("Convert PY Child");
-	    convertPYChildMI.setEnabled(false);
-	    menuLog.add(convertPYChildMI);
+	    countsMI = new JMenuItem("Update Delivery Counts");
+	    countsMI.setEnabled(true);
+	    menuLog.add(countsMI);
 	}
 }

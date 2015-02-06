@@ -17,11 +17,15 @@ public class ServerDriverDB extends ONCServerDB
 	
 	private static List<DriverDBYear> driverDB;
 	private static ServerDriverDB instance = null;
+	
+	private static ClientManager clientMgr;
 
 	private ServerDriverDB() throws FileNotFoundException, IOException
 	{
 		//create the driver data bases for TOTAL_YEARS number of years
 		driverDB = new ArrayList<DriverDBYear>();
+		
+		clientMgr = ClientManager.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -123,6 +127,50 @@ public class ServerDriverDB extends ONCServerDB
 		else
 			return "DELETE_FAILED";	
 	}
+	
+	ONCDriver getDriverByDriverNumber(int year, String drvNum)
+	{
+		List<ONCDriver> dAL = driverDB.get(year-BASE_YEAR).getList();
+		
+		//find the driver
+		int index = 0;	
+		while(index < dAL.size() && !dAL.get(index).getDrvNum().equals(drvNum))
+			index++;
+			
+		if(index < dAL.size())
+			return dAL.get(index);
+		else
+			return null;	
+	}
+	
+	void updateDriverDeliveryCounts(int year, String drvNum1, String drvNum2)
+	{
+		ONCDriver driver;
+		Gson gson = new Gson();
+		String change;
+		
+		if(drvNum1 != null)
+		{
+			driver = getDriverByDriverNumber(year, drvNum1);
+			if(driver != null)
+			{
+				driver.incrementDeliveryCount(-1);
+				change = "UPDATED_DRIVER" + gson.toJson(driver, ONCDriver.class);
+				clientMgr.notifyAllInYearClients(year, change);	
+			}
+		}
+		
+		if(drvNum2 != null)
+		{
+			driver = getDriverByDriverNumber(year, drvNum2);
+			if(driver != null)
+			{
+				driver.incrementDeliveryCount(1);
+				change = "UPDATED_DRIVER" + gson.toJson(driver, ONCDriver.class);
+				clientMgr.notifyAllInYearClients(year, change);
+			}
+		}	
+	}
 
 	@Override
 	void addObject(int year, String[] nextLine)
@@ -174,5 +222,36 @@ public class ServerDriverDB extends ONCServerDB
 			exportDBToCSV(driverDBYear.getList(),  header, path);
 			driverDBYear.setChanged(false);
 		}
+	}
+	
+	void createDeliveryCounts(int year)
+	{
+		//get family data base for the year
+		FamilyDB familyDB = null;
+		try {
+			familyDB = FamilyDB.getInstance();
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		//for each driver that has a numeric driver number, search the delivery data base in that
+		//year for number of deliveries made by that driver
+		for(ONCDriver d: driverDB.get(year - BASE_YEAR).getList())
+		{
+			if(!d.getDrvNum().equals("N/A"))
+			{
+				int count = familyDB.getDelAttemptedCounts(year, d.getDrvNum());
+				d.setDelAssigned(count);
+				System.out.println(String.format("ServerDriverDB.createDelCounts: drv# %s count = %d",
+						d.getDrvNum(), count));
+			}
+		}
+		
+		//mark the file for saving
+		driverDB.get(year - BASE_YEAR).setChanged(true);
 	}
 }

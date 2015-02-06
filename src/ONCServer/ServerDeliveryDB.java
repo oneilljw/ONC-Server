@@ -8,6 +8,7 @@ import java.util.List;
 
 import OurNeighborsChild.HistoryRequest;
 import OurNeighborsChild.ONCDelivery;
+import OurNeighborsChild.ONCFamily;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -15,6 +16,7 @@ import com.google.gson.reflect.TypeToken;
 public class ServerDeliveryDB extends ONCServerDB
 {
 	private static final int DELIVERY_DB_HEADER_LENGTH = 7;
+	private static final int DELIVERY_STATUS_ASSIGNED = 3;
 
 	private static List<DeliveryDBYear> deliveryDB;
 	
@@ -111,10 +113,14 @@ public class ServerDeliveryDB extends ONCServerDB
 		delDBYear.add(addedDelivery);
 		delDBYear.setChanged(true);
 		
-		//notify the corresponding family that delivery has changed
+		
+		//notify the corresponding family that delivery has changed and
+		//check to see if new delivery assigned or removed a delivery from a driver
 		FamilyDB familyDB = null;
+		ServerDriverDB driverDB = null;
 		try {
 			familyDB = FamilyDB.getInstance();
+			driverDB = ServerDriverDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -123,12 +129,50 @@ public class ServerDeliveryDB extends ONCServerDB
 			e.printStackTrace();
 		}
 		
-		//Update the child object with new wish
+		//get prior delivery for this family
+		ONCFamily fam = familyDB.getFamily(year, addedDelivery.getFamID());
+		ONCDelivery priorDelivery = getDelivery(year, fam.getDeliveryID());
+				
+		//If prior status == ASSIGNED && new status < ASSIGNED, decrement the prior delivery driver
+		//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
+		//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
+		//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
+		if(priorDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED && 
+				addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED)
+		{
+			driverDB.updateDriverDeliveryCounts(year, null, addedDelivery.getdDelBy());
+		}
+		else if(priorDelivery.getdStatus() >= DELIVERY_STATUS_ASSIGNED && 
+					addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
+						!priorDelivery.getdDelBy().equals(addedDelivery.getdDelBy()))
+		{
+			driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
+		}
+		else if(priorDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
+					addedDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED)
+		{
+			driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
+		}
+		
+		//Update the family object with new delivery
 		if(familyDB != null)
 			familyDB.updateFamilyDelivery(year, addedDelivery);
 		
 						
 		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCDelivery.class);
+	}
+	
+	ONCDelivery getDelivery(int year, int delID)
+	{
+		List<ONCDelivery> dAL = deliveryDB.get(year-BASE_YEAR).getList();
+		int index = 0;	
+		while(index < dAL.size() && dAL.get(index).getID() != delID)
+			index++;
+		
+		if(index < dAL.size())
+			return dAL.get(index);
+		else
+			return null;
 	}
 	
 	String update(int year, String json)
@@ -165,7 +209,7 @@ public class ServerDeliveryDB extends ONCServerDB
 		List<ONCDelivery> delHistory = new ArrayList<ONCDelivery>();
 		List<ONCDelivery> delAL = deliveryDB.get(year - BASE_YEAR).getList();
 			
-		//Search for child wishes that match the child id
+		//Search for deliveries that match the delivery Family ID
 		for(ONCDelivery del:delAL)
 			if(del.getFamID() == histReq.getID())
 				delHistory.add(del);
@@ -176,14 +220,16 @@ public class ServerDeliveryDB extends ONCServerDB
 		String response = gson.toJson(delHistory, listtype);
 		return response;
 	}
-
+	
+	
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
 		DeliveryDBYear delDBYear = deliveryDB.get(year - BASE_YEAR);
 		delDBYear.add(new ONCDelivery(nextLine));	
 	}
-
+	
+	
 	@Override
 	void createNewYear(int newYear)
 	{

@@ -328,7 +328,7 @@ public class PriorYearDB extends ONCServerDB
 			pycDBYear.setChanged(false);
 		}
 	}
-	
+/*	
 	void updateDOBs()
 	{
 		//get time zone at GMT
@@ -352,4 +352,5 @@ public class PriorYearDB extends ONCServerDB
 			pycDBYear.setChanged(true);
 		}
 	}
+*/	
 }

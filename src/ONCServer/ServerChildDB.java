@@ -337,7 +337,7 @@ public class ServerChildDB extends ONCServerDB
 			cDBYear.setChanged(false);
 		}
 	}
-	
+/*	
 	void updateDOBs()
 	{
 		//get time zone at GMT
@@ -362,4 +362,5 @@ public class ServerChildDB extends ONCServerDB
 			cDBYear.setChanged(true);
 		}
 	}
+*/	
 }

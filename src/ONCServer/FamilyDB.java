@@ -437,4 +437,33 @@ public class FamilyDB extends ONCServerDB
     	
     	void add(ONCFamily addedFamily) { fList.add(addedFamily); }
     }
+    
+    int getDelAttemptedCounts(int year, String drvNum)
+    {
+    	//get family data base for the year
+    			ServerDeliveryDB deliveryDB = null;
+    			try {
+    				deliveryDB = ServerDeliveryDB.getInstance();
+    			} catch (FileNotFoundException e1) {
+    				// TODO Auto-generated catch block
+    				e1.printStackTrace();
+    			} catch (IOException e1) {
+    				// TODO Auto-generated catch block
+    				e1.printStackTrace();
+    			}
+    			
+    	int delCount = 0;
+    	for(ONCFamily f:familyDB.get(year-BASE_YEAR).getList())
+    	{
+    		if(f.getDeliveryID() > -1 && f.getDeliveryStatus() >= 3)
+    		{
+    			//get delivery for family
+    			ONCDelivery del = deliveryDB.getDelivery(year, f.getDeliveryID());
+    			if(del != null && del.getdDelBy().equals(drvNum))
+    				delCount++;
+    		}
+    	}
+    	
+    	return delCount;
+    }
 }

@@ -117,7 +117,7 @@ public class ONCServer
     private void createandshowGUI()
 	{
     	serverMenuBar = new ServerMenuBar();
-    	serverMenuBar.convertPYChildMI.addActionListener(new MenuBarListener());
+    	serverMenuBar.countsMI.addActionListener(new MenuBarListener());
     	serverUI = ServerUI.getInstance();
     	
     	oncFrame =  new JFrame(APPNAME);
@@ -205,13 +205,12 @@ public class ONCServer
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
-			if(e.getSource() == serverMenuBar.convertPYChildMI)
+			if(e.getSource() == serverMenuBar.countsMI)
 			{
-				PriorYearDB pyDB = null;
-				ServerChildDB cDB = null;
+				ServerDriverDB driverDB = null;
 				try {
-					pyDB = PriorYearDB.getInstance();
-					cDB = ServerChildDB.getInstance();
+					driverDB = ServerDriverDB.getInstance();
+					
 				} catch (FileNotFoundException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -220,8 +219,7 @@ public class ONCServer
 					e1.printStackTrace();
 				}
 				
-				pyDB.updateDOBs();
-				cDB.updateDOBs();
+				driverDB.createDeliveryCounts(2014);;
 			}
 			
 		}
