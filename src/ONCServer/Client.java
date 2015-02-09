@@ -298,8 +298,6 @@ public class Client extends Thread
 	                		qContents.add(changeQ.remove());
                 		
                 		String response = gson.toJson(qContents, listOfChanges);
-       
-//                		String response = changeQ.poll();
                 		output.println(response);
                 		clientMgr.addLogMessage("GET<changes> Response: " + response);
                 	}
@@ -636,12 +634,14 @@ public class Client extends Thread
     	}
     	else if(serverUser == null)	//cant find the user in the data base
     	{
-    		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed: User name not found", id));
+    		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
+    				+ " User name not found", id, lo.getVersion()));
     		value += "User Name not found";
     	}
     	else if(serverUser != null && !serverUser.pwMatch(lo.getPassword()))	//found the user but pw is incorrect
     	{
-    		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed: Incorrect password", id));
+    		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
+    				+ " Incorrect password",lo.getVersion()));
     		value += "Incorrect password";
     	}
     	else if(serverUser != null && serverUser.pwMatch(lo.getPassword()))	//user found, password matches
@@ -738,15 +738,4 @@ public class Client extends Thread
     }
     
     int getYear() { return year; } 
- 
-/*
-   private class LoginObject
-   {
-	   private String userid;
-	   private String password;
-	   
-	   String getUid() { return userid;}
-	   String getPw() { return password; }
-   }
-*/
 }
