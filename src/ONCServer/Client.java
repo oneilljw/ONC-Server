@@ -629,7 +629,7 @@ public class Client extends Thread
     	if(lo_version < MINIMUM_CLIENT_VERSION)
     	{
     		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed: "
-    				+ "Downlevel Client, v" + lo.getVersion(), id));
+    				+ "Downlevel Client, v%s",  id, lo.getVersion()));
     		value += "Downlevel ONC Client: v" + lo.getVersion() + ", please upgrade";
     	}
     	else if(serverUser == null)	//cant find the user in the data base
@@ -641,7 +641,7 @@ public class Client extends Thread
     	else if(serverUser != null && !serverUser.pwMatch(lo.getPassword()))	//found the user but pw is incorrect
     	{
     		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
-    				+ " Incorrect password",lo.getVersion()));
+    				+ " Incorrect password", id, lo.getVersion()));
     		value += "Incorrect password";
     	}
     	else if(serverUser != null && serverUser.pwMatch(lo.getPassword()))	//user found, password matches
