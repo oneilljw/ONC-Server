@@ -249,12 +249,13 @@ public class FamilyDB extends ONCServerDB
 	}
 	
 	/*************************************************************************************************************
-	* This method is called when a child's wish status changes due to a user change or a wish merge. The method
-	* implements a set of rules that returns the family status when all children in the families
-	* gifts attain a certain status. For example, when all children's gifts are selected, the returned 
-	* family status is FAMILY_STATUS_GIFTS_SELECTED. A matrix that correlates child gift status to family status
-	* is used. There are 7 possible setting for child wish status.The seven correspond to five family status
-	* choices. The method finds the lowest family status setting based on the children's wish status and returns it. 
+	* This method is called when a child's wish status changes due to a user change. The method
+	* implements a set of rules that returns the family status when all children in the family
+	* wishes/gifts attain a certain status. For example, when all children's gifts are selected,
+	* the returned family status is FAMILY_STATUS_GIFTS_SELECTED. A matrix that correlates child
+	* gift status to family status is used. There are 7 possible setting for child wish status.
+	* The seven correspond to five family status choices. The method finds the lowest family
+	* status setting based on the children's wish status and returns it. 
 	**********************************************************************************************************/
 	int getLowestFamilyStatus(int year, int famid)
 	{
