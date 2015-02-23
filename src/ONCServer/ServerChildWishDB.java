@@ -12,6 +12,7 @@ import OurNeighborsChild.HistoryRequest;
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
 import OurNeighborsChild.ONCWish;
+import OurNeighborsChild.WishStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -313,13 +314,13 @@ public class ServerChildWishDB extends ONCServerDB
 				while(index < pycWH.size() &&
 						pycWH.get(index).getChildWishDateChanged().before(pyDateGiftsReceivedBy))
 				{
-					if(pycWH.get(index).getChildWishStatus() == CHILD_WISH_STATUS_ASSIGNED)
+					if(pycWH.get(index).getChildWishStatus() == WishStatus.Assigned)
 					{
 						pyPartnerAssignedID = pycWH.get(index).getChildWishAssigneeID();
 //						pyPartnerAssignedTS = pycWH.get(index).getChildWishDateChanged();
 					}
 					
-					else if(pycWH.get(index).getChildWishStatus() == CHILD_WISH_STATUS_RECEIVED)
+					else if(pycWH.get(index).getChildWishStatus() == WishStatus.Received)
 					{
 						pyPartnerReceivedID = pycWH.get(index).getChildWishAssigneeID();
 //						pyPartnerReceivedTS = pycWH.get(index).getChildWishDateChanged();
@@ -400,4 +401,22 @@ public class ServerChildWishDB extends ONCServerDB
 			cwDBYear.setChanged(false);
 		}
 	}
+	
+	void convertWishStatus()
+	{
+		//for each year in the data base
+		for(ChildWishDBYear dbYear: childwishDB)
+		{		
+			//for each child wish in the year's list, convert the wish status from an integer
+			//to the proper WishStatus enumeration
+			for(ONCChildWish cw: dbYear.getList())
+			{
+				
+			}
+		
+			//mark the file for saving
+			dbYear.setChanged(true);
+		}
+	}
+
 }

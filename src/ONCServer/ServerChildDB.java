@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
+import OurNeighborsChild.ONCDriver;
+import OurNeighborsChild.WishStatus;
 
 public class ServerChildDB extends ONCServerDB
 {
@@ -147,7 +151,9 @@ public class ServerChildDB extends ONCServerDB
 				{
 					ONCChildWish cw = cwDB.getWish(year, childWishID);
 
-					if(partnerDB != null && cw != null && cw.getChildWishStatus() >= CHILD_WISH_STATUS_ASSIGNED)
+					//if wish has been assigned, then we have to decrement the partner
+					if(partnerDB != null && cw != null && 
+							cw.getChildWishStatus().compareTo(WishStatus.Assigned) >= 0)
 					{
 						int wishPartnerID = cw.getChildWishAssigneeID();
 						partnerDB.decrementGiftCount(year, wishPartnerID);
@@ -336,6 +342,7 @@ public class ServerChildDB extends ONCServerDB
 			cDBYear.setChanged(false);
 		}
 	}
+	
 /*	
 	void updateDOBs()
 	{

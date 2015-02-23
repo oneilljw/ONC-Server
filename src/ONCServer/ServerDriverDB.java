@@ -222,36 +222,5 @@ public class ServerDriverDB extends ONCServerDB
 			exportDBToCSV(driverDBYear.getList(),  header, path);
 			driverDBYear.setChanged(false);
 		}
-	}
-	
-	void createDeliveryCounts(int year)
-	{
-		//get family data base for the year
-		FamilyDB familyDB = null;
-		try {
-			familyDB = FamilyDB.getInstance();
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		//for each driver that has a numeric driver number, search the delivery data base in that
-		//year for number of deliveries made by that driver
-		for(ONCDriver d: driverDB.get(year - BASE_YEAR).getList())
-		{
-			if(!d.getDrvNum().equals("N/A"))
-			{
-				int count = familyDB.getDelAttemptedCounts(year, d.getDrvNum());
-				d.setDelAssigned(count);
-				System.out.println(String.format("ServerDriverDB.createDelCounts: drv# %s count = %d",
-						d.getDrvNum(), count));
-			}
-		}
-		
-		//mark the file for saving
-		driverDB.get(year - BASE_YEAR).setChanged(true);
-	}
+	}	
 }

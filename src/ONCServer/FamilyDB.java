@@ -14,6 +14,7 @@ import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
 import OurNeighborsChild.ONCDelivery;
 import OurNeighborsChild.ONCFamily;
+import OurNeighborsChild.WishStatus;
 
 public class FamilyDB extends ONCServerDB
 {
@@ -275,12 +276,12 @@ public class FamilyDB extends ONCServerDB
 				
 				//if cw is null, it means that the wish doesn't exist yet. If that's the case, 
 				//set the status to the lowest status possible as if the wish existed
-				int childwishstatus = 1;	//Lowest possible child wish status
+				WishStatus childwishstatus = WishStatus.Not_Selected;	//Lowest possible child wish status
 				if(cw != null)
 					childwishstatus = childwishDB.getWish(year, c.getChildWishID(wn)).getChildWishStatus();
 					
-				if(wishstatusmatrix[childwishstatus] < lowestfamstatus)
-					lowestfamstatus = wishstatusmatrix[childwishstatus];
+				if(wishstatusmatrix[childwishstatus.statusIndex()] < lowestfamstatus)
+					lowestfamstatus = wishstatusmatrix[childwishstatus.statusIndex()];
 			}
 		}
 			

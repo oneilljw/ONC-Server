@@ -207,9 +207,9 @@ public class ONCServer
 		{
 			if(e.getSource() == serverMenuBar.countsMI)
 			{
-				ServerDriverDB driverDB = null;
+				ServerChildWishDB cwDB = null;
 				try {
-					driverDB = ServerDriverDB.getInstance();
+					cwDB = ServerChildWishDB.getInstance();
 					
 				} catch (FileNotFoundException e1) {
 					// TODO Auto-generated catch block
@@ -219,7 +219,7 @@ public class ONCServer
 					e1.printStackTrace();
 				}
 				
-				driverDB.createDeliveryCounts(2014);;
+//				cwDB.convertWishStatus();
 			}
 			
 		}
