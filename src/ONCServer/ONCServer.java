@@ -207,21 +207,8 @@ public class ONCServer
 		{
 			if(e.getSource() == serverMenuBar.countsMI)
 			{
-				ServerChildWishDB cwDB = null;
-				try {
-					cwDB = ServerChildWishDB.getInstance();
-					
-				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
 				
-//				cwDB.convertWishStatus();
 			}
-			
 		}
     }
 }

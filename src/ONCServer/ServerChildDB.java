@@ -11,14 +11,12 @@ import com.google.gson.reflect.TypeToken;
 
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
-import OurNeighborsChild.ONCDriver;
 import OurNeighborsChild.WishStatus;
 
 public class ServerChildDB extends ONCServerDB
 {
 	private static final int CHILD_DB_HEADER_LENGTH = 12;
 	private static final int NUMBER_WISHES_PER_CHILD = 3;
-	private static final int CHILD_WISH_STATUS_ASSIGNED = 3;
 	
 	private static List<ChildDBYear> childDB;
 	private static ServerChildDB instance = null;

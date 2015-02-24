@@ -22,8 +22,6 @@ public class ServerChildWishDB extends ONCServerDB
 	private static final int CHILD_WISH_DB_HEADER_LENGTH = 10;
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final int CHILD_WISH_STATUS_ASSIGNED = 3;
-	private static final int CHILD_WISH_STATUS_RECEIVED = 4;
 	private static ServerChildWishDB instance = null;
 
 	private List<ChildWishDBYear> childwishDB;
@@ -404,19 +402,6 @@ public class ServerChildWishDB extends ONCServerDB
 	
 	void convertWishStatus()
 	{
-		//for each year in the data base
-		for(ChildWishDBYear dbYear: childwishDB)
-		{		
-			//for each child wish in the year's list, convert the wish status from an integer
-			//to the proper WishStatus enumeration
-			for(ONCChildWish cw: dbYear.getList())
-			{
-				
-			}
 		
-			//mark the file for saving
-			dbYear.setChanged(true);
-		}
 	}
-
 }

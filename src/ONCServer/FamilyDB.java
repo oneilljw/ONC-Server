@@ -261,10 +261,17 @@ public class FamilyDB extends ONCServerDB
 	int getLowestFamilyStatus(int year, int famid)
 	{
 		//This matrix correlates a child wish status to the family status.
-		int[] wishstatusmatrix = {FAMILY_STATUS_UNVERIFIED,FAMILY_STATUS_INFO_VERIFIED,
-								 FAMILY_STATUS_GIFTS_SELECTED, FAMILY_STATUS_GIFTS_SELECTED,
-								 FAMILY_STATUS_GIFTS_RECEIVED, FAMILY_STATUS_GIFTS_RECEIVED,
-								 FAMILY_STATUS_GIFTS_VERIFIED};
+		int[] wishstatusmatrix = {FAMILY_STATUS_UNVERIFIED,	//WishStatus Index = 0;
+								 FAMILY_STATUS_INFO_VERIFIED,	//WishStatus Index = 1;
+								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 2;
+								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 3;
+								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 4;
+								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 5;
+								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 6;
+								 FAMILY_STATUS_GIFTS_RECEIVED,	//WishStatus Index = 7;
+								 FAMILY_STATUS_GIFTS_RECEIVED,	//WishStatus Index = 8;
+								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 9;
+								 FAMILY_STATUS_GIFTS_VERIFIED};	//WishStatus Index = 10;
 			
 		//Check for all gifts selected
 		int lowestfamstatus = FAMILY_STATUS_GIFTS_VERIFIED;
