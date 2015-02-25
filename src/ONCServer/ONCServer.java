@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -24,7 +23,7 @@ public class ONCServer
 	 */
 	
 	private static final String APPNAME = "Our Neighbor's Child Server";
-	private static final String ONC_SERVER_VERSION = "Our Neighbor's Child Server Version 1.21\n";
+	private static final String ONC_SERVER_VERSION = "Our Neighbor's Child Server Version 1.22\n";
 	private static final String ONC_COPYRIGHT = "\u00A92015 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
