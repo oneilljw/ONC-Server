@@ -171,7 +171,7 @@ public class DBManager
 				response = "ADDED_DBYEAR" + gson.toJson(dbYearList, listOfDBYears);
 			}
 			else
-				response = String.format("ADD_DBYEAR_FAILED%d serverdata base directory creation failed", newYear);
+				response = String.format("ADD_DBYEAR_FAILED%d server data base directory creation failed", newYear);
 		}
 		else
 			response = String.format("ADD_DBYEAR_FAILED%d server data base already exists", newYear);
