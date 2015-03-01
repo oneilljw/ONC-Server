@@ -128,7 +128,7 @@ public class DBManager
 	}
 	String createNewYear()
 	{
-		String response = "ADD_DBYEAR_FAILED";
+		String response;
 		
 		//determine the year. See if it already exists. If it doesn't create it.
 		//Only the current year can be created. For example, if the current date is not in 
@@ -141,24 +141,24 @@ public class DBManager
 		DBYear lastDBYear = dbYearList.get(dbYearList.size()-1);
 		if(lastDBYear.getYear() < newYear)
 		{
-			//Lock all prior years
-			for(DBYear dbYear: dbYearList)
-				dbYear.setLock(true);
-			
-			//add the new year to the list of db years
-//			DBYear newDBYear = new DBYear(currentYear, false);	//add a new db year to the list
-			DBYear newDBYear = new DBYear(newYear, false); //add a new db year to the list
-			dbYearList.add(newDBYear);	
-			
-			//now add a new component year to each of the component data bases. We can
+			//add a new component year to each of the component data bases. We can
 			//conveniently use the dbAutosaveList to accomplish this. First however, we
 			//need to create the directory that the files will be written to
 			
 			//create the directory in the file structure for the new database, it shouldn't exist
 			String directoryPath = String.format("%s/%dDB", System.getProperty("user.dir"), newYear);
+			
 			if(new File(directoryPath).mkdir())
 			{
-				//if directory was update the DBYears file and create the db component files
+				//Lock all prior years
+				for(DBYear dbYear: dbYearList)
+					dbYear.setLock(true);
+				
+				//add the new year to the list of db years
+				DBYear newDBYear = new DBYear(newYear, false); //add a new db year to the list
+				dbYearList.add(newDBYear);
+				
+				//update the DBYears file and create the db component files
 				exportDBYearsList();
 				
 				//for each component database, ask it to create the new year
@@ -171,10 +171,10 @@ public class DBManager
 				response = "ADDED_DBYEAR" + gson.toJson(dbYearList, listOfDBYears);
 			}
 			else
-				response.concat(String.format("% data base directory creating failed", newYear));
+				response = String.format("ADD_DBYEAR_FAILED%d serverdata base directory creation failed", newYear);
 		}
 		else
-			response.concat(String.format("% data base already exists", newYear));
+			response = String.format("ADD_DBYEAR_FAILED%d server data base already exists", newYear);
 		
 		return response;
 	}
