@@ -156,8 +156,8 @@ public class ServerUserDB extends ONCServerDB
 	    	CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
 	    	writer.writeNext(header);
 	    	
-	    	for(ONCUser u: userAL)
-	    		writer.writeNext(u.getExportRow());	//Write user row
+	    	for(ONCServerUser su: userAL)
+	    		writer.writeNext(su.getExportRow());	//Write server user row
 	    	
 	    	writer.close();
 	    } 
