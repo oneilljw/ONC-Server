@@ -58,9 +58,9 @@ public class ServerUI extends JPanel implements ListSelectionListener
 //		  										"Time Logged In" };
 
 	private static String[] columns = {"ID", "First Name", "Last Name", 
-		  								"P", "State", "HB", "Year", "Ver", "Time Stamp" };
+		  								"Perm", "State", "HB", "Year", "Ver", "Time Stamp" };
 
-	private static int[] colWidths = {40, 80, 80, 28, 72, 28, 40, 52, 140};
+	private static int[] colWidths = {40, 80, 80, 80, 80, 28, 40, 52, 140};
 
 	private static int [] center_cols = {0, 3, 5};
 	

@@ -16,7 +16,7 @@ import OurNeighborsChild.ONCUser;
 
 public class ServerUserDB extends ONCServerDB
 {
-	private static final int USER_RECORD_LENGTH = 11;
+	private static final int USER_RECORD_LENGTH = 13;
 	private static ServerUserDB instance  = null;
 	
 	private List<ONCServerUser> userAL;
@@ -50,7 +50,8 @@ public class ServerUserDB extends ONCServerDB
 		//Create response to send to requesting client
 		ONCUser newuser = new ONCUser(su.getID(), su.getDateChanged(), su.getChangedBy(),
 									su.getStoplightPos(), su.getStoplightMssg(), su.getStoplightChangedBy(),
-									su.getFirstname(), su.getLastname(), su.getPermission());
+									su.getFirstname(), su.getLastname(), su.getPermission(),
+									su.getNSessions(), su.getLastLogin());
 		
 		save(year);
 		
@@ -131,8 +132,12 @@ public class ServerUserDB extends ONCServerDB
 		Calendar date_changed = Calendar.getInstance();
 		if(!nextLine[6].isEmpty())
 			date_changed.setTimeInMillis(Long.parseLong(nextLine[6]));
+		
+		Calendar last_login = Calendar.getInstance();
+		if(!nextLine[12].isEmpty())
+			last_login.setTimeInMillis(Long.parseLong(nextLine[12]));
 			
-		userAL.add(new ONCServerUser(nextLine, date_changed.getTime()));
+		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime()));
 		
 	}
 
@@ -146,7 +151,8 @@ public class ServerUserDB extends ONCServerDB
 	void save(int year)
 	{
 		String[] header = {"ID", "Username", "Password", "Permission", "First Name", "Last Name",
-							"Date Changed", "Changed By", "SL Position", "SL Message", "SL Changed By"};
+							"Date Changed", "Changed By", "SL Position", "SL Message", "SL Changed By",
+							"Sessions", "Last Login"};
 		
 		String path = System.getProperty("user.dir") + "/users.csv";
 		File oncwritefile = new File(path);

@@ -10,14 +10,18 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
 import OurNeighborsChild.Login;
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
 import OurNeighborsChild.ONCServerUser;
 import OurNeighborsChild.ONCUser;
+import OurNeighborsChild.UserPermission;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -25,7 +29,7 @@ public class Client extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 2.36f;
+	private static final float MINIMUM_CLIENT_VERSION = 2.40f;
 	
 	private int id;
 	private String version;
@@ -159,12 +163,12 @@ public class Client extends Thread
                 { 
                     String response = loginRequest(command.substring(13));
                     output.println(response);
-                    if(response.startsWith("VALID"))
-                    {
-                    	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstname() + " " + clientUser.getLastname() + 
-                   				  " is now online";
-                		clientMgr.notifyAllOtherClients(this, mssg);
-                    }
+//                  if(response.startsWith("VALID"))
+//                  {
+//                    	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstname() + " " + clientUser.getLastname() + 
+//                   				  " is now online";
+//                		clientMgr.notifyAllOtherClients(this, mssg);
+//                  }
                 }
                 else if(command.startsWith("GET<users>"))
                 {
@@ -632,11 +636,17 @@ public class Client extends Thread
     				+ "Downlevel Client, v%s",  id, lo.getVersion()));
     		value += "Downlevel ONC Client: v" + lo.getVersion() + ", please upgrade";
     	}
-    	else if(serverUser == null)	//cant find the user in the data base
+    	else if(serverUser == null)	//can't find the user in the data base
     	{
     		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
     				+ " User name not found", id, lo.getVersion()));
     		value += "User Name not found";
+    	}
+    	else if(serverUser != null && serverUser.getPermission() == UserPermission.INACTIVE)	//can't find the user in the data base
+    	{
+    		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
+    				+ " User account is inactive", id, lo.getVersion()));
+    		value += "Inactive user account";
     	}
     	else if(serverUser != null && !serverUser.pwMatch(lo.getPassword()))	//found the user but pw is incorrect
     	{
@@ -648,11 +658,19 @@ public class Client extends Thread
     	{
     		//Create user json and attach to VALID response
     		state = ClientState.Logged_In;	//Client logged in
+    		serverUser.incrementSessions();
+    		serverUser.setLastLogin(new Date());
+    		userDB.save(year);	//year will equal -1 at this point, but ignored. Only one user.csv
+    		
     		clientUser = serverUser.getUserFromServerUser();
     		clientUser.setClientID(id);	//set the user object client ID
     		version = lo.getVersion();
     		
-    		value = "VALID" + gson.toJson(clientUser, ONCUser.class);
+    		String loginJson = gson.toJson(clientUser, ONCUser.class);
+    		value = "VALID" + loginJson;
+    		
+    		String mssg = "UPDATED_USER" + loginJson;
+    		clientMgr.notifyAllOtherClients(this, mssg);
 
     		clientMgr.clientLoginAttempt(true, String.format("Client %d, %s %s login request sucessful",
     															id, clientUser.getFirstname(), clientUser.getLastname()));	
@@ -670,7 +688,7 @@ public class Client extends Thread
     	{
     		row[1] = clientUser.getFirstname();
     		row[2] = clientUser.getLastname();
-    		row[3] = Integer.toString(clientUser.getPermission());	
+    		row[3] = clientUser.getPermission().toString();	
     	}
     	else
     	{

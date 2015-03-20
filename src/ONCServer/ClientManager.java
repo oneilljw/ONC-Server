@@ -170,7 +170,7 @@ public class ClientManager implements ActionListener
 	
 	void notifyAllOtherClients(Client requestingClient, String mssg)
 	{
-		//send message to all clients connected in a particular year. 
+		//send message to all clients
 		for(Client c:clientAL )
 		{
 			//Add change to the change queue's of every other client
