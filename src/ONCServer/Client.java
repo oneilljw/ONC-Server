@@ -314,6 +314,14 @@ public class Client extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
                 }
+                else if(command.startsWith("POST<update_user>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = userDB.update(year, command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
                 else if(command.startsWith("POST<setyear>"))
                 {
                 	String response = setYear(command.substring(13));

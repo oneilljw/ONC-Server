@@ -58,6 +58,32 @@ public class ServerUserDB extends ONCServerDB
 		return "ADDED_USER" + gson.toJson(newuser, ONCUser.class) ;
 	}
 	
+	String update(int year, String json)	//User DB currently not implemented by year
+	{
+		Gson gson = new Gson();
+		ONCUser updatedUser = gson.fromJson(json, ONCUser.class);
+		
+		//Find the user by id and replace the old user object
+		int index = 0;
+		while(index < userAL.size() && userAL.get(index).getID() != updatedUser.getID())
+			index++;
+				
+		if(index < userAL.size())
+		{
+			ONCServerUser su = userAL.get(index);
+			su.setLastname(updatedUser.getLastname());
+			su.setFirstname(updatedUser.getFirstname());
+			su.setPermission(updatedUser.getPermission());
+			
+			save(year);
+			
+			ONCUser updateduser = su.getUserFromServerUser();
+			return "UPDATED_USER" + gson.toJson(updateduser, ONCUser.class);
+		}
+		else 
+			return "UPDATE_FAILED";
+	}
+	
 	ONCServerUser find(String uid)
 	{
 		int index = 0;
