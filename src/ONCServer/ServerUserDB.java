@@ -16,7 +16,7 @@ import OurNeighborsChild.ONCUser;
 
 public class ServerUserDB extends ONCServerDB
 {
-	private static final int USER_RECORD_LENGTH = 13;
+	private static final int USER_RECORD_LENGTH = 14;
 	private static ServerUserDB instance  = null;
 	
 	private List<ONCServerUser> userAL;
@@ -44,6 +44,7 @@ public class ServerUserDB extends ONCServerDB
 		ONCServerUser su = gson.fromJson(json, ONCServerUser.class);
 		
 		su.setID(id++);	//Set id for new user
+		su.setUserPW("onc" + su.getPermission().toString());
 	
 		userAL.add(su); //Add new user to data base
 		
@@ -51,7 +52,7 @@ public class ServerUserDB extends ONCServerDB
 		ONCUser newuser = new ONCUser(su.getID(), su.getDateChanged(), su.getChangedBy(),
 									su.getStoplightPos(), su.getStoplightMssg(), su.getStoplightChangedBy(),
 									su.getFirstname(), su.getLastname(), su.getPermission(),
-									su.getNSessions(), su.getLastLogin());
+									su.getNSessions(), su.getLastLogin(), su.changePasswordRqrd());
 		
 		save(year);
 		
@@ -162,8 +163,11 @@ public class ServerUserDB extends ONCServerDB
 		Calendar last_login = Calendar.getInstance();
 		if(!nextLine[12].isEmpty())
 			last_login.setTimeInMillis(Long.parseLong(nextLine[12]));
+		
+		boolean bResetPassword = nextLine[13].charAt(0) == 'T' ? true : false;
 			
-		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime()));
+		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime(),
+										bResetPassword));
 		
 	}
 
@@ -178,7 +182,7 @@ public class ServerUserDB extends ONCServerDB
 	{
 		String[] header = {"ID", "Username", "Password", "Permission", "First Name", "Last Name",
 							"Date Changed", "Changed By", "SL Position", "SL Message", "SL Changed By",
-							"Sessions", "Last Login"};
+							"Sessions", "Last Login", "Reset Password"};
 		
 		String path = System.getProperty("user.dir") + "/users.csv";
 		File oncwritefile = new File(path);
