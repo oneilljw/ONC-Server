@@ -7,10 +7,14 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
 import au.com.bytecode.opencsv.CSVWriter;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import OurNeighborsChild.ChangePasswordRequest;
+import OurNeighborsChild.ONCFamily;
 import OurNeighborsChild.ONCServerUser;
 import OurNeighborsChild.ONCUser;
 
@@ -19,11 +23,15 @@ public class ServerUserDB extends ONCServerDB
 	private static final int USER_RECORD_LENGTH = 14;
 	private static ServerUserDB instance  = null;
 	
+	private static ClientManager clientMgr;
+	
 	private List<ONCServerUser> userAL;
 	private int id;
 	
 	private ServerUserDB() throws NumberFormatException, IOException
 	{
+		clientMgr.getInstance();
+		
 		userAL = new ArrayList<ONCServerUser>();
 		importDB(0, System.getProperty("user.dir") + "/users.csv", "User DB", USER_RECORD_LENGTH);
 		id = getNextID(userAL);
@@ -45,18 +53,13 @@ public class ServerUserDB extends ONCServerDB
 		
 		su.setID(id++);	//Set id for new user
 		su.setUserPW("onc" + su.getPermission().toString());
+		su.setPasswordChangeRqrd(true);
 	
 		userAL.add(su); //Add new user to data base
 		
-		//Create response to send to requesting client
-		ONCUser newuser = new ONCUser(su.getID(), su.getDateChanged(), su.getChangedBy(),
-									su.getStoplightPos(), su.getStoplightMssg(), su.getStoplightChangedBy(),
-									su.getFirstname(), su.getLastname(), su.getPermission(),
-									su.getNSessions(), su.getLastLogin(), su.changePasswordRqrd());
-		
 		save(year);
 		
-		return "ADDED_USER" + gson.toJson(newuser, ONCUser.class) ;
+		return "ADDED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class) ;
 	}
 	
 	String update(int year, String json)	//User DB currently not implemented by year
@@ -113,7 +116,7 @@ public class ServerUserDB extends ONCServerDB
 		return response;	
 	 }
 	 
-	 String changePassword(int year, String json)
+	 String changePassword(int year, String json, Client requestingClient)
 	 {
 		Gson gson = new Gson();
 		ChangePasswordRequest cpwReq = gson.fromJson(json, ChangePasswordRequest.class);
@@ -135,11 +138,22 @@ public class ServerUserDB extends ONCServerDB
 				{
 					//user id found, current password matches and user first and last names match
 					su.setUserPW(cpwReq.getNewPW());
+					if(su.changePasswordRqrd())
+					{
+						//need to notify other clients of update to user
+						su.setPasswordChangeRqrd(false);
+						
+				    	String change = "UPDATED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class);
+				    	clientMgr.notifyAllOtherClients(requestingClient, change);	//null to notify all clients
+					}
+					
+					save(year);
 					response = "PASSWORD_CHANGED<html>Your password has been changed!</html>";
+					
 				}
 				else
 					response = "PASSWORD_CHANGE_FAILED<html>Change password request failed<br>" +
-							"The user name not found.<br>Please contact ONC management.</html>";
+							"The user name not found.<br>Please contact ONC Exec Dir.</html>";
 			}
 			else
 				response = "PASSWORD_CHANGE_FAILED<html>Change password request failed.<br>" +
@@ -147,12 +161,12 @@ public class ServerUserDB extends ONCServerDB
 		}
 		else
 			response = String.format("PASSWORD_CHANGE_FAILED<html>Change password request failed.<br>" +
-					"User #%d couldn't be located.<br>Please contact ONC management.</html>", cpwReq.getUserID());
+					"User #%d couldn't be located.<br>Please contact ONC Exec Dir.</html>", cpwReq.getUserID());
 		
-		save(year);
+		
 		return response;	
 	 }
-	 
+	
 	@Override
 	void addObject(int year, String[] nextLine) 
 	{

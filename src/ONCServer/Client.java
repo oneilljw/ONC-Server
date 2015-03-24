@@ -543,7 +543,7 @@ public class Client extends Thread
                 else if(command.startsWith("POST<change_password>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = userDB.changePassword(year, command.substring(21));
+                	String response = userDB.changePassword(year, command.substring(21), this);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 }
