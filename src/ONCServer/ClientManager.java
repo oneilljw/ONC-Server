@@ -6,8 +6,10 @@ import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
+
 import OurNeighborsChild.ONCUser;
 
 import com.google.gson.Gson;
@@ -170,13 +172,10 @@ public class ClientManager implements ActionListener
 	
 	void notifyAllOtherClients(Client requestingClient, String mssg)
 	{
-		//send message to all clients
-		for(Client c:clientAL )
-		{
-			//Add change to the change queue's of every other client
+		//Add change to the change queue's of every other client
+		for(Client c:clientAL ) 
 			if(c != requestingClient )
-			c.addChange(mssg);
-		}
+				c.addChange(mssg);
 	}
 	
 	int notifyClient(Client targetClient, String mssg)

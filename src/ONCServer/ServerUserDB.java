@@ -7,20 +7,17 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
 import au.com.bytecode.opencsv.CSVWriter;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import OurNeighborsChild.ChangePasswordRequest;
-import OurNeighborsChild.ONCFamily;
 import OurNeighborsChild.ONCServerUser;
 import OurNeighborsChild.ONCUser;
 
 public class ServerUserDB extends ONCServerDB
 {
 	private static final int USER_RECORD_LENGTH = 14;
+	private static final String USER_PASSWORD_PREFIX = "onc";
 	private static ServerUserDB instance  = null;
 	
 	private static ClientManager clientMgr;
@@ -30,7 +27,7 @@ public class ServerUserDB extends ONCServerDB
 	
 	private ServerUserDB() throws NumberFormatException, IOException
 	{
-		clientMgr.getInstance();
+		clientMgr = ClientManager.getInstance();
 		
 		userAL = new ArrayList<ONCServerUser>();
 		importDB(0, System.getProperty("user.dir") + "/users.csv", "User DB", USER_RECORD_LENGTH);
@@ -78,6 +75,11 @@ public class ServerUserDB extends ONCServerDB
 			su.setLastname(updatedUser.getLastname());
 			su.setFirstname(updatedUser.getFirstname());
 			su.setPermission(updatedUser.getPermission());
+			if(updatedUser.changePasswordRqrd())
+			{
+				su.setUserPW(USER_PASSWORD_PREFIX + updatedUser.getPermission().toString());
+				su.setPasswordChangeRqrd(updatedUser.changePasswordRqrd());
+			}
 			
 			save(year);
 			
@@ -142,7 +144,7 @@ public class ServerUserDB extends ONCServerDB
 					{
 						//need to notify other clients of update to user
 						su.setPasswordChangeRqrd(false);
-						
+
 				    	String change = "UPDATED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class);
 				    	clientMgr.notifyAllOtherClients(requestingClient, change);	//null to notify all clients
 					}
