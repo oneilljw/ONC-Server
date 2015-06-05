@@ -18,6 +18,7 @@ import java.util.Queue;
 import OurNeighborsChild.Login;
 import OurNeighborsChild.ONCChild;
 import OurNeighborsChild.ONCChildWish;
+import OurNeighborsChild.ONCEncryptor;
 import OurNeighborsChild.ONCServerUser;
 import OurNeighborsChild.ONCUser;
 import OurNeighborsChild.UserPermission;
@@ -629,6 +630,8 @@ public class Client extends Thread
     {
     	Gson gson = new Gson();
     	Login lo = gson.fromJson(loginjson, Login.class);
+    	String userID = ONCEncryptor.decrypt(lo.getUserID());
+    	String password = ONCEncryptor.decrypt(lo.getPassword());
     	
     	float lo_version = Float.parseFloat(lo.getVersion());
   	
@@ -636,7 +639,7 @@ public class Client extends Thread
     	
     	//don't want a reference here, want a new object. A user can be logged in more than once.
     	//However, never can use this object to update a user's info
-    	ONCServerUser serverUser = (ONCServerUser) userDB.find(lo.getUserID());
+    	ONCServerUser serverUser = (ONCServerUser) userDB.find(userID);
   
     	if(lo_version < MINIMUM_CLIENT_VERSION)
     	{
@@ -656,13 +659,13 @@ public class Client extends Thread
     				+ " User account is inactive", id, lo.getVersion()));
     		value += "Inactive user account";
     	}
-    	else if(serverUser != null && !serverUser.pwMatch(lo.getPassword()))	//found the user but pw is incorrect
+    	else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
     	{
     		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
     				+ " Incorrect password", id, lo.getVersion()));
     		value += "Incorrect password";
     	}
-    	else if(serverUser != null && serverUser.pwMatch(lo.getPassword()))	//user found, password matches
+    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
     	{
     		//Create user json and attach to VALID response
     		state = ClientState.Logged_In;	//Client logged in

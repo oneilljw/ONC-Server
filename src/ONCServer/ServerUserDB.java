@@ -7,10 +7,14 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
 import au.com.bytecode.opencsv.CSVWriter;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import OurNeighborsChild.ChangePasswordRequest;
+import OurNeighborsChild.ONCEncryptor;
 import OurNeighborsChild.ONCServerUser;
 import OurNeighborsChild.ONCUser;
 
@@ -122,6 +126,9 @@ public class ServerUserDB extends ONCServerDB
 	 {
 		Gson gson = new Gson();
 		ChangePasswordRequest cpwReq = gson.fromJson(json, ChangePasswordRequest.class);
+		
+		String currPW = ONCEncryptor.decrypt(cpwReq.getCurrPW());
+		String newPW = ONCEncryptor.decrypt(cpwReq.getNewPW());
 		String response;
 		
 		//find user
@@ -134,12 +141,12 @@ public class ServerUserDB extends ONCServerDB
 			//found user, check other parameters to ensure the right user
 			ONCServerUser su = userAL.get(index);
 			
-			if(cpwReq.getCurrPW().equals(su.getUserPW()))
+			if(currPW.equals(su.getUserPW()))
 			{
 				if(cpwReq.getFirstName().equals(su.getFirstname()) && cpwReq.getLastName().equals(su.getLastname()))
 				{
 					//user id found, current password matches and user first and last names match
-					su.setUserPW(cpwReq.getNewPW());
+					su.setUserPW(newPW);
 					if(su.changePasswordRqrd())
 					{
 						//need to notify other clients of update to user
