@@ -30,7 +30,7 @@ public class Client extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 2.40f;
+	private static final float MINIMUM_CLIENT_VERSION = 2.41f;
 	
 	private int id;
 	private String version;
@@ -630,6 +630,10 @@ public class Client extends Thread
     {
     	Gson gson = new Gson();
     	Login lo = gson.fromJson(loginjson, Login.class);
+    	
+//    	String userID = lo.getUserID();
+//    	String password = lo.getPassword();
+    	
     	String userID = ONCEncryptor.decrypt(lo.getUserID());
     	String password = ONCEncryptor.decrypt(lo.getPassword());
     	
