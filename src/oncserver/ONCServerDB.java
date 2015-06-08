@@ -47,7 +47,7 @@ public abstract class ONCServerDB
     		}
     		else
     		{
-    			String error = String.format("%s file corrupted, header lentgth = %d", name, header.length);
+    			String error = String.format("%s file corrupted, header length = %d", name, header.length);
     	       	JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
     		}		   			
     	}

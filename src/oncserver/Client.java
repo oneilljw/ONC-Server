@@ -58,6 +58,7 @@ public class Client extends Thread
     private ServerWishDetailDB wishDetailDB;
     private PriorYearDB prioryearDB;
     private ClientManager clientMgr;
+    private ServerMealDB mealDB;
     private ServerChatManager chatMgr;
     private ONCUser clientUser;
     private Calendar timestamp;
@@ -101,6 +102,7 @@ public class Client extends Thread
 	        wishCatalog = ServerWishCatalog.getInstance();
 	        wishDetailDB = ServerWishDetailDB.getInstance();
 	        prioryearDB = PriorYearDB.getInstance();
+	        mealDB = ServerMealDB.getInstance();
 		  
 	        clientUser = null;
 	        timestamp = Calendar.getInstance();
@@ -271,6 +273,12 @@ public class Client extends Thread
                 	output.println(response);
                 	state = ClientState.DB_Selected;
                 	clientMgr.clientStateChanged();
+                }
+                else if(command.startsWith("GET<meals>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = mealDB.getMeals(year);
+                	output.println(response);		
                 }
                 else if(command.startsWith("GET<pychild>"))
                 {
@@ -513,6 +521,30 @@ public class Client extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = driverDB.add(year, command.substring(16));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<update_meal>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = mealDB.update(year, command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<delete_meal>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = mealDB.delete(year, command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<add_meal>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = mealDB.add(year, command.substring(14));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
