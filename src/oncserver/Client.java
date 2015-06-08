@@ -15,13 +15,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import OurNeighborsChild.Login;
-import OurNeighborsChild.ONCChild;
-import OurNeighborsChild.ONCChildWish;
-import OurNeighborsChild.ONCEncryptor;
-import OurNeighborsChild.ONCServerUser;
-import OurNeighborsChild.ONCUser;
-import OurNeighborsChild.UserPermission;
+import ourneighborschild.Login;
+import ourneighborschild.ONCChild;
+import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCEncryptor;
+import ourneighborschild.ONCServerUser;
+import ourneighborschild.ONCUser;
+import ourneighborschild.UserPermission;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

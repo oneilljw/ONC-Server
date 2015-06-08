@@ -13,7 +13,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import OurNeighborsChild.OSXAdapter;
+import ourneighborschild.OSXAdapter;
 
 public class ONCServer
 {

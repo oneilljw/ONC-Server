@@ -10,7 +10,7 @@ import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
 
-import OurNeighborsChild.ONCUser;
+import ourneighborschild.ONCUser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

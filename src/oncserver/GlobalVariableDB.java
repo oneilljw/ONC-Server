@@ -12,12 +12,13 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import ourneighborschild.ONCObject;
+import ourneighborschild.ServerGVs;
+
 import com.google.gson.Gson;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-import OurNeighborsChild.ONCObject;
-import OurNeighborsChild.ServerGVs;
 
 public class GlobalVariableDB extends ONCServerDB
 {

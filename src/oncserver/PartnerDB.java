@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import OurNeighborsChild.Organization;
-import OurNeighborsChild.DataChange;
+
+import ourneighborschild.DataChange;
+import ourneighborschild.Organization;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 

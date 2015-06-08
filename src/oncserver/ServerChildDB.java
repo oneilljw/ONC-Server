@@ -6,12 +6,12 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ourneighborschild.ONCChild;
+import ourneighborschild.ONCChildWish;
+import ourneighborschild.WishStatus;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
-import OurNeighborsChild.ONCChild;
-import OurNeighborsChild.ONCChildWish;
-import OurNeighborsChild.WishStatus;
 
 public class ServerChildDB extends ONCServerDB
 {

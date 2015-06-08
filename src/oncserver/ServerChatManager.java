@@ -1,6 +1,7 @@
 package oncserver;
 
-import OurNeighborsChild.ChatMessage;
+import ourneighborschild.ChatMessage;
+
 import com.google.gson.Gson;
 
 public class ServerChatManager

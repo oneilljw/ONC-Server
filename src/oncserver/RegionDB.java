@@ -8,10 +8,11 @@ import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
+import ourneighborschild.Address;
+import ourneighborschild.Region;
+
 import com.google.gson.Gson;
 
-import OurNeighborsChild.Address;
-import OurNeighborsChild.Region;
 import au.com.bytecode.opencsv.CSVReader;
 
 public class RegionDB 

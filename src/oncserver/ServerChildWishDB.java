@@ -8,11 +8,12 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import OurNeighborsChild.HistoryRequest;
-import OurNeighborsChild.ONCChild;
-import OurNeighborsChild.ONCChildWish;
-import OurNeighborsChild.ONCWish;
-import OurNeighborsChild.WishStatus;
+
+import ourneighborschild.HistoryRequest;
+import ourneighborschild.ONCChild;
+import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCWish;
+import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
