@@ -1,4 +1,4 @@
-package ONCServer;
+package oncserver;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;

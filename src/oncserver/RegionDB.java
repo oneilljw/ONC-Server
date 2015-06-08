@@ -1,4 +1,4 @@
-package ONCServer;
+package oncserver;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;

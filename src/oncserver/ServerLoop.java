@@ -1,4 +1,4 @@
-package ONCServer;
+package oncserver;
 
 import java.io.IOException;
 import java.net.ServerSocket;

@@ -1,4 +1,4 @@
-package ONCServer;
+package oncserver;
 
 import OurNeighborsChild.ChatMessage;
 import com.google.gson.Gson;

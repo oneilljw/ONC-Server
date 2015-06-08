@@ -1,4 +1,4 @@
-package ONCServer;
+package oncserver;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
