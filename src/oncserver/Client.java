@@ -59,6 +59,7 @@ public class Client extends Thread
     private PriorYearDB prioryearDB;
     private ClientManager clientMgr;
     private ServerMealDB mealDB;
+    private ServerAdultDB adultDB;
     private ServerChatManager chatMgr;
     private ONCUser clientUser;
     private Calendar timestamp;
@@ -103,6 +104,7 @@ public class Client extends Thread
 	        wishDetailDB = ServerWishDetailDB.getInstance();
 	        prioryearDB = PriorYearDB.getInstance();
 	        mealDB = ServerMealDB.getInstance();
+	        adultDB = ServerAdultDB.getInstance();
 		  
 	        clientUser = null;
 	        timestamp = Calendar.getInstance();
@@ -273,6 +275,12 @@ public class Client extends Thread
                 	output.println(response);
                 	state = ClientState.DB_Selected;
                 	clientMgr.clientStateChanged();
+                }
+                else if(command.startsWith("GET<adults>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = adultDB.getAdults(year);
+                	output.println(response);		
                 }
                 else if(command.startsWith("GET<meals>"))
                 {
@@ -537,6 +545,30 @@ public class Client extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = mealDB.delete(year, command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<add_adult>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = adultDB.add(year, command.substring(15));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<update_adult>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = adultDB.update(year, command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<delete_adult>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = adultDB.delete(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
