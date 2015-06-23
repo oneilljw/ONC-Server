@@ -66,13 +66,17 @@ public class ServerAdultDB extends ONCServerDB
 	{
 		//Create an ONCAdult object for the added adult
 		Gson gson = new Gson();
-		ONCMeal addedAdult = gson.fromJson(adultjson, ONCMeal.class);
+		ONCAdult addedAdult = gson.fromJson(adultjson, ONCAdult.class);
 						
 		//retrieve the adult data base for the year
 		AdultDBYear adultDBYear = adultDB.get(year - BASE_YEAR);
 								
 		//set the new ID for the added ONCAdult
 		addedAdult.setID(adultDBYear.getNextID());
+		
+		//add the new adult to the data base
+		adultDBYear.add(addedAdult);
+		adultDBYear.setChanged(true);
 							
 		return "ADULT_ADDED" + gson.toJson(addedAdult, ONCAdult.class);
 	}
@@ -152,12 +156,11 @@ public class ServerAdultDB extends ONCServerDB
 		AdultDBYear adultDBYear = adultDB.get(year - BASE_YEAR);
 		if(adultDBYear.isUnsaved())
 		{
-//			System.out.println(String.format("ServerMealDB save() - Saving Meal DB"));
+//			System.out.println(String.format("ServerAdultDB save() - Saving Adult DB, size= %d", adultDBYear.getList().size()));
 			String path = String.format("%s/%dDB/AdultDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(adultDBYear.getList(), header, path);
 			adultDBYear.setChanged(false);
 		}
-
 	}
 	
 	private class AdultDBYear extends ServerDBYear

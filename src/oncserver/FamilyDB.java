@@ -18,7 +18,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class FamilyDB extends ONCServerDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 39;
+	private static final int FAMILYDB_HEADER_LENGTH = 40;
 	
 	private static final int FAMILY_STATUS_UNVERIFIED = 0;
 	private static final int FAMILY_STATUS_INFO_VERIFIED = 1;
@@ -330,7 +330,7 @@ public class FamilyDB extends ONCServerDB
 				"Client Family", "First Name", "Last Name", "House #", "Street", "Unit #", "City", "Zip Code",
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
 				"ODB Details", "Children Names", "Schools", "ODB WishList",
-				"Adopted For", "Agent ID", "Delivery ID", "Meal ID", "# of Bags", "# of Large Items", 
+				"Adopted For", "Agent ID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
 				"Stoplight Pos", "Stoplight Mssg", "Stopligh C/B"};
 		
 		FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);

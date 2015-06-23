@@ -13,7 +13,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerMealDB extends ONCServerDB
 {
-	private static final int MEAL_DB_HEADER_LENGTH = 11;
+	private static final int MEAL_DB_HEADER_LENGTH = 10;
 	private static final int BASE_YEAR = 2012;
 	private static ServerMealDB instance = null;
 
@@ -72,6 +72,10 @@ public class ServerMealDB extends ONCServerDB
 						
 		//set the new ID for the added ONCMeal
 		addedMeal.setID(mealDBYear.getNextID());
+		
+		//add the new meal to the data base
+		mealDBYear.add(addedMeal);
+		mealDBYear.setChanged(true);
 					
 		return "MEAL_ADDED" + gson.toJson(addedMeal, ONCMeal.class);
 	}
@@ -147,7 +151,7 @@ public class ServerMealDB extends ONCServerDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Meal ID", "Family ID", "Type", "Status", "Partner ID",
+		String[] header = {"Meal ID", "Family ID", "Type", "Partner ID",
 	 			"Restrictions", "Changed By", "Time Stamp", "SL Pos",
 	 			"SL Mssg", "SL Changed By"};
 		
