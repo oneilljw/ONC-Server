@@ -30,7 +30,7 @@ public class Client extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 2.41f;
+	private static final float MINIMUM_CLIENT_VERSION = 2.42f;
 	
 	private int id;
 	private String version;
@@ -116,7 +116,9 @@ public class Client extends Thread
             output = new PrintWriter(socket.getOutputStream(), true);
             
             //tell the client that they have successfully connected to the server
-            output.println("LOGINConnected to the ONC Server, Please Login");
+            String encryptedResponse = ONCEncryptor.encrypt("LOGINConnected to the ONC Server, Please Login");
+            output.println(encryptedResponse);
+//          output.println("LOGINConnected to the ONC Server, Please Login");
         }         
         catch (FileNotFoundException e1) 
         {

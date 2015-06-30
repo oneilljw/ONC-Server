@@ -95,7 +95,8 @@ public class ClientManager implements ActionListener
 		clientAL.add(c);
 		serverUI.displayClientTable(clientAL);
 		c.start();
-		serverUI.addLogMessage(String.format("Client %d connected", clientID));
+		serverUI.addLogMessage(String.format("Client %d connected, ip= %s", 
+				clientID, socket.getRemoteSocketAddress().toString()));
 		clientID++;
 		
 		return c; 
