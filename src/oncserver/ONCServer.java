@@ -27,6 +27,7 @@ public class ONCServer
 	private static final String ONC_COPYRIGHT = "\u00A92015 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
+	private HTTPServer webServer;	//the web server
 	private ClientManager clientMgr; //Manages all connected clients
 	
 	private boolean bServerRunning;
@@ -152,6 +153,9 @@ public class ONCServer
 		serverUI.btnStopServer.setVisible(true);
 		
 		bServerRunning = true;
+		
+		//start the web server
+		webServer = new HTTPServer();
     }
     
     void stopServer()
