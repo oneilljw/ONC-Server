@@ -37,19 +37,27 @@ public class ONCHttpHandler implements HttpHandler
     	else if(t.getRequestURI().toString().contains("oncsplash"))
     	{
     		// add the required response header for a PDF file
+    	  System.out.println("Got to checkpoint 1");
   	      Headers h = t.getResponseHeaders();
   	      h.add("Content-Type", "image/gif");
 
-  	      // a PDF (you provide your own!)
+  	      // onc splash screen
+  	      System.out.println("Got to checkpoint 2");
   	      String path = String.format("%s/oncsplash.gif",
   										System.getProperty("user.dir"));
   	      File file = new File (path);
   	      byte [] bytearray  = new byte [(int)file.length()];
+  	      System.out.println(String.format("Got to checkpoint 3, file= %s, %d bytes", file.getAbsolutePath(), file.length()));
+  	      
   	      FileInputStream fis = new FileInputStream(file);
+  	      
+  	      System.out.println("Got to checkpoint 4, fis= " + fis.getFD().toString());
   	      BufferedInputStream bis = new BufferedInputStream(fis);
   	      bis.read(bytearray, 0, bytearray.length);
+  	      bis.close();
 
   	      // ok, we are ready to send the response.
+  	      System.out.println("Got to checkpoint 5");
   	      t.sendResponseHeaders(200, file.length());
   	      OutputStream os = t.getResponseBody();
   	      os.write(bytearray,0,bytearray.length);

@@ -190,22 +190,30 @@ public class ONCServer
     	}	
     }
     
-    public static void main(String[] args) throws Exception
+    public static void main(String[] args)
 	{
-		HttpServer server = HttpServer.create(new InetSocketAddress(8902), 0);
-		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
+		HttpServer server;
+		try {
+			server = HttpServer.create(new InetSocketAddress(8902), 0);
+			ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
+			
+			HttpContext context = server.createContext("/test", oncHttpHandler);
+			context.getFilters().add(new ParameterFilter());
+			
+		    context = server.createContext("/oncsplash", oncHttpHandler);
+		    context.getFilters().add(new ParameterFilter());
+		    
+		    context = server.createContext("/login", oncHttpHandler);
+		    context.getFilters().add(new ParameterFilter());
+		    
+		    server.setExecutor(null); // creates a default executor
+		    server.start();
+		} 
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
 		
-		HttpContext context = server.createContext("/test", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-	    context = server.createContext("/oncsplash", oncHttpHandler);
-	    context.getFilters().add(new ParameterFilter());
-	    
-	    context = server.createContext("/login", oncHttpHandler);
-	    context.getFilters().add(new ParameterFilter());
-	    
-	    server.setExecutor(null); // creates a default executor
-	    server.start();
 	}
 /*
     public static void main(String args[])
