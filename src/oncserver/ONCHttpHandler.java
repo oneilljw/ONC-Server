@@ -20,7 +20,8 @@ public class ONCHttpHandler implements HttpHandler
     	
     	if(t.getRequestURI().toString().contains("login"))
     	{
-    	String response = "<html>"
+/*    		
+    		String response = "<html>"
 	      		+"<body>"
     			+"<style>"
 	      		+"IMG.displayed {display: block; margin-left: auto; margin-right: auto }"
@@ -28,40 +29,54 @@ public class ONCHttpHandler implements HttpHandler
 	      		+"<img src= \"oncsplash.gif\" alt=\"HTML5 Icon\" class= \"displayed\">"
 	      		+"</body>"
 	      		+ "</html>";
-    	
-	      t.sendResponseHeaders(200, response.length());
-	      OutputStream os = t.getResponseBody();
-	      os.write(response.getBytes());
-	      os.close();
+*/	      		
+    		String response = "<!DOCTYPE html><html>"
+    		+"<body>"
+    		+"<style>"
+      		+"IMG.displayed {display: block; margin-left: auto; margin-right: auto }"
+			+"</style>"
+      		+"<img src= \"oncsplash.gif\" alt=\"HTML5 Icon\" class= \"displayed\">"
+    		+"<p><b><i>Welcome to Our Neighbors Child</i></b></p>"
+    		+"<p>Please Login</p>"
+    		+"<form action=\"action_page.php\">"
+    		+"User Name: "
+    		+"<input type=\"text\" name=\"firstname\">"
+    		+"<br>"
+    		+"Password:   "
+    		+"<input type=\"text\" name=\"lastname\">"
+    		+"<br><br>"
+    		+"<input type=\"submit\">"
+    		+"</form>"
+    		+"</body>"
+    		+"</html>";
+
+    		t.sendResponseHeaders(200, response.length());
+    		OutputStream os = t.getResponseBody();
+    		os.write(response.getBytes());
+    		os.close();
     	}
     	else if(t.getRequestURI().toString().contains("oncsplash"))
     	{
     		// add the required response header for a PDF file
-    	  System.out.println("Got to checkpoint 1");
-  	      Headers h = t.getResponseHeaders();
-  	      h.add("Content-Type", "image/gif");
+  	      	Headers h = t.getResponseHeaders();
+  	      	h.add("Content-Type", "image/gif");
 
-  	      // onc splash screen
-  	      System.out.println("Got to checkpoint 2");
-  	      String path = String.format("%s/oncsplash.gif",
-  										System.getProperty("user.dir"));
-  	      File file = new File (path);
-  	      byte [] bytearray  = new byte [(int)file.length()];
-  	      System.out.println(String.format("Got to checkpoint 3, file= %s, %d bytes", file.getAbsolutePath(), file.length()));
+  	      	// onc splash screen
+  	      	String path = String.format("%s/oncsplash.gif", System.getProperty("user.dir"));
+  	      	File file = new File (path);
+  	      	byte [] bytearray  = new byte [(int)file.length()];
   	      
-  	      FileInputStream fis = new FileInputStream(file);
+  	      	FileInputStream fis = new FileInputStream(file);
   	      
-  	      System.out.println("Got to checkpoint 4, fis= " + fis.getFD().toString());
-  	      BufferedInputStream bis = new BufferedInputStream(fis);
-  	      bis.read(bytearray, 0, bytearray.length);
-  	      bis.close();
+  	      	BufferedInputStream bis = new BufferedInputStream(fis);
+  	      	bis.read(bytearray, 0, bytearray.length);
+  	      	bis.close();
 
-  	      // ok, we are ready to send the response.
-  	      System.out.println("Got to checkpoint 5");
-  	      t.sendResponseHeaders(200, file.length());
-  	      OutputStream os = t.getResponseBody();
-  	      os.write(bytearray,0,bytearray.length);
-  	      os.close();
+  	      	//send the response.
+  	      	t.sendResponseHeaders(200, file.length());
+  	      	OutputStream os = t.getResponseBody();
+  	      	os.write(bytearray,0,bytearray.length);
+  	      	os.close();
     	}
     	else if(t.getRequestURI().toString().contains("test"))
     	{

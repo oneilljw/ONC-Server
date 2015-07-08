@@ -6,16 +6,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-
-import com.sun.net.httpserver.HttpContext;
-import com.sun.net.httpserver.HttpServer;
 
 import ourneighborschild.OSXAdapter;
 
@@ -150,7 +146,7 @@ public class ONCServer
     	serverIF.start();
 		serverUI.setStoplight(0);	//Set server status to green - running
 		
-		serverUI.addLogMessage("Server Interface Loop started");
+		serverUI.addLogMessage("App Server Interface Loop started");
 		
 		serverUI.btnStartServer.setVisible(false);
 		serverUI.btnStopServer.setVisible(true);
@@ -189,33 +185,7 @@ public class ONCServer
     			stopServer();
     	}	
     }
-    
-    public static void main(String[] args)
-	{
-		HttpServer server;
-		try {
-			server = HttpServer.create(new InetSocketAddress(8902), 0);
-			ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
-			
-			HttpContext context = server.createContext("/test", oncHttpHandler);
-			context.getFilters().add(new ParameterFilter());
-			
-		    context = server.createContext("/oncsplash", oncHttpHandler);
-		    context.getFilters().add(new ParameterFilter());
-		    
-		    context = server.createContext("/login", oncHttpHandler);
-		    context.getFilters().add(new ParameterFilter());
-		    
-		    server.setExecutor(null); // creates a default executor
-		    server.start();
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
-		
-	}
-/*
+
     public static void main(String args[])
 	{    	
 		 SwingUtilities.invokeLater(new Runnable() {
@@ -225,15 +195,16 @@ public class ONCServer
 				try
 				{
 					new ONCServer();
+					new ONCWebServer();
 				} 
 				catch (IOException e)
 				{
-						e.printStackTrace();
+					e.printStackTrace();
 				}
 				
 		}});	 
 	}
-*/    
+   
     private class MenuBarListener implements ActionListener
     {
 		@Override
