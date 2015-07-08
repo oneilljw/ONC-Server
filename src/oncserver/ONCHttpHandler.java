@@ -16,7 +16,10 @@ public class ONCHttpHandler implements HttpHandler
     {
 //    	@SuppressWarnings("unchecked")
 //		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
-    	System.out.println(t.getRequestURI().toASCIIString());
+		
+		ServerUI serverUI = ServerUI.getInstance();
+		serverUI.addLogMessage("Web request, context =  " + t.getRequestURI().toASCIIString());
+//    	System.out.println(t.getRequestURI().toASCIIString());
     	
     	if(t.getRequestURI().toString().contains("login"))
     	{
