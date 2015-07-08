@@ -22,17 +22,7 @@ public class ONCHttpHandler implements HttpHandler
 //    	System.out.println(t.getRequestURI().toASCIIString());
     	
     	if(t.getRequestURI().toString().contains("login"))
-    	{
-/*    		
-    		String response = "<html>"
-	      		+"<body>"
-    			+"<style>"
-	      		+"IMG.displayed {display: block; margin-left: auto; margin-right: auto }"
-    			+"</style>"
-	      		+"<img src= \"oncsplash.gif\" alt=\"HTML5 Icon\" class= \"displayed\">"
-	      		+"</body>"
-	      		+ "</html>";
-*/	      		
+    	{	
     		String response = "<!DOCTYPE html><html>"
     		+"<body>"
     		+"<style>"
