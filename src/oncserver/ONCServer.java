@@ -6,12 +6,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+
+import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpServer;
 
 import ourneighborschild.OSXAdapter;
 
@@ -27,7 +31,6 @@ public class ONCServer
 	private static final String ONC_COPYRIGHT = "\u00A92015 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
-	private HTTPServer webServer;	//the web server
 	private ClientManager clientMgr; //Manages all connected clients
 	
 	private boolean bServerRunning;
@@ -153,9 +156,6 @@ public class ONCServer
 		serverUI.btnStopServer.setVisible(true);
 		
 		bServerRunning = true;
-		
-		//start the web server
-		webServer = new HTTPServer();
     }
     
     void stopServer()
@@ -189,20 +189,43 @@ public class ONCServer
     			stopServer();
     	}	
     }
-
-    public static void main(String args[])
-	{
-		 SwingUtilities.invokeLater(new Runnable() {
-			 public void run() {
-					try {
-						new ONCServer();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}		
-		}});
-	}
     
+    public static void main(String[] args) throws Exception
+	{
+		HttpServer server = HttpServer.create(new InetSocketAddress(8902), 0);
+		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
+		
+		HttpContext context = server.createContext("/test", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+	    context = server.createContext("/oncsplash", oncHttpHandler);
+	    context.getFilters().add(new ParameterFilter());
+	    
+	    context = server.createContext("/login", oncHttpHandler);
+	    context.getFilters().add(new ParameterFilter());
+	    
+	    server.setExecutor(null); // creates a default executor
+	    server.start();
+	}
+/*
+    public static void main(String args[])
+	{    	
+		 SwingUtilities.invokeLater(new Runnable() {
+			 public void run()
+			 {
+				 
+				try
+				{
+					new ONCServer();
+				} 
+				catch (IOException e)
+				{
+						e.printStackTrace();
+				}
+				
+		}});	 
+	}
+*/    
     private class MenuBarListener implements ActionListener
     {
 		@Override
