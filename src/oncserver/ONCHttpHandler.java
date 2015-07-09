@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import ourneighborschild.Agent;
 import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCServerUser;
@@ -165,8 +166,10 @@ public class ONCHttpHandler implements HttpHandler
 	
 	String getFamilyTable(int year)
 	{
+		AgentDB agentDB = null;
 		FamilyDB famDB = null;
 		try {
+			agentDB = AgentDB.getInstance();
 			famDB = FamilyDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -200,18 +203,23 @@ public class ONCHttpHandler implements HttpHandler
 		    +"<th style=\"background-color: #99CCFF\">Gift Status</th>"
 		    +"<th style=\"background-color: #99CCFF\">Delivery Status</th>"
 		    +"<th style=\"background-color: #99CCFF\">Meal Status</th>"
+		    +"<th style=\"background-color: #99CCFF\">Referred By</th>"
 		  +"</tr>";
 		  
 		StringBuffer buff = new StringBuffer();
 		for(int i=0; i<15; i++)
-			buff.append(getTableRow(famList.get(i)));
+		{
+			int agentID = famList.get(i).getAgentID();
+			Agent agent = agentDB.getAgent(year, agentID);
+			buff.append(getTableRow(famList.get(i), agent));
+		}
 		
 		String tableBottom =  "</table>";
 		
 		return tableTop + buff.toString() + tableBottom;
 	}
 	
-	String getTableRow(ONCFamily fam)
+	String getTableRow(ONCFamily fam, Agent agent)
 	{
 		String row = "<tr>"
 				+"<td>"+ fam.getONCNum()  +"</td>"
@@ -221,6 +229,7 @@ public class ONCHttpHandler implements HttpHandler
 			    +"<td>"+ famstatus[fam.getFamilyStatus()]  +"</td>"
 			    +"<td>"+ delstatus[fam.getDeliveryStatus()]  +"</td>"
 			    +"<td>"+ fam.getMealStatus().toString()  +"</td>"
+			    +"<td>"+ agent.getAgentName() +"</td>"
 			    +"</tr>";
 		
 		return row;

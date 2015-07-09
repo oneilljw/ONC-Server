@@ -153,6 +153,21 @@ public class AgentDB extends ONCServerDB
 		else
 			return "DELETE_AGENT_FAILED" + json;
 	}
+	
+	Agent getAgent(int year, int agentID)
+	{
+		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
+		List<Agent> objAL = agentDBYear.getList();
+		int index = 0;
+		while(index < objAL.size() && objAL.get(index).getID() != agentID)
+			index++;
+		
+		//wish must be present in catalog to be deleted
+		if(index < objAL.size())
+			return objAL.get(index);
+		else
+			return null;
+	}
 /*	
 	void exportFamilyDBToCSV(ArrayList<Agent>eAL, String path)
     {	
