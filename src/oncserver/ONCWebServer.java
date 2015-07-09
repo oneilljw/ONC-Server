@@ -21,7 +21,13 @@ public class ONCWebServer
 		context = server.createContext("/oncsplash", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		    
+		context = server.createContext("/", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
 		context = server.createContext("/login", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/logout", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		    
 		server.setExecutor(null); // creates a default executor
