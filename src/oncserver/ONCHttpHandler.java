@@ -3,12 +3,15 @@ package oncserver;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import ourneighborschild.ONCEncryptor;
+import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserDB;
@@ -20,6 +23,9 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class ONCHttpHandler implements HttpHandler
 {
+	private String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
+	private String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
+	
 	public void handle(HttpExchange t) throws IOException 
     {
     	@SuppressWarnings("unchecked")
@@ -64,7 +70,7 @@ public class ONCHttpHandler implements HttpHandler
     		String response = "<!DOCTYPE html><html>"
     		+"<body>"
     		+"<p><b><i>Welcome to Our Neighbors Child</i></b></p>"
-    		+html
+    		+ html
     		+"</body>"
     		+"</html>";
 
@@ -96,27 +102,17 @@ public class ONCHttpHandler implements HttpHandler
   	      	os.write(bytearray,0,bytearray.length);
   	      	os.close();
     	}
-    	else if(t.getRequestURI().toString().contains("/test"))
+    	else if(t.getRequestURI().toString().contains("/familystatus"))
     	{
-    		 String response = "<html>"
-    		      		+"<body style=background-image:url('http://www.ourneighborschild.org/uploads/7/7/7/5/7775392/9738099.jpg?163')>"
-    		      		+"<form><input type=\"button\" id=\"btn01\" value=\"OK\"></form>"
-    		      		+"<p>Click the \"Disable\" button to disable the \"OK\" button:</p>"
-    		      		+"<button onclick=\"disableElement()\">Disable</button>"
-    		      		+"<script>"
-    		      		+"function disableElement() {"
-    		      		+"document.getElementById(\"btn01\").disabled = true;}"
-    		      		+"</script>"
-    		      		+"</body>"
-    		      		+ "</html>";
-    		  t.sendResponseHeaders(200, response.length());
-    		  OutputStream os = t.getResponseBody();
-    		  os.write(response.getBytes());
-    		  os.close();
+    		 String response = getFamilyTable(2014);
+    		 t.sendResponseHeaders(200, response.length());
+    		 OutputStream os = t.getResponseBody();
+    		 os.write(response.getBytes());
+    		 os.close();
     	}
     }
 	
-	String loginRequest(String method, Map params)
+	String loginRequest(String method, Map<String, Object> params)
 	{
 		ServerUserDB userDB = null;
 		try {
@@ -155,6 +151,7 @@ public class ONCHttpHandler implements HttpHandler
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
 	    		value = "<p>You sucessfully logged in!!</p>"
+	    				+ getFamilyTable(2014)
 	    				+"<form action=\"logout\" method=\"get\">"
 	    				+"<input type=\"submit\" value=\"Log Out\">"
 	    				+"</form>";
@@ -162,5 +159,68 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return value;
+	}
+	
+	String getFamilyTable(int year)
+	{
+		FamilyDB famDB = null;
+		try {
+			famDB = FamilyDB.getInstance();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		List<ONCFamily> famList = famDB.getList(year);
+		
+		String tableTop = "<!DOCTYPE html><html>"
+		+"<head>"
+		+"<style>"
+		+"table, th, td {"
+		    +"border: 1px solid black;"
+		    +"border-collapse: collapse;"
+		+"}"
+		+"th, td {"
+		    +"padding: 5px;"
+		+"}"
+		+"</style>"
+		+"</head>"
+		+"<body>"
+		+"<table style=\"width:80%\">"
+		  +"<tr>"
+		  	+"<th>ONC #</th>"
+		    +"<th>First Name</th>"
+		    +"<th>Last Name</th>" 
+		    +"<th>DNS Code</th>" 
+		    +"<th>Gift Status</th>"
+		    +"<th>Delivery Status</th>"
+		    +"<th>Meal Status</th>"
+		  +"</tr>";
+		  
+		StringBuffer buff = new StringBuffer();
+		for(int i=0; i<15; i++)
+			buff.append(getTableRow(famList.get(i)));
+		
+		String tableBottom =  "</table>";
+		
+		return tableTop + buff.toString() + tableBottom;
+	}
+	
+	String getTableRow(ONCFamily fam)
+	{
+		String row = "<tr>"
+				+"<td>"+ fam.getONCNum()  +"</td>"
+			    +"<td>"+ fam.getHOHFirstName()  +"</td>"
+			    +"<td>"+ fam.getHOHLastName()  +"</td>"
+			    +"<td>"+ fam.getDNSCode()  +"</td>"
+			    +"<td>"+ famstatus[fam.getFamilyStatus()]  +"</td>"
+			    +"<td>"+ delstatus[fam.getDeliveryStatus()]  +"</td>"
+			    +"<td>"+ fam.getMealStatus().toString()  +"</td>"
+			    +"</tr>";
+		
+		return row;
 	}
 }

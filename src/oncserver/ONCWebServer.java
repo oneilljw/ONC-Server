@@ -15,7 +15,7 @@ public class ONCWebServer
 		HttpServer server = HttpServer.create(new InetSocketAddress(8902), 0);
 		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
 			
-		HttpContext context = server.createContext("/test", oncHttpHandler);
+		HttpContext context = server.createContext("/familystatus", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 			
 		context = server.createContext("/oncsplash", oncHttpHandler);
