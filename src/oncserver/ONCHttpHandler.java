@@ -1,5 +1,6 @@
 package oncserver;
 
+import java.awt.Color;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -151,6 +152,7 @@ public class ONCHttpHandler implements HttpHandler
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
 	    		value = "<p>You sucessfully logged in!!</p>"
+	    				+"<p><b><i>2014 Family Table</i></b></p>"
 	    				+ getFamilyTable(2014)
 	    				+"<form action=\"logout\" method=\"get\">"
 	    				+"<input type=\"submit\" value=\"Log Out\">"
@@ -191,13 +193,13 @@ public class ONCHttpHandler implements HttpHandler
 		+"<body>"
 		+"<table style=\"width:80%\">"
 		  +"<tr>"
-		  	+"<th>ONC #</th>"
-		    +"<th>First Name</th>"
-		    +"<th>Last Name</th>" 
-		    +"<th>DNS Code</th>" 
-		    +"<th>Gift Status</th>"
-		    +"<th>Delivery Status</th>"
-		    +"<th>Meal Status</th>"
+		  	+"<th style=\"background-color: #99CCFF\">ONC #</th>"
+		    +"<th style=\"background-color: #99CCFF\">First Name</th>"
+		    +"<th style=\"background-color: #99CCFF\">Last Name</th>" 
+		    +"<th style=\"background-color: #99CCFF\">DNS Code</th>" 
+		    +"<th style=\"background-color: #99CCFF\">Gift Status</th>"
+		    +"<th style=\"background-color: #99CCFF\">Delivery Status</th>"
+		    +"<th style=\"background-color: #99CCFF\">Meal Status</th>"
 		  +"</tr>";
 		  
 		StringBuffer buff = new StringBuffer();
