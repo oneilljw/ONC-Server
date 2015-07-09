@@ -133,8 +133,6 @@ public class ONCHttpHandler implements HttpHandler
 		
 		if(method.equals("POST"))
 		{
-			System.out.println(String.format("username: %s, password: %s",params.get("field1"), params.get("field2")));
-			
 			String userID = (String) params.get("field1");
 	    	String password = (String) params.get("field2");
 	    	
