@@ -59,10 +59,85 @@ public class ONCHttpHandler implements HttpHandler
     		+"</form>"
     		+"</body>"
     		+"</html>";
+    		
+    		String altResponse = "<!DOCTYPE html>"
+    		+"<html lang=\"en\">"
+    		+"<head>"
+    		    +"<meta charset=\"UTF-8\">"
+    		    +"<title></title>"
+    		    +"<style>"
+    		        +"body {"
+    		            +"height: 0;"
+    		            +"padding: 0;"
+    		            +"padding-bottom: 75%;"
+    		            +"background-image: url(oncsplash.gif);"
+    		            +"background-position: center center;"
+    		            +"background-size: 100%;"
+    		            +"background-repeat: no-repeat;"
+    		        +"}"
 
-    		t.sendResponseHeaders(200, response.length());
+    		        +"label"
+    		        +"{"
+    		            +"width: 5em;"
+    		            +"float: left;"
+    		            +"text-align: right;"
+    		            +"margin-right: 0.5em;"
+    		            +"display: block;"
+    		            +"color: black;"
+    		        +"}"
+    		        +".submit input"
+    		        +"{"
+    		            +"margin-left: 11em;"
+    		        +"}"
+    		        +"input"
+    		        +"{"
+    		            +"color: black;"
+    		            +"background: #FFFFE4;"
+    		            +"border: 1px solid #781351"
+    		        +"}"
+    		        +".submit input"
+    		        +"{"
+    		            +"color: #000;"
+    		            +"background: #ffa20f;"
+    		            +"border: 2px outset #d7b9c9"
+//    		            +"margin-left: 9em;"
+    		        +"}"
+    		        +"fieldset"
+    		        +"{"
+    		            +"position: absolute;"
+    		            +"top:58%;"
+    		            +"left:31%;"
+    		            +"border: 4px solid #781351;"
+    		            +"color: #00F;"
+    		            +"background: #F2F2FA;"
+    		            +"width: 25em"
+    		        +"}"
+    		        +"legend"
+    		        +"{"
+    		            +"color: black;"
+    		            +"background: #ffa20c;"
+    		            +"border: 1px solid #781351;"
+    		            +"padding: 2px 6px"
+    		        +"}"
+    		    +"</style>"
+    		+"</head>"
+    		+"<body>"
+    		    +"<div class = \"login\">"
+    		        +"<form action=\"login\" method=\"post\">"
+    		            +"<fieldset>"
+    		                +"<legend>User Login</legend>"
+    		                +"<p><label for=\"username\">User Name:</label> <input type=\"text\" id=\"username\" name=\"field1\" autofocus/></p>"
+    		                +"<p><label for=\"password\">Password:</label> <input type=\"password\" id=\"password\" name=\"field2\"/><br /></p>"
+    		                +"<p class=\"submit\"><input type=\"submit\" value=\"Login\" /></p>"
+    		            +"</fieldset>"
+    		        +"</form>"
+    		    +"</div>"
+    		+"</body>"
+    		+"</html>";
+
+    		t.sendResponseHeaders(200, altResponse.length());
     		OutputStream os = t.getResponseBody();
-    		os.write(response.getBytes());
+    		os.write(altResponse.getBytes());
     		os.close();
     	}
     	else if(t.getRequestURI().toString().contains("/login"))
@@ -129,6 +204,8 @@ public class ONCHttpHandler implements HttpHandler
 		
 		String value = "Invalid Request Method";
 		
+//		System.out.println(String.format("username= %s,  pw= %s", params.get("field1"), params.get("field2")));
+		
 		if(method.equals("POST"))
 		{
 			String userID = (String) params.get("field1");
@@ -155,6 +232,7 @@ public class ONCHttpHandler implements HttpHandler
 	    		value = "<p>You sucessfully logged in!!</p>"
 	    				+"<p><b><i>2014 Family Table</i></b></p>"
 	    				+ getFamilyTable(2014)
+	    				+"<br>"
 	    				+"<form action=\"logout\" method=\"get\">"
 	    				+"<input type=\"submit\" value=\"Log Out\">"
 	    				+"</form>";
