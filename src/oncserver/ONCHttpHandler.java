@@ -1,6 +1,5 @@
 package oncserver;
 
-import java.awt.Color;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -261,7 +260,7 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		List<ONCFamily> famList = famDB.getList(year);
-		
+/*		
 		String tableTop = "<!DOCTYPE html><html>"
 		+"<head>"
 		+"<style>"
@@ -305,8 +304,18 @@ public class ONCHttpHandler implements HttpHandler
 		    +"<th>Meal Status</th>"
 		    +"<th>Referred By</th>"
 		  +"</tr>";
-		  
+*/		
+		//add the top of the table
 		StringBuffer buff = new StringBuffer();
+		String path = String.format("%s/famTableTop.txt", System.getProperty("user.dir"));
+		try {
+			buff.append(readFile(path));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//add the inital rows from the family list
 		for(int i=0; i<15; i++)
 		{
 			int agentID = famList.get(i).getAgentID();
@@ -314,9 +323,10 @@ public class ONCHttpHandler implements HttpHandler
 			buff.append(getTableRow(famList.get(i), agent));
 		}
 		
-		String tableBottom =  "</table>";
+		//add the table end
+		buff.append("</table>");
 		
-		return tableTop + buff.toString() + tableBottom;
+		return buff.toString();
 	}
 	
 	String getTableRow(ONCFamily fam, Agent agent)
