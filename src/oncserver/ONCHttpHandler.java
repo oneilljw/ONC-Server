@@ -231,13 +231,7 @@ public class ONCHttpHandler implements HttpHandler
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
-	    		value = "<p>You sucessfully logged in!!</p>"
-	    				+"<p><b><i>2014 Family Table</i></b></p>"
-	    				+ getFamilyTable(2014)
-	    				+"<br>"
-	    				+"<form action=\"logout\" method=\"get\">"
-	    				+"<input type=\"submit\" value=\"Log Out\">"
-	    				+"</form>";
+	    		value = getFamilyTable(2014) + getLogoutHTML();
 	    	}   	
 		}
 		
@@ -259,53 +253,10 @@ public class ONCHttpHandler implements HttpHandler
 			e.printStackTrace();
 		}
 		
+		//get the list of families for the table
 		List<ONCFamily> famList = famDB.getList(year);
-/*		
-		String tableTop = "<!DOCTYPE html><html>"
-		+"<head>"
-		+"<style>"
-		+"table {"
-			+"width: 80%;"
-			+"border-width: 1px;"
-			+"border-spacing: 2px;"
-			+"border-style: outset;"
-			+"border-color: gray;"
-			+"border-collapse: separate;"
-			+"background-color: white;"
-	    +"}"
-	    +"th {"
-			+"border-width: 1px;"
-			+"padding: 1px;"
-			+"border-style: inset;"
-			+"border-color: gray;"
-			+"background-color: #99CCFF;"
-			+"-moz-border-radius: ;"
-		+"}"
-		+"td {"
-			+"border-width: 1px;"
-			+"padding: 1px;"
-			+"border-style: inset;"
-			+"border-color: gray;"
-			+"background-color: white;"
-			+"-moz-border-radius: ;"
-		+"}"
-		+"</style>"
-		+"</head>"
-		+"<body>"
-//		+"<table style=\"width:80%\">"
-		+"<table>"
-		  +"<tr>"
-		  	+"<th>ONC #</th>"
-		    +"<th>First Name</th>"
-		    +"<th>Last Name</th>" 
-		    +"<th>DNS Code</th>" 
-		    +"<th>Gift Status</th>"
-		    +"<th>Delivery Status</th>"
-		    +"<th>Meal Status</th>"
-		    +"<th>Referred By</th>"
-		  +"</tr>";
-*/		
-		//add the top of the table
+
+		//add the top of the table by reading external html/css file
 		StringBuffer buff = new StringBuffer();
 		String path = String.format("%s/famTableTop.txt", System.getProperty("user.dir"));
 		try {
@@ -315,7 +266,7 @@ public class ONCHttpHandler implements HttpHandler
 			e.printStackTrace();
 		}
 		
-		//add the inital rows from the family list
+		//add the initial rows from the family list to the table
 		for(int i=0; i<15; i++)
 		{
 			int agentID = famList.get(i).getAgentID();
@@ -343,6 +294,16 @@ public class ONCHttpHandler implements HttpHandler
 			    +"</tr>";
 		
 		return row;
+	}
+	
+	private String getLogoutHTML()
+	{
+		return   " <br>"
+				+" <form action=\"logout\" method=\"get\">"
+				+" <input type=\"submit\" value=\"Log Out\">"
+				+" </form>"
+				+ "</body>"
+				+ "</html>";
 	}
 	
 	private String readFile( String file ) throws IOException
