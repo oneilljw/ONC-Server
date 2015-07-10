@@ -2,9 +2,11 @@ package oncserver;
 
 import java.awt.Color;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
@@ -39,7 +41,8 @@ public class ONCHttpHandler implements HttpHandler
 //    	System.out.println(t.getRequestURI().toASCIIString());
     	
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
-    	{	
+    	{
+/*
     		String response = "<!DOCTYPE html><html>"
     		+"<body>"
     		+"<style>"
@@ -59,14 +62,15 @@ public class ONCHttpHandler implements HttpHandler
     		+"</form>"
     		+"</body>"
     		+"</html>";
-    		
+*/    		
     		String altResponse = "<!DOCTYPE html>"
     		+"<html lang=\"en\">"
     		+"<head>"
     		    +"<meta charset=\"UTF-8\">"
     		    +"<title></title>"
     		    +"<style>"
-    		        +"body {"
+    		        +"body"
+    		        +"{"
     		            +"height: 0;"
     		            +"padding: 0;"
     		            +"padding-bottom: 75%;"
@@ -75,7 +79,6 @@ public class ONCHttpHandler implements HttpHandler
     		            +"background-size: 100%;"
     		            +"background-repeat: no-repeat;"
     		        +"}"
-
     		        +"label"
     		        +"{"
     		            +"width: 5em;"
@@ -262,26 +265,45 @@ public class ONCHttpHandler implements HttpHandler
 		String tableTop = "<!DOCTYPE html><html>"
 		+"<head>"
 		+"<style>"
-		+"table, th, td {"
-		    +"border: 1px solid black;"
-		    +"border-collapse: collapse;"
+		+"table {"
+			+"width: 80%;"
+			+"border-width: 1px;"
+			+"border-spacing: 2px;"
+			+"border-style: outset;"
+			+"border-color: gray;"
+			+"border-collapse: separate;"
+			+"background-color: white;"
+	    +"}"
+	    +"th {"
+			+"border-width: 1px;"
+			+"padding: 1px;"
+			+"border-style: inset;"
+			+"border-color: gray;"
+			+"background-color: #99CCFF;"
+			+"-moz-border-radius: ;"
 		+"}"
-		+"th, td {"
-		    +"padding: 5px;"
+		+"td {"
+			+"border-width: 1px;"
+			+"padding: 1px;"
+			+"border-style: inset;"
+			+"border-color: gray;"
+			+"background-color: white;"
+			+"-moz-border-radius: ;"
 		+"}"
 		+"</style>"
 		+"</head>"
 		+"<body>"
-		+"<table style=\"width:80%\">"
+//		+"<table style=\"width:80%\">"
+		+"<table>"
 		  +"<tr>"
-		  	+"<th style=\"background-color: #99CCFF\">ONC #</th>"
-		    +"<th style=\"background-color: #99CCFF\">First Name</th>"
-		    +"<th style=\"background-color: #99CCFF\">Last Name</th>" 
-		    +"<th style=\"background-color: #99CCFF\">DNS Code</th>" 
-		    +"<th style=\"background-color: #99CCFF\">Gift Status</th>"
-		    +"<th style=\"background-color: #99CCFF\">Delivery Status</th>"
-		    +"<th style=\"background-color: #99CCFF\">Meal Status</th>"
-		    +"<th style=\"background-color: #99CCFF\">Referred By</th>"
+		  	+"<th>ONC #</th>"
+		    +"<th>First Name</th>"
+		    +"<th>Last Name</th>" 
+		    +"<th>DNS Code</th>" 
+		    +"<th>Gift Status</th>"
+		    +"<th>Delivery Status</th>"
+		    +"<th>Meal Status</th>"
+		    +"<th>Referred By</th>"
 		  +"</tr>";
 		  
 		StringBuffer buff = new StringBuffer();
@@ -311,5 +333,23 @@ public class ONCHttpHandler implements HttpHandler
 			    +"</tr>";
 		
 		return row;
+	}
+	
+	private String readFile( String file ) throws IOException
+	{
+	    BufferedReader reader = new BufferedReader( new FileReader (file));
+	    String         line = null;
+	    StringBuilder  stringBuilder = new StringBuilder();
+	    String         ls = System.getProperty("line.separator");
+
+	    while( ( line = reader.readLine() ) != null )
+	    {
+	        stringBuilder.append( line );
+	        stringBuilder.append( ls );
+	    }
+	    
+	    reader.close();
+
+	    return stringBuilder.toString();
 	}
 }
