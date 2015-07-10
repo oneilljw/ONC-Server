@@ -26,8 +26,10 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class ONCHttpHandler implements HttpHandler
 {
-	private String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
-	private String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
+	private static final String FAMILY_TABLE_HTML_FILE = "famTableTop.htm";
+	
+	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
+	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
 	
 	public void handle(HttpExchange t) throws IOException 
     {
@@ -258,9 +260,9 @@ public class ONCHttpHandler implements HttpHandler
 
 		//add the top of the table by reading external html/css file
 		StringBuffer buff = new StringBuffer();
-		String path = String.format("%s/famTableTop.txt", System.getProperty("user.dir"));
+		
 		try {
-			buff.append(readFile(path));
+			buff.append(readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE)));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
