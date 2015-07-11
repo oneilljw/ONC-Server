@@ -26,7 +26,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class ONCHttpHandler implements HttpHandler
 {
-	private static final String FAMILY_TABLE_HTML_FILE = "famTableTop.htm";
+	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
 	
 	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
 	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
@@ -269,15 +269,15 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		//add the initial rows from the family list to the table
-		for(int i=0; i<15; i++)
+		for(ONCFamily fam : famList)
 		{
-			int agentID = famList.get(i).getAgentID();
+			int agentID = fam.getAgentID();
 			Agent agent = agentDB.getAgent(year, agentID);
-			buff.append(getTableRow(famList.get(i), agent));
+			buff.append(getTableRow(fam, agent));
 		}
 		
 		//add the table end
-		buff.append("</table>");
+		buff.append("</tbody></table></div></div>");
 		
 		return buff.toString();
 	}
