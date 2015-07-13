@@ -321,10 +321,11 @@ public class ONCHttpHandler implements HttpHandler
 	
 	private String getLogoutHTML()
 	{
-		return  " <br>"
+		return  "<br>"
 				+" <form action=\"logout\" method=\"get\">"
 				+" <input type=\"submit\" value=\"Log Out\">"
 				+" </form>"
+				+"</p>"
 				+ "</body>"
 				+ "</html>";
 	}
