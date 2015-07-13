@@ -13,7 +13,6 @@ import java.util.Map;
 
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.Filter.Chain;
 
 public class ParameterFilter extends Filter
 {

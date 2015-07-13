@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class ONCHttpHandler implements HttpHandler
 {
-	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
+	private static final String FAMILY_TABLE_HTML_FILE = "NewFamTable.htm";
 	
 	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
 	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
@@ -50,7 +51,9 @@ public class ONCHttpHandler implements HttpHandler
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
 		
 		ServerUI serverUI = ServerUI.getInstance();
-		String req = String.format("HTTP request %s: %s", t.getRequestMethod() , t.getRequestURI().toASCIIString());
+		URI reqURI = t.getRequestURI();
+		String req = String.format("HTTP request %s: %s, %s",
+				t.getRequestMethod() , reqURI.toASCIIString(),reqURI.getRawQuery());
 		serverUI.addLogMessage(req);
 //    	System.out.println(t.getRequestURI().toASCIIString());
     	
@@ -274,25 +277,27 @@ public class ONCHttpHandler implements HttpHandler
 		//add the top of the table by reading external html/css file
 		StringBuffer buff = new StringBuffer();
 		
-		buff.append(famTableHTML);
-/*		
+//		buff.append(famTableHTML);
+		
 		try {	
 			buff.append(readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE)));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-*/		
+		
 		//add the initial rows from the family list to the table
 		for(ONCFamily fam : famList)
 		{
 			int agentID = fam.getAgentID();
 			Agent agent = agentDB.getAgent(year, agentID);
-			buff.append(getTableRow(fam, agent));
+			if(agent.getAgentName().contains("Dawn"))
+				buff.append(getTableRow(fam, agent));
 		}
 		
 		//add the table end
 		buff.append("</tbody></table></div>");
+		buff.append("</tbody></table>");
 		
 		return buff.toString();
 	}
