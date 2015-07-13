@@ -27,7 +27,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class ONCHttpHandler implements HttpHandler
 {
-	private static final String FAMILY_TABLE_HTML_FILE = "NewFamTable.htm";
+	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
 	
 	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
 	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
@@ -277,22 +277,23 @@ public class ONCHttpHandler implements HttpHandler
 		//add the top of the table by reading external html/css file
 		StringBuffer buff = new StringBuffer();
 		
-//		buff.append(famTableHTML);
+		buff.append(famTableHTML);
 		
-		try {	
-			buff.append(readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE)));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {	
+//			buff.append(readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE)));
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 		//add the initial rows from the family list to the table
-		for(ONCFamily fam : famList)
+		for(int famID=0; famID < famList.size(); famID++)
 		{
+			ONCFamily fam = famList.get(famID);
+			
 			int agentID = fam.getAgentID();
 			Agent agent = agentDB.getAgent(year, agentID);
-			if(agent.getAgentName().contains("Dawn"))
-				buff.append(getTableRow(fam, agent));
+			buff.append(getTableRow(fam, agent));
 		}
 		
 		//add the table end
