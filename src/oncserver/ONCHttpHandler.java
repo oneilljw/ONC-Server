@@ -292,7 +292,7 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		//add the table end
-		buff.append("</tbody></table></div></div>");
+		buff.append("</tbody></table></div>");
 		
 		return buff.toString();
 	}
@@ -315,7 +315,7 @@ public class ONCHttpHandler implements HttpHandler
 	
 	private String getLogoutHTML()
 	{
-		return   " <br>"
+		return  " <br>"
 				+" <form action=\"logout\" method=\"get\">"
 				+" <input type=\"submit\" value=\"Log Out\">"
 				+" </form>"
