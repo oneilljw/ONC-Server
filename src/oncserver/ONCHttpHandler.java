@@ -31,6 +31,19 @@ public class ONCHttpHandler implements HttpHandler
 	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
 	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
 	
+	String famTableHTML;
+	
+	ONCHttpHandler()
+	{
+		//read the family table into memory once
+		try {
+			famTableHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void handle(HttpExchange t) throws IOException 
     {
     	@SuppressWarnings("unchecked")
@@ -261,13 +274,15 @@ public class ONCHttpHandler implements HttpHandler
 		//add the top of the table by reading external html/css file
 		StringBuffer buff = new StringBuffer();
 		
-		try {
+		buff.append(famTableHTML);
+/*		
+		try {	
 			buff.append(readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE)));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+*/		
 		//add the initial rows from the family list to the table
 		for(ONCFamily fam : famList)
 		{
@@ -310,6 +325,8 @@ public class ONCHttpHandler implements HttpHandler
 	
 	private String readFile( String file ) throws IOException
 	{
+		ServerUI sUI = ServerUI.getInstance();
+		
 	    BufferedReader reader = new BufferedReader( new FileReader (file));
 	    String         line = null;
 	    StringBuilder  stringBuilder = new StringBuilder();
@@ -322,7 +339,8 @@ public class ONCHttpHandler implements HttpHandler
 	    }
 	    
 	    reader.close();
-
+	    
+	    sUI.addLogMessage(String.format("Read %s, length = %d", file, stringBuilder.toString().length()));
 	    return stringBuilder.toString();
 	}
 }
