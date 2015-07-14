@@ -28,6 +28,7 @@ import com.sun.net.httpserver.HttpHandler;
 public class ONCHttpHandler implements HttpHandler
 {
 	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
+	private static final String LOGOUT_HTML_FILE = "logout.htm";
 	
 	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
 	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
@@ -59,27 +60,15 @@ public class ONCHttpHandler implements HttpHandler
     	
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
     	{
+    		
+    		String altResponse = null;
+    		try {	
+    			altResponse = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
 /*
-    		String response = "<!DOCTYPE html><html>"
-    		+"<body>"
-    		+"<style>"
-      		+"IMG.displayed {display: block; margin-left: auto; margin-right: auto }"
-			+"</style>"
-      		+"<img src= \"oncsplash.gif\" alt=\"HTML5 Icon\" class= \"displayed\">"
-    		+"<p><b><i>Welcome to Our Neighbors Child</i></b></p>"
-    		+"<p>Please Login</p>"
-    		+"<form action=\"login\" method=\"post\">"
-    		+"User Name: "
-    		+"<input type=\"text\" name=\"field1\">"
-    		+"<br>"
-    		+"Password:   "
-    		+"<input type=\"password\" name=\"field2\">"
-    		+"<br><br>"
-    		+"<input type=\"submit\" value=\"Login\">"
-    		+"</form>"
-    		+"</body>"
-    		+"</html>";
-*/    		
     		String altResponse = "<!DOCTYPE html>"
     		+"<html lang=\"en\">"
     		+"<head>"
@@ -154,7 +143,7 @@ public class ONCHttpHandler implements HttpHandler
     		    +"</div>"
     		+"</body>"
     		+"</html>";
-
+*/
     		t.sendResponseHeaders(200, altResponse.length());
     		OutputStream os = t.getResponseBody();
     		os.write(altResponse.getBytes());

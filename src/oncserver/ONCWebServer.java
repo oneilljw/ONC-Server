@@ -17,6 +17,9 @@ public class ONCWebServer
 			
 		HttpContext context = server.createContext("/familystatus", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/jstest", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
 			
 		context = server.createContext("/oncsplash", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
