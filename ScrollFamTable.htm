@@ -2,7 +2,44 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <title>ONC Family Table</title>
+    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script>
+    var urlYears = "http://localhost:8902/dbStatus?callback=?";
+    var urlAgents = "http://localhost:8902/agents?callback=?";	
+    $( document ).ready(function() {
+    	//get the list of years from the data base and put it in the year combo box
+    	$.getJSON(urlYears, function(data) {
+			var combo = document.getElementById("dbYears");
+    		for (var i = data.length-1; i >= 0; i--)
+    		{
+    			var option = document.createElement("option");
+    			option.text = data[i].id;
+    	    	option.value = data[i].id;
+    	    	try {
+    	        	combo.add(option, null); //Standard 
+    	    	} catch(error) {
+    	        	combo.add(option); // IE only
+    	    	}  
+    		}
+    	});
+    	//get the list of agents from the database and put it in the agent combobox
+    	$.getJSON(urlAgents, function(data) {
+			var agtCombo = document.getElementById("agents");
+    		for (var i = data.length-1; i >= 0; i--)
+    		{
+    			var agtOption = document.createElement("option");
+    			agtOption.text = data[i].name;
+    	    	agtOption.value = data[i].id;
+    	    	try {
+    	        	agtCombo.add(agtOption, null); //Standard 
+    	    	} catch(error) {
+    	        	agtCombo.add(agtOption); // IE only
+    	    	}  
+    		}
+    	});
+    });
+    </script>
     <style type="text/css">
         .scrolltable {
             overflow-x: scroll;
@@ -72,20 +109,11 @@
 <body>
 	<p>
 		Family Table For: 
-		<select>
-			<option value= "2014">2014</option>
-			<option value= "2013">2013</option>
-			<option value= "2012">2012</option>
+		<select id="dbYears" >
 		</select>
 		Referred By:
-		<select>
+		<select id="agents">
 			<option value= "-1">Anyone</option>
-			<option value= "1">Maria Barazza</option>
-			<option value= "2">Anne Flannagan</option>
-			<option value= "3">Carla Johnson</option>
-			<option value= "4">Angie Huber</option>
-			<option value= "5">Deanna Velasco</option>
-			<option value= "6">Dawn Sykes</option>
 		</select>
 		
 	</p>

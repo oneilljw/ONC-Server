@@ -108,6 +108,27 @@ public class DBManager
 		return response;		
 	}
 	
+	static String getDatabaseStatusJSONP(String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfDBs = new TypeToken<ArrayList<DBYear>>(){}.getType();
+		
+//		String dbYearJson = gson.toJson(dbYearList, listOfDBs);
+//		System.out.println(dbYearJson);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return callbackFunction +"(" + gson.toJson(dbYearList, listOfDBs) +")";		
+	}
+	
+	static String getDatabaseStatusJSON()
+	{		
+		Gson gson = new Gson();
+		Type listOfDBs = new TypeToken<ArrayList<DBYear>>(){}.getType();
+			
+		String response = gson.toJson(dbYearList, listOfDBs);
+		return response;		
+	}
+	
 	String updateDBYear(int year, String json)
 	{
 		Gson gson = new Gson();

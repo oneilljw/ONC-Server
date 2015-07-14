@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ourneighborschild.Agent;
+import ourneighborschild.DBYear;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -57,6 +58,17 @@ public class AgentDB extends ONCServerDB
 			
 		String response = gson.toJson(agentDB.get(year - BASE_YEAR).getList(), listtype);
 		return response;	
+	}
+	
+	static String getAgentsJSONP(int year, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();
+			
+		String response = gson.toJson(agentDB.get(year - BASE_YEAR).getList(), listtype);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return callbackFunction +"(" + response +")";		
 	}
 	
 	String update(int year, String json)

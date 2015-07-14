@@ -29,6 +29,7 @@ public class ONCHttpHandler implements HttpHandler
 {
 	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
 	private static final String LOGOUT_HTML_FILE = "logout.htm";
+	private static final String JSTEST_HTML_FILE = "Jstest.htm";
 	
 	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
 	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
@@ -56,11 +57,9 @@ public class ONCHttpHandler implements HttpHandler
 		String req = String.format("HTTP request %s: %s, %s",
 				t.getRequestMethod() , reqURI.toASCIIString(),reqURI.getRawQuery());
 		serverUI.addLogMessage(req);
-//    	System.out.println(t.getRequestURI().toASCIIString());
     	
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
     	{
-    		
     		String altResponse = null;
     		try {	
     			altResponse = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
@@ -68,85 +67,25 @@ public class ONCHttpHandler implements HttpHandler
     			// TODO Auto-generated catch block
     			e.printStackTrace();
     		}
-/*
-    		String altResponse = "<!DOCTYPE html>"
-    		+"<html lang=\"en\">"
-    		+"<head>"
-    		    +"<meta charset=\"UTF-8\">"
-    		    +"<title></title>"
-    		    +"<style>"
-    		        +"body"
-    		        +"{"
-    		            +"height: 0;"
-    		            +"padding: 0;"
-    		            +"padding-bottom: 75%;"
-    		            +"background-image: url(oncsplash.gif);"
-    		            +"background-position: center center;"
-    		            +"background-size: 100%;"
-    		            +"background-repeat: no-repeat;"
-    		        +"}"
-    		        +"label"
-    		        +"{"
-    		            +"width: 5em;"
-    		            +"float: left;"
-    		            +"text-align: right;"
-    		            +"margin-right: 0.5em;"
-    		            +"display: block;"
-    		            +"color: black;"
-    		        +"}"
-    		        +".submit input"
-    		        +"{"
-    		            +"margin-left: 11em;"
-    		        +"}"
-    		        +"input"
-    		        +"{"
-    		            +"color: black;"
-    		            +"background: #FFFFE4;"
-    		            +"border: 1px solid #781351"
-    		        +"}"
-    		        +".submit input"
-    		        +"{"
-    		            +"color: #000;"
-    		            +"background: #ffa20f;"
-    		            +"border: 2px outset #d7b9c9"
-//    		            +"margin-left: 9em;"
-    		        +"}"
-    		        +"fieldset"
-    		        +"{"
-    		            +"position: absolute;"
-    		            +"top:58%;"
-    		            +"left:31%;"
-    		            +"border: 4px solid #781351;"
-    		            +"color: #00F;"
-    		            +"background: #F2F2FA;"
-    		            +"width: 25em"
-    		        +"}"
-    		        +"legend"
-    		        +"{"
-    		            +"color: black;"
-    		            +"background: #ffa20c;"
-    		            +"border: 1px solid #781351;"
-    		            +"padding: 2px 6px"
-    		        +"}"
-    		    +"</style>"
-    		+"</head>"
-    		+"<body>"
-    		    +"<div class = \"login\">"
-    		        +"<form action=\"login\" method=\"post\">"
-    		            +"<fieldset>"
-    		                +"<legend>User Login</legend>"
-    		                +"<p><label for=\"username\">User Name:</label> <input type=\"text\" id=\"username\" name=\"field1\" autofocus/></p>"
-    		                +"<p><label for=\"password\">Password:</label> <input type=\"password\" id=\"password\" name=\"field2\"/><br /></p>"
-    		                +"<p class=\"submit\"><input type=\"submit\" value=\"Login\" /></p>"
-    		            +"</fieldset>"
-    		        +"</form>"
-    		    +"</div>"
-    		+"</body>"
-    		+"</html>";
-*/
+
     		t.sendResponseHeaders(200, altResponse.length());
     		OutputStream os = t.getResponseBody();
     		os.write(altResponse.getBytes());
+    		os.close();
+    	}
+    	else if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/jstest"))
+    	{
+    		String response = null;
+    		try {	
+    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), JSTEST_HTML_FILE));
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+
+    		t.sendResponseHeaders(200, response.length());
+    		OutputStream os = t.getResponseBody();
+    		os.write(response.getBytes());
     		os.close();
     	}
     	else if(t.getRequestURI().toString().contains("/login"))
@@ -159,6 +98,24 @@ public class ONCHttpHandler implements HttpHandler
     		+ html
     		+"</body>"
     		+"</html>";
+
+    		t.sendResponseHeaders(200, response.length());
+    		OutputStream os = t.getResponseBody();
+    		os.write(response.getBytes());
+    		os.close();
+    	}
+    	else if(t.getRequestURI().toString().contains("/dbStatus"))
+    	{
+    		String response = DBManager.getDatabaseStatusJSONP((String) params.get("callback"));
+
+    		t.sendResponseHeaders(200, response.length());
+    		OutputStream os = t.getResponseBody();
+    		os.write(response.getBytes());
+    		os.close();
+    	}
+    	else if(t.getRequestURI().toString().contains("/agents"))
+    	{
+    		String response = AgentDB.getAgentsJSONP(2014, (String) params.get("callback"));
 
     		t.sendResponseHeaders(200, response.length());
     		OutputStream os = t.getResponseBody();
@@ -267,14 +224,7 @@ public class ONCHttpHandler implements HttpHandler
 		StringBuffer buff = new StringBuffer();
 		
 		buff.append(famTableHTML);
-		
-//		try {	
-//			buff.append(readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE)));
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
+
 		//add the initial rows from the family list to the table
 		for(int famID=0; famID < famList.size(); famID++)
 		{

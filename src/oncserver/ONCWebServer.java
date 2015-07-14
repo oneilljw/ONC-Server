@@ -20,6 +20,12 @@ public class ONCWebServer
 		
 		context = server.createContext("/jstest", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/dbStatus", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/agents", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
 			
 		context = server.createContext("/oncsplash", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());

@@ -1,25 +1,56 @@
  <!DOCTYPE html>
 <html>
     <head>
-        <title>Dynamically populating drop down, combobox, list box using JavaScript</title>
-    </head>
-    <script>
-	function addCombo() {
-    	var textb = document.getElementById("txtCombo");
-    	var combo = document.getElementById("combo");
-     
-    	var option = document.createElement("option");
-    	option.text = textb.value;
-    	option.value = textb.value;
-    	try {
-        	combo.add(option, null); //Standard 
-    	}catch(error) {
-        	combo.add(option); // IE only
+    	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <title>jstest</title> 
+    	<script>
+    	$( document ).ready(function() {
+    		$.getJSON('http://localhost:8902/dbStatus?callback=?', function(data) {
+				var out ="";
+				var combo = document.getElementById("combo");
+				
+    			for (var i = data.length-1; i >= 0; i--) {
+    				var option = document.createElement("option");
+    				option.text = data[i].id;
+    	    		option.value = data[i].id;
+    	    		try {
+    	        	combo.add(option, null); //Standard 
+    	    		}catch(error) {
+    	        		combo.add(option); // IE only
+    	    		}  
+    		    }
+    		});
+    	});
+    	function myFunction(arr)
+    	{
+        	var out = "Data here ";
+        	var i;
+        	for(i=0; i<arr.length; i++)
+        	{
+            	out += arr[i].display +"<br>";
+        	}
+        	document.getElementById("id01").innerHTML = out;
     	}
-    	textb.value = "";
-	}
-    </script>
-    <body>
+		function addCombo()
+		{			
+    		var textb = document.getElementById("txtCombo");
+    		var combo = document.getElementById("combo");
+    		var option = document.createElement("option");
+     
+    		var option = document.createElement("option");
+    		option.text = textb.value;
+    		option.value = textb.value;
+    		try {
+        	combo.add(option, null); //Standard 
+    		}catch(error) {
+        		combo.add(option); // IE only
+    		}
+    		textb.value = "";
+		}
+    	</script>
+    </head>
+    <body>  
+    	<div id="id01"></div>
         <fieldset>
             <legend>Combo box</legend>
             Add to Combo: <input type="text" name="txtCombo" id="txtCombo"/>
@@ -27,5 +58,5 @@
             <br/>
             Combobox: <select name="combo" id="combo"></select>
         </fieldset>
-    </body>
+    </body> 
 </html>
