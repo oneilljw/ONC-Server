@@ -5,8 +5,12 @@
     <title>ONC Family Table</title>
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
-    var urlYears = "http://localhost:8902/dbStatus?callback=?";
-    var urlAgents = "http://localhost:8902/agents?callback=?";	
+//	for live    
+    var urlYears = "http://cfs.idtus.com:8902/dbStatus?callback=?";
+    var urlAgents = "http://cfs.idtus.com:8902/agents?callback=?";
+//	for debug    
+//  var urlYears = "http://cfs.idtus.com:8902/dbStatus?callback=?";
+//  var urlAgents = "http://cfs.idtus.com:8902/agents?callback=?";
     $( document ).ready(function() {
     	//get the list of years from the data base and put it in the year combo box
     	$.getJSON(urlYears, function(data) {
