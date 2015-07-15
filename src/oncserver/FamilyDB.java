@@ -95,8 +95,19 @@ public class FamilyDB extends ONCServerDB
 	{		
 		Gson gson = new Gson();
 		Type listOfFamilies = new TypeToken<ArrayList<ONCFamily>>(){}.getType();
+		
+		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
+		ArrayList<ONCFamily> responseList = new ArrayList<ONCFamily>();
+		
+		for(int i=15; i<50; i++)
+		{
+			responseList.add(searchList.get(i));
+		}
+		System.out.println(responseList.size());
+		String response = gson.toJson(responseList, listOfFamilies);
+		
 			
-		String response = gson.toJson(familyDB.get(year-BASE_YEAR).getList(), listOfFamilies);
+//		String response = gson.toJson(familyDB.get(year-BASE_YEAR).getList(), listOfFamilies);
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return callbackFunction +"(" + response +")";		
