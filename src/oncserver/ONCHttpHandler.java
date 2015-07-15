@@ -51,11 +51,12 @@ public class ONCHttpHandler implements HttpHandler
     {
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
+    	System.out.println("# params: " + params.size());
 		
 		ServerUI serverUI = ServerUI.getInstance();
 		URI reqURI = t.getRequestURI();
-		String req = String.format("HTTP request %s: %s, %s",
-				t.getRequestMethod() , reqURI.toASCIIString(),reqURI.getRawQuery());
+		String req = String.format("HTTP request %s:%s",
+				t.getRequestMethod(), reqURI.toASCIIString());
 		serverUI.addLogMessage(req);
     	
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
@@ -115,7 +116,11 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(t.getRequestURI().toString().contains("/agents"))
     	{
-    		String response = AgentDB.getAgentsJSONP(2014, (String) params.get("callback"));
+    		String zYear = (String) params.get("year");
+    		int year = Integer.parseInt(zYear);
+    		System.out.println("Year: " + year);
+    		
+    		String response = AgentDB.getAgentsJSONP(year, (String) params.get("callback"));
 
     		t.sendResponseHeaders(200, response.length());
     		OutputStream os = t.getResponseBody();

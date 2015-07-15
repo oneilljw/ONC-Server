@@ -5,18 +5,25 @@
     <title>ONC Family Table</title>
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
-//	for live    
-    var urlYears = "http://cfs.idtus.com:8902/dbStatus?callback=?";
-    var urlAgents = "http://cfs.idtus.com:8902/agents?callback=?";
-//	for debug    
-//  var urlYears = "http://cfs.idtus.com:8902/dbStatus?callback=?";
-//  var urlAgents = "http://cfs.idtus.com:8902/agents?callback=?";
+//  var url ="http://cfs.idtus.com:8902";	//for live server
+    var url ="http://localhost:8902";	//for local server
+  
+	var urlYears = url.concat("/dbStatus?callback=?");
+	var urlAgents = url.concat("/agents?year=2014&callback=?");
+	var famJson;
+	var year;
     $( document ).ready(function() {
     	//get the list of years from the data base and put it in the year combo box
     	$.getJSON(urlYears, function(data) {
 			var combo = document.getElementById("dbYears");
     		for (var i = data.length-1; i >= 0; i--)
     		{
+    			if(i==data.length-1)
+    			{
+    				year = data[i].id;
+    				console.log(year);
+    			}
+    			
     			var option = document.createElement("option");
     			option.text = data[i].id;
     	    	option.value = data[i].id;
@@ -30,7 +37,7 @@
     	//get the list of agents from the database and put it in the agent combobox
     	$.getJSON(urlAgents, function(data) {
 			var agtCombo = document.getElementById("agents");
-    		for (var i = data.length-1; i >= 0; i--)
+    		for (var i=0; i < data.length; i++)
     		{
     			var agtOption = document.createElement("option");
     			agtOption.text = data[i].name;

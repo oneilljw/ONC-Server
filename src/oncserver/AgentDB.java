@@ -66,6 +66,7 @@ public class AgentDB extends ONCServerDB
 		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();
 			
 		String response = gson.toJson(agentDB.get(year - BASE_YEAR).getList(), listtype);
+		System.out.println(response);
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return callbackFunction +"(" + response +")";		
