@@ -101,11 +101,8 @@ public class FamilyDB extends ONCServerDB
 		ArrayList<ONCWebsiteFamily> responseList = new ArrayList<ONCWebsiteFamily>();
 		
 		for(int i=0; i<searchList.size(); i++)
-		{
 			responseList.add(new ONCWebsiteFamily(searchList.get(i)));
-		}
 		
-		System.out.println(responseList.size());
 		String response = gson.toJson(responseList, listOfWebsiteFamilies);
 
 		//wrap the json in the callback function per the JSONP protocol
