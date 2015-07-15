@@ -51,28 +51,22 @@ public class ONCHttpHandler implements HttpHandler
     {
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
-    	System.out.println("# params: " + params.size());
+//    	System.out.println("# params: " + params.size());
 		
 		ServerUI serverUI = ServerUI.getInstance();
-		URI reqURI = t.getRequestURI();
-		String req = String.format("HTTP request %s:%s",
-				t.getRequestMethod(), reqURI.toASCIIString());
-		serverUI.addLogMessage(req);
+		serverUI.addLogMessage(String.format("HTTP request %s:%s", t.getRequestMethod(), t.getRequestURI().toASCIIString()));
     	
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
     	{
-    		String altResponse = null;
+    		String response = null;
     		try {	
-    			altResponse = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
+    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
     		} catch (IOException e) {
     			// TODO Auto-generated catch block
     			e.printStackTrace();
     		}
-
-    		t.sendResponseHeaders(200, altResponse.length());
-    		OutputStream os = t.getResponseBody();
-    		os.write(altResponse.getBytes());
-    		os.close();
+    		
+    		sendHTMLResponse(t, response);
     	}
     	else if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/jstest"))
     	{
@@ -84,10 +78,7 @@ public class ONCHttpHandler implements HttpHandler
     			e.printStackTrace();
     		}
 
-    		t.sendResponseHeaders(200, response.length());
-    		OutputStream os = t.getResponseBody();
-    		os.write(response.getBytes());
-    		os.close();
+    		sendHTMLResponse(t,  response);
     	}
     	else if(t.getRequestURI().toString().contains("/login"))
     	{
@@ -100,32 +91,23 @@ public class ONCHttpHandler implements HttpHandler
     		+"</body>"
     		+"</html>";
 
-    		t.sendResponseHeaders(200, response.length());
-    		OutputStream os = t.getResponseBody();
-    		os.write(response.getBytes());
-    		os.close();
+    		sendHTMLResponse(t, response);
     	}
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
     	{
-    		String response = DBManager.getDatabaseStatusJSONP((String) params.get("callback"));
-
-    		t.sendResponseHeaders(200, response.length());
-    		OutputStream os = t.getResponseBody();
-    		os.write(response.getBytes());
-    		os.close();
+    		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
     	}
     	else if(t.getRequestURI().toString().contains("/agents"))
     	{
-    		String zYear = (String) params.get("year");
-    		int year = Integer.parseInt(zYear);
-    		System.out.println("Year: " + year);
-    		
+    		int year = Integer.parseInt((String) params.get("year"));
     		String response = AgentDB.getAgentsJSONP(year, (String) params.get("callback"));
-
-    		t.sendResponseHeaders(200, response.length());
-    		OutputStream os = t.getResponseBody();
-    		os.write(response.getBytes());
-    		os.close();
+    		sendHTMLResponse(t, response);
+    	}
+    	else if(t.getRequestURI().toString().contains("/families"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		String response = FamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
     	}
     	else if(t.getRequestURI().toString().contains("/oncsplash"))
     	{
@@ -150,15 +132,27 @@ public class ONCHttpHandler implements HttpHandler
   	      	os.write(bytearray,0,bytearray.length);
   	      	os.close();
     	}
-    	else if(t.getRequestURI().toString().contains("/familystatus"))
+    	else if(t.getRequestURI().toString().contains("/refresh"))
     	{
-    		 String response = getFamilyTable(2014);
-    		 t.sendResponseHeaders(200, response.length());
-    		 OutputStream os = t.getResponseBody();
-    		 os.write(response.getBytes());
-    		 os.close();
+    		if(t.getRequestMethod().toLowerCase().equals("post"))
+    		{
+    			int dbYear = Integer.parseInt((String) params.get("dbYear"));
+    	    	int agentID = Integer.parseInt((String) params.get("agtID"));
+    	    	System.out.println(dbYear + " " + agentID);
+    	    	
+    			String response = getFamilyTable(2014, agentID);
+    			sendHTMLResponse(t, response);
+    		}
     	}
     }
+	
+	void sendHTMLResponse(HttpExchange t, String response) throws IOException
+	{
+		t.sendResponseHeaders(200, response.length());
+		OutputStream os = t.getResponseBody();
+		os.write(response.getBytes());
+		os.close();
+	}
 	
 	String loginRequest(String method, Map<String, Object> params)
 	{
@@ -177,7 +171,7 @@ public class ONCHttpHandler implements HttpHandler
 		
 //		System.out.println(String.format("username= %s,  pw= %s", params.get("field1"), params.get("field2")));
 		
-		if(method.equals("POST"))
+		if(method.toLowerCase().equals("post"))
 		{
 			String userID = (String) params.get("field1");
 	    	String password = (String) params.get("field2");
@@ -200,14 +194,14 @@ public class ONCHttpHandler implements HttpHandler
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
-	    		value = getFamilyTable(2014) + getLogoutHTML();
+	    		value = getFamilyTable(2014, -1);
 	    	}   	
 		}
 		
 		return value;
 	}
 	
-	String getFamilyTable(int year)
+	String getFamilyTable(int year, int agtID)
 	{
 		AgentDB agentDB = null;
 		FamilyDB famDB = null;
@@ -229,21 +223,24 @@ public class ONCHttpHandler implements HttpHandler
 		StringBuffer buff = new StringBuffer();
 		
 		buff.append(famTableHTML);
-
+/*
 		//add the initial rows from the family list to the table
 		for(int famID=0; famID < famList.size(); famID++)
 		{
 			ONCFamily fam = famList.get(famID);
 			
-			int agentID = fam.getAgentID();
-			Agent agent = agentDB.getAgent(year, agentID);
-			buff.append(getTableRow(fam, agent));
+			int famAgentID = fam.getAgentID();
+			if(agtID == -1 || agtID == famAgentID)
+			{
+				Agent agent = agentDB.getAgent(year, famAgentID);
+				buff.append(getTableRow(fam, agent));
+			}
 		}
 		
 		//add the table end
 		buff.append("</tbody></table></div>");
 		buff.append("</tbody></table>");
-		
+*/		
 		return buff.toString();
 	}
 	

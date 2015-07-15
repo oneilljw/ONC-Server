@@ -10,8 +10,9 @@
   
 	var urlYears = url.concat("/dbStatus?callback=?");
 	var urlAgents = url.concat("/agents?year=2014&callback=?");
-	var famJson;
+	var urlFamilies = url.concat("/families?year=2014&callback=?");
 	var year;
+	var famJson;
     $( document ).ready(function() {
     	//get the list of years from the data base and put it in the year combo box
     	$.getJSON(urlYears, function(data) {
@@ -21,7 +22,6 @@
     			if(i==data.length-1)
     			{
     				year = data[i].id;
-    				console.log(year);
     			}
     			
     			var option = document.createElement("option");
@@ -49,7 +49,64 @@
     	    	}  
     		}
     	});
+    	$.getJSON(urlFamilies, function(data) {
+    		famJson = data;
+    		$("#tbodyid").empty();
+    		for(var i=0; i<famJson.length; i++)
+    		{
+    			addRow(famJson[i]);	//add row to table
+    		}
+    	});
     });
+    function updateForAgent()
+    {
+    	$("#tbodyid").empty();
+    	var e = document.getElementById("agents");
+    	var agentID = e.options[e.selectedIndex].value;
+    	
+    	for(var i=0; i<famJson.length; i++)
+		{
+    		if(agentID == -1 || agentID == famJson[i].agentID)
+    		{
+    			addRow(famJson[i]);	//add row to table
+    		}
+		}
+    }
+    function addRow(family)
+    {
+        if (!document.getElementsByTagName) return;
+        tabBody=document.getElementsByTagName("tbody").item(0);
+        row=document.createElement("tr");
+         cell1 = document.createElement("td");
+         cell2 = document.createElement("td");
+         cell3 = document.createElement("td");
+         cell4 = document.createElement("td");
+         cell5 = document.createElement("td");
+         cell6 = document.createElement("td");
+         cell7 = document.createElement("td");
+         textnode1=document.createTextNode(family.oncNum);
+         textnode2=document.createTextNode(family.HOHFirstName);
+         textnode3=document.createTextNode(family.HOHLastName);
+         textnode4=document.createTextNode(family.DNSCode);
+         textnode5=document.createTextNode(family.fstatus);
+         textnode6=document.createTextNode(family.dstatus);
+         textnode7=document.createTextNode(family.mealStatus);
+         cell1.appendChild(textnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(textnode4);
+         cell5.appendChild(textnode5);
+         cell6.appendChild(textnode6);
+         cell7.appendChild(textnode7);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         row.appendChild(cell5);
+         row.appendChild(cell6);
+         row.appendChild(cell7);
+         tabBody.appendChild(row);
+    }
     </script>
     <style type="text/css">
         .scrolltable {
@@ -74,11 +131,11 @@
         }
         /* an outside constraint to react against */
         #constrainer {
-            width: 905px;
+            width: 792px;
             height: 200px;
         }
         #constrainer2 {
-            width: 905px;
+            width: 792px;
             overflow-x: scroll;
         }
         #constrainer2 table {
@@ -115,23 +172,35 @@
         tr:nth-child(even) {
             background-color: #eee;
         }
+        input {
+        	background-color: #336699;
+        	color: #ffffff;
+        }
     </style>
 </head>
 <body>
-	<p>
-		Family Table For: 
-		<select id="dbYears" >
-		</select>
-		Referred By:
-		<select id="agents">
+	<form action="/refresh" method="post">
+		<select id="dbYears" name="dbYear" ></select>
+		<label for="agents">Families Referred By:</label>
+		<select id="agents"  onchange="updateForAgent()" name="agtID">
 			<option value= "-1">Anyone</option>
 		</select>
-		
-	</p>
+	</form>
 <div id="constrainer2">
     <table>
         <thead>
-        <th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
-        <th>Gift Status</th><th>Delivery Status</th><th>Meal Status</th><th>Referred By</th>
+        <tr>
+       		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
+        	<th>Gift Status</th><th>Delivery Status</th><th>Meal Status</th>
+        </tr>
         </thead>
-        <tbody>
+        <tbody id="tbodyid">
+        </tbody>
+	</table>
+</div>
+<br>
+	<form action="logout" method="get">
+		<input type="submit" value="Log Out">
+	</form>
+</body>
+</html>

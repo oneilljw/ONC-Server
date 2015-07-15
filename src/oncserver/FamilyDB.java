@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import ourneighborschild.Agent;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCDelivery;
@@ -88,6 +89,17 @@ public class FamilyDB extends ONCServerDB
 		
 		String response = gson.toJson(familyDB.get(year-BASE_YEAR).getList(), listOfFamilies);
 		return response;	
+	}
+	
+	static String getFamiliesJSONP(int year, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfFamilies = new TypeToken<ArrayList<ONCFamily>>(){}.getType();
+			
+		String response = gson.toJson(familyDB.get(year-BASE_YEAR).getList(), listOfFamilies);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return callbackFunction +"(" + response +")";		
 	}
 	
 	String update(int year, String familyjson, boolean bAutoAssign)
