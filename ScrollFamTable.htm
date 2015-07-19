@@ -84,6 +84,7 @@
          cell5 = document.createElement("td");
          cell6 = document.createElement("td");
          cell7 = document.createElement("td");
+         btn = document.createElement("button");
          textnode1=document.createTextNode(family.oncNum);
          textnode2=document.createTextNode(family.HOHFirstName);
          textnode3=document.createTextNode(family.HOHLastName);
@@ -91,6 +92,8 @@
          textnode5=document.createTextNode(family.fstatus);
          textnode6=document.createTextNode(family.dstatus);
          textnode7=document.createTextNode(family.mealStatus);
+         btn.value=family.id;
+         btn.innerHTML = 'Refer'
          cell1.appendChild(textnode1);
          cell2.appendChild(textnode2);
          cell3.appendChild(textnode3);
@@ -105,6 +108,7 @@
          row.appendChild(cell5);
          row.appendChild(cell6);
          row.appendChild(cell7);
+         row.appendChild(btn);
          tabBody.appendChild(row);
     }
     </script>
@@ -127,15 +131,15 @@
             -webkit-flex: 1;
         }
         th, td {
-            min-width: 110px;
+            min-width: 116px;
         }
         /* an outside constraint to react against */
         #constrainer {
-            width: 792px;
+            width: 880px;
             height: 200px;
         }
         #constrainer2 {
-            width: 792px;
+            width: 880px;
             overflow-x: scroll;
         }
         #constrainer2 table {
