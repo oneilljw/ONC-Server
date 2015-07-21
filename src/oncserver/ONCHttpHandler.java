@@ -4,21 +4,12 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
-import ourneighborschild.Agent;
-import ourneighborschild.ONCEncryptor;
-import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCServerUser;
-import ourneighborschild.ONCUser;
-import ourneighborschild.UserDB;
 import ourneighborschild.UserPermission;
 
 import com.sun.net.httpserver.Headers;
@@ -30,12 +21,11 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
 	private static final String LOGOUT_HTML_FILE = "logout.htm";
 	private static final String JSTEST_HTML_FILE = "Jstest.htm";
+	private static final int DEFAULT_YEAR = 2014;
 	
-	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
-	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
-	
-	String famTableHTML;
-	
+//	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
+//	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
+/*	
 	ONCHttpHandler()
 	{
 		//read the family table into memory once
@@ -46,7 +36,7 @@ public class ONCHttpHandler implements HttpHandler
 			e.printStackTrace();
 		}
 	}
-	
+*/	
 	public void handle(HttpExchange t) throws IOException 
     {
     	@SuppressWarnings("unchecked")
@@ -81,22 +71,9 @@ public class ONCHttpHandler implements HttpHandler
     		sendHTMLResponse(t,  response);
     	}
     	else if(t.getRequestURI().toString().contains("/login"))
-    	{
-    		String html = loginRequest(t.getRequestMethod(), params);
-    		
-    		String response = "<!DOCTYPE html><html>"
-    		+"<body>"
-    		+"<p><b><i>Welcome to Our Neighbors Child</i></b></p>"
-    		+ html
-    		+"</body>"
-    		+"</html>";
-
-    		sendHTMLResponse(t, response);
-    	}
+    		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params));
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
-    	{
     		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
-    	}
     	else if(t.getRequestURI().toString().contains("/agents"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
@@ -167,7 +144,9 @@ public class ONCHttpHandler implements HttpHandler
 			e.printStackTrace();
 		}
 		
-		String value = "Invalid Request Method";
+		String html = "<!DOCTYPE html><html>"
+	    		+"<body>"
+	    		+"<p><b><i>Welcome to Our Neighbors Child";    		
 		
 //		System.out.println(String.format("username= %s,  pw= %s", params.get("field1"), params.get("field2")));
 		
@@ -182,95 +161,43 @@ public class ONCHttpHandler implements HttpHandler
 	  
 	    	if(serverUser == null)	//can't find the user in the data base
 	    	{
-	    		value = "<p>User name not found</p>";
+	    		html += "</i></b></p><p>User name not found</p>";
 	    	}
 	    	else if(serverUser != null && serverUser.getPermission() == UserPermission.INACTIVE)	//can't find the user in the data base
 	    	{
-	    		value = "<p>Inactive user account, please contact the executive director</p>";
+	    		html += "</i></b></p><p>Inactive user account, please contact the executive director</p>";
 	    	}
 	    	else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
 	    	{
-	    		value = "<p>Incorrect password, access denied</p>";
+	    		html += "</i></b></p><p>Incorrect password, access denied</p>";
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
-	    		value = getFamilyTable(2014, -1);
+	    		html += String.format(" %s</i></b></p>", serverUser.getFirstname());
+	    		html += getFamilyTable(DEFAULT_YEAR, -1);
 	    	}   	
 		}
+		else
+			html += "<p>Invalid Request Method</p>";
 		
-		return value;
+		return html +"</body></html>";
 	}
 	
 	String getFamilyTable(int year, int agtID)
 	{
-		AgentDB agentDB = null;
-		FamilyDB famDB = null;
-		try {
-			agentDB = AgentDB.getInstance();
-			famDB = FamilyDB.getInstance();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		//get the list of families for the table
-		List<ONCFamily> famList = famDB.getList(year);
-
-		//add the top of the table by reading external html/css file
-		StringBuffer buff = new StringBuffer();
-		
-		buff.append(famTableHTML);
-/*
-		//add the initial rows from the family list to the table
-		for(int famID=0; famID < famList.size(); famID++)
+		//read the family table html
+		String famTableHTML = null;
+		try
 		{
-			ONCFamily fam = famList.get(famID);
-			
-			int famAgentID = fam.getAgentID();
-			if(agtID == -1 || agtID == famAgentID)
-			{
-				Agent agent = agentDB.getAgent(year, famAgentID);
-				buff.append(getTableRow(fam, agent));
-			}
+			famTableHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE));
+			return famTableHTML;
 		}
-		
-		//add the table end
-		buff.append("</tbody></table></div>");
-		buff.append("</tbody></table>");
-*/		
-		return buff.toString();
+		catch (IOException e) 
+		{
+			return "<p>Family Table Unavailable</p>";
+		}
 	}
-	
-	String getTableRow(ONCFamily fam, Agent agent)
-	{
-		String row = "<tr>"
-				+"<td>"+ fam.getONCNum()  +"</td>"
-			    +"<td>"+ fam.getHOHFirstName()  +"</td>"
-			    +"<td>"+ fam.getHOHLastName()  +"</td>"
-			    +"<td>"+ fam.getDNSCode()  +"</td>"
-			    +"<td>"+ famstatus[fam.getFamilyStatus()]  +"</td>"
-			    +"<td>"+ delstatus[fam.getDeliveryStatus()]  +"</td>"
-			    +"<td>"+ fam.getMealStatus().toString()  +"</td>"
-			    +"<td>"+ agent.getAgentName() +"</td>"
-			    +"</tr>";
-		
-		return row;
-	}
-	
-	private String getLogoutHTML()
-	{
-		return  "<br>"
-				+" <form action=\"logout\" method=\"get\">"
-				+" <input type=\"submit\" value=\"Log Out\">"
-				+" </form>"
-				+"</p>"
-				+ "</body>"
-				+ "</html>";
-	}
-	
+
 	private String readFile( String file ) throws IOException
 	{
 		ServerUI sUI = ServerUI.getInstance();
@@ -282,8 +209,8 @@ public class ONCHttpHandler implements HttpHandler
 
 	    while( ( line = reader.readLine() ) != null )
 	    {
-	        stringBuilder.append( line );
-	        stringBuilder.append( ls );
+	        stringBuilder.append(line);
+	        stringBuilder.append(ls);
 	    }
 	    
 	    reader.close();

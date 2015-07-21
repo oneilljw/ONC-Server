@@ -6,23 +6,24 @@
     <script>
 	/* Comment the correct line for live vs local */    
 	var url ="http://cfs.idtus.com:8902";
-/*	var url ="http://localhost:8902"; */
+//	var url ="http://localhost:8902"; 
   
 	var urlYears = url.concat("/dbStatus?callback=?");
-	var urlAgents = url.concat("/agents?year=2014&callback=?");
-	var urlFamilies = url.concat("/families?year=2014&callback=?");
+	var urlAgents = url.concat("/agents?year=YEAR&callback=?");
+	var urlFamilies = url.concat("/families?year=YEAR&callback=?");
 	var year;
 	var famJson;
-    $( document ).ready(function() {
+	var urlFamiliesForYear;
+	var urlAgentsForYear;
+    $( document ).ready(function()
+    {
     	//get the list of years from the data base and put it in the year combo box
     	$.getJSON(urlYears, function(data) {
 			var combo = document.getElementById("dbYears");
     		for (var i = data.length-1; i >= 0; i--)
     		{
-    			if(i==data.length-1)
-    			{
+    			if(i==data.length-1)	/*set year to the last year in the list from the server*/
     				year = data[i].id;
-    			}
     			
     			var option = document.createElement("option");
     			option.text = data[i].id;
@@ -35,8 +36,20 @@
     		}
     	});
     	//get the list of agents from the database and put it in the agent combobox
-    	$.getJSON(urlAgents, function(data) {
+    	$.getJSON(urlAgents.replace("YEAR", "2014"), function(data) {
 			var agtCombo = document.getElementById("agents");
+			
+			//add the "Anyone" option
+			var agtOption = document.createElement("option");
+			agtOption.text = "Anyone";
+	    	agtOption.value = -1;
+	    	try {
+	        	agtCombo.add(agtOption, null); //Standard 
+	    	} catch(error) {
+	        	agtCombo.add(agtOption); // IE only
+	    	}  
+	    	
+	    	//add the actual agent options
     		for (var i=0; i < data.length; i++)
     		{
     			var agtOption = document.createElement("option");
@@ -49,7 +62,9 @@
     	    	}  
     		}
     	});
-    	$.getJSON(urlFamilies, function(data) {
+    	//get families from server
+//    	urlFamiliesForYear = urlFamilies.replace("YEAR", "2014")    	
+    	$.getJSON(urlFamilies.replace("YEAR", "2014"), function(data) {
     		famJson = data;
     		$("#tbodyid").empty();
     		for(var i=0; i<famJson.length; i++)
@@ -58,7 +73,61 @@
     		}
     	});
     });
-    function updateForAgent()
+    
+    function updateForYearSelection()
+    {
+    	var e = document.getElementById("dbYears");
+    	year = e.options[e.selectedIndex].value;
+    	
+    	//clear the agent combobox
+    	document.getElementById("agents").options.length = 0;
+		
+    	//get updated agentJson from server and place into combobox
+		//get the list of agents from the database and put it in the agent combobox
+    	var urlAgentsForYear = urlAgents.replace("YEAR", year.toString());
+    	$.getJSON(urlAgentsForYear, function(data)
+    	{
+			var agtCombo = document.getElementById("agents");
+			
+			//add the "Anyone" option
+			var agtOption = document.createElement("option");
+			agtOption.text = "Anyone";
+	    	agtOption.value = -1;
+	    	try {
+	        	agtCombo.add(agtOption, null); //Standard 
+	    	} catch(error) {
+	        	agtCombo.add(agtOption); // IE only
+	    	} 
+	    	
+	    	//add the agents for the year
+    		for (var i=0; i < data.length; i++)
+    		{
+    			var agtOption = document.createElement("option");
+    			agtOption.text = data[i].name;
+    	    	agtOption.value = data[i].id;
+    	    	try {
+    	        	agtCombo.add(agtOption, null); //Standard 
+    	    	} catch(error) {
+    	        	agtCombo.add(agtOption); // IE only
+    	    	}  
+    		}   		
+    	});
+    	
+    	//clear the table
+    	$("#tbodyid").empty();
+    	
+    	//get updated familyJson from server and place into the table   	
+    	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data) {
+    		famJson = data;
+    		$("#tbodyid").empty();
+    		for(var i=0; i<famJson.length; i++)
+    		{
+    			addRow(famJson[i]);	//add row to table
+    		}
+    	});
+    }
+    
+    function updateForAgentSelection()
     {
     	$("#tbodyid").empty();
     	var e = document.getElementById("agents");
@@ -72,44 +141,50 @@
     		}
 		}
     }
+    
     function addRow(family)
     {
         if (!document.getElementsByTagName) return;
         tabBody=document.getElementsByTagName("tbody").item(0);
         row=document.createElement("tr");
-         cell1 = document.createElement("td");
-         cell2 = document.createElement("td");
-         cell3 = document.createElement("td");
-         cell4 = document.createElement("td");
-         cell5 = document.createElement("td");
-         cell6 = document.createElement("td");
-         cell7 = document.createElement("td");
-         btn = document.createElement("button");
-         textnode1=document.createTextNode(family.oncNum);
-         textnode2=document.createTextNode(family.HOHFirstName);
-         textnode3=document.createTextNode(family.HOHLastName);
-         textnode4=document.createTextNode(family.DNSCode);
-         textnode5=document.createTextNode(family.fstatus);
-         textnode6=document.createTextNode(family.dstatus);
-         textnode7=document.createTextNode(family.mealStatus);
-         btn.value=family.id;
-         btn.innerHTML = 'Refer'
-         cell1.appendChild(textnode1);
-         cell2.appendChild(textnode2);
-         cell3.appendChild(textnode3);
-         cell4.appendChild(textnode4);
-         cell5.appendChild(textnode5);
-         cell6.appendChild(textnode6);
-         cell7.appendChild(textnode7);
-         row.appendChild(cell1);
-         row.appendChild(cell2);
-         row.appendChild(cell3);
-         row.appendChild(cell4);
-         row.appendChild(cell5);
-         row.appendChild(cell6);
-         row.appendChild(cell7);
-         row.appendChild(btn);
-         tabBody.appendChild(row);
+        cell1 = document.createElement("td");
+        cell2 = document.createElement("td");
+        cell3 = document.createElement("td");
+        cell4 = document.createElement("td");
+        cell5 = document.createElement("td");
+        cell6 = document.createElement("td");
+        cell7 = document.createElement("td");
+        btn = document.createElement("button");
+        textnode1=document.createTextNode(family.oncNum);
+        textnode2=document.createTextNode(family.HOHFirstName);
+        textnode3=document.createTextNode(family.HOHLastName);
+        textnode4=document.createTextNode(family.DNSCode);
+        textnode5=document.createTextNode(family.fstatus);
+        textnode6=document.createTextNode(family.dstatus);
+        textnode7=document.createTextNode(family.mealStatus);
+        btn.value=family.id;
+        btn.innerHTML = 'Refer'
+        btn.onclick=function() {referFamily(family.id);};
+        cell1.appendChild(textnode1);
+        cell2.appendChild(textnode2);
+        cell3.appendChild(textnode3);
+        cell4.appendChild(textnode4);
+        cell5.appendChild(textnode5);
+        cell6.appendChild(textnode6);
+        cell7.appendChild(textnode7);
+        row.appendChild(cell1);
+        row.appendChild(cell2);
+        row.appendChild(cell3);
+        row.appendChild(cell4);
+        row.appendChild(cell5);
+        row.appendChild(cell6);
+        row.appendChild(cell7);
+        row.appendChild(btn);
+        tabBody.appendChild(row);
+    }
+    function referFamily(id)
+    {
+    	alert(id);
     }
     </script>
     <style type="text/css">
@@ -183,12 +258,10 @@
     </style>
 </head>
 <body>
-	<form action="/refresh" method="post">
-		<select id="dbYears" name="dbYear" ></select>
+	<form>
+		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="agents">Families Referred By:</label>
-		<select id="agents"  onchange="updateForAgent()" name="agtID">
-			<option value= "-1">Anyone</option>
-		</select>
+		<select id="agents"  onchange="updateForAgentSelection()" name="agtID"></select>
 	</form>
 <div id="constrainer2">
     <table>
@@ -203,7 +276,7 @@
 	</table>
 </div>
 <br>
-	<form action="logut" method="get">
+	<form action="logout" method="get">
   		<button type="submit">Logout</button>
   		<button type="submit">New Family</button>
 	</form>	

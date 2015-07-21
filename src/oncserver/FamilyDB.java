@@ -363,6 +363,16 @@ public class FamilyDB extends ONCServerDB
 		}
 	}
 	
+	static boolean didAgentReferInYear(int agentID, int year)
+	{
+		List<ONCFamily> famList = familyDB.get(year-BASE_YEAR).getList();
+		int index = 0;
+		while(index < famList.size() && famList.get(index).getAgentID() != agentID)
+			index++;
+		
+		return index < famList.size();	//true if agentID referred family	
+	}
+	
 	List<ONCFamily> getList(int year)
 	{
 		return familyDB.get(year-BASE_YEAR).getList();

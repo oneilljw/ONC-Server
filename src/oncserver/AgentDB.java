@@ -60,12 +60,26 @@ public class AgentDB extends ONCServerDB
 		return response;	
 	}
 	
+	/***
+	 * Returns an <Agent> json that contains agents that referred families in the parameter
+	 * year. Uses the JSONP construct.
+	 * @param year
+	 * @param callbackFunction
+	 * @return
+	 */
 	static String getAgentsJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();
+		
+		List<Agent> agentReferredInYearList = new ArrayList<Agent>();
+		List<Agent> agentYearList = agentDB.get(year - BASE_YEAR).getList();
+		
+		for(Agent agent : agentYearList)
+			if(FamilyDB.didAgentReferInYear(agent.getID(), year))
+				agentReferredInYearList.add(agent);
 			
-		String response = gson.toJson(agentDB.get(year - BASE_YEAR).getList(), listtype);
+		String response = gson.toJson(agentReferredInYearList, listtype);
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return callbackFunction +"(" + response +")";		

@@ -112,10 +112,7 @@ public class DBManager
 	{		
 		Gson gson = new Gson();
 		Type listOfDBs = new TypeToken<ArrayList<DBYear>>(){}.getType();
-		
-//		String dbYearJson = gson.toJson(dbYearList, listOfDBs);
-//		System.out.println(dbYearJson);
-		
+	
 		//wrap the json in the callback function per the JSONP protocol
 		return callbackFunction +"(" + gson.toJson(dbYearList, listOfDBs) +")";		
 	}
