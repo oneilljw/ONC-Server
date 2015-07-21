@@ -5,8 +5,8 @@
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
 	/* Comment the correct line for live vs local */    
-	var url ="http://cfs.idtus.com:8902";
-//	var url ="http://localhost:8902"; 
+//	var url ="http://cfs.idtus.com:8902";
+	var url ="http://localhost:8902"; 
   
 	var urlYears = url.concat("/dbStatus?callback=?");
 	var urlAgents = url.concat("/agents?year=YEAR&callback=?");
@@ -36,35 +36,51 @@
     		}
     	});
     	//get the list of agents from the database and put it in the agent combobox
-    	$.getJSON(urlAgents.replace("YEAR", "2014"), function(data) {
-			var agtCombo = document.getElementById("agents");
-			
-			//add the "Anyone" option
-			var agtOption = document.createElement("option");
-			agtOption.text = "Anyone";
-	    	agtOption.value = -1;
-	    	try {
-	        	agtCombo.add(agtOption, null); //Standard 
-	    	} catch(error) {
-	        	agtCombo.add(agtOption); // IE only
-	    	}  
-	    	
-	    	//add the actual agent options
-    		for (var i=0; i < data.length; i++)
-    		{
-    			var agtOption = document.createElement("option");
-    			agtOption.text = data[i].name;
-    	    	agtOption.value = data[i].id;
-    	    	try {
-    	        	agtCombo.add(agtOption, null); //Standard 
-    	    	} catch(error) {
-    	        	agtCombo.add(agtOption); // IE only
-    	    	}  
-    		}
-    	});
+    	getAgentsFromServer(2014);
+//    	$.getJSON(urlAgents.replace("YEAR", "2014"), function(data) {
+//			var agtCombo = document.getElementById("agents");
+//			
+//			//add the "Anyone" option
+//			var agtOption = document.createElement("option");
+//			agtOption.text = "Anyone";
+//	    	agtOption.value = -1;
+//	    	try {
+//	        	agtCombo.add(agtOption, null); //Standard 
+//	    	} catch(error) {
+//	        	agtCombo.add(agtOption); // IE only
+//	    	}  
+//	    	
+//	    	//add the actual agent options
+//    		for (var i=0; i < data.length; i++)
+//    		{
+//    			var agtOption = document.createElement("option");
+//    			agtOption.text = data[i].name;
+//    	    	agtOption.value = data[i].id;
+//    	    	try {
+//    	        	agtCombo.add(agtOption, null); //Standard 
+//    	    	} catch(error) {
+//    	        	agtCombo.add(agtOption); // IE only
+//    	    	}  
+//    		}
+//    	});
     	//get families from server
+    	getFamiliesFromServer(2014);
 //    	urlFamiliesForYear = urlFamilies.replace("YEAR", "2014")    	
-    	$.getJSON(urlFamilies.replace("YEAR", "2014"), function(data) {
+//    	$.getJSON(urlFamilies.replace("YEAR", "2014"), function(data) {
+//    		famJson = data;
+//    		$("#tbodyid").empty();
+//    		for(var i=0; i<famJson.length; i++)
+//    		{
+//    			addRow(famJson[i]);	//add row to table
+//    		}
+//    	});
+    });
+    
+    function getFamiliesFromServer(year)
+    {
+    	//get families from server
+    	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
+    	{
     		famJson = data;
     		$("#tbodyid").empty();
     		for(var i=0; i<famJson.length; i++)
@@ -72,13 +88,10 @@
     			addRow(famJson[i]);	//add row to table
     		}
     	});
-    });
+    }
     
-    function updateForYearSelection()
+    function getAgentsFromServer(year)
     {
-    	var e = document.getElementById("dbYears");
-    	year = e.options[e.selectedIndex].value;
-    	
     	//clear the agent combobox
     	document.getElementById("agents").options.length = 0;
 		
@@ -112,19 +125,60 @@
     	    	}  
     		}   		
     	});
+    }
+    
+    function updateForYearSelection()
+    {
+    	//get agents from server
+    	getAgentsFromServer(year);
+//    	//clear the agent combobox
+//    	document.getElementById("agents").options.length = 0;
+//		
+//    	//get updated agentJson from server and place into combobox
+//		//get the list of agents from the database and put it in the agent combobox
+//    	var urlAgentsForYear = urlAgents.replace("YEAR", year.toString());
+//    	$.getJSON(urlAgentsForYear, function(data)
+//    	{
+//			var agtCombo = document.getElementById("agents");
+//			
+//			//add the "Anyone" option
+//			var agtOption = document.createElement("option");
+//			agtOption.text = "Anyone";
+//	    	agtOption.value = -1;
+//	    	try {
+//	        	agtCombo.add(agtOption, null); //Standard 
+//	    	} catch(error) {
+//	        	agtCombo.add(agtOption); // IE only
+//	    	} 
+//	    	
+//	    	//add the agents for the year
+//    		for (var i=0; i < data.length; i++)
+//    		{
+//    			var agtOption = document.createElement("option");
+//    			agtOption.text = data[i].name;
+//    	    	agtOption.value = data[i].id;
+//    	    	try {
+//    	        	agtCombo.add(agtOption, null); //Standard 
+//    	    	} catch(error) {
+//    	        	agtCombo.add(agtOption); // IE only
+//    	    	}  
+//    		}   		
+//    	});
     	
+    	//get families from server
+    	getFamiliesFromServer(year);
     	//clear the table
-    	$("#tbodyid").empty();
-    	
-    	//get updated familyJson from server and place into the table   	
-    	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data) {
-    		famJson = data;
-    		$("#tbodyid").empty();
-    		for(var i=0; i<famJson.length; i++)
-    		{
-    			addRow(famJson[i]);	//add row to table
-    		}
-    	});
+//    	$("#tbodyid").empty();
+//    	
+//    	//get updated familyJson from server and place into the table   	
+//    	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data) {
+//    		famJson = data;
+//    		$("#tbodyid").empty();
+//    		for(var i=0; i<famJson.length; i++)
+//    		{
+//    			addRow(famJson[i]);	//add row to table
+//    		}
+//    	});
     }
     
     function updateForAgentSelection()
