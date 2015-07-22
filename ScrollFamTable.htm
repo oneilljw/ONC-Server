@@ -13,72 +13,40 @@
 	var urlFamilies = url.concat("/families?year=YEAR&callback=?");
 	var year;
 	var famJson;
-	var urlFamiliesForYear;
-	var urlAgentsForYear;
+	
     $( document ).ready(function()
     {
     	//get the list of years from the data base and put it in the year combo box
-    	$.getJSON(urlYears, function(data) {
+    	$.getJSON(urlYears, function(data)
+    	{
 			var combo = document.getElementById("dbYears");
     		for (var i = data.length-1; i >= 0; i--)
     		{
-    			if(i==data.length-1)	/*set year to the last year in the list from the server*/
+    			if(i==data.length-1)	//set year to the last year in the list from the server
     				year = data[i].id;
     			
     			var option = document.createElement("option");
     			option.text = data[i].id;
     	    	option.value = data[i].id;
-    	    	try {
+    	    	try 
+    	    	{
     	        	combo.add(option, null); //Standard 
-    	    	} catch(error) {
+    	    	} 
+    	    	catch(error) 
+    	    	{
     	        	combo.add(option); // IE only
     	    	}  
     		}
     	});
     	//get the list of agents from the database and put it in the agent combobox
     	getAgentsFromServer(2014);
-//    	$.getJSON(urlAgents.replace("YEAR", "2014"), function(data) {
-//			var agtCombo = document.getElementById("agents");
-//			
-//			//add the "Anyone" option
-//			var agtOption = document.createElement("option");
-//			agtOption.text = "Anyone";
-//	    	agtOption.value = -1;
-//	    	try {
-//	        	agtCombo.add(agtOption, null); //Standard 
-//	    	} catch(error) {
-//	        	agtCombo.add(agtOption); // IE only
-//	    	}  
-//	    	
-//	    	//add the actual agent options
-//    		for (var i=0; i < data.length; i++)
-//    		{
-//    			var agtOption = document.createElement("option");
-//    			agtOption.text = data[i].name;
-//    	    	agtOption.value = data[i].id;
-//    	    	try {
-//    	        	agtCombo.add(agtOption, null); //Standard 
-//    	    	} catch(error) {
-//    	        	agtCombo.add(agtOption); // IE only
-//    	    	}  
-//    		}
-//    	});
+
     	//get families from server
     	getFamiliesFromServer(2014);
-//    	urlFamiliesForYear = urlFamilies.replace("YEAR", "2014")    	
-//    	$.getJSON(urlFamilies.replace("YEAR", "2014"), function(data) {
-//    		famJson = data;
-//    		$("#tbodyid").empty();
-//    		for(var i=0; i<famJson.length; i++)
-//    		{
-//    			addRow(famJson[i]);	//add row to table
-//    		}
-//    	});
     });
     
     function getFamiliesFromServer(year)
     {
-    	//get families from server
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		famJson = data;
@@ -96,9 +64,7 @@
     	document.getElementById("agents").options.length = 0;
 		
     	//get updated agentJson from server and place into combobox
-		//get the list of agents from the database and put it in the agent combobox
-    	var urlAgentsForYear = urlAgents.replace("YEAR", year.toString());
-    	$.getJSON(urlAgentsForYear, function(data)
+    	$.getJSON(urlAgents.replace("YEAR", year.toString()), function(data)
     	{
 			var agtCombo = document.getElementById("agents");
 			
@@ -106,9 +72,12 @@
 			var agtOption = document.createElement("option");
 			agtOption.text = "Anyone";
 	    	agtOption.value = -1;
-	    	try {
+	    	try 
+	    	{
 	        	agtCombo.add(agtOption, null); //Standard 
-	    	} catch(error) {
+	    	} 
+	    	catch(error) 
+	    	{
 	        	agtCombo.add(agtOption); // IE only
 	    	} 
 	    	
@@ -118,9 +87,12 @@
     			var agtOption = document.createElement("option");
     			agtOption.text = data[i].name;
     	    	agtOption.value = data[i].id;
-    	    	try {
+    	    	try 
+    	    	{
     	        	agtCombo.add(agtOption, null); //Standard 
-    	    	} catch(error) {
+    	    	}
+    	    	catch(error)
+    	    	{
     	        	agtCombo.add(agtOption); // IE only
     	    	}  
     		}   		
@@ -129,56 +101,13 @@
     
     function updateForYearSelection()
     {
-    	//get agents from server
-    	getAgentsFromServer(year);
-//    	//clear the agent combobox
-//    	document.getElementById("agents").options.length = 0;
-//		
-//    	//get updated agentJson from server and place into combobox
-//		//get the list of agents from the database and put it in the agent combobox
-//    	var urlAgentsForYear = urlAgents.replace("YEAR", year.toString());
-//    	$.getJSON(urlAgentsForYear, function(data)
-//    	{
-//			var agtCombo = document.getElementById("agents");
-//			
-//			//add the "Anyone" option
-//			var agtOption = document.createElement("option");
-//			agtOption.text = "Anyone";
-//	    	agtOption.value = -1;
-//	    	try {
-//	        	agtCombo.add(agtOption, null); //Standard 
-//	    	} catch(error) {
-//	        	agtCombo.add(agtOption); // IE only
-//	    	} 
-//	    	
-//	    	//add the agents for the year
-//    		for (var i=0; i < data.length; i++)
-//    		{
-//    			var agtOption = document.createElement("option");
-//    			agtOption.text = data[i].name;
-//    	    	agtOption.value = data[i].id;
-//    	    	try {
-//    	        	agtCombo.add(agtOption, null); //Standard 
-//    	    	} catch(error) {
-//    	        	agtCombo.add(agtOption); // IE only
-//    	    	}  
-//    		}   		
-//    	});
+    	//get selected year
+    	var yearCB = document.getElementById("dbYears");
+		year = yearCB.options[yearCB.selectedIndex].value;
     	
-    	//get families from server
-    	getFamiliesFromServer(year);
-    	//clear the table
-//    	$("#tbodyid").empty();
-//    	
-//    	//get updated familyJson from server and place into the table   	
-//    	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data) {
-//    		famJson = data;
-//    		$("#tbodyid").empty();
-//    		for(var i=0; i<famJson.length; i++)
-//    		{
-//    			addRow(famJson[i]);	//add row to table
-//    		}
-//    	});
+    	getAgentsFromServer(year);	//get agents from server
+
+    	getFamiliesFromServer(year);	//get families from server
     }
     
     function updateForAgentSelection()
@@ -199,47 +128,34 @@
     function addRow(family)
     {
         if (!document.getElementsByTagName) return;
+        
+        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
+      					  family.fstatus, family.dstatus, family.mealStatus];
+        
         tabBody=document.getElementsByTagName("tbody").item(0);
         row=document.createElement("tr");
-        cell1 = document.createElement("td");
-        cell2 = document.createElement("td");
-        cell3 = document.createElement("td");
-        cell4 = document.createElement("td");
-        cell5 = document.createElement("td");
-        cell6 = document.createElement("td");
-        cell7 = document.createElement("td");
+         
+        for(index=0; index < familyinfo.length; index++)	//create the family info cells
+        {
+        	cell = document.createElement("td");
+        	cell.appendChild(document.createTextNode(familyinfo[index]));
+        	row.appendChild(cell);
+        }
+        
         btn = document.createElement("button");
-        textnode1=document.createTextNode(family.oncNum);
-        textnode2=document.createTextNode(family.HOHFirstName);
-        textnode3=document.createTextNode(family.HOHLastName);
-        textnode4=document.createTextNode(family.DNSCode);
-        textnode5=document.createTextNode(family.fstatus);
-        textnode6=document.createTextNode(family.dstatus);
-        textnode7=document.createTextNode(family.mealStatus);
         btn.value=family.id;
         btn.innerHTML = 'Refer'
         btn.onclick=function() {referFamily(family.id);};
-        cell1.appendChild(textnode1);
-        cell2.appendChild(textnode2);
-        cell3.appendChild(textnode3);
-        cell4.appendChild(textnode4);
-        cell5.appendChild(textnode5);
-        cell6.appendChild(textnode6);
-        cell7.appendChild(textnode7);
-        row.appendChild(cell1);
-        row.appendChild(cell2);
-        row.appendChild(cell3);
-        row.appendChild(cell4);
-        row.appendChild(cell5);
-        row.appendChild(cell6);
-        row.appendChild(cell7);
         row.appendChild(btn);
+        
         tabBody.appendChild(row);
     }
+    
     function referFamily(id)
     {
     	alert(id);
     }
+    
     </script>
     <style type="text/css">
         .scrolltable {

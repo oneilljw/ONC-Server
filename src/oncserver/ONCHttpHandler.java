@@ -173,7 +173,7 @@ public class ONCHttpHandler implements HttpHandler
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
-	    		html += String.format(" %s</i></b></p>", serverUser.getFirstname());
+	    		html += String.format(", %s!</i></b></p>", serverUser.getFirstname());
 	    		html += getFamilyTable(DEFAULT_YEAR, -1);
 	    	}   	
 		}
