@@ -16,6 +16,8 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import java.util.UUID;
+
 public class ONCHttpHandler implements HttpHandler
 {
 	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
@@ -130,6 +132,7 @@ public class ONCHttpHandler implements HttpHandler
 		OutputStream os = t.getResponseBody();
 		os.write(response.getBytes());
 		os.close();
+		t.close();
 	}
 	
 	String loginRequest(String method, Map<String, Object> params)
@@ -174,6 +177,8 @@ public class ONCHttpHandler implements HttpHandler
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
+	    		UUID idOne = UUID.randomUUID();
+	    		System.out.println("ONCHttpHandler.loginRequest UUID = " + idOne);
 	    		html += String.format(", %s!</i></b></p>", serverUser.getFirstname());
 	    		html += getFamilyTable(DEFAULT_YEAR, -1);
 	    	}   	
