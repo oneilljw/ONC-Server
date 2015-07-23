@@ -41,10 +41,11 @@ public class ONCHttpHandler implements HttpHandler
     {
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
-//    	System.out.println("# params: " + params.size());
+    	String cleintIP = t.getRemoteAddress().toString();
 		
 		ServerUI serverUI = ServerUI.getInstance();
-		serverUI.addLogMessage(String.format("HTTP request %s:%s", t.getRequestMethod(), t.getRequestURI().toASCIIString()));
+		serverUI.addLogMessage(String.format("HTTP request %s: %s:%s", 
+				t.getRemoteAddress().toString(), t.getRequestMethod(), t.getRequestURI().toASCIIString()));
     	
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
     	{
@@ -217,5 +218,5 @@ public class ONCHttpHandler implements HttpHandler
 	    
 	    sUI.addLogMessage(String.format("Read %s, length = %d", file, stringBuilder.toString().length()));
 	    return stringBuilder.toString();
-	}
+	}	
 }
