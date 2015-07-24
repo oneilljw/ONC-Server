@@ -26,7 +26,7 @@ import ourneighborschild.UserPermission;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class Client extends Thread 
+public class DesktopClient extends Thread 
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
@@ -71,7 +71,7 @@ public class Client extends Thread
      * initializes the stream fields, displays the first two
      * welcoming messages.
      */
-    public Client(Socket socket, int id)
+    public DesktopClient(Socket socket, int id)
     {
     	this.id = id;
     	version = "N/A";

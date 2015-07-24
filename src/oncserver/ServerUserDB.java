@@ -121,7 +121,7 @@ public class ServerUserDB extends ONCServerDB
 		return response;	
 	 }
 	 
-	 String changePassword(int year, String json, Client requestingClient)
+	 String changePassword(int year, String json, DesktopClient requestingClient)
 	 {
 		Gson gson = new Gson();
 		ChangePasswordRequest cpwReq = gson.fromJson(json, ChangePasswordRequest.class);

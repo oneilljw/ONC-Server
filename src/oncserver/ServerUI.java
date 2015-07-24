@@ -50,7 +50,7 @@ public class ServerUI extends JPanel implements ListSelectionListener
 	private DefaultTableModel clientTableModel;
 	private boolean bClientTableChanging;
 	
-	private ArrayList<Client> clientTableList;
+	private ArrayList<DesktopClient> clientTableList;
 	
 //	private static String[] columnToolTips = {"ID", "First Name", "Last Name", 
 //		  										"Permission", "Client Status", "Heart Beat",
@@ -114,7 +114,7 @@ public class ServerUI extends JPanel implements ListSelectionListener
     		public boolean isCellEditable(int row, int column) {return false;}
     	};
     	
-    	clientTableList = new ArrayList<Client>();	//List holds references of clients show in table
+    	clientTableList = new ArrayList<DesktopClient>();	//List holds references of clients show in table
 
     	//Set the table model, select ability to select multiple rows and add a listener to 
     	//check if the user has selected a row. 
@@ -242,7 +242,7 @@ public class ServerUI extends JPanel implements ListSelectionListener
 		
 	}
 	
-	void displayClientTable(ArrayList<Client> cAL)
+	void displayClientTable(ArrayList<DesktopClient> cAL)
 	{
 		bClientTableChanging = true;
 		
@@ -251,7 +251,7 @@ public class ServerUI extends JPanel implements ListSelectionListener
 		while (clientTableModel.getRowCount() > 0)	//Clear the current table
 			clientTableModel.removeRow(0);
 		
-		for(Client ci:cAL)	//Build the new table
+		for(DesktopClient ci:cAL)	//Build the new table
 		{
 			clientTableList.add(ci);
 			clientTableModel.addRow(ci.getClientTableRow());
@@ -266,7 +266,7 @@ public class ServerUI extends JPanel implements ListSelectionListener
 	}
 	
 	//returns a reference to the client that is selected in the client table
-	Client getClientTableSelection()
+	DesktopClient getClientTableSelection()
 	{
 		if(clientTable.getSelectedRow() != -1)	//make sure row is selected
 			return clientTableList.get(clientTable.getSelectedRow());

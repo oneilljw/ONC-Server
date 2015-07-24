@@ -30,7 +30,7 @@ public class ServerChatManager
 		ChatMessage chatReq = gson.fromJson(json, ChatMessage.class);
 		
 		//find client. If found, ask client manager to queue the request, else respond not found
-		Client receiverClient = clientMgr.findClient(chatReq.getReceiverClientID());
+		DesktopClient receiverClient = clientMgr.findClient(chatReq.getReceiverClientID());
 		if(receiverClient != null)
 		{
 			clientMgr.notifyClient(receiverClient, "CHAT_REQUESTED" + json);
@@ -46,7 +46,7 @@ public class ServerChatManager
 		ChatMessage chatReq = gson.fromJson(json, ChatMessage.class);
 		
 		//find client. If found, ask client manager to queue the acceptance, else respond not found
-		Client receiverClient = clientMgr.findClient(chatReq.getReceiverClientID());
+		DesktopClient receiverClient = clientMgr.findClient(chatReq.getReceiverClientID());
 		if(receiverClient != null)
 		{
 			clientMgr.notifyClient(receiverClient, "CHAT_ACCEPTED" + json);
@@ -62,7 +62,7 @@ public class ServerChatManager
 		ChatMessage chatMssg = gson.fromJson(json, ChatMessage.class);
 		
 		//find client. If found, ask client manager to queue the request, else respond not found
-		Client receiverClient = clientMgr.findClient(chatMssg.getReceiverClientID());
+		DesktopClient receiverClient = clientMgr.findClient(chatMssg.getReceiverClientID());
 		if(receiverClient != null)
 		{
 			clientMgr.notifyClient(receiverClient, "CHAT_MESSAGE" + json);
@@ -79,7 +79,7 @@ public class ServerChatManager
 		ChatMessage chatEnd = gson.fromJson(json, ChatMessage.class);
 		
 		//find client. If found, ask client manager to queue the request, else respond not found
-		Client receiverClient = clientMgr.findClient(chatEnd.getReceiverClientID());
+		DesktopClient receiverClient = clientMgr.findClient(chatEnd.getReceiverClientID());
 		if(receiverClient != null)
 		{
 			clientMgr.notifyClient(receiverClient, "CHAT_ENDED" + json);
