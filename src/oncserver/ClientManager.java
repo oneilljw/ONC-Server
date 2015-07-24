@@ -14,6 +14,7 @@ import ourneighborschild.ONCUser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.sun.net.httpserver.HttpExchange;
 
 public class ClientManager implements ActionListener
 {
@@ -29,7 +30,8 @@ public class ClientManager implements ActionListener
 	
 	private static ClientManager instance = null;
 	
-	private ArrayList<DesktopClient> clientAL;	//list of clients connected to server
+	private ArrayList<DesktopClient> dtClientAL;	//list of desktop clients connected to server
+	private static ArrayList<WebClient> webClientAL;	//list of web clients connected to server
 	private int clientID;	
 	private ServerUI serverUI;
 	
@@ -37,7 +39,8 @@ public class ClientManager implements ActionListener
 	
 	private ClientManager()
 	{
-		clientAL = new ArrayList<DesktopClient>();
+		dtClientAL = new ArrayList<DesktopClient>();
+		webClientAL = new ArrayList<WebClient>();
 		clientID = 0;
 		
 		serverUI = ServerUI.getInstance();	//reference for client manager to communicate with UI
@@ -60,24 +63,24 @@ public class ClientManager implements ActionListener
 	void clientDied(DesktopClient c)
 	{
 		c.closeClientSocket();
-		clientAL.remove(c);
-		serverUI.displayClientTable(clientAL);
+		dtClientAL.remove(c);
+		serverUI.displayClientTable(dtClientAL);
 	}
 	
 	void clientQuit(DesktopClient c)
 	{
 		serverUI.addLogMessage(String.format("Client %d quit", c.getClientID()));
 		c.closeClientSocket();
-		clientAL.remove(c);
-		serverUI.displayClientTable(clientAL);
+		dtClientAL.remove(c);
+		serverUI.displayClientTable(dtClientAL);
 	}
 	
 	void killClient(DesktopClient c)
 	{
 		serverUI.addLogMessage(String.format("Client %d killed", c.getClientID()));
 		c.closeClientSocket();
-		clientAL.remove(c);
-		serverUI.displayClientTable(clientAL);
+		dtClientAL.remove(c);
+		serverUI.displayClientTable(dtClientAL);
 	}
 	
 	void clientLoggedOut(DesktopClient c)
@@ -85,21 +88,32 @@ public class ClientManager implements ActionListener
 		serverUI.addLogMessage(String.format("Client %d, %s logged out", c.getClientID(),
 												c.getClientName()));
 		c.closeClientSocket();
-		clientAL.remove(c);
-		serverUI.displayClientTable(clientAL);
+		dtClientAL.remove(c);
+		serverUI.displayClientTable(dtClientAL);
 	}
 	
-	synchronized DesktopClient addClient(Socket socket)
+	synchronized DesktopClient addDesktopClient(Socket socket)
 	{
 		DesktopClient c = new DesktopClient(socket, clientID);
-		clientAL.add(c);
-		serverUI.displayClientTable(clientAL);
+		dtClientAL.add(c);
+		serverUI.displayClientTable(dtClientAL);
 		c.start();
 		serverUI.addLogMessage(String.format("Client %d connected, ip= %s", 
 				clientID, socket.getRemoteSocketAddress().toString()));
 		clientID++;
 		
 		return c; 
+	}
+	
+	synchronized WebClient addWebClient(HttpExchange t)
+	{
+		WebClient wc = new WebClient();
+		webClientAL.add(wc);
+
+		serverUI.addLogMessage(String.format("Web Client connected, ip= %s", 
+				 				t.getRemoteAddress().toString()));
+		
+		return wc; 
 	}
 	
 	/*************************************************************************************
@@ -110,11 +124,11 @@ public class ClientManager implements ActionListener
 	{
 		//Search for client
 		int index = 0;
-		while(index < clientAL.size() && clientAL.get(index).getClientID() != clientID)
+		while(index < dtClientAL.size() && dtClientAL.get(index).getClientID() != clientID)
 			index++;
 			
-		if(index < clientAL.size())
-			return clientAL.get(index);
+		if(index < dtClientAL.size())
+			return dtClientAL.get(index);
 		else
 			return null;	//client not found
 	}
@@ -124,12 +138,12 @@ public class ClientManager implements ActionListener
 		serverUI.addLogMessage(mssg);
 		
 		if(bValid)	//redraw table, we now know who the client is
-			serverUI.displayClientTable(clientAL);
+			serverUI.displayClientTable(dtClientAL);
 	}
 	
 	void clientStateChanged()
 	{
-		serverUI.displayClientTable(clientAL);
+		serverUI.displayClientTable(dtClientAL);
 	}
 	
 	void addLogMessage(String mssg)
@@ -140,7 +154,7 @@ public class ClientManager implements ActionListener
 	String getOnlineUsers()
 	{
 		List<ONCUser> userList= new ArrayList<ONCUser>();
-		for(DesktopClient c:clientAL)
+		for(DesktopClient c:dtClientAL)
 			userList.add(c.getClientUser());
 			
 		Gson gson = new Gson();
@@ -153,7 +167,7 @@ public class ClientManager implements ActionListener
 	void notifyAllInYearClients(int year, String mssg)
 	{
 		//send message to all clients connected in a particular year. 
-		for(DesktopClient c:clientAL )
+		for(DesktopClient c:dtClientAL )
 		{
 			//Add change to the change queue's of every other client				//that is using the same years data
 			if(c.getYear() == year)	
@@ -164,7 +178,7 @@ public class ClientManager implements ActionListener
 	void notifyAllClients(String mssg)
 	{
 		//send message to all clients connected in a particular year. 
-		for(DesktopClient c:clientAL )
+		for(DesktopClient c:dtClientAL )
 		{
 			//Add change to the change queue's of every other client
 			c.addChange(mssg);
@@ -174,7 +188,7 @@ public class ClientManager implements ActionListener
 	void notifyAllOtherClients(DesktopClient requestingClient, String mssg)
 	{
 		//Add change to the change queue's of every other client
-		for(DesktopClient c:clientAL ) 
+		for(DesktopClient c:dtClientAL ) 
 			if(c != requestingClient )
 				c.addChange(mssg);
 	}
@@ -183,12 +197,12 @@ public class ClientManager implements ActionListener
 	{
 		//Search for client
 		int index = 0;
-		while(index < clientAL.size() &&! clientAL.get(index).equals(targetClient))
+		while(index < dtClientAL.size() &&! dtClientAL.get(index).equals(targetClient))
 			index++;
 		
-		if(index < clientAL.size())
+		if(index < dtClientAL.size())
 		{
-			clientAL.get(index).addChange(mssg);
+			dtClientAL.get(index).addChange(mssg);
 			return 0;
 		}
 		else
@@ -198,7 +212,7 @@ public class ClientManager implements ActionListener
 	void dataChanged(DesktopClient requestingClient, String change)
 	{
 		//Need to add change to all client changes lists so they can poll for the change
-		for(DesktopClient c:clientAL )
+		for(DesktopClient c:dtClientAL )
 		{
 			//Add change to the change queue's of every other client that is using the same years data
 			if(c != requestingClient  && c.getYear() == requestingClient.getYear())	
@@ -225,7 +239,7 @@ public class ClientManager implements ActionListener
 //		if(clientAL.size() > 0)	//add a hb check mssg to log if there any clients
 //			addLogMessage("Server Checking Client heart beats");
 		
-		for(DesktopClient c: clientAL)	
+		for(DesktopClient c: dtClientAL)	
 		{
 			ClientState clientState = c.getClientState();
 			long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
@@ -248,7 +262,7 @@ public class ClientManager implements ActionListener
 				{
 					//Heart beat was lost and remained lost past the terminal time limit
 					c.setClientHeartbeat(Heartbeat.Terminal);
-					serverUI.displayClientTable(clientAL);
+					serverUI.displayClientTable(dtClientAL);
 				
 					String mssg = String.format("Client %d heart beat terminal, not detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);
@@ -259,7 +273,7 @@ public class ClientManager implements ActionListener
 				{
 					//Heart beat was not detected
 					c.setClientHeartbeat(Heartbeat.Lost);
-					serverUI.displayClientTable(clientAL);
+					serverUI.displayClientTable(dtClientAL);
 				
 					String mssg = String.format("Client %d heart beat lost, not detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);
@@ -272,7 +286,7 @@ public class ClientManager implements ActionListener
 					//Heart beat was lost and is still lost or went terminal and re-recovered prior to
 					//killing the client
 					c.setClientHeartbeat(Heartbeat.Active);
-					serverUI.displayClientTable(clientAL);
+					serverUI.displayClientTable(dtClientAL);
 				
 					String mssg = String.format("Client %d heart beat recovered, detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);

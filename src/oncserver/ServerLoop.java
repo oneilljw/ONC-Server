@@ -43,7 +43,7 @@ public class ServerLoop extends Thread
         	{
     			//Server loops listening for clients to connect
     			Socket clientSocket = listener.accept();
-    			clientMgr.addClient(clientSocket);
+    			clientMgr.addDesktopClient(clientSocket);
         	}
     		catch(java.io.InterruptedIOException e)
     		{

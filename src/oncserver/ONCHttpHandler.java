@@ -43,7 +43,7 @@ public class ONCHttpHandler implements HttpHandler
     {
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
-    	String cleintIP = t.getRemoteAddress().toString();
+    	
 		
 		ServerUI serverUI = ServerUI.getInstance();
 		serverUI.addLogMessage(String.format("HTTP request %s: %s:%s", 
@@ -52,6 +52,9 @@ public class ONCHttpHandler implements HttpHandler
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
     	{
     		String response = null;
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		clientMgr.addWebClient(t);
+    		
     		try {	
     			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
     		} catch (IOException e) {
