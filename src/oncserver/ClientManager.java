@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
@@ -107,7 +108,7 @@ public class ClientManager implements ActionListener
 	
 	synchronized WebClient addWebClient(HttpExchange t)
 	{
-		WebClient wc = new WebClient();
+		WebClient wc = new WebClient(UUID.randomUUID());
 		webClientAL.add(wc);
 
 		serverUI.addLogMessage(String.format("Web Client connected, ip= %s", 

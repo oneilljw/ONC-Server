@@ -48,12 +48,14 @@ public class ONCHttpHandler implements HttpHandler
 		ServerUI serverUI = ServerUI.getInstance();
 		serverUI.addLogMessage(String.format("HTTP request %s: %s:%s", 
 				t.getRemoteAddress().toString(), t.getRequestMethod(), t.getRequestURI().toASCIIString()));
+
     	
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
     	{
     		String response = null;
     		ClientManager clientMgr = ClientManager.getInstance();
-    		clientMgr.addWebClient(t);
+    		WebClient wc =clientMgr.addWebClient(t);
+    		System.out.println("ONCHttpHandler.loginRequest UUID = " + wc.getSessionID());
     		
     		try {	
     			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
@@ -64,18 +66,18 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, response);
     	}
-    	else if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/jstest"))
-    	{
-    		String response = null;
-    		try {	
-    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), JSTEST_HTML_FILE));
-    		} catch (IOException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
-
-    		sendHTMLResponse(t,  response);
-    	}
+//    	else if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/jstest"))
+//    	{
+//    		String response = null;
+//    		try {	
+//    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), JSTEST_HTML_FILE));
+//    		} catch (IOException e) {
+//    			// TODO Auto-generated catch block
+//    			e.printStackTrace();
+//    		}
+//
+//    		sendHTMLResponse(t,  response);
+//    	}
     	else if(t.getRequestURI().toString().contains("/login"))
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params));
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
@@ -180,8 +182,6 @@ public class ONCHttpHandler implements HttpHandler
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
-	    		UUID idOne = UUID.randomUUID();
-	    		System.out.println("ONCHttpHandler.loginRequest UUID = " + idOne);
 	    		html += String.format(", %s!</i></b></p>", serverUser.getFirstname());
 	    		html += getFamilyTable(DEFAULT_YEAR, -1);
 	    	}   	
