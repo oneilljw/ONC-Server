@@ -80,7 +80,10 @@ public class ONCHttpHandler implements HttpHandler
     	else if(t.getRequestURI().toString().contains("/login"))
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
+    	{
+    		System.out.println("ONCHttpHandler: Token = " + (String) params.get("token"));
     		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
+    	}
     	else if(t.getRequestURI().toString().contains("/agents"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));

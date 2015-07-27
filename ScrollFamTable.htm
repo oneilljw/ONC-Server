@@ -8,9 +8,9 @@
 //	var url ="http://cfs.idtus.com:8902";
 	var url ="http://localhost:8902"; 
   
-	var urlYears = url.concat("/dbStatus?callback=?");
-	var urlAgents = url.concat("/agents?year=YEAR&callback=?");
-	var urlFamilies = url.concat("/families?year=YEAR&callback=?");
+	var urlYears = url.concat("/dbStatus?token=REPLACE_TOKEN&callback=?");
+	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
+	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var year;
 	var famJson;
 	
@@ -49,6 +49,7 @@
     
     function getFamiliesFromServer(year)
     {
+    	var token = sessionStorage
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		famJson = data;
