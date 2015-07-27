@@ -196,7 +196,7 @@ public class ONCHttpHandler implements HttpHandler
 	    	{
 	    		ClientManager clientMgr = ClientManager.getInstance();
 	    		WebClient wc = clientMgr.addWebClient(t);
-	    		System.out.println("ONCHttpHandler.loginRequest UUID = " + wc.getSessionID());
+//	    		System.out.println("ONCHttpHandler.loginRequest UUID = " + wc.getSessionID());
 	    		String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", serverUser.getFirstname());
 	    		html = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 	    				
