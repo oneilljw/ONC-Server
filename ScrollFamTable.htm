@@ -14,6 +14,8 @@
 	var year;
 	var famJson;
 	
+	sessionStorage.setItem("whoamI", "REPLACE_TOKEN");
+	
     $( document ).ready(function()
     {
     	//get the list of years from the data base and put it in the year combo box
@@ -228,6 +230,7 @@
     </style>
 </head>
 <body>
+	<p><b><i>Welcome to Our Neighbors Child, USER_NAME_HERE</i></b></p>
 	<form>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="agents">Families Referred By:</label>

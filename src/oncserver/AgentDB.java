@@ -67,7 +67,7 @@ public class AgentDB extends ONCServerDB
 	 * @param callbackFunction
 	 * @return
 	 */
-	static String getAgentsJSONP(int year, String callbackFunction)
+	static HtmlResponse getAgentsJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();
@@ -82,7 +82,7 @@ public class AgentDB extends ONCServerDB
 		String response = gson.toJson(agentReferredInYearList, listtype);
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return callbackFunction +"(" + response +")";		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
 	String update(int year, String json)

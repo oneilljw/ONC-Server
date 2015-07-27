@@ -25,6 +25,9 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String JSTEST_HTML_FILE = "Jstest.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	
+	private static final int HTTP_OK = 200;
+	private static final int HTTP_FORBIDDEN = 403;
+	
 //	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
 //	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
 /*	
@@ -53,10 +56,6 @@ public class ONCHttpHandler implements HttpHandler
     	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
     	{
     		String response = null;
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc =clientMgr.addWebClient(t);
-    		System.out.println("ONCHttpHandler.loginRequest UUID = " + wc.getSessionID());
-    		
     		try {	
     			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
     		} catch (IOException e) {
@@ -64,7 +63,7 @@ public class ONCHttpHandler implements HttpHandler
     			e.printStackTrace();
     		}
     		
-    		sendHTMLResponse(t, response);
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
 //    	else if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/jstest"))
 //    	{
@@ -79,19 +78,19 @@ public class ONCHttpHandler implements HttpHandler
 //    		sendHTMLResponse(t,  response);
 //    	}
     	else if(t.getRequestURI().toString().contains("/login"))
-    		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params));
+    		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
     		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
     	else if(t.getRequestURI().toString().contains("/agents"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
-    		String response = AgentDB.getAgentsJSONP(year, (String) params.get("callback"));
+    		HtmlResponse response = AgentDB.getAgentsJSONP(year, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(t.getRequestURI().toString().contains("/families"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
-    		String response = FamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
+    		HtmlResponse response = FamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(t.getRequestURI().toString().contains("/oncsplash"))
@@ -117,31 +116,41 @@ public class ONCHttpHandler implements HttpHandler
   	      	os.write(bytearray,0,bytearray.length);
   	      	os.close();
     	}
-    	else if(t.getRequestURI().toString().contains("/refresh"))
-    	{
-    		if(t.getRequestMethod().toLowerCase().equals("post"))
-    		{
-    			int dbYear = Integer.parseInt((String) params.get("dbYear"));
-    	    	int agentID = Integer.parseInt((String) params.get("agtID"));
-    	    	System.out.println(dbYear + " " + agentID);
-    	    	
-    			String response = getFamilyTable(2014, agentID);
-    			sendHTMLResponse(t, response);
-    		}
-    	}
+//    	else if(t.getRequestURI().toString().contains("/refresh"))
+//    	{
+//    		if(t.getRequestMethod().toLowerCase().equals("post"))
+//    		{
+//    			int dbYear = Integer.parseInt((String) params.get("dbYear"));
+//    	    	int agentID = Integer.parseInt((String) params.get("agtID"));
+//    	    	System.out.println(dbYear + " " + agentID);
+//    	    	
+//    			String response = getFamilyTable(2014, agentID);
+//    			sendHTMLResponse(t, response);
+//    		}
+//   	}
     }
 	
-	void sendHTMLResponse(HttpExchange t, String response) throws IOException
+	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
 	{
-		t.sendResponseHeaders(200, response.length());
-		OutputStream os = t.getResponseBody();
-		os.write(response.getBytes());
-		os.close();
+		if(html.getResponseCode() == HTTPCode.Ok)
+		{
+			t.sendResponseHeaders(html.getCode(), html.getResponse().length());
+			OutputStream os = t.getResponseBody();
+			os.write(html.getResponse().getBytes());
+			os.close();
+		}
+		else
+		{
+			t.sendResponseHeaders(html.getCode(), -1);
+		}
+		
 		t.close();
 	}
 	
-	String loginRequest(String method, Map<String, Object> params)
+	HtmlResponse loginRequest(String method, Map<String, Object> params, HttpExchange t)
 	{
+		HtmlResponse response = null;
+		
 		ServerUserDB userDB = null;
 		try {
 			userDB = ServerUserDB.getInstance();
@@ -171,28 +180,40 @@ public class ONCHttpHandler implements HttpHandler
 	    	if(serverUser == null)	//can't find the user in the data base
 	    	{
 	    		html += "</i></b></p><p>User name not found</p>";
+	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && serverUser.getPermission() == UserPermission.INACTIVE)	//can't find the user in the data base
 	    	{
 	    		html += "</i></b></p><p>Inactive user account, please contact the executive director</p>";
+	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
 	    	{
 	    		html += "</i></b></p><p>Incorrect password, access denied</p>";
+	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
-	    		html += String.format(", %s!</i></b></p>", serverUser.getFirstname());
-	    		html += getFamilyTable(DEFAULT_YEAR, -1);
+	    		ClientManager clientMgr = ClientManager.getInstance();
+	    		WebClient wc = clientMgr.addWebClient(t);
+	    		System.out.println("ONCHttpHandler.loginRequest UUID = " + wc.getSessionID());
+	    		String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", serverUser.getFirstname());
+	    		html = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+	    				
+	    		response = new HtmlResponse(html, HTTPCode.Ok);
 	    	}   	
 		}
 		else
+		{
 			html += "<p>Invalid Request Method</p>";
+			response = new HtmlResponse(html, HTTPCode.Forbidden);
+		}
 		
-		return html +"</body></html>";
+		response.append("</body></html>");
+		return response;
 	}
 	
-	String getFamilyTable(int year, int agtID)
+	String getFamilyTableHTML(int year, int agtID)
 	{
 		//read the family table html
 		String famTableHTML = null;

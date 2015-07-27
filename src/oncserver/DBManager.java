@@ -108,13 +108,13 @@ public class DBManager
 		return response;		
 	}
 	
-	static String getDatabaseStatusJSONP(String callbackFunction)
+	static HtmlResponse getDatabaseStatusJSONP(String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listOfDBs = new TypeToken<ArrayList<DBYear>>(){}.getType();
 	
 		//wrap the json in the callback function per the JSONP protocol
-		return callbackFunction +"(" + gson.toJson(dbYearList, listOfDBs) +")";		
+		return new HtmlResponse(callbackFunction +"(" + gson.toJson(dbYearList, listOfDBs) +")", HTTPCode.Ok);		
 	}
 	
 	static String getDatabaseStatusJSON()

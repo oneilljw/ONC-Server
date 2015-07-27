@@ -92,7 +92,7 @@ public class FamilyDB extends ONCServerDB
 		return response;	
 	}
 	
-	static String getFamiliesJSONP(int year, String callbackFunction)
+	static HtmlResponse getFamiliesJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listOfWebsiteFamilies = new TypeToken<ArrayList<ONCWebsiteFamily>>(){}.getType();
@@ -106,7 +106,7 @@ public class FamilyDB extends ONCServerDB
 		String response = gson.toJson(responseList, listOfWebsiteFamilies);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return callbackFunction +"(" + response +")";		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
 	String update(int year, String familyjson, boolean bAutoAssign)
