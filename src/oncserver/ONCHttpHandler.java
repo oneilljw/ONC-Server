@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.Map;
 
 import ourneighborschild.ONCServerUser;
@@ -199,6 +200,15 @@ public class ONCHttpHandler implements HttpHandler
 	    	{
 	    		ClientManager clientMgr = ClientManager.getInstance();
 	    		WebClient wc = clientMgr.addWebClient(t);
+	    		
+	    		long oldSessions = serverUser.getNSessions();
+	    		long currSessions = serverUser.incrementSessions();
+	    		serverUser.setLastLogin(new Date());
+	    		
+	    		System.out.println(String.format("ONCHttpHandler.loginRequest: prior sessions=%d, now=%d",
+	    				oldSessions, currSessions));
+	    		userDB.save(DEFAULT_YEAR);	//year will equal -1 at this point, but ignored. Only one user.csv
+	    		
 //	    		System.out.println("ONCHttpHandler.loginRequest UUID = " + wc.getSessionID());
 	    		String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", serverUser.getFirstname());
 	    		html = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
