@@ -11,38 +11,23 @@ import java.util.Date;
 import java.util.Map;
 
 import ourneighborschild.ONCServerUser;
+import ourneighborschild.ONCUser;
 import ourneighborschild.UserPermission;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.util.UUID;
+import com.google.gson.Gson;
 
 public class ONCHttpHandler implements HttpHandler
 {
 	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
 	private static final String LOGOUT_HTML_FILE = "logout.htm";
-	private static final String JSTEST_HTML_FILE = "Jstest.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	
 	private static final int HTTP_OK = 200;
-	private static final int HTTP_FORBIDDEN = 403;
 	
-//	private final String[] famstatus = {"Unverified", "Info Verified", "Gifts Selected", "Gifts Received", "Gifts Verified", "Packaged"};
-//	private final String[] delstatus = {"Empty", "Contacted", "Confirmed", "Assigned", "Attempted", "Returned", "Delivered", "Counselor Pick-Up"};
-/*	
-	ONCHttpHandler()
-	{
-		//read the family table into memory once
-		try {
-			famTableHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-*/	
 	public void handle(HttpExchange t) throws IOException 
     {
     	@SuppressWarnings("unchecked")
@@ -66,23 +51,11 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-//    	else if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/jstest"))
-//    	{
-//    		String response = null;
-//    		try {	
-//    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), JSTEST_HTML_FILE));
-//    		} catch (IOException e) {
-//    			// TODO Auto-generated catch block
-//    			e.printStackTrace();
-//    		}
-//
-//    		sendHTMLResponse(t,  response);
-//    	}
     	else if(t.getRequestURI().toString().contains("/login"))
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
     	{
-    		System.out.println("ONCHttpHandler: Token = " + (String) params.get("token"));
+//    		System.out.println("ONCHttpHandler: Token = " + (String) params.get("token"));
     		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
     	}
     	else if(t.getRequestURI().toString().contains("/agents"))
@@ -115,39 +88,20 @@ public class ONCHttpHandler implements HttpHandler
   	      	bis.close();
 
   	      	//send the response.
-  	      	t.sendResponseHeaders(200, file.length());
+  	      	t.sendResponseHeaders(HTTP_OK, file.length());
   	      	OutputStream os = t.getResponseBody();
   	      	os.write(bytearray,0,bytearray.length);
   	      	os.close();
+  	      	t.close();
     	}
-//    	else if(t.getRequestURI().toString().contains("/refresh"))
-//    	{
-//    		if(t.getRequestMethod().toLowerCase().equals("post"))
-//    		{
-//    			int dbYear = Integer.parseInt((String) params.get("dbYear"));
-//    	    	int agentID = Integer.parseInt((String) params.get("agtID"));
-//    	    	System.out.println(dbYear + " " + agentID);
-//    	    	
-//    			String response = getFamilyTable(2014, agentID);
-//    			sendHTMLResponse(t, response);
-//    		}
-//   	}
     }
 	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
 	{
-		if(html.getResponseCode() == HTTPCode.Ok)
-		{
-			t.sendResponseHeaders(html.getCode(), html.getResponse().length());
-			OutputStream os = t.getResponseBody();
-			os.write(html.getResponse().getBytes());
-			os.close();
-		}
-		else
-		{
-			t.sendResponseHeaders(html.getCode(), -1);
-		}
-		
+		t.sendResponseHeaders(html.getCode(), html.getResponse().length());
+		OutputStream os = t.getResponseBody();
+		os.write(html.getResponse().getBytes());
+		os.close();
 		t.close();
 	}
 	
@@ -183,17 +137,17 @@ public class ONCHttpHandler implements HttpHandler
 	  
 	    	if(serverUser == null)	//can't find the user in the data base
 	    	{
-	    		html += "</i></b></p><p>User name not found</p>";
+	    		html += "</i></b></p><p>User name not found</p></body></html>";
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && serverUser.getPermission() == UserPermission.INACTIVE)	//can't find the user in the data base
 	    	{
-	    		html += "</i></b></p><p>Inactive user account, please contact the executive director</p>";
+	    		html += "</i></b></p><p>Inactive user account, please contact the executive director</p></body></html>";
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
 	    	{
-	    		html += "</i></b></p><p>Incorrect password, access denied</p>";
+	    		html += "</i></b></p><p>Incorrect password, access denied</p></body></html>";
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
@@ -201,15 +155,17 @@ public class ONCHttpHandler implements HttpHandler
 	    		ClientManager clientMgr = ClientManager.getInstance();
 	    		WebClient wc = clientMgr.addWebClient(t);
 	    		
-	    		long oldSessions = serverUser.getNSessions();
-	    		long currSessions = serverUser.incrementSessions();
 	    		serverUser.setLastLogin(new Date());
-	    		
-	    		System.out.println(String.format("ONCHttpHandler.loginRequest: prior sessions=%d, now=%d",
-	    				oldSessions, currSessions));
 	    		userDB.save(DEFAULT_YEAR);	//year will equal -1 at this point, but ignored. Only one user.csv
 	    		
-//	    		System.out.println("ONCHttpHandler.loginRequest UUID = " + wc.getSessionID());
+	    		ONCUser webUser = serverUser.getUserFromServerUser();
+	    		
+	    		Gson gson = new Gson();
+	    		String loginJson = gson.toJson(webUser, ONCUser.class);
+	    		
+	    		String mssg = "UPDATED_USER" + loginJson;
+	    		clientMgr.notifyAllClients(mssg);
+	    		
 	    		String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", serverUser.getFirstname());
 	    		html = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 	    				
@@ -218,11 +174,10 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		else
 		{
-			html += "<p>Invalid Request Method</p>";
+			html += "<p>Invalid Request Method</p></body></html>";
 			response = new HtmlResponse(html, HTTPCode.Forbidden);
 		}
 		
-		response.append("</body></html>");
 		return response;
 	}
 	
@@ -243,7 +198,7 @@ public class ONCHttpHandler implements HttpHandler
 
 	private String readFile( String file ) throws IOException
 	{
-		ServerUI sUI = ServerUI.getInstance();
+		
 		
 	    BufferedReader reader = new BufferedReader( new FileReader (file));
 	    String         line = null;
@@ -258,7 +213,8 @@ public class ONCHttpHandler implements HttpHandler
 	    
 	    reader.close();
 	    
-	    sUI.addLogMessage(String.format("Read %s, length = %d", file, stringBuilder.toString().length()));
+//	    ServerUI sUI = ServerUI.getInstance();
+//	    sUI.addLogMessage(String.format("Read %s, length = %d", file, stringBuilder.toString().length()));
 	    return stringBuilder.toString();
 	}	
 }
