@@ -39,8 +39,28 @@ public class ONCHttpHandler implements HttpHandler
 				t.getRemoteAddress().toString(), t.getRequestMethod(), t.getRequestURI().toASCIIString()));
 
     	
-    	if(t.getRequestURI().toString().equals("/") || t.getRequestURI().toString().contains("/logout"))
+    	if(t.getRequestURI().toString().equals("/"))
     	{
+    		String response = null;
+    		try {	
+    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(t.getRequestURI().toString().contains("/logout"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		
+    		if(clientMgr.logoutWebClient(sessionID))
+    			System.out.println(String.format("ONCHttpHandler.handle %s logged out", sessionID));
+    		else
+    			System.out.println("ONCHttpHandler.handle: logout failure, client not found");
+    		
     		String response = null;
     		try {	
     			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
@@ -124,8 +144,6 @@ public class ONCHttpHandler implements HttpHandler
 	    		+"<body>"
 	    		+"<p><b><i>Welcome to Our Neighbors Child";    		
 		
-//		System.out.println(String.format("username= %s,  pw= %s", params.get("field1"), params.get("field2")));
-		
 		if(method.toLowerCase().equals("post"))
 		{
 			String userID = (String) params.get("field1");
@@ -151,14 +169,14 @@ public class ONCHttpHandler implements HttpHandler
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
-	    	{
-	    		ClientManager clientMgr = ClientManager.getInstance();
-	    		WebClient wc = clientMgr.addWebClient(t);
-	    		
+	    	{	
 	    		serverUser.setLastLogin(new Date());
 	    		userDB.save(DEFAULT_YEAR);	//year will equal -1 at this point, but ignored. Only one user.csv
 	    		
 	    		ONCUser webUser = serverUser.getUserFromServerUser();
+	    		
+	    		ClientManager clientMgr = ClientManager.getInstance();
+	    		WebClient wc = clientMgr.addWebClient(t, webUser);
 	    		
 	    		Gson gson = new Gson();
 	    		String loginJson = gson.toJson(webUser, ONCUser.class);
@@ -198,17 +216,14 @@ public class ONCHttpHandler implements HttpHandler
 
 	private String readFile( String file ) throws IOException
 	{
-		
-		
 	    BufferedReader reader = new BufferedReader( new FileReader (file));
 	    String         line = null;
 	    StringBuilder  stringBuilder = new StringBuilder();
-	    String         ls = System.getProperty("line.separator");
 
 	    while( ( line = reader.readLine() ) != null )
 	    {
 	        stringBuilder.append(line);
-	        stringBuilder.append(ls);
+	        stringBuilder.append(System.getProperty("line.separator"));
 	    }
 	    
 	    reader.close();

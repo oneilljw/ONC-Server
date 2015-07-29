@@ -106,20 +106,20 @@ public class ClientManager implements ActionListener
 		return c; 
 	}
 	
-	synchronized WebClient addWebClient(HttpExchange t)
+	synchronized WebClient addWebClient(HttpExchange t, ONCUser webUser)
 	{
-		WebClient wc = new WebClient(UUID.randomUUID());
+		WebClient wc = new WebClient(UUID.randomUUID(), webUser);
 		webClientAL.add(wc);
 
-		serverUI.addLogMessage(String.format("Web Client connected, ip= %s", 
-				 				t.getRemoteAddress().toString()));
+		serverUI.addLogMessage(String.format("Web Client connected, ip=%s, user= %s, sessionID=%s", 
+				 				t.getRemoteAddress().toString(), webUser.getLastname(), wc.getSessionID()));
 		
 		return wc; 
 	}
 	
 	/*************************************************************************************
-	 * Find a client by client id. If client id is not logged into the server, return null,
-	 * otherwise return a reference to the client.
+	 * Find a desktop client by client id. If client id is not logged into the server, 
+	 * return null,otherwise return a reference to the client.
 	 * **********************************************************************************/
 	DesktopClient findClient(long clientID)
 	{
@@ -132,6 +132,43 @@ public class ClientManager implements ActionListener
 			return dtClientAL.get(index);
 		else
 			return null;	//client not found
+	}
+	
+	/*************************************************************************************
+	 * Find a web client by client token. If client token is not logged into the server, 
+	 * return null,otherwise return a reference to the web client.
+	 * **********************************************************************************/
+	WebClient findClient(String sessionID)
+	{
+		//Search for client
+		int index = 0;
+		while(index < webClientAL.size() && !webClientAL.get(index).getSessionID().equals(sessionID))
+			index++;
+			
+		if(index < webClientAL.size())
+			return webClientAL.get(index);
+		else
+			return null;	//client not found
+	}
+	
+	/*************************************************************************************
+	 * Find a web client by client token. If client token is not logged into the server, 
+	 * return null,otherwise return a reference to the web client.
+	 * **********************************************************************************/
+	boolean logoutWebClient(String sessionID)
+	{
+		//Search for client
+		int index = 0;
+		while(index < webClientAL.size() && !webClientAL.get(index).getSessionID().equals(sessionID))
+			index++;
+			
+		if(index < webClientAL.size())	//found web client
+		{	
+			webClientAL.remove(index);
+			return true;
+		}
+		else
+			return false;	//client not found
 	}
 	
 	void clientLoginAttempt(boolean bValid, String mssg)
