@@ -71,7 +71,7 @@
     		$("#tbodyid").empty();
     		for(var i=0; i<pyFamJson.length; i++)
     		{
-    			addRow(pyFamJson[i]);	//add row to table
+    			addRow(pyFamJson[i], "pyTable");	//add row to table
     		}
     	});
     }
@@ -138,20 +138,20 @@
 		{
     		if(agentID == -1 || agentID == pyFamJson[i].agentID)
     		{
-    			addRow(pyFamJson[i]);	//add row to table
+    			addRow(pyFamJson[i], "pyTable");	//add row to table
     		}
 		}
     }
     
-    function addRow(family)
+    function addRow(family, tablename)
     {
         if (!document.getElementsByTagName) return;
         
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
       					  family.fstatus, family.dstatus, family.mealStatus];
         
-	    tabBody=document.getElementsByTagName("tbody").item(0);
-//	    tabBody=document.getElementsByID("tbodyid");
+//	    tabBody=document.getElementsByTagName("tbody").item(0);
+	    var tabBody = document.getElementById(tablename).getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
         for(index=0; index < familyinfo.length; index++)	//create the family info cells
@@ -254,7 +254,7 @@
 		<select id="pyagents"  onchange="updateForAgentSelection()" name="pyagtID"></select>
 	</form>
 <div id="constrainer2">
-    <table>
+    <table id="pyTable">
         <thead>
         <tr>
        		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
@@ -275,7 +275,7 @@
 		<select id="curragents"  onchange="updateForAgentSelection()" name="curragtID"></select>
 	</form>
 <div id="constrainer2">
-    <table>
+    <table id = cyTable>
         <thead>
         <tr>
        		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
