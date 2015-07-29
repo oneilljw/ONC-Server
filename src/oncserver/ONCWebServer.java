@@ -39,6 +39,9 @@ public class ONCWebServer
 		
 		context = server.createContext("/logout", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/newfamily", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
 		    
 		server.setExecutor(null); // creates a default executor
 		server.start();

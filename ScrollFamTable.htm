@@ -11,40 +11,55 @@
 	var urlYears = url.concat("/dbStatus?token=REPLACE_TOKEN&callback=?");
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
-	var year;
-	var famJson;
+	var currYear;
+	var priorYear;
+	var pyFamJson;
+	var cyFamJson;
 	
 	sessionStorage.setItem("whoamI", "REPLACE_TOKEN");
 	
     $( document ).ready(function()
     {
+    	currYear = new Date().getFullYear();
+		document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
+		
+		priorYear = new Date().getFullYear()-1;
+		
     	//get the list of years from the data base and put it in the year combo box
     	$.getJSON(urlYears, function(data)
     	{
 			var combo = document.getElementById("dbYears");
     		for (var i = data.length-1; i >= 0; i--)
     		{
-    			if(i==data.length-1)	//set year to the last year in the list from the server
-    				year = data[i].id;
+    			
+    			
+//    			if(i==data.length-1)	//set year to the last year in the list from the server
+//    				year = data[i].id;
     			
     			var option = document.createElement("option");
     			option.text = data[i].id;
     	    	option.value = data[i].id;
-    	    	try 
+    	    	if(option.value != currYear)	//dont add current year to year selections
     	    	{
-    	        	combo.add(option, null); //Standard 
-    	    	} 
-    	    	catch(error) 
-    	    	{
-    	        	combo.add(option); // IE only
-    	    	}  
+    	    		try 
+    	    		{
+    	        		combo.add(option, null); //Standard 
+    	    		} 
+    	    		catch(error) 
+    	    		{
+    	        		combo.add(option); // IE only
+    	    		}
+    	    	}
     		}
     	});
     	//get the list of agents from the database and put it in the agent combobox
-    	getAgentsFromServer(2014);
+    	getAgentsFromServer(priorYear.toString(), "pyagents");
 
-    	//get families from server
-    	getFamiliesFromServer(2014);
+    	//get prior year families from server
+    	getFamiliesFromServer(priorYear.toString());
+    	
+    	//get current year families from server
+
     });
     
     function getFamiliesFromServer(year)
@@ -52,24 +67,24 @@
     	var token = sessionStorage
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
-    		famJson = data;
+    		pyFamJson = data;
     		$("#tbodyid").empty();
-    		for(var i=0; i<famJson.length; i++)
+    		for(var i=0; i<pyFamJson.length; i++)
     		{
-    			addRow(famJson[i]);	//add row to table
+    			addRow(pyFamJson[i]);	//add row to table
     		}
     	});
     }
     
-    function getAgentsFromServer(year)
+    function getAgentsFromServer(year, cbID)
     {
     	//clear the agent combobox
-    	document.getElementById("agents").options.length = 0;
+    	document.getElementById(cbID).options.length = 0;
 		
     	//get updated agentJson from server and place into combobox
     	$.getJSON(urlAgents.replace("YEAR", year.toString()), function(data)
     	{
-			var agtCombo = document.getElementById("agents");
+			var agtCombo = document.getElementById(cbID);
 			
 			//add the "Anyone" option
 			var agtOption = document.createElement("option");
@@ -106,24 +121,24 @@
     {
     	//get selected year
     	var yearCB = document.getElementById("dbYears");
-		year = yearCB.options[yearCB.selectedIndex].value;
+		priorYear = yearCB.options[yearCB.selectedIndex].value;
     	
-    	getAgentsFromServer(year);	//get agents from server
+    	getAgentsFromServer(priorYear, "pyagents");	//get agents from server
 
-    	getFamiliesFromServer(year);	//get families from server
+    	getFamiliesFromServer(priorYear);	//get families from server
     }
     
     function updateForAgentSelection()
     {
     	$("#tbodyid").empty();
-    	var e = document.getElementById("agents");
+    	var e = document.getElementById("pyagents");
     	var agentID = e.options[e.selectedIndex].value;
     	
-    	for(var i=0; i<famJson.length; i++)
+    	for(var i=0; i<pyFamJson.length; i++)
 		{
-    		if(agentID == -1 || agentID == famJson[i].agentID)
+    		if(agentID == -1 || agentID == pyFamJson[i].agentID)
     		{
-    			addRow(famJson[i]);	//add row to table
+    			addRow(pyFamJson[i]);	//add row to table
     		}
 		}
     }
@@ -135,7 +150,8 @@
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
       					  family.fstatus, family.dstatus, family.mealStatus];
         
-        tabBody=document.getElementsByTagName("tbody").item(0);
+	    tabBody=document.getElementsByTagName("tbody").item(0);
+//	    tabBody=document.getElementsByID("tbodyid");
         row=document.createElement("tr");
          
         for(index=0; index < familyinfo.length; index++)	//create the family info cells
@@ -234,8 +250,8 @@
 	<p><b><i>Welcome to Our Neighbors Child, USER_NAME_HERE</i></b></p>
 	<form>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
-		<label for="agents">Families Referred By:</label>
-		<select id="agents"  onchange="updateForAgentSelection()" name="agtID"></select>
+		<label for="pyagents">Families Referred By:</label>
+		<select id="pyagents"  onchange="updateForAgentSelection()" name="pyagtID"></select>
 	</form>
 <div id="constrainer2">
     <table>
@@ -250,9 +266,29 @@
 	</table>
 </div>
 <br>
-	<form action="logout?token=REPLACE_TOKEN" method="post">
-  		<button type="submit">Logout</button>
+	<form action="newfamily?token=REPLACE_TOKEN" method="post">
   		<button type="submit">New Family</button>
 	</form>	
+<br>
+<form>
+		<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
+		<select id="curragents"  onchange="updateForAgentSelection()" name="curragtID"></select>
+	</form>
+<div id="constrainer2">
+    <table>
+        <thead>
+        <tr>
+       		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
+        	<th>Gift Status</th><th>Delivery Status</th><th>Meal Status</th>
+        </tr>
+        </thead>
+        <tbody id="tbodycurrid">
+        </tbody>
+	</table>
+</div>
+<br>
+	<form action="logout?token=REPLACE_TOKEN" method="post">
+  		<button type="submit">Logout</button>
+	</form>		
 </body>
 </html>

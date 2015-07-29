@@ -56,9 +56,7 @@ public class ONCHttpHandler implements HttpHandler
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
     		
-    		if(clientMgr.logoutWebClient(sessionID))
-    			System.out.println(String.format("ONCHttpHandler.handle %s logged out", sessionID));
-    		else
+    		if(!clientMgr.logoutWebClient(sessionID))
     			System.out.println("ONCHttpHandler.handle: logout failure, client not found");
     		
     		String response = null;
@@ -114,6 +112,16 @@ public class ONCHttpHandler implements HttpHandler
   	      	os.close();
   	      	t.close();
     	}
+    	else if(t.getRequestURI().toString().contains("/newfamily"))
+    	{
+    		String html = "<!DOCTYPE html><html>"
+    	    		+"<body>"
+    	    		+"<p><b><i>New family form will go here</i></b></p>"
+    				+"</body>"
+    	    		+"</html>";
+    		sendHTMLResponse(t, new HtmlResponse(html, HTTPCode.Ok));
+    	}
+    	
     }
 	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
