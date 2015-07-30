@@ -31,11 +31,6 @@
 			var combo = document.getElementById("dbYears");
     		for (var i = data.length-1; i >= 0; i--)
     		{
-    			
-    			
-//    			if(i==data.length-1)	//set year to the last year in the list from the server
-//    				year = data[i].id;
-    			
     			var option = document.createElement("option");
     			option.text = data[i].id;
     	    	option.value = data[i].id;
@@ -56,22 +51,41 @@
     	getAgentsFromServer(priorYear.toString(), "pyagents");
 
     	//get prior year families from server
-    	getFamiliesFromServer(priorYear.toString());
+    	getPYFamiliesFromServer(priorYear.toString());
+    	
+    	//get the list of agents from the database and put it in the agent combobox
+    	getAgentsFromServer(currYear.toString(), "curragents");
     	
     	//get current year families from server
-
+    	getCYFamiliesFromServer(currYear.toString());
     });
     
-    function getFamiliesFromServer(year)
+    function getPYFamiliesFromServer(year)
     {
     	var token = sessionStorage
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		pyFamJson = data;
     		$("#tbodyid").empty();
-    		for(var i=0; i<pyFamJson.length; i++)
+    		
+    		for(var i=0; i<data.length; i++)
     		{
-    			addRow(pyFamJson[i], "pyTable");	//add row to table
+    			addRow(data[i], "pyTable", "Refer");	//add row to table
+    		}
+    	});
+    }
+    
+    function getCYFamiliesFromServer(year)
+    {
+    	var token = sessionStorage
+    	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
+    	{
+    		cyFamJson = data;
+    		$("#tbodycurrid").empty();
+    		
+    		for(var i=0; i<data.length; i++)
+    		{
+    			addRow(data[i],  "cyTable", "Detail");	//add row to table
     		}
     	});
     }
@@ -125,10 +139,10 @@
     	
     	getAgentsFromServer(priorYear, "pyagents");	//get agents from server
 
-    	getFamiliesFromServer(priorYear);	//get families from server
+    	getPYFamiliesFromServer(priorYear.toString());
     }
     
-    function updateForAgentSelection()
+    function updateForPYAgentSelection()
     {
     	$("#tbodyid").empty();
     	var e = document.getElementById("pyagents");
@@ -138,12 +152,27 @@
 		{
     		if(agentID == -1 || agentID == pyFamJson[i].agentID)
     		{
-    			addRow(pyFamJson[i], "pyTable");	//add row to table
+    			addRow(pyFamJson[i], "pyTable", "Refer");	//add row to table
     		}
 		}
     }
     
-    function addRow(family, tablename)
+    function updateForCYAgentSelection()
+    {
+    	$("#tbodycurrid").empty();
+    	var e = document.getElementById("curragents");
+    	var agentID = e.options[e.selectedIndex].value;
+    	
+    	for(var i=0; i<cyFamJson.length; i++)
+		{
+    		if(agentID == -1 || agentID == cyFamJson[i].agentID)
+    		{
+    			addRow(cyFamJson[i], "cyTable", "Detail");	//add row to table
+    		}
+		}
+    }
+    
+    function addRow(family, tablename, buttonname)
     {
         if (!document.getElementsByTagName) return;
         
@@ -163,7 +192,7 @@
         
         btn = document.createElement("button");
         btn.value=family.id;
-        btn.innerHTML = 'Refer'
+        btn.innerHTML = buttonname;
         btn.onclick=function() {referFamily(family.id);};
         row.appendChild(btn);
         
@@ -251,7 +280,7 @@
 	<form>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="pyagents">Families Referred By:</label>
-		<select id="pyagents"  onchange="updateForAgentSelection()" name="pyagtID"></select>
+		<select id="pyagents"  onchange="updateForPYAgentSelection()" name="pyagtID"></select>
 	</form>
 <div id="constrainer2">
     <table id="pyTable">
@@ -272,7 +301,7 @@
 <br>
 <form>
 		<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
-		<select id="curragents"  onchange="updateForAgentSelection()" name="curragtID"></select>
+		<select id="curragents"  onchange="updateForCYAgentSelection()" name="curragtID"></select>
 	</form>
 <div id="constrainer2">
     <table id = cyTable>
