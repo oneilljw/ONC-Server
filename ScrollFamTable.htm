@@ -11,6 +11,7 @@
 	var urlYears = url.concat("/dbStatus?token=REPLACE_TOKEN&callback=?");
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
+	var urlRefer = url.concat("/referral?token=REPLACE_TOKEN&year=YEAR&famID=FAMID");
 	var currYear;
 	var priorYear;
 	var pyFamJson;
@@ -70,7 +71,7 @@
     		
     		for(var i=0; i<data.length; i++)
     		{
-    			addRow(data[i], "pyTable", "Refer");	//add row to table
+    			addPYTableRow(data[i]);	//add row to table
     		}
     	});
     }
@@ -85,7 +86,7 @@
     		
     		for(var i=0; i<data.length; i++)
     		{
-    			addRow(data[i],  "cyTable", "Detail");	//add row to table
+    			addCYTableRow(data[i]);	//add row to table
     		}
     	});
     }
@@ -152,7 +153,7 @@
 		{
     		if(agentID == -1 || agentID == pyFamJson[i].agentID)
     		{
-    			addRow(pyFamJson[i], "pyTable", "Refer");	//add row to table
+    			addPYTableRow(pyFamJson[i]);	//add row to table
     		}
 		}
     }
@@ -167,12 +168,12 @@
 		{
     		if(agentID == -1 || agentID == cyFamJson[i].agentID)
     		{
-    			addRow(cyFamJson[i], "cyTable", "Detail");	//add row to table
+    			addCYTableRow(cyFamJson[i]);	//add row to table
     		}
 		}
     }
     
-    function addRow(family, tablename, buttonname)
+    function addPYTableRow(family)
     {
         if (!document.getElementsByTagName) return;
         
@@ -180,7 +181,7 @@
       					  family.fstatus, family.dstatus, family.mealStatus];
         
 //	    tabBody=document.getElementsByTagName("tbody").item(0);
-	    var tabBody = document.getElementById(tablename).getElementsByTagName('tbody').item(0);
+	    var tabBody = document.getElementById("pyTable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
         for(index=0; index < familyinfo.length; index++)	//create the family info cells
@@ -192,14 +193,49 @@
         
         btn = document.createElement("button");
         btn.value=family.id;
-        btn.innerHTML = buttonname;
+        btn.innerHTML = "Refer";
         btn.onclick=function() {referFamily(family.id);};
         row.appendChild(btn);
         
         tabBody.appendChild(row);
     }
     
+    function addCYTableRow(family, tablename, buttonname)
+    {
+        if (!document.getElementsByTagName) return;
+        
+        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
+      					  family.fstatus, family.dstatus, family.mealStatus];
+        
+//	    tabBody=document.getElementsByTagName("tbody").item(0);
+	    var tabBody = document.getElementById("cyTable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < familyinfo.length; index++)	//create the family info cells
+        {
+        	cell = document.createElement("td");
+        	cell.appendChild(document.createTextNode(familyinfo[index]));
+        	row.appendChild(cell);
+        }
+        
+        btn = document.createElement("button");
+        btn.value=family.id;
+		btn.value=family.HOHLastName;
+        btn.innerHTML = "Detail";
+        btn.onclick=function() {details(family.HOHLastName);};
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+    
     function referFamily(id)
+    {
+    	var urlReferWithYear = urlRefer.replace("YEAR", priorYear.toString());
+    	var urlReferWithYearAndFamID = urlReferWithYear.replace("FAMID", id.toString());
+    	window.open(urlReferWithYearAndFamID);
+    }
+    
+    function details(id)
     {
     	alert(id);
     }

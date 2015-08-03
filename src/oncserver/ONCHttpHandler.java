@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.util.Date;
 import java.util.Map;
 
+import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserPermission;
@@ -17,7 +18,6 @@ import ourneighborschild.UserPermission;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-
 import com.google.gson.Gson;
 
 public class ONCHttpHandler implements HttpHandler
@@ -34,7 +34,6 @@ public class ONCHttpHandler implements HttpHandler
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
     	
-		
 		ServerUI serverUI = ServerUI.getInstance();
 		serverUI.addLogMessage(String.format("HTTP request %s: %s:%s", 
 				t.getRemoteAddress().toString(), t.getRequestMethod(), t.getRequestURI().toASCIIString()));
@@ -58,7 +57,7 @@ public class ONCHttpHandler implements HttpHandler
     		ClientManager clientMgr = ClientManager.getInstance();
     		
     		if(!clientMgr.logoutWebClient(sessionID))
-    			System.out.println("ONCHttpHandler.handle: logout failure, client not found");
+    			System.out.println("ONCHttpHandler.handle/logut: logout failure, client not found");
     		
     		String response = null;
     		try {	
@@ -117,17 +116,49 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
-    		
-    		if(!clientMgr.logoutWebClient(sessionID))
-    			System.out.println("ONCHttpHandler.handle: logout failure, client not found");
-    		
     		String response = null;
-    		try {	
-    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_FILE));
-    		} catch (IOException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
+    		
+    		if(clientMgr.findClient(sessionID) != null)	
+    		{
+    			try {	
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_FILE));
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
     		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(t.getRequestURI().toString().contains("/referral"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		
+    		if(clientMgr.findClient(sessionID) != null)
+    		{
+    			try {	
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_FILE));
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    			
+    			//get the family
+    			int year = Integer.parseInt((String) params.get("year"));
+    			int famID = Integer.parseInt((String) params.get("famID"));
+    		
+    			FamilyDB famDB = FamilyDB.getInstance();
+    			ONCFamily fam = famDB.getFamily(year, famID);
+    		
+    			response = response.replace("HOHFIRSTNAME",fam.getHOHFirstName());
+    			response = response.replace("HOHLASTNAME", fam.getHOHLastName());
+    		}
+    		else
+    			response = invalidTokenReceived();
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
@@ -230,6 +261,12 @@ public class ONCHttpHandler implements HttpHandler
 		{
 			return "<p>Family Table Unavailable</p>";
 		}
+	}
+	
+	String invalidTokenReceived()
+	{
+		return "<!DOCTYPE html><html><body><p>Invalid Token Received</p></body></html>";
+		
 	}
 
 	private String readFile( String file ) throws IOException

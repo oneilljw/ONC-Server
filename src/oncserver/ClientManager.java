@@ -165,6 +165,7 @@ public class ClientManager implements ActionListener
 		if(index < webClientAL.size())	//found web client
 		{	
 			webClientAL.remove(index);
+			System.out.println(String.format("ClientManager.logoutWebClient: logged out %s", sessionID));
 			return true;
 		}
 		else

@@ -8,11 +8,12 @@
 	.orange {background-color: #FFCC99;}
 </style>
 <body>
+	<p>ONC Family Referral Form - Please complete and click submit
 	<form>
   <fieldset class="gray">
     <legend>Head of Household Information:</legend>
-    <input name="hohFN" type="text" size="20" placeholder="First Name">
-    <input name="hohLN" type="text" size="20" placeholder="Last Name">
+    <input name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME">
+    <input name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLASTNAME">
     <input name="homephone" type="text" size="20" placeholder="Primary Phone">
     <input name="cellphone" type="text" size="20" placeholder="Alternate Phone">
   	<select name="language">
@@ -39,6 +40,7 @@
 	</select>
 	<input name="email" type="email" size="30" placeholder="email address">
   </fieldset>
+  <br>
   <fieldset class="orange">
 	<legend>Delivery Address (ONC will deliver gifts to this address):</legend>
 	<input type="checkbox" name="sameaddress" value="same" />Check if same as HOH address
@@ -55,7 +57,81 @@
 		<option value="22039">22039</option>
 	</select>
   </fieldset>
+  <br>
   <fieldset class="gray">
+  	<legend>Family Members</legend>
+  <fieldset class="gray">
+  	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
+  	<input name="childfn" type="text" size="20" placeholder="First Name">
+    <input name="childln" type="text" size="20" placeholder="Last Name">
+    <input name="childdob" type="date" size="20" placeholder="DoB">
+    <select name="childgender">
+		<option value="Boy">Boy</option>
+		<option value="Girl">Girl</option>
+		<option value="Unknown">Unknown</option>
+	</select>
+	<input name="school" type="text" size="20" placeholder="School">
+  <table id="childtable" border="1">
+  	<thead>
+    	<tr>
+    		<th>#</th>
+        	<th>First Name</th>
+        	<th>Last Name</th>
+        	<th>DoB </th>
+        	<th>Gender </th>
+        	<th>School </th>
+    	</tr>
+      </thead>
+      <tbody>
+      	<tr>
+        	<td>1</td>
+        	<td>Jane</td>
+        	<td>Doe</td>
+        	<td>Dec 25, 2002</td>
+        	<td>Girl</td>
+        	<td>Virginia Run ES</td>
+    	</tr>
+    	<tr>
+        	<td>2</td>
+        	<td>John</td>
+        	<td>Doe</td>
+        	<td>Dec 25, 2007</td>
+        	<td>Boy</td>
+        	<td>Virginia Run ES</td>
+    	</tr>
+      </tbody>
+  </table>
+  </fieldset>
+  <fieldset class="gray">
+  	<legend>Other Adults in family (Adults in addition to HOH)</legend>
+  	<input name="adultfn" type="text" size="20" placeholder="First Name">
+    <input name="adultln" type="text" size="20" placeholder="Last Name">
+    <select name="adultgender">
+		<option value="Male">Male</option>
+		<option value="Female">Female</option>
+		<option value="Unknown">Unknown</option>
+	</select>
+  <table id="adulttable" border="1">
+    <tr>
+    	<th>#</th>
+        <th>First & Last Name</th>
+        <th>Gender </th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>Sister Doe</td>
+        <td>Female</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>Brother Doe</td>
+        <td>Male</td>
+    </tr>
+</table>
+  </fieldset>
+  </fieldset>
+  <br>
+  <fieldset class="orange">
 	<legend>Meal Assistance (ONC will refer family to WFCM or equivalent):</legend>
 	<input type="checkbox" name="mealrqrd" value="mealrqrd" />Check to request meal assistance for:
     <select name="mealtype">
@@ -65,7 +141,8 @@
 	</select>
 	<input type="text" name="dietres" size="56" placeholder="Describe any deitary restrictions">
   </fieldset>
-  <fieldset class=orange>
+  <br>
+  <fieldset class=gray>
 	<legend>Family Details (Details about family you think ONC should know):</legend>
 	<input type="text" name="detail" size="132" height="44" placeholder="Details about family ONC should know">
   </fieldset>

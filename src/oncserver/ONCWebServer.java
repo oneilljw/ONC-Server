@@ -42,6 +42,9 @@ public class ONCWebServer
 		
 		context = server.createContext("/newfamily", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/referral", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
 		    
 		server.setExecutor(null); // creates a default executor
 		server.start();
