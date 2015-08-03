@@ -82,18 +82,14 @@ public class AgentDB extends ONCServerDB
 		if(user.getPermission().compareTo(UserPermission.AGENT) == 0)
 		{
 			String userName = user.getFirstname() + " " + user.getLastname();
-			System.out.println(String.format("AgentDB.getAgentsJSONP: creating list for %s", userName));
  			agentYearList = agentDB.get(year - BASE_YEAR).getList();
+ 			
 			int index=0;
 			while(index<agentYearList.size() && !agentYearList.get(index).getAgentName().equals(userName))
 				index++;
 					
 			if(index < agentYearList.size())
-			{
-				Agent agent = agentYearList.get(index);
-				if(FamilyDB.didAgentReferInYear(agent.getID(), year))
-					agentReferredInYearList.add(agent);
-			}
+				agentReferredInYearList.add(agentYearList.get(index));
 		}
 		else
 		{
