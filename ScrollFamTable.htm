@@ -5,8 +5,8 @@
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
 	/* Comment the correct line for live vs local */    
-	var url ="http://cfs.idtus.com:8902";
-//	var url ="http://localhost:8902"; 
+//	var url ="http://cfs.idtus.com:8902";
+	var url ="http://localhost:8902"; 
   
 	var urlYears = url.concat("/dbStatus?token=REPLACE_TOKEN&callback=?");
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
@@ -18,6 +18,7 @@
 	var cyFamJson;
 	
 	sessionStorage.setItem("whoamI", "REPLACE_TOKEN");
+//	sessionStorage.setItem("permission", "REPLACE_PERMISSION");
 	
     $( document ).ready(function()
     {
@@ -67,12 +68,15 @@
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		pyFamJson = data;
-    		$("#tbodyid").empty();
     		
-    		for(var i=0; i<data.length; i++)
-    		{
-    			addPYTableRow(data[i]);	//add row to table
-    		}
+    		updateForPYAgentSelection();
+    		
+//    		$("#tbodyid").empty();
+//    		
+//    		for(var i=0; i<data.length; i++)
+//    		{
+//    			addPYTableRow(data[i]);	//add row to table
+//    		}
     	});
     }
     
@@ -82,12 +86,14 @@
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		cyFamJson = data;
-    		$("#tbodycurrid").empty();
     		
-    		for(var i=0; i<data.length; i++)
-    		{
-    			addCYTableRow(data[i]);	//add row to table
-    		}
+    		updateForCYAgentSelection();
+//    		$("#tbodycurrid").empty();
+//    		
+//    		for(var i=0; i<data.length; i++)
+//    		{
+//    			addCYTableRow(data[i]);	//add row to table
+//    		}
     	});
     }
     
@@ -101,18 +107,21 @@
     	{
 			var agtCombo = document.getElementById(cbID);
 			
-			//add the "Anyone" option
-			var agtOption = document.createElement("option");
-			agtOption.text = "Anyone";
-	    	agtOption.value = -1;
-	    	try 
-	    	{
-	        	agtCombo.add(agtOption, null); //Standard 
-	    	} 
-	    	catch(error) 
-	    	{
-	        	agtCombo.add(agtOption); // IE only
-	    	} 
+			//add the "Anyone" option if there is more than one agent object
+			if(data.length > 1)
+			{
+				var agtOption = document.createElement("option");
+				agtOption.text = "Anyone";
+	    		agtOption.value = -1;
+	    		try 
+	    		{
+	        		agtCombo.add(agtOption, null); //Standard 
+	    		} 
+	    		catch(error) 
+	    		{
+	        		agtCombo.add(agtOption); // IE only
+	    		}
+			}
 	    	
 	    	//add the agents for the year
     		for (var i=0; i < data.length; i++)

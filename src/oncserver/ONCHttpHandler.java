@@ -34,10 +34,11 @@ public class ONCHttpHandler implements HttpHandler
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
     	
+    	String mssg = String.format("HTTP request %s: %s:%s", 
+				t.getRemoteAddress().toString(), t.getRequestMethod(), t.getRequestURI().toASCIIString());
 		ServerUI serverUI = ServerUI.getInstance();
-		serverUI.addLogMessage(String.format("HTTP request %s: %s:%s", 
-				t.getRemoteAddress().toString(), t.getRequestMethod(), t.getRequestURI().toASCIIString()));
-
+		serverUI.addLogMessage(mssg);
+//		System.out.println("ONCHttpHandler.handle: Request: " + mssg);
     	
     	if(t.getRequestURI().toString().equals("/"))
     	{
@@ -79,13 +80,21 @@ public class ONCHttpHandler implements HttpHandler
     	else if(t.getRequestURI().toString().contains("/agents"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
-    		HtmlResponse response = AgentDB.getAgentsJSONP(year, (String) params.get("callback"));
+    		
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient client = clientMgr.findClient(sessionID);
+    		
+    		HtmlResponse response = AgentDB.getAgentsJSONP(year, 
+    				client.getWebUser(), (String) params.get("callback"));
+    		
     		sendHTMLResponse(t, response);
     	}
     	else if(t.getRequestURI().toString().contains("/families"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
     		HtmlResponse response = FamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
+    		ClientManager clientMgr = ClientManager.getInstance();
     		sendHTMLResponse(t, response);
     	}
     	else if(t.getRequestURI().toString().contains("/oncsplash"))

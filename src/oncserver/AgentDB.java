@@ -8,6 +8,8 @@ import java.util.List;
 
 import ourneighborschild.Agent;
 import ourneighborschild.DBYear;
+import ourneighborschild.ONCUser;
+import ourneighborschild.UserPermission;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -67,17 +69,40 @@ public class AgentDB extends ONCServerDB
 	 * @param callbackFunction
 	 * @return
 	 */
-	static HtmlResponse getAgentsJSONP(int year, String callbackFunction)
+	static HtmlResponse getAgentsJSONP(int year, ONCUser user, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();
 		
 		List<Agent> agentReferredInYearList = new ArrayList<Agent>();
-		List<Agent> agentYearList = agentDB.get(year - BASE_YEAR).getList();
+		List<Agent> agentYearList;
 		
-		for(Agent agent : agentYearList)
-			if(FamilyDB.didAgentReferInYear(agent.getID(), year))
-				agentReferredInYearList.add(agent);
+		//if user permission is AGENT, only return a list of that agent, else return all agents
+		//that referred
+		if(user.getPermission().compareTo(UserPermission.AGENT) == 0)
+		{
+			String userName = user.getFirstname() + " " + user.getLastname();
+			System.out.println(String.format("AgentDB.getAgentsJSONP: creating list for %s", userName));
+ 			agentYearList = agentDB.get(year - BASE_YEAR).getList();
+			int index=0;
+			while(index<agentYearList.size() && !agentYearList.get(index).getAgentName().equals(userName))
+				index++;
+					
+			if(index < agentYearList.size())
+			{
+				Agent agent = agentYearList.get(index);
+				if(FamilyDB.didAgentReferInYear(agent.getID(), year))
+					agentReferredInYearList.add(agent);
+			}
+		}
+		else
+		{
+			agentYearList = agentDB.get(year - BASE_YEAR).getList();
+			
+			for(Agent agent : agentYearList)
+				if(FamilyDB.didAgentReferInYear(agent.getID(), year))
+					agentReferredInYearList.add(agent);
+		}
 			
 		String response = gson.toJson(agentReferredInYearList, listtype);
 		
