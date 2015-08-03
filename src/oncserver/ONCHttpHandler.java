@@ -24,6 +24,7 @@ public class ONCHttpHandler implements HttpHandler
 {
 	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
 	private static final String LOGOUT_HTML_FILE = "logout.htm";
+	private static final String NEW_FAMILY_FILE = "FamilyReferral.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	
 	private static final int HTTP_OK = 200;
@@ -114,12 +115,21 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(t.getRequestURI().toString().contains("/newfamily"))
     	{
-    		String html = "<!DOCTYPE html><html>"
-    	    		+"<body>"
-    	    		+"<p><b><i>New family form will go here</i></b></p>"
-    				+"</body>"
-    	    		+"</html>";
-    		sendHTMLResponse(t, new HtmlResponse(html, HTTPCode.Ok));
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		
+    		if(!clientMgr.logoutWebClient(sessionID))
+    			System.out.println("ONCHttpHandler.handle: logout failure, client not found");
+    		
+    		String response = null;
+    		try {	
+    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_FILE));
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
     	
     }

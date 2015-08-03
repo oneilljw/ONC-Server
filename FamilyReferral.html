@@ -1,0 +1,74 @@
+ <!DOCTYPE html>
+<html>
+<head lang="en">
+    <title>ONC Family Assistance Request</title>
+</head>
+<style>
+	.gray {background-color: #E8E8E8;}
+	.orange {background-color: #FFCC99;}
+</style>
+<body>
+	<form>
+  <fieldset class="gray">
+    <legend>Head of Household Information:</legend>
+    <input name="hohFN" type="text" size="20" placeholder="First Name">
+    <input name="hohLN" type="text" size="20" placeholder="Last Name">
+    <input name="homephone" type="text" size="20" placeholder="Primary Phone">
+    <input name="cellphone" type="text" size="20" placeholder="Alternate Phone">
+  	<select name="language">
+		<option value="English">English</option>
+		<option value="Spanish">Spanish</option>
+		<option value="Arabic">Arabic</option>
+		<option value="Korean">Korean</option>
+		<option value="Vietnamese">Vietnamese</option>
+		<option value="Other">Other</option>
+		<option value="?">Unknown</option>
+	</select>
+	<br>
+	<input name="housenum" type="text" size="8" placeholder="House #">
+    <input name="street" type="text" size="20" placeholder="Street Name">
+    <input name="unit" type="text" size="8" placeholder="Apt #">
+    <input name="city" type="text" size="20" placeholder="City">
+    <select name="zipcode">
+		<option value="20120">20120</option>
+		<option value="20121">20121</option>
+		<option value="20124">20124</option>
+		<option value="20151">20151</option>
+		<option value="22033">22033</option>
+		<option value="22039">22039</option>
+	</select>
+	<input name="email" type="email" size="30" placeholder="email address">
+  </fieldset>
+  <fieldset class="orange">
+	<legend>Delivery Address (ONC will deliver gifts to this address):</legend>
+	<input type="checkbox" name="sameaddress" value="same" />Check if same as HOH address
+	<input name="housenum" type="text" size="8" placeholder="House #">
+    <input name="street" type="text" size="20" placeholder="Street Name">
+    <input name="unit" type="text" size="8" placeholder="Apt #">
+    <input name="city" type="text" size="20" placeholder="City">
+    <select name="zipcode">
+		<option value="20120">20120</option>
+		<option value="20121">20121</option>
+		<option value="20124">20124</option>
+		<option value="20151">20151</option>
+		<option value="22033">22033</option>
+		<option value="22039">22039</option>
+	</select>
+  </fieldset>
+  <fieldset class="gray">
+	<legend>Meal Assistance (ONC will refer family to WFCM or equivalent):</legend>
+	<input type="checkbox" name="mealrqrd" value="mealrqrd" />Check to request meal assistance for:
+    <select name="mealtype">
+		<option value="Thanksgiving">Thanksgiving</option>
+		<option value="December Holiday">December Holiday</option>
+		<option value="Both">Both</option>
+	</select>
+	<input type="text" name="dietres" size="56" placeholder="Describe any deitary restrictions">
+  </fieldset>
+  <fieldset class=orange>
+	<legend>Family Details (Details about family you think ONC should know):</legend>
+	<input type="text" name="detail" size="132" height="44" placeholder="Details about family ONC should know">
+  </fieldset>
+</form>
+</body>
+</html>   
