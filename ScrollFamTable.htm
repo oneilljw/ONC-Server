@@ -18,7 +18,6 @@
 	var cyFamJson;
 	
 	sessionStorage.setItem("whoamI", "REPLACE_TOKEN");
-//	sessionStorage.setItem("permission", "REPLACE_PERMISSION");
 	
     $( document ).ready(function()
     {
@@ -51,12 +50,12 @@
     	});
     	//get the list of agents from the database and put it in the agent combobox
     	getAgentsFromServer(priorYear.toString(), "pyagents");
-
-    	//get prior year families from server
-    	getPYFamiliesFromServer(priorYear.toString());
     	
     	//get the list of agents from the database and put it in the agent combobox
     	getAgentsFromServer(currYear.toString(), "curragents");
+
+    	//get prior year families from server
+    	getPYFamiliesFromServer(priorYear.toString());
     	
     	//get current year families from server
     	getCYFamiliesFromServer(currYear.toString());
@@ -64,36 +63,19 @@
     
     function getPYFamiliesFromServer(year)
     {
-    	var token = sessionStorage
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		pyFamJson = data;
-    		
     		updateForPYAgentSelection();
-    		
-//    		$("#tbodyid").empty();
-//    		
-//    		for(var i=0; i<data.length; i++)
-//    		{
-//    			addPYTableRow(data[i]);	//add row to table
-//    		}
     	});
     }
     
     function getCYFamiliesFromServer(year)
     {
-    	var token = sessionStorage
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		cyFamJson = data;
-    		
     		updateForCYAgentSelection();
-//    		$("#tbodycurrid").empty();
-//    		
-//    		for(var i=0; i<data.length; i++)
-//    		{
-//    			addCYTableRow(data[i]);	//add row to table
-//    		}
     	});
     }
     
@@ -103,6 +85,7 @@
     	document.getElementById(cbID).options.length = 0;
 		
     	//get updated agentJson from server and place into combobox
+    	
     	$.getJSON(urlAgents.replace("YEAR", year.toString()), function(data)
     	{
 			var agtCombo = document.getElementById(cbID);

@@ -8,6 +8,8 @@ import java.util.List;
 
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
@@ -61,6 +63,24 @@ public class ServerChildDB extends ONCServerDB
 			
 		String response = gson.toJson(childDB.get(year - BASE_YEAR).getList(), listtype);
 		return response;	
+	}
+	
+	static HtmlResponse getChildrenInFamilyJSONP(int year, int famID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfChildren = new TypeToken<ArrayList<ONCChild>>(){}.getType();
+		
+		List<ONCChild> searchList = childDB.get(year-BASE_YEAR).getList();
+		ArrayList<ONCChild> responseList = new ArrayList<ONCChild>();
+		
+		for(ONCChild c: searchList)
+			if(c.getFamID() == famID)
+				responseList.add(c);
+		
+		String response = gson.toJson(responseList, listOfChildren);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
 	String add(int year, String childjson)

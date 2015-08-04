@@ -93,8 +93,24 @@ public class ONCHttpHandler implements HttpHandler
     	else if(t.getRequestURI().toString().contains("/families"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
+    		
     		HtmlResponse response = FamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
-    		ClientManager clientMgr = ClientManager.getInstance();
+    		sendHTMLResponse(t, response);
+    	}
+    	else if(t.getRequestURI().toString().contains("/children"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		int famID = Integer.parseInt((String) params.get("famid"));
+    		
+    		HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
+    	else if(t.getRequestURI().toString().contains("/adults"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		int famID = Integer.parseInt((String) params.get("famid"));
+    		
+    		HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(t.getRequestURI().toString().contains("/oncsplash"))
@@ -135,6 +151,10 @@ public class ONCHttpHandler implements HttpHandler
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
+    			
+    			//remove the placehoders
+    			response = response.replace("value=\"HOHFIRSTNAME\"","");
+    			response = response.replace("value=\"HOHLASTNAME\"", "");
     		}
     		else
     			response = invalidTokenReceived();
@@ -163,6 +183,10 @@ public class ONCHttpHandler implements HttpHandler
     			FamilyDB famDB = FamilyDB.getInstance();
     			ONCFamily fam = famDB.getFamily(year, famID);
     		
+    			//replace the place holders
+    			response = response.replace("REPLACE_TOKEN", sessionID);
+    			response = response.replace("YEAR",(String) params.get("year"));
+    			response = response.replace("FAMID",(String) params.get("famID"));
     			response = response.replace("HOHFIRSTNAME",fam.getHOHFirstName());
     			response = response.replace("HOHLASTNAME", fam.getHOHLastName());
     		}

@@ -22,6 +22,12 @@ public class ONCWebServer
 		context = server.createContext("/families", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		
+		context = server.createContext("/children", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/adults", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
 		context = server.createContext("/dbStatus", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		

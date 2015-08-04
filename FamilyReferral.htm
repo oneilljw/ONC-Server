@@ -1,18 +1,205 @@
  <!DOCTYPE html>
 <html>
 <head lang="en">
-    <title>ONC Family Assistance Request</title>
-</head>
-<style>
+  <title>ONC Family Assistance Request</title>
+  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script>
+  
+  	/* Comment the correct line for live vs local */    
+	//	var url ="http://cfs.idtus.com:8902";
+	var url ="http://localhost:8902"
+  
+  	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
+  	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
+  	
+  	var childrenJson;
+  	var adultsJson;
+  	
+  	$( document ).ready(function()
+	{
+  		$.getJSON(urlChildren, function(data)
+  		{
+  		     childrenJson = data;
+  		     updateChildTable();
+  		     updateWishTable();
+  		});
+  		
+  		$.getJSON(urlAdults, function(data)
+  		{
+  		     adultsJson = data;
+  		     updateAdultTable();
+  		});
+  		
+  		$(function() {
+  		    $("form input").keypress(function (e) {
+  		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+  		            $('button[type=submit] .default').click();
+  		            return false;
+  		        } else {
+  		            return true;
+  		        }
+  		    });
+  		});
+	});	
+	
+	function updateChildTable()
+    {
+    	$("#tchildbody").empty();
+    	
+    	for(var i=0; i<childrenJson.length; i++)
+		{
+    		addChildTableRow(childrenJson[i]);	//add row to table
+		}
+    }
+	
+	function updateWishTable()
+    {
+    	$("#twishbody").empty();
+    	
+    	for(var i=0; i<childrenJson.length; i++)
+		{
+    		addWishTableRow(childrenJson[i]);	//add row to table
+		}
+    }
+	
+	function updateAdultTable()
+    {
+    	$("#tadultbody").empty();
+    	
+    	for(var i=0; i<adultsJson.length; i++)
+		{
+    		addAdultTableRow(adultsJson[i]);	//add row to table
+		}
+    }
+	
+	function addChildTableRow(child)
+    {
+        if (!document.getElementsByTagName) return;
+        
+        var childinfo = [child.childFirstName, child.childLastName,
+                         new Date(child.childDOB).toLocaleDateString(),
+                         child.childGender, child.childSchool];
+        
+	    var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < childinfo.length; index++)	//create the child info cells
+        {
+        	cell = document.createElement("td");
+        	cell.appendChild(document.createTextNode(childinfo[index]));
+        	row.appendChild(cell);
+        }
+        
+        btn = document.createElement("button");
+        btn.value=child.id;
+        btn.type="button";
+        btn.innerHTML = "Remove";
+        btn.onclick=function() {removeChild(child.id);};
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+	
+	function addWishTableRow(child)
+    {
+        if (!document.getElementsByTagName) return;
+        
+        var childinfo = [child.childFirstName, child.childLastName];
+        
+	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < childinfo.length; index++)	//create the child info cells
+        {
+        	cell = document.createElement("td");
+        	cell.appendChild(document.createTextNode(childinfo[index]));
+        	row.appendChild(cell);
+        }
+        
+        var wishlist= document.createElement("input");
+        wishlist.type="text";
+        wishlist.placeholder= "Wish list for " + child.childFirstName;
+        wishlist.setAttribute("size", 120);
+        row.appendChild(wishlist);
+        
+        tabBody.appendChild(row);
+    }
+	
+	function addAdultTableRow(adult)
+    {
+        if (!document.getElementsByTagName) return;
+        
+        var adultinfo = [adult.name, adult.gender];
+        
+	    var tabBody = document.getElementById("adulttable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < adultnfo.length; index++)	//create the child info cells
+        {
+        	cell = document.createElement("td");
+        	cell.appendChild(document.createTextNode(adultinfo[index]));
+        	row.appendChild(cell);
+        }
+        
+        btn = document.createElement("button");
+        btn.value=child.id;
+        btn.type="button";
+        btn.innerHTML = "Remove";
+        btn.onclick=function() {removeAdult(adult.id);};
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+	
+	function removeChild(id)
+	{
+		console.log(id);
+		var index=0;
+		while(index<childrenJson.length && childrenJson[index].id != id)
+			index++;
+		
+		if(index < childrenJson.length)
+			alert("Remove " + childrenJson[index].childLastName)
+		else
+			alert("Child not found");	
+	}
+	
+	function removeAdult(id)
+	{
+		
+	}
+	
+	function sameAddressClicked(cb)
+	{
+		if(cb.checked == true)
+		{
+			document.getElementById('delhousenum').value = document.getElementById('housenum').value;
+			document.getElementById('delstreet').value = document.getElementById('street').value;
+			document.getElementById('delunit').value = document.getElementById('unit').value;
+			document.getElementById('delcity').value = document.getElementById('city').value;
+			document.getElementById('delzipcode').value = document.getElementById('zipcode').value;
+		}
+		else
+		{
+			document.getElementById('delhousenum').value = "";
+			document.getElementById('delstreet').value = "";
+			document.getElementById('delunit').value = "";
+			document.getElementById('delcity').value = "";
+			document.getElementById('delzipcode').selectedIndex = 0;
+		}
+	}
+  </script>
+  <style>
 	.gray {background-color: #E8E8E8;}
 	.orange {background-color: #FFCC99;}
-</style>
+  </style>
+</head>
 <body>
 	<p>ONC Family Referral Form - Please complete and click submit
 	<form>
   <fieldset class="gray">
     <legend>Head of Household Information:</legend>
-    <input name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME">
+    <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME">
     <input name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLASTNAME">
     <input name="homephone" type="text" size="20" placeholder="Primary Phone">
     <input name="cellphone" type="text" size="20" placeholder="Alternate Phone">
@@ -26,11 +213,11 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input name="housenum" type="text" size="8" placeholder="House #">
-    <input name="street" type="text" size="20" placeholder="Street Name">
-    <input name="unit" type="text" size="8" placeholder="Apt #">
-    <input name="city" type="text" size="20" placeholder="City">
-    <select name="zipcode">
+	<input id="housenum" name="housenum" type="text" size="8" placeholder="House #">
+    <input id="street" name="street" type="text" size="20" placeholder="Street Name">
+    <input id="unit" name="unit" type="text" size="8" placeholder="Apt #">
+    <input id="city" name="city" type="text" size="20" placeholder="City">
+    <select id="zipcode" name="zipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
 		<option value="20124">20124</option>
@@ -43,12 +230,12 @@
   <br>
   <fieldset class="orange">
 	<legend>Delivery Address (ONC will deliver gifts to this address):</legend>
-	<input type="checkbox" name="sameaddress" value="same" />Check if same as HOH address
-	<input name="housenum" type="text" size="8" placeholder="House #">
-    <input name="street" type="text" size="20" placeholder="Street Name">
-    <input name="unit" type="text" size="8" placeholder="Apt #">
-    <input name="city" type="text" size="20" placeholder="City">
-    <select name="zipcode">
+	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)" name="sameaddress" value="same" />Check if same as HOH address
+	<input id="delhousenum" name="delhousenum" type="text" size="8" placeholder="House #">
+    <input id="delstreet" name="delstreet" type="text" size="20" placeholder="Street Name">
+    <input id="delunit" name="delunit" type="text" size="8" placeholder="Apt #">
+    <input id="delcity" name="delcity" type="text" size="20" placeholder="City">
+    <select id="delzipcode" name="delzipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
 		<option value="20124">20124</option>
@@ -71,10 +258,10 @@
 		<option value="Unknown">Unknown</option>
 	</select>
 	<input name="school" type="text" size="20" placeholder="School">
+	<button type="button">Add Child</button>
   <table id="childtable" border="1">
   	<thead>
     	<tr>
-    		<th>#</th>
         	<th>First Name</th>
         	<th>Last Name</th>
         	<th>DoB </th>
@@ -82,26 +269,11 @@
         	<th>School </th>
     	</tr>
       </thead>
-      <tbody>
-      	<tr>
-        	<td>1</td>
-        	<td>Jane</td>
-        	<td>Doe</td>
-        	<td>Dec 25, 2002</td>
-        	<td>Girl</td>
-        	<td>Virginia Run ES</td>
-    	</tr>
-    	<tr>
-        	<td>2</td>
-        	<td>John</td>
-        	<td>Doe</td>
-        	<td>Dec 25, 2007</td>
-        	<td>Boy</td>
-        	<td>Virginia Run ES</td>
-    	</tr>
+      <tbody id="tchildbody">
       </tbody>
   </table>
   </fieldset>
+  <br>
   <fieldset class="gray">
   	<legend>Other Adults in family (Adults in addition to HOH)</legend>
   	<input name="adultfn" type="text" size="20" placeholder="First Name">
@@ -111,27 +283,36 @@
 		<option value="Female">Female</option>
 		<option value="Unknown">Unknown</option>
 	</select>
+	<button type="button">Add Adult</button>
   <table id="adulttable" border="1">
-    <tr>
-    	<th>#</th>
-        <th>First & Last Name</th>
-        <th>Gender </th>
-    </tr>
-    <tr>
-        <td>1</td>
-        <td>Sister Doe</td>
-        <td>Female</td>
-    </tr>
-    <tr>
-        <td>2</td>
-        <td>Brother Doe</td>
-        <td>Male</td>
-    </tr>
+  	<thead>
+    	<tr>
+        	<th>First & Last Name</th>
+        	<th>Gender </th>
+    	</tr>
+    </thead>
+    <tbody id="tadultbody">
+    </tbody>
 </table>
   </fieldset>
   </fieldset>
   <br>
   <fieldset class="orange">
+  	<legend>Gift Assistance: Complete for each child in family</legend>
+  	 <table id="wishtable" border="1">
+  	<thead>
+    	<tr>
+        	<th>First Name</th>
+        	<th>Last Name</th>
+        	<th>Wish List: 3 wishes in order of importance per child; if clothing, include size & color preference </th>
+    	</tr>
+      </thead>
+      <tbody id="twishbody">
+      </tbody>
+  </table>
+  </fieldset>
+   <br>
+  <fieldset class="gray">
 	<legend>Meal Assistance (ONC will refer family to WFCM or equivalent):</legend>
 	<input type="checkbox" name="mealrqrd" value="mealrqrd" />Check to request meal assistance for:
     <select name="mealtype">
@@ -142,10 +323,12 @@
 	<input type="text" name="dietres" size="56" placeholder="Describe any deitary restrictions">
   </fieldset>
   <br>
-  <fieldset class=gray>
+  <fieldset class=orange>
 	<legend>Family Details (Details about family you think ONC should know):</legend>
 	<input type="text" name="detail" size="132" height="44" placeholder="Details about family ONC should know">
   </fieldset>
+  <br>
+  <input id="submit"  formaction="" type="submit" value="Submit to ONC">Please check that all fields are completed!
 </form>
 </body>
 </html>   

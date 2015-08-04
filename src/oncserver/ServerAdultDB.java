@@ -10,15 +10,16 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.ONCAdult;
+import ourneighborschild.ONCChild;
 import ourneighborschild.ONCMeal;
 
 public class ServerAdultDB extends ONCServerDB
 {
 	private static final int ADULT_DB_HEADER_LENGTH = 4;
 	private static final int BASE_YEAR = 2012;
+	
 	private static ServerAdultDB instance = null;
-
-	private List<AdultDBYear> adultDB;
+	private static List<AdultDBYear> adultDB;
 	
 	private ServerAdultDB() throws FileNotFoundException, IOException
 	{
@@ -59,6 +60,24 @@ public class ServerAdultDB extends ONCServerDB
 		
 		String response = gson.toJson(adultDB.get(year-BASE_YEAR).getList(), listOfAdults);
 		return response;	
+	}
+	
+	static HtmlResponse getAdultsInFamilyJSONP(int year, int famID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfAdults = new TypeToken<ArrayList<ONCAdult>>(){}.getType();
+		
+		List<ONCAdult> searchList = adultDB.get(year-BASE_YEAR).getList();
+		ArrayList<ONCAdult> responseList = new ArrayList<ONCAdult>();
+		
+		for(ONCAdult a: searchList)
+			if(a.getFamID() == famID)
+				responseList.add(a);
+		
+		String response = gson.toJson(responseList, listOfAdults);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 
 	@Override
