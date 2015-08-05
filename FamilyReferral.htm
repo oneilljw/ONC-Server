@@ -84,10 +84,7 @@
     {
         if (!document.getElementsByTagName) return;
         
-        var birthdate = new Date(child.childDOB);
-        var childinfo = [child.childFirstName, child.childLastName,
-                         (birthdate.getMonth() + 1) + '/' + birthdate.getDate() + '/' +  birthdate.getFullYear(),
-                         child.childGender, child.childSchool];
+        var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
         
 	    var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -100,10 +97,10 @@
         }
         
         btn = document.createElement("button");
-        btn.value=child.id;
+        btn.value=child.firstName;
         btn.type="button";
         btn.innerHTML = "Remove";
-        btn.onclick=function() {removeChild(child.id);};
+        btn.onclick=function() {removeChild(child.firstname);};
         row.appendChild(btn);
         
         tabBody.appendChild(row);
@@ -113,7 +110,7 @@
     {
         if (!document.getElementsByTagName) return;
         
-        var childinfo = [child.childFirstName, child.childLastName];
+        var childinfo = [child.firstname, child.lastname];
         
 	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -162,14 +159,27 @@
 	
 	function addChild()
 	{
-		var id = $(this).attr("title");
-        var email = $(this).val();
-
-        item = {}
-        item ["title"] = id;
-        item ["email"] = email;
-
-        jsonObj.push(item);
+        var child = {}
+        child["firstname"] = document.getElementById('childfn').value;
+        child["lastname"] = document.getElementById('childln').value;
+        child["sDOB"] = document.getElementById('childdob').value;
+        child["gender"] = document.getElementById('childgender').value;
+        child["school"] = document.getElementById('school').value;
+        childrenJson.push(child);
+        
+        updateChildTable();
+        updateWishTable();
+        
+        clearAddChild();  
+	}
+	
+	function clearAddChild()
+	{
+		document.getElementById('childfn').value="";
+        document.getElementById('childln').value="";
+        document.getElementById('childdob').value="";
+        document.getElementById('childgender').value="Boy";
+        document.getElementById('school').value="";
 	}
 	
 	function removeChild(id)
@@ -270,16 +280,17 @@
   	<legend>Family Members</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
-  	<input name="childfn" type="text" size="20" placeholder="First Name">
-    <input name="childln" type="text" size="20" placeholder="Last Name">
-    <input name="childdob" type="date" size="20" placeholder="DoB">
-    <select name="childgender">
+  	<input id="childfn" name="childfn" type="text" size="20" placeholder="First Name">
+    <input id="childln" name="childln" type="text" size="20" placeholder="Last Name">
+    <input id="childdob" name="childdob" type="date" size="20" placeholder="DoB">
+    <select id="childgender" name="childgender">
 		<option value="Boy">Boy</option>
 		<option value="Girl">Girl</option>
 		<option value="Unknown">Unknown</option>
 	</select>
-	<input name="school" type="text" size="20" placeholder="School">
-	<button type="button">Add Child</button>
+	<input id="school" name="school" type="text" size="20" placeholder="School">
+	<button type="button" onclick="addChild()">Add Child</button>
+	<button type="button" onclick="clearAddChild()">Clear</button>
   <table id="childtable" border="1">
   	<thead>
     	<tr>

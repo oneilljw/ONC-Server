@@ -9,6 +9,7 @@ import java.util.List;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.WishStatus;
 
@@ -68,14 +69,14 @@ public class ServerChildDB extends ONCServerDB
 	static HtmlResponse getChildrenInFamilyJSONP(int year, int famID, String callbackFunction)
 	{		
 		Gson gson = new Gson();
-		Type listOfChildren = new TypeToken<ArrayList<ONCChild>>(){}.getType();
+		Type listOfChildren = new TypeToken<ArrayList<ONCWebChild>>(){}.getType();
 		
 		List<ONCChild> searchList = childDB.get(year-BASE_YEAR).getList();
-		ArrayList<ONCChild> responseList = new ArrayList<ONCChild>();
+		ArrayList<ONCWebChild> responseList = new ArrayList<ONCWebChild>();
 		
 		for(ONCChild c: searchList)
 			if(c.getFamID() == famID)
-				responseList.add(c);
+				responseList.add(new ONCWebChild(c));
 		
 		String response = gson.toJson(responseList, listOfChildren);
 
