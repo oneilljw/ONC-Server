@@ -66,7 +66,7 @@
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		pyFamJson = data;
-    		updateForPYAgentSelection();
+    		updatePYTable();
     	});
     }
     
@@ -75,7 +75,7 @@
     	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
     	{
     		cyFamJson = data;
-    		updateForCYAgentSelection();
+    		updateCYTable();
     	});
     }
     
@@ -135,7 +135,7 @@
     	getPYFamiliesFromServer(priorYear.toString());
     }
     
-    function updateForPYAgentSelection()
+    function updatePYTable()
     {
     	$("#tbodyid").empty();
     	var e = document.getElementById("pyagents");
@@ -150,7 +150,7 @@
 		}
     }
     
-    function updateForCYAgentSelection()
+    function updateCYTable()
     {
     	$("#tbodycurrid").empty();
     	var e = document.getElementById("curragents");
@@ -308,7 +308,7 @@
 	<form>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="pyagents">Families Referred By:</label>
-		<select id="pyagents"  onchange="updateForPYAgentSelection()" name="pyagtID"></select>
+		<select id="pyagents"  onchange="updatePYTable()" name="pyagtID"></select>
 	</form>
 <div id="constrainer2">
     <table id="pyTable">
@@ -329,7 +329,7 @@
 <br>
 <form>
 		<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
-		<select id="curragents"  onchange="updateForCYAgentSelection()" name="curragtID"></select>
+		<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
 	</form>
 <div id="constrainer2">
     <table id = cyTable>
