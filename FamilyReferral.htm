@@ -6,8 +6,8 @@
   <script>
   
   	/* Comment the correct line for live vs local */    
-	//	var url ="http://cfs.idtus.com:8902";
-	var url ="http://localhost:8902"
+	var url ="http://cfs.idtus.com:8902";
+//	var url ="http://localhost:8902"
   
   	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
   	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
@@ -56,7 +56,7 @@
     	
     	for(var i=0; i<childrenJson.length; i++)
 		{
-    		addChildTableRow(childrenJson[i]);	//add row to table
+    		addChildTableRow(i, childrenJson[i]);	//add row to table
 		}
     }
 	
@@ -66,7 +66,7 @@
     	
     	for(var i=0; i<childrenJson.length; i++)
 		{
-    		addWishTableRow(childrenJson[i]);	//add row to table
+    		addWishTableRow(i, childrenJson[i]);	//add row to table
 		}
     }
 	
@@ -76,82 +76,100 @@
     	
     	for(var i=0; i<adultsJson.length; i++)
 		{
-    		addAdultTableRow(adultsJson[i]);	//add row to table
+    		addAdultTableRow(i, adultsJson[i]);	//add row to table
 		}
     }
 	
-	function addChildTableRow(child)
+	function addChildTableRow(cnum, child)
     {
-        if (!document.getElementsByTagName) return;
-        
         var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
+        var fieldname = ["childfn", "childln", "childdob", "childgender", "childshcool"];
+        var fieldsize = [15, 16, 11, 11, 20];
         
 	    var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
-         
+    	
         for(index=0; index < childinfo.length; index++)	//create the child info cells
         {
-        	cell = document.createElement("td");
-        	cell.appendChild(document.createTextNode(childinfo[index]));
+        	cell= document.createElement("td");
+    	    content= document.createElement("input");
+ 	    	content.type="text";
+ 	    	content.name=fieldname[index] + cnum;
+        	content.value = childinfo[index];
+        	content.setAttribute("size", fieldsize[index]);
+        	cell.appendChild(content);
         	row.appendChild(cell);
         }
         
         btn = document.createElement("button");
-        btn.value=child.firstName;
+        btn.value=cnum;
         btn.type="button";
         btn.innerHTML = "Remove";
-        btn.onclick=function() {removeChild(child.firstname);};
+        btn.onclick=function() {removeChild(cnum);};
         row.appendChild(btn);
         
         tabBody.appendChild(row);
     }
 	
-	function addWishTableRow(child)
+	function addWishTableRow(cnum, child)
     {
-        if (!document.getElementsByTagName) return;
-        
-        var childinfo = [child.firstname, child.lastname];
+		var childinfo = [child.firstname, child.lastname];
         
 	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
         for(index=0; index < childinfo.length; index++)	//create the child info cells
         {
-        	cell = document.createElement("td");
-        	cell.appendChild(document.createTextNode(childinfo[index]));
+        	cell= document.createElement("td");
+    	    content= document.createElement("input");
+ 	    	content.type="text";
+        	content.value = childinfo[index];
+        	content.readOnly = true;
+        	content.setAttribute("size", 12);
+        	cell.appendChild(content);
         	row.appendChild(cell);
         }
-        
+
+        var wlcell= document.createElement("td");
         var wishlist= document.createElement("input");
         wishlist.type="input";
-        wishlist.placeholder= "Wish list for " + child.childFirstName;
-        wishlist.setAttribute("size", 120);
-        row.appendChild(wishlist);
+        wishlist.name="wish" + cnum;
+        wishlist.placeholder= "Wish list for " + child.firstname;
+        wishlist.setAttribute("size", 112);
+        wlcell.appendChild(wishlist);
+        row.appendChild(wlcell);
         
         tabBody.appendChild(row);
     }
 	
-	function addAdultTableRow(adult)
+	function addAdultTableRow(anum, adult)
     {
-        if (!document.getElementsByTagName) return;
-        
-        var adultinfo = [adult.name, adult.gender];
-        
 	    var tabBody = document.getElementById("adulttable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
-         
-        for(index=0; index < adultnfo.length; index++)	//create the child info cells
-        {
-        	cell = document.createElement("td");
-        	cell.appendChild(document.createTextNode(adultinfo[index]));
-        	row.appendChild(cell);
-        }
         
-        btn = document.createElement("button");
-        btn.value=child.id;
+        cell= document.createElement("td");
+        adultname= document.createElement("input");
+        adultname.type="input";
+        adultname.name="adultname" + anum;
+        adultname.value = adult.name;
+        adultname.setAttribute("size", 27);
+        cell.appendChild(adultname);
+        row.appendChild(cell);
+        
+        cell= document.createElement("td");
+        var adultgender= document.createElement("input");
+        adultgender.type="input";
+        adultgender.name="adultgender" + anum;
+        adultgender.value = adult.gender;
+        adultgender.setAttribute("size", 11);
+        cell.appendChild(adultgender);
+        row.appendChild(cell);
+        
+        var btn = document.createElement("button");
+        btn.value= anum;
         btn.type="button";
         btn.innerHTML = "Remove";
-        btn.onclick=function() {removeAdult(adult.id);};
+        btn.onclick=function() {removeAdult(anum);};
         row.appendChild(btn);
         
         tabBody.appendChild(row);
@@ -182,22 +200,38 @@
         document.getElementById('school').value="";
 	}
 	
-	function removeChild(id)
+	function removeChild(index)
 	{
-		console.log(id);
-		var index=0;
-		while(index<childrenJson.length && childrenJson[index].id != id)
-			index++;
+		console.log("Removing index " + index);
+		childrenJson.splice(index, 1);
 		
-		if(index < childrenJson.length)
-			alert("Remove " + childrenJson[index].childLastName)
-		else
-			alert("Child not found");	
+		updateChildTable();
+        updateWishTable();	
 	}
 	
-	function removeAdult(id)
+	function addAdult()
 	{
-		
+        var adult = {}
+        adult["name"] = document.getElementById('adultname').value;
+        adult["gender"] = document.getElementById('adultgender').value;
+        adultsJson.push(adult);
+        
+        updateAdultTable();
+        
+        clearAddAdult();  
+	}
+	
+	function clearAddAdult()
+	{
+		document.getElementById('adultfn').value="";
+        document.getElementById('adultln').value="";
+        document.getElementById('adultgender').value="Male";
+	}
+	
+	function removeAdult(index)
+	{
+		adultsJson.splice(index, 1);
+		updateAdultTable();
 	}
 	
 	function sameAddressClicked(cb)
@@ -223,18 +257,22 @@
   <style>
 	.gray {background-color: #E8E8E8;}
 	.orange {background-color: #FFCC99;}
+	.right {float: right;}
+	table, th, td {border: 1px solid black;}
+	th, td {min-width: 80px; }
+	button {background-color: #336699; color: #ffffff;}
   </style>
 </head>
 <body>
-	<p>ONC Family Referral Form - Please complete and click submit
-	<form>
+  <p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
+  <form>
   <fieldset class="gray">
     <legend>Head of Household Information:</legend>
     <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME">
-    <input name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLASTNAME">
-    <input name="homephone" type="text" size="20" placeholder="Primary Phone">
-    <input name="cellphone" type="text" size="20" placeholder="Alternate Phone">
-  	<select name="language">
+    <input title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLASTNAME">
+    <input title="Home Phone #" name="homephone" type="text" size="20" placeholder="Primary Phone">
+    <input title="Cell Phone #" name="cellphone" type="text" size="20" placeholder="Alternate Phone">
+  	<select title="Primary language" name="language">
 		<option value="English">English</option>
 		<option value="Spanish">Spanish</option>
 		<option value="Arabic">Arabic</option>
@@ -244,11 +282,11 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input id="housenum" name="housenum" type="text" size="8" placeholder="House #">
-    <input id="street" name="street" type="text" size="20" placeholder="Street Name">
-    <input id="unit" name="unit" type="text" size="8" placeholder="Apt #">
-    <input id="city" name="city" type="text" size="20" placeholder="City">
-    <select id="zipcode" name="zipcode">
+	<input id="housenum" title="House # name="housenum" type="text" size="8" placeholder="House #">
+    <input id="street" title="Street: name="street" type="text" size="20" placeholder="Street Name">
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #">
+    <input id="city" title="City" name="city" type="text" size="20" placeholder="City">
+    <select id="zipcode" title="Zip Code" name="zipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
 		<option value="20124">20124</option>
@@ -256,7 +294,7 @@
 		<option value="22033">22033</option>
 		<option value="22039">22039</option>
 	</select>
-	<input name="email" type="email" size="30" placeholder="email address">
+	<input title="E-mail address" name="email" type="email" size="30" placeholder="email address">
   </fieldset>
   <br>
   <fieldset class="orange">
@@ -280,9 +318,9 @@
   	<legend>Family Members</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
-  	<input id="childfn" name="childfn" type="text" size="20" placeholder="First Name">
-    <input id="childln" name="childln" type="text" size="20" placeholder="Last Name">
-    <input id="childdob" name="childdob" type="date" size="20" placeholder="DoB">
+  	<input id="childfn" name="childfn" type="text" size="16" placeholder="First Name">
+    <input id="childln" name="childln" type="text" size="16" placeholder="Last Name">
+    <input id="childdob" name="childdob" type="date" size="12" placeholder="DoB">
     <select id="childgender" name="childgender">
 		<option value="Boy">Boy</option>
 		<option value="Girl">Girl</option>
@@ -307,19 +345,19 @@
   </fieldset>
   <br>
   <fieldset class="gray">
-  	<legend>Other Adults in family (Adults in addition to HOH)</legend>
-  	<input name="adultfn" type="text" size="20" placeholder="First Name">
-    <input name="adultln" type="text" size="20" placeholder="Last Name">
-    <select name="adultgender">
+  	<legend>Other adults in family (in addition to the head of household)</legend>
+  	<input id="adultname" name="adultname" type="text" size="28" placeholder="First & Last Name">
+    <select id="adultgender" name="adultgender">
 		<option value="Male">Male</option>
 		<option value="Female">Female</option>
 		<option value="Unknown">Unknown</option>
 	</select>
-	<button type="button">Add Adult</button>
+	<button type="button" onclick="addAdult()">Add Adult</button>
+	<button type="button" onclick="clearAddAdult()">Clear</button>
   <table id="adulttable" border="1">
   	<thead>
     	<tr>
-        	<th>First & Last Name</th>
+        	<th>Name</th>
         	<th>Gender </th>
     	</tr>
     </thead>
@@ -352,15 +390,18 @@
 		<option value="December Holiday">December Holiday</option>
 		<option value="Both">Both</option>
 	</select>
-	<input type="text" name="dietres" size="56" placeholder="Describe any deitary restrictions">
+	<input type="text" name="dietres" size="80" placeholder="Describe any deitary restrictions">
   </fieldset>
   <br>
   <fieldset class=orange>
 	<legend>Family Details (Details about family you think ONC should know):</legend>
-	<input type="text" name="detail" size="132" height="44" placeholder="Details about family ONC should know">
+	<input type="text" name="detail" size="140" placeholder="Details about family ONC should know">
   </fieldset>
   <br>
-  <input id="submit"  formaction="" type="submit" value="Submit to ONC">Please check that all fields are completed!
+  <div class=right>
+  <label for="submit">Please check that all fields are complete prior to submission: </label>
+  <input id="submit" formaction="" type="submit" value="Submit to ONC" style="background-color: #336699; color: #ffffff;">
+  </div>
 </form>
 </body>
 </html>   
