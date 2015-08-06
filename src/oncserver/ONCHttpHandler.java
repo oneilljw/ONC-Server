@@ -35,12 +35,12 @@ public class ONCHttpHandler implements HttpHandler
     {
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
+    	
     	String requestURI = t.getRequestURI().toASCIIString();
     	
     	String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI serverUI = ServerUI.getInstance();
 		serverUI.addLogMessage(mssg);
-//		System.out.println("ONCHttpHandler.handle: Request: " + mssg);
     	
     	if(requestURI.equals("/"))
     	{
@@ -76,7 +76,6 @@ public class ONCHttpHandler implements HttpHandler
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
     	{
-//    		System.out.println("ONCHttpHandler: Token = " + (String) params.get("token"));
     		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
     	}
     	else if(requestURI.contains("/agents"))
@@ -202,22 +201,9 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/referfamily"))
     	{
-    		Set<String> keyset = params.keySet();
-    		for(String key: keyset)
-    			System.out.println(key);
-    		
-    		if(params.containsKey("token"))
-    		{
-    			String token = params.get("token").toString();
-    			System.out.println(token);
-    		}
-    		else
-    			System.out.println("No token in params map");
-    	
     		String response = "<!DOCTYPE html><html><head lang=\"en\"><title>ONC Family Request Received</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	
     }
 	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException

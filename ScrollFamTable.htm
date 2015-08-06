@@ -12,8 +12,9 @@
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlRefer = url.concat("/referral?token=REPLACE_TOKEN&year=YEAR&famID=FAMID");
-//	var urlCreateNewFamily = url.concat("/newfamily?token=REPLACE_TOKEN");
-	var urlCreateNewFamily = url.concat("/newfamily");
+//	var urlRefer = url.concat("/referral");
+	var urlCreateNewFamily = url.concat("/newfamily?token=REPLACE_TOKEN");
+//	var urlCreateNewFamily = url.concat("/newfamily");
 	var currYear;
 	var priorYear;
 	var pyFamJson;
@@ -266,12 +267,13 @@
     	var urlReferWithYear = urlRefer.replace("YEAR", priorYear.toString());
     	var urlReferWithYearAndFamID = urlReferWithYear.replace("FAMID", id.toString());
     	window.open(urlReferWithYearAndFamID);
+//    	newopen(POST, urlRefer, {token:"REPLACE_TOKEN", year:"2014", famid:"5"})
     }
     
     function newFamily()
     {
-//    	window.open(urlCreateNewFamily);
-		open("POST", urlCreateNewFamily, {token:"REPLACE_TOKEN"}, 'newwin');
+    	window.open(urlCreateNewFamily);
+//		newopen("POST", urlCreateNewFamily, {token:"REPLACE_TOKEN"}, 'newwin');
     }
     
     function details(id)
@@ -282,7 +284,7 @@
  	// Arguments :
 	//  verb : 'GET'|'POST'
 	//  target : an optional opening target (a name, or "_blank"), defaults to "_self"
-	open = function(verb, url, data, target)
+	newopen = function(verb, url, data, target)
 	{
   		var form = document.createElement("form");
   		form.action = url;
@@ -374,7 +376,7 @@
     </style>
 </head>
 <body>
-	<p><b><i>Welcome to Our Neighbors Child, USER_NAME_HERE</i></b></p>
+	<p align="center"><b><i>USER_NAME_HERE, Welcome to Our Neighbors Child</i></b></p>
 	<form>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="pyagents">Families Referred By:</label>
@@ -392,9 +394,7 @@
         </tbody>
 	</table>
 </div>
-<br>
-  	<button onclick="newFamily()">Refer New Family</button>
-<br>
+<p><button onclick="newFamily()">Refer New Family</button></p>
 <form>
 		<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
 		<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
@@ -414,6 +414,6 @@
 <br>
 	<form action="logout?token=REPLACE_TOKEN" method="post">
   		<button type="submit">Logout</button>
-	</form>		
+	</form>
 </body>
 </html>
