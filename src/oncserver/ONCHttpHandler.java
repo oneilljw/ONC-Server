@@ -25,7 +25,8 @@ public class ONCHttpHandler implements HttpHandler
 {
 	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
 	private static final String LOGOUT_HTML_FILE = "logout.htm";
-	private static final String NEW_FAMILY_FILE = "FamilyReferral.htm";
+	private static final String EXISTING_FAMILY_FILE = "ExistingFamilyReferral.htm";
+	private static final String NEW_FAMILY_FILE = "NewFamilyReferral.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	
 	private static final int HTTP_OK = 200;
@@ -144,6 +145,8 @@ public class ONCHttpHandler implements HttpHandler
     		ClientManager clientMgr = ClientManager.getInstance();
     		String response = null;
     		
+    		System.out.println(sessionID);
+    		
     		if(clientMgr.findClient(sessionID) != null)	
     		{
     			try {	
@@ -153,7 +156,8 @@ public class ONCHttpHandler implements HttpHandler
     				e.printStackTrace();
     			}
     			
-    			//remove the placehoders
+    			//remove the place holders
+    			response = response.replace("REPLACE_TOKEN", sessionID);
     			response = response.replace("value=\"HOHFIRSTNAME\"","");
     			response = response.replace("value=\"HOHLASTNAME\"", "");
     		}
@@ -171,7 +175,7 @@ public class ONCHttpHandler implements HttpHandler
     		if(clientMgr.findClient(sessionID) != null)
     		{
     			try {	
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_FILE));
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), EXISTING_FAMILY_FILE));
     			} catch (IOException e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();

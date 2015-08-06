@@ -178,7 +178,7 @@
 	
 	function addChild()
 	{
-        var child = {}
+        var child = {};
         child["firstname"] = document.getElementById('childfn').value;
         child["lastname"] = document.getElementById('childln').value;
         child["sDOB"] = document.getElementById('childdob').value;
@@ -212,7 +212,7 @@
 	
 	function addAdult()
 	{
-        var adult = {}
+        var adult = {};
         adult["name"] = document.getElementById('adultname').value;
         adult["gender"] = document.getElementById('adultgender').value;
         adultsJson.push(adult);
@@ -304,8 +304,8 @@
 </head>
 <body>
   <p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
-  <form action="/referfamily method="post">
-  <input type="hidden" name="token" value="REPLACE_TOKEN">;
+  <form action="referfamily" method="post">
+  <input type="hidden" name="token" value="REPLACE_TOKEN">
   <fieldset class="gray">
     <legend>Head of Household Information:</legend>
     <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME" required>

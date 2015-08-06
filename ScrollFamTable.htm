@@ -12,6 +12,8 @@
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlRefer = url.concat("/referral?token=REPLACE_TOKEN&year=YEAR&famID=FAMID");
+//	var urlCreateNewFamily = url.concat("/newfamily?token=REPLACE_TOKEN");
+	var urlCreateNewFamily = url.concat("/newfamily");
 	var currYear;
 	var priorYear;
 	var pyFamJson;
@@ -48,17 +50,11 @@
     	    	}
     		}
     	});
-    	//get the list of agents from the database and put it in the agent combobox
-    	getAgentsFromServer(priorYear.toString(), "pyagents");
+    	//get the list of prior year agents & families from the server and display them
+    	getPYAgentsAndFamiliesFromServer(priorYear.toString());
     	
-    	//get the list of agents from the database and put it in the agent combobox
-    	getAgentsFromServer(currYear.toString(), "curragents");
-
-    	//get prior year families from server
-    	getPYFamiliesFromServer(priorYear.toString());
-    	
-    	//get current year families from server
-    	getCYFamiliesFromServer(currYear.toString());
+    	//get the list of current year agents & familes from the server and display them
+    	getCYAgentsAndFamiliesFromServer(currYear.toString());
     });
     
     function getPYFamiliesFromServer(year)
@@ -79,17 +75,17 @@
     	});
     }
     
-    function getAgentsFromServer(year, cbID)
+    function getPYAgentsAndFamiliesFromServer(year)
     {
+    	//get reference to agent combobox
+    	var agtcb = document.getElementById('pyagents');
+    	
     	//clear the agent combobox
-    	document.getElementById(cbID).options.length = 0;
+    	agtcb.options.length = 0;
 		
     	//get updated agentJson from server and place into combobox
-    	
     	$.getJSON(urlAgents.replace("YEAR", year.toString()), function(data)
     	{
-			var agtCombo = document.getElementById(cbID);
-			
 			//add the "Anyone" option if there is more than one agent object
 			if(data.length > 1)
 			{
@@ -98,11 +94,11 @@
 	    		agtOption.value = -1;
 	    		try 
 	    		{
-	        		agtCombo.add(agtOption, null); //Standard 
+	        		agtcb.add(agtOption, null); //Standard 
 	    		} 
 	    		catch(error) 
 	    		{
-	        		agtCombo.add(agtOption); // IE only
+	        		agtcb.add(agtOption); // IE only
 	    		}
 			}
 	    	
@@ -114,13 +110,62 @@
     	    	agtOption.value = data[i].id;
     	    	try 
     	    	{
-    	        	agtCombo.add(agtOption, null); //Standard 
+    	        	agtcb.add(agtOption, null); //Standard 
     	    	}
     	    	catch(error)
     	    	{
-    	        	agtCombo.add(agtOption); // IE only
+    	        	agtcb.add(agtOption); // IE only
     	    	}  
-    		}   		
+    		}
+	    	
+	    	getPYFamiliesFromServer(year);
+    	});
+    }
+    
+    function getCYAgentsAndFamiliesFromServer(year)
+    {
+    	//get reference to agent combobox
+    	var agtcb = document.getElementById('curragents');
+    	
+    	//clear the agent combobox
+    	agtcb.options.length = 0;
+		
+    	//get updated agentJson from server and place into combobox
+    	$.getJSON(urlAgents.replace("YEAR", year.toString()), function(data)
+    	{
+			//add the "Anyone" option if there is more than one agent object
+			if(data.length > 1)
+			{
+				var agtOption = document.createElement("option");
+				agtOption.text = "Anyone";
+	    		agtOption.value = -1;
+	    		try 
+	    		{
+	        		agtcb.add(agtOption, null); //Standard 
+	    		} 
+	    		catch(error) 
+	    		{
+	        		agtcb.add(agtOption); // IE only
+	    		}
+			}
+	    	
+	    	//add the agents for the year
+    		for (var i=0; i < data.length; i++)
+    		{
+    			var agtOption = document.createElement("option");
+    			agtOption.text = data[i].name;
+    	    	agtOption.value = data[i].id;
+    	    	try 
+    	    	{
+    	        	agtcb.add(agtOption, null); //Standard 
+    	    	}
+    	    	catch(error)
+    	    	{
+    	        	agtcb.add(agtOption); // IE only
+    	    	}  
+    		}
+	    	
+    		getCYFamiliesFromServer(year);
     	});
     }
     
@@ -130,9 +175,7 @@
     	var yearCB = document.getElementById("dbYears");
 		priorYear = yearCB.options[yearCB.selectedIndex].value;
     	
-    	getAgentsFromServer(priorYear, "pyagents");	//get agents from server
-
-    	getPYFamiliesFromServer(priorYear.toString());
+    	getPYAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
     }
     
     function updatePYTable()
@@ -172,7 +215,6 @@
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
       					  family.fstatus, family.dstatus, family.mealStatus];
         
-//	    tabBody=document.getElementsByTagName("tbody").item(0);
 	    var tabBody = document.getElementById("pyTable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
@@ -199,7 +241,6 @@
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
       					  family.fstatus, family.dstatus, family.mealStatus];
         
-//	    tabBody=document.getElementsByTagName("tbody").item(0);
 	    var tabBody = document.getElementById("cyTable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
@@ -227,11 +268,40 @@
     	window.open(urlReferWithYearAndFamID);
     }
     
+    function newFamily()
+    {
+//    	window.open(urlCreateNewFamily);
+		open("POST", urlCreateNewFamily, {token:"REPLACE_TOKEN"}, 'newwin');
+    }
+    
     function details(id)
     {
     	alert(id);
     }
     
+ 	// Arguments :
+	//  verb : 'GET'|'POST'
+	//  target : an optional opening target (a name, or "_blank"), defaults to "_self"
+	open = function(verb, url, data, target)
+	{
+  		var form = document.createElement("form");
+  		form.action = url;
+  		form.method = verb;
+  		form.target = target || "_self";
+  		if (data)
+  		{
+    		for (var key in data)
+    		{
+      		var input = document.createElement("textarea");
+      		input.name = key;
+      		input.value = typeof data[key] === "object" ? JSON.stringify(data[key]) : data[key];
+      		form.appendChild(input);
+    		}
+  		}
+  		form.style.display = 'none';
+  		document.body.appendChild(form);
+  			form.submit();
+	};
     </script>
     <style type="text/css">
         .scrolltable {
@@ -323,9 +393,7 @@
 	</table>
 </div>
 <br>
-	<form action="newfamily?token=REPLACE_TOKEN" method="post">
-  		<button type="submit">New Family</button>
-	</form>	
+  	<button onclick="newFamily()">Refer New Family</button>
 <br>
 <form>
 		<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>

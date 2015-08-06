@@ -1,0 +1,433 @@
+ <!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>ONC Family Assistance Request</title>
+  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script>
+  
+  	/* Comment the correct line for live vs local */    
+//	var url ="http://cfs.idtus.com:8902";
+//	var url ="http://localhost:8902"
+  
+//  var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
+//  var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
+  	
+  	var childrenJson = new Array();
+  	var adultsJson = new Array();
+  	
+  	$( document ).ready(function()
+	{
+  		$(function() {
+  		    $("form input").keypress(function (e) {
+  		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+  		            $('button[type=submit] .default').click();
+  		            return false;
+  		        } else {
+  		            return true;
+  		        }
+  		    });
+  		});
+  		
+  		$('html').bind('keypress', function(e)
+  		{
+  			if(e.keyCode == 13)
+  			{
+  				return false;
+  			}
+  		});
+	});	
+	
+	function updateChildTable()
+    {
+    	$("#tchildbody").empty();
+    	
+    	for(var i=0; i<childrenJson.length; i++)
+		{
+    		addChildTableRow(i, childrenJson[i]);	//add row to table
+		}
+    }
+	
+	function updateWishTable()
+    {
+    	$("#twishbody").empty();
+    	
+    	for(var i=0; i<childrenJson.length; i++)
+		{
+    		addWishTableRow(i, childrenJson[i]);	//add row to table
+		}
+    }
+	
+	function updateAdultTable()
+    {
+    	$("#tadultbody").empty();
+    	
+    	for(var i=0; i<adultsJson.length; i++)
+		{
+    		addAdultTableRow(i, adultsJson[i]);	//add row to table
+		}
+    }
+	
+	function addChildTableRow(cnum, child)
+    {
+        var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
+        var fieldname = ["childfn", "childln", "childdob", "childgender", "childshcool"];
+        var fieldsize = [15, 16, 11, 11, 20];
+        
+	    var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+    	
+        for(index=0; index < childinfo.length; index++)	//create the child info cells
+        {
+        	cell= document.createElement("td");
+    	    content= document.createElement("input");
+ 	    	content.type="text";
+ 	    	content.name=fieldname[index] + cnum;
+        	content.value = childinfo[index];
+        	content.setAttribute("size", fieldsize[index]);
+        	cell.appendChild(content);
+        	row.appendChild(cell);
+        }
+        
+        btn = document.createElement("button");
+        btn.value=cnum;
+        btn.type="button";
+        btn.innerHTML = "Remove";
+        btn.onclick=function() {removeChild(cnum);};
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+	
+	function addWishTableRow(cnum, child)
+    {
+		var childinfo = [child.firstname, child.lastname];
+        
+	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < childinfo.length; index++)	//create the child info cells
+        {
+        	cell= document.createElement("td");
+    	    content= document.createElement("input");
+ 	    	content.type="text";
+        	content.value = childinfo[index];
+        	content.readOnly = true;
+        	content.setAttribute("size", 12);
+        	cell.appendChild(content);
+        	row.appendChild(cell);
+        }
+
+        var wlcell= document.createElement("td");
+        var wishlist= document.createElement("input");
+        wishlist.type="input";
+        wishlist.name="wishlist" + cnum;
+        wishlist.placeholder= "Wish list for " + child.firstname;
+        wishlist.setAttribute("size", 112);
+        wishlist.required = true;
+        wlcell.appendChild(wishlist);
+        row.appendChild(wlcell);
+        
+        tabBody.appendChild(row);
+    }
+	
+	function addAdultTableRow(anum, adult)
+    {
+	    var tabBody = document.getElementById("adulttable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+        
+        cell= document.createElement("td");
+        adultname= document.createElement("input");
+        adultname.type="input";
+        adultname.name="adultname" + anum;
+        adultname.value = adult.name;
+        adultname.setAttribute("size", 27);
+        cell.appendChild(adultname);
+        row.appendChild(cell);
+        
+        cell= document.createElement("td");
+        var adultgender= document.createElement("input");
+        adultgender.type="input";
+        adultgender.name="adultgender" + anum;
+        adultgender.value = adult.gender;
+        adultgender.setAttribute("size", 11);
+        cell.appendChild(adultgender);
+        row.appendChild(cell);
+        
+        var btn = document.createElement("button");
+        btn.value= anum;
+        btn.type="button";
+        btn.innerHTML = "Remove";
+        btn.onclick=function() {removeAdult(anum);};
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+	
+	function addChild()
+	{		
+        var child = {}
+        child["firstname"] = document.getElementById('childfn').value;
+        child["lastname"] = document.getElementById('childln').value;
+        child["sDOB"] = document.getElementById('childdob').value;
+        child["gender"] = document.getElementById('childgender').value;
+        child["school"] = document.getElementById('school').value;
+        
+        childrenJson.push(child);
+        
+        updateChildTable();
+        updateWishTable();
+        
+        clearAddChild();  
+	}
+	
+	function clearAddChild()
+	{
+		document.getElementById('childfn').value="";
+        document.getElementById('childln').value="";
+        document.getElementById('childdob').value="";
+        document.getElementById('childgender').value="Boy";
+        document.getElementById('school').value="";
+	}
+	
+	function removeChild(index)
+	{
+		console.log("Removing index " + index);
+		childrenJson.splice(index, 1);
+		
+		updateChildTable();
+        updateWishTable();	
+	}
+	
+	function addAdult()
+	{
+        var adult = {}
+        adult["name"] = document.getElementById('adultname').value;
+        adult["gender"] = document.getElementById('adultgender').value;
+        adultsJson.push(adult);
+        
+        updateAdultTable();
+        
+        clearAddAdult();  
+	}
+	
+	function clearAddAdult()
+	{
+		document.getElementById('adultfn').value="";
+        document.getElementById('adultln').value="";
+        document.getElementById('adultgender').value="Male";
+	}
+	
+	function removeAdult(index)
+	{
+		adultsJson.splice(index, 1);
+		updateAdultTable();
+	}
+	
+	function sameAddressClicked(cb)
+	{
+		if(cb.checked == true)
+		{
+			document.getElementById('delhousenum').value = document.getElementById('housenum').value;
+			document.getElementById('delstreet').value = document.getElementById('street').value;
+			document.getElementById('delunit').value = document.getElementById('unit').value;
+			document.getElementById('delcity').value = document.getElementById('city').value;
+			document.getElementById('delzipcode').value = document.getElementById('zipcode').value;
+		}
+		else
+		{
+			document.getElementById('delhousenum').value = "";
+			document.getElementById('delstreet').value = "";
+			document.getElementById('delunit').value = "";
+			document.getElementById('delcity').value = "";
+			document.getElementById('delzipcode').selectedIndex = 0;
+		}
+	}
+	
+	function mealRqrdClicked(cb)
+	{
+		var mealCombo = document.getElementById('mealtype');
+		var dietres = document.getElementById('dietres');
+		//clear the meal type combobox
+    	mealCombo.options.length = 0;
+		
+		if(cb.checked == true)
+		{
+			var choices = ["Thanksgiving", "December Holiday", "Both"];
+			mealCombo.disabled = false;
+			dietres.disabled = false;
+		}
+		else
+		{
+			var choices = ["No Assistance Rqrd"];
+			mealCombo.disabled = true;
+			dietres.value="";
+			dietres.disabled = true;
+		}
+		
+		//add the meal choices
+		for (var i=0; i < choices.length; i++)
+		{
+			var mealOption = document.createElement("option");
+			mealOption.text = choices[i];
+	    	mealOption.value = choices[i];
+	    	try 
+	    	{
+	        	mealCombo.add(mealOption, null); //Standard 
+	    	}
+	    	catch(error)
+	    	{
+	        	mealCombo.add(mealOption); // IE only
+	    	}  
+		}   	
+	}
+  </script>
+  <style>
+	.gray {background-color: #E8E8E8;}
+	.orange {background-color: #FFCC99;}
+	.right {float: right;}
+	table, th, td {border: 1px solid black;}
+	th, td {min-width: 80px; }
+	button {background-color: #336699; color: #ffffff;}
+  </style>
+</head>
+<body>
+  <p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
+  <form action="referfamily" method="post">
+  <input type="hidden" name="token" value="REPLACE_TOKEN">
+  <fieldset class="gray">
+    <legend>Head of Household Information:</legend>
+    <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME" required>
+    <input title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLASTNAME" required>
+    <input title="Home Phone #" name="homephone" type="text" size="20" placeholder="Primary Phone"required>
+    <input title="Cell Phone #" name="cellphone" type="text" size="20" placeholder="Alternate Phone">
+  	<select title="Primary language" name="language">
+		<option value="English">English</option>
+		<option value="Spanish">Spanish</option>
+		<option value="Arabic">Arabic</option>
+		<option value="Korean">Korean</option>
+		<option value="Vietnamese">Vietnamese</option>
+		<option value="Other">Other</option>
+		<option value="?">Unknown</option>
+	</select>
+	<br>
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" required>
+    <input id="city" title="City" name="city" type="text" size="20" placeholder="City" required>
+    <select id="zipcode" title="Zip Code" name="zipcode">
+		<option value="20120">20120</option>
+		<option value="20121">20121</option>
+		<option value="20124">20124</option>
+		<option value="20151">20151</option>
+		<option value="22033">22033</option>
+		<option value="22039">22039</option>
+	</select>
+	<input title="E-mail address" name="email" type="email" size="30" placeholder="email address">
+  </fieldset>
+  <br>
+  <fieldset class="orange">
+	<legend>Delivery Address (ONC will deliver gifts to this address):</legend>
+	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)" name="sameaddress" value="same" />Check if same as HOH address
+	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
+    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" required>
+    <input id="delcity" title="Delivery City" name="delcity" type="text" size="20" placeholder="City" required>
+    <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
+		<option value="20120">20120</option>
+		<option value="20121">20121</option>
+		<option value="20124">20124</option>
+		<option value="20151">20151</option>
+		<option value="22033">22033</option>
+		<option value="22039">22039</option>
+	</select>
+  </fieldset>
+  <br>
+  <fieldset class="gray">
+  	<legend>Family Members</legend>
+  <fieldset class="gray">
+  	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
+  	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
+    <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
+    <input id="childdob" title="Date of birth for child to be added" type="date" size="12" placeholder="DoB">
+    <select id="childgender" title="Gender of child to be added">
+		<option value="Boy">Boy</option>
+		<option value="Girl">Girl</option>
+		<option value="Unknown">Unknown</option>
+	</select>
+	<input id="school" title="School attended, if any, for child to be added" type="text" size="20" placeholder="School">
+	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
+	<button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button>
+  <table id="childtable" border="1">
+  	<thead>
+    	<tr>
+        	<th>First Name</th>
+        	<th>Last Name</th>
+        	<th>DoB </th>
+        	<th>Gender </th>
+        	<th>School </th>
+    	</tr>
+      </thead>
+      <tbody id="tchildbody">
+      </tbody>
+  </table>
+  </fieldset>
+  <br>
+  <fieldset class="gray">
+  	<legend>Other adults in family (in addition to the head of household)</legend>
+  	<input id="adultname" title="Name" type="text" size="28" placeholder="First & Last Name">
+    <select id="adultgender" title="Gender">
+		<option value="Male">Male</option>
+		<option value="Female">Female</option>
+		<option value="Unknown">Unknown</option>
+	</select>
+	<button type="button" onclick="addAdult()" title="Click to add adult to family">Add Adult</button>
+	<button type="button" onclick="clearAddAdult()" title="Click to clear adult fields">Clear</button>
+  <table id="adulttable" border="1">
+  	<thead>
+    	<tr>
+        	<th>Name</th>
+        	<th>Gender </th>
+    	</tr>
+    </thead>
+    <tbody id="tadultbody">
+    </tbody>
+</table>
+  </fieldset>
+  </fieldset>
+  <br>
+  <fieldset class="orange">
+  	<legend>Gift Assistance: Complete for each child in family</legend>
+  	 <table id="wishtable" border="1">
+  	<thead>
+    	<tr>
+        	<th>First Name</th>
+        	<th>Last Name</th>
+        	<th>Wish List: 3 wishes in order of importance per child; if clothing, include size & color preference </th>
+    	</tr>
+      </thead>
+      <tbody id="twishbody">
+      </tbody>
+  </table>
+  </fieldset>
+   <br>
+  <fieldset class="gray">
+	<legend>Meal Assistance (ONC will refer family to WFCM or equivalent):</legend>
+	<input type="checkbox" onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
+    <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
+		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
+	</select>
+	<input id="dietres" type="text" name="dietres" size="80" placeholder="Describe any deitary restrictions" title="Describe any family dietary restrictions" disabled>
+  </fieldset>
+  <br>
+  <fieldset class=orange>
+	<legend>Family Details (Details about family you think ONC should know):</legend>
+	<input type="text" name="detail" size="140" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
+  </fieldset>
+  <br>
+  <div class=right>
+  <label for="submit">Please check that all fields are complete prior to submission: </label>
+  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC">
+  </div>
+</form>
+</body>
+</html>   
