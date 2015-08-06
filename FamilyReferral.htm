@@ -6,8 +6,8 @@
   <script>
   
   	/* Comment the correct line for live vs local */    
-	var url ="http://cfs.idtus.com:8902";
-//	var url ="http://localhost:8902"
+//	var url ="http://cfs.idtus.com:8902";
+	var url ="http://localhost:8902"
   
   	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
   	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
@@ -133,9 +133,10 @@
         var wlcell= document.createElement("td");
         var wishlist= document.createElement("input");
         wishlist.type="input";
-        wishlist.name="wish" + cnum;
+        wishlist.name="wishlist" + cnum;
         wishlist.placeholder= "Wish list for " + child.firstname;
         wishlist.setAttribute("size", 112);
+        wishlist.required = true;
         wlcell.appendChild(wishlist);
         row.appendChild(wlcell);
         
@@ -253,6 +254,44 @@
 			document.getElementById('delzipcode').selectedIndex = 0;
 		}
 	}
+	
+	function mealRqrdClicked(cb)
+	{
+		var mealCombo = document.getElementById('mealtype');
+		var dietres = document.getElementById('dietres');
+		//clear the meal type combobox
+    	mealCombo.options.length = 0;
+		
+		if(cb.checked == true)
+		{
+			var choices = ["Thanksgiving", "December Holiday", "Both"];
+			mealCombo.disabled = false;
+			dietres.disabled = false;
+		}
+		else
+		{
+			var choices = ["No Assistance Rqrd"];
+			mealCombo.disabled = true;
+			dietres.value="";
+			dietres.disabled = true;
+		}
+		
+		//add the meal choices
+		for (var i=0; i < choices.length; i++)
+		{
+			var mealOption = document.createElement("option");
+			mealOption.text = choices[i];
+	    	mealOption.value = choices[i];
+	    	try 
+	    	{
+	        	mealCombo.add(mealOption, null); //Standard 
+	    	}
+	    	catch(error)
+	    	{
+	        	mealCombo.add(mealOption); // IE only
+	    	}  
+		}   	
+	}
   </script>
   <style>
 	.gray {background-color: #E8E8E8;}
@@ -265,12 +304,13 @@
 </head>
 <body>
   <p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
-  <form>
+  <form action="/referfamily method="post">
+  <input type="hidden" name="token" value="REPLACE_TOKEN">;
   <fieldset class="gray">
     <legend>Head of Household Information:</legend>
-    <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME">
-    <input title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLASTNAME">
-    <input title="Home Phone #" name="homephone" type="text" size="20" placeholder="Primary Phone">
+    <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME" required>
+    <input title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLASTNAME" required>
+    <input title="Home Phone #" name="homephone" type="text" size="20" placeholder="Primary Phone"required>
     <input title="Cell Phone #" name="cellphone" type="text" size="20" placeholder="Alternate Phone">
   	<select title="Primary language" name="language">
 		<option value="English">English</option>
@@ -282,10 +322,10 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input id="housenum" title="House # name="housenum" type="text" size="8" placeholder="House #">
-    <input id="street" title="Street: name="street" type="text" size="20" placeholder="Street Name">
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #">
-    <input id="city" title="City" name="city" type="text" size="20" placeholder="City">
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" required>
+    <input id="city" title="City" name="city" type="text" size="20" placeholder="City" required>
     <select id="zipcode" title="Zip Code" name="zipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
@@ -300,11 +340,11 @@
   <fieldset class="orange">
 	<legend>Delivery Address (ONC will deliver gifts to this address):</legend>
 	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)" name="sameaddress" value="same" />Check if same as HOH address
-	<input id="delhousenum" name="delhousenum" type="text" size="8" placeholder="House #">
-    <input id="delstreet" name="delstreet" type="text" size="20" placeholder="Street Name">
-    <input id="delunit" name="delunit" type="text" size="8" placeholder="Apt #">
-    <input id="delcity" name="delcity" type="text" size="20" placeholder="City">
-    <select id="delzipcode" name="delzipcode">
+	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
+    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" required>
+    <input id="delcity" title="Delivery City" name="delcity" type="text" size="20" placeholder="City" required>
+    <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
 		<option value="20124">20124</option>
@@ -318,17 +358,17 @@
   	<legend>Family Members</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
-  	<input id="childfn" name="childfn" type="text" size="16" placeholder="First Name">
-    <input id="childln" name="childln" type="text" size="16" placeholder="Last Name">
-    <input id="childdob" name="childdob" type="date" size="12" placeholder="DoB">
-    <select id="childgender" name="childgender">
+  	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
+    <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
+    <input id="childdob" title="Date of birth for child to be added" type="date" size="12" placeholder="DoB">
+    <select id="childgender" title="Gender of child to be added">
 		<option value="Boy">Boy</option>
 		<option value="Girl">Girl</option>
 		<option value="Unknown">Unknown</option>
 	</select>
-	<input id="school" name="school" type="text" size="20" placeholder="School">
-	<button type="button" onclick="addChild()">Add Child</button>
-	<button type="button" onclick="clearAddChild()">Clear</button>
+	<input id="school" title="School attended, if any, for child to be added" type="text" size="20" placeholder="School">
+	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
+	<button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button>
   <table id="childtable" border="1">
   	<thead>
     	<tr>
@@ -346,14 +386,14 @@
   <br>
   <fieldset class="gray">
   	<legend>Other adults in family (in addition to the head of household)</legend>
-  	<input id="adultname" name="adultname" type="text" size="28" placeholder="First & Last Name">
-    <select id="adultgender" name="adultgender">
+  	<input id="adultname" title="Name" type="text" size="28" placeholder="First & Last Name">
+    <select id="adultgender" title="Gender">
 		<option value="Male">Male</option>
 		<option value="Female">Female</option>
 		<option value="Unknown">Unknown</option>
 	</select>
-	<button type="button" onclick="addAdult()">Add Adult</button>
-	<button type="button" onclick="clearAddAdult()">Clear</button>
+	<button type="button" onclick="addAdult()" title="Click to add adult to family">Add Adult</button>
+	<button type="button" onclick="clearAddAdult()" title="Click to clear adult fields">Clear</button>
   <table id="adulttable" border="1">
   	<thead>
     	<tr>
@@ -384,23 +424,21 @@
    <br>
   <fieldset class="gray">
 	<legend>Meal Assistance (ONC will refer family to WFCM or equivalent):</legend>
-	<input type="checkbox" name="mealrqrd" value="mealrqrd" />Check to request meal assistance for:
-    <select name="mealtype">
-		<option value="Thanksgiving">Thanksgiving</option>
-		<option value="December Holiday">December Holiday</option>
-		<option value="Both">Both</option>
+	<input type="checkbox" onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
+    <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
+		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
 	</select>
-	<input type="text" name="dietres" size="80" placeholder="Describe any deitary restrictions">
+	<input id="dietres" type="text" name="dietres" size="80" placeholder="Describe any deitary restrictions" title="Describe any family dietary restrictions" disabled>
   </fieldset>
   <br>
   <fieldset class=orange>
 	<legend>Family Details (Details about family you think ONC should know):</legend>
-	<input type="text" name="detail" size="140" placeholder="Details about family ONC should know">
+	<input type="text" name="detail" size="140" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <br>
   <div class=right>
   <label for="submit">Please check that all fields are complete prior to submission: </label>
-  <input id="submit" formaction="" type="submit" value="Submit to ONC" style="background-color: #336699; color: #ffffff;">
+  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC">
   </div>
 </form>
 </body>

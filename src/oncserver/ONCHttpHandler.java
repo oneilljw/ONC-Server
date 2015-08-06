@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCServerUser;
@@ -33,14 +34,14 @@ public class ONCHttpHandler implements HttpHandler
     {
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
+    	String requestURI = t.getRequestURI().toASCIIString();
     	
-    	String mssg = String.format("HTTP request %s: %s:%s", 
-				t.getRemoteAddress().toString(), t.getRequestMethod(), t.getRequestURI().toASCIIString());
+    	String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI serverUI = ServerUI.getInstance();
 		serverUI.addLogMessage(mssg);
 //		System.out.println("ONCHttpHandler.handle: Request: " + mssg);
     	
-    	if(t.getRequestURI().toString().equals("/"))
+    	if(requestURI.equals("/"))
     	{
     		String response = null;
     		try {	
@@ -52,7 +53,7 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	else if(t.getRequestURI().toString().contains("/logout"))
+    	else if(requestURI.contains("/logout"))
     	{
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
@@ -70,14 +71,14 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	else if(t.getRequestURI().toString().contains("/login"))
+    	else if(requestURI.contains("/login"))
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
     	{
 //    		System.out.println("ONCHttpHandler: Token = " + (String) params.get("token"));
     		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
     	}
-    	else if(t.getRequestURI().toString().contains("/agents"))
+    	else if(requestURI.contains("/agents"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
     		
@@ -90,14 +91,14 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, response);
     	}
-    	else if(t.getRequestURI().toString().contains("/families"))
+    	else if(requestURI.contains("/families"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
     		
     		HtmlResponse response = FamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
-    	else if(t.getRequestURI().toString().contains("/children"))
+    	else if(requestURI.contains("/children"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
     		int famID = Integer.parseInt((String) params.get("famid"));
@@ -105,7 +106,7 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
-    	else if(t.getRequestURI().toString().contains("/adults"))
+    	else if(requestURI.contains("/adults"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
     		int famID = Integer.parseInt((String) params.get("famid"));
@@ -113,7 +114,7 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
-    	else if(t.getRequestURI().toString().contains("/oncsplash"))
+    	else if(requestURI.contains("/oncsplash"))
     	{
     		// add the required response header for a PDF file
   	      	Headers h = t.getResponseHeaders();
@@ -137,7 +138,7 @@ public class ONCHttpHandler implements HttpHandler
   	      	os.close();
   	      	t.close();
     	}
-    	else if(t.getRequestURI().toString().contains("/newfamily"))
+    	else if(requestURI.contains("/newfamily"))
     	{
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
@@ -161,7 +162,7 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	else if(t.getRequestURI().toString().contains("/referral"))
+    	else if(requestURI.contains("/referral"))
     	{
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
@@ -193,6 +194,23 @@ public class ONCHttpHandler implements HttpHandler
     		else
     			response = invalidTokenReceived();
     		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/referfamily"))
+    	{
+    		Set<String> keyset = params.keySet();
+    		for(String key: keyset)
+    			System.out.println(key);
+    		
+    		if(params.containsKey("token"))
+    		{
+    			String token = params.get("token").toString();
+    			System.out.println(token);
+    		}
+    		else
+    			System.out.println("No token in params map");
+    	
+    		String response = "<!DOCTYPE html><html><head lang=\"en\"><title>ONC Family Request Received</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
     	
