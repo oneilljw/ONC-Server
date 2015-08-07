@@ -6,8 +6,8 @@
   <script>
   
   	/* Comment the correct line for live vs local */    
-	var url ="http://cfs.idtus.com:8902";
-//	var url ="http://localhost:8902"
+//	var url ="http://cfs.idtus.com:8902";
+	var url ="http://localhost:8902"
   
   	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
   	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
@@ -17,6 +17,9 @@
   	
   	$( document ).ready(function()
 	{
+  		var yearinput = document.getElementById("year");
+  		yearinput.value = new Date().getFullYear().toString();
+  		
   		$.getJSON(urlChildren, function(data)
   		{
   		     childrenJson = data;
@@ -159,7 +162,7 @@
         
         cell= document.createElement("td");
         var adultgender= document.createElement("input");
-        adultgender.type="input";
+        adultgender.type="text";
         adultgender.name="adultgender" + anum;
         adultgender.value = adult.gender;
         adultgender.setAttribute("size", 11);
@@ -307,6 +310,7 @@
   <p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
   <form action="referfamily" method="post">
   <input type="hidden" name="token" value="REPLACE_TOKEN">
+  <input id="year" type="hidden" name="year">
   <fieldset class="gray">
     <legend>Head of Household Information:</legend>
     <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME" required>
@@ -340,7 +344,7 @@
   <br>
   <fieldset class="orange">
 	<legend>Delivery Address (ONC will deliver gifts to this address):</legend>
-	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)" name="sameaddress" value="same" />Check if same as HOH address
+	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #">

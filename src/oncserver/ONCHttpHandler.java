@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import ourneighborschild.Agent;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
@@ -153,18 +154,22 @@ public class ONCHttpHandler implements HttpHandler
     			try {	
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_FILE));
     			} catch (IOException e) {
-    				// TODO Auto-generated catch block
+    				System.out.println("Couldn't open/find " + NEW_FAMILY_FILE);
     				e.printStackTrace();
     			}
     			
+    			System.out.println(response.length());
+    			
     			//remove the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
+//    			response = response.replace("YEAR",(String) params.get("year"));
     			response = response.replace("value=\"HOHFIRSTNAME\"","");
     			response = response.replace("value=\"HOHLASTNAME\"", "");
     		}
     		else
     			response = invalidTokenReceived();
     		
+    		System.out.println(response);
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
     	else if(requestURI.contains("/referral"))
@@ -204,13 +209,24 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/referfamily"))
     	{
-    		Set<String> keyset = params.keySet();
-    		for(String key:keyset)
-    			System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
     		
-    		processFamilyReferral(params);
+    		if((wc=clientMgr.findClient(sessionID)) != null)
+    		{
+    			Set<String> keyset = params.keySet();
+    			for(String key:keyset)
+    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
-    		String response = "<!DOCTYPE html><html><head lang=\"en\"><title>ONC Family Request Received</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
+    			processFamilyReferral(wc, params);
+    		
+    			response = "<!DOCTYPE html><html><head lang=\"en\"><title>ONC Family Request Received</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
     }
@@ -338,28 +354,55 @@ public class ONCHttpHandler implements HttpHandler
 	    return stringBuilder.toString();
 	}
 	
-	void processFamilyReferral(Map<String, Object> params)
+	void processFamilyReferral(WebClient wc, Map<String, Object> params)
 	{
-		//verify that the HOH address is good
-		String houseNum = null, streetName = null;
-		if(params.containsKey("House #"))
-			houseNum = (String) params.get("House #");
-		if(params.containsKey("Street Name"))
-			streetName = (String) params.get("Street Name");
-		boolean bAddressGood = houseNum != null && streetName != null && 
-									RegionDB.isAddressValid(houseNum, streetName);
+		//get the agent
+		int year = Integer.parseInt((String) params.get("year"));
+		Agent agent = AgentDB.getAgent(year, wc.getWebUser());
+		System.out.println("ONCHttpHandler.processFamilyReferral: Agent: " + agent.getAgentName());
 		
-		System.out.println("ONCHttpHandler.processFamilyReferral: HOH Adress: " + bAddressGood);
+		//verify that the HOH address is good
+		System.out.println("ONCHttpHandler.processFamilyReferral: HOH Address: " + isHOHAddressValid(params));
+		
+		//verify that the Delivery address is good
+		System.out.println("ONCHttpHandler.processFamilyReferral: Delivery Address: " + isDeliveryAddressValid(params));
 		
 		//create a family request
 		
-		//create the children
+		//create the children for the family
 		
 		//create the other adults
 		
 		//create the meal request
 		
-		//if a
+		//if all are good, populate the data bases
+		
+	}
+	
+	boolean isHOHAddressValid(Map<String, Object> params)
+	{
+		boolean bAddressGood = false;
+		String houseNum = null, streetName = null;
+		if(params.containsKey("housenum") && (houseNum = (String) params.get("housenum")) != null
+			&& params.containsKey("street") && (streetName = (String) params.get("street")) != null )
+		{
+			bAddressGood = RegionDB.isAddressValid(houseNum, streetName);
+		}
+		
+		return bAddressGood;
+	}
+	
+	boolean isDeliveryAddressValid(Map<String, Object> params)
+	{
+		boolean bAddressGood = false;
+		String houseNum = null, streetName = null;
+		if(params.containsKey("delhousenum") && (houseNum = (String) params.get("delhousenum")) != null
+			&& params.containsKey("delstreet") && (streetName = (String) params.get("delstreet")) != null )
+		{
+			bAddressGood = RegionDB.isAddressValid(houseNum, streetName);
+		}
+		
+		return bAddressGood;
 	}
 	
 	void verifyReferralInformation()

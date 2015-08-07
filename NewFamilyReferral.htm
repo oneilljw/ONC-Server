@@ -9,6 +9,9 @@
   	
   	$( document ).ready(function()
 	{
+  		var yearinput = document.getElementById("year");
+  		yearinput.value = new Date().getFullYear().toString();
+  		
   		$(function() {
   		    $("form input").keypress(function (e) {
   		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
@@ -129,7 +132,7 @@
         
         cell= document.createElement("td");
         adultname= document.createElement("input");
-        adultname.type="input";
+        adultname.type="text";
         adultname.name="adultname" + anum;
         adultname.value = adult.name;
         adultname.setAttribute("size", 27);
@@ -286,6 +289,7 @@
   <p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
   <form action="referfamily" method="post">
   <input type="hidden" name="token" value="REPLACE_TOKEN">
+  <input id="year" type="hidden" name="year">
   <fieldset class="gray">
     <legend>Head of Household Information:</legend>
     <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFIRSTNAME" required>
@@ -304,7 +308,7 @@
 	<br>
 	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
     <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #">
     <input id="city" title="City" name="city" type="text" size="20" placeholder="City" required>
     <select id="zipcode" title="Zip Code" name="zipcode">
 		<option value="20120">20120</option>
@@ -319,10 +323,10 @@
   <br>
   <fieldset class="orange">
 	<legend>Delivery Address (ONC will deliver gifts to this address):</legend>
-	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)" name="sameaddress" value="same" />Check if same as HOH address
+	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
-    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" required>
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #">
     <input id="delcity" title="Delivery City" name="delcity" type="text" size="20" placeholder="City" required>
     <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
 		<option value="20120">20120</option>

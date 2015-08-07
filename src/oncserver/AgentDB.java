@@ -8,6 +8,7 @@ import java.util.List;
 
 import ourneighborschild.Agent;
 import ourneighborschild.DBYear;
+import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserPermission;
 
@@ -207,6 +208,21 @@ public class AgentDB extends ONCServerDB
 		List<Agent> objAL = agentDBYear.getList();
 		int index = 0;
 		while(index < objAL.size() && objAL.get(index).getID() != agentID)
+			index++;
+		
+		//wish must be present in catalog to be deleted
+		if(index < objAL.size())
+			return objAL.get(index);
+		else
+			return null;
+	}
+	
+	static Agent getAgent(int year, ONCUser user)
+	{
+		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
+		List<Agent> objAL = agentDBYear.getList();
+		int index = 0;
+		while(index < objAL.size() && objAL.get(index).getID() != user.getID())	//agent id == user id
 			index++;
 		
 		//wish must be present in catalog to be deleted
