@@ -27,6 +27,8 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String LOGOUT_HTML_FILE = "logout.htm";
 	private static final String EXISTING_FAMILY_FILE = "ExistingFamilyReferral.htm";
 	private static final String NEW_FAMILY_FILE = "NewFamilyReferral.htm";
+	private static final String INPUT_NORMAL_BACKGROUND = "#FFFFFF";
+	private static final String INPUT_ERROR_BACKGROUND = "#FFC0CB";
 	private static final int DEFAULT_YEAR = 2014;
 	
 	private static final int HTTP_OK = 200;
@@ -193,6 +195,7 @@ public class ONCHttpHandler implements HttpHandler
     			response = response.replace("FAMID",(String) params.get("famID"));
     			response = response.replace("HOHFIRSTNAME",fam.getHOHFirstName());
     			response = response.replace("HOHLASTNAME", fam.getHOHLastName());
+    			response = response.replace("ADDRESS_COLOR", INPUT_NORMAL_BACKGROUND);
     		}
     		else
     			response = invalidTokenReceived();
@@ -201,6 +204,12 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/referfamily"))
     	{
+    		Set<String> keyset = params.keySet();
+    		for(String key:keyset)
+    			System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+    		
+    		processFamilyReferral(params);
+    		
     		String response = "<!DOCTYPE html><html><head lang=\"en\"><title>ONC Family Request Received</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
@@ -327,5 +336,35 @@ public class ONCHttpHandler implements HttpHandler
 //	    ServerUI sUI = ServerUI.getInstance();
 //	    sUI.addLogMessage(String.format("Read %s, length = %d", file, stringBuilder.toString().length()));
 	    return stringBuilder.toString();
-	}	
+	}
+	
+	void processFamilyReferral(Map<String, Object> params)
+	{
+		//verify that the HOH address is good
+		String houseNum = null, streetName = null;
+		if(params.containsKey("House #"))
+			houseNum = (String) params.get("House #");
+		if(params.containsKey("Street Name"))
+			streetName = (String) params.get("Street Name");
+		boolean bAddressGood = houseNum != null && streetName != null && 
+									RegionDB.isAddressValid(houseNum, streetName);
+		
+		System.out.println("ONCHttpHandler.processFamilyReferral: HOH Adress: " + bAddressGood);
+		
+		//create a family request
+		
+		//create the children
+		
+		//create the other adults
+		
+		//create the meal request
+		
+		//if a
+	}
+	
+	void verifyReferralInformation()
+	{
+		
+	}
+	
 }

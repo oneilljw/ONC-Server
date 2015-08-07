@@ -6,8 +6,8 @@
   <script>
   
   	/* Comment the correct line for live vs local */    
-	var url ="http://cfs.idtus.com:8902";
-//	var url ="http://localhost:8902"
+//	var url ="http://cfs.idtus.com:8902";
+	var url ="http://localhost:8902"
   
   	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
   	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
@@ -132,7 +132,7 @@
 
         var wlcell= document.createElement("td");
         var wishlist= document.createElement("input");
-        wishlist.type="input";
+        wishlist.type="text";
         wishlist.name="wishlist" + cnum;
         wishlist.placeholder= "Wish list for " + child.firstname;
         wishlist.setAttribute("size", 112);
@@ -294,6 +294,7 @@
 	}
   </script>
   <style>
+  	.homeaddress {background-color: ADDRESS_COLOR }
 	.gray {background-color: #E8E8E8;}
 	.orange {background-color: #FFCC99;}
 	.right {float: right;}
@@ -322,10 +323,10 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
+	<input id="housenum" class="homeaddress" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
+    <input id="street" class="homeaddress" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
     <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" required>
-    <input id="city" title="City" name="city" type="text" size="20" placeholder="City" required>
+    <input id="city" class="homeaddress" title="City" name="city" type="text" size="20" placeholder="City" required>
     <select id="zipcode" title="Zip Code" name="zipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
@@ -342,7 +343,7 @@
 	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)" name="sameaddress" value="same" />Check if same as HOH address
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
-    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" required>
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #">
     <input id="delcity" title="Delivery City" name="delcity" type="text" size="20" placeholder="City" required>
     <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
 		<option value="20120">20120</option>

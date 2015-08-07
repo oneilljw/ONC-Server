@@ -79,7 +79,7 @@ public class RegionDB
 		return searchForRegionMatch(createSearchAddress(streetnum, streetname));
 	}
 	
-	String[] createSearchAddress(String streetnum, String streetname)
+	static String[] createSearchAddress(String streetnum, String streetname)
 	{
 		String[] searchAddress = new String[4];
 		String[] step1 = new String[2];
@@ -114,7 +114,7 @@ public class RegionDB
 	 * return a two element string array with the leading digits as element 1 and the remainder
 	 * of the string past the blank space as element 2. If there are no leading digits, element 1
 	 ***********************************************************************************/
-	String[] separateLeadingDigits(String src)
+	static String[] separateLeadingDigits(String src)
 	{
 		String[] output = {"",""};
 		
@@ -149,7 +149,7 @@ public class RegionDB
 	 * direction is not present, element 0 will be empty and element 1 will contain the 
 	 * original street parameter
 	 ***********************************************************************************/
-	String[] separateStreetDirection(String street)
+	static String[] separateStreetDirection(String street)
 	{
 		String[] output = new String[2];
 		
@@ -168,7 +168,7 @@ public class RegionDB
 		return output;
 	}
 	
-	String[] separateStreetSuffix(String streetname)
+	static String[] separateStreetSuffix(String streetname)
 	{
 		StringBuffer buf = new StringBuffer("");
 		
@@ -194,6 +194,18 @@ public class RegionDB
 			return 0;
 		else
 			return getRegionNumber(regAL.get(ri).getRegion());
+	}
+	
+	static boolean isAddressValid(String streetNum, String streetName)
+	{
+		String[] searchAddress = createSearchAddress(streetNum, streetName);
+		int ri = 0;
+		
+		while(ri < regAL.size() && !regAL.get(ri).isRegionMatch(searchAddress))
+			ri++;
+		
+		//If match not found return region = 0, else return region
+		return ri < regAL.size();		
 	}
 	
 	int getRegionNumber(String r) //Returns 0 if r is null or empty, number corresponding to letter otherwise
