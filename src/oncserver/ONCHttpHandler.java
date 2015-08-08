@@ -12,7 +12,10 @@ import java.util.Map;
 import java.util.Set;
 
 import ourneighborschild.Agent;
+import ourneighborschild.MealStatus;
+import ourneighborschild.MealType;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserPermission;
@@ -358,8 +361,8 @@ public class ONCHttpHandler implements HttpHandler
 	{
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
-		Agent agent = AgentDB.getAgent(year, wc.getWebUser());
-		System.out.println("ONCHttpHandler.processFamilyReferral: Agent: " + agent.getAgentName());
+		Agent agt = AgentDB.getAgent(year, wc.getWebUser());
+		System.out.println("ONCHttpHandler.processFamilyReferral: Agent: " + agt.getAgentName());
 		
 		//verify that the HOH address is good
 		System.out.println("ONCHttpHandler.processFamilyReferral: HOH Address: " + isHOHAddressValid(params));
@@ -367,9 +370,36 @@ public class ONCHttpHandler implements HttpHandler
 		//verify that the Delivery address is good
 		System.out.println("ONCHttpHandler.processFamilyReferral: Delivery Address: " + isDeliveryAddressValid(params));
 		
-		//create a family request
 		
-		//create the children for the family
+		
+		//create a family request
+		String language = (String) params.get("language");
+		String hohfn = (String) params.get("hohfn");
+		String hohln = (String) params.get("hohln");
+		String housenum = (String) params.get("housenum");
+		String street = (String) params.get("street");
+		String unit = (String) params.get("unit");
+		String city = (String) params.get("city");
+		String zipcode = (String) params.get("zipcode");
+		String homephone = (String) params.get("homephone");
+		String cellphone = (String) params.get("cellphone");
+		String email = (String) params.get("email");
+		String detail = (String) params.get("detail");
+		String mealtype = (String) params.get("mealtype");
+		String mealres = (String) params.get("dietres");
+		
+		//create a meal request
+		ONCMeal mealreq = new ONCMeal(-1, -1, MealType.valueOf(mealtype), mealres, -1,
+										agt.getAgentName(), new Date(), 3, "Family Referred", 
+										agt.getAgentName());
+		
+		ONCFamily fam = new ONCFamily(-1, agt.getAgentName(), "NNA", "ONCxxxxx", "B-ONC", 
+				language.equals("English") ? "Yes" : "No", language,
+				hohfn, hohln, housenum, street, unit, city, zipcode, homephone, cellphone, email,
+				detail, createWishList(params), agt.getID(), mealreq.getID(), 
+				mealtype.equals("No Assistance Rqrd") ? MealStatus.None : MealStatus.Requested);
+		
+		//create the children for the family"
 		
 		//create the other adults
 		
@@ -377,6 +407,32 @@ public class ONCHttpHandler implements HttpHandler
 		
 		//if all are good, populate the data bases
 		
+	}
+	
+	String createWishList(Map<String, Object> params)
+	{
+		StringBuffer buff = new StringBuffer();
+		int cn = 0;
+		String key = "childfn" + Integer.toString(cn);
+		
+		//using child first name as the iterator, build a wish list string for each 
+		//child in the family
+		while(params.containsKey(key))
+		{
+			buff.append((String) params.get(key));
+			buff.append(" ");
+			buff.append((String) params.get("childln" + Integer.toString(cn)));
+			buff.append(":");
+			buff.append((String) params.get("wishlist" + Integer.toString(cn)));
+			cn++;
+			key = "childfn" + Integer.toString(cn);	//get next child key
+			if(params.containsKey(key))	//if that wasn't the last child, add newline
+				buff.append("\n");
+			else
+				break;
+		}
+		
+		return buff.toString();
 	}
 	
 	boolean isHOHAddressValid(Map<String, Object> params)
