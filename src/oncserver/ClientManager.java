@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,8 +22,10 @@ public class ClientManager implements ActionListener
 {
 	private static final boolean CLIENT_TIMER_ENABLED = true;
 	private static final int CLIENT_HEARTBEAT_SAMPLE_RATE = 1000 * 60 * 1; //one minute
-	private static final int CLIENT_INACTIVE_LIMIT = 1000 * 60 * 3; //three minutes
-	private static final int CLIENT_TERMINAL_LIMIT = 1000 * 60 * 10; //ten minutes
+	private static final int DESKTOP_CLIENT_INACTIVE_LIMIT = 1000 * 60 * 3; //three minutes
+	private static final int WEB_CLIENT_LOGIN_LIMIT = 1000 * 60 * 1; //one minute
+	private static final int DESKTOP_CLIENT_TERMINAL_LIMIT = 1000 * 60 * 10; //ten minutes
+	private static final int WEB_CLIENT_TERMINAL_LIMIT = 1000 * 60 * 10; //ten minutes
 	
 	//client timeouts used for test only
 //	private static final int CLIENT_HEARTBEAT_SAMPLE_RATE = 1000 * 10; //ten seconds
@@ -165,7 +168,6 @@ public class ClientManager implements ActionListener
 		if(index < webClientAL.size())	//found web client
 		{	
 			webClientAL.remove(index);
-//			System.out.println(String.format("ClientManager.logoutWebClient: logged out %s", sessionID));
 			return true;
 		}
 		else
@@ -283,21 +285,21 @@ public class ClientManager implements ActionListener
 			ClientState clientState = c.getClientState();
 			long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
 			
-			if(clientState == ClientState.Running  && timeSinceLastHeartbeat > CLIENT_INACTIVE_LIMIT)
+			if(clientState == ClientState.Running  && timeSinceLastHeartbeat > DESKTOP_CLIENT_INACTIVE_LIMIT)
 			{
 				killClientList.add(c);
 			}
 			else if(clientState == ClientState.Logged_In || clientState == ClientState.DB_Selected)
 			{
 //				System.out.println(String.format("Checking if Client %d still has a heart beat", c.getClientID()));
-				if(c.getClientHeartbeat() == Heartbeat.Terminal && timeSinceLastHeartbeat  > CLIENT_TERMINAL_LIMIT)
+				if(c.getClientHeartbeat() == Heartbeat.Terminal && timeSinceLastHeartbeat  > DESKTOP_CLIENT_TERMINAL_LIMIT)
 				{
 					//Heart beat is terminal  and remained lost past the terminal time limit
 					//kill the client by closing the socket which causes an IO exception which
 					//will terminate the client thread
 					killClientList.add(c);
 				}
-				else if(c.getClientHeartbeat() == Heartbeat.Lost && timeSinceLastHeartbeat  > CLIENT_TERMINAL_LIMIT)
+				else if(c.getClientHeartbeat() == Heartbeat.Lost && timeSinceLastHeartbeat  > DESKTOP_CLIENT_TERMINAL_LIMIT)
 				{
 					//Heart beat was lost and remained lost past the terminal time limit
 					c.setClientHeartbeat(Heartbeat.Terminal);
@@ -308,7 +310,7 @@ public class ClientManager implements ActionListener
 				
 					addLogMessage(mssg);
 				}
-				else if(c.getClientHeartbeat() == Heartbeat.Active && timeSinceLastHeartbeat > CLIENT_INACTIVE_LIMIT)
+				else if(c.getClientHeartbeat() == Heartbeat.Active && timeSinceLastHeartbeat > DESKTOP_CLIENT_INACTIVE_LIMIT)
 				{
 					//Heart beat was not detected
 					c.setClientHeartbeat(Heartbeat.Lost);
@@ -320,7 +322,7 @@ public class ClientManager implements ActionListener
 					addLogMessage(mssg);		
 				}
 				else if((c.getClientHeartbeat() == Heartbeat.Lost || c.getClientHeartbeat() == Heartbeat.Terminal) && 
-							timeSinceLastHeartbeat < CLIENT_INACTIVE_LIMIT)
+							timeSinceLastHeartbeat < DESKTOP_CLIENT_INACTIVE_LIMIT)
 				{
 					//Heart beat was lost and is still lost or went terminal and re-recovered prior to
 					//killing the client
@@ -345,6 +347,19 @@ public class ClientManager implements ActionListener
 			String mssg = String.format("Client %d heart beat remained terminal, client killed", kc.getClientID());					
 			addLogMessage(mssg);
 		}
+/*		
+		for(int index = webClientAL.size()-1; index>=0; index--)
+		{
+			WebClient wc = webClientAL.get(index);
+			long currentTime = new Date().getTime();
+			if(wc.getloginTimeStamp() == wc.getLastTimeStamp() && 
+				currentTime - wc.getloginTimeStamp() > WEB_CLIENT_LOGIN_LIMIT ||
+				 currentTime - wc.getLastTimeStamp() > WEB_CLIENT_TERMINAL_LIMIT)
+			{
+//				webClientAL.remove(index);
+			}
+		}
+*/	
 	}	
 	
 	private class ClientTimerListener implements ActionListener

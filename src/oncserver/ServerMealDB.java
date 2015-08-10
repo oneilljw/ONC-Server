@@ -109,16 +109,35 @@ public class ServerMealDB extends ONCServerDB
 		while(index < mealAL.size() && mealAL.get(index).getID() != updatedMeal.getID())
 			index++;
 		
-		//Replace the current child object with the update
+		//Replace the current meal object with the update
 		if(index < mealAL.size())
 		{
-			//set the prior year history id for the child
 			mealAL.set(index, updatedMeal);
 			mealDBYear.setChanged(true);
 			return "UPDATED_MEAL" + gson.toJson(updatedMeal, ONCMeal.class);
 		}
 		else
 			return "UPDATE_FAILED";
+	}
+	
+	boolean update(int year, ONCMeal updatedMeal)
+	{
+		//Find the position for the current meal being updated
+		MealDBYear mealDBYear = mealDB.get(year-BASE_YEAR);
+		List<ONCMeal> mealAL = mealDBYear.getList();
+		int index = 0;
+		while(index < mealAL.size() && mealAL.get(index).getID() != updatedMeal.getID())
+			index++;
+		
+		//Replace the current meal object with the update
+		if(index < mealAL.size())
+		{
+			mealAL.set(index, updatedMeal);
+			mealDBYear.setChanged(true);
+			return true;
+		}
+		else
+			return false;
 	}
 	
 	String delete(int year, String mealjson)

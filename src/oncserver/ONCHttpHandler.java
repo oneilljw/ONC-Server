@@ -10,11 +10,18 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
+
+import javax.swing.JOptionPane;
 
 import ourneighborschild.Agent;
+import ourneighborschild.GlobalVariables;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
@@ -153,12 +160,12 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
     		String response = null;
     		
-    		System.out.println(sessionID);
-    		
-    		if(clientMgr.findClient(sessionID) != null)	
+    		if((wc=clientMgr.findClient(sessionID)) != null)	
     		{
+    			wc.updateTimestamp();
     			try {	
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_FILE));
     			} catch (IOException e) {
@@ -170,14 +177,12 @@ public class ONCHttpHandler implements HttpHandler
     			
     			//remove the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
-//    			response = response.replace("YEAR",(String) params.get("year"));
     			response = response.replace("value=\"HOHFIRSTNAME\"","");
     			response = response.replace("value=\"HOHLASTNAME\"", "");
     		}
     		else
     			response = invalidTokenReceived();
     		
-    		System.out.println(response);
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
     	else if(requestURI.contains("/referral"))
@@ -185,9 +190,11 @@ public class ONCHttpHandler implements HttpHandler
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
     		String response = null;
+    		WebClient wc;
     		
-    		if(clientMgr.findClient(sessionID) != null)
+    		if((wc=clientMgr.findClient(sessionID)) != null)
     		{
+    			wc.updateTimestamp();
     			try {	
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), EXISTING_FAMILY_FILE));
     			} catch (IOException e) {
@@ -222,15 +229,18 @@ public class ONCHttpHandler implements HttpHandler
     		String response = null;
     		WebClient wc;
     		
-    		if((wc=clientMgr.findClient(sessionID)) != null)
+    		if((wc=clientMgr.findClient(sessionID)) != null && 
+    				t.getRequestMethod().toLowerCase().equals("post"))
     		{
+    			wc.updateTimestamp();
     			Set<String> keyset = params.keySet();
     			for(String key:keyset)
     				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
-    			processFamilyReferral(wc, params);
-    		
-    			response = "<!DOCTYPE html><html><head lang=\"en\"><title>ONC Family Request Received</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
+    			if(processFamilyReferral(wc, params) == 1)
+    				response = "<!DOCTYPE html><html><head lang=\"en\"><title>ONC Family Request Received</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
+    			else
+    				response = "<!DOCTYPE html><html><head lang=\"en\"><title>Agent Not Found in data base</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
     		}
     		else
     			response = invalidTokenReceived();
@@ -362,11 +372,18 @@ public class ONCHttpHandler implements HttpHandler
 	    return stringBuilder.toString();
 	}
 	
-	void processFamilyReferral(WebClient wc, Map<String, Object> params)
+	int processFamilyReferral(WebClient wc, Map<String, Object> params)
 	{
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
 		Agent agt = AgentDB.getAgent(year, wc.getWebUser());
+		
+		if(agt == null)
+		{
+			System.out.println("ONCHttpHandler.processFamilyReferral: NULL Agent Error");
+			return -1;
+		}
+
 		System.out.println("ONCHttpHandler.processFamilyReferral: Agent: " + agt.getAgentName());
 		
 		//verify that the HOH address is good
@@ -375,63 +392,91 @@ public class ONCHttpHandler implements HttpHandler
 		//verify that the Delivery address is good
 		System.out.println("ONCHttpHandler.processFamilyReferral: Delivery Address: " + isDeliveryAddressValid(params));
 		
-		
 		//create a family request
-		String language = (String) params.get("language");
-		String hohfn = (String) params.get("hohfn");
-		String hohln = (String) params.get("hohln");
-		String housenum = (String) params.get("housenum");
-		String street = (String) params.get("street");
-		String unit = (String) params.get("unit");
-		String city = (String) params.get("city");
-		String zipcode = (String) params.get("zipcode");
-		String homephone = (String) params.get("homephone");
-		String cellphone = (String) params.get("cellphone");
-		String email = (String) params.get("email");
-		String detail = (String) params.get("detail");
-		String mealtype = (String) params.get("mealtype");
-		String mealres = (String) params.get("dietres");
+		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
+							   "zipcode", "homephone", "cellphone", "email", "detail"};
+		Map<String, String> familyMap = new HashMap<String, String>();
+		for(String familyKey:familyKeys)
+		{
+			String value = (String) params.get(familyKey);
+			familyMap.put(familyKey, value != null ? value : "");
+			System.out.println(String.format("FamilyKey=%s, value=%s", familyKey, familyMap.get(familyKey)));
+		}
 		
-		int mealID = -1;
+		//get database references
+		ServerMealDB mealDB = null;
+		FamilyDB familyDB= null;
+		ServerChildDB childDB = null;
+		ServerAdultDB adultDB = null;
+		
+		try
+		{
+			mealDB = ServerMealDB.getInstance();
+			familyDB = FamilyDB.getInstance();
+			childDB = ServerChildDB.getInstance();
+			adultDB = ServerAdultDB.getInstance();
+		} 
+		catch (FileNotFoundException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("got the database references");
+		
 		//create a meal request, if meal was requested
+		int mealID = -1;
+		ONCMeal mealReq = null;
+		
+		String mealtype ="No Assistance Rqrd", mealres="";
+		if(params.containsKey("mealtype") && params.get("mealtype") != null)
+			mealtype = (String) params.get("mealtype");
+		if(params.containsKey("dietres") && params.get("dietres") != null)
+			mealres = (String) params.get("dietres");
+		
+		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealtype));
+		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealres= " + mealres));
+		
 		if(!mealtype.equals("No Assistance Rqrd"))
 		{
-			try {
-				ServerMealDB mealDB = ServerMealDB.getInstance();
-				ONCMeal mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealtype), mealres, -1,
+			mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealtype), mealres, -1,
 						agt.getAgentName(), new Date(), 3, "Family Referred", 
 						agt.getAgentName());
-				mealID = mealDB.add(year, mealReq);
 			
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			mealID = mealDB.add(year, mealReq);
+			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealID= %d", mealID));
 		}
+		else
+			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealtype));
+			
 		
 		//create the family
 		int famID = -1;
-		try {
-			FamilyDB familyDB = FamilyDB.getInstance();
-			ONCFamily fam = new ONCFamily(-1, agt.getAgentName(), "NNA", "ONCxxxxx", "B-ONC", 
-					language.equals("English") ? "Yes" : "No", language,
-					hohfn, hohln, housenum, street, unit, city, zipcode, homephone, cellphone, email,
-					detail, createWishList(params), agt.getID(), mealID, 
+		ONCFamily fam = new ONCFamily(-1, agt.getAgentName(), "NNA", "ONCxxxxx", "B-ONC", 
+					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
+					familyMap.get("hohFN"), familyMap.get("hohLN"), familyMap.get("housenum"),
+					familyMap.get("street"), familyMap.get("unit"), familyMap.get("city"),
+					familyMap.get("zipcode"), familyMap.get("homephone"), familyMap.get("cellphone"),
+					familyMap.get("email"), familyMap.get("detail"), createWishList(params), agt.getID(), mealID, 
 					mealID == -1 ? MealStatus.None : MealStatus.Requested);
-			famID = familyDB.add(year, fam);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+			
+		famID = familyDB.add(year, fam);
+		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: familyID= %d", famID));
+
 		if(famID > -1)
 		{
+			//update the family id for the meal, if a meal was requested
+			if(mealReq != null)
+			{
+				mealReq.setFamilyID(famID);
+				mealDB.update(year, mealReq);
+			}
+			
 			//create the children for the family
 			String childfn, childln, childDoB, childGender, childSchool;
 			
@@ -440,87 +485,92 @@ public class ONCHttpHandler implements HttpHandler
 			
 			//using child first name as the iterator, create a db entry for each
 			//child in the family
-			try {
-				ServerChildDB childDB = ServerChildDB.getInstance();
-				while(params.containsKey(key))
-				{
-					childfn = (String) params.get(key);
-					childln = (String) params.get("childln" + Integer.toString(cn));
-					childDoB = (String) params.get("childdob" + Integer.toString(cn));
-					childGender = (String) params.get("childgender" + Integer.toString(cn));
-					childSchool = (String) params.get("childschool" + Integer.toString(cn));
+			while(params.containsKey(key))
+			{
+				childfn = (String) params.get(key);
+				childln = (String) params.get("childln" + Integer.toString(cn));
+				childDoB = (String) params.get("childdob" + Integer.toString(cn));
+				childGender = (String) params.get("childgender" + Integer.toString(cn));
+				childSchool = (String) params.get("childschool" + Integer.toString(cn));
 					
-					ONCChild child = new ONCChild(-1, famID, childfn, childln, childGender, 
-													dateToMillis(childDoB), childSchool, year);
+				ONCChild child = new ONCChild(-1, famID, childfn, childln, childGender, 
+													createChildDOB(childDoB), childSchool, year);
 					
-					childDB.add(year,child);
+				int childID = childDB.add(year,child);
+				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: childID= %d", childID));
 					
-					cn++;
-					key = "childfn" + Integer.toString(cn);	//get next child key
-				}
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				cn++;
+				key = "childfn" + Integer.toString(cn);	//get next child key
 			}
 			
-		
-			//create the other adults
-			//create the children for the family
+			//create the other adults in the family
 			String adultName, adultGender;
 			
 			int an = 0;
 			key = "adultname" + Integer.toString(an);
 			
-			//using child first name as the iterator, create a db entry for each
-			//child in the family
-			try {
-				ServerAdultDB adultDB = ServerAdultDB.getInstance();
-				while(params.containsKey(key))
-				{
-					adultName = (String) params.get(key);
-					adultGender = (String) params.get("adultgender" + Integer.toString(cn));
+			//using adultnameX as the iterator, create a db entry for each
+			//adult in the family
+			while(params.containsKey(key))
+			{
+				adultName = (String) params.get(key);
+				adultGender = (String) params.get("adultgender" + Integer.toString(an));
 					
-					ONCAdult adult = new ONCAdult(-1, famID, adultName, adultGender); 
+				ONCAdult adult = new ONCAdult(-1, famID, adultName, adultGender); 
 													
-					adultDB.add(year, adult);
+				int adultID = adultDB.add(year, adult);
+				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: adultID= %d", adultID));
 					
-					cn++;
-					key = "childfn" + Integer.toString(cn);	//get next child key
-				}
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				an++;
+				key = "adultname" + Integer.toString(an);	//get next child key
 			}
+			
 		}
+		
+		return 1;
 	}
 	
-	long dateToMillis(String dob)
-	{
-		SimpleDateFormat sdf = new SimpleDateFormat();
-		
-		if(dob.contains("-"))
-			 sdf.applyPattern("MM-dd-yyyy");
-		else if(dob.contains("/"))
-			sdf.applyPattern("MM/dd/yyyy");
-		else if(dob.contains("."))
-			sdf.applyPattern("MM.dd.yyyy");
-		
-		Date date = new Date();
-		try {
-			date = sdf.parse(dob);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return date.getTime();	
-	}
+	/**************************************************************************************************
+	 * This method takes a string date in one of two formats (yyyy-MM-dd or M/D/yy) and returns a Date
+	 * object from the string. If the input string is not of either format, the current date is returned.
+	 ***************************************************************************************************/
+    Long createChildDOB(String dob)
+    {
+		TimeZone timezone = TimeZone.getTimeZone("GMT");
+		Calendar gmtDOB = Calendar.getInstance(timezone);
+    	
+    	//First, parse the input string based on format to create an Calendar variable for DOB
+    	//If it can't be determined, set DOB = today. 
+    	if(dob.length() == 10 && dob.contains("-"))	//format one
+    	{			
+    		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    		sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+    		try
+    		{
+				gmtDOB.setTime(sdf.parse(dob));
+			}
+    		catch (ParseException e)
+    		{
+    			String errMssg = "Couldn't determine DOB from input: " + dob;
+			}
+    	}
+    	else if(dob.contains("/"))	//format two
+    	{
+    		SimpleDateFormat oncdf = new SimpleDateFormat("M/d/yy");
+    		oncdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+    		try
+    		{
+				gmtDOB.setTime(oncdf.parse(dob));
+			}
+    		catch (ParseException e)
+    		{
+    			String errMssg = "Couldn't determine DOB from input: " + dob;
+			}
+    	}
+    	
+    	//then convert the Calendar to a Date and return it
+    	return gmtDOB.getTimeInMillis();
+    }
 	
 	String createWishList(Map<String, Object> params)
 	{
@@ -535,7 +585,7 @@ public class ONCHttpHandler implements HttpHandler
 			buff.append((String) params.get(key));
 			buff.append(" ");
 			buff.append((String) params.get("childln" + Integer.toString(cn)));
-			buff.append(":");
+			buff.append(": ");
 			buff.append((String) params.get("wishlist" + Integer.toString(cn)));
 			cn++;
 			key = "childfn" + Integer.toString(cn);	//get next child key
