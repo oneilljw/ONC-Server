@@ -214,6 +214,36 @@ public class FamilyDB extends ONCServerDB
 			return "ADD_FAMILY_FAILED";
 	}
 	
+	int add(int year, ONCFamily addedFam)
+	{
+		if(addedFam != null)
+		{
+			//get the family data base for the correct year
+			FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
+			
+			//set region for family
+			int region = updateRegion(addedFam);
+			addedFam.setRegion(region);
+		
+			//create the ONC number
+			String oncNum = generateONCNumber(year, region);
+			addedFam.setONCNum(oncNum);
+			
+			//set the new ID for the added family
+			int famID = fDBYear.getNextID();
+			addedFam.setID(famID);
+			
+			//add to the family data base
+			fDBYear.add(addedFam);
+			fDBYear.setChanged(true);
+		
+			//return the new family
+			return famID;
+		}
+		else
+			return -1;
+	}
+	
 	String getFamily(int year, String zFamID)
 	{
 		int oncID = Integer.parseInt(zFamID);

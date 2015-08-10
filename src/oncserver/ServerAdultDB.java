@@ -100,6 +100,22 @@ public class ServerAdultDB extends ONCServerDB
 		return "ADULT_ADDED" + gson.toJson(addedAdult, ONCAdult.class);
 	}
 	
+	int add(int year, ONCAdult addedAdult)
+	{			
+		//retrieve the adult data base for the year
+		AdultDBYear adultDBYear = adultDB.get(year - BASE_YEAR);
+								
+		//set the new ID for the added ONCAdult
+		int adultID = adultDBYear.getNextID();
+		addedAdult.setID(adultID);
+		
+		//add the new adult to the data base
+		adultDBYear.add(addedAdult);
+		adultDBYear.setChanged(true);
+							
+		return adultID;
+	}
+	
 	String update(int year, String adultjson)
 	{
 		//Create a ONCAdult object for the updated adult

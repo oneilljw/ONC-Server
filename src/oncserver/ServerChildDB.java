@@ -8,9 +8,7 @@ import java.util.List;
 
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
-import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCWebChild;
-import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
@@ -105,6 +103,25 @@ public class ServerChildDB extends ONCServerDB
 		
 		return "ADDED_CHILD" + gson.toJson(addedChild, ONCChild.class);
 		
+	}
+	
+	int add(int year, ONCChild addedChild)
+	{
+		//get the child data base for the year
+		ChildDBYear cDBYear = childDB.get(year - BASE_YEAR);
+		
+		//set the new ID for the added child
+		int childID = cDBYear.getNextID();
+		addedChild.setID(childID);
+		
+		//set the prior year history id for the child
+		addedChild.setPriorYearChildID(searchForPriorYearMatch(year, addedChild));
+		
+		//add the new child to the data base
+		cDBYear.add(addedChild);
+		cDBYear.setChanged(true);
+		
+		return childID;
 	}
 	
 	int searchForPriorYearMatch(int year, ONCChild child)
