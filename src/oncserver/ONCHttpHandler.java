@@ -13,17 +13,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TimeZone;
 
-import javax.swing.JOptionPane;
-
 import ourneighborschild.Agent;
-import ourneighborschild.GlobalVariables;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
@@ -384,17 +377,17 @@ public class ONCHttpHandler implements HttpHandler
 		
 		if(agt == null)
 		{
-			System.out.println("ONCHttpHandler.processFamilyReferral: NULL Agent Error");
+//			System.out.println("ONCHttpHandler.processFamilyReferral: NULL Agent Error");
 			return -1;
 		}
 
 //		System.out.println("ONCHttpHandler.processFamilyReferral: Agent: " + agt.getAgentName());
 		
 		//verify that the HOH address is good
-		System.out.println("ONCHttpHandler.processFamilyReferral: HOH Address: " + isHOHAddressValid(params));
+//		System.out.println("ONCHttpHandler.processFamilyReferral: HOH Address: " + isHOHAddressValid(params));
 		
 		//verify that the Delivery address is good
-		System.out.println("ONCHttpHandler.processFamilyReferral: Delivery Address: " + isDeliveryAddressValid(params));
+//		System.out.println("ONCHttpHandler.processFamilyReferral: Delivery Address: " + isDeliveryAddressValid(params));
 /*		
 		//create a family request
 		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
@@ -431,7 +424,7 @@ public class ONCHttpHandler implements HttpHandler
 			e.printStackTrace();
 		}
 		
-		System.out.println("got the database references");
+//		System.out.println("got the database references");
 		
 		//create a meal request, if meal was requested
 		int mealID = -1;
@@ -439,6 +432,8 @@ public class ONCHttpHandler implements HttpHandler
 		
 		String[] mealKeys = {"mealtype", "dietres"};
 		Map<String, String> mealMap = createMap(params, mealKeys);
+		
+//		System.out.println("Meal Map Size =" + mealMap.size());
 /*		
 		String mealtype ="No Assistance Rqrd", mealres="";
 		if(params.containsKey("mealtype") && params.get("mealtype") != null)
@@ -459,7 +454,7 @@ public class ONCHttpHandler implements HttpHandler
 //			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealID= %d", mealID));
 		}
 //		else
-//			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealtype));
+//			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealMap.get("mealtype")));
 				
 		//create the family
 		int famID = -1;
@@ -468,6 +463,7 @@ public class ONCHttpHandler implements HttpHandler
 				   "delunit", "delcity", "delzipcode"};
 		
 		Map<String, String> familyMap = createMap(params, familyKeys);
+//		System.out.println("Family Map Size =" + familyMap.size());
 		
 		ONCFamily fam = new ONCFamily(-1, agt.getAgentName(), "NNA", "O000000", "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
@@ -480,7 +476,7 @@ public class ONCHttpHandler implements HttpHandler
 					agt.getID(), mealID, mealID == -1 ? MealStatus.None : MealStatus.Requested);
 			
 		famID = familyDB.add(year, fam);
-		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: familyID= %d", famID));
+//		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: familyID= %d", famID));
 
 		if(famID > -1)
 		{
@@ -505,13 +501,13 @@ public class ONCHttpHandler implements HttpHandler
 				childln = (String) params.get("childln" + Integer.toString(cn));
 				childDoB = (String) params.get("childdob" + Integer.toString(cn));
 				childGender = (String) params.get("childgender" + Integer.toString(cn));
-				childSchool = (String) params.get("childschool" + Integer.toString(cn));
+				childSchool = (String) params.get("school" + Integer.toString(cn));
 					
 				ONCChild child = new ONCChild(-1, famID, childfn, childln, childGender, 
 													createChildDOB(childDoB), childSchool, year);
 					
 				int childID = childDB.add(year,child);
-				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: childID= %d", childID));
+//				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: childID= %d", childID));
 					
 				cn++;
 				key = "childfn" + Integer.toString(cn);	//get next child key
@@ -533,7 +529,7 @@ public class ONCHttpHandler implements HttpHandler
 				ONCAdult adult = new ONCAdult(-1, famID, adultName, adultGender); 
 													
 				int adultID = adultDB.add(year, adult);
-				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: adultID= %d", adultID));
+//				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: adultID= %d", adultID));
 					
 				an++;
 				key = "adultname" + Integer.toString(an);	//get next child key
@@ -551,8 +547,8 @@ public class ONCHttpHandler implements HttpHandler
 		{
 			String value = "";
 			if(params.containsKey(key))
-				value = (String) params.get(key) != null ? value : "";
-			
+				value = (String) params.get(key) != null ? (String) params.get(key) : "";
+		
 			map.put(key, value);
 		}
 		
