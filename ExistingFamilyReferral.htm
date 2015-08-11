@@ -1,13 +1,14 @@
  <!DOCTYPE html>
 <html>
 <head lang="en">
+  <meta http-equiv="refresh" content="30" />
   <title>ONC Family Assistance Request</title>
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script>
   
   	/* Comment the correct line for live vs local */    
-	var url ="http://cfs.idtus.com:8902";
-//	var url ="http://localhost:8902"
+//	var url ="http://cfs.idtus.com:8902";
+	var url ="http://localhost:8902"
   
   	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
   	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
