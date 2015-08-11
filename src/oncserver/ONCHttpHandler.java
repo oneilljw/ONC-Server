@@ -13,8 +13,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -173,12 +175,10 @@ public class ONCHttpHandler implements HttpHandler
     				e.printStackTrace();
     			}
     			
-    			System.out.println(response.length());
-    			
     			//remove the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
-    			response = response.replace("value=\"HOHFIRSTNAME\"","");
-    			response = response.replace("value=\"HOHLASTNAME\"", "");
+    			response = response.replace("value=\"HOHFN\"","");
+    			response = response.replace("value=\"HOHLN\"", "");
     		}
     		else
     			response = invalidTokenReceived();
@@ -213,8 +213,8 @@ public class ONCHttpHandler implements HttpHandler
     			response = response.replace("REPLACE_TOKEN", sessionID);
     			response = response.replace("YEAR",(String) params.get("year"));
     			response = response.replace("FAMID",(String) params.get("famID"));
-    			response = response.replace("HOHFIRSTNAME",fam.getHOHFirstName());
-    			response = response.replace("HOHLASTNAME", fam.getHOHLastName());
+    			response = response.replace("HOHFN",fam.getHOHFirstName());
+    			response = response.replace("HOHLN", fam.getHOHLastName());
     			response = response.replace("ADDRESS_COLOR", INPUT_NORMAL_BACKGROUND);
     		}
     		else
@@ -233,12 +233,16 @@ public class ONCHttpHandler implements HttpHandler
     				t.getRequestMethod().toLowerCase().equals("post"))
     		{
     			wc.updateTimestamp();
-    			Set<String> keyset = params.keySet();
-    			for(String key:keyset)
-    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
     			if(processFamilyReferral(wc, params) == 1)
-    				response = "<!DOCTYPE html><html><head lang=\"en\"><title>ONC Family Request Received</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
+    			{
+    				String userFN = wc.getWebUser().getFirstname();
+    				String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", userFN);
+    	    		response = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    			}
     			else
     				response = "<!DOCTYPE html><html><head lang=\"en\"><title>Agent Not Found in data base</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
     		}
@@ -384,14 +388,14 @@ public class ONCHttpHandler implements HttpHandler
 			return -1;
 		}
 
-		System.out.println("ONCHttpHandler.processFamilyReferral: Agent: " + agt.getAgentName());
+//		System.out.println("ONCHttpHandler.processFamilyReferral: Agent: " + agt.getAgentName());
 		
 		//verify that the HOH address is good
 		System.out.println("ONCHttpHandler.processFamilyReferral: HOH Address: " + isHOHAddressValid(params));
 		
 		//verify that the Delivery address is good
 		System.out.println("ONCHttpHandler.processFamilyReferral: Delivery Address: " + isDeliveryAddressValid(params));
-		
+/*		
 		//create a family request
 		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
 							   "zipcode", "homephone", "cellphone", "email", "detail"};
@@ -402,7 +406,7 @@ public class ONCHttpHandler implements HttpHandler
 			familyMap.put(familyKey, value != null ? value : "");
 			System.out.println(String.format("FamilyKey=%s, value=%s", familyKey, familyMap.get(familyKey)));
 		}
-		
+*/		
 		//get database references
 		ServerMealDB mealDB = null;
 		FamilyDB familyDB= null;
@@ -433,6 +437,9 @@ public class ONCHttpHandler implements HttpHandler
 		int mealID = -1;
 		ONCMeal mealReq = null;
 		
+		String[] mealKeys = {"mealtype", "dietres"};
+		Map<String, String> mealMap = createMap(params, mealKeys);
+/*		
 		String mealtype ="No Assistance Rqrd", mealres="";
 		if(params.containsKey("mealtype") && params.get("mealtype") != null)
 			mealtype = (String) params.get("mealtype");
@@ -441,29 +448,36 @@ public class ONCHttpHandler implements HttpHandler
 		
 		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealtype));
 		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealres= " + mealres));
-		
-		if(!mealtype.equals("No Assistance Rqrd"))
+*/		
+		if(!mealMap.get(mealKeys[0]).equals("No Assistance Rqrd"))
 		{
-			mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealtype), mealres, -1,
-						agt.getAgentName(), new Date(), 3, "Family Referred", 
-						agt.getAgentName());
+			mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealMap.get(mealKeys[0])),
+							mealMap.get(mealKeys[1]), -1, agt.getAgentName(), new Date(), 3,
+							"Family Referred", agt.getAgentName());
 			
 			mealID = mealDB.add(year, mealReq);
-			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealID= %d", mealID));
+//			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealID= %d", mealID));
 		}
-		else
-			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealtype));
-			
-		
+//		else
+//			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealtype));
+				
 		//create the family
 		int famID = -1;
-		ONCFamily fam = new ONCFamily(-1, agt.getAgentName(), "NNA", "ONCxxxxx", "B-ONC", 
+		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
+				   "zipcode", "homephone", "cellphone", "email","delhousenum", "delstreet","detail",
+				   "delunit", "delcity", "delzipcode"};
+		
+		Map<String, String> familyMap = createMap(params, familyKeys);
+		
+		ONCFamily fam = new ONCFamily(-1, agt.getAgentName(), "NNA", "O000000", "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohFN"), familyMap.get("hohLN"), familyMap.get("housenum"),
 					familyMap.get("street"), familyMap.get("unit"), familyMap.get("city"),
-					familyMap.get("zipcode"), familyMap.get("homephone"), familyMap.get("cellphone"),
-					familyMap.get("email"), familyMap.get("detail"), createWishList(params), agt.getID(), mealID, 
-					mealID == -1 ? MealStatus.None : MealStatus.Requested);
+					familyMap.get("zipcode"), familyMap.get("delhousenum"), familyMap.get("delstreet"),
+					familyMap.get("delunit"), familyMap.get("delcity"), familyMap.get("delzipcode"),
+					familyMap.get("homephone"), familyMap.get("cellphone"),
+					familyMap.get("email"), familyMap.get("detail"), createWishList(params),
+					agt.getID(), mealID, mealID == -1 ? MealStatus.None : MealStatus.Requested);
 			
 		famID = familyDB.add(year, fam);
 		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: familyID= %d", famID));
@@ -528,6 +542,21 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return 1;
+	}
+	
+	Map<String, String> createMap(Map<String, Object> params, String[] keys)
+	{
+		Map<String, String> map = new HashMap<String, String>();
+		for(String key:keys)
+		{
+			String value = "";
+			if(params.containsKey(key))
+				value = (String) params.get(key) != null ? value : "";
+			
+			map.put(key, value);
+		}
+		
+		return map;
 	}
 	
 	/**************************************************************************************************
@@ -624,9 +653,46 @@ public class ONCHttpHandler implements HttpHandler
 		return bAddressGood;
 	}
 	
-	void verifyReferralInformation()
+	Map<String, String> verifyReferralInformation(Map<String, Object> params)
 	{
+		Map<String, String> errorMap = new HashMap<String, String>();
 		
-	}
-	
+		Map<String, String> rqrdMap = new HashMap<String, String>();
+		rqrdMap.put("hohFN", "Error - HOH first name missing");
+		rqrdMap.put("hohLN", "Error - HOH last name missing");
+		rqrdMap.put("housenum", "Error - HOH house # missing");
+		rqrdMap.put("street", "Error - HOH street name missing");
+		rqrdMap.put("city", "Error - HOH city missing");
+		rqrdMap.put("homephone", "Error - HOH primary phone # missing");
+		rqrdMap.put("delhousenum", "Error - Delivery Address house # missing");
+		rqrdMap.put("delstreet", "Error - Delivery Address street name missing");
+		rqrdMap.put("delcity", "Error - Delivery Address city missing");
+		rqrdMap.put("childfn0", "Error - Missing child 1 firstname");
+		rqrdMap.put("childln0", "Error - Missing child 1 lastname");
+		rqrdMap.put("childdob0", "Error - Missing child 1  birthdate");
+		rqrdMap.put("wishlist0", "Error - Missing child 1 wishlist");
+		
+		int cn = 1;
+		String key = "childfn" + Integer.toString(cn);
+		while(params.containsKey(key))
+		{
+			rqrdMap.put("childfn" + Integer.toString(cn), "Error - Missing child " + cn+1 + " firstname");
+			rqrdMap.put("childln" + Integer.toString(cn), "Error - Missing child " + cn+1 + " lastname");
+			rqrdMap.put("childdob" + Integer.toString(cn), "Error - Missing child " + cn+1 + " birthdate");
+			rqrdMap.put("wishlist" + Integer.toString(cn), "Error - Missing child " + cn+1 + " wishlist");
+		}
+		
+		for (Map.Entry<String, String> entry : rqrdMap.entrySet())
+		{
+			String value = (String) params.get(entry.getKey());
+			if(value == null  || value.isEmpty())
+			{
+				errorMap.put(entry.getKey(), entry.getValue());
+				System.out.println(errorMap);
+				break;
+			}
+		}
+		
+		return errorMap;
+	}	
 }
