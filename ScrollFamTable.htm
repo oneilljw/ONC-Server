@@ -11,9 +11,7 @@
 	var urlYears = url.concat("/dbStatus?token=REPLACE_TOKEN&callback=?");
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
-//	var urlRefer = url.concat("/referral?token=REPLACE_TOKEN&year=YEAR&famID=FAMID");
 	var urlRefer = url.concat("/referral");
-//	var urlCreateNewFamily = url.concat("/newfamily?token=REPLACE_TOKEN");
 	var urlCreateNewFamily = url.concat("/newfamily");
 	var currYear;
 	var priorYear;
@@ -381,7 +379,7 @@
     </style>
 </head>
 <body>
-	<p align="center"><b><i>USER_NAME_HERE, Welcome to Our Neighbors Child</i></b></p>
+	<p align="center"><b><i>USER_NAME_HERE, welcome to Our Neighbors Child!</i></b></p>
 	<form>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="pyagents">Families Referred By:</label>

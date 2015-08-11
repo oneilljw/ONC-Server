@@ -80,7 +80,7 @@ public class ServerMealDB extends ONCServerDB
 		return "MEAL_ADDED" + gson.toJson(addedMeal, ONCMeal.class);
 	}
 	
-	int add(int year, ONCMeal addedMeal)
+	ONCMeal add(int year, ONCMeal addedMeal)
 	{
 		//retrieve the meal data base for the year
 		MealDBYear mealDBYear = mealDB.get(year - BASE_YEAR);
@@ -93,7 +93,7 @@ public class ServerMealDB extends ONCServerDB
 		mealDBYear.add(addedMeal);
 		mealDBYear.setChanged(true);
 					
-		return mealID;
+		return addedMeal;
 	}
 	
 	String update(int year, String mealjson)

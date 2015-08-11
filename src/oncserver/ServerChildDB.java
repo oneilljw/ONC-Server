@@ -105,7 +105,7 @@ public class ServerChildDB extends ONCServerDB
 		
 	}
 	
-	int add(int year, ONCChild addedChild)
+	ONCChild add(int year, ONCChild addedChild)
 	{
 		//get the child data base for the year
 		ChildDBYear cDBYear = childDB.get(year - BASE_YEAR);
@@ -121,7 +121,7 @@ public class ServerChildDB extends ONCServerDB
 		cDBYear.add(addedChild);
 		cDBYear.setChanged(true);
 		
-		return childID;
+		return addedChild;
 	}
 	
 	int searchForPriorYearMatch(int year, ONCChild child)

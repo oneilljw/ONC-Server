@@ -347,19 +347,19 @@ public class ClientManager implements ActionListener
 			String mssg = String.format("Client %d heart beat remained terminal, client killed", kc.getClientID());					
 			addLogMessage(mssg);
 		}
-/*		
+		
 		for(int index = webClientAL.size()-1; index>=0; index--)
 		{
 			WebClient wc = webClientAL.get(index);
 			long currentTime = new Date().getTime();
-			if(wc.getloginTimeStamp() == wc.getLastTimeStamp() && 
-				currentTime - wc.getloginTimeStamp() > WEB_CLIENT_LOGIN_LIMIT ||
+			if((wc.getloginTimeStamp() == wc.getLastTimeStamp() && 
+				currentTime - wc.getloginTimeStamp() > WEB_CLIENT_LOGIN_LIMIT) ||
 				 currentTime - wc.getLastTimeStamp() > WEB_CLIENT_TERMINAL_LIMIT)
 			{
-//				webClientAL.remove(index);
+				webClientAL.remove(index);
 			}
 		}
-*/	
+	
 	}	
 	
 	private class ClientTimerListener implements ActionListener

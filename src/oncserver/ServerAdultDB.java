@@ -10,8 +10,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.ONCAdult;
-import ourneighborschild.ONCChild;
-import ourneighborschild.ONCMeal;
 
 public class ServerAdultDB extends ONCServerDB
 {
@@ -100,7 +98,7 @@ public class ServerAdultDB extends ONCServerDB
 		return "ADULT_ADDED" + gson.toJson(addedAdult, ONCAdult.class);
 	}
 	
-	int add(int year, ONCAdult addedAdult)
+	ONCAdult add(int year, ONCAdult addedAdult)
 	{			
 		//retrieve the adult data base for the year
 		AdultDBYear adultDBYear = adultDB.get(year - BASE_YEAR);
@@ -113,7 +111,7 @@ public class ServerAdultDB extends ONCServerDB
 		adultDBYear.add(addedAdult);
 		adultDBYear.setChanged(true);
 							
-		return adultID;
+		return addedAdult;
 	}
 	
 	String update(int year, String adultjson)
@@ -134,7 +132,7 @@ public class ServerAdultDB extends ONCServerDB
 		{
 			adultAL.set(index, updatedAdult);
 			adultDBYear.setChanged(true);
-			return "UPDATED_ADULT" + gson.toJson(updatedAdult, ONCMeal.class);
+			return "UPDATED_ADULT" + gson.toJson(updatedAdult, ONCAdult.class);
 		}
 		else
 			return "UPDATE_FAILED";

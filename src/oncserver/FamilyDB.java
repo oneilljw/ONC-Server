@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import ourneighborschild.Agent;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCDelivery;
@@ -39,7 +38,7 @@ public class FamilyDB extends ONCServerDB
 	
 	private static ClientManager clientMgr;
 	
-	//THIS IS TEMPORARY  FOR 2015 - NEED TO HAVE ONC NUM RANGES GENERATED AUTOMATICALLY
+	//THIS IS A TEMPORARY HACK FOR 2015 - NEED TO HAVE ONC NUM RANGES GENERATED AUTOMATICALLY
 	int[] oncnumRegionRanges = {1000,100,124,142,234,444,454,479,514,587,619,643,650,656,662,
 								671,791,817,941,944,949,954,966,990};
 	
@@ -214,7 +213,7 @@ public class FamilyDB extends ONCServerDB
 			return "ADD_FAMILY_FAILED";
 	}
 	
-	int add(int year, ONCFamily addedFam)
+	ONCFamily add(int year, ONCFamily addedFam)
 	{
 		if(addedFam != null)
 		{
@@ -238,10 +237,10 @@ public class FamilyDB extends ONCServerDB
 			fDBYear.setChanged(true);
 		
 			//return the new family
-			return famID;
+			return addedFam;
 		}
 		else
-			return -1;
+			return null;
 	}
 	
 	String getFamily(int year, String zFamID)

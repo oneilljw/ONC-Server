@@ -10,9 +10,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -73,7 +75,7 @@ public class ONCHttpHandler implements HttpHandler
     		ClientManager clientMgr = ClientManager.getInstance();
     		
     		if(!clientMgr.logoutWebClient(sessionID))
-    			System.out.println("ONCHttpHandler.handle/logut: logout failure, client not found");
+    			clientMgr.addLogMessage(String.format("ONCHttpHandler.handle/logut: logout failure, client %s not found", sessionID));
     		
     		String response = null;
     		try {	
@@ -232,6 +234,7 @@ public class ONCHttpHandler implements HttpHandler
     		
     			if(processFamilyReferral(wc, params) == 1)
     			{
+    				//submission successful, send the family table page back to the user
     				String userFN = wc.getWebUser().getFirstname();
     				String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", userFN);
     	    		response = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
@@ -299,7 +302,8 @@ public class ONCHttpHandler implements HttpHandler
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
-	    	{	
+	    	{
+	    		serverUser.incrementSessions();	
 	    		serverUser.setLastLogin(new Date());
 	    		userDB.save(DEFAULT_YEAR);	//year will equal -1 at this point, but ignored. Only one user.csv
 	    		
@@ -427,7 +431,6 @@ public class ONCHttpHandler implements HttpHandler
 //		System.out.println("got the database references");
 		
 		//create a meal request, if meal was requested
-		int mealID = -1;
 		ONCMeal mealReq = null;
 		
 		String[] mealKeys = {"mealtype", "dietres"};
@@ -444,20 +447,20 @@ public class ONCHttpHandler implements HttpHandler
 		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealtype));
 		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealres= " + mealres));
 */		
+		ONCMeal addedMeal = null;
 		if(!mealMap.get(mealKeys[0]).equals("No Assistance Rqrd"))
 		{
 			mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealMap.get(mealKeys[0])),
 							mealMap.get(mealKeys[1]), -1, agt.getAgentName(), new Date(), 3,
 							"Family Referred", agt.getAgentName());
 			
-			mealID = mealDB.add(year, mealReq);
+			addedMeal = mealDB.add(year, mealReq);
 //			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealID= %d", mealID));
 		}
 //		else
 //			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealMap.get("mealtype")));
 				
 		//create the family
-		int famID = -1;
 		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
 				   "zipcode", "homephone", "cellphone", "email","delhousenum", "delstreet","detail",
 				   "delunit", "delcity", "delzipcode"};
@@ -465,7 +468,7 @@ public class ONCHttpHandler implements HttpHandler
 		Map<String, String> familyMap = createMap(params, familyKeys);
 //		System.out.println("Family Map Size =" + familyMap.size());
 		
-		ONCFamily fam = new ONCFamily(-1, agt.getAgentName(), "NNA", "O000000", "B-DI", 
+		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA", "O000000", "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohFN"), familyMap.get("hohLN"), familyMap.get("housenum"),
 					familyMap.get("street"), familyMap.get("unit"), familyMap.get("city"),
@@ -473,18 +476,21 @@ public class ONCHttpHandler implements HttpHandler
 					familyMap.get("delunit"), familyMap.get("delcity"), familyMap.get("delzipcode"),
 					familyMap.get("homephone"), familyMap.get("cellphone"),
 					familyMap.get("email"), familyMap.get("detail"), createWishList(params),
-					agt.getID(), mealID, mealID == -1 ? MealStatus.None : MealStatus.Requested);
+					agt.getID(), addedMeal != null ? addedMeal.getID() : -1,
+					addedMeal != null ? MealStatus.Requested : MealStatus.None);
 			
-		famID = familyDB.add(year, fam);
-//		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: familyID= %d", famID));
+		ONCFamily addedFamily = familyDB.add(year, fam);
+//		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: familyID= %d", addedFamily.getID()));
 
-		if(famID > -1)
+		List<ONCChild> addedChildList = new ArrayList<ONCChild>();
+		List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
+		if(addedFamily != null)
 		{
 			//update the family id for the meal, if a meal was requested
-			if(mealReq != null)
+			if(addedMeal != null)
 			{
-				mealReq.setFamilyID(famID);
-				mealDB.update(year, mealReq);
+				addedMeal.setFamilyID(addedFamily.getID());
+				mealDB.update(year, addedMeal);
 			}
 			
 			//create the children for the family
@@ -495,18 +501,20 @@ public class ONCHttpHandler implements HttpHandler
 			
 			//using child first name as the iterator, create a db entry for each
 			//child in the family
+			
 			while(params.containsKey(key))
 			{
 				childfn = (String) params.get(key);
 				childln = (String) params.get("childln" + Integer.toString(cn));
 				childDoB = (String) params.get("childdob" + Integer.toString(cn));
 				childGender = (String) params.get("childgender" + Integer.toString(cn));
-				childSchool = (String) params.get("school" + Integer.toString(cn));
-					
-				ONCChild child = new ONCChild(-1, famID, childfn, childln, childGender, 
+				childSchool = (String) params.get("childschool" + Integer.toString(cn));
+			
+				ONCChild child = new ONCChild(-1, addedFamily.getID(), childfn, childln, childGender, 
 													createChildDOB(childDoB), childSchool, year);
-					
-				int childID = childDB.add(year,child);
+				
+				addedChildList.add(childDB.add(year,child));
+//				ONCChild addedChild = childDB.add(year,child);
 //				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: childID= %d", childID));
 					
 				cn++;
@@ -526,15 +534,46 @@ public class ONCHttpHandler implements HttpHandler
 				adultName = (String) params.get(key);
 				adultGender = (String) params.get("adultgender" + Integer.toString(an));
 					
-				ONCAdult adult = new ONCAdult(-1, famID, adultName, adultGender); 
-													
-				int adultID = adultDB.add(year, adult);
+				ONCAdult adult = new ONCAdult(-1, addedFamily.getID(), adultName, adultGender); 
+				
+				addedAdultList.add(adultDB.add(year, adult));
+//				ONCAdult addedAdult = adultDB.add(year, adult);
 //				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: adultID= %d", adultID));
 					
 				an++;
 				key = "adultname" + Integer.toString(an);	//get next child key
 			}
 			
+		}
+		
+		//successfully process meals, family, children and adults. Notify the desktop
+		//clients so they refresh
+		ClientManager clientMgr = ClientManager.getInstance();
+		Gson gson = new Gson();
+		String mssg;
+		
+		if(addedFamily != null)
+		{
+			if(addedMeal != null)
+			{
+				mssg = "ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class);
+				clientMgr.notifyAllInYearClients(year, mssg);
+			}
+			
+			for(ONCChild addedChild:addedChildList)
+			{
+				mssg = "ADDED_CHILD" + gson.toJson(addedChild, ONCChild.class);
+				clientMgr.notifyAllInYearClients(year, mssg);
+			}
+			
+			for(ONCAdult addedAdult:addedAdultList)
+			{
+				mssg = "ADDED_ADULT" + gson.toJson(addedAdult, ONCAdult.class);
+				clientMgr.notifyAllInYearClients(year, mssg);
+			}
+			
+			mssg = "ADDED_FAMILY" + gson.toJson(addedFamily, ONCFamily.class);
+			clientMgr.notifyAllInYearClients(year, mssg);
 		}
 		
 		return 1;
@@ -684,7 +723,7 @@ public class ONCHttpHandler implements HttpHandler
 			if(value == null  || value.isEmpty())
 			{
 				errorMap.put(entry.getKey(), entry.getValue());
-				System.out.println(errorMap);
+				System.out.println(entry.getValue());
 				break;
 			}
 		}
