@@ -1,7 +1,6 @@
  <!DOCTYPE html>
 <html>
 <head lang="en">
-  <meta http-equiv="refresh" content="30" />
   <title>ONC Family Assistance Request</title>
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script>
@@ -187,7 +186,7 @@
         child["lastname"] = document.getElementById('childln').value;
         child["sDOB"] = document.getElementById('childdob').value;
         child["gender"] = document.getElementById('childgender').value;
-        child["childschool"] = document.getElementById('childschool').value;
+        child["school"] = document.getElementById('childschool').value;
         childrenJson.push(child);
         
         updateChildTable();
@@ -371,7 +370,7 @@
 		<option value="Girl">Girl</option>
 		<option value="Unknown">Unknown</option>
 	</select>
-	<input id="school" title="School attended, if any, for child to be added" type="text" size="20" placeholder="School">
+	<input id="childschool" title="School attended, if any, for child to be added" type="text" size="20" placeholder="School">
 	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
 	<button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button>
   <table id="childtable" border="1">
@@ -433,7 +432,7 @@
     <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
 		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
 	</select>
-	<input id="dietres" type="text" name="dietres" size="80" placeholder="Describe any deitary restrictions" title="Describe any family dietary restrictions" disabled>
+	<input id="dietres" type="text" name="dietres" size="80" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
   </fieldset>
   <br>
   <fieldset class=orange>
