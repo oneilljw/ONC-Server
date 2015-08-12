@@ -296,6 +296,17 @@
 	}
   </script>
   <style>
+  	.topbar 
+    {
+    	width:960px;
+    	height:87px;
+    	margin:0 auto;
+	}
+	.topbar img
+	{
+    	float:left;
+   		border: 0;
+	}
   	.homeaddress {background-color: ADDRESS_COLOR }
 	.gray {background-color: #E8E8E8;}
 	.orange {background-color: #FFCC99;}
@@ -306,7 +317,10 @@
   </style>
 </head>
 <body>
-  <p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
+  <div class="topbar">
+    <img src="onclogo" height="55" width="75"/>
+	<p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
+  </div>
   <form action="referfamily" method="post">
   <input type="hidden" name="token" value="REPLACE_TOKEN">
   <input id="year" type="hidden" name="year">

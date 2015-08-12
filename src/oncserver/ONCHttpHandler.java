@@ -158,6 +158,30 @@ public class ONCHttpHandler implements HttpHandler
   	      	os.close();
   	      	t.close();
     	}
+    	else if(requestURI.contains("/onclogo"))
+    	{
+    		// add the required response header for a PDF file
+  	      	Headers h = t.getResponseHeaders();
+  	      	h.add("Content-Type", "image/gif");
+
+  	      	// onc splash screen
+  	      	String path = String.format("%s/onclogosmall.gif", System.getProperty("user.dir"));
+  	      	File file = new File (path);
+  	      	byte [] bytearray  = new byte [(int)file.length()];
+  	      
+  	      	FileInputStream fis = new FileInputStream(file);
+  	      
+  	      	BufferedInputStream bis = new BufferedInputStream(fis);
+  	      	bis.read(bytearray, 0, bytearray.length);
+  	      	bis.close();
+
+  	      	//send the response.
+  	      	t.sendResponseHeaders(HTTP_OK, file.length());
+  	      	OutputStream os = t.getResponseBody();
+  	      	os.write(bytearray,0,bytearray.length);
+  	      	os.close();
+  	      	t.close();
+    	}
     	else if(requestURI.contains("/newfamily"))
     	{
     		String sessionID = (String) params.get("token");
@@ -365,6 +389,10 @@ public class ONCHttpHandler implements HttpHandler
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
+	    		//get the old data before updating
+	    		long nLogins = serverUser.getNSessions();
+	    		Date lastLogin = serverUser.getLastLogin();
+	    		
 	    		serverUser.incrementSessions();	
 	    		serverUser.setLastLogin(new Date());
 	    		userDB.save(DEFAULT_YEAR);	//year will equal -1 at this point, but ignored. Only one user.csv
@@ -405,12 +433,12 @@ public class ONCHttpHandler implements HttpHandler
 	    			
 	    			//determine if user never visited or last login date
 	    			String userMssg;
-	    			if(webUser.getNSessions() == 0)
+	    			if(nLogins == 0)
 	    				userMssg = "This is your first visit!";
 	    			else
 	    			{
 	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy HH:mm:ss z");
-	    				userMssg = "You last visited " + sdf.format(webUser.getLastLogin());
+	    				userMssg = "You last visited " + sdf.format(lastLogin);
 	    			}
 	    		
 	    			html = getFamilyTableHTML(DEFAULT_YEAR, -1);

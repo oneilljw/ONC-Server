@@ -36,6 +36,9 @@ public class ONCWebServer
 			
 		context = server.createContext("/oncsplash", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/onclogo", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
 		    
 		context = server.createContext("/", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());

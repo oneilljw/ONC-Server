@@ -309,7 +309,28 @@
 	}
     </script>
     <style type="text/css">
-        .scrolltable {
+    	.topbar 
+    	{
+    		width:900px;
+    		height:72px;
+    		margin:0 auto;
+    		background-color: #FF0000;
+			border: 1px solid black;
+		}
+		.topbar img
+		{
+    		float:left;
+   			border: 0;
+		}
+		.tables
+		{
+			width:900px;
+			margin:0 auto;
+			background-color: #3CB371;
+			border: 1px solid black;
+		}
+        .scrolltable 
+        {
             overflow-x: scroll;
             height: 100%;
             display: flex;
@@ -351,7 +372,7 @@
         }
         /* only styling below here */
         #constrainer, #constrainer2 {
-            border: 1px solid lightgrey;
+            border: 1px solid black;
         }
         table {
             border-collapse: collapse;
@@ -369,26 +390,46 @@
         tr:first-child td {
             border-top-width: 0;
         }
-        tr:nth-child(even) {
-            background-color: #eee;
+        tr:nth-child(odd) {
+            background-color: #ffffff;
         }
-        button {
+        tr:nth-child(even) {
+            background-color: lightgrey;
+        }
+        button
+        {
+        	background-color: #336699;
+        	color: #ffffff;
+        }
+        #new
+        {
+       		float: right;
+        	background-color: #336699;
+        	color: #ffffff;
+        }
+        input
+        {
+        	float: right;
         	background-color: #336699;
         	color: #ffffff;
         }
     </style>
 </head>
 <body>
+  <div class="topbar">
+    <img src="onclogo" height="55" width="75"/>
 	<p align="center"><b><i>USER_NAME, welcome to the Our Neighbor's Child Family Referral System!</i></b></p>
 	<p id="message" align="center">USER_MESSAGE</p>
+  </div>
+  <div class="tables">
 	<br>
 	<form>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="pyagents">Families Referred By:</label>
 		<select id="pyagents"  onchange="updatePYTable()" name="pyagtID"></select>
 	</form>
-<div id="constrainer2">
-    <table id="pyTable">
+	<div id="constrainer2">
+      <table id="pyTable">
         <thead>
         <tr>
        		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
@@ -397,15 +438,16 @@
         </thead>
         <tbody id="tbodyid">
         </tbody>
-	</table>
-</div>
-<p><button onclick="newFamily()">Refer New Family</button></p>
-<form>
+	  </table>
+	</div>
+	<p><button id="new" onclick="newFamily()">Refer New Family</button></p>
+	<br>
+	<form>
 		<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
 		<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
 	</form>
-<div id="constrainer2">
-    <table id = cyTable>
+  	<div id="constrainer2">
+      <table id = cyTable>
         <thead>
         <tr>
        		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
@@ -414,11 +456,12 @@
         </thead>
         <tbody id="tbodycurrid">
         </tbody>
-	</table>
-</div>
-<br>
+	  </table>
+	</div>
+
 	<form action="logout?token=REPLACE_TOKEN" method="post">
-  		<button type="submit">Logout</button>
+  		<input id="submit" type="submit" value="Logout">
 	</form>
+  </div>
 </body>
 </html>
