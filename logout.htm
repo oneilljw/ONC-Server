@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-    <title></title>
+    <title>Our Neighbor's Child</title>
     <style>
     body
     {
@@ -23,32 +23,27 @@
     	display: block;
     	color: black;
     }
-    .submit input
-    {
-    	margin-left: 11em;
-    }
     input
     {
     	color: black;
     	background: #FFFFE4;
-    	border: 1px solid #781351
+    	border: 1px solid #781351;
+    	width: 15em;
     }
-    .submit input
+    #submit
     {
+    	display: block;
+    	margin: 0px auto;
     	color: #000;
-    	background: #ffa20f;
-    	border: 2px outset #d7b9c9
-/*    	margin-left: 9em	*/
-    }
+    	background: #ffa20c;
+    	border: 4px outset #d7b9c9
+    } 
    	fieldset
     {
-    	position: absolute;
-    	top:58%;
-    	left:31%;
-    	border: 4px solid #781351;
+  		border: 4px solid #781351;
     	color: #00F;
     	background: #F2F2FA;
-    	width: 25em
+    	width: 26em
     }
     legend
     {
@@ -57,18 +52,30 @@
     	border: 1px solid #781351;
     	padding: 2px 6px
     }
+    #inner
+    {
+    	width:300px;
+		height:200px;
+		position:absolute;
+		left:45%;
+		top:60%;
+		margin:-100px 0 0 -150px;
+	}
     </style>
 </head>
 <body>
-	<div class = "login">
+  <div id="outer" style="width:100%">
+	<div id="inner">
     	<form action="login" method="post">
     		<fieldset>
-    			<legend>User Login</legend>
+    			<legend>ONC User Login</legend>
+    			<p align="center"><b><i>WELCOME_MESSAGE</i></b></p>
     		    <p><label for="username">User Name:</label> <input type="text" id="username" name="field1" autofocus/></p>
     		    <p><label for="password">Password:</label> <input type="password" id="password" name="field2"/><br /></p>
-    		    <p class="submit"><input type="submit" value="Login" /></p>
+    		    <p><input id="submit" type="submit" value="Login" /></p>
     		</fieldset>
     	</form>
     </div>
+  </div>
 </body>
 </html>

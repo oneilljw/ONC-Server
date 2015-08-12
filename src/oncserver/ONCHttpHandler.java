@@ -67,6 +67,8 @@ public class ONCHttpHandler implements HttpHandler
     			e.printStackTrace();
     		}
     		
+    		response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
+    		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
     	else if(requestURI.contains("/logout"))
@@ -85,6 +87,7 @@ public class ONCHttpHandler implements HttpHandler
     			e.printStackTrace();
     		}
     		
+    		response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
     	else if(requestURI.contains("/login"))
