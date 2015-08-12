@@ -186,6 +186,45 @@ public class ServerUserDB extends ONCServerDB
 		
 		return response;	
 	 }
+	 
+	 int changePassword(String currpw, String newpw, WebClient webClient)
+	 {
+		int result = 0;
+		
+		//find user in server user data base
+		int index = 0;
+		while(index < userAL.size() && userAL.get(index).getID() != webClient.getWebUser().getID())
+		 index++;
+		 
+		if(index < userAL.size()) 
+		{
+			//found user, check other parameters to ensure the right user
+			ONCServerUser su = userAL.get(index);
+			
+			if(su.pwMatch(currpw))
+			{
+				su.setUserPW(newpw);
+				
+				if(su.changePasswordRqrd())
+				{
+					//need to notify other clients of update to user
+					su.setPasswordChangeRqrd(false);
+
+					Gson gson = new Gson();
+				    String change = "UPDATED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class);
+				    clientMgr.notifyAllClients(change);	//notify all desktop clients
+				}
+					
+				save(-1);	//year is irrelevant, only one user db
+			}
+			else
+				result = -1;
+		}
+		else
+			result = -2;
+		
+		return result;	
+	 } 
 	
 	@Override
 	void addObject(int year, String[] nextLine) 

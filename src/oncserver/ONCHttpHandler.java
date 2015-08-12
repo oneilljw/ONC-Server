@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import ourneighborschild.Agent;
@@ -36,10 +37,11 @@ import com.google.gson.Gson;
 
 public class ONCHttpHandler implements HttpHandler
 {
-	private static final String FAMILY_TABLE_HTML_FILE = "ScrollFamTable.htm";
-	private static final String LOGOUT_HTML_FILE = "logout.htm";
-	private static final String EXISTING_FAMILY_FILE = "ExistingFamilyReferral.htm";
-	private static final String NEW_FAMILY_FILE = "NewFamilyReferral.htm";
+	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
+	private static final String LOGOUT_HTML = "logout.htm";
+	private static final String EXISTING_FAMILY_HTML = "ExistingFamilyReferral.htm";
+	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
+	private static final String NEW_FAMILY_HTML = "NewFamilyReferral.htm";
 	private static final String INPUT_NORMAL_BACKGROUND = "#FFFFFF";
 	private static final String INPUT_ERROR_BACKGROUND = "#FFC0CB";
 	private static final int DEFAULT_YEAR = 2014;
@@ -61,7 +63,7 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		String response = null;
     		try {	
-    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
+    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
     		} catch (IOException e) {
     			// TODO Auto-generated catch block
     			e.printStackTrace();
@@ -81,7 +83,7 @@ public class ONCHttpHandler implements HttpHandler
     		
     		String response = null;
     		try {	
-    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML_FILE));
+    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
     		} catch (IOException e) {
     			// TODO Auto-generated catch block
     			e.printStackTrace();
@@ -167,9 +169,9 @@ public class ONCHttpHandler implements HttpHandler
     		{
     			wc.updateTimestamp();
     			try {	
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_FILE));
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_HTML));
     			} catch (IOException e) {
-    				System.out.println("Couldn't open/find " + NEW_FAMILY_FILE);
+    				System.out.println("Couldn't open/find " + NEW_FAMILY_HTML);
     				e.printStackTrace();
     			}
     			
@@ -194,7 +196,7 @@ public class ONCHttpHandler implements HttpHandler
     		{
     			wc.updateTimestamp();
     			try {	
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), EXISTING_FAMILY_FILE));
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), EXISTING_FAMILY_HTML));
     			} catch (IOException e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
@@ -239,8 +241,10 @@ public class ONCHttpHandler implements HttpHandler
     			{
     				//submission successful, send the family table page back to the user
     				String userFN = wc.getWebUser().getFirstname();
-    				String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", userFN);
-    	    		response = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    				response = getFamilyTableHTML(DEFAULT_YEAR, -1);
+    				response= response.replace("USER_NAME", userFN);
+    				response= response.replace("USER_MESSAGE", "Family Referral Accepted");
+    	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
     			}
     			else
     				response = "<!DOCTYPE html><html><head lang=\"en\"><title>Agent Not Found in data base</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
@@ -261,17 +265,43 @@ public class ONCHttpHandler implements HttpHandler
     				t.getRequestMethod().toLowerCase().equals("post"))
     		{
     			wc.updateTimestamp();
-		
-    			if(changePassword(wc, params))
+    			
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println("ONCHttpHandler /changepw: key: " + key);
+    			
+    			ServerUserDB serveruserDB = null;
+    			try {
+    				serveruserDB = ServerUserDB.getInstance();
+    			} catch (NumberFormatException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    			 
+    			int retCode = serveruserDB.changePassword((String) params.get("field1"),
+    							(String) params.get("field2"), wc);
+    			
+    			if(retCode == 0)
     			{
     				//submission successful, send the family table page back to the user
     				String userFN = wc.getWebUser().getFirstname();
-    				String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", userFN);
-    	    		response = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    				response = getFamilyTableHTML(DEFAULT_YEAR, -1);
+    				response = response.replace("USER_NAME", userFN);
+    				response = response.replace("USER_MESSAGE", "Your password change was successful!");
+    	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
     			}
-    			else
+    			else if(retCode == -1)
     			{
-    				response = "<!DOCTYPE html><html><head lang=\"en\"><title>Password Change Failed</title></head><body><p>Password Change Failed, Sorry!</p></body></html>";
+    				response = "<!DOCTYPE html><html><head lang=\"en\"><title>Password Change Failed</title>"
+    						+ "</head><body><p>Change password failed, current password incorrect. Please try again</p></body></html>";
+    			}
+    			else if(retCode == -2)
+    			{
+    				response = "<!DOCTYPE html><html><head lang=\"en\"><title>Password Change Failed</title>"
+    						+ "</head><body><p>Change password failed, user couldn't be located, please contact ONC Exec Dir</p></body></html>";
     			}
     		}
     		else
@@ -340,20 +370,56 @@ public class ONCHttpHandler implements HttpHandler
 	    		userDB.save(DEFAULT_YEAR);	//year will equal -1 at this point, but ignored. Only one user.csv
 	    		
 	    		ONCUser webUser = serverUser.getUserFromServerUser();
-	    		
 	    		ClientManager clientMgr = ClientManager.getInstance();
-	    		WebClient wc = clientMgr.addWebClient(t, webUser);
+    			WebClient wc = clientMgr.addWebClient(t, webUser);
+    			
+	    		//has the current password expired? If so, send change password page
+	    		if(serverUser.changePasswordRqrd())
+	    		{
+	    			try {	
+	    				html = readFile(String.format("%s/%s",System.getProperty("user.dir"), CHANGE_PASSWORD_HTML));
+	    			} catch (IOException e) {
+	    				// TODO Auto-generated catch block
+	    				e.printStackTrace();
+	    			}
+	    			
+	    			Gson gson = new Gson();
+	    			String loginJson = gson.toJson(webUser, ONCUser.class);
 	    		
-	    		Gson gson = new Gson();
-	    		String loginJson = gson.toJson(webUser, ONCUser.class);
+	    			String mssg = "UPDATED_USER" + loginJson;
+	    			clientMgr.notifyAllClients(mssg);
+	    			
+	    			//replace the HTML place holders
+	    			html = html.replace("USERFN", serverUser.getFirstname());
+	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+	    			
+	    			response = new HtmlResponse(html, HTTPCode.Ok);
+	    		}
+	    		else //send the referral status page
+	    		{
+	    			Gson gson = new Gson();
+	    			String loginJson = gson.toJson(webUser, ONCUser.class);
 	    		
-	    		String mssg = "UPDATED_USER" + loginJson;
-	    		clientMgr.notifyAllClients(mssg);
+	    			String mssg = "UPDATED_USER" + loginJson;
+	    			clientMgr.notifyAllClients(mssg);
+	    			
+	    			//determine if user never visited or last login date
+	    			String userMssg;
+	    			if(webUser.getNSessions() == 0)
+	    				userMssg = "This is your first visit!";
+	    			else
+	    			{
+	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy HH:mm:ss z");
+	    				userMssg = "You last visited " + sdf.format(webUser.getLastLogin());
+	    			}
 	    		
-	    		String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", serverUser.getFirstname());
-	    		html = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+	    			html = getFamilyTableHTML(DEFAULT_YEAR, -1);
+	    			html = html.replace("USER_NAME", serverUser.getFirstname());
+	    			html = html.replace("USER_MESSAGE", userMssg);
+	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 	    				
-	    		response = new HtmlResponse(html, HTTPCode.Ok);
+	    			response = new HtmlResponse(html, HTTPCode.Ok);
+	    		}
 	    	}   	
 		}
 		else
@@ -371,7 +437,7 @@ public class ONCHttpHandler implements HttpHandler
 		String famTableHTML = null;
 		try
 		{
-			famTableHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_TABLE_HTML_FILE));
+			famTableHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
 			return famTableHTML;
 		}
 		catch (IOException e) 
@@ -564,34 +630,7 @@ public class ONCHttpHandler implements HttpHandler
 		
 		return 1;
 	}
-	
-	boolean changePassword(WebClient wc, Map<String, Object> params)
-	{
-		ServerUserDB userDB = null;
-		try {
-			userDB = ServerUserDB.getInstance();
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		ONCServerUser serverUser = userDB.find(wc.getWebUser().getID());
-		
-		if(serverUser.pwMatch((String) params.get("currpw")))
-		{
-			//server user and current passwords match, go ahead and update password
-			String newPW = (String) params.get("field1");
-			serverUser.setUserPW(newPW);
-			serverUser.setPasswordChangeRqrd(false);
-			return true;
-		}
-		else
-			return false;	
-	}
-	
+
 	Map<String, String> createMap(Map<String, Object> params, String[] keys)
 	{
 		Map<String, String> map = new HashMap<String, String>();
