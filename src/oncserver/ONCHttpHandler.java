@@ -250,6 +250,35 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
+    	else if(requestURI.contains("/changepw"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    		
+    		if((wc=clientMgr.findClient(sessionID)) != null && 
+    				t.getRequestMethod().toLowerCase().equals("post"))
+    		{
+    			wc.updateTimestamp();
+		
+    			if(changePassword(wc, params))
+    			{
+    				//submission successful, send the family table page back to the user
+    				String userFN = wc.getWebUser().getFirstname();
+    				String webPage = getFamilyTableHTML(DEFAULT_YEAR, -1).replace("USER_NAME_HERE", userFN);
+    	    		response = webPage.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    			}
+    			else
+    			{
+    				response = "<!DOCTYPE html><html><head lang=\"en\"><title>Password Change Failed</title></head><body><p>Password Change Failed, Sorry!</p></body></html>";
+    			}
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
     }
 	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
@@ -359,11 +388,11 @@ public class ONCHttpHandler implements HttpHandler
 
 	private String readFile( String file ) throws IOException
 	{
-	    BufferedReader reader = new BufferedReader( new FileReader (file));
+	    BufferedReader reader = new BufferedReader(new FileReader(file));
 	    String         line = null;
 	    StringBuilder  stringBuilder = new StringBuilder();
 
-	    while( ( line = reader.readLine() ) != null )
+	    while((line = reader.readLine()) != null)
 	    {
 	        stringBuilder.append(line);
 	        stringBuilder.append(System.getProperty("line.separator"));
@@ -371,8 +400,6 @@ public class ONCHttpHandler implements HttpHandler
 	    
 	    reader.close();
 	    
-//	    ServerUI sUI = ServerUI.getInstance();
-//	    sUI.addLogMessage(String.format("Read %s, length = %d", file, stringBuilder.toString().length()));
 	    return stringBuilder.toString();
 	}
 	
@@ -384,29 +411,9 @@ public class ONCHttpHandler implements HttpHandler
 		
 		if(agt == null)
 		{
-//			System.out.println("ONCHttpHandler.processFamilyReferral: NULL Agent Error");
 			return -1;
 		}
 
-//		System.out.println("ONCHttpHandler.processFamilyReferral: Agent: " + agt.getAgentName());
-		
-		//verify that the HOH address is good
-//		System.out.println("ONCHttpHandler.processFamilyReferral: HOH Address: " + isHOHAddressValid(params));
-		
-		//verify that the Delivery address is good
-//		System.out.println("ONCHttpHandler.processFamilyReferral: Delivery Address: " + isDeliveryAddressValid(params));
-/*		
-		//create a family request
-		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
-							   "zipcode", "homephone", "cellphone", "email", "detail"};
-		Map<String, String> familyMap = new HashMap<String, String>();
-		for(String familyKey:familyKeys)
-		{
-			String value = (String) params.get(familyKey);
-			familyMap.put(familyKey, value != null ? value : "");
-			System.out.println(String.format("FamilyKey=%s, value=%s", familyKey, familyMap.get(familyKey)));
-		}
-*/		
 		//get database references
 		ServerMealDB mealDB = null;
 		FamilyDB familyDB= null;
@@ -431,25 +438,12 @@ public class ONCHttpHandler implements HttpHandler
 			e.printStackTrace();
 		}
 		
-//		System.out.println("got the database references");
-		
 		//create a meal request, if meal was requested
 		ONCMeal mealReq = null;
 		
 		String[] mealKeys = {"mealtype", "dietres"};
 		Map<String, String> mealMap = createMap(params, mealKeys);
-		
-//		System.out.println("Meal Map Size =" + mealMap.size());
-/*		
-		String mealtype ="No Assistance Rqrd", mealres="";
-		if(params.containsKey("mealtype") && params.get("mealtype") != null)
-			mealtype = (String) params.get("mealtype");
-		if(params.containsKey("dietres") && params.get("dietres") != null)
-			mealres = (String) params.get("dietres");
-		
-		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealtype));
-		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealres= " + mealres));
-*/		
+
 		ONCMeal addedMeal = null;
 		if(!mealMap.get(mealKeys[0]).equals("No Assistance Rqrd"))
 		{
@@ -458,18 +452,14 @@ public class ONCHttpHandler implements HttpHandler
 							"Family Referred", agt.getAgentName());
 			
 			addedMeal = mealDB.add(year, mealReq);
-//			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealID= %d", mealID));
 		}
-//		else
-//			System.out.println(String.format("ONCHttpHandler.processFamilyRequest: mealtype= " + mealMap.get("mealtype")));
-				
+
 		//create the family
 		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
 				   "zipcode", "homephone", "cellphone", "email","delhousenum", "delstreet","detail",
 				   "delunit", "delcity", "delzipcode"};
 		
 		Map<String, String> familyMap = createMap(params, familyKeys);
-//		System.out.println("Family Map Size =" + familyMap.size());
 		
 		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA", "O000000", "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
@@ -483,7 +473,6 @@ public class ONCHttpHandler implements HttpHandler
 					addedMeal != null ? MealStatus.Requested : MealStatus.None);
 			
 		ONCFamily addedFamily = familyDB.add(year, fam);
-//		System.out.println(String.format("ONCHttpHandler.processFamilyRequest: familyID= %d", addedFamily.getID()));
 
 		List<ONCChild> addedChildList = new ArrayList<ONCChild>();
 		List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
@@ -517,9 +506,6 @@ public class ONCHttpHandler implements HttpHandler
 													createChildDOB(childDoB), childSchool, year);
 				
 				addedChildList.add(childDB.add(year,child));
-//				ONCChild addedChild = childDB.add(year,child);
-//				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: childID= %d", childID));
-					
 				cn++;
 				key = "childfn" + Integer.toString(cn);	//get next child key
 			}
@@ -539,10 +525,7 @@ public class ONCHttpHandler implements HttpHandler
 					
 				ONCAdult adult = new ONCAdult(-1, addedFamily.getID(), adultName, adultGender); 
 				
-				addedAdultList.add(adultDB.add(year, adult));
-//				ONCAdult addedAdult = adultDB.add(year, adult);
-//				System.out.println(String.format("ONCHttpHandler.processFamilyRequest: adultID= %d", adultID));
-					
+				addedAdultList.add(adultDB.add(year, adult));	
 				an++;
 				key = "adultname" + Integer.toString(an);	//get next child key
 			}
@@ -580,6 +563,33 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return 1;
+	}
+	
+	boolean changePassword(WebClient wc, Map<String, Object> params)
+	{
+		ServerUserDB userDB = null;
+		try {
+			userDB = ServerUserDB.getInstance();
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		ONCServerUser serverUser = userDB.find(wc.getWebUser().getID());
+		
+		if(serverUser.pwMatch((String) params.get("currpw")))
+		{
+			//server user and current passwords match, go ahead and update password
+			String newPW = (String) params.get("field1");
+			serverUser.setUserPW(newPW);
+			serverUser.setPasswordChangeRqrd(false);
+			return true;
+		}
+		else
+			return false;	
 	}
 	
 	Map<String, String> createMap(Map<String, Object> params, String[] keys)

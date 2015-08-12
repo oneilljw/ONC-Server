@@ -105,6 +105,18 @@ public class ServerUserDB extends ONCServerDB
 			return null;		
 	}
 	
+	ONCServerUser find(int id)
+	{
+		int index = 0;
+		while(index < userAL.size() && userAL.get(index).getID() != id)
+			index++;
+		
+		if(index < userAL.size())
+			return userAL.get(index);
+		else 
+			return null;		
+	}
+	
 	 String getUsers()
 	 {
 		 //create a list of ONCUsers from the list of ONCServerUsers because we don't share/send
