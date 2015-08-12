@@ -6,8 +6,8 @@
   <script>
   
   	/* Comment the correct line for live vs local */    
-	var url ="http://cfs.idtus.com:8902";
-//	var url ="http://localhost:8902"
+//	var url ="http://cfs.idtus.com:8902";
+	var url ="http://localhost:8902"
   
   	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
   	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
@@ -116,7 +116,8 @@
 	
 	function addWishTableRow(cnum, child)
     {
-		var childinfo = [child.firstname, child.lastname];
+		var childinfo = [child.firstname, child.lastname, child.age];
+		var fieldsize = [15, 16, 8];
         
 	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -128,7 +129,7 @@
  	    	content.type="text";
         	content.value = childinfo[index];
         	content.readOnly = true;
-        	content.setAttribute("size", 12);
+        	content.setAttribute("size", fieldsize[index]);
         	cell.appendChild(content);
         	row.appendChild(cell);
         }
@@ -138,7 +139,7 @@
         wishlist.type="text";
         wishlist.name="wishlist" + cnum;
         wishlist.placeholder= "Wish list for " + child.firstname;
-        wishlist.setAttribute("size", 112);
+        wishlist.setAttribute("size", 96);
         wishlist.required = true;
         wlcell.appendChild(wishlist);
         row.appendChild(wlcell);
@@ -187,6 +188,8 @@
         child["sDOB"] = document.getElementById('childdob').value;
         child["gender"] = document.getElementById('childgender').value;
         child["school"] = document.getElementById('childschool').value;
+//      child["age"] = calculateAge(child["sDOB"]);
+		child["age"] = "000";
         childrenJson.push(child);
         
         updateChildTable();
@@ -298,8 +301,8 @@
   <style>
   	.topbar 
     {
-    	width:960px;
-    	height:87px;
+    	width:900px;
+    	height:72px;
     	margin:0 auto;
 	}
 	.topbar img
@@ -312,7 +315,7 @@
 	.orange {background-color: #FFCC99;}
 	.right {float: right;}
 	table, th, td {border: 1px solid black;}
-	th, td {min-width: 80px; }
+	th, td {min-width: 60px; }
 	button {background-color: #336699; color: #ffffff;}
   </style>
 </head>
@@ -432,6 +435,7 @@
     	<tr>
         	<th>First Name</th>
         	<th>Last Name</th>
+        	<th>Age</th>
         	<th>Wish List: 3 wishes in order of importance per child; if clothing, include size & color preference </th>
     	</tr>
       </thead>

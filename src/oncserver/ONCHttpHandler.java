@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -437,7 +438,8 @@ public class ONCHttpHandler implements HttpHandler
 	    				userMssg = "This is your first visit!";
 	    			else
 	    			{
-	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy HH:mm:ss z");
+	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy h:mm a z");
+	    				sdf.setTimeZone(TimeZone.getDefault());
 	    				userMssg = "You last visited " + sdf.format(lastLogin);
 	    			}
 	    		
