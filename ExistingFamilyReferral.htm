@@ -2,18 +2,23 @@
 <html>
 <head lang="en">
   <title>ONC Family Assistance Request</title>
-  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
-  <script>
-  
-  	/* Comment the correct line for live vs local */    
-//	var url ="http://cfs.idtus.com:8902";
-	var url ="http://localhost:8902"
-  
-  	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
-  	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
-  	
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+  <link href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />
+  <script> 
+  	var url = window.location.protocol + '//' + window.location.host;
+	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
+  	var urlAdults = url.concat("/referral", "adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
   	var childrenJson;
   	var adultsJson;
+  	
+  	$(function() {
+  	    $( "#childdob" ).datepicker({
+  	      changeMonth: true,
+  	      changeYear: true
+  	    });
+  	  });
   	
   	$( document ).ready(function()
 	{
@@ -116,8 +121,8 @@
 	
 	function addWishTableRow(cnum, child)
     {
-		var childinfo = [child.firstname, child.lastname, child.age];
-		var fieldsize = [15, 16, 8];
+		var childinfo = [child.firstname, child.lastname, child.age + " " + child.gender.toLowerCase()];
+		var fieldsize = [15, 16, 14];
         
 	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -134,15 +139,19 @@
         	row.appendChild(cell);
         }
 
-        var wlcell= document.createElement("td");
-        var wishlist= document.createElement("input");
-        wishlist.type="text";
-        wishlist.name="wishlist" + cnum;
-        wishlist.placeholder= "Wish list for " + child.firstname;
-        wishlist.setAttribute("size", 96);
-        wishlist.required = true;
-        wlcell.appendChild(wishlist);
-        row.appendChild(wlcell);
+        for(wn=0;wn<3;wn++)
+        {
+        	var wlcell= document.createElement("td");
+        	var wish= document.createElement("input");
+        	var wishnum = wn+1;
+        	wish.type="text";
+        	wish.name="wish" + cnum + wn;
+        	wish.placeholder= "Wish " + wishnum + " for " + child.firstname;
+        	wish.setAttribute("size", 28);
+        	wish.required = true;
+        	wlcell.appendChild(wish);
+        	row.appendChild(wlcell);
+        }
         
         tabBody.appendChild(row);
     }
@@ -188,8 +197,7 @@
         child["sDOB"] = document.getElementById('childdob').value;
         child["gender"] = document.getElementById('childgender').value;
         child["school"] = document.getElementById('childschool').value;
-//      child["age"] = calculateAge(child["sDOB"]);
-		child["age"] = "000";
+	    child["age"] = getAge(child["sDOB"]);
         childrenJson.push(child);
         
         updateChildTable();
@@ -238,6 +246,42 @@
 	{
 		adultsJson.splice(index, 1);
 		updateAdultTable();
+	}
+	
+	function getAge(birthdate)
+	{
+		var curryear = new Date().getFullYear();
+		var xmasday = new Date(curryear,11,25,0,0,0,0);
+		var birthdate= new Date(birthdate);
+		
+		var age= [];
+		
+		if(birthdate >= xmasday)
+		{
+			age.push('Newborn');
+		}
+		else
+		{
+	    	var y= [xmasday.getFullYear(), birthdate.getFullYear()],
+	    	ydiff= y[0]-y[1],
+	    	m= [xmasday.getMonth(), birthdate.getMonth()],
+	    	mdiff= m[0]-m[1],
+	    	d= [xmasday.getDate(), birthdate.getDate()],
+	    	ddiff= d[0]-d[1];
+
+	    	if(mdiff < 0 || (mdiff=== 0 && ddiff<0))--ydiff;
+	    	if(mdiff<0) mdiff+= 12;
+	    	if(ddiff<0)
+	    	{
+	        	birthdate.setMonth(m[1]+1, 0);
+	        	ddiff= birthdate.getDate()-d[1]+d[0];
+	        	--mdiff;
+	    	}
+	    	
+	    	if(ydiff> 0) age.push(ydiff+ ' yr. old');
+	    	else if(mdiff> 0) age.push(mdiff+ ' mos. old');
+		}
+	    	return age.join('');
 	}
 	
 	function sameAddressClicked(cb)
@@ -310,6 +354,12 @@
     	float:left;
    		border: 0;
 	}
+	div.ui-datepicker
+	{
+		width:480px;
+  		background-color: lightgray;
+  		font-size:15px;
+	}
   	.homeaddress {background-color: ADDRESS_COLOR }
 	.gray {background-color: #E8E8E8;}
 	.orange {background-color: #FFCC99;}
@@ -359,8 +409,8 @@
   </fieldset>
   <br>
   <fieldset class="orange">
-	<legend>Delivery Address (ONC will deliver gifts to this address):</legend>
-	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address
+	<legend>Delivery Address: Provide address that ONC will use to deliver gifts</legend>
+	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address, else complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #">
@@ -381,7 +431,7 @@
   	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
   	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
     <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
-    <input id="childdob" title="Date of birth for child to be added" type="date" size="12" placeholder="DoB">
+    <input id="childdob" title="Date of birth for child to be added" type="text" size="12" placeholder="DoB">
     <select id="childgender" title="Gender of child to be added">
 		<option value="Boy">Boy</option>
 		<option value="Girl">Girl</option>
@@ -429,14 +479,16 @@
   </fieldset>
   <br>
   <fieldset class="orange">
-  	<legend>Gift Assistance: Complete for each child in family</legend>
+  	<legend>Gift Assistance: Provide 3 wishes, in priority order, for each child; if clothing, include size & color preference</legend>
   	 <table id="wishtable" border="1">
   	<thead>
     	<tr>
         	<th>First Name</th>
         	<th>Last Name</th>
-        	<th>Age</th>
-        	<th>Wish List: 3 wishes in order of importance per child; if clothing, include size & color preference </th>
+        	<th>Age/Gender</th>
+        	<th>Wish 1</th>
+        	<th>Wish 2</th>
+        	<th>Wish 3</th>	
     	</tr>
       </thead>
       <tbody id="twishbody">
@@ -454,7 +506,7 @@
   </fieldset>
   <br>
   <fieldset class=orange>
-	<legend>Family Details (Details about family you think ONC should know):</legend>
+	<legend>Family Details: Provide details (if any) about family you think ONC should know):</legend>
 	<input type="text" name="detail" size="140" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <br>

@@ -258,21 +258,18 @@ public class ONCHttpHandler implements HttpHandler
     				t.getRequestMethod().toLowerCase().equals("post"))
     		{
     			wc.updateTimestamp();
-//    			Set<String> keyset = params.keySet();
-//    			for(String key:keyset)
-//    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+    			Set<String> keyset = params.keySet();
+    			for(String key:keyset)
+    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
-    			if(processFamilyReferral(wc, params) == 1)
-    			{
-    				//submission successful, send the family table page back to the user
-    				String userFN = wc.getWebUser().getFirstname();
-    				response = getFamilyTableHTML(DEFAULT_YEAR, -1);
-    				response= response.replace("USER_NAME", userFN);
-    				response= response.replace("USER_MESSAGE", "Family Referral Accepted");
-    	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    			}
-    			else
-    				response = "<!DOCTYPE html><html><head lang=\"en\"><title>Agent Not Found in data base</title></head><body><p>Family Referral Received, Thank You!</p></body></html>";
+    			FamilyResponseCode frc = processFamilyReferral(wc, params);
+    			
+    			//submission processed, send the family table page back to the user
+    			String userFN = wc.getWebUser().getFirstname();
+    			response = getFamilyTableHTML(DEFAULT_YEAR, -1);
+    			response= response.replace("USER_NAME", userFN);
+    			response= response.replace("USER_MESSAGE", frc.getMessage());
+    	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
     		}
     		else
     			response = invalidTokenReceived();
@@ -499,7 +496,7 @@ public class ONCHttpHandler implements HttpHandler
 	    return stringBuilder.toString();
 	}
 	
-	int processFamilyReferral(WebClient wc, Map<String, Object> params)
+	FamilyResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
 	{
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
@@ -507,7 +504,7 @@ public class ONCHttpHandler implements HttpHandler
 		
 		if(agt == null)
 		{
-			return -1;
+			return new FamilyResponseCode(-1, "Family Referral Rejected: Referring Agent Not Found");
 		}
 
 		//get database references
@@ -658,7 +655,7 @@ public class ONCHttpHandler implements HttpHandler
 			clientMgr.notifyAllInYearClients(year, mssg);
 		}
 		
-		return 1;
+		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted");
 	}
 
 	Map<String, String> createMap(Map<String, Object> params, String[] keys)
@@ -732,11 +729,17 @@ public class ONCHttpHandler implements HttpHandler
 			buff.append(" ");
 			buff.append((String) params.get("childln" + Integer.toString(cn)));
 			buff.append(": ");
-			buff.append((String) params.get("wishlist" + Integer.toString(cn)));
+			
+			for(int wn=0; wn<3; wn++)
+			{
+				buff.append((String) params.get("wish" + Integer.toString(cn) + Integer.toString(wn)));
+				buff.append(wn < 2 ? ", " : ";");
+			}
+			
 			cn++;
 			key = "childfn" + Integer.toString(cn);	//get next child key
-			if(params.containsKey(key))	//if that wasn't the last child, add newline
-				buff.append("\n");
+			if(params.containsKey(key))	//if that wasn't the last child, add 2 newlines
+				buff.append("\n\n");
 			else
 				break;
 		}
@@ -811,5 +814,20 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return errorMap;
-	}	
+	}
+	
+	private class FamilyResponseCode
+	{
+		private int returnCode;
+		private String message;
+		
+		FamilyResponseCode(int rc, String mssg)
+		{
+			this.returnCode = rc;
+			this.message = mssg;
+		}
+		
+		int getReturnCode() { return returnCode; }
+		String getMessage() { return message; }
+	}
 }

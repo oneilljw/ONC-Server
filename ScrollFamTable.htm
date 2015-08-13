@@ -4,21 +4,19 @@
     <title>ONC Family Table</title>
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
-	/* Comment the correct line for live vs local */    
-//	var url ="http://cfs.idtus.com:8902";
-	var url ="http://localhost:8902"; 
-  
+	var url = window.location.protocol + '//' + window.location.host;
 	var urlYears = url.concat("/dbStatus?token=REPLACE_TOKEN&callback=?");
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlRefer = url.concat("/referral");
 	var urlCreateNewFamily = url.concat("/newfamily");
+	
 	var currYear;
 	var priorYear;
 	var pyFamJson;
 	var cyFamJson;
 	
-	sessionStorage.setItem("whoamI", "REPLACE_TOKEN");
+	sessionStorage.setItem("token", "REPLACE_TOKEN");
 	
     $( document ).ready(function()
     {
@@ -264,7 +262,7 @@
     {
 		var params = {}
 		params["year"] = priorYear.toString();
-		params["token"] = "REPLACE_TOKEN";
+		params["token"] = sessionStorage.getItem('token');
 		params["famID"] = id.toString();
 		
 		post(urlRefer, params);
@@ -273,7 +271,7 @@
     function newFamily()
     {
     	var params = {}
-		params["token"] = "REPLACE_TOKEN";
+		params["token"] = sessionStorage.getItem('token');
 		
 		post(urlCreateNewFamily, params);
     }
@@ -433,7 +431,7 @@
         <thead>
         <tr>
        		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
-        	<th>Gift Status</th><th>Delivery Status</th><th>Meal Status</th>
+        	<th>Family Status</th><th>Delivery Status</th><th>Meal Status</th>
         </tr>
         </thead>
         <tbody id="tbodyid">
@@ -451,7 +449,7 @@
         <thead>
         <tr>
        		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
-        	<th>Gift Status</th><th>Delivery Status</th><th>Meal Status</th>
+        	<th>Family Status</th><th>Delivery Status</th><th>Meal Status</th>
         </tr>
         </thead>
         <tbody id="tbodycurrid">
