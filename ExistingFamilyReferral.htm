@@ -7,11 +7,11 @@
   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
   <link href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />
   <script> 
-  	var url = window.location.protocol + '//' + window.location.host;
+  	var url = window.location.protocol + '://' + window.location.host;
 	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
   	var urlAdults = url.concat("/referral", "adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
-  	var childrenJson;
-  	var adultsJson;
+  	var childrenJson= [];
+  	var adultsJson= [];
   	
   	$(function() {
   	    $( "#childdob" ).datepicker({
@@ -147,7 +147,7 @@
         	wish.type="text";
         	wish.name="wish" + cnum + wn;
         	wish.placeholder= "Wish " + wishnum + " for " + child.firstname;
-        	wish.setAttribute("size", 28);
+        	wish.setAttribute("size", 24);
         	wish.required = true;
         	wlcell.appendChild(wish);
         	row.appendChild(wlcell);
@@ -348,6 +348,8 @@
     	width:900px;
     	height:72px;
     	margin:0 auto;
+    	background-color: #FF0000;
+		border: 1px solid black;
 	}
 	.topbar img
 	{
@@ -360,25 +362,59 @@
   		background-color: lightgray;
   		font-size:15px;
 	}
+	form
+	{
+		width:900px;
+		margin:0 auto;
+		background-color: #3CB371;
+		border: 1px solid black;
+	}
+	button
+    {
+        background-color: #336699;
+        color: #ffffff;
+    }      
+	.major
+	{
+  		padding: 0.2em 0.5em;
+  		border:2px solid black;
+/*  		background-color: #E8E8E8;	*/
+  		background-color: #E5FFCC;
+  		font-size:80%;
+  		text-align:left;
+  	}
+  	#topbar p
+    {
+       	text-align: center;
+    }
+    #banner
+    {
+    	font-weight: bold;
+    	font-style: italic;
+    	font-size: 130%;
+	}
   	.homeaddress {background-color: ADDRESS_COLOR }
 	.gray {background-color: #E8E8E8;}
 	.orange {background-color: #FFCC99;}
 	.right {float: right;}
 	table, th, td {border: 1px solid black;}
 	th, td {min-width: 60px; }
-	button {background-color: #336699; color: #ffffff;}
+	button {background-color: #336699; color: #fffff;}
   </style>
 </head>
 <body>
-  <div class="topbar">
+  <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-	<p align="center"><b>ONC Family Assistance Referral Form<br>(please complete and click Submit To ONC)</b></p>
+    <p><span id="banner">ONC Family Assistance Referral Form</span><br>
+	<span id="message">(please complete and click Submit To ONC)</span></p>
   </div>
   <form action="referfamily" method="post">
   <input type="hidden" name="token" value="REPLACE_TOKEN">
   <input id="year" type="hidden" name="year">
+  <br>
+  
   <fieldset class="gray">
-    <legend>Head of Household Information:</legend>
+  <legend class="major">Head of Household Information</legend>
     <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFN" required>
     <input title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLN" required>
     <input title="Home Phone #" name="homephone" type="text" size="20" placeholder="Primary Phone"required>
@@ -408,8 +444,8 @@
 	<input title="E-mail address" name="email" type="email" size="30" placeholder="email address">
   </fieldset>
   <br>
-  <fieldset class="orange">
-	<legend>Delivery Address: Provide address that ONC will use to deliver gifts</legend>
+  <fieldset class="gray">
+  <legend class="major">Delivery Address: Provide address that ONC will use to deliver gifts</legend>
 	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address, else complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
@@ -426,7 +462,7 @@
   </fieldset>
   <br>
   <fieldset class="gray">
-  	<legend>Family Members</legend>
+  <legend class="major">Family Members</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
   	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
@@ -478,8 +514,8 @@
   </fieldset>
   </fieldset>
   <br>
-  <fieldset class="orange">
-  	<legend>Gift Assistance: Provide 3 wishes, in priority order, for each child; if clothing, include size & color preference</legend>
+  <fieldset class="gray">
+   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, for each child; if clothing, include size & color preference</legend>
   	 <table id="wishtable" border="1">
   	<thead>
     	<tr>
@@ -495,19 +531,19 @@
       </tbody>
   </table>
   </fieldset>
-   <br>
+  <br>
   <fieldset class="gray">
-	<legend>Meal Assistance (ONC will refer family to WFCM or equivalent):</legend>
+  <legend class="major">Meal Assistance: ONC will refer family to WFCM or equivalent</legend>
 	<input type="checkbox" onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
     <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
 		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
 	</select>
-	<input id="dietres" type="text" name="dietres" size="80" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
+	<input id="dietres" type="text" name="dietres" size="68" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
   </fieldset>
   <br>
-  <fieldset class=orange>
-	<legend>Family Details: Provide details (if any) about family you think ONC should know):</legend>
-	<input type="text" name="detail" size="140" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
+  <fieldset class=gray>
+   <legend class="major">Family Details: Provide details (if any) about family you think ONC should know</legend>
+	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <br>
   <div class=right>

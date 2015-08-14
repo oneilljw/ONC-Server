@@ -4,7 +4,7 @@
     <title>ONC Family Table</title>
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
-	var url = window.location.protocol + '//' + window.location.host;
+	var url = window.location.protocol + '://' + window.location.host;
 	var urlYears = url.concat("/dbStatus?token=REPLACE_TOKEN&callback=?");
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
@@ -393,12 +393,12 @@
         }
         tr:nth-child(even) {
             background-color: lightgrey;
-        }
+        }       
         button
         {
         	background-color: #336699;
         	color: #ffffff;
-        }
+        }      
         #new
         {
        		float: right;
@@ -411,13 +411,23 @@
         	background-color: #336699;
         	color: #ffffff;
         }
+        #topbar p
+        {
+       		text-align: center;
+        }
+        #banner
+        {
+    		font-weight: bold;
+    		font-style: italic;
+    		font-size: 130%;
+		}
     </style>
 </head>
 <body>
-  <div class="topbar">
+  <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-	<p align="center"><b><i>USER_NAME, welcome to the Our Neighbor's Child Family Referral System!</i></b></p>
-	<p id="message" align="center">USER_MESSAGE</p>
+	<p><span id="banner">USER_NAME, welcome to the Our Neighbor's Child Family Referral System!</span><br>
+	<span id="message">USER_MESSAGE</span></p>
   </div>
   <div class="tables">
 	<br>
