@@ -730,7 +730,7 @@ public class ONCHttpHandler implements HttpHandler
 			buff.append((String) params.get("childln" + Integer.toString(cn)));
 			buff.append(": ");
 			
-			for(int wn=0; wn<3; wn++)
+			for(int wn=0; wn<4; wn++)
 			{
 				buff.append((String) params.get("wish" + Integer.toString(cn) + Integer.toString(wn)));
 				buff.append(wn < 2 ? ", " : ";");

@@ -25,18 +25,22 @@
   		var yearinput = document.getElementById("year");
   		yearinput.value = new Date().getFullYear().toString();
   		
-  		$.getJSON(urlChildren, function(data)
+  		var urlmode = window.location.href;
+  		if(urlmode.indexOf("referral") > -1)
   		{
-  		     childrenJson = data;
-  		     updateChildTable();
-  		     updateWishTable();
-  		});
+  			$.getJSON(urlChildren, function(data)
+  			{
+  		     	childrenJson = data;
+  		     	updateChildTable();
+  		     	updateWishTable();
+  			});
   		
-  		$.getJSON(urlAdults, function(data)
-  		{
-  		     adultsJson = data;
-  		     updateAdultTable();
-  		});
+  			$.getJSON(urlAdults, function(data)
+  			{
+  		     	adultsJson = data;
+  		     	updateAdultTable();
+  			});
+  		}	
   		
   		$(function() {
   		    $("form input").keypress(function (e) {
@@ -121,8 +125,9 @@
 	
 	function addWishTableRow(cnum, child)
     {
-		var childinfo = [child.firstname, child.lastname, child.age + " " + child.gender.toLowerCase()];
-		var fieldsize = [15, 16, 14];
+		var childinfo= [child.firstname, child.age + " " + child.gender.toLowerCase()];
+		var childfieldsize= [15, 14];
+		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
         
 	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -134,20 +139,19 @@
  	    	content.type="text";
         	content.value = childinfo[index];
         	content.readOnly = true;
-        	content.setAttribute("size", fieldsize[index]);
+        	content.setAttribute("size", childfieldsize[index]);
         	cell.appendChild(content);
         	row.appendChild(cell);
         }
 
-        for(wn=0;wn<3;wn++)
+        for(wn=0; wn<wishplaceholder.length; wn++)
         {
         	var wlcell= document.createElement("td");
         	var wish= document.createElement("input");
-        	var wishnum = wn+1;
         	wish.type="text";
         	wish.name="wish" + cnum + wn;
-        	wish.placeholder= "Wish " + wishnum + " for " + child.firstname;
-        	wish.setAttribute("size", 24);
+        	wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
+        	wish.setAttribute("size", 22);
         	wish.required = true;
         	wlcell.appendChild(wish);
         	row.appendChild(wlcell);
@@ -515,16 +519,16 @@
   </fieldset>
   <br>
   <fieldset class="gray">
-   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, for each child; if clothing, include size & color preference</legend>
+   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish per child; if clothing, include size & color preference</legend>
   	 <table id="wishtable" border="1">
   	<thead>
     	<tr>
         	<th>First Name</th>
-        	<th>Last Name</th>
         	<th>Age/Gender</th>
         	<th>Wish 1</th>
         	<th>Wish 2</th>
-        	<th>Wish 3</th>	
+        	<th>Wish 3</th>
+        	<th>Alternate Wish</th>	
     	</tr>
       </thead>
       <tbody id="twishbody">
