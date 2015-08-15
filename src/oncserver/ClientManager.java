@@ -352,14 +352,11 @@ public class ClientManager implements ActionListener
 		{
 			WebClient wc = webClientAL.get(index);
 			long currentTime = new Date().getTime();
-			if((wc.getloginTimeStamp() == wc.getLastTimeStamp() && 
-				currentTime - wc.getloginTimeStamp() > WEB_CLIENT_LOGIN_LIMIT) ||
-				 currentTime - wc.getLastTimeStamp() > WEB_CLIENT_TERMINAL_LIMIT)
+			if(currentTime - wc.getLastTimeStamp() > WEB_CLIENT_TERMINAL_LIMIT)
 			{
 				webClientAL.remove(index);
 			}
 		}
-	
 	}	
 	
 	private class ClientTimerListener implements ActionListener

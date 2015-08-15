@@ -8,7 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -475,8 +474,15 @@ public class ONCHttpHandler implements HttpHandler
 	
 	String invalidTokenReceived()
 	{
-		return "<!DOCTYPE html><html><body><p>Invalid Token Received</p></body></html>";
+		String response = null;
+		try {	
+			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
+		return response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
 	}
 
 	private String readFile( String file ) throws IOException
@@ -532,25 +538,26 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		//create a meal request, if meal was requested
-		ONCMeal mealReq = null;
-		
+		ONCMeal mealReq = null, addedMeal = null;
 		String[] mealKeys = {"mealtype", "dietres"};
-		Map<String, String> mealMap = createMap(params, mealKeys);
-
-		ONCMeal addedMeal = null;
-		if(!mealMap.get(mealKeys[0]).equals("No Assistance Rqrd"))
+		
+		if(params.containsKey(mealKeys[0]))
 		{
-			mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealMap.get(mealKeys[0])),
-							mealMap.get(mealKeys[1]), -1, agt.getAgentName(), new Date(), 3,
-							"Family Referred", agt.getAgentName());
-			
-			addedMeal = mealDB.add(year, mealReq);
-		}
+			Map<String, String> mealMap = createMap(params, mealKeys);
 
+			if(!mealMap.get(mealKeys[0]).equals("No Assistance Rqrd"))
+			{
+				mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealMap.get(mealKeys[0])),
+								mealMap.get(mealKeys[1]), -1, agt.getAgentName(), new Date(), 3,
+								"Family Referred", agt.getAgentName());
+			
+				addedMeal = mealDB.add(year, mealReq);
+			}
+		}
 		//create the family
 		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
-				   "zipcode", "homephone", "cellphone", "email","delhousenum", "delstreet","detail",
-				   "delunit", "delcity", "delzipcode"};
+				   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
+				   "delstreet","detail", "delunit", "delcity", "delzipcode"};
 		
 		Map<String, String> familyMap = createMap(params, familyKeys);
 		
@@ -560,7 +567,7 @@ public class ONCHttpHandler implements HttpHandler
 					familyMap.get("street"), familyMap.get("unit"), familyMap.get("city"),
 					familyMap.get("zipcode"), familyMap.get("delhousenum"), familyMap.get("delstreet"),
 					familyMap.get("delunit"), familyMap.get("delcity"), familyMap.get("delzipcode"),
-					familyMap.get("homephone"), familyMap.get("cellphone"),
+					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createWishList(params),
 					agt.getID(), addedMeal != null ? addedMeal.getID() : -1,
 					addedMeal != null ? MealStatus.Requested : MealStatus.None);
@@ -733,7 +740,7 @@ public class ONCHttpHandler implements HttpHandler
 			for(int wn=0; wn<4; wn++)
 			{
 				buff.append((String) params.get("wish" + Integer.toString(cn) + Integer.toString(wn)));
-				buff.append(wn < 2 ? ", " : ";");
+				buff.append(wn < 3 ? ", " : ";");
 			}
 			
 			cn++;
