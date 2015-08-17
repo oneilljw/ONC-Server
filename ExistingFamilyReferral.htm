@@ -8,8 +8,8 @@
   <link href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.10/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />
   <script> 
   	var url = window.location.protocol + '://' + window.location.host;
-	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
-  	var urlAdults = url.concat("/referral", "adults?token=REPLACE_TOKEN&year=YEAR&famid=FAMID&callback=?");
+	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
+  	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
   	var childrenJson= [];
   	var adultsJson= [];
   	
@@ -415,6 +415,7 @@
   <form action="referfamily" method="post">
   <input type="hidden" name="token" value="REPLACE_TOKEN">
   <input id="year" type="hidden" name="year">
+   <input type="hidden" name="targetid" value=TARGETID>
   <br>
   
   <fieldset class="gray">

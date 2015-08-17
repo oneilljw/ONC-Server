@@ -121,7 +121,7 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/children"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
-    		int famID = Integer.parseInt((String) params.get("famid"));
+    		int famID = FamilyDB.getFamilyID(year, (String) params.get("targetid"));
     		
     		HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
@@ -129,7 +129,7 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/adults"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
-    		int famID = Integer.parseInt((String) params.get("famid"));
+    		int famID = FamilyDB.getFamilyID(year, (String) params.get("targetid"));
     		
     		HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
@@ -201,6 +201,7 @@ public class ONCHttpHandler implements HttpHandler
     			
     			//remove the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
+    			response = response.replace("TARGETID","NNA");
     			response = response.replace("value=\"HOHFN\"","");
     			response = response.replace("value=\"HOHLN\"", "");
     		}
@@ -216,6 +217,10 @@ public class ONCHttpHandler implements HttpHandler
     		String response = null;
     		WebClient wc;
     		
+//    		Set<String> keyset = params.keySet();
+//    		for(String key:keyset)
+//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+    		
     		if((wc=clientMgr.findClient(sessionID)) != null)
     		{
     			wc.updateTimestamp();
@@ -228,15 +233,15 @@ public class ONCHttpHandler implements HttpHandler
     			
     			//get the family
     			int year = Integer.parseInt((String) params.get("year"));
-    			int famID = Integer.parseInt((String) params.get("famID"));
+    			String targetID = (String) params.get("targetid");
     		
     			FamilyDB famDB = FamilyDB.getInstance();
-    			ONCFamily fam = famDB.getFamily(year, famID);
+    			ONCFamily fam = famDB.getFamilyByTargetID(year, targetID);
     		
     			//replace the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
     			response = response.replace("YEAR",(String) params.get("year"));
-    			response = response.replace("FAMID",(String) params.get("famID"));
+    			response = response.replace("TARGETID",targetID);
     			response = response.replace("HOHFN",fam.getHOHFirstName());
     			response = response.replace("HOHLN", fam.getHOHLastName());
     			response = response.replace("ADDRESS_COLOR", INPUT_NORMAL_BACKGROUND);
@@ -555,13 +560,14 @@ public class ONCHttpHandler implements HttpHandler
 			}
 		}
 		//create the family
-		String[] familyKeys = {"language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
+		String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
 				   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
 				   "delstreet","detail", "delunit", "delcity", "delzipcode"};
 		
 		Map<String, String> familyMap = createMap(params, familyKeys);
 		
-		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA", "O000000", "B-DI", 
+		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
+					familyMap.get("targetid"), "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohFN"), familyMap.get("hohLN"), familyMap.get("housenum"),
 					familyMap.get("street"), familyMap.get("unit"), familyMap.get("city"),

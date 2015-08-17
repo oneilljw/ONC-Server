@@ -13,8 +13,8 @@
 	
 	var currYear;
 	var priorYear;
-	var pyFamJson;
-	var cyFamJson;
+	var pyFamJson = [];
+	var cyFamJson = [];
 	
 	sessionStorage.setItem("token", "REPLACE_TOKEN");
 	
@@ -47,11 +47,13 @@
     	    	}
     		}
     	});
-    	//get the list of prior year agents & families from the server and display them
-    	getPYAgentsAndFamiliesFromServer(priorYear.toString());
     	
     	//get the list of current year agents & familes from the server and display them
     	getCYAgentsAndFamiliesFromServer(currYear.toString());
+    	
+    	//get the list of prior year agents & families from the server and display them
+    	getPYAgentsAndFamiliesFromServer(priorYear.toString());
+    	
     });
     
     function getPYFamiliesFromServer(year)
@@ -223,9 +225,15 @@
         }
         
         btn = document.createElement("button");
-        btn.value=family.id;
+        btn.value=family.idNum;
         btn.innerHTML = "Refer";
-        btn.onclick=function() {referFamily(family.id);};
+        btn.onclick=function() {referFamily(family.targetID);};
+//      console.log(family.targetID, alreadyReferred(family.targetID));
+        if(alreadyReferred(family.targetID) === true)
+        {
+        	btn.style.backgroundColor='Red';
+        	btn.disabled = true;
+        }
         row.appendChild(btn);
         
         tabBody.appendChild(row);
@@ -252,18 +260,18 @@
         btn.value=family.id;
 		btn.value=family.HOHLastName;
         btn.innerHTML = "Edit";
-        btn.onclick=function() {details(family.HOHLastName);};
+        btn.onclick=function() {details(family.targetID);};
         row.appendChild(btn);
         
         tabBody.appendChild(row);
     }
     
-    function referFamily(id)
+    function referFamily(targetID)
     {
 		var params = {}
 		params["year"] = priorYear.toString();
 		params["token"] = sessionStorage.getItem('token');
-		params["famID"] = id.toString();
+		params["targetid"] = targetID;
 		
 		post(urlRefer, params);
     }
@@ -274,6 +282,18 @@
 		params["token"] = sessionStorage.getItem('token');
 		
 		post(urlCreateNewFamily, params);
+    }
+    
+    function alreadyReferred(targetID)
+    {
+    	var index = 0;
+    	while(index < cyFamJson.length && cyFamJson[index].targetID != targetID)
+    	    index++;
+    	
+    	if(index < cyFamJson.length)
+    		return true;
+    	else
+    	    return false;
     }
     
     function details(id)

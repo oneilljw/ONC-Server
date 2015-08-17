@@ -1,25 +1,36 @@
 package oncserver;
 
+import java.awt.HeadlessException;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCDelivery;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCObject;
+import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.WishStatus;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class FamilyDB extends ONCServerDB
 {
+	private static final int TARGETID_HEADER_LENGTH = 1;
 	private static final int FAMILYDB_HEADER_LENGTH = 40;
+	private static final String HIGHEST_TARGETID_FILENAME = "HighestTargetID.csv";
 	
 	private static final int FAMILY_STATUS_UNVERIFIED = 0;
 	private static final int FAMILY_STATUS_INFO_VERIFIED = 1;
@@ -31,6 +42,8 @@ public class FamilyDB extends ONCServerDB
 	
 	private static List<FamilyDBYear> familyDB;
 	private static FamilyDB instance = null;
+	private static int highestTargetID;
+	private static boolean bTargetIDChanged;
 //	private static List<int[]> oncNumRanges;
 	
 	private static ServerChildDB childDB;
@@ -46,6 +59,10 @@ public class FamilyDB extends ONCServerDB
 	{
 		//create the family data bases for the years of ONC Server operation starting with 2012
 //		oncNumRanges = new ArrayList<int[]>();
+		
+		//retrieve the highest Target ID used by ONC direct family in-take
+		readTargetID(System.getProperty("user.dir") + "/" + HIGHEST_TARGETID_FILENAME);
+		bTargetIDChanged = false;
 
 		familyDB = new ArrayList<FamilyDBYear>();
 		
@@ -232,6 +249,11 @@ public class FamilyDB extends ONCServerDB
 			int famID = fDBYear.getNextID();
 			addedFam.setID(famID);
 			
+			//set the new target ID for family if necessary
+			String targetID = addedFam.getODBFamilyNum();
+			if(targetID.equals("NNA") || targetID.equals(""))
+				targetID = generateTargetID();
+			
 			//add to the family data base
 			fDBYear.add(addedFam);
 			fDBYear.setChanged(true);
@@ -263,11 +285,24 @@ public class FamilyDB extends ONCServerDB
 			return "FAMILY_NOT_FOUND";
 	}
 	
-	ONCFamily getFamily(int year, int famID)
+	ONCFamily getFamily(int year, int id)	//id number set each year
 	{
 		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
 		int index = 0;	
-		while(index < fAL.size() && fAL.get(index).getID() != famID)
+		while(index < fAL.size() && fAL.get(index).getID() != id)
+			index++;
+		
+		if(index < fAL.size())
+			return fAL.get(index);
+		else
+			return null;
+	}
+	
+	ONCFamily getFamilyByTargetID(int year, String idNum)	//Persistent odb, wfcm or onc id number string
+	{
+		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
+		int index = 0;	
+		while(index < fAL.size() && !fAL.get(index).getODBFamilyNum().equals(idNum))
 			index++;
 		
 		if(index < fAL.size())
@@ -390,6 +425,9 @@ public class FamilyDB extends ONCServerDB
 			exportDBToCSV(fDBYear.getList(), header, path);
 			fDBYear.setChanged(false);
 		}
+		
+		if(bTargetIDChanged)
+			saveTargetID(System.getProperty("user.dir") + "/" + HIGHEST_TARGETID_FILENAME);
 	}
 	
 	static boolean didAgentReferInYear(int agentID, int year)
@@ -400,6 +438,21 @@ public class FamilyDB extends ONCServerDB
 			index++;
 		
 		return index < famList.size();	//true if agentID referred family	
+	}
+	
+	//convert targetID to familyID
+	static int getFamilyID(int year, String targetID)
+	{
+		List<ONCFamily> famList = familyDB.get(year-BASE_YEAR).getList();
+		
+		int index = 0;
+		while(index < famList.size() && !famList.get(index).getODBFamilyNum().equals(targetID))
+			index++;
+		
+		if(index < famList.size())
+			return famList.get(index).getID();	//return famID
+		else
+			return -1;
 	}
 	
 	List<ONCFamily> getList(int year)
@@ -478,6 +531,88 @@ public class FamilyDB extends ONCServerDB
     	return oncNum;
     }
     
+    /******************************************************************************************************
+     * This method generates a target ID number prior to import of external data. Each family only
+     * has one target ID which remains constant from year to year
+     ******************************************************************************************************/
+    String generateTargetID()
+    {
+    	//increment the saved target id number, format it to a five digit string
+    	highestTargetID++;
+    	bTargetIDChanged = true;	//mark it for next save
+    	
+    	if(highestTargetID < 10)
+    		return "C0000" + Integer.toString(highestTargetID);
+    	else if(highestTargetID >= 10 && highestTargetID < 100)
+    		return "C000" + Integer.toString(highestTargetID);
+    	else if(highestTargetID >= 100 && highestTargetID < 1000)
+    		return "C00" + Integer.toString(highestTargetID);
+    	else if(highestTargetID >= 1000 && highestTargetID < 10000)
+    		return "C0" + Integer.toString(highestTargetID);
+    	else
+    		return "C" + Integer.toString(highestTargetID);
+    }
+    
+    void readTargetID(String path)
+    {
+    	CSVReader reader;
+    	String[] nextLine, header;
+		try 
+		{
+			reader = new CSVReader(new FileReader(path));
+			if((header = reader.readNext()) != null)	//Does file have records? 
+	    	{
+	    		//Read the User File
+	    		if(header.length == TARGETID_HEADER_LENGTH)	//Does the record have the right # of fields? 
+	    		{
+	    			if((nextLine = reader.readNext()) != null)
+	    				highestTargetID = Integer.parseInt(nextLine[0]);
+	    		}
+	    		else
+	    		{
+	    			String error = String.format("%s file corrupted, header length = %d", path, header.length);
+	    	       	JOptionPane.showMessageDialog(null, error,  path + "Corrupted", JOptionPane.ERROR_MESSAGE);
+	    		}		   			
+	    	}
+	    	else
+	    	{
+	    		String error = String.format("%s file is empty", path);
+	    		JOptionPane.showMessageDialog(null, error,  path + " Empty", JOptionPane.ERROR_MESSAGE);
+	    	}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (HeadlessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+    }
+    
+    void saveTargetID(String path)
+    {		
+    	String[] header = {"Highest Target ID"};
+    	String[] data = {Integer.toString(highestTargetID)};
+	    try 
+	    {
+	    	CSVWriter writer = new CSVWriter(new FileWriter(path));
+	    	writer.writeNext(header);
+	    	writer.writeNext(data);
+	    	
+	    	writer.close();
+	    	       	    
+	    } 
+	    catch (IOException x)
+	    {
+	    	System.err.format("IO Exception: %s%n", x);
+	    }
+    }
+   
     int searchForONCNumber(int year, String oncnum)
     {
     	List<ONCFamily> oncFamAL = familyDB.get(year-BASE_YEAR).getList();
