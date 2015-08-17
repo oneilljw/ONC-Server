@@ -228,7 +228,7 @@
         btn.value=family.idNum;
         btn.innerHTML = "Refer";
         btn.onclick=function() {referFamily(family.targetID);};
-//      console.log(family.targetID, alreadyReferred(family.targetID));
+
         if(alreadyReferred(family.targetID) === true)
         {
         	btn.style.backgroundColor='Red';
