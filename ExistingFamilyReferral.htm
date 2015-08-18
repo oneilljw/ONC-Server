@@ -291,21 +291,29 @@
 	
 	function sameAddressClicked(cb)
 	{
-		if(cb.checked == true)
+		var addrElements = ['housenum', 'street', 'unit', 'city', 'zipcode'];
+		var delElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
+		for(var i=0; i<delElements.length; i++)
 		{
-			document.getElementById('delhousenum').value = document.getElementById('housenum').value;
-			document.getElementById('delstreet').value = document.getElementById('street').value;
-			document.getElementById('delunit').value = document.getElementById('unit').value;
-			document.getElementById('delcity').value = document.getElementById('city').value;
-			document.getElementById('delzipcode').value = document.getElementById('zipcode').value;
-		}
-		else
-		{
-			document.getElementById('delhousenum').value = "";
-			document.getElementById('delstreet').value = "";
-			document.getElementById('delunit').value = "";
-			document.getElementById('delcity').value = "";
-			document.getElementById('delzipcode').selectedIndex = 0;
+			var addrElement = document.getElementById(addrElements[i]);
+			var delElement = document.getElementById(delElements[i]);
+			
+			if(cb.checked == true)
+			{	
+				delElement.value = addrElement.value;
+				delElement.disabled = true;
+				addrElement.disabled = true;
+			}
+			else
+			{
+				delElement.value = "";
+				
+				if(delElement.type === 'select-one')
+					delElement.selectedIndex = 0;
+				
+				delElement.disabled = false;
+				addrElement.disabled = false;
+			}
 		}
 	}
 	
@@ -346,7 +354,7 @@
 	    	}  
 		}   	
 	}
-	function validate()
+	function validateAddresses()
     {
         var ok = false;
         
@@ -355,12 +363,58 @@
         var urlAddressWithStreet = urlAddressWithHouse.replace("STREET", document.getElementById('street').value);
         var urlAddressWithCity = urlAddressWithStreet.replace("CITY", document.getElementById('city').value);
         var urlAddressComplete = urlAddressWithCity.replace("ZIPCODE", document.getElementById('zipcode').value);
-        
-        console.log(urlAddressComplete);
-        alert(urlAddressComplete);
+        var addrresponse;
+        $.getJSON(urlAddressComplete, function(data)
+      	{
+      		addrresponse = data;
+      		
+      		if(addrresponse.bAddressValid === true)
+      		{
+      			//might need to check the delivery address if checkbox is empty
+      			if(document.getElementById('sameaddress').checked)
+      			{
+      				ok = true;
+      			}
+      			else
+      			{
+      				var urlDelAddressWithHouse = urlAddress.replace("HOUSENUM", document.getElementById('delhousenum').value);
+      	        	var urlDelAddressWithStreet = urlDelAddressWithHouse.replace("STREET", document.getElementById('delstreet').value);
+      	        	var urlDelAddressWithCity = urlDelAddressWithStreet.replace("CITY", document.getElementById('delcity').value);
+      	        	var urlDelAddressComplete = urlDelAddressWithCity.replace("ZIPCODE", document.getElementById('delzipcode').value);
+      	      		var deladdrresponse;
+              		$.getJSON(urlDelAddressComplete, function(data)
+            		{
+            			deladdrresponse = data;
+            			if(deladdrresponse.bAddressValid === true)
+            				ok = true;           			
+            			else
+            			{
+            				var delElements = ['delhousenum', 'delstreet'];
+            				changeAddressBackground(hohElements, '#FF9999');
+            				alert("Delivery Address invalid: doesn't exist , please try again");
+            			}
+            		});
+      			}	
+      		}
+      		else
+      		{
+      			var hohElements = ['housenum', 'street'];
+      			changeAddressBackground(hohElements, '#FF9999');
+      			alert("HOH Address invalid: doesn't exist, please try again");
+      			
+      		}
+      	});
         
         return ok;
     }
+	function changeAddressBackground(elements, color)
+	{
+		for(var i=0; i<elements.length; i++)
+		{
+			var element = document.getElementById(elements[i]);
+			element.style.backgroundColor = color;	
+		}
+	}
   </script>
   <style>
   	.topbar 
@@ -428,7 +482,7 @@
     <p><span id="banner">ONC Family Assistance Referral Form</span><br>
 	<span id="message">(please complete and click Submit To ONC)</span></p>
   </div>
-  <form action="referfamily" onsubmit="return validate()" method="post">
+  <form action="referfamily" onsubmit="return validateAddresses()" method="post">
   <input type="hidden" name="token" value="REPLACE_TOKEN">
   <input id="year" type="hidden" name="year">
    <input type="hidden" name="targetid" value=TARGETID>
@@ -453,7 +507,7 @@
 	<br>
 	<input id="housenum" class="homeaddress" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
     <input id="street" class="homeaddress" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #">
     <input id="city" class="homeaddress" title="City" name="city" type="text" size="20" placeholder="City" required>
     <select id="zipcode" title="Zip Code" name="zipcode">
 		<option value="20120">20120</option>
@@ -468,7 +522,7 @@
   <br>
   <fieldset class="gray">
   <legend class="major">Delivery Address: Provide address that ONC will use to deliver gifts</legend>
-	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address, else complete:
+	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address, otherwise complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #">

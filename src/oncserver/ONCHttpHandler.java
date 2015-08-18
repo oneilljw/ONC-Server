@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import ourneighborschild.Address;
 import ourneighborschild.Agent;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
@@ -204,6 +205,23 @@ public class ONCHttpHandler implements HttpHandler
     			response = response.replace("TARGETID","NNA");
     			response = response.replace("value=\"HOHFN\"","");
     			response = response.replace("value=\"HOHLN\"", "");
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/address"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		String response = null;
+    		
+    		if((wc=clientMgr.findClient(sessionID)) != null)	
+    		{
+    			wc.updateTimestamp();
+    			response = verifyAddress(params);	//verify the address and send response
     		}
     		else
     			response = invalidTokenReceived();
@@ -505,6 +523,26 @@ public class ONCHttpHandler implements HttpHandler
 	    reader.close();
 	    
 	    return stringBuilder.toString();
+	}
+	
+	String verifyAddress(Map<String, Object> params)
+	{
+		String callback = (String) params.get("callback");
+		
+		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode"};
+		
+		Map<String, String> addressMap = createMap(params, addressKeys);
+		
+		for(String key:addressMap.keySet())
+			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));	
+
+		boolean bAddressValid  = RegionDB.isAddressValid(addressMap.get("housenum"), addressMap.get("street"));
+
+//		AddressValidation av = new AddressValidation(bAddressValid, "Address Found");
+		Gson gson = new Gson();
+		String json = gson.toJson(new AddressValidation(bAddressValid, "Address Found"), AddressValidation.class);
+		
+		return callback +"(" + json +")";
 	}
 	
 	FamilyResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
