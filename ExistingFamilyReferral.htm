@@ -10,6 +10,7 @@
   	var url = window.location.protocol + '://' + window.location.host;
 	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
   	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
+  	var urlAddress = url.concat("/address?token=REPLACE_TOKEN&housenum=HOUSENUM&street=STREET&city=CITY&zipcode=ZIPCODE&callback=?");
   	var childrenJson= [];
   	var adultsJson= [];
   	
@@ -345,6 +346,21 @@
 	    	}  
 		}   	
 	}
+	function validate()
+    {
+        var ok = false;
+        
+        //form the address url
+        var urlAddressWithHouse = urlAddress.replace("HOUSENUM", document.getElementById('housenum').value);
+        var urlAddressWithStreet = urlAddressWithHouse.replace("STREET", document.getElementById('street').value);
+        var urlAddressWithCity = urlAddressWithStreet.replace("CITY", document.getElementById('city').value);
+        var urlAddressComplete = urlAddressWithCity.replace("ZIPCODE", document.getElementById('zipcode').value);
+        
+        console.log(urlAddressComplete);
+        alert(urlAddressComplete);
+        
+        return ok;
+    }
   </script>
   <style>
   	.topbar 
@@ -412,7 +428,7 @@
     <p><span id="banner">ONC Family Assistance Referral Form</span><br>
 	<span id="message">(please complete and click Submit To ONC)</span></p>
   </div>
-  <form action="referfamily" method="post">
+  <form action="referfamily" onsubmit="return validate()" method="post">
   <input type="hidden" name="token" value="REPLACE_TOKEN">
   <input id="year" type="hidden" name="year">
    <input type="hidden" name="targetid" value=TARGETID>
