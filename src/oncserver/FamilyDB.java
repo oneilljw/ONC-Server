@@ -251,8 +251,11 @@ public class FamilyDB extends ONCServerDB
 			
 			//set the new target ID for family if necessary
 			String targetID = addedFam.getODBFamilyNum();
-			if(targetID.equals("NNA") || targetID.equals(""))
+			if(targetID.contains("NNA") || targetID.equals(""))
+			{
 				targetID = generateTargetID();
+				addedFam.setODBFamilyNum(targetID);
+			}
 			
 			//add to the family data base
 			fDBYear.add(addedFam);

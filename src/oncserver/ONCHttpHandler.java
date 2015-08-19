@@ -39,9 +39,8 @@ public class ONCHttpHandler implements HttpHandler
 {
 	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
-	private static final String EXISTING_FAMILY_HTML = "ExistingFamilyReferral.htm";
+	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
-	private static final String NEW_FAMILY_HTML = "ExistingFamilyReferral.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	
 	private static final int HTTP_OK = 200;
@@ -191,9 +190,9 @@ public class ONCHttpHandler implements HttpHandler
     		{
     			wc.updateTimestamp();
     			try {	
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), NEW_FAMILY_HTML));
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_HTML));
     			} catch (IOException e) {
-    				System.out.println("Couldn't open/find " + NEW_FAMILY_HTML);
+    				System.out.println("Couldn't open/find " + REFERRAL_HTML);
     				e.printStackTrace();
     			}
     			
@@ -240,7 +239,7 @@ public class ONCHttpHandler implements HttpHandler
     		{
     			wc.updateTimestamp();
     			try {	
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), EXISTING_FAMILY_HTML));
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_HTML));
     			} catch (IOException e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
