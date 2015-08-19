@@ -13,6 +13,8 @@
   	var urlAddress = url.concat("/address?token=REPLACE_TOKEN&housenum=HOUSENUM&street=STREET&city=CITY&zipcode=ZIPCODE&callback=?");
   	var childrenJson= [];
   	var adultsJson= [];
+  	var hohAddressGood = false;
+  	var delAddressGood = false;
   	
   	$(function() {
   	    $( "#childdob" ).datepicker({
@@ -301,8 +303,8 @@
 			if(cb.checked == true)
 			{	
 				delElement.value = addrElement.value;
-				delElement.disabled = true;
-				addrElement.disabled = true;
+				setEnabledReadOnly(delElement, true);
+				setEnabledReadOnly(addrElement, true);
 			}
 			else
 			{
@@ -311,10 +313,18 @@
 				if(delElement.type === 'select-one')
 					delElement.selectedIndex = 0;
 				
-				delElement.disabled = false;
-				addrElement.disabled = false;
+				setEnabledReadOnly(delElement, false);
+				setEnabledReadOnly(addrElement, false);
 			}
 		}
+		
+		verifyDeliveryAddress();
+	}
+	
+	function setEnabledReadOnly(element, tf)
+	{
+		if(element.type !== 'select-one')
+			element.readOnly = tf;
 	}
 	
 	function mealRqrdClicked(cb)
@@ -354,70 +364,94 @@
 	    	}  
 		}   	
 	}
-	function validateAddresses()
+	function verifyHOHAddress()
+	{
+		//called when HOH address inputs blur
+		var addrElement = [document.getElementById('housenum'), 
+		                   document.getElementById('street'), 
+		                   document.getElementById('city'), 
+		                   document.getElementById('zipcode')];
+		
+		//check to see that housenum and street are provided
+		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+		{
+			//form the address url
+	        var verifyAddressUrl = createAddressUrl(addrElement, urlAddress);
+	        var addrresponse;
+	        $.getJSON(verifyAddressUrl, function(data)
+	      	{
+	      		addrresponse = data;
+	      		
+	      		if(addrresponse.bAddressValid === true)
+	      		{
+	      			changeAddressBackground(addrElement, '#FFFFFF');
+	      			hohAddressGood = true;
+	      		}	
+	      		else
+	      		{
+	      			hohAddressGood = false;
+	      			changeAddressBackground(addrElement, '#FF9999');
+//	      			alert("HOH Address invalid: doesn't exist, please correct");
+	      		}
+	      	});
+		}
+		else
+			hohAddressGood = false;
+	}
+	function verifyDeliveryAddress()
+	{
+		//called when HOH address inputs blur
+		var addrElement = [document.getElementById('delhousenum'), 
+		                   document.getElementById('delstreet'), 
+		                   document.getElementById('delcity'), 
+		                   document.getElementById('delzipcode')];
+		
+		//check to see that housenum and street are provided
+		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+		{
+			//form the address url
+	        var verifyAddressUrl = createAddressUrl(addrElement, urlAddress);
+	        var addrresponse;
+	        $.getJSON(verifyAddressUrl, function(data)
+	      	{
+	      		addrresponse = data;
+	      		
+	      		if(addrresponse.bAddressValid === true)
+	      		{
+	      			changeAddressBackground(addrElement, '#FFFFFF');
+	      			delAddressGood = true;
+	      		}	
+	      		else
+	      		{
+	      			delAddressGood = false;
+	      			changeAddressBackground(addrElement, '#FF9999');
+//	      			alert("Delivery Address invalid: doesn't exist, please correct");
+	      		}
+	      	});
+		}
+		else
+			delAddressGood = false;
+	}
+	function submitReferral()
     {
-        var ok = false;
-        
-        //form the address url
-        var urlAddressWithHouse = urlAddress.replace("HOUSENUM", document.getElementById('housenum').value);
-        var urlAddressWithStreet = urlAddressWithHouse.replace("STREET", document.getElementById('street').value);
-        var urlAddressWithCity = urlAddressWithStreet.replace("CITY", document.getElementById('city').value);
-        var urlAddressComplete = urlAddressWithCity.replace("ZIPCODE", document.getElementById('zipcode').value);
-        var addrresponse;
-        var hohElements = ['housenum', 'street'];
-        var delElements = ['delhousenum', 'delstreet'];
-        $.getJSON(urlAddressComplete, function(data)
-      	{
-      		addrresponse = data;
-      		
-      		if(addrresponse.bAddressValid === true)
-      		{
-      			changeAddressBackground(hohElements, '#FFFFFF');
-      			//might need to check the delivery address if checkbox is empty
-      			if(document.getElementById('sameaddress').checked)
-      			{
-      				ok = true;
-      			}
-      			else
-      			{
-      				var urlDelAddressWithHouse = urlAddress.replace("HOUSENUM", document.getElementById('delhousenum').value);
-      	        	var urlDelAddressWithStreet = urlDelAddressWithHouse.replace("STREET", document.getElementById('delstreet').value);
-      	        	var urlDelAddressWithCity = urlDelAddressWithStreet.replace("CITY", document.getElementById('delcity').value);
-      	        	var urlDelAddressComplete = urlDelAddressWithCity.replace("ZIPCODE", document.getElementById('delzipcode').value);
-      	      		var deladdrresponse;
-              		$.getJSON(urlDelAddressComplete, function(data)
-            		{
-            			deladdrresponse = data;
-            			console.log(deladdrresponse);
-            			if(deladdrresponse.bAddressValid === true)
-            			{
-            				ok = true;
-            			}
-            			else
-            			{
-            				changeAddressBackground(delElements, '#FF9999');
-            				alert("Delivery Address invalid: doesn't exist , please correct");
-            			}
-            		});
-      			}	
-      		}
-      		else
-      		{
-      			changeAddressBackground(hohElements, '#FF9999');
-      			alert("HOH Address invalid: doesn't exist, please correct");
-      		}
-      	});
-        
-        alert("got here")
-        return ok;
+     	return hohAddressGood && delAddressGood;   
     }
+	
 	function changeAddressBackground(elements, color)
 	{
-		for(var i=0; i<elements.length; i++)
+			elements[0].style.backgroundColor = color;
+			elements[1].style.backgroundColor = color;
+	}
+	function createAddressUrl(addrElement, baseAddress)
+	{
+		var replText = ["HOUSENUM", "STREET", "CITY", "ZIPCODE"];
+		var address = baseAddress;
+		for(var i=0; i< addrElement.length; i++)
 		{
-			var element = document.getElementById(elements[i]);
-			element.style.backgroundColor = color;	
+			address = address.replace(replText[i], addrElement[i].value);	
 		}
+		
+		return address;
 	}
   </script>
   <style>
@@ -484,12 +518,11 @@
     <p><span id="banner">ONC Family Assistance Referral Form</span><br>
 	<span id="message">(please complete and click Submit To ONC)</span></p>
   </div>
-  <form action="referfamily" onsubmit="return validateAddresses()" method="post">
+  <form id="familyreferral" action="referfamily" onsubmit="return submitReferral()" method="post">
   <input type="hidden" name="token" value="REPLACE_TOKEN">
   <input id="year" type="hidden" name="year">
    <input type="hidden" name="targetid" value=TARGETID>
   <br>
-  
   <fieldset>
   <legend class="major">Head of Household Information</legend>
     <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFN" required>
@@ -507,8 +540,8 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onblur="verifyHOHAddress()" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onblur="verifyHOHAddress()" required>
     <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #">
     <input id="city"  title="City" name="city" type="text" size="20" placeholder="City" required>
     <select id="zipcode" title="Zip Code" name="zipcode">
@@ -525,8 +558,8 @@
   <fieldset>
   <legend class="major">Delivery Address: Provide address that ONC will use to deliver gifts</legend>
 	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address, otherwise complete:
-	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
-    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" required>
+	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onblur="verifyDeliveryAddress()" required>
+    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onblur="verifyDeliveryAddress()" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #">
     <input id="delcity" title="Delivery City" name="delcity" type="text" size="20" placeholder="City" required>
     <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">

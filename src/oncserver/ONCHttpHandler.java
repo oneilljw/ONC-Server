@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import ourneighborschild.Address;
 import ourneighborschild.Agent;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
@@ -42,9 +41,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String EXISTING_FAMILY_HTML = "ExistingFamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
-	private static final String NEW_FAMILY_HTML = "NewFamilyReferral.htm";
-	private static final String INPUT_NORMAL_BACKGROUND = "#FFFFFF";
-	private static final String INPUT_ERROR_BACKGROUND = "#FFC0CB";
+	private static final String NEW_FAMILY_HTML = "ExistingFamilyReferral.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	
 	private static final int HTTP_OK = 200;
@@ -262,7 +259,6 @@ public class ONCHttpHandler implements HttpHandler
     			response = response.replace("TARGETID",targetID);
     			response = response.replace("HOHFN",fam.getHOHFirstName());
     			response = response.replace("HOHLN", fam.getHOHLastName());
-    			response = response.replace("ADDRESS_COLOR", INPUT_NORMAL_BACKGROUND);
     		}
     		else
     			response = invalidTokenReceived();
@@ -280,9 +276,9 @@ public class ONCHttpHandler implements HttpHandler
     				t.getRequestMethod().toLowerCase().equals("post"))
     		{
     			wc.updateTimestamp();
-    			Set<String> keyset = params.keySet();
-    			for(String key:keyset)
-    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
     			FamilyResponseCode frc = processFamilyReferral(wc, params);
     			
@@ -533,12 +529,11 @@ public class ONCHttpHandler implements HttpHandler
 		
 		Map<String, String> addressMap = createMap(params, addressKeys);
 		
-		for(String key:addressMap.keySet())
-			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));	
+//		for(String key:addressMap.keySet())
+//			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));	
 
 		boolean bAddressValid  = RegionDB.isAddressValid(addressMap.get("housenum"), addressMap.get("street"));
 
-//		AddressValidation av = new AddressValidation(bAddressValid, "Address Found");
 		Gson gson = new Gson();
 		String json = gson.toJson(new AddressValidation(bAddressValid, "Address Found"), AddressValidation.class);
 		
