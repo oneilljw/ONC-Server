@@ -556,7 +556,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Delivery Address: Provide address that ONC will use to deliver gifts</legend>
+  <legend class="major">Delivery Address: Provide address that ONC will use for gift delivery</legend>
 	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address, otherwise complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onblur="verifyDeliveryAddress()" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onblur="verifyDeliveryAddress()" required>
@@ -575,7 +575,7 @@
   <fieldset>
   <legend class="major">Family Members</legend>
   <fieldset class="gray">
-  	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
+  	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS)</legend>
   	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
     <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
     <input id="childdob" title="Date of birth for child to be added" type="text" size="12" placeholder="DoB">
@@ -626,7 +626,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish per child; if clothing, include size & color preference</legend>
+   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish per child; if clothing or footwear, please include size</legend>
   	 <table id="wishtable" border="1">
   	<thead>
     	<tr>
