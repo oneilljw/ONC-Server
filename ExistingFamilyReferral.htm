@@ -364,12 +364,15 @@
         var urlAddressWithCity = urlAddressWithStreet.replace("CITY", document.getElementById('city').value);
         var urlAddressComplete = urlAddressWithCity.replace("ZIPCODE", document.getElementById('zipcode').value);
         var addrresponse;
+        var hohElements = ['housenum', 'street'];
+        var delElements = ['delhousenum', 'delstreet'];
         $.getJSON(urlAddressComplete, function(data)
       	{
       		addrresponse = data;
       		
       		if(addrresponse.bAddressValid === true)
       		{
+      			changeAddressBackground(hohElements, '#FFFFFF');
       			//might need to check the delivery address if checkbox is empty
       			if(document.getElementById('sameaddress').checked)
       			{
@@ -385,26 +388,27 @@
               		$.getJSON(urlDelAddressComplete, function(data)
             		{
             			deladdrresponse = data;
+            			console.log(deladdrresponse);
             			if(deladdrresponse.bAddressValid === true)
-            				ok = true;           			
+            			{
+            				ok = true;
+            			}
             			else
             			{
-            				var delElements = ['delhousenum', 'delstreet'];
-            				changeAddressBackground(hohElements, '#FF9999');
-            				alert("Delivery Address invalid: doesn't exist , please try again");
+            				changeAddressBackground(delElements, '#FF9999');
+            				alert("Delivery Address invalid: doesn't exist , please correct");
             			}
             		});
       			}	
       		}
       		else
       		{
-      			var hohElements = ['housenum', 'street'];
       			changeAddressBackground(hohElements, '#FF9999');
-      			alert("HOH Address invalid: doesn't exist, please try again");
-      			
+      			alert("HOH Address invalid: doesn't exist, please correct");
       		}
       	});
         
+        alert("got here")
         return ok;
     }
 	function changeAddressBackground(elements, color)
@@ -467,9 +471,7 @@
     	font-style: italic;
     	font-size: 130%;
 	}
-  	.homeaddress {background-color: ADDRESS_COLOR }
-	.gray {background-color: #E8E8E8;}
-	.orange {background-color: #FFCC99;}
+	fieldset {background-color: #E8E8E8;}
 	.right {float: right;}
 	table, th, td {border: 1px solid black;}
 	th, td {min-width: 60px; }
@@ -488,7 +490,7 @@
    <input type="hidden" name="targetid" value=TARGETID>
   <br>
   
-  <fieldset class="gray">
+  <fieldset>
   <legend class="major">Head of Household Information</legend>
     <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFN" required>
     <input title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLN" required>
@@ -505,10 +507,10 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input id="housenum" class="homeaddress" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
-    <input id="street" class="homeaddress" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" required>
     <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #">
-    <input id="city" class="homeaddress" title="City" name="city" type="text" size="20" placeholder="City" required>
+    <input id="city"  title="City" name="city" type="text" size="20" placeholder="City" required>
     <select id="zipcode" title="Zip Code" name="zipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
@@ -520,7 +522,7 @@
 	<input title="E-mail address" name="email" type="email" size="30" placeholder="email address">
   </fieldset>
   <br>
-  <fieldset class="gray">
+  <fieldset>
   <legend class="major">Delivery Address: Provide address that ONC will use to deliver gifts</legend>
 	<input type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address, otherwise complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" required>
@@ -537,7 +539,7 @@
 	</select>
   </fieldset>
   <br>
-  <fieldset class="gray">
+  <fieldset>
   <legend class="major">Family Members</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ and still enrolled in FCPS)</legend>
@@ -567,7 +569,7 @@
   </table>
   </fieldset>
   <br>
-  <fieldset class="gray">
+  <fieldset>
   	<legend>Other adults in family (in addition to the head of household)</legend>
   	<input id="adultname" title="Name" type="text" size="28" placeholder="First & Last Name">
     <select id="adultgender" title="Gender">
@@ -590,7 +592,7 @@
   </fieldset>
   </fieldset>
   <br>
-  <fieldset class="gray">
+  <fieldset>
    <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish per child; if clothing, include size & color preference</legend>
   	 <table id="wishtable" border="1">
   	<thead>
@@ -608,7 +610,7 @@
   </table>
   </fieldset>
   <br>
-  <fieldset class="gray">
+  <fieldset>
   <legend class="major">Meal Assistance: ONC will refer family to WFCM or equivalent</legend>
 	<input type="checkbox" onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
     <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
@@ -617,7 +619,7 @@
 	<input id="dietres" type="text" name="dietres" size="68" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
   </fieldset>
   <br>
-  <fieldset class=gray>
+  <fieldset>
    <legend class="major">Family Details: Provide details (if any) about family you think ONC should know</legend>
 	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
