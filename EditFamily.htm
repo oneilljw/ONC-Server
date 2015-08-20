@@ -1,0 +1,409 @@
+ <!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>ONC Family Contact Info Update</title>
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script> 
+  	var url = window.location.protocol + '://' + window.location.host;
+  	var urlFamily = url.concat("/getfamily?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
+  	var urlAddress = url.concat("/address?token=REPLACE_TOKEN&housenum=HOUSENUM&street=STREET&city=CITY&zipcode=ZIPCODE&callback=?");
+  	var hohAddressGood = false;
+  	var delAddressGood = false;
+  	var errorColor = '#FF9999';
+  	var familyJson =[];
+  	
+  	$( document ).ready(function()
+	{
+  		var yearinput = document.getElementById("year");
+  		yearinput.value = new Date().getFullYear().toString();
+  		
+  		var urlmode = window.location.href;
+  		if(urlmode.indexOf("familyupdate") > -1)
+  		{
+  			$.getJSON(urlFamily, function(data)
+  			{
+  		     	familyJson = data;
+  		     	updateFamilyInfo(data);
+  			});
+  		}	
+  		
+  		$(function() {
+  		    $("form input").keypress(function (e) {
+  		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+  		            $('button[type=submit] .default').click();
+  		            return false;
+  		        } else {
+  		            return true;
+  		        }
+  		    });
+  		});
+  		
+  		$('html').bind('keypress', function(e)
+  		{
+  			if(e.keyCode == 13)
+  			{
+  				return false;
+  			}
+  		});
+	});
+  	
+  	function updateFamilyInfo(family)
+  	{		        
+  		var familyElements = [family.HOHFirstName, family.HOHLastName, family.HomePhone,
+  			                    family.OtherPhone, family.Language, family.HouseNum, family.Street, 
+  			                    family.UnitNum, family.City, family.ZipCode, family.FamilyEmail, 
+  			                    family.details];
+  			
+  		var formElements = ['hohfn', 'hohln', 'homephone', 'cellphone', 'language',
+  			                    'housenum', 'street', 'unit', 'city', 'zipcode', 'email', 'detail'];
+  			
+  		//set normal elements
+  		for(var i=0; i<familyElements.length; i++)
+  			document.getElementById(formElements[i]).value = familyElements[i];
+  			
+  		//deal with the exceptions
+  		var deliveryAddr = family.substituteDeliveryAddress.split('_');
+  		var hohAddrElements = [family.HouseNum, family.Street, family.UnitNum, family.City, family.ZipCode];
+  		var delAddrElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
+  		if(deliveryAddr.length === delAddrElements.length)	//delivery address is different
+  		{
+  			for(var i=0; i<deliveryAddr.length; i++)
+  				document.getElementById(delAddrElements[i]).value = deliveryAddr[i];
+  		}
+  		else	//delivery address is the same
+  		{
+  			var cb = document.getElementById("checkbox");
+  			cb.checked= true;
+  			sameAddressClicked(cb);
+  		}		
+ 		//DEAL WITH ALTPHONE HERE
+  	}
+	
+	function sameAddressClicked(cb)
+	{
+		var addrElements = ['housenum', 'street', 'unit', 'city', 'zipcode'];
+		var delElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
+		for(var i=0; i<delElements.length; i++)
+		{
+			var addrElement = document.getElementById(addrElements[i]);
+			var delElement = document.getElementById(delElements[i]);
+			
+			if(cb.checked == true)
+			{	
+				delElement.value = addrElement.value;
+				setEnabledReadOnly(delElement, true);
+				setEnabledReadOnly(addrElement, true);
+			}
+			else
+			{
+				delElement.value = "";
+				
+				if(delElement.type === 'select-one')
+					delElement.selectedIndex = 0;
+				
+				setEnabledReadOnly(delElement, false);
+				setEnabledReadOnly(addrElement, false);
+			}
+		}
+		
+		verifyDeliveryAddress();
+	}
+	function setEnabledReadOnly(element, tf)
+	{
+		if(element.type !== 'select-one')
+			element.readOnly = tf;
+	}
+	function verifyHOHAddress()
+	{
+		//called when HOH address inputs blur
+		var addrElement = [document.getElementById('housenum'), 
+		                   document.getElementById('street'), 
+		                   document.getElementById('city'), 
+		                   document.getElementById('zipcode')];
+		
+		//check to see that housenum and street are provided
+		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+		{
+			//form the address url
+	        var verifyAddressUrl = createAddressUrl(addrElement, urlAddress);
+	        var addrresponse;
+	        $.getJSON(verifyAddressUrl, function(data)
+	      	{
+	      		addrresponse = data;
+	      		
+	      		if(addrresponse.bAddressValid === true)
+	      		{
+	      			changeAddressBackground(addrElement, '#FFFFFF');
+	      			hohAddressGood = true;
+	      		}	
+	      		else
+	      		{
+	      			hohAddressGood = false;
+	      			changeAddressBackground(addrElement, errorColor);
+//	      			alert("HOH Address invalid: doesn't exist, please correct");
+	      		}
+	      	});
+		}
+		else
+			hohAddressGood = false;
+	}
+	function verifyDeliveryAddress()
+	{
+		//called when HOH address inputs blur
+		var addrElement = [document.getElementById('delhousenum'), 
+		                   document.getElementById('delstreet'), 
+		                   document.getElementById('delcity'), 
+		                   document.getElementById('delzipcode')];
+		
+		//check to see that housenum and street are provided
+		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+		{
+			//form the address url
+	        var verifyAddressUrl = createAddressUrl(addrElement, urlAddress);
+	        var addrresponse;
+	        $.getJSON(verifyAddressUrl, function(data)
+	      	{
+	      		addrresponse = data;
+	      		
+	      		if(addrresponse.bAddressValid === true)
+	      		{
+	      			changeAddressBackground(addrElement, '#FFFFFF');
+	      			delAddressGood = true;
+	      		}	
+	      		else
+	      		{
+	      			delAddressGood = false;
+	      			changeAddressBackground(addrElement, errorColor);
+//	      			alert("Delivery Address invalid: doesn't exist, please correct");
+	      		}
+	      	});
+		}
+		else
+			delAddressGood = false;
+	}
+	
+	function changeAddressBackground(elements, color)
+	{
+			elements[0].style.backgroundColor = color;
+			elements[1].style.backgroundColor = color;
+	}
+	function createAddressUrl(addrElement, baseAddress)
+	{
+		var replText = ["HOUSENUM", "STREET", "CITY", "ZIPCODE"];
+		var address = baseAddress;
+		for(var i=0; i< addrElement.length; i++)
+		{
+			address = address.replace(replText[i], addrElement[i].value);	
+		}
+		
+		return address;
+	}
+	function verifyPhoneNumbers()
+	{
+		var errorMssg= "";
+		
+		var phoneName= ["Primary", "Alternate", "2nd Alternate"];
+		
+		if(document.getElementById('homephone').value=="")
+		{
+			document.getElementById('homephone').style.backgroundColor= errorColor;
+			errorMssg= "Submit Error: Primary Phone # missing"
+		}
+		else
+		{
+			var index=0;
+			while(index<phoneName.length && verifyPhoneNumber(index))
+				index++;
+			
+			if(index < phoneName.length)	
+				errorMssg= "Submit Error: " + phoneName[index] + " Phone # is invalid";	
+		}
+		
+		return errorMssg;	
+	}
+	function verifyPhoneNumber(elementNum)
+	{
+		var phoneElement= [document.getElementById('homephone'), 
+							document.getElementById('cellphone'),
+							document.getElementById('altphone')];
+		
+		var numberGood = true;
+		var number= phoneElement[elementNum].value;
+		
+		if(number == '')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===10 && number.indexOf("-")===-1 && number.indexOf(".")===-1)
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else
+		{
+			numberGood= false;
+			phoneElement[elementNum].style.backgroundColor = errorColor;
+		}
+		
+		return numberGood;
+	}
+	function submitUpdate()
+	{
+		var phoneNumbersGood= true;
+		var errorElement = document.getElementById('errormessage');
+ 
+		if(hohAddressGood===false)
+			errorElement.textContent = "Submit Error: HoH address does not exist";
+		else if(delAddressGood===false)
+			errorElement.textContent = "Sumbit Error: Delivery address does not exist";
+		else
+		{	
+			//check phone numbers
+			var phoneMssg= verifyPhoneNumbers();
+			if(phoneMssg != '')
+			{
+				phoneNumbersGood=false;
+				errorElement.textContent=phoneMssg;
+			}
+		}
+		
+	    return hohAddressGood && delAddressGood && phoneNumbersGood;
+	}
+  </script>
+  <style>
+  	.topbar 
+    {
+    	width:900px;
+    	height:72px;
+    	margin:0 auto;
+    	background-color: #FF0000;
+		border: 1px solid black;
+	}
+	.topbar img
+	{
+    	float:left;
+   		border: 0;
+	}
+	div.ui-datepicker
+	{
+		width:480px;
+  		background-color: lightgray;
+  		font-size:15px;
+	}
+	form
+	{
+		width:900px;
+		margin:0 auto;
+		background-color: #3CB371;
+		border: 1px solid black;
+	}
+	button
+    {
+        background-color: #336699;
+        color: #ffffff;
+    }      
+	.major
+	{
+  		padding: 0.2em 0.5em;
+  		border:2px solid black;
+/*  		background-color: #E8E8E8;	*/
+  		background-color: #E5FFCC;
+  		font-size:80%;
+  		text-align:left;
+  	}
+  	#topbar p
+    {
+       	text-align: center;
+    }
+    #banner
+    {
+    	font-weight: bold;
+    	font-style: italic;
+    	font-size: 130%;
+	}
+	fieldset {background-color: #E8E8E8;}
+	#submitspan {float: right;}
+	#errormessage
+	{
+		float: left;
+		font-weight: bold;
+		font-style: italic;
+		color: red;
+	}
+	button {background-color: #336699; color: #fffff;}
+  </style>
+</head>
+<body>
+  <div id="topbar" class="topbar">
+    <img src="onclogo" height="55" width="75"/>
+    <p><span id="banner">ONC Family Contact Information Update Form</span><br>
+	<span id="message">(please edit and click Submit To ONC to update contact info)</span></p>
+  </div>
+  <form id="familyupdate" action="updatefamily" onsubmit="return submitUpdate()" method="post">
+  <input type="hidden" name="token" value="REPLACE_TOKEN">
+  <input id="year" type="hidden" name="year">
+   <input type="hidden" name="targetid" value=TARGETID>
+  <br>
+  <fieldset>
+  <legend class="major">Head of Household Information</legend>
+    <input id="hohfn" title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFN" required>
+    <input id="hohln" title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLN" required>
+    <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onblur="verifyPhoneNumber(0)" required>
+    <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onblur="verifyPhoneNumber(1)">
+    <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onblur="verifyPhoneNumber(2)">
+  	<select id="language" title="Primary language" name="language">
+		<option value="English">English</option>
+		<option value="Spanish">Spanish</option>
+		<option value="Arabic">Arabic</option>
+		<option value="Korean">Korean</option>
+		<option value="Vietnamese">Vietnamese</option>
+		<option value="Other">Other</option>
+		<option value="?">Unknown</option>
+	</select>
+	<br>
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onblur="verifyHOHAddress()" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onblur="verifyHOHAddress()" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #">
+    <input id="city"  title="City" name="city" type="text" size="20" placeholder="City" required>
+    <select id="zipcode" title="Zip Code" name="zipcode">
+		<option value="20120">20120</option>
+		<option value="20121">20121</option>
+		<option value="20124">20124</option>
+		<option value="20151">20151</option>
+		<option value="22033">22033</option>
+		<option value="22039">22039</option>
+	</select>
+	<input id="email" title="E-mail address" name="email" type="email" size="30" placeholder="email address">
+  </fieldset>
+  <br>
+  <fieldset>
+  <legend class="major">Delivery Address: Update address that ONC will use for gift delivery</legend>
+	<input id="checkbox" type="checkbox" id="sameaddress" onclick="sameAddressClicked(this)">Check if same as HOH address, otherwise complete:
+	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onblur="verifyDeliveryAddress()" required>
+    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onblur="verifyDeliveryAddress()" required>
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #">
+    <input id="delcity" title="Delivery City" name="delcity" type="text" size="20" placeholder="City" required>
+    <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
+		<option value="20120">20120</option>
+		<option value="20121">20121</option>
+		<option value="20124">20124</option>
+		<option value="20151">20151</option>
+		<option value="22033">22033</option>
+		<option value="22039">22039</option>
+	</select>
+  </fieldset>
+  <br>
+  <fieldset>
+   <legend class="major">Family Details: Update details (if any) about family you think ONC should know</legend>
+	<input id="detail" type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
+  </fieldset>
+  <br>
+  <div>
+  	<span id="errormessage"></span>
+  	<span id="submitspan">
+  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
+  	  <input id="submit" type="submit" value="Submit Update to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC">
+  	</span>
+  </div>
+</form>
+</body>
+</html>   

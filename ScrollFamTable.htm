@@ -9,6 +9,7 @@
 	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
 	var urlRefer = url.concat("/referral");
+	var urlUpdate = url.concat("/familyupdate")
 	var urlCreateNewFamily = url.concat("/newfamily");
 	
 	var currYear;
@@ -260,7 +261,7 @@
         btn.value=family.id;
 		btn.value=family.HOHLastName;
         btn.innerHTML = "Edit";
-        btn.onclick=function() {details(family.targetID);};
+        btn.onclick=function() {update(family.targetID);};
         row.appendChild(btn);
         
         tabBody.appendChild(row);
@@ -296,9 +297,14 @@
     	    return false;
     }
     
-    function details(id)
+    function update(targetID)
     {
-    	alert(id);
+    	var params = {}
+		params["year"] = currYear.toString();
+		params["token"] = sessionStorage.getItem('token');
+		params["targetid"] = targetID;
+		
+		post(urlUpdate, params);
     }
     
 	function post(path, params, method) 

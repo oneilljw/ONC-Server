@@ -171,6 +171,48 @@ public class FamilyDB extends ONCServerDB
 			return "UPDATE_FAILED";
 	}
 	
+	ONCFamily update(int year, ONCFamily updatedFamily, boolean bAutoAssign)
+	{
+		//Find the position for the current family being replaced
+		FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
+		List<ONCFamily> fAL = fDBYear.getList();
+		int index = 0;
+		while(index < fAL.size() && fAL.get(index).getID() != updatedFamily.getID())
+			index++;
+		
+		//replace the current family object with the update. First, check for address change.
+		//if address has changed, update the region. 
+		if(index < fAL.size())
+		{
+			ONCFamily currFam = fAL.get(index);
+			
+			//check if the address has changed and a region update check is required
+			if(!currFam.getHouseNum().equals(updatedFamily.getHouseNum()) ||
+				!currFam.getStreet().equals(updatedFamily.getStreet()) ||
+				 !currFam.getCity().equals(updatedFamily.getCity()) ||
+				  !currFam.getZipCode().equals(updatedFamily.getZipCode()))
+			{
+//				System.out.println(String.format("FamilyDB - update: region change, old region is %d", currFam.getRegion()));
+				updateRegion(updatedFamily);	
+			}
+			
+			//check if the update is requesting automatic assignment of an ONC family number
+			//can only auto assign if ONC Number is not number and is not "DEL" and the
+			//region is valid
+			if(bAutoAssign && !updatedFamily.getONCNum().equals("DEL") && updatedFamily.getRegion() != 0 &&
+						  !Character.isDigit(updatedFamily.getONCNum().charAt(0)))
+			{
+				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getRegion()));
+			}
+			
+			fAL.set(index, updatedFamily);
+			fDBYear.setChanged(true);
+			return updatedFamily;
+		}
+		else
+			return null;
+	}
+	
 	int updateRegion(ONCFamily updatedFamily)
 	{
 		int reg = 0; //initialize return value to no region found
@@ -288,6 +330,26 @@ public class FamilyDB extends ONCServerDB
 			return "FAMILY_NOT_FOUND";
 	}
 	
+	static HtmlResponse getFamilyJSONP(int year, String targetID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		String response;
+		
+		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
+		
+		int index=0;
+		while(index<fAL.size() && !fAL.get(index).getODBFamilyNum().equals(targetID))
+			index++;
+		
+		if(index<fAL.size())
+			response = gson.toJson(fAL.get(index), ONCFamily.class);
+		else
+			response = "";
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
 	ONCFamily getFamily(int year, int id)	//id number set each year
 	{
 		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
@@ -301,11 +363,11 @@ public class FamilyDB extends ONCServerDB
 			return null;
 	}
 	
-	ONCFamily getFamilyByTargetID(int year, String idNum)	//Persistent odb, wfcm or onc id number string
+	ONCFamily getFamilyByTargetID(int year, String targetID)	//Persistent odb, wfcm or onc id number string
 	{
 		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
 		int index = 0;	
-		while(index < fAL.size() && !fAL.get(index).getODBFamilyNum().equals(idNum))
+		while(index < fAL.size() && !fAL.get(index).getODBFamilyNum().equals(targetID))
 			index++;
 		
 		if(index < fAL.size())

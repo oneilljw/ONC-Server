@@ -16,9 +16,7 @@ public class ONCWebServer
 		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
 		
 		HttpContext context;
-//		HttpContext context = server.createContext("/refresh", oncHttpHandler);
-//		context.getFilters().add(new ParameterFilter());
-		
+
 		context = server.createContext("/families", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		
@@ -59,6 +57,15 @@ public class ONCWebServer
 		context.getFilters().add(new ParameterFilter());
 		
 		context = server.createContext("/address", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/getfamily", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/referfamily", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/updatefamily", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		    
 		server.setExecutor(null); // creates a default executor
