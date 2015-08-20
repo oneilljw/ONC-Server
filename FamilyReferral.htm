@@ -15,6 +15,7 @@
   	var adultsJson= [];
   	var hohAddressGood = false;
   	var delAddressGood = false;
+  	var errorColor = '#FF9999';
   	
   	$(function() {
   	    $( "#childdob" ).datepicker({
@@ -390,7 +391,7 @@
 	      		else
 	      		{
 	      			hohAddressGood = false;
-	      			changeAddressBackground(addrElement, '#FF9999');
+	      			changeAddressBackground(addrElement, errorColor);
 //	      			alert("HOH Address invalid: doesn't exist, please correct");
 	      		}
 	      	});
@@ -424,7 +425,7 @@
 	      		else
 	      		{
 	      			delAddressGood = false;
-	      			changeAddressBackground(addrElement, '#FF9999');
+	      			changeAddressBackground(addrElement, errorColor);
 //	      			alert("Delivery Address invalid: doesn't exist, please correct");
 	      		}
 	      	});
@@ -432,10 +433,6 @@
 		else
 			delAddressGood = false;
 	}
-	function submitReferral()
-    {
-     	return hohAddressGood && delAddressGood;   
-    }
 	
 	function changeAddressBackground(elements, color)
 	{
@@ -452,6 +449,76 @@
 		}
 		
 		return address;
+	}
+	function verifyPhoneNumbers()
+	{
+		var errorMssg= "";
+		
+		var phoneName= ["Primary", "Alternate", "2nd Alternate"];
+		
+		if(document.getElementById('homephone').value=="")
+		{
+			document.getElementById('homephone').style.backgroundColor= errorColor;
+			errorMssg= "Submit Error: Primary Phone # missing"
+		}
+		else
+		{
+			var index=0;
+			while(index<phoneName.length && verifyPhoneNumber(index))
+				index++;
+			
+			if(index < phoneName.length)	
+				errorMssg= "Submit Error: " + phoneName[index] + " Phone # is invalid";	
+		}
+		
+		return errorMssg;	
+	}
+	function verifyPhoneNumber(elementNum)
+	{
+		var phoneElement= [document.getElementById('homephone'), 
+							document.getElementById('cellphone'),
+							document.getElementById('altphone')];
+		
+		var numberGood = true;
+		var number= phoneElement[elementNum].value;
+		
+		if(number == '')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===10 && number.indexOf("-")===-1 && number.indexOf(".")===-1)
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else
+		{
+			numberGood= false;
+			phoneElement[elementNum].style.backgroundColor = errorColor;
+		}
+		
+		return numberGood;
+	}
+	function submitReferral()
+	{
+		var phoneNumbersGood= true;
+		var errorElement = document.getElementById('errormessage');
+ 
+		if(hohAddressGood===false)
+			errorElement.textContent = "Submit Error: HoH address does not exist";
+		else if(delAddressGood===false)
+			errorElement.textContent = "Sumbit Error: Delivery address does not exist";
+		else
+		{	
+			//check phone numbers
+			var phoneMssg= verifyPhoneNumbers();
+			if(phoneMssg != '')
+			{
+				phoneNumbersGood=false;
+				errorElement.textContent=phoneMssg;
+			}
+		}
+		
+	    return hohAddressGood && delAddressGood && phoneNumbersGood;
 	}
   </script>
   <style>
@@ -506,7 +573,14 @@
     	font-size: 130%;
 	}
 	fieldset {background-color: #E8E8E8;}
-	.right {float: right;}
+	#submitspan {float: right;}
+	#errormessage
+	{
+		float: left;
+		font-weight: bold;
+		font-style: italic;
+		color: red;
+	}
 	table, th, td {border: 1px solid black;}
 	th, td {min-width: 60px; }
 	button {background-color: #336699; color: #fffff;}
@@ -527,9 +601,9 @@
   <legend class="major">Head of Household Information</legend>
     <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFN" required>
     <input title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLN" required>
-    <input title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #"required>
-    <input title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #">
-    <input title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="Alt. 2 Phone #">
+    <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onblur="verifyPhoneNumber(0)" required>
+    <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onblur="verifyPhoneNumber(1)">
+    <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onblur="verifyPhoneNumber(2)">
   	<select title="Primary language" name="language">
 		<option value="English">English</option>
 		<option value="Spanish">Spanish</option>
@@ -626,7 +700,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish per child; if clothing or footwear, please include size</legend>
+   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish, per child; if clothing or footwear, please include size</legend>
   	 <table id="wishtable" border="1">
   	<thead>
     	<tr>
@@ -657,9 +731,12 @@
 	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <br>
-  <div class=right>
-  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC">
+  <div>
+  	<span id="errormessage"></span>
+  	<span id="submitspan">
+  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
+  	  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC">
+  	</span>
   </div>
 </form>
 </body>
