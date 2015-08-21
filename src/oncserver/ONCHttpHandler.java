@@ -344,10 +344,6 @@ public class ONCHttpHandler implements HttpHandler
     				t.getRequestMethod().toLowerCase().equals("post"))
     		{
     			wc.updateTimestamp();
-    			Set<String> keyset = params.keySet();
-    			for(String key:keyset)
-    				System.out.println(String.format("/updatefamily key=%s, value=%s", key, params.get(key)));
-    		
     			FamilyResponseCode frc = processFamilyUpdate(wc, params);
     			
     			//submission processed, send the family table page back to the user
