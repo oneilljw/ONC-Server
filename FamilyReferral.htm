@@ -155,7 +155,6 @@
         	wish.name="wish" + cnum + wn;
         	wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
         	wish.setAttribute("size", 22);
-        	wish.required = true;
         	wlcell.appendChild(wish);
         	row.appendChild(wlcell);
         }
@@ -458,7 +457,7 @@
 		if(document.getElementById('homephone').value=="")
 		{
 			document.getElementById('homephone').style.backgroundColor= errorColor;
-			errorMssg= "Submit Error: Primary Phone # missing"
+			errorMssg= "Submission Error: Primary Phone # missing"
 		}
 		else
 		{
@@ -467,7 +466,7 @@
 				index++;
 			
 			if(index < phoneName.length)	
-				errorMssg= "Submit Error: " + phoneName[index] + " Phone # is invalid";	
+				errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
 		}
 		
 		return errorMssg;	
@@ -503,9 +502,9 @@
 		var errorElement = document.getElementById('errormessage');
  
 		if(hohAddressGood===false)
-			errorElement.textContent = "Submit Error: HoH address does not exist";
+			errorElement.textContent = "Submission Error: HoH address does not exist";
 		else if(delAddressGood===false)
-			errorElement.textContent = "Sumbit Error: Delivery address does not exist";
+			errorElement.textContent = "Submission Error: Delivery address does not exist";
 		else
 		{	
 			//check phone numbers
