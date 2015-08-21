@@ -322,18 +322,11 @@ public class ONCHttpHandler implements HttpHandler
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
-    			
-    			//get the family
-    			int year = Integer.parseInt((String) params.get("year"));
-    			String targetID = (String) params.get("targetid");
-    		
-    			FamilyDB famDB = FamilyDB.getInstance();
-    			ONCFamily fam = famDB.getFamilyByTargetID(year, targetID);
     		
     			//replace the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
     			response = response.replace("YEAR",(String) params.get("year"));
-    			response = response.replace("TARGETID",targetID);
+    			response = response.replace("TARGETID", (String) params.get("targetid"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -351,9 +344,9 @@ public class ONCHttpHandler implements HttpHandler
     				t.getRequestMethod().toLowerCase().equals("post"))
     		{
     			wc.updateTimestamp();
-//    			Set<String> keyset = params.keySet();
-//    			for(String key:keyset)
-//    				System.out.println(String.format("/updatefamily key=%s, value=%s", key, params.get(key)));
+    			Set<String> keyset = params.keySet();
+    			for(String key:keyset)
+    				System.out.println(String.format("/updatefamily key=%s, value=%s", key, params.get(key)));
     		
     			FamilyResponseCode frc = processFamilyUpdate(wc, params);
     			
@@ -528,7 +521,8 @@ public class ONCHttpHandler implements HttpHandler
 	    				userMssg = "This is your first visit!";
 	    			else
 	    			{
-	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy h:mm a z");
+//	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy h:mm a z");
+	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
 	    				sdf.setTimeZone(TimeZone.getDefault());
 	    				userMssg = "You last visited " + sdf.format(lastLogin);
 	    			}
