@@ -4,11 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import ourneighborschild.Agent;
-import ourneighborschild.DBYear;
-import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserPermission;
 
@@ -100,6 +100,9 @@ public class AgentDB extends ONCServerDB
 				if(FamilyDB.didAgentReferInYear(agent.getID(), year))
 					agentReferredInYearList.add(agent);
 		}
+		
+		//sort the list by name
+		Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
 			
 		String response = gson.toJson(agentReferredInYearList, listtype);
 		
@@ -315,5 +318,14 @@ public class AgentDB extends ONCServerDB
 			exportDBToCSV(agentDBYear.getList(),  header, path);
 			agentDBYear.setChanged(false);
 		}	
-	}	
+	}
+	
+	private static class ONCAgentNameComparator implements Comparator<Agent>
+	{
+		@Override
+		public int compare(Agent o1, Agent o2)
+		{
+			return o1.getAgentName().compareTo(o2.getAgentName());
+		}
+	}
 }

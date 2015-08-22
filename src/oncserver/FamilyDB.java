@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -16,8 +18,6 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCDelivery;
 import ourneighborschild.ONCFamily;
-import ourneighborschild.ONCObject;
-import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.WishStatus;
 import au.com.bytecode.opencsv.CSVReader;
@@ -118,6 +118,9 @@ public class FamilyDB extends ONCServerDB
 		
 		for(int i=0; i<searchList.size(); i++)
 			responseList.add(new ONCWebsiteFamily(searchList.get(i)));
+		
+		//sort the list by HoH last name
+		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
 		
 		String response = gson.toJson(responseList, listOfWebsiteFamilies);
 
@@ -733,4 +736,13 @@ public class FamilyDB extends ONCServerDB
     	
     	return delCount;
     }
+    
+    private static class ONCWebsiteFamilyLNComparator implements Comparator<ONCWebsiteFamily>
+	{
+		@Override
+		public int compare(ONCWebsiteFamily o1, ONCWebsiteFamily o2)
+		{
+			return o1.getHOHLastName().compareTo(o2.getHOHLastName());
+		}
+	}
 }
