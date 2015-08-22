@@ -309,10 +309,6 @@ public class ONCHttpHandler implements HttpHandler
     		String response = null;
     		WebClient wc;
     		
-//    		Set<String> keyset = params.keySet();
-//    		for(String key:keyset)
-//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
-    		
     		if((wc=clientMgr.findClient(sessionID)) != null)
     		{
     			wc.updateTimestamp();
@@ -338,7 +334,11 @@ public class ONCHttpHandler implements HttpHandler
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
     		String response = null;
-    		WebClient wc;
+    		WebClient wc; 		
+       		
+    		Set<String> keyset = params.keySet();
+    		for(String key:keyset)
+    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
     		
     		if((wc=clientMgr.findClient(sessionID)) != null && 
     				t.getRequestMethod().toLowerCase().equals("post"))
@@ -838,6 +838,13 @@ public class ONCHttpHandler implements HttpHandler
 				updateFam.setSubstituteDeliveryAddress(altAddress);
 			}
 			
+			updateFam.setHomePhone(familyMap.get("homephone"));
+			
+			if(familyMap.get("altphone").equals(""))
+				updateFam.setOtherPhon(familyMap.get("cellphone"));
+			else
+				updateFam.setOtherPhon(familyMap.get("cellphone") +"\n" + familyMap.get("altphone"));
+			updateFam.setFamilyEmail(familyMap.get("email"));
 			updateFam.setDetails(familyMap.get("detail"));	
 			
 			//if changes detected, update the family in the db
