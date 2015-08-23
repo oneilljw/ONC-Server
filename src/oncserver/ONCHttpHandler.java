@@ -124,6 +124,14 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = FamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
+    	else if(requestURI.contains("/getmeal"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		String targetID = (String) params.get("mealid");
+    		
+    		HtmlResponse response = ServerMealDB.getMealJSONP(year, targetID, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
     	else if(requestURI.contains("/children"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
@@ -239,11 +247,7 @@ public class ONCHttpHandler implements HttpHandler
     		ClientManager clientMgr = ClientManager.getInstance();
     		String response = null;
     		WebClient wc;
-    		
-//    		Set<String> keyset = params.keySet();
-//    		for(String key:keyset)
-//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
-    		
+    			
     		if((wc=clientMgr.findClient(sessionID)) != null)
     		{
     			wc.updateTimestamp();
@@ -336,9 +340,9 @@ public class ONCHttpHandler implements HttpHandler
     		String response = null;
     		WebClient wc; 		
        		
-    		Set<String> keyset = params.keySet();
-    		for(String key:keyset)
-    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+//    		Set<String> keyset = params.keySet();
+//    		for(String key:keyset)
+//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
     		
     		if((wc=clientMgr.findClient(sessionID)) != null && 
     				t.getRequestMethod().toLowerCase().equals("post"))
@@ -1015,7 +1019,6 @@ public class ONCHttpHandler implements HttpHandler
 			if(value == null  || value.isEmpty())
 			{
 				errorMap.put(entry.getKey(), entry.getValue());
-				System.out.println(entry.getValue());
 				break;
 			}
 		}

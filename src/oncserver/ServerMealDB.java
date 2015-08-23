@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
 
 import com.google.gson.Gson;
@@ -17,7 +18,7 @@ public class ServerMealDB extends ONCServerDB
 	private static final int BASE_YEAR = 2012;
 	private static ServerMealDB instance = null;
 
-	private List<MealDBYear> mealDB;
+	private static List<MealDBYear> mealDB;
 	
 	private ServerMealDB() throws FileNotFoundException, IOException
 	{
@@ -58,6 +59,27 @@ public class ServerMealDB extends ONCServerDB
 		
 		String response = gson.toJson(mealDB.get(year-BASE_YEAR).getList(), listOfMeals);
 		return response;	
+	}
+	
+	static HtmlResponse getMealJSONP(int year, String mealID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		String response;
+		
+		List<ONCMeal> mAL = mealDB.get(year-BASE_YEAR).getList();
+		int mID = Integer.parseInt(mealID);
+		
+		int index=0;
+		while(index<mAL.size() && mAL.get(index).getID() != mID)
+			index++;
+		
+		if(index < mAL.size())
+			response = gson.toJson(mAL.get(index), ONCMeal.class);
+		else
+			response = "";
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
 	@Override

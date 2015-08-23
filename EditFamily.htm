@@ -6,11 +6,11 @@
   <script> 
   	var url = window.location.protocol + '://' + window.location.host;
   	var urlFamily = url.concat("/getfamily?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
+  	var urlMeal = url.concat("/getmeal?token=REPLACE_TOKEN&year=YEAR&mealid=MEALID&callback=?");
   	var urlAddress = url.concat("/address?token=REPLACE_TOKEN&housenum=HOUSENUM&street=STREET&city=CITY&zipcode=ZIPCODE&callback=?");
   	var hohAddressGood = false;
   	var delAddressGood = false;
   	var errorColor = '#FF9999';
-  	var familyJson =[];
   	
   	$( document ).ready(function()
 	{
@@ -20,12 +20,21 @@
   		var urlmode = window.location.href;
   		if(urlmode.indexOf("familyupdate") > -1)
   		{
-  			$.getJSON(urlFamily, function(data)
+  			$.getJSON(urlFamily, function(family)
   			{
-  		     	familyJson = data;
-  		     	updateFamilyInfo(data);
+  		     	updateFamilyInfo(family);
   		     	verifyHOHAddress();
   		     	verifyDeliveryAddress();
+  		     	
+  		     	//get meal and update if family meal id > 1
+  		     	if(family.mealID > -1)
+  		     	{
+  		     		urlMeal = urlMeal.replace("MEALID", family.mealID.toString());
+  		     		$.getJSON(urlMeal, function(meal)
+  		     	  	{
+  		     			updateMealRequest(family, meal);
+  		     		});
+  		     	}
   			});
   		}	
   		
@@ -51,19 +60,29 @@
   	
   	function updateFamilyInfo(family)
   	{		        
-  		var familyElements = [family.HOHFirstName, family.HOHLastName, family.HomePhone,
-  			                    family.OtherPhone, family.Language, family.HouseNum, family.Street, 
-  			                    family.UnitNum, family.City, family.ZipCode, family.FamilyEmail, 
-  			                    family.details];
+  		var familyElements = [family.HOHFirstName, family.HOHLastName, family.Language, family.HouseNum, family.Street, 
+  			                    family.UnitNum, family.City, family.ZipCode, family.FamilyEmail, family.details];
   			
-  		var formElements = ['hohfn', 'hohln', 'homephone', 'cellphone', 'language',
-  			                    'housenum', 'street', 'unit', 'city', 'zipcode', 'email', 'detail'];
+  		var formElements = ['hohfn', 'hohln','language', 'housenum', 'street', 'unit', 'city', 'zipcode', 'email', 'detail'];
   			
-  		//set normal elements
+  		//set name, HoH address, email and detail elements
   		for(var i=0; i<familyElements.length; i++)
   			document.getElementById(formElements[i]).value = familyElements[i];
+  	
+  		//set phone elements
+  		var homephoneParts= family.HomePhone.split(/\r\n|\r|\n/g);
+  		document.getElementById('homephone').value = homephoneParts[0];
+  		
+  		var otherphoneParts= family.OtherPhone.split(/\r\n|\r|\n/g);
+  		if(otherphoneParts.length > 1)
+  		{
+  			document.getElementById('cellphone').value = otherphoneParts[0];
+  			document.getElementById('altphone').value = otherphoneParts[1];
+  		}
+  		else if(otherphoneParts.length === 1)
+  			document.getElementById('cellphone').value = otherphoneParts[0];
   			
-  		//deal with the exceptions
+  		//set delivery adress elements
   		var deliveryAddr = family.substituteDeliveryAddress.split('_');
   		var hohAddrElements = [family.HouseNum, family.Street, family.UnitNum, family.City, family.ZipCode];
   		var delAddrElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
@@ -78,7 +97,13 @@
   			cb.checked= true;
   			sameAddressClicked(cb);
   		}		
- 		//DEAL WITH ALTPHONE HERE
+  	}
+  	
+  	function updateMealRequest(family, meal)
+  	{
+  		document.getElementById('mealstatus').value = family.mealStatus;
+  		document.getElementById('mealtype').value = meal.type;
+  		document.getElementById('dietres').value = meal.dietaryRestrictions
   	}
 	
 	function sameAddressClicked(cb)
@@ -331,7 +356,7 @@
 		font-style: italic;
 		color: red;
 	}
-	button {background-color: #336699; color: #fffff;}
+	button { background-color: #336699; color: #fffff; }
   </style>
 </head>
 <body>
@@ -392,6 +417,21 @@
 		<option value="22033">22033</option>
 		<option value="22039">22039</option>
 	</select>
+  </fieldset>
+  <br>
+   <fieldset>
+  <legend class="major">Meal Assistance Request Status: For information only, can not be edited after original sumbittal</legend>
+ 	<label for='mealstatus'>Status:</label>
+	<input id='mealstatus' type="text" size="12" title="Status of meal request" disabled>
+	<label for='mealtype'>Requested For:</label>
+    <select id="mealtype" name="mealtype" style="width: 102px" title="When does the family need meal assistance?" disabled>
+		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
+		<option value="Thanksgiving">Thanksgiving</option>
+		<option value="December">December</option>
+		<option value="Both">Both</option>
+	</select>
+	<label for='dietres'>Restrictions:</label>
+	<input id="dietres" type="text" name="dietres" size="64" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
   </fieldset>
   <br>
   <fieldset>

@@ -742,7 +742,7 @@ public class FamilyDB extends ONCServerDB
 		@Override
 		public int compare(ONCWebsiteFamily o1, ONCWebsiteFamily o2)
 		{
-			return o1.getHOHLastName().compareTo(o2.getHOHLastName());
+			return o1.getHOHLastName().toLowerCase().compareTo(o2.getHOHLastName().toLowerCase());
 		}
 	}
 }
