@@ -136,10 +136,8 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		int year = Integer.parseInt((String) params.get("year"));
     		int famID = FamilyDB.getFamilyID(year, (String) params.get("targetid"));
-    		System.out.println("famID=" + famID);
     		
     		HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
-    		System.out.println(response.getResponse());
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/adults"))
