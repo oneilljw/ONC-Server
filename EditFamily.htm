@@ -35,6 +35,8 @@
   		     			updateMealRequest(family, meal);
   		     		});
   		     	}
+  		     	else
+  		     		document.getElementById('mealstatus').value = "None";
   			});
   		}	
   		
@@ -424,7 +426,7 @@
  	<label for='mealstatus'>Status:</label>
 	<input id='mealstatus' type="text" size="12" title="Status of meal request" disabled>
 	<label for='mealtype'>Requested For:</label>
-    <select id="mealtype" name="mealtype" style="width: 102px" title="When does the family need meal assistance?" disabled>
+    <select id="mealtype" name="mealtype" style="width: 102px" title="For which holidays does the family need meal assistance: Thanksgiving, December or Both?" disabled>
 		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
 		<option value="Thanksgiving">Thanksgiving</option>
 		<option value="December">December</option>
