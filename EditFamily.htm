@@ -4,23 +4,26 @@
   <title>ONC Family Contact Info Update</title>
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   <script> 
-  	var url = window.location.protocol + '://' + window.location.host;
-  	var urlFamily = url.concat("/getfamily?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
-  	var urlMeal = url.concat("/getmeal?token=REPLACE_TOKEN&year=YEAR&mealid=MEALID&callback=?");
-  	var urlAddress = url.concat("/address?token=REPLACE_TOKEN&housenum=HOUSENUM&street=STREET&city=CITY&zipcode=ZIPCODE&callback=?");
-  	var hohAddressGood = false;
+	var hohAddressGood = false;
   	var delAddressGood = false;
   	var errorColor = '#FF9999';
   	
   	$( document ).ready(function()
 	{
-  		var yearinput = document.getElementById("year");
-  		yearinput.value = new Date().getFullYear().toString();
+  		//set the hidden values
+  		document.getElementById('year').value= new Date().getFullYear().toString();
+  		document.getElementById('token').value= sessionStorage.getItem("token");
+  		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   		
   		var urlmode = window.location.href;
   		if(urlmode.indexOf("familyupdate") > -1)
   		{
-  			$.getJSON(urlFamily, function(family)
+  			familyparams = "token=" + sessionStorage.getItem("token") + "&" +
+  							"year=" + new Date().getFullYear().toString() + "&" +
+  							"targetid=" + sessionStorage.getItem("targetid") + "&" +
+  							"callback=?";
+  			
+  			$.getJSON('getfamily', familyparams, function(family)
   			{
   		     	updateFamilyInfo(family);
   		     	verifyHOHAddress();
@@ -29,8 +32,12 @@
   		     	//get meal and update if family meal id > 1
   		     	if(family.mealID > -1)
   		     	{
-  		     		urlMeal = urlMeal.replace("MEALID", family.mealID.toString());
-  		     		$.getJSON(urlMeal, function(meal)
+  		     		var mealparams = "token=" + sessionStorage.getItem("token") + "&" +
+  		     						"year=" + new Date().getFullYear().toString() + "&" +
+  		     						"mealid=" + family.mealID.toString() + "&" +
+  		     						"callback=?";	
+  		     					
+  		     		$.getJSON('getmeal', mealparams, function(meal)
   		     	  	{
   		     			updateMealRequest(family, meal);
   		     		});
@@ -154,9 +161,9 @@
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 		{
 			//form the address url
-	        var verifyAddressUrl = createAddressUrl(addrElement, urlAddress);
+	        var addressparams = createAddressParams(addrElement);
 	        var addrresponse;
-	        $.getJSON(verifyAddressUrl, function(data)
+	        $.getJSON('address', addressparams, function(data)
 	      	{
 	      		addrresponse = data;
 	      		
@@ -188,9 +195,9 @@
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 		{
 			//form the address url
-	        var verifyAddressUrl = createAddressUrl(addrElement, urlAddress);
+	        var addressparams = createAddressParams(addrElement);
 	        var addrresponse;
-	        $.getJSON(verifyAddressUrl, function(data)
+	        $.getJSON('address',  addressparams, function(data)
 	      	{
 	      		addrresponse = data;
 	      		
@@ -216,16 +223,17 @@
 			elements[0].style.backgroundColor = color;
 			elements[1].style.backgroundColor = color;
 	}
-	function createAddressUrl(addrElement, baseAddress)
+	function createAddressParams(addrElement)
 	{
-		var replText = ["HOUSENUM", "STREET", "CITY", "ZIPCODE"];
-		var address = baseAddress;
-		for(var i=0; i< addrElement.length; i++)
-		{
-			address = address.replace(replText[i], addrElement[i].value);	
-		}
+
+		var addressparams = "token=" + sessionStorage.getItem("token") + "&" +
+							"housenum=" + addrElement[0].value + "&" +
+							"street=" + addrElement[1].value + "&" +
+							"city=" + addrElement[2].value + "&" +
+							"zipcode=" + addrElement[3].value + "&" +
+							"callback=?";
 		
-		return address;
+		return addressparams;
 	}
 	function verifyPhoneNumbers()
 	{
@@ -368,9 +376,9 @@
 	<span id="message">(please edit and click Submit To ONC to update contact info)</span></p>
   </div>
   <form id="updatefamily" action="updatefamily" onsubmit="return submitUpdate()" method="post">
-  <input type="hidden" name="token" value="REPLACE_TOKEN">
+  <input id='token' type="hidden" name="token">
   <input id="year" type="hidden" name="year">
-   <input type="hidden" name="targetid" value=TARGETID>
+  <input id='targetid' type="hidden" name="targetid">
   <br>
   <fieldset>
   <legend class="major">Head of Household Information</legend>
@@ -426,14 +434,14 @@
  	<label for='mealstatus'>Status:</label>
 	<input id='mealstatus' type="text" size="12" title="Status of meal request" disabled>
 	<label for='mealtype'>Requested For:</label>
-    <select id="mealtype" name="mealtype" style="width: 102px" title="For which holidays does the family need meal assistance: Thanksgiving, December or Both?" disabled>
+    <select id="mealtype" name="mealtype" style="width: 120px" title="For which holidays does the family need meal assistance: Thanksgiving, December or Both?" disabled>
 		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
 		<option value="Thanksgiving">Thanksgiving</option>
 		<option value="December">December</option>
 		<option value="Both">Both</option>
 	</select>
 	<label for='dietres'>Restrictions:</label>
-	<input id="dietres" type="text" name="dietres" size="64" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
+	<input id="dietres" type="text" name="dietres" size="60" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
   </fieldset>
   <br>
   <fieldset>

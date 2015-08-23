@@ -136,8 +136,10 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		int year = Integer.parseInt((String) params.get("year"));
     		int famID = FamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    		System.out.println("famID=" + famID);
     		
     		HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
+    		System.out.println(response.getResponse());
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/adults"))
@@ -212,12 +214,13 @@ public class ONCHttpHandler implements HttpHandler
     				System.out.println("Couldn't open/find " + REFERRAL_HTML);
     				e.printStackTrace();
     			}
-    			
+/*    			
     			//remove the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
     			response = response.replace("TARGETID","NNA");
     			response = response.replace("value=\"HOHFN\"","");
     			response = response.replace("value=\"HOHLN\"", "");
+*/    			
     		}
     		else
     			response = invalidTokenReceived();
@@ -257,20 +260,20 @@ public class ONCHttpHandler implements HttpHandler
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
-    			
+/*    			
     			//get the family
     			int year = Integer.parseInt((String) params.get("year"));
     			String targetID = (String) params.get("targetid");
     		
     			FamilyDB famDB = FamilyDB.getInstance();
-    			ONCFamily fam = famDB.getFamilyByTargetID(year, targetID);
-    		
+    			ONCFamily fam = famDB.getFamilyByTargetID(year, targetID);    		
     			//replace the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
     			response = response.replace("YEAR",(String) params.get("year"));
     			response = response.replace("TARGETID",targetID);
     			response = response.replace("HOHFN",fam.getHOHFirstName());
     			response = response.replace("HOHLN", fam.getHOHLastName());
+*/    			
     		}
     		else
     			response = invalidTokenReceived();
@@ -322,11 +325,12 @@ public class ONCHttpHandler implements HttpHandler
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
-    		
+/*    		
     			//replace the place holders
     			response = response.replace("REPLACE_TOKEN", sessionID);
     			response = response.replace("YEAR",(String) params.get("year"));
     			response = response.replace("TARGETID", (String) params.get("targetid"));
+*/    			
     		}
     		else
     			response = invalidTokenReceived();

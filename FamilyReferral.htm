@@ -6,10 +6,6 @@
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
   <script> 
-  	var url = window.location.protocol + '://' + window.location.host;
-	var urlChildren = url.concat("/children?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
-  	var urlAdults = url.concat("/adults?token=REPLACE_TOKEN&year=YEAR&targetid=TARGETID&callback=?");
-  	var urlAddress = url.concat("/address?token=REPLACE_TOKEN&housenum=HOUSENUM&street=STREET&city=CITY&zipcode=ZIPCODE&callback=?");
   	var childrenJson= [];
   	var adultsJson= [];
   	var hohAddressGood = false;
@@ -25,20 +21,45 @@
   	
   	$( document ).ready(function()
 	{
-  		var yearinput = document.getElementById("year");
-  		yearinput.value = new Date().getFullYear().toString();
+  		//set the hidden values
+  		document.getElementById('year').value= new Date().getFullYear().toString();
+  		document.getElementById('token').value= sessionStorage.getItem("token");
+  		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   		
   		var urlmode = window.location.href;
   		if(urlmode.indexOf("referral") > -1)
   		{
-  			$.getJSON(urlChildren, function(data)
+  			
+  			familyparams = "token=" + sessionStorage.getItem("token") + "&" +
+				"year=" + sessionStorage.getItem("prioryear") + "&" +
+				"targetid=" + sessionStorage.getItem("targetid") + "&" +
+				"callback=?";
+
+			$.getJSON('getfamily', familyparams, function(family)
+			{
+				console.log(family);
+				document.getElementById('hohfn').value= family.HOHFirstName;
+				document.getElementById('hohln').value= family.HOHLastName;
+			});
+			
+  			childrenparams=  "token=" + sessionStorage.getItem("token") + "&" +
+							"year=" + sessionStorage.getItem("prioryear") + "&" +
+							"targetid=" + sessionStorage.getItem("targetid") + "&" +
+							"callback=?";
+  			
+  			$.getJSON('children', childrenparams, function(data)
   			{
   		     	childrenJson = data;
   		     	updateChildTable();
   		     	updateWishTable();
   			});
   		
-  			$.getJSON(urlAdults, function(data)
+  			adultsparams=  "token=" + sessionStorage.getItem("token") + "&" +
+  			"year=" + sessionStorage.getItem("prioryear") + "&" +
+			"targetid=" + sessionStorage.getItem("targetid") + "&" +
+			"callback=?";
+  			
+  			$.getJSON('adults', adultsparams, function(data)
   			{
   		     	adultsJson = data;
   		     	updateAdultTable();
@@ -375,9 +396,9 @@
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 		{
 			//form the address url
-	        var verifyAddressUrl = createAddressUrl(addrElement, urlAddress);
+	        var addressparams = createAddressParams(addrElement);
 	        var addrresponse;
-	        $.getJSON(verifyAddressUrl, function(data)
+	        $.getJSON('address', addressparams, function(data)
 	      	{
 	      		addrresponse = data;
 	      		
@@ -409,9 +430,9 @@
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 		{
 			//form the address url
-	        var verifyAddressUrl = createAddressUrl(addrElement, urlAddress);
+	        var addressparams = createAddressParams(addrElement);
 	        var addrresponse;
-	        $.getJSON(verifyAddressUrl, function(data)
+	        $.getJSON('address',  addressparams, function(data)
 	      	{
 	      		addrresponse = data;
 	      		
@@ -437,16 +458,17 @@
 			elements[0].style.backgroundColor = color;
 			elements[1].style.backgroundColor = color;
 	}
-	function createAddressUrl(addrElement, baseAddress)
+	function createAddressParams(addrElement)
 	{
-		var replText = ["HOUSENUM", "STREET", "CITY", "ZIPCODE"];
-		var address = baseAddress;
-		for(var i=0; i< addrElement.length; i++)
-		{
-			address = address.replace(replText[i], addrElement[i].value);	
-		}
+
+		var addressparams = "token=" + sessionStorage.getItem("token") + "&" +
+							"housenum=" + addrElement[0].value + "&" +
+							"street=" + addrElement[1].value + "&" +
+							"city=" + addrElement[2].value + "&" +
+							"zipcode=" + addrElement[3].value + "&" +
+							"callback=?";
 		
-		return address;
+		return addressparams;
 	}
 	function verifyPhoneNumbers()
 	{
@@ -591,14 +613,14 @@
 	<span id="message">(please complete and click Submit To ONC)</span></p>
   </div>
   <form id="familyreferral" action="referfamily" onsubmit="return submitReferral()" method="post">
-  <input type="hidden" name="token" value="REPLACE_TOKEN">
-  <input id="year" type="hidden" name="year">
-   <input type="hidden" name="targetid" value=TARGETID>
+  <input id='token' type="hidden" name="token">
+  <input id='year' type="hidden" name="year">
+  <input id='targetid' type="hidden" name="targetid">
   <br>
   <fieldset>
   <legend class="major">Head of Household Information</legend>
-    <input title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFN" required>
-    <input title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLN" required>
+    <input id='hohfn' title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" required>
+    <input id='hohln' title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name" required>
     <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onblur="verifyPhoneNumber(0)" required>
     <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onblur="verifyPhoneNumber(1)">
     <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onblur="verifyPhoneNumber(2)">

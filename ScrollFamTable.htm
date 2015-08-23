@@ -4,14 +4,6 @@
     <title>ONC Family Table</title>
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
-	var url = window.location.protocol + '://' + window.location.host;
-	var urlYears = url.concat("/dbStatus?token=REPLACE_TOKEN&callback=?");
-	var urlAgents = url.concat("/agents?token=REPLACE_TOKEN&year=YEAR&callback=?");
-	var urlFamilies = url.concat("/families?token=REPLACE_TOKEN&year=YEAR&callback=?");
-	var urlRefer = url.concat("/referral");
-	var urlUpdate = url.concat("/familyupdate")
-	var urlCreateNewFamily = url.concat("/newfamily");
-	
 	var currYear;
 	var priorYear;
 	var pyFamJson = [];
@@ -25,9 +17,11 @@
 		document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
 		
 		priorYear = new Date().getFullYear()-1;
+		sessionStorage.setItem("prioryear", priorYear);
 		
     	//get the list of years from the data base and put it in the year combo box
-    	$.getJSON(urlYears, function(data)
+    	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+    	$.getJSON('dbStatus', dbyearsparams, function(data)
     	{
 			var combo = document.getElementById("dbYears");
     		for (var i = data.length-1; i >= 0; i--)
@@ -56,7 +50,9 @@
     
     function getPYFamiliesFromServer(year)
     {
-    	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
+    	familiesparams = "token=" + sessionStorage.getItem("token") + "&" +
+    	"year=" + sessionStorage.getItem("prioryear") + "&callback=?";
+    	$.getJSON('families', familiesparams, function(data)
     	{
     		pyFamJson = data;
     		updatePYTable();
@@ -65,7 +61,10 @@
     
     function getCYFamiliesFromServer(year)
     {
-    	$.getJSON(urlFamilies.replace("YEAR", year.toString()), function(data)
+    	familiesparams = "token=" + sessionStorage.getItem("token") + "&" +
+		  				 "year=" + currYear.toString() + "&callback=?";
+    	
+    	$.getJSON('families', familiesparams, function(data)
     	{
     		cyFamJson = data;
     		updateCYTable();
@@ -81,7 +80,10 @@
     	agtcb.options.length = 0;
 		
     	//get updated agentJson from server and place into combobox
-    	$.getJSON(urlAgents.replace("YEAR", year.toString()), function(data)
+    	var agentsparams = "token=" + sessionStorage.getItem("token") + "&" +
+    						"year=" + sessionStorage.getItem("prioryear") + "&callback=?";
+    	
+    	$.getJSON('agents', agentsparams, function(data)
     	{
 			//add the "Anyone" option if there is more than one agent object
 			if(data.length > 1)
@@ -128,7 +130,10 @@
     	agtcb.options.length = 0;
 		
     	//get updated agentJson from server and place into combobox
-    	$.getJSON(urlAgents.replace("YEAR", year.toString()), function(data)
+    	var agentsparams = "token=" + sessionStorage.getItem("token") + "&" +
+    						"year=" + currYear.toString() + "&callback=?";
+    	
+    	$.getJSON('agents', agentsparams, function(data)
     	{
 			//add the "Anyone" option if there is more than one agent object
 			if(data.length > 1)
@@ -174,6 +179,7 @@
     	//get selected year
     	var yearCB = document.getElementById("dbYears");
 		priorYear = yearCB.options[yearCB.selectedIndex].value;
+		sessionStorage.setItem("prioryear", priorYear);
     	
     	getPYAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
     }
@@ -269,12 +275,14 @@
     
     function referFamily(targetID)
     {
+    	sessionStorage.setItem("targetid", targetID);
+    	
 		var params = {}
 		params["year"] = priorYear.toString();
 		params["token"] = sessionStorage.getItem('token');
 		params["targetid"] = targetID;
 		
-		post(urlRefer, params);
+		post('referral', params);
     }
     
     function newFamily()
@@ -282,7 +290,7 @@
     	var params = {}
 		params["token"] = sessionStorage.getItem('token');
 		
-		post(urlCreateNewFamily, params);
+		post('newfamily', params);
     }
     
     function alreadyReferred(targetID)
@@ -299,12 +307,13 @@
     
     function update(targetID)
     {
+    	sessionStorage.setItem("targetid", targetID);
     	var params = {}
 		params["year"] = currYear.toString();
 		params["token"] = sessionStorage.getItem('token');
 		params["targetid"] = targetID;
 		
-		post(urlUpdate, params);
+		post('familyupdate', params);
     }
     
 	function post(path, params, method) 
