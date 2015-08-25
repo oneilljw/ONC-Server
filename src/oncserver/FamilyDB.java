@@ -19,6 +19,7 @@ import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCDelivery;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCWebsiteFamily;
+import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.WishStatus;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -345,7 +346,10 @@ public class FamilyDB extends ONCServerDB
 			index++;
 		
 		if(index<fAL.size())
-			response = gson.toJson(fAL.get(index), ONCFamily.class);
+		{
+			ONCWebsiteFamilyExtended family = new ONCWebsiteFamilyExtended(fAL.get(index));
+			response = gson.toJson(family, ONCWebsiteFamilyExtended.class);
+		}
 		else
 			response = "";
 		

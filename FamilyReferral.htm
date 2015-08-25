@@ -37,7 +37,6 @@
 
 			$.getJSON('getfamily', familyparams, function(family)
 			{
-				console.log(family);
 				document.getElementById('hohfn').value= family.HOHFirstName;
 				document.getElementById('hohln').value= family.HOHLastName;
 			});
