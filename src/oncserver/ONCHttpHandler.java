@@ -304,7 +304,12 @@ public class ONCHttpHandler implements HttpHandler
     			FamilyResponseCode frc = processFamilyReferral(wc, params);
     			
     			//submission processed, send the family table page back to the user
-    			String userFN = wc.getWebUser().getFirstname();
+    			String userFN;
+    			if(wc.getWebUser().getFirstname().equals(""))
+    				userFN = wc.getWebUser().getLastname();
+    			else
+    				userFN = wc.getWebUser().getFirstname();
+    				
     			response = getFamilyTableHTML(DEFAULT_YEAR, -1);
     			response= response.replace("USER_NAME", userFN);
     			response= response.replace("USER_MESSAGE", frc.getMessage());
@@ -361,7 +366,12 @@ public class ONCHttpHandler implements HttpHandler
     			FamilyResponseCode frc = processFamilyUpdate(wc, params);
     			
     			//submission processed, send the family table page back to the user
-    			String userFN = wc.getWebUser().getFirstname();
+    			String userFN;
+    			if(wc.getWebUser().getFirstname().equals(""))
+    				userFN = wc.getWebUser().getLastname();
+    			else
+    				userFN = wc.getWebUser().getFirstname();
+    			
     			response = getFamilyTableHTML(DEFAULT_YEAR, -1);
     			response= response.replace("USER_NAME", userFN);
     			response= response.replace("USER_MESSAGE", frc.getMessage());
@@ -405,7 +415,11 @@ public class ONCHttpHandler implements HttpHandler
     			if(retCode == 0)
     			{
     				//submission successful, send the family table page back to the user
-    				String userFN = wc.getWebUser().getFirstname();
+    				String userFN;
+        			if(wc.getWebUser().getFirstname().equals(""))
+        				userFN = wc.getWebUser().getLastname();
+        			else
+        				userFN = wc.getWebUser().getFirstname();
     				response = getFamilyTableHTML(DEFAULT_YEAR, -1);
     				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", "Your password change was successful!");
@@ -542,7 +556,11 @@ public class ONCHttpHandler implements HttpHandler
 	    			}
 	    		
 	    			html = getFamilyTableHTML(DEFAULT_YEAR, -1);
-	    			html = html.replace("USER_NAME", serverUser.getFirstname());
+	    			if(serverUser.getFirstname().equals(""))
+	    				html = html.replace("USER_NAME", serverUser.getLastname());
+	    			else
+	    				html = html.replace("USER_NAME", serverUser.getFirstname());
+//	    			html = html.replace("USER_NAME", serverUser.getFirstname());
 	    			html = html.replace("USER_MESSAGE", userMssg);
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 	    				
