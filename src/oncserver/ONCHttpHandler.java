@@ -512,7 +512,11 @@ public class ONCHttpHandler implements HttpHandler
 	    			clientMgr.notifyAllClients(mssg);
 	    			
 	    			//replace the HTML place holders
-	    			html = html.replace("USERFN", serverUser.getFirstname());
+	    			if(serverUser.getFirstname().equals(""))
+	    				html = html.replace("USERFN", serverUser.getLastname());
+	    			else
+	    				html = html.replace("USERFN", serverUser.getFirstname());
+	    			
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
