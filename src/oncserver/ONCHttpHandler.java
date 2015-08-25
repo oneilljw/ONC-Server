@@ -57,7 +57,7 @@ public class ONCHttpHandler implements HttpHandler
 		ServerUI serverUI = ServerUI.getInstance();
 		serverUI.addLogMessage(mssg);
     	
-    	if(requestURI.equals("/"))
+    	if(requestURI.equals("/welcome"))
     	{
     		String response = null;
     		try {	
@@ -79,16 +79,22 @@ public class ONCHttpHandler implements HttpHandler
     		if(!clientMgr.logoutWebClient(sessionID))
     			clientMgr.addLogMessage(String.format("ONCHttpHandler.handle/logut: logout failure, client %s not found", sessionID));
     		
-    		String response = null;
-    		try {	
-    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
-    		} catch (IOException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
+//    		String response = null;
+// 			try {	
+   // 			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), RETURN_TO_ONC_HTML));
+   // 		} catch (IOException e) {
+   // 			// TODO Auto-generated catch block
+   // 			e.printStackTrace();
+   // 		}
+    		Headers header = t.getResponseHeaders();
+    		ArrayList<String> headerList = new ArrayList<String>();
+    		headerList.add("http://www.ourneighborschild.org");
+    		header.put("Location", headerList);
+   //		response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
+   //		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     		
-    		response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
+    		
     	}
     	else if(requestURI.contains("/login"))
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));

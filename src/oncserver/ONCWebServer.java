@@ -38,8 +38,8 @@ public class ONCWebServer
 		context = server.createContext("/onclogo", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		    
-		context = server.createContext("/", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
+//		context = server.createContext("/", oncHttpHandler);
+//		context.getFilters().add(new ParameterFilter());
 		
 		context = server.createContext("/login", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
@@ -66,6 +66,9 @@ public class ONCWebServer
 		context.getFilters().add(new ParameterFilter());
 		
 		context = server.createContext("/updatefamily", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/welcome", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		    
 		server.setExecutor(null); // creates a default executor
