@@ -97,7 +97,9 @@ public class ONCHttpHandler implements HttpHandler
     		
     	}
     	else if(requestURI.contains("/login"))
+    	{
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
+    	}
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
     	{
     		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));

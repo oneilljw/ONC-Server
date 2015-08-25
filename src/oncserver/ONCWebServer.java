@@ -15,8 +15,19 @@ public class ONCWebServer
 		HttpServer server = HttpServer.create(new InetSocketAddress(8902), 0);
 		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
 		
+		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents",
+							"/families", "/getfamily", "/getmeal", "/children", "/adults",
+							"/oncsplash", "/onclogo", "/newfamily", "/address", "/referral",
+							"/referfamily", "/familyupdate", "/updatefamily", "/changepw"};
+		
 		HttpContext context;
-
+		
+		for(String contextname:contexts)
+		{
+			context = server.createContext(contextname, oncHttpHandler);
+			context.getFilters().add(new ParameterFilter());
+		}
+/*
 		context = server.createContext("/families", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		
@@ -62,7 +73,13 @@ public class ONCWebServer
 		context = server.createContext("/getfamily", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		
+		context = server.createContext("/getmeal", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
 		context = server.createContext("/referfamily", oncHttpHandler);
+		context.getFilters().add(new ParameterFilter());
+		
+		context = server.createContext("/familyupdate", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
 		
 		context = server.createContext("/updatefamily", oncHttpHandler);
@@ -70,10 +87,10 @@ public class ONCWebServer
 		
 		context = server.createContext("/welcome", oncHttpHandler);
 		context.getFilters().add(new ParameterFilter());
-		    
+*/		    
 		server.setExecutor(null); // creates a default executor
 		server.start();
 		
-		serverUI.addLogMessage("Web Server started");
+		serverUI.addLogMessage(String.format("Web Server started: %d contexts", contexts.length));
 	}
 }
