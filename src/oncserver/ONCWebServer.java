@@ -8,11 +8,13 @@ import com.sun.net.httpserver.HttpServer;
 
 public class ONCWebServer
 {
+	private static final int WEB_SERVER_PORT = 8902;
+	
 	public ONCWebServer() throws IOException
 	{
 		ServerUI serverUI = ServerUI.getInstance();
 		
-		HttpServer server = HttpServer.create(new InetSocketAddress(8902), 0);
+		HttpServer server = HttpServer.create(new InetSocketAddress(WEB_SERVER_PORT), 0);
 		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
 		
 		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents",
@@ -27,67 +29,7 @@ public class ONCWebServer
 			context = server.createContext(contextname, oncHttpHandler);
 			context.getFilters().add(new ParameterFilter());
 		}
-/*
-		context = server.createContext("/families", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/children", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/adults", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/dbStatus", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/agents", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-			
-		context = server.createContext("/oncsplash", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/onclogo", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		    
-//		context = server.createContext("/", oncHttpHandler);
-//		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/login", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/logout", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/newfamily", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/referral", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/changepw", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/address", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/getfamily", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/getmeal", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/referfamily", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/familyupdate", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/updatefamily", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-		
-		context = server.createContext("/welcome", oncHttpHandler);
-		context.getFilters().add(new ParameterFilter());
-*/		    
+
 		server.setExecutor(null); // creates a default executor
 		server.start();
 		
