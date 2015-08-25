@@ -750,12 +750,6 @@ public class ONCHttpHandler implements HttpHandler
 		
 		if(addedFamily != null)
 		{
-			if(addedMeal != null)
-			{
-				mssg = "ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class);
-				clientMgr.notifyAllInYearClients(year, mssg);
-			}
-			
 			for(ONCChild addedChild:addedChildList)
 			{
 				mssg = "ADDED_CHILD" + gson.toJson(addedChild, ONCChild.class);
@@ -770,6 +764,16 @@ public class ONCHttpHandler implements HttpHandler
 			
 			mssg = "ADDED_FAMILY" + gson.toJson(addedFamily, ONCFamily.class);
 			clientMgr.notifyAllInYearClients(year, mssg);
+			
+			//must add family before meal, since desktop client meal ui updates 
+			//based on families in database, then gets meal id from family. So
+			//family must be mirrored in client local db before meal is added
+			if(addedMeal != null)
+			{
+				mssg = "ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class);
+				clientMgr.notifyAllInYearClients(year, mssg);
+			}
+			
 		}
 		
 		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted");
