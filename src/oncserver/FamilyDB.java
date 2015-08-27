@@ -14,10 +14,12 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import ourneighborschild.MealStatus;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCDelivery;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.WishStatus;
@@ -370,6 +372,20 @@ public class FamilyDB extends ONCServerDB
 			return null;
 	}
 	
+	ONCFamily getFamilyByMealID(int year, int mealID)
+	{
+		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
+		int index = 0;	
+		while(index < fAL.size() && fAL.get(index).getMealID() != mealID)
+			index++;
+		
+		if(index < fAL.size())
+			return fAL.get(index);
+		else
+			return null;
+	}
+
+	
 	ONCFamily getFamilyByTargetID(int year, String targetID)	//Persistent odb, wfcm or onc id number string
 	{
 		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
@@ -465,6 +481,32 @@ public class FamilyDB extends ONCServerDB
 		Gson gson = new Gson();
     	String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
     	clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients	
+	}
+	
+	void updateFamilyMeal(int year, ONCMeal addedMeal)
+	{
+		//try to find the family the meal belongs to. In order to add the meal, the family
+		//must exist
+		ONCFamily fam = getFamily(year, addedMeal.getFamilyID());				
+		
+		if(fam != null && addedMeal != null)
+		{
+			fam.setMealID(addedMeal.getID());
+			
+			if(addedMeal.getID() == -1)
+				fam.setMealStatus(MealStatus.None);
+			if(addedMeal.getPartnerID() == -1)
+				fam.setMealStatus(MealStatus.Requested);
+			else if(fam.getMealStatus() == MealStatus.Referred && addedMeal.getPartnerID() > -1)
+				fam.setMealStatus(MealStatus.Referred);
+			
+			familyDB.get(year - BASE_YEAR).setChanged(true);
+		
+			//notify the in year clients of the family update
+			Gson gson = new Gson();
+			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+		}
 	}
 
 	void addObject(int year, String[] nextLine)

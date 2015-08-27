@@ -687,8 +687,8 @@ public class ONCHttpHandler implements HttpHandler
 			if(!mealMap.get(mealKeys[0]).equals("No Assistance Rqrd"))
 			{
 				mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealMap.get(mealKeys[0])),
-								mealMap.get(mealKeys[1]), -1, agt.getAgentName(), new Date(), 3,
-								"Family Referred", agt.getAgentName());
+								mealMap.get(mealKeys[1]), -1, wc.getWebUser().getLNFI(), new Date(), 3,
+								"Family Referred", wc.getWebUser().getLNFI());
 			
 				addedMeal = mealDB.add(year, mealReq);
 			}
@@ -733,7 +733,6 @@ public class ONCHttpHandler implements HttpHandler
 			
 			//using child first name as the iterator, create a db entry for each
 			//child in the family
-			
 			while(params.containsKey(key))
 			{
 				childfn = (String) params.get(key);
@@ -767,7 +766,7 @@ public class ONCHttpHandler implements HttpHandler
 				
 				addedAdultList.add(adultDB.add(year, adult));	
 				an++;
-				key = "adultname" + Integer.toString(an);	//get next child key
+				key = "adultname" + Integer.toString(an);	//get next adult key
 			}
 			
 		}

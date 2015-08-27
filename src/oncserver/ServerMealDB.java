@@ -82,6 +82,7 @@ public class ServerMealDB extends ONCServerDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
+	//add used by desktop client to add a meal
 	@Override
 	String add(int year, String mealjson)
 	{
@@ -91,9 +92,27 @@ public class ServerMealDB extends ONCServerDB
 				
 		//retrieve the meal data base for the year
 		MealDBYear mealDBYear = mealDB.get(year - BASE_YEAR);
-						
+		
 		//set the new ID for the added ONCMeal
 		addedMeal.setID(mealDBYear.getNextID());
+		
+		//notify the family database of an added meal
+		FamilyDB familyDB = null;
+		try
+		{
+			familyDB = FamilyDB.getInstance();
+			familyDB.updateFamilyMeal(year, addedMeal);
+		}
+		catch (FileNotFoundException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		//add the new meal to the data base
 		mealDBYear.add(addedMeal);
@@ -102,6 +121,7 @@ public class ServerMealDB extends ONCServerDB
 		return "MEAL_ADDED" + gson.toJson(addedMeal, ONCMeal.class);
 	}
 	
+	//add used by the Web Client. It can only add a new meal when it adds a family
 	ONCMeal add(int year, ONCMeal addedMeal)
 	{
 		//retrieve the meal data base for the year
