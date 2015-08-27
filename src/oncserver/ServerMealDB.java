@@ -118,7 +118,7 @@ public class ServerMealDB extends ONCServerDB
 		mealDBYear.add(addedMeal);
 		mealDBYear.setChanged(true);
 					
-		return "MEAL_ADDED" + gson.toJson(addedMeal, ONCMeal.class);
+		return "ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class);
 	}
 	
 	//add used by the Web Client. It can only add a new meal when it adds a family
