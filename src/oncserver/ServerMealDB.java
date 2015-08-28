@@ -137,7 +137,7 @@ public class ServerMealDB extends ONCServerDB
 					
 		return addedMeal;
 	}
-	
+/*	
 	String update(int year, String mealjson)
 	{
 		//Create a ONCMeal object for the updated meal
@@ -161,7 +161,10 @@ public class ServerMealDB extends ONCServerDB
 		else
 			return "UPDATE_FAILED";
 	}
-	
+*/	
+	/*
+	 * Used by the web http handler to update a meal after the 
+	 */
 	boolean update(int year, ONCMeal updatedMeal)
 	{
 		//Find the position for the current meal being updated

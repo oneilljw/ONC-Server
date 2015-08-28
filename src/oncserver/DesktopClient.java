@@ -535,6 +535,7 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
                 }
+/*                
                 else if(command.startsWith("POST<update_meal>"))
                 {
                 	clientMgr.addLogMessage(command);
@@ -543,6 +544,7 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
                 }
+*/                
                 else if(command.startsWith("POST<delete_meal>"))
                 {
                 	clientMgr.addLogMessage(command);

@@ -28,6 +28,7 @@ import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.Transportation;
 import ourneighborschild.UserPermission;
 
 import com.sun.net.httpserver.Headers;
@@ -696,7 +697,7 @@ public class ONCHttpHandler implements HttpHandler
 		//create the family
 		String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
 				   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
-				   "delstreet","detail", "delunit", "delcity", "delzipcode"};
+				   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation"};
 		
 		Map<String, String> familyMap = createMap(params, familyKeys);
 		
@@ -710,10 +711,11 @@ public class ONCHttpHandler implements HttpHandler
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createWishList(params),
 					agt.getID(), addedMeal != null ? addedMeal.getID() : -1,
-					addedMeal != null ? MealStatus.Requested : MealStatus.None);
+					addedMeal != null ? MealStatus.Requested : MealStatus.None,
+					Transportation.valueOf(familyMap.get("transportation")));
 			
 		ONCFamily addedFamily = familyDB.add(year, fam);
-
+		
 		List<ONCChild> addedChildList = new ArrayList<ONCChild>();
 		List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
 		if(addedFamily != null)

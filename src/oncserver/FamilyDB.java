@@ -32,7 +32,7 @@ import com.google.gson.reflect.TypeToken;
 public class FamilyDB extends ONCServerDB
 {
 	private static final int TARGETID_HEADER_LENGTH = 1;
-	private static final int FAMILYDB_HEADER_LENGTH = 40;
+	private static final int FAMILYDB_HEADER_LENGTH = 41;
 	private static final String HIGHEST_TARGETID_FILENAME = "HighestTargetID.csv";
 	
 	private static final int FAMILY_STATUS_UNVERIFIED = 0;
@@ -528,7 +528,7 @@ public class FamilyDB extends ONCServerDB
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
 				"ODB Details", "Children Names", "Schools", "ODB WishList",
 				"Adopted For", "Agent ID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
-				"Stoplight Pos", "Stoplight Mssg", "Stopligh C/B"};
+				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation"};
 		
 		FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 		if(fDBYear.isUnsaved())
