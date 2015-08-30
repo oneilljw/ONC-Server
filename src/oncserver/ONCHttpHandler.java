@@ -709,12 +709,14 @@ public class ONCHttpHandler implements HttpHandler
 					familyMap.get("zipcode"), familyMap.get("delhousenum"), familyMap.get("delstreet"),
 					familyMap.get("delunit"), familyMap.get("delcity"), familyMap.get("delzipcode"),
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
-					familyMap.get("email"), familyMap.get("detail"), createWishList(params),
-					agt.getID(), addedMeal != null ? addedMeal.getID() : -1,
+					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
+					createWishList(params), agt.getID(), addedMeal != null ? addedMeal.getID() : -1,
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
 					Transportation.valueOf(familyMap.get("transportation")));
 			
 		ONCFamily addedFamily = familyDB.add(year, fam);
+		
+		System.out.println(addedFamily.getSchools());
 		
 		List<ONCChild> addedChildList = new ArrayList<ONCChild>();
 		List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
@@ -808,6 +810,35 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted");
+	}
+	
+	String createFamilySchoolList(Map<String, Object> params)
+	{
+		int cn = 0, nSchoolsAdded = 0;
+		String key = "childschool" + Integer.toString(cn);
+		StringBuffer buff = new StringBuffer();
+		
+		//using child school as the iterator, create list of unique schools
+		while(params.containsKey(key))
+		{
+			String school = (String) params.get(key);
+			if(school != null && !school.equals("") && buff.indexOf(school) == -1)
+			{
+				if(nSchoolsAdded > 0)
+					buff.append("\r" + school);
+				else
+					buff.append(school);
+				
+				nSchoolsAdded++;
+			}
+			
+			key = "childschool" + Integer.toString(++cn);
+		}
+		
+		if(nSchoolsAdded > 0)
+			return buff.toString();
+		else
+			return "";
 	}
 	
 	FamilyResponseCode processFamilyUpdate(WebClient wc, Map<String, Object> params)
