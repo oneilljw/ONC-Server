@@ -217,28 +217,44 @@
 	
 	function addChild()
 	{
-        var child = {};
-        child["firstname"] = document.getElementById('childfn').value;
-        child["lastname"] = document.getElementById('childln').value;
-        child["sDOB"] = document.getElementById('childdob').value;
-        child["gender"] = document.getElementById('childgender').value;
-        child["school"] = document.getElementById('childschool').value;
-	    child["age"] = getAge(child["sDOB"]);
-        childrenJson.push(child);
+		var childfnElement = document.getElementById('childfn');
+		var childlnElement = document.getElementById('childln');
+		
+		if(childfnElement.value === "")
+			childfnElement.style.background = errorColor;
+		else if(childlnElement.value === "")
+			childlnElement.style.background = errorColor;
+		else
+		{
+       		var child = {};
+        	child["firstname"] = childfnElement.value;
+        	child["lastname"] = childlnElement.value;
+        	child["sDOB"] =	document.getElementById('childdob').value;
+        	child["gender"] = document.getElementById('childgender').value;
+        	child["school"] = document.getElementById('childschool').value;
+	   	 	child["age"] = getAge(child["sDOB"]);
+        	childrenJson.push(child);
         
-        updateChildTable();
-        updateWishTable();
+        	updateChildTable();
+        	updateWishTable();
         
-        clearAddChild();  
+        	clearAddChild();
+		}
 	}
 	
 	function clearAddChild()
 	{
-		document.getElementById('childfn').value="";
-        document.getElementById('childln').value="";
+		var childfnElement = document.getElementById('childfn');
+		var childlnElement = document.getElementById('childln');
+		
+		childfnElement.value="";
+        childlnElement.value="";
         document.getElementById('childdob').value="";
         document.getElementById('childgender').value="Boy";
         document.getElementById('childschool').value="";
+        
+        childfnElement.style.background = '#FFFFFF';
+        childlnElement.style.background = '#FFFFFF'; 
 	}
 	
 	function removeChild(index)
@@ -252,20 +268,31 @@
 	
 	function addAdult()
 	{
-        var adult = {};
-        adult["name"] = document.getElementById('adultname').value;
-        adult["gender"] = document.getElementById('adultgender').value;
-        adultsJson.push(adult);
+		var adultnameElement = document.getElementById('adultname');
+		
+		if(adultnameElement.value === "")
+			adultnameElement.style.background = errorColor;
+		else
+		{	
+       		var adult = {};
+        	adult["name"] = adultnameElement.value;
+        	adult["gender"] = document.getElementById('adultgender').value;
+        	adultsJson.push(adult);
         
-        updateAdultTable();
+        	updateAdultTable();
         
-        clearAddAdult();  
+        	clearAddAdult();
+		}
 	}
 	
 	function clearAddAdult()
 	{
-		document.getElementById('adultname').value="";
+		var adultnameElement = document.getElementById('adultname');
+		
+		adultnameElement.value="";
         document.getElementById('adultgender').value="Male";
+        
+        adultnameElement.style.background = '#FFFFFF';
 	}
 	
 	function removeAdult(index)

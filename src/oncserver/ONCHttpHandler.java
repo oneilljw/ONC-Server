@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -701,38 +702,14 @@ public class ONCHttpHandler implements HttpHandler
 		
 		Map<String, String> familyMap = createMap(params, familyKeys);
 		
-		//ensure each word in street name and delivery street name
-		//starts with a capital letter
-		String[] streetparts = familyMap.get("street").split(" ");
-		for(int i=0; i< streetparts.length; i++)
-		{	
-			if(streetparts[i].length() > 0)
-			{
-				char firstchar = streetparts[i].charAt(0);
-				firstchar = Character.toUpperCase(firstchar);
-				streetparts[i].replace(streetparts[i].charAt(0), firstchar);
-			}
-		}
-		String street = streetparts.toString();
-		
-		streetparts = familyMap.get("delstreet").split(" ");
-		for(int i=0; i< streetparts.length; i++)
-		{	
-			if(streetparts[i].length() > 0)
-			{
-				char firstchar = streetparts[i].charAt(0);
-				firstchar = Character.toUpperCase(firstchar);
-				streetparts[i].replace(streetparts[i].charAt(0), firstchar);
-			}
-		}
-		String delstreet = streetparts.toString();
-		
 		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
 					familyMap.get("targetid"), "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohFN"), familyMap.get("hohLN"), familyMap.get("housenum"),
-					street, familyMap.get("unit"), familyMap.get("city"),
-					familyMap.get("zipcode"), familyMap.get("delhousenum"), delstreet,
+					ensureUpperCaseStreetName(familyMap.get("street")),
+					familyMap.get("unit"), familyMap.get("city"),
+					familyMap.get("zipcode"), familyMap.get("delhousenum"),
+					ensureUpperCaseStreetName(familyMap.get("delstreet")),
 					familyMap.get("delunit"), familyMap.get("delcity"), familyMap.get("delzipcode"),
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
@@ -769,10 +746,13 @@ public class ONCHttpHandler implements HttpHandler
 				childGender = (String) params.get("childgender" + Integer.toString(cn));
 				childSchool = (String) params.get("childschool" + Integer.toString(cn));
 			
-				ONCChild child = new ONCChild(-1, addedFamily.getID(), childfn, childln, childGender, 
+				if(!childln.isEmpty())	//only add a child if the last name is provided
+				{
+					ONCChild child = new ONCChild(-1, addedFamily.getID(), childfn, childln, childGender, 
 													createChildDOB(childDoB), childSchool, year);
 				
-				addedChildList.add(childDB.add(year,child));
+					addedChildList.add(childDB.add(year,child));
+				}
 				cn++;
 				key = "childfn" + Integer.toString(cn);	//get next child key
 			}
@@ -789,10 +769,13 @@ public class ONCHttpHandler implements HttpHandler
 			{
 				adultName = (String) params.get(key);
 				adultGender = (String) params.get("adultgender" + Integer.toString(an));
-					
-				ONCAdult adult = new ONCAdult(-1, addedFamily.getID(), adultName, adultGender); 
 				
-				addedAdultList.add(adultDB.add(year, adult));	
+				if(!adultName.isEmpty())
+				{
+					ONCAdult adult = new ONCAdult(-1, addedFamily.getID(), adultName, adultGender); 
+				
+					addedAdultList.add(adultDB.add(year, adult));
+				}
 				an++;
 				key = "adultname" + Integer.toString(an);	//get next adult key
 			}
@@ -834,6 +817,22 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted");
+	}
+	
+	String ensureUpperCaseStreetName(String street)
+	{
+		StringBuffer buff = new StringBuffer();
+		String[] streetparts = street.split(" ");
+		for(int i=0; i< streetparts.length; i++)
+		{	
+			if(streetparts[i].length() > 0)
+			{
+				buff.append(Character.toUpperCase(streetparts[i].charAt(0)) +
+						streetparts[i].substring(1) + " ");
+			}
+		}
+		
+		return buff.toString().trim();
 	}
 	
 	String createFamilySchoolList(Map<String, Object> params)
@@ -911,7 +910,7 @@ public class ONCHttpHandler implements HttpHandler
 			updateFam.setHOHFirstName(familyMap.get("hohFN"));
 			updateFam.setHOHLastName(familyMap.get("hohLN"));
 			updateFam.setHouseNum(familyMap.get("housenum"));
-			updateFam.setStreet(familyMap.get("street"));
+			updateFam.setStreet(ensureUpperCaseStreetName(familyMap.get("street")));
 			updateFam.setUnitNum(familyMap.get("unit"));
 			updateFam.setCity(familyMap.get("city"));
 			updateFam.setZipCode(familyMap.get("zipcode"));
@@ -927,7 +926,7 @@ public class ONCHttpHandler implements HttpHandler
 			else
 			{
 				String altAddress = familyMap.get("delhousenum") + "_" +
-									familyMap.get("delstreet") + "_" +
+									ensureUpperCaseStreetName(familyMap.get("delstreet")) + "_" +
 									familyMap.get("delunit") + "_" +
 									familyMap.get("delcity") + "_" +
 									familyMap.get("delzipcode");
