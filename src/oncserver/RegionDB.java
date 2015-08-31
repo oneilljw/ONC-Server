@@ -65,7 +65,8 @@ public class RegionDB
 		Address matchAddress = gson.fromJson(addressjson, Address.class);
 		
 		String[] searchAddress = createSearchAddress(matchAddress.getStreetnum(),
-														matchAddress.getStreetname());
+													  matchAddress.getStreetname(),
+													   matchAddress.getZipCode());
 		
 		//Must have a valid street number and street name to search
 		if(searchAddress[0].isEmpty() || searchAddress[2].isEmpty())
@@ -74,14 +75,14 @@ public class RegionDB
 			return "MATCH" + Integer.toString(searchForRegionMatch(searchAddress));		
 	}
 	
-	int getRegionMatch(String streetnum, String streetname)
+	int getRegionMatch(String streetnum, String streetname, String zipcode)
 	{
-		return searchForRegionMatch(createSearchAddress(streetnum, streetname));
+		return searchForRegionMatch(createSearchAddress(streetnum, streetname, zipcode));
 	}
 	
-	static String[] createSearchAddress(String streetnum, String streetname)
+	static String[] createSearchAddress(String streetnum, String streetname, String zipcode)
 	{
-		String[] searchAddress = new String[4];
+		String[] searchAddress = new String[5];
 		String[] step1 = new String[2];
 		
 		//Break the street name into its four parts using a three step process. If only the street name
@@ -98,6 +99,7 @@ public class RegionDB
 		searchAddress[1] = step2[0];	//Street Direction
 		searchAddress[2] = step3[0];	//Street Name
 		searchAddress[3] = step3[1];	//Street Suffix
+		searchAddress[4] = zipcode;
 		
 		if(searchAddress[0].isEmpty())	//Street number may not be contained in street name
 		{
@@ -196,11 +198,11 @@ public class RegionDB
 			return getRegionNumber(regAL.get(ri).getRegion());
 	}
 	
-	static boolean isAddressValid(String streetNum, String streetName)
+	static boolean isAddressValid(String streetNum, String streetName, String zip)
 	{
-		String[] searchAddress = createSearchAddress(streetNum, streetName);
-		int ri = 0;
+		String[] searchAddress = createSearchAddress(streetNum, streetName, zip);
 		
+		int ri = 0;
 		while(ri < regAL.size() && !regAL.get(ri).isRegionMatch(searchAddress))
 			ri++;
 		

@@ -237,7 +237,9 @@ public class FamilyDB extends ONCServerDB
 		
 		if(regionDB != null)
 		{
-			reg = regionDB.getRegionMatch(updatedFamily.getHouseNum(), updatedFamily.getStreet());
+			reg = regionDB.getRegionMatch(updatedFamily.getHouseNum(),
+											updatedFamily.getStreet(),
+											  updatedFamily.getZipCode());
 			updatedFamily.setRegion(reg);
 		}
 		

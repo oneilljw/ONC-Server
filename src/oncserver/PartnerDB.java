@@ -173,7 +173,8 @@ public class PartnerDB extends ONCServerDB
 		if(regionDB != null)
 		{
 			reg = regionDB.getRegionMatch(Integer.toString(updatedOrg.getStreetnum()),
-											updatedOrg.getStreetname());
+											updatedOrg.getStreetname(),
+											 updatedOrg.getZipcode());
 			updatedOrg.setRegion(reg);
 		}
 		
@@ -206,7 +207,8 @@ public class PartnerDB extends ONCServerDB
 		
 		if(regionDB != null)
 			addedPartner.setRegion(regionDB.getRegionMatch(Integer.toString(addedPartner.getStreetnum()), 
-															addedPartner.getStreetname()));
+															addedPartner.getStreetname(),
+															addedPartner.getZipcode()));
 		else
 			addedPartner.setRegion(0);
 		

@@ -404,6 +404,11 @@
 		{
 			zipElement.options[0] = new Option('22039', '22039');
 		}
+		
+		if(elementName === 'city')
+			verifyHOHAddress();
+		else
+			verifyDeliveryAddress();	
 	}
 	
 	function mealRqrdClicked(cb)
@@ -512,11 +517,20 @@
 			delAddressGood = false;
 	}
 	
+	function onZipChanged(zipelement)
+	{
+		if(zipelement === 'zipcode')
+			verifyHOHAddress();
+		else
+			verifyDeliveryAddress();
+	}
+	
 	function changeAddressBackground(elements, color)
 	{
-			elements[0].style.backgroundColor = color;
-			elements[1].style.backgroundColor = color;
+		for(var i=0; i< elements.length; i++)
+			elements[i].style.backgroundColor = color;
 	}
+	
 	function createAddressParams(addrElement)
 	{
 
@@ -703,7 +717,7 @@
 		<option value="Fairfax">Fairfax</option>
 		<option value="Fairfax Station">Fairfax Station</option>
 	</select>
-    <select id="zipcode" title="Zip Code" name="zipcode">
+    <select id="zipcode" title="Zip Code" name="zipcode" onchange="onZipChanged('zipcode')">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
 	</select>
@@ -723,7 +737,7 @@
 		<option value="Fairfax">Fairfax</option>
 		<option value="Fairfax Station">Fairfax Station</option>
 	</select>	
-    <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
+    <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode" onchange="onZipChanged('delzipcode')">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
 	</select>

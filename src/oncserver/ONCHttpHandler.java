@@ -635,7 +635,7 @@ public class ONCHttpHandler implements HttpHandler
 //		for(String key:addressMap.keySet())
 //			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));	
 
-		boolean bAddressValid  = RegionDB.isAddressValid(addressMap.get("housenum"), addressMap.get("street"));
+		boolean bAddressValid  = RegionDB.isAddressValid(addressMap.get("housenum"), addressMap.get("street"), addressMap.get("zipcode"));
 
 		Gson gson = new Gson();
 		String json = gson.toJson(new AddressValidation(bAddressValid, "Address Found"), AddressValidation.class);
@@ -1052,11 +1052,12 @@ public class ONCHttpHandler implements HttpHandler
 	boolean isHOHAddressValid(Map<String, Object> params)
 	{
 		boolean bAddressGood = false;
-		String houseNum = null, streetName = null;
+		String houseNum = null, streetName = null, zipCode = null;
 		if(params.containsKey("housenum") && (houseNum = (String) params.get("housenum")) != null
-			&& params.containsKey("street") && (streetName = (String) params.get("street")) != null )
+			&& params.containsKey("street") && (streetName = (String) params.get("street")) != null 
+			 && params.containsKey("zipcode") && (zipCode = (String) params.get("zipcode")) != null)
 		{
-			bAddressGood = RegionDB.isAddressValid(houseNum, streetName);
+			bAddressGood = RegionDB.isAddressValid(houseNum, streetName, zipCode);
 		}
 		
 		return bAddressGood;
@@ -1065,11 +1066,12 @@ public class ONCHttpHandler implements HttpHandler
 	boolean isDeliveryAddressValid(Map<String, Object> params)
 	{
 		boolean bAddressGood = false;
-		String houseNum = null, streetName = null;
+		String houseNum = null, streetName = null, zipCode = null;
 		if(params.containsKey("delhousenum") && (houseNum = (String) params.get("delhousenum")) != null
-			&& params.containsKey("delstreet") && (streetName = (String) params.get("delstreet")) != null )
+			&& params.containsKey("delstreet") && (streetName = (String) params.get("delstreet")) != null
+			 && params.containsKey("delzipcode") && (zipCode = (String) params.get("delzipcode")) != null)
 		{
-			bAddressGood = RegionDB.isAddressValid(houseNum, streetName);
+			bAddressGood = RegionDB.isAddressValid(houseNum, streetName, zipCode);
 		}
 		
 		return bAddressGood;
