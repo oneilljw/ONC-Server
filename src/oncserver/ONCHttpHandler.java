@@ -716,8 +716,6 @@ public class ONCHttpHandler implements HttpHandler
 			
 		ONCFamily addedFamily = familyDB.add(year, fam);
 		
-		System.out.println(addedFamily.getSchools());
-		
 		List<ONCChild> addedChildList = new ArrayList<ONCChild>();
 		List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
 		if(addedFamily != null)
