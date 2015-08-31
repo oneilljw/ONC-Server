@@ -701,12 +701,38 @@ public class ONCHttpHandler implements HttpHandler
 		
 		Map<String, String> familyMap = createMap(params, familyKeys);
 		
+		//ensure each word in street name and delivery street name
+		//starts with a capital letter
+		String[] streetparts = familyMap.get("street").split(" ");
+		for(int i=0; i< streetparts.length; i++)
+		{	
+			if(streetparts[i].length() > 0)
+			{
+				char firstchar = streetparts[i].charAt(0);
+				firstchar = Character.toUpperCase(firstchar);
+				streetparts[i].replace(streetparts[i].charAt(0), firstchar);
+			}
+		}
+		String street = streetparts.toString();
+		
+		streetparts = familyMap.get("delstreet").split(" ");
+		for(int i=0; i< streetparts.length; i++)
+		{	
+			if(streetparts[i].length() > 0)
+			{
+				char firstchar = streetparts[i].charAt(0);
+				firstchar = Character.toUpperCase(firstchar);
+				streetparts[i].replace(streetparts[i].charAt(0), firstchar);
+			}
+		}
+		String delstreet = streetparts.toString();
+		
 		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
 					familyMap.get("targetid"), "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohFN"), familyMap.get("hohLN"), familyMap.get("housenum"),
-					familyMap.get("street"), familyMap.get("unit"), familyMap.get("city"),
-					familyMap.get("zipcode"), familyMap.get("delhousenum"), familyMap.get("delstreet"),
+					street, familyMap.get("unit"), familyMap.get("city"),
+					familyMap.get("zipcode"), familyMap.get("delhousenum"), delstreet,
 					familyMap.get("delunit"), familyMap.get("delcity"), familyMap.get("delzipcode"),
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
