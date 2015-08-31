@@ -711,7 +711,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Delivery Address & Transportation: Provide address that ONC will use for gift delivery & family's transportation availability</legend>
+  <legend class="major">Delivery Address & Transportation: Provide address that ONC will use for gift delivery & family's access to transportation</legend>
 	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onblur="verifyDeliveryAddress()" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onblur="verifyDeliveryAddress()" required>
@@ -728,9 +728,9 @@
 		<option value="20121">20121</option>
 	</select>
   <br><br>
-  <label>Does the family have thier own transportation? </label>
-  <input id="transYes" type="radio" name="transportation" value="Yes" checked>Yes
-  <input id="transNo" type="radio" name="transportation" value="No">No
+  <label>Does the family have their own transportation? </label>
+  <input id="transYes" type="radio" name="transportation" value="Yes">Yes
+  <input id="transNo" type="radio" name="transportation" value="No" checked>No
   </fieldset>
   <br>
   <fieldset>
@@ -805,7 +805,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Meal Assistance: ONC will refer family to WFCM or equivalent</legend>
+  <legend class="major">Meal Assistance: ONC will refer family to WFCM or other meal providing organizations</legend>
 	<input type="checkbox" onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
     <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
 		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
@@ -814,7 +814,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Family Details: Provide details (if any) about family you think ONC should know</legend>
+   <legend class="major">Family Details: Provide any additional details that may assist in serving this family</legend>
 	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <br>
