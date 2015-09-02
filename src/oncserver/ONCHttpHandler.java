@@ -635,9 +635,21 @@ public class ONCHttpHandler implements HttpHandler
 //			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));	
 
 		boolean bAddressValid  = RegionDB.isAddressValid(addressMap.get("housenum"), addressMap.get("street"), addressMap.get("zipcode"));
-
+		int errorCode = bAddressValid ? 0 : 1;
+		
+		int priorYear = Integer.parseInt((String)params.get("prioryear"));
+		boolean bUnitMissing = addressMap.get("unit").isEmpty() && FamilyDB.shouldAddressHaveUnit(priorYear,
+														addressMap.get("housenum"),
+														addressMap.get("street"),
+														addressMap.get("zipcode"));
+		
+		if(bUnitMissing)
+			errorCode += 2;
+		
+		boolean bAddressGood = bAddressValid && !bUnitMissing;
+		
 		Gson gson = new Gson();
-		String json = gson.toJson(new AddressValidation(bAddressValid, "Address Found"), AddressValidation.class);
+		String json = gson.toJson(new AddressValidation(bAddressGood, errorCode), AddressValidation.class);
 		
 		return callback +"(" + json +")";
 	}

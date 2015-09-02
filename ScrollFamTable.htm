@@ -288,6 +288,7 @@
     function newFamily()
     {
     	sessionStorage.setItem("targetid", "NNA");
+		sessionStorage.setItem("prioryear", new Date().getFullYear()-1);
     	
     	var params = {}
 		params["token"] = sessionStorage.getItem('token');

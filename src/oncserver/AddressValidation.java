@@ -3,17 +3,19 @@ package oncserver;
 public class AddressValidation 
 {
 	private boolean bAddressValid;
-	private String errorMssg;
+	private int errorCode;
 	
-	AddressValidation(boolean bAddressValid, String errorMssg)
+	AddressValidation(boolean bAddressValid, int errorCode)
 	{
 		this.bAddressValid = bAddressValid;
-		this.errorMssg = errorMssg;
+		this.errorCode = errorCode;
 	}
 	
 	//getters
 	boolean isAddressValid() { return bAddressValid; }
+	int getErrorCode() { return errorCode; }
 	
 	//setters
-	void setAddressValid(boolean tf) { bAddressValid = tf; }
+	void setAddressValid(boolean tf) { this.bAddressValid = tf; }
+	void setErrorCode(int ec) { this.errorCode = ec; }
 }

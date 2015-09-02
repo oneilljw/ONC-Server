@@ -117,50 +117,63 @@
 	
   	function sameAddressClicked(cb)
 	{
-		var addrElements = ['housenum', 'street', 'unit', 'city'];
-		var delElements = ['delhousenum', 'delstreet', 'delunit', 'delcity'];
-		for(var i=0; i<delElements.length; i++)
-		{
-			var addrElement = document.getElementById(addrElements[i]);
-			var delElement = document.getElementById(delElements[i]);
-			
-			if(cb.checked == true)
-			{	
-				delElement.value = addrElement.value;
-				
-				if(delElement.type != 'select-one')
-				{	
-					setEnabledReadOnly(delElement, true);
-					setEnabledReadOnly(addrElement, true);
-				}
-			}
-			else
-			{
-				if(delElement.type === 'select-one')
-					delElement.selectedIndex = 0;
-				else
-				{
-					delElement.value = "";
-					setEnabledReadOnly(delElement, false);
-					setEnabledReadOnly(addrElement, false);
-				}
-			}
-		}
+		var addrInputElements = [document.getElementById('housenum'),
+				                    document.getElementById('street'),
+				                    document.getElementById('unit')];
 		
-		//handle the zip codes separately to ensure proper list content
-		cityChanged('delcity');
+		var addrSelectElements = [document.getElementById('city'),
+		                          document.getElementById('zipcode')];
+		                          
+		var delInputElements = [document.getElementById('delhousenum'),
+				                 document.getElementById('delstreet'),
+				                 document.getElementById('delunit')];
+		
+		var delSelectElements = [document.getElementById('delcity'),
+		                          document.getElementById('delzipcode')];
+		
 		if(cb.checked == true)
-			document.getElementById('delzipcode').value = document.getElementById('zipcode').value;
+		{	
+			//copy the address input elements to delivery address elements
+			for(var i=0; i<addrInputElements.length; i++)
+				delInputElements[i].value = addrInputElements[i].value;
+			
+			delSelectElements[0].value = addrSelectElements[0].value;
+			cityChanged('delcity');
+			delSelectElements[1].value = addrSelectElements[1].value;
+			
+			//set read only
+			for(var i=0; i<addrInputElements.length; i++)
+			{
+				delInputElements[i].readOnly = true;
+				addrInputElements[i].readOnly = true;
+			}
+			
+			//verify the address
+			verifyDeliveryAddress();	
+		}
 		else
-			document.getElementById('delzipcode').selectedIndex = 0;	
+		{
+			//clear the delivery address elements
+			for(var i=0; i<delInputElements.length; i++)
+				delInputElements[i].value = "";
+			
+			delSelectElements[0].selectedIndex = 0;
+			cityChanged('delcity');
+			delSelectElements[1].selectedIndex = 0;
 		
-		verifyDeliveryAddress();
+			//clear read only for delivery input elements
+			for(var i=0; i<addrInputElements.length; i++)
+			{
+				delInputElements[i].readOnly = false;
+				addrInputElements[i].readOnly = false;
+			}
+			
+			//clear background color
+			changeAddressBackground(delInputElements, '#FFFFFF')
+			changeAddressBackground(delSelectElements, '#FFFFFF')
+		}
 	}
-	function setEnabledReadOnly(element, tf)
-	{
-		if(element.type !== 'select-one')
-			element.readOnly = tf;
-	}
+  	
 	function cityChanged(elementName)
 	{
 		if(elementName === 'city')
@@ -203,9 +216,12 @@
 	{
 		//called when HOH address inputs blur
 		var addrElement = [document.getElementById('housenum'), 
-		                   document.getElementById('street'), 
+		                   document.getElementById('street'),
+		                   document.getElementById('unit'),
 		                   document.getElementById('city'), 
 		                   document.getElementById('zipcode')];
+		
+		var unitElement = [document.getElementById('unit')];
 		
 		//check to see that housenum and street are provided
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
@@ -215,31 +231,40 @@
 	        var addrresponse;
 	        $.getJSON('address', addressparams, function(data)
 	      	{
-	      		addrresponse = data;
+	      		addresponse = data;
 	      		
-	      		if(addrresponse.bAddressValid === true)
+	      		if(addresponse.errorCode === 0)
 	      		{
 	      			changeAddressBackground(addrElement, '#FFFFFF');
 	      			hohAddressGood = true;
 	      		}	
-	      		else
+	      		else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
 	      		{
 	      			hohAddressGood = false;
 	      			changeAddressBackground(addrElement, errorColor);
-//	      			alert("HOH Address invalid: doesn't exist, please correct");
+	      		}
+	      		else if(addresponse.errorCode === 2)
+	      		{
+	      			hohAddressGood = false;
+	      			changeAddressBackground(addrElement, '#FFFFFF');
+	      			changeAddressBackground(unitElement, errorColor);
 	      		}
 	      	});
 		}
 		else
 			hohAddressGood = false;
 	}
+	
 	function verifyDeliveryAddress()
 	{
-		//called when HOH address inputs blur
-		var addrElement = [document.getElementById('delhousenum'), 
-		                   document.getElementById('delstreet'), 
+		//called when delivery address inputs blur
+		var addrElement = [document.getElementById('delhousenum'),
+		                   document.getElementById('delstreet'),
+		                   document.getElementById('delunit'),
 		                   document.getElementById('delcity'), 
 		                   document.getElementById('delzipcode')];
+		
+		var unitElement = [document.getElementById('delunit')];
 		
 		//check to see that housenum and street are provided
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
@@ -249,18 +274,23 @@
 	        var addrresponse;
 	        $.getJSON('address',  addressparams, function(data)
 	      	{
-	      		addrresponse = data;
+	      		addresponse = data;
 	      		
-	      		if(addrresponse.bAddressValid === true)
+	      		if(addresponse.bAddressValid.errorCode === 0)
 	      		{
 	      			changeAddressBackground(addrElement, '#FFFFFF');
 	      			delAddressGood = true;
 	      		}	
-	      		else
+	      		else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
 	      		{
 	      			delAddressGood = false;
 	      			changeAddressBackground(addrElement, errorColor);
-//	      			alert("Delivery Address invalid: doesn't exist, please correct");
+	      		}
+	      		else if(addresponse.errorCode === 2)
+	      		{
+	      			delAddressGood = false;
+	      			changeAddressBackground(addrElement, '#FFFFFF');
+	      			changeAddressBackground(unitElement, errorColor);
 	      		}
 	      	});
 		}
@@ -283,12 +313,13 @@
 	}
 	function createAddressParams(addrElement)
 	{
-
 		var addressparams = "token=" + sessionStorage.getItem("token") + "&" +
+							"prioryear=" + sessionStorage.getItem("prioryear") + "&" +
 							"housenum=" + addrElement[0].value + "&" +
 							"street=" + addrElement[1].value + "&" +
-							"city=" + addrElement[2].value + "&" +
-							"zipcode=" + addrElement[3].value + "&" +
+							"unit=" + addrElement[2].value + "&" +
+							"city=" + addrElement[3].value + "&" +
+							"zipcode=" + addrElement[4].value + "&" +
 							"callback=?";
 		
 		return addressparams;
@@ -347,9 +378,9 @@
 		var errorElement = document.getElementById('errormessage');
  
 		if(hohAddressGood===false)
-			errorElement.textContent = "Submission Error: HoH address does not exist";
+			errorElement.textContent = "Submission Error: HoH address incomplete ordoes not exist";
 		else if(delAddressGood===false)
-			errorElement.textContent = "Submission Error: Delivery address does not exist";
+			errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
 		else
 		{	
 			//check phone numbers
@@ -457,7 +488,7 @@
 	<br>
 	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onblur="verifyHOHAddress()" required>
     <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onblur="verifyHOHAddress()" required>
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #">
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onblur="verifyHOHAddress()">
     <select id="city" title="City" name="city" onchange="cityChanged('city')">
 		<option value="Centreville">Centreville</option>
 		<option value="Chantilly">Chantilly</option>
@@ -481,7 +512,7 @@
 	<input id="checkbox" type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onblur="verifyDeliveryAddress()" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onblur="verifyDeliveryAddress()" required>
-    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #">
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" onblur="verifyDeliveryAddress()">
     <select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged('delcity')">
 		<option value="Centreville">Centreville</option>
 		<option value="Chantilly">Chantilly</option>

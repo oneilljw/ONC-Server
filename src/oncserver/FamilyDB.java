@@ -556,6 +556,26 @@ public class FamilyDB extends ONCServerDB
 		return index < famList.size();	//true if agentID referred family	
 	}
 	
+	static boolean shouldAddressHaveUnit(int priorYear, String housenum, String street, String zip)
+	{
+		boolean bAddressHasUnit = false;
+		if(priorYear > BASE_YEAR)
+		{
+			List<ONCFamily> famList = familyDB.get(priorYear-BASE_YEAR).getList();
+			int index = 0;
+			while(index < famList.size() &&
+				   !(famList.get(index).getHouseNum().equals(housenum) &&
+					 famList.get(index).getStreet().equals(street) &&
+					  famList.get(index).getZipCode().equals(zip)))
+				index++;
+			
+			if(index < famList.size())
+				bAddressHasUnit = !famList.get(index).getUnitNum().isEmpty();
+		}
+		
+		return bAddressHasUnit;
+	}
+	
 	//convert targetID to familyID
 	static int getFamilyID(int year, String targetID)
 	{
