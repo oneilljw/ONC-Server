@@ -339,8 +339,8 @@
 	
 	function sameAddressClicked(cb)
 	{
-		var addrElements = ['housenum', 'street', 'unit', 'city', 'zipcode'];
-		var delElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
+		var addrElements = ['housenum', 'street', 'unit', 'city'];
+		var delElements = ['delhousenum', 'delstreet', 'delunit', 'delcity'];
 		for(var i=0; i<delElements.length; i++)
 		{
 			var addrElement = document.getElementById(addrElements[i]);
@@ -349,20 +349,32 @@
 			if(cb.checked == true)
 			{	
 				delElement.value = addrElement.value;
-				setEnabledReadOnly(delElement, true);
-				setEnabledReadOnly(addrElement, true);
+				
+				if(delElement.type != 'select-one')
+				{	
+					setEnabledReadOnly(delElement, true);
+					setEnabledReadOnly(addrElement, true);
+				}
 			}
 			else
 			{
-				delElement.value = "";
-				
 				if(delElement.type === 'select-one')
 					delElement.selectedIndex = 0;
-				
-				setEnabledReadOnly(delElement, false);
-				setEnabledReadOnly(addrElement, false);
+				else
+				{
+					delElement.value = "";
+					setEnabledReadOnly(delElement, false);
+					setEnabledReadOnly(addrElement, false);
+				}
 			}
 		}
+		
+		//handle the zip codes separately to ensure proper list content
+		cityChanged('delcity');
+		if(cb.checked == true)
+			document.getElementById('delzipcode').value = document.getElementById('zipcode').value;
+		else
+			document.getElementById('delzipcode').selectedIndex = 0;	
 		
 		verifyDeliveryAddress();
 	}
@@ -374,10 +386,13 @@
 	}
 	function cityChanged(elementName)
 	{
+		console.log(elementName);
+		
 		if(elementName === 'city')
 			var zipElement = document.getElementById('zipcode')
 		else
-			var zipElement = document.getElementById('delzipcode')	
+			var zipElement = document.getElementById('delzipcode')
+			
 		for(i = 0; i < zipElement.options.length; i++)
   			zipElement.options[i] = null;
 		

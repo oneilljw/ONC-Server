@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import ourneighborschild.ONCMeal;
@@ -92,8 +93,9 @@ public class ServerMealDB extends ONCServerDB
 		//retrieve the meal data base for the year
 		MealDBYear mealDBYear = mealDB.get(year - BASE_YEAR);
 		
-		//set the new ID for the added ONCMeal
+		//set the new ID and time stamp for the added ONCMeal
 		addedMeal.setID(mealDBYear.getNextID());
+		addedMeal.setDateChanged(new Date());
 		
 		//notify the family database of an added meal
 		FamilyDB familyDB = null;
