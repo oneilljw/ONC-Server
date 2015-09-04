@@ -536,7 +536,7 @@
 	      	{
 	      		addresponse = data;
 	      		
-	      		if(addresponse.bAddressValid.errorCode === 0)
+	      		if(addresponse.errorCode === 0)
 	      		{
 	      			changeAddressBackground(addrElement, '#FFFFFF');
 	      			delAddressGood = true;
@@ -592,20 +592,20 @@
 		
 		var phoneName= ["Primary", "Alternate", "2nd Alternate"];
 		
-		if(document.getElementById('homephone').value=="")
-		{
-			document.getElementById('homephone').style.backgroundColor= errorColor;
-			errorMssg= "Submission Error: Primary Phone # missing"
-		}
-		else
-		{
+//		if(document.getElementById('homephone').value=="")
+//		{
+//			document.getElementById('homephone').style.backgroundColor= errorColor;
+//			errorMssg= "Submission Error: Primary Phone # missing"
+//		}
+//		else
+//		{
 			var index=0;
 			while(index<phoneName.length && verifyPhoneNumber(index))
 				index++;
 			
 			if(index < phoneName.length)	
 				errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
-		}
+//		}
 		
 		return errorMssg;	
 	}
