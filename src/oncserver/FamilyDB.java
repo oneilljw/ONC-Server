@@ -558,7 +558,7 @@ public class FamilyDB extends ONCServerDB
 	
 	static boolean shouldAddressHaveUnit(int priorYear, String housenum, String street, String zip)
 	{
-		boolean bAddressHasUnit = false;
+		boolean bAddressHadUnit = false;
 		if(priorYear > BASE_YEAR)
 		{
 			List<ONCFamily> famList = familyDB.get(priorYear-BASE_YEAR).getList();
@@ -570,10 +570,14 @@ public class FamilyDB extends ONCServerDB
 				index++;
 			
 			if(index < famList.size())
-				bAddressHasUnit = !famList.get(index).getUnitNum().isEmpty();
+			{
+//				ONCFamily fam = famList.get(index);
+//				System.out.println(String.format("FamilyDB.shouldAddressHaveUnit: Prior Year = %d, ONC#= %s, Unit=%s, Unit.length=%d", priorYear, fam.getONCNum(), fam.getUnitNum(), fam.getUnitNum().trim().length()));
+				bAddressHadUnit = !famList.get(index).getUnitNum().trim().isEmpty();
+			}
 		}
 		
-		return bAddressHasUnit;
+		return bAddressHadUnit;
 	}
 	
 	//convert targetID to familyID

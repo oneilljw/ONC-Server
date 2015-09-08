@@ -638,6 +638,7 @@ public class ONCHttpHandler implements HttpHandler
 		int errorCode = bAddressValid ? 0 : 1;
 		
 		int priorYear = Integer.parseInt((String)params.get("prioryear"));
+		
 		boolean bUnitMissing = addressMap.get("unit").isEmpty() && FamilyDB.shouldAddressHaveUnit(priorYear,
 														addressMap.get("housenum"),
 														addressMap.get("street"),
@@ -646,6 +647,7 @@ public class ONCHttpHandler implements HttpHandler
 		if(bUnitMissing)
 			errorCode += 2;
 		
+	//	System.out.println("bUnitEmpty=" + bUnitEmpty + " bShouldHaveUnit=" + bShouldHaveUnit);		
 		boolean bAddressGood = bAddressValid && !bUnitMissing;
 		
 		Gson gson = new Gson();
