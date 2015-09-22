@@ -497,7 +497,7 @@ public class FamilyDB extends ONCServerDB
 			
 			if(addedMeal.getID() == -1)
 				fam.setMealStatus(MealStatus.None);
-			if(addedMeal.getPartnerID() == -1)
+			else if(addedMeal.getPartnerID() == -1)
 				fam.setMealStatus(MealStatus.Requested);
 			else if(fam.getMealStatus() == MealStatus.Requested && addedMeal.getPartnerID() > -1)
 				fam.setMealStatus(MealStatus.Referred);
