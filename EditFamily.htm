@@ -486,9 +486,9 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onchange="verifyHOHAddress()" required>
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" required>
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()">
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off">
     <select id="city" title="City" name="city" onchange="cityChanged('city')">
 		<option value="Centreville">Centreville</option>
 		<option value="Chantilly">Chantilly</option>
@@ -510,9 +510,9 @@
   <fieldset>
   <legend class="major">Delivery Address: Update address that ONC will use for gift delivery</legend>
 	<input id="checkbox" type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
-	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onchange="verifyDeliveryAddress()" required>
-    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onchange="verifyDeliveryAddress()" required>
-    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" onchange="verifyDeliveryAddress()">
+	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onchange="verifyDeliveryAddress()" autocomplete="off" required>
+    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onchange="verifyDeliveryAddress()" autocomplete="off" required>
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" onchange="verifyDeliveryAddress()" autocomplete="off">
     <select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged('delcity')">
 		<option value="Centreville">Centreville</option>
 		<option value="Chantilly">Chantilly</option>
