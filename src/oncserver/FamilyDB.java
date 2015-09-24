@@ -290,7 +290,7 @@ public class FamilyDB extends ONCServerDB
 			//set region for family
 			int region = updateRegion(addedFam);
 			addedFam.setRegion(region);
-		
+	
 			//create the ONC number
 			String oncNum = generateONCNumber(year, region);
 			addedFam.setONCNum(oncNum);
@@ -299,7 +299,6 @@ public class FamilyDB extends ONCServerDB
 			int famID = fDBYear.getNextID();
 			addedFam.setID(famID);
 			
-			//set the new target ID for family if necessary
 			String targetID = addedFam.getODBFamilyNum();
 			if(targetID.contains("NNA") || targetID.equals(""))
 			{
@@ -671,6 +670,148 @@ public class FamilyDB extends ONCServerDB
     	return oncNum;
     }
     
+    /***
+     * Check to see if family is already in a family data base. 
+     */
+    ONCFamily getDuplicateFamily(int year, ONCFamily addedFamily, List<ONCChild> addedChildList)
+    {
+//    	System.out.println(String.format("FamilyDB.getDuplicateFamily: "
+//				+ "year= %d, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//				year, addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+    	
+    	ONCFamily dupFamily = null;
+    	boolean bFamilyDuplicate = false;
+    	//check to see if family exists in year. 
+    	List<ONCFamily> famList = familyDB.get(year-BASE_YEAR).getList();
+    	
+//    	System.out.println("getDuplicateFamiiy: got famList, size= " + famList.size());
+    	
+    	int dupFamilyIndex = 0;
+    	
+    	while(dupFamilyIndex < famList.size() && 
+    		   addedFamily.getID() != famList.get(dupFamilyIndex).getID() &&
+    			!bFamilyDuplicate)
+    	{
+    		dupFamily = famList.get(dupFamilyIndex++);
+    		
+//    		System.out.println(String.format("FamiyDB.getDuplicateFamily: Checking dupFamily id= %d "
+//					+ "dupFamily HOHLastName= %s, dupRef#= %s, against addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//					dupFamily.getID(), dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
+//					addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+    		
+    		List<ONCChild> dupChildList = childDB.getChildList(year, dupFamily.getID());
+    		
+//    		if(dupChildList == null)
+//   			System.out.println("FamilyDB.getDuplicateFamily: dupChildList is null");
+//    		else
+//    			System.out.println(String.format("FamiyDB.getDuplicateFamily: #children in %s family = %d ",
+//					dupFamily.getHOHLastName(), dupChildList.size()));
+    	
+    		bFamilyDuplicate = areFamiliesTheSame(dupFamily, dupChildList, addedFamily, addedChildList);
+    	}
+    	
+//    	if(dupFamily != null)
+//    		System.out.println(String.format("FamiyDB.getDuplicateFamily: "
+//					+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//					dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
+//					addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+//    	
+//    	else
+//    		System.out.println("FamiyDB.getDuplicateFamily: dupFamiy is null");
+    	
+    	return bFamilyDuplicate ? dupFamily : null;	
+    }
+    
+    /****
+     * Checks each prior year in data base to see if an addedFamily matches. Once an added 
+     * family matches the search ends and the method returns the ODB# for the family. If
+     * no match is found, null is returned
+     * @param year
+     * @param addedFamily
+     * @param addedChildList
+     * @return
+     */
+    ONCFamily isPriorYearFamily(int year, ONCFamily addedFamily, List<ONCChild> addedChildList)
+    {
+    	boolean bFamilyIsInPriorYear = false;
+    	ONCFamily pyFamily = null;
+    	int yearIndex = year-1;
+    	
+    	//check each prior year for a match
+    	while(yearIndex >= BASE_YEAR && !bFamilyIsInPriorYear)
+    	{
+    		List<ONCFamily> pyFamilyList = familyDB.get(yearIndex-BASE_YEAR).getList();
+    		
+    		//check each family in year for a match
+    		int pyFamilyIndex = 0;
+    		while(pyFamilyIndex < pyFamilyList.size() && !bFamilyIsInPriorYear)
+    		{
+    			pyFamily = pyFamilyList.get(pyFamilyIndex++);
+    			List<ONCChild> pyChildList = childDB.getChildList(yearIndex, pyFamily.getID());
+    			
+    			bFamilyIsInPriorYear = areFamiliesTheSame(pyFamily, pyChildList, addedFamily, addedChildList);	
+    		}
+    		
+    		yearIndex--;
+    	}
+    	
+    	return bFamilyIsInPriorYear ? pyFamily : null;
+    	
+    }
+    
+    boolean areFamiliesTheSame(ONCFamily checkFamily, List<ONCChild> checkChildList, 
+    							ONCFamily addedFamily, List<ONCChild> addedChildList)
+    {
+    	
+//    	System.out.println(String.format("FamiyDB.areFamiliesThe Same: Checking family "
+//				+ "checkFamily HOHLastName= %s, checkFamilyRef#= %s, against addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//				checkFamily.getHOHLastName(), checkFamily.getODBFamilyNum(), 
+//				addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+    	
+    	return checkFamily.getHOHFirstName().equals(addedFamily.getHOHFirstName()) &&
+    			checkFamily.getHOHLastName().equals(addedFamily.getHOHLastName()) &&
+    			areChildrenTheSame(checkChildList, addedChildList);
+    }
+    
+    boolean areChildrenTheSame(List<ONCChild> checkChildList, List<ONCChild> addedChildList)
+    {
+    	boolean bChildrenAreTheSame = true;
+    	
+    	int checkChildIndex = 0;
+    	while(checkChildIndex < checkChildList.size() && bChildrenAreTheSame)
+    	{
+    		ONCChild checkChild = checkChildList.get(checkChildIndex);
+    		if(!isChildInList(checkChild, addedChildList))
+    			bChildrenAreTheSame = false;
+    		else
+    			checkChildIndex++;
+    	}
+    	
+    	return bChildrenAreTheSame;
+    }
+    
+    
+    boolean isChildInList(ONCChild checkChild, List<ONCChild> addedChildList)
+    {
+    	boolean bChildIsInList = false;
+    	int addedChildIndex = 0;
+        	
+    	while(addedChildIndex < addedChildList.size()  && !bChildIsInList)
+    	{
+    		ONCChild addedChild = addedChildList.get(addedChildIndex);
+    		
+    		if(checkChild.getChildLastName().equals(addedChild.getChildLastName()) ||
+    				checkChild.getChildDOB().equals(addedChild.getChildDOB()) ||
+    					checkChild.getChildGender().equals(addedChild.getChildGender()))
+    			bChildIsInList = true;
+    		else
+    			addedChildIndex++;
+    	}	
+    			
+    	return bChildIsInList;
+    }
+    
+    
     /******************************************************************************************************
      * This method generates a target ID number prior to import of external data. Each family only
      * has one target ID which remains constant from year to year
@@ -691,6 +832,12 @@ public class FamilyDB extends ONCServerDB
     		return "C0" + Integer.toString(highestTargetID);
     	else
     		return "C" + Integer.toString(highestTargetID);
+    }
+    
+    void decrementTargetID()
+    {
+    	highestTargetID--;
+    	bTargetIDChanged = true;
     }
     
     void readTargetID(String path)

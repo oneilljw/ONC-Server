@@ -44,6 +44,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	private static final int DEFAULT_YEAR = 2014;
+	private static final int FAMILY_STOPLIGHT_RED = 2;
 	
 	private static final int HTTP_OK = 200;
 	
@@ -770,13 +771,104 @@ public class ONCHttpHandler implements HttpHandler
 				key = "childfn" + Integer.toString(cn);	//get next child key
 			}
 			
+			//now that we have added children, we can check for duplicate family in this year.
+//			System.out.println("Checking for duplicate family");
+			ONCFamily dupFamily = familyDB.getDuplicateFamily(year, addedFamily, addedChildList);
+			
+//			if(dupFamily != null)
+//				System.out.println(String.format("HttpHandler.processFamilyReferral: "
+//						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
+//						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+//			
+			if(dupFamily == null)
+			{
+				//added family not in current year, check if in prior years
+//				System.out.println("Checking for prior year family");
+				ONCFamily pyFamily = familyDB.isPriorYearFamily(year, addedFamily, addedChildList);
+				if(pyFamily != null)
+				{
+//					System.out.println(String.format("HttpHandler.processFamilyReferral: "
+//							+ "pyFamily HOHLastName= %s, pyRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//							pyFamily.getHOHLastName(), pyFamily.getODBFamilyNum(), 
+//							addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+					
+					//added family was in prior year, keep the same target and reset the 
+					//newly assigned target id index
+					addedFamily.setODBFamilyNum(pyFamily.getODBFamilyNum());
+					familyDB.decrementTargetID();
+				}
+			}
+			else if(!dupFamily.getODBFamilyNum().startsWith("C") && 
+						addedFamily.getODBFamilyNum().startsWith("C"))
+			{
+//				System.out.println(String.format("HttpHandler.processFamilyReferral, dupFamily no C: "
+//						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
+//						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+				
+				//family is in current year already with an ODB referred target ID
+				addedFamily.setONCNum("DEL");
+				addedFamily.setDNSCode("DUP");
+				addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
+				addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
+				addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
+				familyDB.decrementTargetID();
+			}	
+			else if(dupFamily.getODBFamilyNum().startsWith("C") && 
+					!addedFamily.getODBFamilyNum().startsWith("C"))
+			{
+//				System.out.println(String.format("HttpHandler.processFamilyReferral: dupFamily with C "
+//						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
+//						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+				
+				//family is already in current year with an ONC referred target ID and added family 
+				//does not have an ONC target id. In this situation, we can't decrement the assigned
+				//ONC based target id and will just have to burn one.
+				dupFamily.setONCNum("DEL");
+				dupFamily.setDNSCode("DUP");
+				dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
+				dupFamily.setStoplightMssg("DUP of " + addedFamily.getODBFamilyNum());
+				dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
+				dupFamily.setODBFamilyNum(addedFamily.getODBFamilyNum());
+			}
+			else if(dupFamily.getODBFamilyNum().startsWith("C") && 
+					addedFamily.getODBFamilyNum().startsWith("C"))
+			{
+				//which one was first?
+				int dupNumber = Integer.parseInt(dupFamily.getODBFamilyNum().substring(1));
+				int addedNumber = Integer.parseInt(addedFamily.getODBFamilyNum().substring(1));
+				
+				if(dupNumber < addedNumber)
+				{
+					//dup family has the correct ref #, so added family is duplicate
+					addedFamily.setONCNum("DEL");
+					addedFamily.setDNSCode("DUP");
+					addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
+					addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
+					addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
+					familyDB.decrementTargetID();
+				}
+				else
+				{
+					//added family has the correct ref #, so dup family is the duplicate
+					dupFamily.setONCNum("DEL");
+					dupFamily.setDNSCode("DUP");
+					dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
+					dupFamily.setStoplightMssg("DUP of " + addedFamily.getODBFamilyNum());
+					dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
+					dupFamily.setODBFamilyNum(addedFamily.getODBFamilyNum());
+				}
+			}
+			
 			//create the other adults in the family
 			String adultName, adultGender;
 			
 			int an = 0;
 			key = "adultname" + Integer.toString(an);
 			
-			//using adultnameX as the iterator, create a db entry for each
+			//using adult name as the iterator, create a db entry for each
 			//adult in the family
 			while(params.containsKey(key))
 			{
@@ -996,9 +1088,32 @@ public class ONCHttpHandler implements HttpHandler
     {
 		TimeZone timezone = TimeZone.getTimeZone("GMT");
 		Calendar gmtDOB = Calendar.getInstance(timezone);
+		
+		SimpleDateFormat websitesdf = new SimpleDateFormat();
+		websitesdf.setTimeZone(TimeZone.getTimeZone("GMT"));
     	
-    	//First, parse the input string based on format to create an Calendar variable for DOB
-    	//If it can't be determined, set DOB = today. 
+    	//Create a date formatter to  parse the input string to create an Calendar
+		//variable for DOB. If it can't be determined, set DOB = today.
+		if(dob.length() == 10 && dob.contains("-"))
+			websitesdf.applyPattern("MM-dd-yyyy");
+		else if(dob.length() < 10 && dob.contains("-"))
+			websitesdf.applyPattern("M-d-yy");
+		else if(dob.length() == 10 && dob.contains("/"))
+			websitesdf.applyPattern("MM/dd/yyyy");
+		else
+			websitesdf.applyPattern("M/d/yy");
+		
+		try
+		{
+			gmtDOB.setTime(websitesdf.parse(dob));
+		}
+		catch (ParseException e)
+		{
+			String errMssg = "Couldn't determine DOB from input: " + dob;
+		}
+		
+		
+/*		
     	if(dob.length() == 10 && dob.contains("-"))	//format one
     	{			
     		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -1025,8 +1140,8 @@ public class ONCHttpHandler implements HttpHandler
     			String errMssg = "Couldn't determine DOB from input: " + dob;
 			}
     	}
-    	
-    	//then convert the Calendar to a Date and return it
+*/    	
+    	//then convert the Calendar to a Date in Millis and return it
     	return gmtDOB.getTimeInMillis();
     }
 	
