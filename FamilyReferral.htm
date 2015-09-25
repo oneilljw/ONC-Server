@@ -482,13 +482,12 @@
 		                   document.getElementById('city'), 
 		                   document.getElementById('zipcode')];
 		
-		var unitElement = [document.getElementById('unit')];
-		
-		//check to see that housenum and street are provided
+		//check to see that housenum and street are not blank
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 		{
 			//form the address url
 	        var addressparams = createAddressParams(addrElement);
+
 	        var addrresponse;
 	        $.getJSON('address', addressparams, function(data)
 	      	{
@@ -508,7 +507,7 @@
 	      		{
 	      			hohAddressGood = false;
 	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			changeAddressBackground(unitElement, errorColor);
+	      			changeAddressBackground(document.getElementById('unit'), errorColor);
 	      		}
 	      	});
 		}
@@ -524,8 +523,6 @@
 		                   document.getElementById('delunit'),
 		                   document.getElementById('delcity'), 
 		                   document.getElementById('delzipcode')];
-		
-		var unitElement = [document.getElementById('delunit')];
 		
 		//check to see that housenum and street are provided
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
@@ -551,7 +548,7 @@
 	      		{
 	      			delAddressGood = false;
 	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			changeAddressBackground(unitElement, errorColor);
+	      			changeAddressBackground(document.getElementById('delunit'), errorColor);
 	      		}
 	      	});
 		}
@@ -574,13 +571,12 @@
 	}
 	
 	function createAddressParams(addrElement)
-	{
-
+	{	
 		var addressparams = "token=" + sessionStorage.getItem("token") + "&" +
 							"prioryear=" + sessionStorage.getItem("prioryear") + "&" +
-							"housenum=" + addrElement[0].value + "&" +
-							"street=" + addrElement[1].value + "&" +
-							"unit=" + addrElement[2].value + "&" +
+							"housenum=" + encodeURIComponent(addrElement[0].value) + "&" +
+							"street=" + encodeURIComponent(addrElement[1].value) + "&" +
+							"unit=" + encodeURIComponent(addrElement[2].value) + "&" +
 							"city=" + addrElement[3].value + "&" +
 							"zipcode=" + addrElement[4].value + "&" +
 							"callback=?";

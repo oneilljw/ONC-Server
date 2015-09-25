@@ -238,6 +238,11 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/address"))
     	{
     		String sessionID = (String) params.get("token");
+    		
+//			Set<String> keyset = params.keySet();
+//			for(String key:keyset)
+//				System.out.println(String.format("/address key=%s, value=%s", key, params.get(key)));
+    		
     		ClientManager clientMgr = ClientManager.getInstance();
     		WebClient wc;
     		String response = null;

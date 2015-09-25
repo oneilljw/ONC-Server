@@ -312,12 +312,12 @@
 			elements[i].style.backgroundColor = color;
 	}
 	function createAddressParams(addrElement)
-	{
+	{	
 		var addressparams = "token=" + sessionStorage.getItem("token") + "&" +
 							"prioryear=" + sessionStorage.getItem("prioryear") + "&" +
-							"housenum=" + addrElement[0].value + "&" +
-							"street=" + addrElement[1].value + "&" +
-							"unit=" + addrElement[2].value + "&" +
+							"housenum=" + encodeURIComponent(addrElement[0].value) + "&" +
+							"street=" + encodeURIComponent(addrElement[1].value) + "&" +
+							"unit=" + encodeURIComponent(addrElement[2].value) + "&" +
 							"city=" + addrElement[3].value + "&" +
 							"zipcode=" + addrElement[4].value + "&" +
 							"callback=?";
