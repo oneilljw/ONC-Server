@@ -23,7 +23,7 @@ public class ONCServer
 	 */
 	
 	private static final String APPNAME = "Our Neighbor's Child Server";
-	private static final String ONC_SERVER_VERSION = "Our Neighbor's Child Server Version 1.27\n";
+	private static final String ONC_SERVER_VERSION = "Our Neighbor's Child Server Version 2.00\n";
 	private static final String ONC_COPYRIGHT = "\u00A92015 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop

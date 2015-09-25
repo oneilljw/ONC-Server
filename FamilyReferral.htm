@@ -149,7 +149,8 @@
 	
 	function addWishTableRow(cnum, child)
     {
-		var childinfo= [child.firstname, child.age + " " + child.gender.toLowerCase()];
+		
+		var childinfo= [child.firstname, getAge(child.sDOB) + " " + child.gender.toLowerCase()];
 		var childfieldsize= [15, 14];
 		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
         
@@ -233,7 +234,7 @@
         	child["sDOB"] =	document.getElementById('childdob').value;
         	child["gender"] = document.getElementById('childgender').value;
         	child["school"] = document.getElementById('childschool').value;
-	   	 	child["age"] = getAge(child["sDOB"]);
+//	   	 	child["age"] = getAge(child["sDOB"]);
         	childrenJson.push(child);
         
         	updateChildTable();
