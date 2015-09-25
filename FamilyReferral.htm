@@ -483,6 +483,8 @@
 		                   document.getElementById('city'), 
 		                   document.getElementById('zipcode')];
 		
+		var unitElement = [document.getElementById('unit')];
+		
 		//check to see that housenum and street are not blank
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 		{
@@ -508,7 +510,7 @@
 	      		{
 	      			hohAddressGood = false;
 	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			changeAddressBackground(document.getElementById('unit'), errorColor);
+	      			changeAddressBackground(unitElement, errorColor);
 	      		}
 	      	});
 		}
@@ -524,6 +526,8 @@
 		                   document.getElementById('delunit'),
 		                   document.getElementById('delcity'), 
 		                   document.getElementById('delzipcode')];
+		
+		var unitElement = [document.getElementById('delunit')];
 		
 		//check to see that housenum and street are provided
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
@@ -549,7 +553,7 @@
 	      		{
 	      			delAddressGood = false;
 	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			changeAddressBackground(document.getElementById('delunit'), errorColor);
+	      			changeAddressBackground(unitElement, errorColor);
 	      		}
 	      	});
 		}

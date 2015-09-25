@@ -653,7 +653,7 @@ public class ONCHttpHandler implements HttpHandler
 		if(bUnitMissing)
 			errorCode += 2;
 		
-	//	System.out.println("bUnitEmpty=" + bUnitEmpty + " bShouldHaveUnit=" + bShouldHaveUnit);		
+//		System.out.println("HttpHandler.verifyAddress: ErrorCode: "+ errorCode);		
 		boolean bAddressGood = bAddressValid && !bUnitMissing;
 		
 		Gson gson = new Gson();
