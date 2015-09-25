@@ -3,6 +3,7 @@ package oncserver;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 
@@ -23,11 +24,13 @@ public class ONCWebServer
 							"/referfamily", "/familyupdate", "/updatefamily", "/changepw"};
 		
 		HttpContext context;
+//		Filter paramFilter = new ParameterFilter();
 		
 		for(String contextname:contexts)
 		{
 			context = server.createContext(contextname, oncHttpHandler);
 			context.getFilters().add(new ParameterFilter());
+//			context.getFilters().add(paramFilter);
 		}
 
 		server.setExecutor(null); // creates a default executor
