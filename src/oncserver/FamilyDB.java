@@ -768,8 +768,8 @@ public class FamilyDB extends ONCServerDB
 //				checkFamily.getHOHLastName(), checkFamily.getODBFamilyNum(), 
 //				addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
     	
-    	return checkFamily.getHOHFirstName().equals(addedFamily.getHOHFirstName()) &&
-    			checkFamily.getHOHLastName().equals(addedFamily.getHOHLastName()) &&
+    	return checkFamily.getHOHFirstName().equalsIgnoreCase(addedFamily.getHOHFirstName()) &&
+    			checkFamily.getHOHLastName().equalsIgnoreCase(addedFamily.getHOHLastName()) &&
     			areChildrenTheSame(checkChildList, addedChildList);
     }
     
@@ -800,9 +800,9 @@ public class FamilyDB extends ONCServerDB
     	{
     		ONCChild addedChild = addedChildList.get(addedChildIndex);
     		
-    		if(checkChild.getChildLastName().equals(addedChild.getChildLastName()) ||
+    		if(checkChild.getChildLastName().equalsIgnoreCase(addedChild.getChildLastName()) ||
     				checkChild.getChildDOB().equals(addedChild.getChildDOB()) ||
-    					checkChild.getChildGender().equals(addedChild.getChildGender()))
+    					checkChild.getChildGender().equalsIgnoreCase(addedChild.getChildGender()))
     			bChildIsInList = true;
     		else
     			addedChildIndex++;

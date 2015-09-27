@@ -1111,6 +1111,11 @@ public class ONCHttpHandler implements HttpHandler
 		try
 		{
 			gmtDOB.setTime(websitesdf.parse(dob));
+			gmtDOB.set(Calendar.HOUR_OF_DAY, 0);
+			gmtDOB.set(Calendar.MINUTE, 0);
+			gmtDOB.set(Calendar.SECOND, 0);
+			gmtDOB.set(Calendar.MILLISECOND, 0);
+			System.out.println(gmtDOB.getTimeInMillis());
 		}
 		catch (ParseException e)
 		{
