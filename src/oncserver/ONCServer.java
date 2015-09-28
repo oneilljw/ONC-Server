@@ -134,7 +134,7 @@ public class ONCServer
         
         oncFrame.setJMenuBar(serverMenuBar);
         oncFrame.setContentPane(serverUI); 
-        oncFrame.setSize(500, 450);
+        oncFrame.setSize(524, 520);
         oncFrame.setVisible(true);
 	}
     

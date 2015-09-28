@@ -68,7 +68,7 @@ public class ClientManager implements ActionListener
 	{
 		c.closeClientSocket();
 		dtClientAL.remove(c);
-		serverUI.displayClientTable(dtClientAL);
+		serverUI.displayDesktopClientTable(dtClientAL);
 	}
 	
 	void clientQuit(DesktopClient c)
@@ -76,7 +76,7 @@ public class ClientManager implements ActionListener
 		serverUI.addLogMessage(String.format("Client %d quit", c.getClientID()));
 		c.closeClientSocket();
 		dtClientAL.remove(c);
-		serverUI.displayClientTable(dtClientAL);
+		serverUI.displayDesktopClientTable(dtClientAL);
 	}
 	
 	void killClient(DesktopClient c)
@@ -84,7 +84,7 @@ public class ClientManager implements ActionListener
 		serverUI.addLogMessage(String.format("Client %d killed", c.getClientID()));
 		c.closeClientSocket();
 		dtClientAL.remove(c);
-		serverUI.displayClientTable(dtClientAL);
+		serverUI.displayDesktopClientTable(dtClientAL);
 	}
 	
 	void clientLoggedOut(DesktopClient c)
@@ -93,14 +93,14 @@ public class ClientManager implements ActionListener
 												c.getClientName()));
 		c.closeClientSocket();
 		dtClientAL.remove(c);
-		serverUI.displayClientTable(dtClientAL);
+		serverUI.displayDesktopClientTable(dtClientAL);
 	}
 	
 	synchronized DesktopClient addDesktopClient(Socket socket)
 	{
 		DesktopClient c = new DesktopClient(socket, clientID);
 		dtClientAL.add(c);
-		serverUI.displayClientTable(dtClientAL);
+		serverUI.displayDesktopClientTable(dtClientAL);
 		c.start();
 		serverUI.addLogMessage(String.format("Client %d connected, ip= %s", 
 				clientID, socket.getRemoteSocketAddress().toString()));
@@ -114,6 +114,7 @@ public class ClientManager implements ActionListener
 		WebClient wc = new WebClient(UUID.randomUUID(), webUser);
 		webClientAL.add(wc);
 
+		serverUI.displayWebsiteClientTable(webClientAL);
 		serverUI.addLogMessage(String.format("Web Client connected, ip=%s, user= %s, sessionID=%s", 
 				 				t.getRemoteAddress().toString(), webUser.getLastname(), wc.getSessionID()));
 		
@@ -168,6 +169,7 @@ public class ClientManager implements ActionListener
 		if(index < webClientAL.size())	//found web client
 		{	
 			webClientAL.remove(index);
+			serverUI.displayWebsiteClientTable(webClientAL);
 			return true;
 		}
 		else
@@ -179,12 +181,12 @@ public class ClientManager implements ActionListener
 		serverUI.addLogMessage(mssg);
 		
 		if(bValid)	//redraw table, we now know who the client is
-			serverUI.displayClientTable(dtClientAL);
+			serverUI.displayDesktopClientTable(dtClientAL);
 	}
 	
 	void clientStateChanged()
 	{
-		serverUI.displayClientTable(dtClientAL);
+		serverUI.displayDesktopClientTable(dtClientAL);
 	}
 	
 	void addLogMessage(String mssg)
@@ -303,7 +305,7 @@ public class ClientManager implements ActionListener
 				{
 					//Heart beat was lost and remained lost past the terminal time limit
 					c.setClientHeartbeat(Heartbeat.Terminal);
-					serverUI.displayClientTable(dtClientAL);
+					serverUI.displayDesktopClientTable(dtClientAL);
 				
 					String mssg = String.format("Client %d heart beat terminal, not detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);
@@ -314,7 +316,7 @@ public class ClientManager implements ActionListener
 				{
 					//Heart beat was not detected
 					c.setClientHeartbeat(Heartbeat.Lost);
-					serverUI.displayClientTable(dtClientAL);
+					serverUI.displayDesktopClientTable(dtClientAL);
 				
 					String mssg = String.format("Client %d heart beat lost, not detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);
@@ -327,7 +329,7 @@ public class ClientManager implements ActionListener
 					//Heart beat was lost and is still lost or went terminal and re-recovered prior to
 					//killing the client
 					c.setClientHeartbeat(Heartbeat.Active);
-					serverUI.displayClientTable(dtClientAL);
+					serverUI.displayDesktopClientTable(dtClientAL);
 				
 					String mssg = String.format("Client %d heart beat recovered, detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);
@@ -357,6 +359,8 @@ public class ClientManager implements ActionListener
 				webClientAL.remove(index);
 			}
 		}
+		
+		serverUI.displayWebsiteClientTable(webClientAL);
 	}	
 	
 	private class ClientTimerListener implements ActionListener

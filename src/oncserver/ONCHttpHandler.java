@@ -721,6 +721,11 @@ public class ONCHttpHandler implements HttpHandler
 		
 		Map<String, String> familyMap = createMap(params, familyKeys);
 		
+		//check to see if this is a new family or a re-referral. Need to know this to determine 
+		//whether to perform a prior year check after the family and children objects are created
+		String targetID = familyMap.get("targetid");
+		boolean bNewFamily = targetID.contains("NNA") || targetID.equals("");
+		
 		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
 					familyMap.get("targetid"), "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
@@ -777,7 +782,6 @@ public class ONCHttpHandler implements HttpHandler
 			}
 			
 			//now that we have added children, we can check for duplicate family in this year.
-//			System.out.println("Checking for duplicate family");
 			ONCFamily dupFamily = familyDB.getDuplicateFamily(year, addedFamily, addedChildList);
 			
 //			if(dupFamily != null)
@@ -786,24 +790,27 @@ public class ONCHttpHandler implements HttpHandler
 //						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
 //						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
 //			
-			if(dupFamily == null)
+			if(dupFamily == null)	//if not a dup, then for new families, check for prior year
 			{
 				//added family not in current year, check if in prior years
-//				System.out.println("Checking for prior year family");
-				ONCFamily pyFamily = familyDB.isPriorYearFamily(year, addedFamily, addedChildList);
-				if(pyFamily != null)
+				//only check new families for prior year existence. If a re-referral,
+				//we already know the reference id was from prior year
+				ONCFamily pyFamily = null;
+				if(bNewFamily)	
 				{
-//					System.out.println(String.format("HttpHandler.processFamilyReferral: "
-//							+ "pyFamily HOHLastName= %s, pyRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
-//							pyFamily.getHOHLastName(), pyFamily.getODBFamilyNum(), 
-//							addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
-					
-					//added family was in prior year, keep the same target and reset the 
-					//newly assigned target id index
-					addedFamily.setODBFamilyNum(pyFamily.getODBFamilyNum());
-					familyDB.decrementTargetID();
+					pyFamily = familyDB.isPriorYearFamily(year, addedFamily, addedChildList);
+					if(pyFamily != null)
+					{				
+						//added new family was in prior year, keep the prior year reference # 
+						//and reset the newly assigned target id index
+						addedFamily.setODBFamilyNum(pyFamily.getODBFamilyNum());
+						familyDB.decrementTargetID();
+					}
 				}
 			}
+			//else if family was a dup, determine which family has the best reference number to
+			//use. The family with the best reference number is retained and the family with 
+			//the worst reference number is marked as duplicate
 			else if(!dupFamily.getODBFamilyNum().startsWith("C") && 
 						addedFamily.getODBFamilyNum().startsWith("C"))
 			{

@@ -892,6 +892,9 @@ public class FamilyDB extends ONCServerDB
 	    	writer.writeNext(data);
 	    	
 	    	writer.close();
+	    	
+	    	bTargetIDChanged = false;
+//	    	System.out.println("FamilyDB.saveTargetID: TargetID Saved= " + data[0]);
 	    	       	    
 	    } 
 	    catch (IOException x)

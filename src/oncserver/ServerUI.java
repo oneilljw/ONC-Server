@@ -46,11 +46,12 @@ public class ServerUI extends JPanel implements ListSelectionListener
 	private JLabel lblNumClients;
 	private JRadioButton rbStoplight;
 //	private ONCTable clientTable;
-	private JTable clientTable;
-	private DefaultTableModel clientTableModel;
-	private boolean bClientTableChanging;
+	private JTable desktopClientTable, websiteClientTable;
+	private DefaultTableModel desktopClientTableModel, websiteClientTableModel;
+	private boolean bDesktopClientTableChanging, bWebsiteClientTableChanging;
 	
 	private ArrayList<DesktopClient> clientTableList;
+	private ArrayList<WebClient> websiteTableList;
 	
 //	private static String[] columnToolTips = {"ID", "First Name", "Last Name", 
 //		  										"Permission", "Client Status", "Heart Beat",
@@ -97,16 +98,16 @@ public class ServerUI extends JPanel implements ListSelectionListener
     	statusPanel.add(statusPanelCenter);
     	statusPanel.add(statusPanelRight);
     	
-    	//Set up the client table panel
-    	JPanel tablepanel = new JPanel();
-    	tablepanel.setLayout(new BorderLayout());
+    	//Set up the desktop client table panel and wesite client table panel
+    	JPanel desktoptablepanel = new JPanel();
+    	desktoptablepanel.setLayout(new BorderLayout());
     	
-    	bClientTableChanging = false;
+    	bDesktopClientTableChanging = false;
 //    	clientTable = new ONCTable(columnToolTips, new Color(240,248,255));
-    	clientTable = new JTable();
+    	desktopClientTable = new JTable();
 
     	//Set up the table model. Cells are not editable
-    	clientTableModel = new DefaultTableModel(columns, 0) {
+    	desktopClientTableModel = new DefaultTableModel(columns, 0) {
     		private static final long serialVersionUID = 1L;
     				
     		@Override
@@ -118,8 +119,8 @@ public class ServerUI extends JPanel implements ListSelectionListener
 
     	//Set the table model, select ability to select multiple rows and add a listener to 
     	//check if the user has selected a row. 
-    	clientTable.setModel(clientTableModel);
-    	clientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    	desktopClientTable.setModel(desktopClientTableModel);
+    	desktopClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 //    	clientTable.getSelectionModel().addListSelectionListener(this);
 //    	clientTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 //    		@Override
@@ -132,13 +133,13 @@ public class ServerUI extends JPanel implements ListSelectionListener
     	int tablewidth = 0;
     	for(int i=0; i < colWidths.length; i++)
     	{
-    		clientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
+    		desktopClientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
     		tablewidth += colWidths[i];
     	}
    		tablewidth += 24; 	//Account for vertical scroll bar
 
     	//Set up the table header
-    	JTableHeader anHeader = clientTable.getTableHeader();
+    	JTableHeader anHeader = desktopClientTable.getTableHeader();
     	anHeader.setForeground( Color.black);
     	anHeader.setBackground( new Color(161,202,241));
 
@@ -156,14 +157,87 @@ public class ServerUI extends JPanel implements ListSelectionListener
     	DefaultTableCellRenderer dtcr = new DefaultTableCellRenderer();    
     	dtcr.setHorizontalAlignment(SwingConstants.CENTER);
     	for(int i=0; i<center_cols.length; i++)
-    		clientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
+    		desktopClientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
 
 //    	clientTable.setBorder(UIManager.getBorder("Table.scrollPaneBorder"));
 
-    	clientTable.setFillsViewportHeight(true);
-    	tablepanel.add(anHeader, BorderLayout.NORTH);
-    	tablepanel.add(clientTable, BorderLayout.CENTER);
-    	tablepanel.setPreferredSize(new Dimension(tablewidth, clientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
+    	desktopClientTable.setFillsViewportHeight(true);
+    	desktoptablepanel.add(anHeader, BorderLayout.NORTH);
+    	desktoptablepanel.add(desktopClientTable, BorderLayout.CENTER);
+    	desktoptablepanel.setPreferredSize(new Dimension(tablewidth, desktopClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
+/*    	
+    	//Create the scroll pane and add the table to it.
+    	JScrollPane clientScrollPane = new JScrollPane(clientTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+    												JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+    	clientScrollPane.setPreferredSize(new Dimension(tablewidth, clientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
+*/ 
+    	JPanel websitetablepanel = new JPanel();
+    	websitetablepanel.setLayout(new BorderLayout());
+    	
+    	bWebsiteClientTableChanging = false;
+//    	clientTable = new ONCTable(columnToolTips, new Color(240,248,255));
+    	websiteClientTable = new JTable();
+
+    	//Set up the table model. Cells are not editable
+    	websiteClientTableModel = new DefaultTableModel(columns, 0) {
+    		private static final long serialVersionUID = 1L;
+    				
+    		@Override
+    		//All cells are locked from being changed by user
+    		public boolean isCellEditable(int row, int column) {return false;}
+    	};
+    	
+    	websiteTableList = new ArrayList<WebClient>();	//List holds references of clients show in table
+
+    	//Set the table model, select ability to select multiple rows and add a listener to 
+    	//check if the user has selected a row. 
+    	websiteClientTable.setModel(websiteClientTableModel);
+    	websiteClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+//    	clientTable.getSelectionModel().addListSelectionListener(this);
+//    	clientTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+//    		@Override
+//    		public void valueChanged(ListSelectionEvent arg0) {
+//    			checkApplyChangesEnabled();	//Check to see if user postured to change delivery driver.	
+//    		}
+//    	});
+
+//    	//Set table column widths
+//    	tablewidth = 0;
+    	for(int i=0; i < colWidths.length; i++)
+    	{
+    		websiteClientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
+//    		tablewidth += colWidths[i];
+    	}
+//   		tablewidth += 24; 	//Account for vertical scroll bar
+
+    	//Set up the table header
+    	anHeader = websiteClientTable.getTableHeader();
+    	anHeader.setForeground( Color.black);
+    	anHeader.setBackground( new Color(161,202,241));
+
+    	//mouse listener for table header click causes table to be sorted based on column selected
+    	//uses family data base sort method to sort. Method requires ONCFamily array list to be sorted
+    	//and column name
+    	//anHeader.addMouseListener(new MouseAdapter() {
+    	//	@Override
+    	//    public void mouseClicked(MouseEvent e) {
+    	//		//TODO: add table sorting code here
+    	//   }
+    	//});
+
+    	//Center cell entries for specified cells
+    	dtcr = new DefaultTableCellRenderer();    
+    	dtcr.setHorizontalAlignment(SwingConstants.CENTER);
+    	for(int i=0; i<center_cols.length; i++)
+    		websiteClientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
+
+//    	clientTable.setBorder(UIManager.getBorder("Table.scrollPaneBorder"));
+
+    	websiteClientTable.setFillsViewportHeight(true);
+    	websitetablepanel.add(anHeader, BorderLayout.NORTH);
+    	websitetablepanel.add(websiteClientTable, BorderLayout.CENTER);
+    	websitetablepanel.setPreferredSize(new Dimension(tablewidth, websiteClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
 /*    	
     	//Create the scroll pane and add the table to it.
     	JScrollPane clientScrollPane = new JScrollPane(clientTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
@@ -171,6 +245,7 @@ public class ServerUI extends JPanel implements ListSelectionListener
 
     	clientScrollPane.setPreferredSize(new Dimension(tablewidth, clientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
 */   			
+    	
     	//Set up the client log pane
     	logTA = new JTextArea();
     	logTA.setToolTipText("Server log");
@@ -215,12 +290,13 @@ public class ServerUI extends JPanel implements ListSelectionListener
         
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); 
         this.add(statusPanel);
-        this.add(tablepanel);
+        this.add(desktoptablepanel);
+        this.add(websitetablepanel);
 //      this.add(clientScrollPane);
         this.add(logScrollPane);
         this.add(cntlPanel);
         
-        this.setMinimumSize(new Dimension(tablewidth, 400));
+        this.setMinimumSize(new Dimension(tablewidth, 600));
 	}
 	
 	/** Initialize icons */
@@ -242,22 +318,22 @@ public class ServerUI extends JPanel implements ListSelectionListener
 		
 	}
 	
-	void displayClientTable(ArrayList<DesktopClient> cAL)
+	void displayDesktopClientTable(ArrayList<DesktopClient> cAL)
 	{
-		bClientTableChanging = true;
+		bDesktopClientTableChanging = true;
 		
 		clientTableList.clear();
 		
-		while (clientTableModel.getRowCount() > 0)	//Clear the current table
-			clientTableModel.removeRow(0);
+		while (desktopClientTableModel.getRowCount() > 0)	//Clear the current table
+			desktopClientTableModel.removeRow(0);
 		
 		for(DesktopClient ci:cAL)	//Build the new table
 		{
 			clientTableList.add(ci);
-			clientTableModel.addRow(ci.getClientTableRow());
+			desktopClientTableModel.addRow(ci.getClientTableRow());
 		}
 		
-		bClientTableChanging = false;
+		bDesktopClientTableChanging = false;
 		
 		btnKillClient.setVisible(cAL.size() > 0);
 		btnKillClient.setEnabled(false);
@@ -265,11 +341,29 @@ public class ServerUI extends JPanel implements ListSelectionListener
 		lblNumClients.setText("Clients Connected: " + Integer.toString(cAL.size()));
 	}
 	
+	void displayWebsiteClientTable(ArrayList<WebClient> cAL)
+	{
+		bWebsiteClientTableChanging = true;
+		
+		websiteTableList.clear();
+		
+		while (websiteClientTableModel.getRowCount() > 0)	//Clear the current table
+			websiteClientTableModel.removeRow(0);
+		
+		for(WebClient ci:cAL)	//Build the new table
+		{
+			websiteTableList.add(ci);
+			websiteClientTableModel.addRow(ci.getClientTableRow());
+		}
+		
+		bWebsiteClientTableChanging = false;
+	}
+	
 	//returns a reference to the client that is selected in the client table
 	DesktopClient getClientTableSelection()
 	{
-		if(clientTable.getSelectedRow() != -1)	//make sure row is selected
-			return clientTableList.get(clientTable.getSelectedRow());
+		if(desktopClientTable.getSelectedRow() != -1)	//make sure row is selected
+			return clientTableList.get(desktopClientTable.getSelectedRow());
 			
 		else
 			return null;
@@ -304,10 +398,10 @@ public class ServerUI extends JPanel implements ListSelectionListener
 	@Override
 	public void valueChanged(ListSelectionEvent lse)
 	{
-		if(!lse.getValueIsAdjusting() &&lse.getSource() == clientTable.getSelectionModel() &&
-				!bClientTableChanging)
+		if(!lse.getValueIsAdjusting() &&lse.getSource() == desktopClientTable.getSelectionModel() &&
+				!bDesktopClientTableChanging)
 		{
-			btnKillClient.setEnabled(clientTable.getSelectedRowCount() > 0);
+			btnKillClient.setEnabled(desktopClientTable.getSelectedRowCount() > 0);
 		}
 	}
 }
