@@ -1115,42 +1115,12 @@ public class ONCHttpHandler implements HttpHandler
 			gmtDOB.set(Calendar.MINUTE, 0);
 			gmtDOB.set(Calendar.SECOND, 0);
 			gmtDOB.set(Calendar.MILLISECOND, 0);
-			System.out.println(gmtDOB.getTimeInMillis());
 		}
 		catch (ParseException e)
 		{
 			String errMssg = "Couldn't determine DOB from input: " + dob;
 		}
-		
-		
-/*		
-    	if(dob.length() == 10 && dob.contains("-"))	//format one
-    	{			
-    		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    		sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-    		try
-    		{
-				gmtDOB.setTime(sdf.parse(dob));
-			}
-    		catch (ParseException e)
-    		{
-    			String errMssg = "Couldn't determine DOB from input: " + dob;
-			}
-    	}
-    	else if(dob.contains("/"))	//format two
-    	{
-    		SimpleDateFormat oncdf = new SimpleDateFormat("M/d/yy");
-    		oncdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-    		try
-    		{
-				gmtDOB.setTime(oncdf.parse(dob));
-			}
-    		catch (ParseException e)
-    		{
-    			String errMssg = "Couldn't determine DOB from input: " + dob;
-			}
-    	}
-*/    	
+
     	//then convert the Calendar to a Date in Millis and return it
     	return gmtDOB.getTimeInMillis();
     }
