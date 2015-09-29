@@ -846,70 +846,7 @@ public class FamilyDB extends ONCServerDB
     	
     	return highestRefNum;
     }
-/*    
-    void readTargetID(String path)
-    {
-    	CSVReader reader;
-    	String[] nextLine, header;
-		try 
-		{
-			reader = new CSVReader(new FileReader(path));
-			if((header = reader.readNext()) != null)	//Does file have records? 
-	    	{
-	    		//Read the User File
-	    		if(header.length == TARGETID_HEADER_LENGTH)	//Does the record have the right # of fields? 
-	    		{
-	    			if((nextLine = reader.readNext()) != null)
-	    				highestTargetID = Integer.parseInt(nextLine[0]);
-	    		}
-	    		else
-	    		{
-	    			String error = String.format("%s file corrupted, header length = %d", path, header.length);
-	    	       	JOptionPane.showMessageDialog(null, error,  path + "Corrupted", JOptionPane.ERROR_MESSAGE);
-	    		}		   			
-	    	}
-	    	else
-	    	{
-	    		String error = String.format("%s file is empty", path);
-	    		JOptionPane.showMessageDialog(null, error,  path + " Empty", JOptionPane.ERROR_MESSAGE);
-	    	}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (HeadlessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
-    }
-   
-    void saveTargetID(String path)
-    {		
-    	String[] header = {"Highest Target ID"};
-    	String[] data = {Integer.toString(highestTargetID)};
-	    try 
-	    {
-	    	CSVWriter writer = new CSVWriter(new FileWriter(path));
-	    	writer.writeNext(header);
-	    	writer.writeNext(data);
-	    	
-	    	writer.close();
-	    	
-	    	bTargetIDChanged = false;
-//	    	System.out.println("FamilyDB.saveTargetID: TargetID Saved= " + data[0]);
-	    	       	    
-	    } 
-	    catch (IOException x)
-	    {
-	    	System.err.format("IO Exception: %s%n", x);
-	    }
-    }
-*/   
+
     int searchForONCNumber(int year, String oncnum)
     {
     	List<ONCFamily> oncFamAL = familyDB.get(year-BASE_YEAR).getList();
