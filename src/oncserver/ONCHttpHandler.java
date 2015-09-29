@@ -804,7 +804,7 @@ public class ONCHttpHandler implements HttpHandler
 						//added new family was in prior year, keep the prior year reference # 
 						//and reset the newly assigned target id index
 						addedFamily.setODBFamilyNum(pyFamily.getODBFamilyNum());
-						familyDB.decrementTargetID();
+						familyDB.decrementReferenceNumber();
 					}
 				}
 			}
@@ -825,7 +825,7 @@ public class ONCHttpHandler implements HttpHandler
 				addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 				addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
 				addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
-				familyDB.decrementTargetID();
+				familyDB.decrementReferenceNumber();
 			}	
 			else if(dupFamily.getODBFamilyNum().startsWith("C") && 
 					!addedFamily.getODBFamilyNum().startsWith("C"))
@@ -860,7 +860,7 @@ public class ONCHttpHandler implements HttpHandler
 					addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
 					addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
-					familyDB.decrementTargetID();
+					familyDB.decrementReferenceNumber();
 				}
 				else
 				{

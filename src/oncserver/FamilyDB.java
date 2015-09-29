@@ -1,9 +1,6 @@
 package oncserver;
 
-import java.awt.HeadlessException;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -11,8 +8,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.swing.JOptionPane;
 
 import ourneighborschild.MealStatus;
 import ourneighborschild.ONCChild;
@@ -23,17 +18,13 @@ import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.WishStatus;
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class FamilyDB extends ONCServerDB
 {
-	private static final int TARGETID_HEADER_LENGTH = 1;
 	private static final int FAMILYDB_HEADER_LENGTH = 41;
-	private static final String HIGHEST_TARGETID_FILENAME = "HighestTargetID.csv";
 	
 	private static final int FAMILY_STATUS_UNVERIFIED = 0;
 	private static final int FAMILY_STATUS_INFO_VERIFIED = 1;
@@ -45,8 +36,7 @@ public class FamilyDB extends ONCServerDB
 	
 	private static List<FamilyDBYear> familyDB;
 	private static FamilyDB instance = null;
-	private static int highestTargetID;
-	private static boolean bTargetIDChanged;
+	private static int highestRefNum;
 //	private static List<int[]> oncNumRanges;
 	
 	private static ServerChildDB childDB;
@@ -63,10 +53,6 @@ public class FamilyDB extends ONCServerDB
 		//create the family data bases for the years of ONC Server operation starting with 2012
 //		oncNumRanges = new ArrayList<int[]>();
 		
-		//retrieve the highest Target ID used by ONC direct family in-take
-		readTargetID(System.getProperty("user.dir") + "/" + HIGHEST_TARGETID_FILENAME);
-		bTargetIDChanged = false;
-
 		familyDB = new ArrayList<FamilyDBYear>();
 		
 		//populate the family data base for the last TOTAL_YEARS from persistent store
@@ -86,7 +72,10 @@ public class FamilyDB extends ONCServerDB
 			//set the next id
 			fDBYear.setNextID(getNextID(fDBYear.getList()));
 		}
-
+		
+		//set the reference number
+		highestRefNum = initializeHighestReferenceNumber();
+		
 		//set references to associated data bases
 		childDB = ServerChildDB.getInstance();
 		childwishDB = ServerChildWishDB.getInstance();
@@ -302,7 +291,7 @@ public class FamilyDB extends ONCServerDB
 			String targetID = addedFam.getODBFamilyNum();
 			if(targetID.contains("NNA") || targetID.equals(""))
 			{
-				targetID = generateTargetID();
+				targetID = generateReferenceNumber();
 				addedFam.setODBFamilyNum(targetID);
 			}
 			
@@ -540,9 +529,6 @@ public class FamilyDB extends ONCServerDB
 			exportDBToCSV(fDBYear.getList(), header, path);
 			fDBYear.setChanged(false);
 		}
-		
-		if(bTargetIDChanged)
-			saveTargetID(System.getProperty("user.dir") + "/" + HIGHEST_TARGETID_FILENAME);
 	}
 	
 	static boolean didAgentReferInYear(int agentID, int year)
@@ -813,33 +799,54 @@ public class FamilyDB extends ONCServerDB
     
     
     /******************************************************************************************************
-     * This method generates a target ID number prior to import of external data. Each family only
-     * has one target ID which remains constant from year to year
+     * This method generates a family reference number prior to import of external data. Each family
+     * has one reference number, which remains constant from year to year
      ******************************************************************************************************/
-    String generateTargetID()
+    String generateReferenceNumber()
     {
-    	//increment the saved target id number, format it to a five digit string
-    	highestTargetID++;
-    	bTargetIDChanged = true;	//mark it for next save
+    	//increment the last reference number used and format it to a five digit string
+    	//that starts with the letter 'C'
+    	highestRefNum++;
     	
-    	if(highestTargetID < 10)
-    		return "C0000" + Integer.toString(highestTargetID);
-    	else if(highestTargetID >= 10 && highestTargetID < 100)
-    		return "C000" + Integer.toString(highestTargetID);
-    	else if(highestTargetID >= 100 && highestTargetID < 1000)
-    		return "C00" + Integer.toString(highestTargetID);
-    	else if(highestTargetID >= 1000 && highestTargetID < 10000)
-    		return "C0" + Integer.toString(highestTargetID);
+    	if(highestRefNum < 10)
+    		return "C0000" + Integer.toString(highestRefNum);
+    	else if(highestRefNum >= 10 && highestRefNum < 100)
+    		return "C000" + Integer.toString(highestRefNum);
+    	else if(highestRefNum >= 100 && highestRefNum < 1000)
+    		return "C00" + Integer.toString(highestRefNum);
+    	else if(highestRefNum >= 1000 && highestRefNum < 10000)
+    		return "C0" + Integer.toString(highestRefNum);
     	else
-    		return "C" + Integer.toString(highestTargetID);
+    		return "C" + Integer.toString(highestRefNum);
     }
     
-    void decrementTargetID()
+    void decrementReferenceNumber() { highestRefNum--; }
+
+    /*******
+     * This method looks at every year in the data base and determines the highest ONC family
+     * reference number used to date. ONC reference numbers start with the letter 'C'
+     * and have the format Cxxxxx, where x's are digits 0-9.
+     ******************/
+    int initializeHighestReferenceNumber()
     {
-    	highestTargetID--;
-    	bTargetIDChanged = true;
+    	int highestRefNum = 0;
+    	for(FamilyDBYear dbYear: familyDB)
+    	{
+    		List<ONCFamily> yearListOfFamilies = dbYear.getList();
+    		for(ONCFamily f: yearListOfFamilies)
+    		{
+    			if(f.getODBFamilyNum().startsWith("C"))
+    			{
+    				int refNum = Integer.parseInt(f.getODBFamilyNum().substring(1));
+    				if(refNum > highestRefNum)
+    					highestRefNum = refNum;
+    			}
+    		}
+    	}
+    	
+    	return highestRefNum;
     }
-    
+/*    
     void readTargetID(String path)
     {
     	CSVReader reader;
@@ -880,7 +887,7 @@ public class FamilyDB extends ONCServerDB
 			e.printStackTrace();
 		}	
     }
-    
+   
     void saveTargetID(String path)
     {		
     	String[] header = {"Highest Target ID"};
@@ -902,7 +909,7 @@ public class FamilyDB extends ONCServerDB
 	    	System.err.format("IO Exception: %s%n", x);
 	    }
     }
-   
+*/   
     int searchForONCNumber(int year, String oncnum)
     {
     	List<ONCFamily> oncFamAL = familyDB.get(year-BASE_YEAR).getList();
