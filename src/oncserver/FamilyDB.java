@@ -139,6 +139,16 @@ public class FamilyDB extends ONCServerDB
 		{
 			ONCFamily currFam = fAL.get(index);
 			
+			//check if the reference number has changed to a Cxxxxx number greater than
+			//the current highestReferenceNumber. If it is, reset highestRefNum
+			if(updatedFamily.getODBFamilyNum().startsWith("C") && 
+				!currFam.getODBFamilyNum().equals(updatedFamily.getODBFamilyNum()))
+			{
+				int updatedFamilyRefNum = Integer.parseInt(updatedFamily.getODBFamilyNum().substring(1));
+				if(updatedFamilyRefNum > highestRefNum)
+					highestRefNum = updatedFamilyRefNum;
+			}
+			
 			//check if the address has changed and a region update check is required
 			if(!currFam.getHouseNum().equals(updatedFamily.getHouseNum()) ||
 				!currFam.getStreet().equals(updatedFamily.getStreet()) ||
