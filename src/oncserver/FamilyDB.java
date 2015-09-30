@@ -796,8 +796,8 @@ public class FamilyDB extends ONCServerDB
     	{
     		ONCChild addedChild = addedChildList.get(addedChildIndex);
     		
-    		if(checkChild.getChildLastName().equalsIgnoreCase(addedChild.getChildLastName()) ||
-    				checkChild.getChildDOB().equals(addedChild.getChildDOB()) ||
+    		if(checkChild.getChildLastName().equalsIgnoreCase(addedChild.getChildLastName()) &&
+    				checkChild.getChildDOB().equals(addedChild.getChildDOB()) &&
     					checkChild.getChildGender().equalsIgnoreCase(addedChild.getChildGender()))
     			bChildIsInList = true;
     		else
