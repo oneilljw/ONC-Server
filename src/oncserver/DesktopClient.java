@@ -305,6 +305,11 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(command);
                 	output.println(deliveryDB.getDeliveryHistory(year, command.substring(20)));
                 }
+                else if(command.startsWith("GET<websitestatus>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	output.println(ONCHttpHandler.getWebsiteStatus());
+                }
                 else if(command.startsWith("GET<changes>"))
                 {   
                 	if(changeQ.peek() == null)

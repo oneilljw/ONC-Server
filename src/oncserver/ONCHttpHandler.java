@@ -41,12 +41,21 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
 	private static final String UPDATE_HTML = "EditFamily.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
+	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	
 	private static final int HTTP_OK = 200;
+	private static boolean bWebsiteOnline;
+	private static String zTimeBackUp;
+	
+	public ONCHttpHandler()
+	{
+		bWebsiteOnline = true;
+		zTimeBackUp = "Online";
+	}
 	
 	public void handle(HttpExchange t) throws IOException 
     {
@@ -62,39 +71,40 @@ public class ONCHttpHandler implements HttpHandler
     	if(requestURI.equals("/welcome"))
     	{
     		String response = null;
-    		try {	
-    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
+    		try {
+    			if(bWebsiteOnline)
+    			{
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
+    				response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
+    			}
+    			else
+    			{
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
+    				response = response.replace("TIME_BACK_UP", "after 4pm EDT");
+    			}
     		} catch (IOException e) {
     			// TODO Auto-generated catch block
     			e.printStackTrace();
     		}
     		
-    		response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
-    		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
     	else if(requestURI.contains("/logout"))
     	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
+    		if(params.containsKey("token"))
+    		{	
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
     		
-    		if(!clientMgr.logoutWebClient(sessionID))
-    			clientMgr.addLogMessage(String.format("ONCHttpHandler.handle/logut: logout failure, client %s not found", sessionID));
+    			if(!clientMgr.logoutWebClient(sessionID))
+    				clientMgr.addLogMessage(String.format("ONCHttpHandler.handle/logut: logout failure, client %s not found", sessionID));
+    		} 
     		
-//    		String response = null;
-// 			try {	
-   // 			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), RETURN_TO_ONC_HTML));
-   // 		} catch (IOException e) {
-   // 			// TODO Auto-generated catch block
-   // 			e.printStackTrace();
-   // 		}
     		Headers header = t.getResponseHeaders();
     		ArrayList<String> headerList = new ArrayList<String>();
     		headerList.add("http://www.ourneighborschild.org");
     		header.put("Location", headerList);
-   //		response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
-   //		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    		
+  	
     		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
     		
     	}
@@ -450,6 +460,16 @@ public class ONCHttpHandler implements HttpHandler
     	}
     }
 	
+	static String getWebsiteStatus()
+	{
+		//build websiteStatusJson
+		String zWebOnline = bWebsiteOnline ? "true" : "false";
+		String response = "{\"bWebsiteOnline\":" + zWebOnline + "\"zTimeBackUp\":" + "\"zTimeBackUp\"}";
+		return response;
+	}
+	
+	static void setWebsiteStatus(boolean bWebsiteStatus) { bWebsiteOnline = bWebsiteStatus; }
+	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
 	{
 		t.sendResponseHeaders(html.getCode(), html.getResponse().length());
@@ -602,14 +622,23 @@ public class ONCHttpHandler implements HttpHandler
 	String invalidTokenReceived()
 	{
 		String response = null;
-		try {	
-			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
+		try {
+			if(bWebsiteOnline)
+			{
+				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
+				response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
+			}
+			else
+			{
+				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
+				response = response.replace("TIME_BACK_UP", "after 4pm EDT");
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
+		return response;
 	}
 
 	private String readFile( String file ) throws IOException
