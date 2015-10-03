@@ -257,6 +257,10 @@ public class FamilyDB extends ONCServerDB
 			//get the family data base for the correct year
 			FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 			
+			//check to see if family is already in the data base, if so, mark it as
+			//a duplicate family
+			
+			
 			//set region for family
 			int region = updateRegion(addedFam);
 			addedFam.setRegion(region);
