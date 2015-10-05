@@ -46,6 +46,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	private static final int FAMILY_STOPLIGHT_RED = 2;
+	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
 	
 	private static final int HTTP_OK = 200;
 	private static boolean bWebsiteOnline;
@@ -1151,6 +1152,15 @@ public class ONCHttpHandler implements HttpHandler
 			gmtDOB.set(Calendar.MINUTE, 0);
 			gmtDOB.set(Calendar.SECOND, 0);
 			gmtDOB.set(Calendar.MILLISECOND, 0);
+			
+			//perform a check to see that the dob is in UTC with no hours, minutes or seconds
+			//if that's not true correct it.
+			if(gmtDOB.getTimeInMillis() % DAYS_TO_MILLIS != 0)
+			{
+				float badDOBinDays = gmtDOB.getTimeInMillis() / DAYS_TO_MILLIS;
+				int goodDOBinDays = (int) (badDOBinDays + 0.5);
+				gmtDOB.setTimeInMillis(goodDOBinDays * DAYS_TO_MILLIS);
+			}
 		}
 		catch (ParseException e)
 		{
@@ -1159,6 +1169,84 @@ public class ONCHttpHandler implements HttpHandler
 
     	//then convert the Calendar to a Date in Millis and return it
     	return gmtDOB.getTimeInMillis();
+    }
+    
+    Long newCreateChildDOB(String dob)
+    {
+    	//get current GMT time
+    	TimeZone timezone = TimeZone.getTimeZone("GMT");
+		Calendar gmtDOB = Calendar.getInstance(timezone);
+		
+		//set time to 0:00:00:000 (midnight GMT)
+		gmtDOB.set(Calendar.HOUR_OF_DAY, 0);
+		gmtDOB.set(Calendar.MINUTE, 0);
+		gmtDOB.set(Calendar.SECOND, 0);
+		gmtDOB.set(Calendar.MILLISECOND, 0);
+		
+		//begin parse tree
+		String[] dateParts = null;
+		if(dob.contains("/"))
+			dateParts = dob.split("/");
+		else if(dob.contains("-"))
+			dateParts = dob.split("-");
+		
+		if(dateParts != null && dateParts.length == 3)
+		{
+			int calYear = parseYear(dateParts[2], gmtDOB.get(Calendar.YEAR));
+			int calMonth = parseMonth(dateParts[0].trim());
+			int calDay = Integer.parseInt(dateParts[1].trim(), calMonth);
+			
+			if(calYear > -1 && calMonth > -1 && calYear > -1)
+			{
+				gmtDOB.set(Calendar.YEAR, calYear);
+				gmtDOB.set(Calendar.MONTH, calMonth);
+				gmtDOB.set(Calendar.DAY_OF_MONTH, calDay);
+			}
+		}
+		
+		return gmtDOB.getTimeInMillis();
+    }
+    
+    int parseYear(String zYear, int currentYear)
+    {
+    	int currentCentury = currentYear/100;
+    	int yearInCentury = currentYear % 100;
+    	
+    	int year = -1;
+    	if(zYear.length() == 2)
+    	{
+    		int tempYear = Integer.parseInt(zYear);
+    		if(tempYear < 80)
+    			year = currentCentury + yearInCentury;
+    		else
+    			year = currentCentury -1 + yearInCentury;		
+    	}
+    	else if(zYear.length() == 4)
+    		year = Integer.parseInt(zYear);
+    	
+    	return year;	
+    }
+    
+    int parseMonth(String zMonth)
+    {
+    	int month = Integer.parseInt(zMonth.trim());
+    	if(month > 0 && month < 13)
+    		return month-1;
+    	else
+    		return -1;	
+    }
+    
+    int parseDay(String zDay, int month)
+    {
+    	int day = Integer.parseInt(zDay.trim());
+    	if(month == 2 && (day==28 || day==29))
+    		return day;
+    	else if((month == 4 || month == 6 || month == 9 || month == 11) && day > 0 && day < 31)
+    		return day;
+    	else if(month > 0 && month < 13 && day > 0 && day < 31)
+    		return day;	
+    	else
+    		return -1;
     }
 	
 	String createWishList(Map<String, Object> params)
