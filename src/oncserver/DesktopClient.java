@@ -540,7 +540,7 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
                 }
-/*                
+/*MEALS ARE NOT UPDATED BY DESKTOP CLIENTS - NEW MEALS ARE ADDED
                 else if(command.startsWith("POST<update_meal>"))
                 {
                 	clientMgr.addLogMessage(command);
