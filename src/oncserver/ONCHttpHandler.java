@@ -1157,13 +1157,13 @@ public class ONCHttpHandler implements HttpHandler
 			//if that's not true correct it.
 			if(gmtDOB.getTimeInMillis() % DAYS_TO_MILLIS != 0)
 			{
-				System.out.println(String.format("HttpHandler.createChildDOB: Set Time= %d",
-						gmtDOB.getTimeInMillis()));
+//				System.out.println(String.format("HttpHandler.createChildDOB: Set Time= %d",
+//						gmtDOB.getTimeInMillis()));
 				float badDOBinDays = gmtDOB.getTimeInMillis() / DAYS_TO_MILLIS;
 				int goodDOBinDays = (int) (badDOBinDays + 0.5);
 				gmtDOB.setTimeInMillis(goodDOBinDays * DAYS_TO_MILLIS);
-				System.out.println(String.format("HttpHandler.createChildDOB: Adj Time= %d",
-						gmtDOB.getTimeInMillis()));
+//				System.out.println(String.format("HttpHandler.createChildDOB: Adj Time= %d",
+//						gmtDOB.getTimeInMillis()));
 			}
 		}
 		catch (ParseException e)
@@ -1174,7 +1174,12 @@ public class ONCHttpHandler implements HttpHandler
     	//then convert the Calendar to a Date in Millis and return it
     	return gmtDOB.getTimeInMillis();
     }
-    
+/**** THIS WAS CREATED AS AN ALTERNATIVE TO USING SIMPLEDATEFORMAT TO PARSE DOB's
+ *     
+ * @param dob
+ * @return
+ */
+ /*   
     Long newCreateChildDOB(String dob)
     {
     	//get current GMT time
@@ -1252,7 +1257,7 @@ public class ONCHttpHandler implements HttpHandler
     	else
     		return -1;
     }
-	
+*/	
 	String createWishList(Map<String, Object> params)
 	{
 		StringBuffer buff = new StringBuffer();
