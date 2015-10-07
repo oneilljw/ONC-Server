@@ -889,6 +889,7 @@ public class ONCHttpHandler implements HttpHandler
 					addedFamily.setDNSCode("DUP");
 					addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
+					addedFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
 					addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
 					familyDB.decrementReferenceNumber();
 				}

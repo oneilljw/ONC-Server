@@ -15,6 +15,7 @@ import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCDelivery;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
+import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.WishStatus;
@@ -31,6 +32,8 @@ public class FamilyDB extends ONCServerDB
 	private static final int FAMILY_STATUS_GIFTS_SELECTED = 2;
 	private static final int FAMILY_STATUS_GIFTS_RECEIVED = 3;
 	private static final int FAMILY_STATUS_GIFTS_VERIFIED = 4;
+	
+	private static final int FAMILY_STOPLIGHT_RED = 2;
 	
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
 	
@@ -258,7 +261,7 @@ public class FamilyDB extends ONCServerDB
 			FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 			
 			//check to see if family is already in the data base, if so, mark it as
-			//a duplicate family
+			//a duplicate family. 
 			
 			
 			//set region for family
@@ -318,6 +321,49 @@ public class FamilyDB extends ONCServerDB
 		}
 		else
 			return null;
+	}
+	
+	String checkForDuplicateFamily(int year, String json, ONCUser user)
+	{
+		//Create a family object for the family to check
+		Gson gson = new Gson();
+		ONCFamily reqFamToCheck = gson.fromJson(json, ONCFamily.class);
+		
+		String result = "UNIQUE_FAMILY";
+		
+		//verify requested family to check is in database
+		ONCFamily famToCheck = getFamily(year, reqFamToCheck.getID());
+		if(famToCheck != null)
+		{
+			//get the children to check from the family to check
+			List<ONCChild> famChildrenToCheck = childDB.getChildList(year, famToCheck.getID());
+			
+			ONCFamily dupFamily = getDuplicateFamily(year, famToCheck, famChildrenToCheck);
+			if(dupFamily != null)
+			{
+				//family to check is a duplicate, mark them as such and notify clients
+				//update the other. Use reference # to determine
+				famToCheck.setONCNum("DEL");
+				famToCheck.setDNSCode("DUP");
+				famToCheck.setStoplightPos(FAMILY_STOPLIGHT_RED);
+				famToCheck.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
+				famToCheck.setStoplightChangedBy(user.getLNFI());
+				famToCheck.setODBFamilyNum(dupFamily.getODBFamilyNum());
+				
+				//notify all in year clients of change to famToCheck
+				String famToCheckJson = gson.toJson(famToCheck, ONCFamily.class);
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(year, "UPDATED_FAMILY" + famToCheckJson);
+				
+				result = "DUPLICATE_FAMILY";
+			}	
+								
+			
+			
+		}
+		
+		return result;
+			
 	}
 	
 	String getFamily(int year, String zFamID)
