@@ -58,6 +58,8 @@ public abstract class ONCServerDB
     		String error = String.format("%s file is empty", name);
     		JOptionPane.showMessageDialog(null, error,  name + " Empty", JOptionPane.ERROR_MESSAGE);
     	}
+    	
+    	reader.close();
 	}
 	
 	abstract void addObject(int year, String[] nextLine);

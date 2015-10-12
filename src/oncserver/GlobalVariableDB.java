@@ -110,7 +110,9 @@ public class GlobalVariableDB extends ONCServerDB
     		String error = String.format("GlobalVariablesDB file is empty");
     		JOptionPane.showMessageDialog(null, error,  "Global Variables DB Empty",
        								JOptionPane.ERROR_MESSAGE);
-    	}   		
+    	}
+    	
+    	reader.close();
     	
 		return gvs;
 	}
