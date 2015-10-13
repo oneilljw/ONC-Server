@@ -656,10 +656,10 @@ public class DesktopClient extends Thread
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 }
-                else if(command.startsWith("POST<website_status>"))
+                else if(command.startsWith("POST<update_website_status>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = ONCWebServer.setWebsiteStatus(command.substring(20));
+                	String response = ONCWebServer.setWebsiteStatus(command.substring(27));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherClients(this, response);
