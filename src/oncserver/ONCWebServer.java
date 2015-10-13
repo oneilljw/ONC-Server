@@ -3,6 +3,9 @@ package oncserver;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import ourneighborschild.WebsiteStatus;
+
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 
@@ -10,7 +13,10 @@ public class ONCWebServer
 {
 	private static final int WEB_SERVER_PORT = 8902;
 	
-	public ONCWebServer() throws IOException
+	private static ONCWebServer instance = null;
+	private static WebsiteStatus websiteStatus;
+	
+	private ONCWebServer() throws IOException
 	{
 		ServerUI serverUI = ServerUI.getInstance();
 		
@@ -35,6 +41,35 @@ public class ONCWebServer
 		server.setExecutor(null); // creates a default executor
 		server.start();
 		
+		websiteStatus = new WebsiteStatus(true, "Online");
+		
 		serverUI.addLogMessage(String.format("Web Server started: %d contexts", contexts.length));
 	}
+	
+	public static ONCWebServer getInstance() throws IOException
+	{
+		if(instance == null)
+			instance = new ONCWebServer();
+		
+		return instance;
+	}
+	
+	static String getWebsiteStatusJson()
+	{
+		//build websiteStatusJson
+		Gson gson = new Gson();
+		String websiteJson = gson.toJson(websiteStatus, WebsiteStatus.class);
+		return "WEBSITE_STATUS" + websiteJson;
+	}
+	
+	static String setWebsiteStatus(String websiteStatusJson)
+	{ 
+		Gson gson = new Gson();
+		ONCWebServer.websiteStatus = gson.fromJson(websiteStatusJson, WebsiteStatus.class);
+		
+		return "UPDATED_WEBSITE_STATUS" + websiteStatusJson;
+	}
+	
+	static boolean isWebsiteOnline() { return websiteStatus.getWebsiteStatus(); }
+	static String getWebsiteTimeBackOnline() { return websiteStatus.getTimeBackUp(); }
 }

@@ -85,8 +85,8 @@ public class DesktopClient extends Thread
         
         //Initialize the chat manager interface
         chatMgr = ServerChatManager.getInstance();
-        
-        //Initialize the data base interface
+
+        //Initialize the web server and data base interface
         try
         {
         	dbManager = DBManager.getInstance(clientMgr.getAppIcon());
@@ -305,10 +305,10 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(command);
                 	output.println(deliveryDB.getDeliveryHistory(year, command.substring(20)));
                 }
-                else if(command.startsWith("GET<websitestatus>"))
+                else if(command.startsWith("GET<website_status>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	output.println(ONCHttpHandler.getWebsiteStatus());
+                	output.println(ONCWebServer.getWebsiteStatusJson());
                 }
                 else if(command.startsWith("GET<changes>"))
                 {   
@@ -655,6 +655,14 @@ public class DesktopClient extends Thread
                 	String response = chatMgr.endChat(command.substring(16));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
+                }
+                else if(command.startsWith("POST<website_status>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = ONCWebServer.setWebsiteStatus(command.substring(20));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if (command.startsWith("LOGOUT")) 
                 {

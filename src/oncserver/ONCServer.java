@@ -195,7 +195,7 @@ public class ONCServer
 				try
 				{
 					new ONCServer();
-					new ONCWebServer();
+					ONCWebServer.getInstance();
 				} 
 				catch (IOException e)
 				{

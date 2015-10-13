@@ -29,6 +29,7 @@ import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.Transportation;
 import ourneighborschild.UserPermission;
+import ourneighborschild.WebsiteStatus;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -46,15 +47,13 @@ public class ONCHttpHandler implements HttpHandler
 	private static final int DEFAULT_YEAR = 2014;
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
-	
 	private static final int HTTP_OK = 200;
-	private static boolean bWebsiteOnline;
-	private static String zTimeBackUp;
+	
+	
 	
 	public ONCHttpHandler()
 	{
-		bWebsiteOnline = true;
-		zTimeBackUp = "Online";
+		
 	}
 	
 	public void handle(HttpExchange t) throws IOException 
@@ -72,7 +71,7 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		String response = null;
     		try {
-    			if(bWebsiteOnline)
+    			if(ONCWebServer.isWebsiteOnline())
     			{
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
     				response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
@@ -80,7 +79,7 @@ public class ONCHttpHandler implements HttpHandler
     			else
     			{
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
-    				response = response.replace("TIME_BACK_UP", "after 4pm EDT");
+    				response = response.replace("TIME_BACK_UP", ONCWebServer.getWebsiteTimeBackOnline());
     			}
     		} catch (IOException e) {
     			// TODO Auto-generated catch block
@@ -460,16 +459,6 @@ public class ONCHttpHandler implements HttpHandler
     	}
     }
 	
-	static String getWebsiteStatus()
-	{
-		//build websiteStatusJson
-		String zWebOnline = bWebsiteOnline ? "true" : "false";
-		String response = "{\"bWebsiteOnline\":" + zWebOnline + "\"zTimeBackUp\":" + "\"zTimeBackUp\"}";
-		return response;
-	}
-	
-	static void setWebsiteStatus(boolean bWebsiteStatus) { bWebsiteOnline = bWebsiteStatus; }
-	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
 	{
 		t.sendResponseHeaders(html.getCode(), html.getResponse().length());
@@ -623,7 +612,7 @@ public class ONCHttpHandler implements HttpHandler
 	{
 		String response = null;
 		try {
-			if(bWebsiteOnline)
+			if(ONCWebServer.isWebsiteOnline())
 			{
 				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
 				response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
