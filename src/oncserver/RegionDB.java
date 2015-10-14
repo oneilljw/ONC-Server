@@ -85,7 +85,7 @@ public class RegionDB
 		String[] searchAddress = new String[5];
 		String[] step1 = new String[2];
 		
-		//Break the street name into its four parts using a three step process. If only the street name
+		//Break the street name into its five parts using a three step process. If only the street name
 		//or street number are empty, take different paths. 
 		if(streetname.length() < 2)
 			step1 = separateLeadingDigits(streetnum);
@@ -99,7 +99,7 @@ public class RegionDB
 		searchAddress[1] = step2[0];	//Street Direction
 		searchAddress[2] = step3[0];	//Street Name
 		searchAddress[3] = step3[1];	//Street Suffix
-		searchAddress[4] = zipcode;
+		searchAddress[4] = zipcode;		//zip code
 		
 		if(searchAddress[0].isEmpty())	//Street number may not be contained in street name
 		{

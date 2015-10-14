@@ -610,8 +610,9 @@ public class FamilyDB extends ONCServerDB
 			int index = 0;
 			while(index < famList.size() &&
 				   !(famList.get(index).getHouseNum().equals(housenum) &&
-					 famList.get(index).getStreet().equals(street) &&
-					  famList.get(index).getZipCode().equals(zip)))
+					 famList.get(index).getStreet().toLowerCase().equals(street.toLowerCase())
+					 ))
+//					 && famList.get(index).getZipCode().equals(zip)))
 				index++;
 			
 			if(index < famList.size())
