@@ -601,6 +601,18 @@ public class FamilyDB extends ONCServerDB
 		return index < famList.size();	//true if agentID referred family	
 	}
 	
+	/****
+	 * Checks to see if an address should have a unit number. Looks at all prior years stored
+	 * in the database and tries to find a match for the address without unit. If it finds a
+	 * match it stops the search. Then, using the matched address, determines if the stored 
+	 * address had an apt/unit. If so, returns true. The address match search matches house
+	 * number, street name without suffix and city. 
+	 * @param priorYear
+	 * @param housenum
+	 * @param street
+	 * @param zip
+	 * @return
+	 */
 	static boolean shouldAddressHaveUnit(int priorYear, String housenum, String street, String zip)
 	{
 		boolean bAddressHadUnit = false;
@@ -610,8 +622,8 @@ public class FamilyDB extends ONCServerDB
 			int index = 0;
 			while(index < famList.size() &&
 				   !(famList.get(index).getHouseNum().equals(housenum) &&
-					 famList.get(index).getStreet().toLowerCase().equals(street.toLowerCase())
-					 ))
+//					 famList.get(index).getStreet().toLowerCase().equals(street.toLowerCase())))
+					 removeStreetSuffix(famList.get(index).getStreet()).equals(removeStreetSuffix(street))))				
 //					 && famList.get(index).getZipCode().equals(zip)))
 				index++;
 			
@@ -624,6 +636,21 @@ public class FamilyDB extends ONCServerDB
 		}
 		
 		return bAddressHadUnit;
+	}
+	
+	static String removeStreetSuffix(String streetName)
+	{
+		if(!streetName.isEmpty())
+		{
+			String[] nameParts = streetName.split(" ");
+			StringBuffer buff = new StringBuffer(nameParts[0]);
+			for(int i=0; i<nameParts.length-1; i++)
+				buff.append(" " + nameParts[i]);
+			
+			return buff.toString().toLowerCase();
+		}
+		else
+			return "";
 	}
 	
 	//convert targetID to familyID
