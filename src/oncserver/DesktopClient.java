@@ -30,7 +30,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 3.08f;
+	private static final float MINIMUM_CLIENT_VERSION = 3.09f;
 	
 	private int id;
 	private String version;
@@ -294,6 +294,13 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	output.println(prioryearDB.getPriorYearChild(year, command.substring(12)));
+                }
+                else if(command.startsWith("GET<search_pychild>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String jsonResponse = prioryearDB.searchForPriorYearChild(year, command.substring(19));
+                	output.println(jsonResponse);
+                	clientMgr.addLogMessage(jsonResponse);
                 }
                 else if(command.startsWith("GET<wishhistory>"))
                 {

@@ -72,6 +72,36 @@ public class PriorYearDB extends ONCServerDB
 			return "PYC_NOT_FOUND";
 	}
 	
+	String searchForPriorYearChild(int year, String pycJson)
+	{
+		Gson gson = new Gson();
+		ONCPriorYearChild targetPYC = gson.fromJson(pycJson, ONCPriorYearChild.class);
+	
+		
+		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_YEAR).getList();
+		
+		int index = 0;
+		while(index < pycAL.size())
+		{
+			ONCPriorYearChild pyc = pycAL.get(index);
+			if(pyc.getLastName().equalsIgnoreCase(targetPYC.getLastName()) &&
+				pyc.getDOB() == targetPYC.getDOB() && 
+				 pyc.getGender().equalsIgnoreCase(targetPYC.getGender()))
+				break;
+			else
+				index++;
+		}
+		
+		if(index < pycAL.size())
+		{
+			String pycjson = gson.toJson(pycAL.get(index), ONCPriorYearChild.class);
+			
+			return "PYC" + pycjson;
+		}
+		else
+			return "PYC_NOT_FOUND";
+	}
+	
 	ONCPriorYearChild getPriorYearChild(int year, int id)
 	{
 		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_YEAR).getList();

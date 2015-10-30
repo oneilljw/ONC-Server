@@ -235,11 +235,26 @@ public class ServerChildDB extends ONCServerDB
 		//Replace the current child object with the update
 		if(index < cAL.size())
 		{
-			//set the prior year history id for the child
-			updatedChild.setPriorYearChildID(searchForPriorYearMatch(year, updatedChild));
-			cAL.set(index, updatedChild);
-			childDBYear.setChanged(true);
-			return "UPDATED_CHILD" + gson.toJson(updatedChild, ONCChild.class);
+			ONCChild replChild = cAL.get(index);
+//			System.out.println(String.format("repl DOB: %d", replChild.getChildDateOfBirth()));
+//			System.out.println(String.format("updt DOB: %d", updatedChild.getChildDateOfBirth()));
+//			
+//			if(!replChild.getChildDOB().equals(updatedChild.getChildDOB()))
+//				System.out.println(updatedChild.getChildDOB());
+			
+			//if the parameters that effect prior year child id search changed,
+			//then conduct a search to attempt to match a prior year child
+			if(!replChild.getChildLastName().equals(updatedChild.getChildLastName()) ||
+				!replChild.getChildDOB().equals(updatedChild.getChildDOB()) ||
+				!replChild.getChildGender().equals(updatedChild.getChildGender()))
+			{
+//				System.out.println("Searching for Prior Year Child");
+				updatedChild.setPriorYearChildID(searchForPriorYearMatch(year, updatedChild));
+			}
+			
+				cAL.set(index, updatedChild);
+				childDBYear.setChanged(true);
+				return "UPDATED_CHILD" + gson.toJson(updatedChild, ONCChild.class);
 		}
 		else
 			return "UPDATE_FAILED";
