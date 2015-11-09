@@ -29,7 +29,6 @@ import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.Transportation;
 import ourneighborschild.UserPermission;
-import ourneighborschild.WebsiteStatus;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -48,8 +47,6 @@ public class ONCHttpHandler implements HttpHandler
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
 	private static final int HTTP_OK = 200;
-	
-	
 	
 	public ONCHttpHandler()
 	{
@@ -330,6 +327,8 @@ public class ONCHttpHandler implements HttpHandler
     			response= response.replace("USER_NAME", userFN);
     			response= response.replace("USER_MESSAGE", frc.getMessage());
     	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    	    	response = response.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
+    	    	response = response.replace("EDIT_CUTOFF", isPastEditDeadline());
     		}
     		else
     			response = invalidTokenReceived();
@@ -392,6 +391,8 @@ public class ONCHttpHandler implements HttpHandler
     			response= response.replace("USER_NAME", userFN);
     			response= response.replace("USER_MESSAGE", frc.getMessage());
     	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    	    	response = response.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
+    	    	response = response.replace("EDIT_CUTOFF", isPastEditDeadline());
     		}
     		else
     			response = invalidTokenReceived();
@@ -440,6 +441,8 @@ public class ONCHttpHandler implements HttpHandler
     				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", "Your password change was successful!");
     	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    	    		response = response.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
+        	    	response = response.replace("EDIT_CUTOFF", isPastEditDeadline());
     			}
     			else if(retCode == -1)
     			{
@@ -548,6 +551,8 @@ public class ONCHttpHandler implements HttpHandler
 	    				html = html.replace("USERFN", serverUser.getFirstname());
 	    			
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+	    			html = html.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
+	    			html = html.replace("EDIT_CUTOFF", isPastEditDeadline());
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -579,6 +584,8 @@ public class ONCHttpHandler implements HttpHandler
 //	    			html = html.replace("USER_NAME", serverUser.getFirstname());
 	    			html = html.replace("USER_MESSAGE", userMssg);
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+	    			html = html.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
+	    			html = html.replace("EDIT_CUTOFF", isPastEditDeadline());
 	    				
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -1347,6 +1354,46 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return errorMap;
+	}
+	
+	String isPastIntakeDeadline()
+	{
+		GlobalVariableDB gDB = null;
+		try {
+			gDB = GlobalVariableDB.getInstance();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		Calendar today = Calendar.getInstance();
+		if(gDB != null && today.getTime().after(gDB.getFamilyIntakeDeadline(today.get(Calendar.YEAR))))
+			return "true";
+		else
+			return "false";
+	}
+	
+	String isPastEditDeadline()
+	{
+		GlobalVariableDB gDB = null;
+		try {
+			gDB = GlobalVariableDB.getInstance();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		Calendar today = Calendar.getInstance();
+		if(gDB != null && today.getTime().after(gDB.getFamilyEditDeadline(today.get(Calendar.YEAR))))
+			return "true";
+		else
+			return "false";
 	}
 	
 	private class FamilyResponseCode

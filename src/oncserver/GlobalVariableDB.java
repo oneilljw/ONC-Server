@@ -22,7 +22,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class GlobalVariableDB extends ONCServerDB
 {
-	private static final int GV_HEADER_LENGTH = 4;
+	private static final int GV_HEADER_LENGTH = 6;
 	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	
@@ -73,6 +73,16 @@ public class GlobalVariableDB extends ONCServerDB
 		return globalDB.get(year - BASE_YEAR).getServerGVs().getGiftsReceivedDate();
 	}
 	
+	Date getFamilyIntakeDeadline(int year)
+	{
+		return globalDB.get(year - BASE_YEAR).getServerGVs().getFamilyIntakeDeadline();
+	}
+	
+	Date getFamilyEditDeadline(int year)
+	{
+		return globalDB.get(year - BASE_YEAR).getServerGVs().getFamilyEditDeadline();
+	}
+	
 	private ServerGVs readGVs(String file) throws FileNotFoundException, IOException
 	{
 		ServerGVs gvs = null;
@@ -92,7 +102,8 @@ public class GlobalVariableDB extends ONCServerDB
     				gvs = new ServerGVs(Long.parseLong(nextLine[0]),
     								Long.parseLong(nextLine[1]),
     								nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
-    								Long.parseLong(nextLine[3]));
+    								Long.parseLong(nextLine[3]), Long.parseLong(nextLine[4]),
+    								Long.parseLong(nextLine[5]));
     				
     				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
@@ -170,8 +181,29 @@ public class GlobalVariableDB extends ONCServerDB
 		giftsreceivedDate.set(Calendar.SECOND, 0);
 		giftsreceivedDate.set(Calendar.MILLISECOND, 0);
 		
+		Calendar familyIntakeDeadline = Calendar.getInstance();
+		familyIntakeDeadline.set(Calendar.YEAR, newYear);
+		familyIntakeDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
+		familyIntakeDeadline.set(Calendar.DAY_OF_MONTH, 25);
+		familyIntakeDeadline.set(Calendar.HOUR_OF_DAY, 0);
+		familyIntakeDeadline.set(Calendar.MINUTE, 0);
+		familyIntakeDeadline.set(Calendar.SECOND, 0);
+		familyIntakeDeadline.set(Calendar.MILLISECOND, 0);
+		
+		Calendar familyEditDeadline = Calendar.getInstance();
+		familyEditDeadline.set(Calendar.YEAR, newYear);
+		familyEditDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
+		familyEditDeadline.set(Calendar.DAY_OF_MONTH, 25);
+		familyEditDeadline.set(Calendar.HOUR_OF_DAY, 0);
+		familyEditDeadline.set(Calendar.MINUTE, 0);
+		familyEditDeadline.set(Calendar.SECOND, 0);
+		familyEditDeadline.set(Calendar.MILLISECOND, 0);
+
+		
 		ServerGVs newYearServerGVs = new ServerGVs(deliveryDate.getTime(), seasonStartDate.getTime(),
-													DEFAULT_ADDRESS, giftsreceivedDate.getTime());
+													DEFAULT_ADDRESS, giftsreceivedDate.getTime(),
+													familyIntakeDeadline.getTime(),
+													familyEditDeadline.getTime());
 		
 		GlobalVariableDBYear newGVDBYear = new GlobalVariableDBYear(newYear, newYearServerGVs);
 		globalDB.add(newGVDBYear);
@@ -188,7 +220,8 @@ public class GlobalVariableDB extends ONCServerDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Date"};
+		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address",
+							"Gifts Received Deadline", "Intake Deadline", "Info Edit Deadline"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_YEAR);
 		if(gvDBYear.isUnsaved())

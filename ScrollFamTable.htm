@@ -8,6 +8,8 @@
 	var priorYear;
 	var pyFamJson = [];
 	var cyFamJson = [];
+	var intakeCutoff = INTAKE_CUTOFF;
+	var editCutoff = EDIT_CUTOFF;
 	
 	sessionStorage.setItem("token", "REPLACE_TOKEN");
 	
@@ -42,6 +44,14 @@
     	    	}
     		}
     	});
+    	
+    	//determine the color and enabling of the Refer New Family button
+		var btnRNF = document.getElementById('new');
+		if(intakeCutoff === true)
+		{
+			btnRNF.style.backgroundColor='Gray';
+        	btnRNF.disabled = true;
+		}
     	
     	//get the list of current year agents & familes from the server and display them
     	//this also gets prior year families and displays them
@@ -241,6 +251,11 @@
         	btn.style.backgroundColor='Red';
         	btn.disabled = true;
         }
+        else if(intakeCutoff === true)
+        {
+        	btn.style.backgroundColor='Gray';
+        	btn.disabled = true;
+        }
         row.appendChild(btn);
         
         tabBody.appendChild(row);
@@ -268,6 +283,11 @@
 		btn.value=family.HOHLastName;
         btn.innerHTML = "Edit";
         btn.onclick=function() {update(family.targetID);};
+        if(editCutoff === true)
+        {
+        	btn.style.backgroundColor='Gray';
+        	btn.disabled = true;
+        }
         row.appendChild(btn);
         
         tabBody.appendChild(row);
