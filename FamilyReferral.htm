@@ -444,18 +444,24 @@
 		//clear the meal type combobox
     	mealCombo.options.length = 0;
 		
-		if(cb.checked == true)
-		{
-			var choices = ["Thanksgiving", "December", "Both"];
-			mealCombo.disabled = false;
-			dietres.disabled = false;
-		}
-		else
+		if(cb.checked == false)
 		{
 			var choices = ["No Assistance Rqrd"];
 			mealCombo.disabled = true;
 			dietres.value="";
 			dietres.disabled = true;
+		}
+		else if(sessionStorage.getItem('thanksgivingCutoff') === 'past')
+		{
+			var choices = ["December"];
+			mealCombo.disabled = false;
+			dietres.disabled = false;
+		}
+		else
+		{
+			var choices = ["Thanksgiving", "December", "Both"];
+			mealCombo.disabled = false;
+			dietres.disabled = false;	
 		}
 		
 		//add the meal choices

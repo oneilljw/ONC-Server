@@ -228,9 +228,9 @@ public class ONCHttpHandler implements HttpHandler
     				System.out.println("Couldn't open/find " + REFERRAL_HTML);
     				e.printStackTrace();
     			}
-/*    			
+   			
     			//remove the place holders
-    			response = response.replace("REPLACE_TOKEN", sessionID);
+/*    			response = response.replace("REPLACE_TOKEN", sessionID);
     			response = response.replace("TARGETID","NNA");
     			response = response.replace("value=\"HOHFN\"","");
     			response = response.replace("value=\"HOHLN\"", "");
@@ -327,8 +327,9 @@ public class ONCHttpHandler implements HttpHandler
     			response= response.replace("USER_NAME", userFN);
     			response= response.replace("USER_MESSAGE", frc.getMessage());
     	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    	response = response.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
-    	    	response = response.replace("EDIT_CUTOFF", isPastEditDeadline());
+    	    	response = response.replace("THANSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
+    	    	response = response.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
+    	    	response = response.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -391,8 +392,9 @@ public class ONCHttpHandler implements HttpHandler
     			response= response.replace("USER_NAME", userFN);
     			response= response.replace("USER_MESSAGE", frc.getMessage());
     	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    	response = response.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
-    	    	response = response.replace("EDIT_CUTOFF", isPastEditDeadline());
+    	    	response = response.replace("THANSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
+    	    	response = response.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
+    	    	response = response.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -441,8 +443,9 @@ public class ONCHttpHandler implements HttpHandler
     				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", "Your password change was successful!");
     	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    		response = response.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
-        	    	response = response.replace("EDIT_CUTOFF", isPastEditDeadline());
+    	    		response = response.replace("THANSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
+        	    	response = response.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
+        	    	response = response.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
     			}
     			else if(retCode == -1)
     			{
@@ -551,8 +554,9 @@ public class ONCHttpHandler implements HttpHandler
 	    				html = html.replace("USERFN", serverUser.getFirstname());
 	    			
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-	    			html = html.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
-	    			html = html.replace("EDIT_CUTOFF", isPastEditDeadline());
+	    			html = html.replace("THANKSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
+	    			html = html.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
+	    			html = html.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -584,8 +588,9 @@ public class ONCHttpHandler implements HttpHandler
 //	    			html = html.replace("USER_NAME", serverUser.getFirstname());
 	    			html = html.replace("USER_MESSAGE", userMssg);
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-	    			html = html.replace("INTAKE_CUTOFF", isPastIntakeDeadline());
-	    			html = html.replace("EDIT_CUTOFF", isPastEditDeadline());
+	    			html = html.replace("THANKSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
+	    			html = html.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
+	    			html = html.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
 	    				
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -1356,7 +1361,7 @@ public class ONCHttpHandler implements HttpHandler
 		return errorMap;
 	}
 	
-	String isPastIntakeDeadline()
+	String isPastDeadline(String day)
 	{
 		GlobalVariableDB gDB = null;
 		try {
@@ -1370,44 +1375,33 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		Calendar today = Calendar.getInstance();
-		if(gDB != null && today.getTime().after(gDB.getFamilyIntakeDeadline(today.get(Calendar.YEAR))))
-			return "true";
-		else
-			return "false";
-	}
-	
-	String isPastEditDeadline()
-	{
-		GlobalVariableDB gDB = null;
-		try {
-			gDB = GlobalVariableDB.getInstance();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		Date compareDate;
 		
-		Calendar today = Calendar.getInstance();
-		if(gDB != null && today.getTime().after(gDB.getFamilyEditDeadline(today.get(Calendar.YEAR))))
-			return "true";
+		if(day.equals("Thanksgiving"))
+			compareDate = gDB.getThanksgivingDeadline(today.get(Calendar.YEAR));
+		else if(day.equals("December"))
+			compareDate = gDB.getDecemberDeadline(today.get(Calendar.YEAR));
 		else
-			return "false";
+			compareDate = gDB.getFamilyEditDeadline(today.get(Calendar.YEAR));
+		
+		if(gDB != null && today.getTime().after(compareDate))
+			return "past";
+		else
+			return "prior";
 	}
 	
 	private class FamilyResponseCode
 	{
-		private int returnCode;
+//		private int returnCode;
 		private String message;
 		
 		FamilyResponseCode(int rc, String mssg)
 		{
-			this.returnCode = rc;
+//			this.returnCode = rc;
 			this.message = mssg;
 		}
 		
-		int getReturnCode() { return returnCode; }
+//		int getReturnCode() { return returnCode; }
 		String getMessage() { return message; }
 	}
 }

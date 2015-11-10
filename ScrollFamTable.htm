@@ -8,10 +8,11 @@
 	var priorYear;
 	var pyFamJson = [];
 	var cyFamJson = [];
-	var intakeCutoff = INTAKE_CUTOFF;
-	var editCutoff = EDIT_CUTOFF;
 	
-	sessionStorage.setItem("token", "REPLACE_TOKEN");
+	sessionStorage.setItem('token', "REPLACE_TOKEN");
+	sessionStorage.setItem('thanksgivingCutoff', "THANKSGIVING_CUTOFF");
+	sessionStorage.setItem('decemberCutoff', "DECEMBER_CUTOFF");
+	sessionStorage.setItem('editCutoff', "EDIT_CUTOFF");
 	
     $( document ).ready(function()
     {
@@ -47,7 +48,7 @@
     	
     	//determine the color and enabling of the Refer New Family button
 		var btnRNF = document.getElementById('new');
-		if(intakeCutoff === true)
+		if(sessionStorage.getItem('decemberCutoff') === 'past')
 		{
 			btnRNF.style.backgroundColor='Gray';
         	btnRNF.disabled = true;
@@ -251,7 +252,7 @@
         	btn.style.backgroundColor='Red';
         	btn.disabled = true;
         }
-        else if(intakeCutoff === true)
+        else if(sessionStorage.getItem('decemberCutoff') === 'past')
         {
         	btn.style.backgroundColor='Gray';
         	btn.disabled = true;
@@ -283,7 +284,7 @@
 		btn.value=family.HOHLastName;
         btn.innerHTML = "Edit";
         btn.onclick=function() {update(family.targetID);};
-        if(editCutoff === true)
+        if(sessionStorage.getItem('editCutoff') === 'past')
         {
         	btn.style.backgroundColor='Gray';
         	btn.disabled = true;

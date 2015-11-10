@@ -22,7 +22,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class GlobalVariableDB extends ONCServerDB
 {
-	private static final int GV_HEADER_LENGTH = 6;
+	private static final int GV_HEADER_LENGTH = 7;
 	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	
@@ -73,9 +73,14 @@ public class GlobalVariableDB extends ONCServerDB
 		return globalDB.get(year - BASE_YEAR).getServerGVs().getGiftsReceivedDate();
 	}
 	
-	Date getFamilyIntakeDeadline(int year)
+	Date getThanksgivingDeadline(int year)
 	{
-		return globalDB.get(year - BASE_YEAR).getServerGVs().getFamilyIntakeDeadline();
+		return globalDB.get(year - BASE_YEAR).getServerGVs().getThanksgivingDeadline();
+	}
+	
+	Date getDecemberDeadline(int year)
+	{
+		return globalDB.get(year - BASE_YEAR).getServerGVs().getDecemberDeadline();
 	}
 	
 	Date getFamilyEditDeadline(int year)
@@ -103,7 +108,7 @@ public class GlobalVariableDB extends ONCServerDB
     								Long.parseLong(nextLine[1]),
     								nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
     								Long.parseLong(nextLine[3]), Long.parseLong(nextLine[4]),
-    								Long.parseLong(nextLine[5]));
+    								Long.parseLong(nextLine[5]), Long.parseLong(nextLine[6]));
     				
     				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
@@ -181,14 +186,23 @@ public class GlobalVariableDB extends ONCServerDB
 		giftsreceivedDate.set(Calendar.SECOND, 0);
 		giftsreceivedDate.set(Calendar.MILLISECOND, 0);
 		
-		Calendar familyIntakeDeadline = Calendar.getInstance();
-		familyIntakeDeadline.set(Calendar.YEAR, newYear);
-		familyIntakeDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
-		familyIntakeDeadline.set(Calendar.DAY_OF_MONTH, 25);
-		familyIntakeDeadline.set(Calendar.HOUR_OF_DAY, 0);
-		familyIntakeDeadline.set(Calendar.MINUTE, 0);
-		familyIntakeDeadline.set(Calendar.SECOND, 0);
-		familyIntakeDeadline.set(Calendar.MILLISECOND, 0);
+		Calendar thanksgivingDeadline = Calendar.getInstance();
+		thanksgivingDeadline.set(Calendar.YEAR, newYear);
+		thanksgivingDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
+		thanksgivingDeadline.set(Calendar.DAY_OF_MONTH, 25);
+		thanksgivingDeadline.set(Calendar.HOUR_OF_DAY, 0);
+		thanksgivingDeadline.set(Calendar.MINUTE, 0);
+		thanksgivingDeadline.set(Calendar.SECOND, 0);
+		thanksgivingDeadline.set(Calendar.MILLISECOND, 0);
+		
+		Calendar decemberDeadline = Calendar.getInstance();
+		decemberDeadline.set(Calendar.YEAR, newYear);
+		decemberDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
+		decemberDeadline.set(Calendar.DAY_OF_MONTH, 25);
+		decemberDeadline.set(Calendar.HOUR_OF_DAY, 0);
+		decemberDeadline.set(Calendar.MINUTE, 0);
+		decemberDeadline.set(Calendar.SECOND, 0);
+		decemberDeadline.set(Calendar.MILLISECOND, 0);
 		
 		Calendar familyEditDeadline = Calendar.getInstance();
 		familyEditDeadline.set(Calendar.YEAR, newYear);
@@ -202,7 +216,7 @@ public class GlobalVariableDB extends ONCServerDB
 		
 		ServerGVs newYearServerGVs = new ServerGVs(deliveryDate.getTime(), seasonStartDate.getTime(),
 													DEFAULT_ADDRESS, giftsreceivedDate.getTime(),
-													familyIntakeDeadline.getTime(),
+													thanksgivingDeadline.getTime(), decemberDeadline.getTime(),
 													familyEditDeadline.getTime());
 		
 		GlobalVariableDBYear newGVDBYear = new GlobalVariableDBYear(newYear, newYearServerGVs);
@@ -220,8 +234,8 @@ public class GlobalVariableDB extends ONCServerDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address",
-							"Gifts Received Deadline", "Intake Deadline", "Info Edit Deadline"};
+		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Deadline",
+							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_YEAR);
 		if(gvDBYear.isUnsaved())
