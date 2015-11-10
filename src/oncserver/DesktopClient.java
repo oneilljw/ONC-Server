@@ -170,12 +170,6 @@ public class DesktopClient extends Thread
                 { 
                     String response = loginRequest(command.substring(13));
                     output.println(response);
-//                  if(response.startsWith("VALID"))
-//                  {
-//                    	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstname() + " " + clientUser.getLastname() + 
-//                   				  " is now online";
-//                		clientMgr.notifyAllOtherClients(this, mssg);
-//                  }
                 }
                 else if(command.startsWith("GET<users>"))
                 {
