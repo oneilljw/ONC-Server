@@ -361,7 +361,7 @@ public class PartnerDB extends ONCServerDB
 		partnerDBYear.setNextID(newYear*1000);	//all partner id's start with current year
 		
 		//determine the prior year performance for each partner
-		determinePriorYearPerformance(newYear, partnerDBYear);
+		determinePriorYearPerformance(newYear);
 		
 		//Mark the newly created WishCatlogDBYear for saving during the next save event
 		partnerDBYear.setChanged(true);
@@ -372,7 +372,7 @@ public class PartnerDB extends ONCServerDB
 	 * @param newYear
 	 * @param partnerDBYear
 	 ******************************************************************************************/
-	void determinePriorYearPerformance(int newYear, PartnerDBYear partnerDBYear)
+	void determinePriorYearPerformance(int newYear)
 	{
 		//get the child wish data base reference
 		ServerChildWishDB serverChildWishDB = null;

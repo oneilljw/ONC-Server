@@ -24,7 +24,7 @@ public class ServerMenuBar extends JMenuBar
 	    showLogMI = new JMenuItem("Show Log");
 	    menuLog.add(showLogMI);
 	    
-	    countsMI = new JMenuItem("Convert Wish Status");
+	    countsMI = new JMenuItem("Update PY Partner Performance");
 	    countsMI.setEnabled(true);
 	    menuLog.add(countsMI);
 	}
