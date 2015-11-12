@@ -404,6 +404,10 @@ public class PartnerDB extends ONCServerDB
 			if(wishReceivedPartner != null)
 				wishReceivedPartner.incrementPYReceived();
 		}
+		
+		//Mark the newly created PartnerDBYear for saving during the next save event
+		PartnerDBYear partnerDBYear = partnerDB.get(newYear - BASE_YEAR);
+		partnerDBYear.setChanged(true);
 	}
 	
 	private class PartnerDBYear extends ServerDBYear
