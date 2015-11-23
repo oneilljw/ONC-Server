@@ -129,8 +129,6 @@ public class ServerDeliveryDB extends ONCServerDB
 			e.printStackTrace();
 		}
 		
-		System.out.println(String.format("Server Delivery DB.add: id=%d", addedDelivery.getID()));
-		
 		//get prior delivery for this family
 		ONCFamily fam = familyDB.getFamily(year, addedDelivery.getFamID());
 		ONCDelivery priorDelivery = getDelivery(year, fam.getDeliveryID());
