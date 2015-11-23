@@ -129,36 +129,40 @@ public class ServerDeliveryDB extends ONCServerDB
 			e.printStackTrace();
 		}
 		
+		System.out.println(String.format("Server Delivery DB.add: id=%d", addedDelivery.getID()));
+		
 		//get prior delivery for this family
 		ONCFamily fam = familyDB.getFamily(year, addedDelivery.getFamID());
 		ONCDelivery priorDelivery = getDelivery(year, fam.getDeliveryID());
-				
-		//If prior status == ASSIGNED && new status < ASSIGNED, decrement the prior delivery driver
-		//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
-		//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
-		//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
-		if(priorDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED && 
-				addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED)
-		{
-			driverDB.updateDriverDeliveryCounts(year, null, addedDelivery.getdDelBy());
-		}
-		else if(priorDelivery.getdStatus() >= DELIVERY_STATUS_ASSIGNED && 
-					addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
-						!priorDelivery.getdDelBy().equals(addedDelivery.getdDelBy()))
-		{
-			driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
-		}
-		else if(priorDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
-					addedDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED)
-		{
-			driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
-		}
 		
+		//if there was a prior delivery, then update the status and counts
+		if(priorDelivery != null)
+		{
+			//If prior status == ASSIGNED && new status < ASSIGNED, decrement the prior delivery driver
+			//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
+			//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
+			//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
+			if(priorDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED && 
+					addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED)
+			{
+				driverDB.updateDriverDeliveryCounts(year, null, addedDelivery.getdDelBy());
+			}
+			else if(priorDelivery.getdStatus() >= DELIVERY_STATUS_ASSIGNED && 
+					 addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
+					  !priorDelivery.getdDelBy().equals(addedDelivery.getdDelBy()))
+			{
+				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
+			}
+			else if(priorDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
+					 addedDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED)
+			{
+				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
+			}
+		}
 		//Update the family object with new delivery
 		if(familyDB != null)
 			familyDB.updateFamilyDelivery(year, addedDelivery);
-		
-						
+					
 		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCDelivery.class);
 	}
 	
