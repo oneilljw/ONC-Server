@@ -229,8 +229,18 @@
     {
         if (!document.getElementsByTagName) return;
         
+        var mealstatus;
+        if(family.mealStatus === 'Thanksgiving_Confirmed')
+        	mealstatus = 'Thkgvg Conf';
+        else if(family.mealStatus === 'December_Confirmed')
+        	mealstatus = 'Dec. Conf';
+        else if(family.mealStatus === 'Both_Confirmed')
+        	mealstatus = 'Both Conf';
+        else
+        	mealstatus = family.mealStatus;
+        
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
-      					  family.fstatus, family.dstatus, family.mealStatus];
+      					  family.fstatus, family.dstatus, mealstatus];
         
 	    var tabBody = document.getElementById("pyTable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -266,8 +276,18 @@
     {
         if (!document.getElementsByTagName) return;
         
+        var mealstatus;
+        if(family.mealStatus === 'Thanksgiving_Confirmed')
+        	mealstatus = 'Thkgvg Conf';
+        else if(family.mealStatus === 'December_Confirmed')
+        	mealstatus = 'Dec. Conf';
+        else if(family.mealStatus === 'Both_Confirmed')
+        	mealstatus = 'Both Conf';
+        else
+        	mealstatus = family.mealStatus;
+        	
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
-      					  family.fstatus, family.dstatus, family.mealStatus];
+      					  family.fstatus, family.dstatus, mealstatus];
         
 	    var tabBody = document.getElementById("cyTable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
