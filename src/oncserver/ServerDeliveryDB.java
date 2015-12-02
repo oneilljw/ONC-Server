@@ -164,6 +164,89 @@ public class ServerDeliveryDB extends ONCServerDB
 		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCDelivery.class);
 	}
 	
+	String add(int year, ONCDelivery addedDelivery)
+	{
+		//add the new delivery to the data base
+		DeliveryDBYear delDBYear = deliveryDB.get(year - BASE_YEAR);
+		addedDelivery.setID(delDBYear.getNextID());
+		delDBYear.add(addedDelivery);
+		delDBYear.setChanged(true);
+		
+		
+		//notify the corresponding family that delivery has changed and
+		//check to see if new delivery assigned or removed a delivery from a driver
+		FamilyDB familyDB = null;
+		ServerDriverDB driverDB = null;
+		try {
+			familyDB = FamilyDB.getInstance();
+			driverDB = ServerDriverDB.getInstance();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//get prior delivery for this family
+		ONCFamily fam = familyDB.getFamily(year, addedDelivery.getFamID());
+		ONCDelivery priorDelivery = getDelivery(year, fam.getDeliveryID());
+		
+		//if there was a prior delivery, then update the status and counts
+		if(priorDelivery != null)
+		{
+			//If prior status == ASSIGNED && new status < ASSIGNED, decrement the prior delivery driver
+			//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
+			//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
+			//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
+			if(priorDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED && 
+					addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED)
+			{
+				driverDB.updateDriverDeliveryCounts(year, null, addedDelivery.getdDelBy());
+			}
+			else if(priorDelivery.getdStatus() >= DELIVERY_STATUS_ASSIGNED && 
+					 addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
+					  !priorDelivery.getdDelBy().equals(addedDelivery.getdDelBy()))
+			{
+				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
+			}
+			else if(priorDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
+					 addedDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED)
+			{
+				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
+			}
+		}
+		//Update the family object with new delivery
+		if(familyDB != null)
+			familyDB.updateFamilyDelivery(year, addedDelivery);
+
+		Gson gson = new Gson();
+		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCDelivery.class);
+	}
+	
+	String addDeliveryGroup(int year, String deliveryGroupJson)
+	{
+		ClientManager clientMgr = ClientManager.getInstance();
+		
+		//un-bundle to list of ONCDelivery objects
+		Gson gson = new Gson();
+		Type listOfDeliveries = new TypeToken<ArrayList<ONCDelivery>>(){}.getType();
+		
+		List<ONCDelivery> deliveryList = gson.fromJson(deliveryGroupJson, listOfDeliveries);
+		
+		//for each delivery in the list, add it to the database and notify all clients that
+		//it was added
+		for(ONCDelivery addedDelivery:deliveryList)
+		{
+			String response = add(year, addedDelivery);
+			//if add was successful, need to q the change to all in-year clients
+			//notify in year clients of change
+	    	clientMgr.notifyAllInYearClients(year, response);
+		}
+		
+		return "ADDED_GROUP_DELIVERIES";
+	}
+	
 	ONCDelivery getDelivery(int year, int delID)
 	{
 		List<ONCDelivery> dAL = deliveryDB.get(year-BASE_YEAR).getList();

@@ -30,7 +30,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 3.13f;
+	private static final float MINIMUM_CLIENT_VERSION = 3.14f;
 	
 	private int id;
 	private String version;
@@ -520,6 +520,14 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = deliveryDB.add(year, command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<delivery_group>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = deliveryDB.addDeliveryGroup(year, command.substring(20));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
