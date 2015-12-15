@@ -281,11 +281,13 @@
         if(family.fstatus === 'Packaged')
         	fstatus = 'Packaged \u2713';
         else
-        	dstatus = family.dstatus;
+        	fstatus = family.fstatus;
         
         var dstatus;
         if(family.dstatus === 'Delivered')
         	dstatus = 'Delivered \u2713';
+        else if(family.dstatus === 'Empty')
+        	dstatus = 'Removed';
         else
         	dstatus = family.dstatus;
         
