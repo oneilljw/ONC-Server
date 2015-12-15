@@ -276,6 +276,19 @@
     {
         if (!document.getElementsByTagName) return;
         
+        
+        var fstatus;
+        if(family.fstatus === 'Packaged')
+        	fstatus = 'Packaged \u2713';
+        else
+        	dstatus = family.dstatus;
+        
+        var dstatus;
+        if(family.dstatus === 'Delivered')
+        	dstatus = 'Delivered \u2713';
+        else
+        	dstatus = family.dstatus;
+        
         var mealstatus;
         if(family.mealStatus === 'Thanksgiving_Confirmed')
         	mealstatus = 'Thanksgiving \u2713';
@@ -287,7 +300,7 @@
         	mealstatus = family.mealStatus;
         	
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
-      					  family.fstatus, family.dstatus, mealstatus];
+      					  fstatus, dstatus, mealstatus];
         
 	    var tabBody = document.getElementById("cyTable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
