@@ -73,11 +73,25 @@ public class GlobalVariableDB extends ONCServerDB
 		return globalDB.get(year - BASE_YEAR).getServerGVs().getGiftsReceivedDate();
 	}
 	
-	Date getThanksgivingDeadline(int year)
+	Date getDeadline(int year, String deadline)
 	{
-		return globalDB.get(year - BASE_YEAR).getServerGVs().getThanksgivingDeadline();
+		System.out.println(globalDB.size());
+		//check if year is in database. If it's not, return null
+		if(year - BASE_YEAR < globalDB.size())
+		{
+			if(deadline.equals("Thanksgiving"))
+				return globalDB.get(year - BASE_YEAR).getServerGVs().getThanksgivingDeadline();
+			else if(deadline.equals("December"))
+				return globalDB.get(year - BASE_YEAR).getServerGVs().getDecemberDeadline();
+			else if(deadline.equals("Edit"))
+				return globalDB.get(year - BASE_YEAR).getServerGVs().getFamilyEditDeadline();
+			else
+				return Calendar.getInstance().getTime();
+		}
+		else
+			return null;
 	}
-	
+/*	
 	Date getDecemberDeadline(int year)
 	{
 		return globalDB.get(year - BASE_YEAR).getServerGVs().getDecemberDeadline();
@@ -87,7 +101,7 @@ public class GlobalVariableDB extends ONCServerDB
 	{
 		return globalDB.get(year - BASE_YEAR).getServerGVs().getFamilyEditDeadline();
 	}
-	
+*/	
 	private ServerGVs readGVs(String file) throws FileNotFoundException, IOException
 	{
 		ServerGVs gvs = null;

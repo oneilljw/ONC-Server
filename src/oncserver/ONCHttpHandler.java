@@ -581,17 +581,18 @@ public class ONCHttpHandler implements HttpHandler
 	    			}
 	    		
 	    			html = getFamilyTableHTML(DEFAULT_YEAR, -1);
+	    			
 	    			if(serverUser.getFirstname().equals(""))
 	    				html = html.replace("USER_NAME", serverUser.getLastname());
 	    			else
 	    				html = html.replace("USER_NAME", serverUser.getFirstname());
-//	    			html = html.replace("USER_NAME", serverUser.getFirstname());
+
 	    			html = html.replace("USER_MESSAGE", userMssg);
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 	    			html = html.replace("THANKSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
 	    			html = html.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
 	    			html = html.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
-	    				
+	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
 	    	}   	
@@ -1375,16 +1376,10 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		Calendar today = Calendar.getInstance();
-		Date compareDate;
 		
-		if(day.equals("Thanksgiving"))
-			compareDate = gDB.getThanksgivingDeadline(today.get(Calendar.YEAR));
-		else if(day.equals("December"))
-			compareDate = gDB.getDecemberDeadline(today.get(Calendar.YEAR));
-		else
-			compareDate = gDB.getFamilyEditDeadline(today.get(Calendar.YEAR));
+		Date compareDate = gDB.getDeadline(today.get(Calendar.YEAR), day);
 		
-		if(gDB != null && today.getTime().after(compareDate))
+		if(gDB != null  && compareDate != null && today.getTime().after(compareDate))
 			return "past";
 		else
 			return "prior";
