@@ -48,7 +48,7 @@
     	
     	//determine the color and enabling of the Refer New Family button
 		var btnRNF = document.getElementById('new');
-		if(sessionStorage.getItem('decemberCutoff') === 'past')
+		if(sessionStorage.getItem('decemberCutoff') === 'disabled')
 		{
 			btnRNF.style.backgroundColor='Gray';
         	btnRNF.disabled = true;
@@ -262,7 +262,7 @@
         	btn.style.backgroundColor='Red';
         	btn.disabled = true;
         }
-        else if(sessionStorage.getItem('decemberCutoff') === 'past')
+        else if(sessionStorage.getItem('decemberCutoff') === 'disabled')
         {
         	btn.style.backgroundColor='Gray';
         	btn.disabled = true;
@@ -319,7 +319,7 @@
 		btn.value=family.HOHLastName;
         btn.innerHTML = "Edit";
         btn.onclick=function() {update(family.targetID);};
-        if(sessionStorage.getItem('editCutoff') === 'past')
+        if(sessionStorage.getItem('editCutoff') === 'disabled')
         {
         	btn.style.backgroundColor='Gray';
         	btn.disabled = true;

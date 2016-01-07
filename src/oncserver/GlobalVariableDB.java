@@ -68,6 +68,11 @@ public class GlobalVariableDB extends ONCServerDB
 			return "NO_GLOBALS";
 	}
 	
+	Date getSeasonStartDate(int year)
+	{
+		return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartDate();
+	}
+	
 	Date getDateGiftsRecivedBy(int year)
 	{
 		return globalDB.get(year - BASE_YEAR).getServerGVs().getGiftsReceivedDate();

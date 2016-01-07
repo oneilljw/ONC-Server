@@ -89,8 +89,7 @@ public class AgentDB extends ONCServerDB
 			while(index<agentYearList.size() && !agentYearList.get(index).getAgentName().equals(userName))
 				index++;
 					
-			if(index < agentYearList.size())
-				agentReferredInYearList.add(agentYearList.get(index));
+			agentReferredInYearList.add(agentYearList.get(index));
 		}
 		else
 		{

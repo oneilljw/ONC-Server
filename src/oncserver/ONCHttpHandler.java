@@ -27,6 +27,7 @@ import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.ServerGVs;
 import ourneighborschild.Transportation;
 import ourneighborschild.UserPermission;
 
@@ -327,9 +328,9 @@ public class ONCHttpHandler implements HttpHandler
     			response= response.replace("USER_NAME", userFN);
     			response= response.replace("USER_MESSAGE", frc.getMessage());
     	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    	response = response.replace("THANSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
-    	    	response = response.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
-    	    	response = response.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
+    	    	response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+    	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+    	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -392,9 +393,9 @@ public class ONCHttpHandler implements HttpHandler
     			response= response.replace("USER_NAME", userFN);
     			response= response.replace("USER_MESSAGE", frc.getMessage());
     	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    	response = response.replace("THANSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
-    	    	response = response.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
-    	    	response = response.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
+    	    	response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+    	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+    	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -443,9 +444,9 @@ public class ONCHttpHandler implements HttpHandler
     				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", "Your password change was successful!");
     	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    		response = response.replace("THANSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
-        	    	response = response.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
-        	    	response = response.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
+    	    		response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+        	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+        	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     			}
     			else if(retCode == -1)
     			{
@@ -554,9 +555,9 @@ public class ONCHttpHandler implements HttpHandler
 	    				html = html.replace("USERFN", serverUser.getFirstname());
 	    			
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-	    			html = html.replace("THANKSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
-	    			html = html.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
-	    			html = html.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
+	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+	    			html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+	    			html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -589,9 +590,9 @@ public class ONCHttpHandler implements HttpHandler
 
 	    			html = html.replace("USER_MESSAGE", userMssg);
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-	    			html = html.replace("THANKSGIVING_CUTOFF", isPastDeadline("Thanksgiving"));
-	    			html = html.replace("DECEMBER_CUTOFF", isPastDeadline("December"));
-	    			html = html.replace("EDIT_CUTOFF", isPastDeadline("Edit"));
+	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+	    			html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+	    			html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -1362,7 +1363,7 @@ public class ONCHttpHandler implements HttpHandler
 		return errorMap;
 	}
 	
-	String isPastDeadline(String day)
+	String enableReferralButton(String day)
 	{
 		GlobalVariableDB gDB = null;
 		try {
@@ -1376,13 +1377,14 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		Calendar today = Calendar.getInstance();
-		
+		Date seasonStartDate = gDB.getSeasonStartDate(today.get(Calendar.YEAR));
 		Date compareDate = gDB.getDeadline(today.get(Calendar.YEAR), day);
 		
-		if(gDB != null  && compareDate != null && today.getTime().after(compareDate))
-			return "past";
+		if(gDB != null && seasonStartDate != null && compareDate != null && 
+			today.getTime().compareTo(seasonStartDate) >=0 && today.getTime().compareTo(compareDate) < 0 )
+			return "enabled";
 		else
-			return "prior";
+			return "disabled";
 	}
 	
 	private class FamilyResponseCode
