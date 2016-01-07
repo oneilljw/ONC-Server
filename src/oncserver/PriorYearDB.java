@@ -234,7 +234,6 @@ public class PriorYearDB extends ONCServerDB
 		
 		//get last years list of ONCChild objects
 		List<ONCChild> lycList = serverChildDB.getList(newYear-1);
-//		System.out.println(String.format("Size of %d Child list: %d", newYear-1, lycAL.size()));
 		
 		//for each child from last year, if they were in an eligible family
 		//determine if the child's prior year history was retained already.
@@ -244,17 +243,23 @@ public class PriorYearDB extends ONCServerDB
 		for(ONCChild lyc:lycList)
 		{
 			ONCFamily lyfam = familyDB.getFamily(newYear-1, lyc.getFamID());
-			String lyfamONCNum = lyfam.getONCNum();
-			
-			if(isNumeric(lyfamONCNum) && Integer.parseInt(lyfamONCNum) >= 100)
+			if(isNumeric(lyfam.getONCNum()) && Integer.parseInt(lyfam.getONCNum()) >= 100)
 			{
 				ONCChildWish lyChildWish1 = childwishDB.getWish(newYear-1, lyc.getChildWishID(0));
 				ONCChildWish lyChildWish2 = childwishDB.getWish(newYear-1, lyc.getChildWishID(1));
 				ONCChildWish lyChildWish3 = childwishDB.getWish(newYear-1, lyc.getChildWishID(2));
 				
-				String lyWish1 = cat.findWishNameByID(newYear-1, lyChildWish1.getWishID()) + "- " + lyChildWish1.getChildWishDetail();
-	    		String lyWish2 = cat.findWishNameByID(newYear-1, lyChildWish2.getWishID()) + "- " + lyChildWish2.getChildWishDetail();
-	    		String lyWish3 = cat.findWishNameByID(newYear-1, lyChildWish3.getWishID()) + "- " + lyChildWish3.getChildWishDetail();
+				//determine the wishes from last year. Check to ensure the child wish existed. If it didn't, 
+				//set the wish blank
+				String lyWish1 = "", lyWish2 = "", lyWish3 = "";
+				if(lyChildWish1 != null)
+					 lyWish1 = cat.findWishNameByID(newYear-1, lyChildWish1.getWishID()) + "- " + lyChildWish1.getChildWishDetail();
+				
+				if(lyChildWish2 != null)
+					lyWish2 = cat.findWishNameByID(newYear-1, lyChildWish2.getWishID()) + "- " + lyChildWish2.getChildWishDetail();
+				
+				if(lyChildWish3 != null)
+					lyWish3 = cat.findWishNameByID(newYear-1, lyChildWish3.getWishID()) + "- " + lyChildWish3.getChildWishDetail();
 	    		
 				//last year child was in a served family, have they already been added to the
 	    		//new years prior year child list?
@@ -280,7 +285,8 @@ public class PriorYearDB extends ONCServerDB
 //		System.out.println(String.format("Number of %d children retained: %d", 2014, nRetained));
 //		System.out.println(String.format("Number of %d children new to prior year: %d", 2014, nNew));
 		
-		newPYCDBYear.setChanged(true);	//mark this db for persistent saving on the next save event	
+		newPYCDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
+			
 	}
 		
 	 /******************************************************************************************
