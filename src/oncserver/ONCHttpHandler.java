@@ -39,6 +39,7 @@ import com.google.gson.Gson;
 public class ONCHttpHandler implements HttpHandler
 {
 	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
+	private static final String ONC_ELF_PAGE_HTML = "ONC.htm";
 	private static final String UPDATE_HTML = "EditFamily.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
@@ -561,7 +562,42 @@ public class ONCHttpHandler implements HttpHandler
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
-	    		else //send the referral status page
+	    		else if(serverUser.getPermission() == UserPermission.SYS_ADMIN ) //send the family referral page or the elf home page
+	    		{
+	    			Gson gson = new Gson();
+	    			String loginJson = gson.toJson(webUser, ONCUser.class);
+	    		
+	    			String mssg = "UPDATED_USER" + loginJson;
+	    			clientMgr.notifyAllClients(mssg);
+	    			
+	    			//determine if user never visited or last login date
+	    			String userMssg;
+	    			if(nLogins == 0)
+	    				userMssg = "This is your first visit!";
+	    			else
+	    			{
+//	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy h:mm a z");
+	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
+	    				sdf.setTimeZone(TimeZone.getDefault());
+	    				userMssg = "You last visited " + sdf.format(lastLogin);
+	    			}
+	    		
+	    			html = getONCElfPageHTML(DEFAULT_YEAR, -1);
+	    			
+	    			if(serverUser.getFirstname().equals(""))
+	    				html = html.replace("USER_NAME", serverUser.getLastname());
+	    			else
+	    				html = html.replace("USER_NAME", serverUser.getFirstname());
+
+	    			html = html.replace("USER_MESSAGE", userMssg);
+	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+	    			html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+	    			html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+	    			
+	    			response = new HtmlResponse(html, HTTPCode.Ok);
+	    		}
+	    		else //send the family referral page
 	    		{
 	    			Gson gson = new Gson();
 	    			String loginJson = gson.toJson(webUser, ONCUser.class);
@@ -619,6 +655,21 @@ public class ONCHttpHandler implements HttpHandler
 		catch (IOException e) 
 		{
 			return "<p>Family Table Unavailable</p>";
+		}
+	}
+	
+	String getONCElfPageHTML(int year, int agtID)
+	{
+		//read the onc page html
+		String oncElfPageHTML = null;
+		try
+		{
+			oncElfPageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_ELF_PAGE_HTML));
+			return oncElfPageHTML;
+		}
+		catch (IOException e) 
+		{
+			return "<p>ONC Elf Page Unavailable</p>";
 		}
 	}
 	

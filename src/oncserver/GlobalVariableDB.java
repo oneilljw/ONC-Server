@@ -80,7 +80,6 @@ public class GlobalVariableDB extends ONCServerDB
 	
 	Date getDeadline(int year, String deadline)
 	{
-		System.out.println(globalDB.size());
 		//check if year is in database. If it's not, return null
 		if(year - BASE_YEAR < globalDB.size())
 		{
