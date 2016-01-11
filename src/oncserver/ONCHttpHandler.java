@@ -142,6 +142,14 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = FamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
+    	else if(requestURI.contains("/getagent"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		int agtID = Integer.parseInt((String) params.get("agentid"));
+    		
+    		HtmlResponse response = AgentDB.getAgentJSONP(year, agtID, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
     	else if(requestURI.contains("/getmeal"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));

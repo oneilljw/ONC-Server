@@ -6,8 +6,8 @@
     <script>
 	var currYear;
 	var priorYear;
-	var pyFamJson = [];
-	var cyFamJson = [];
+	var famJson = {};
+	var agtJson;
 	
 	sessionStorage.setItem('token', "REPLACE_TOKEN");
 	sessionStorage.setItem('thanksgivingCutoff', "THANKSGIVING_CUTOFF");
@@ -17,8 +17,6 @@
     $( document ).ready(function()
     {
     	currYear = new Date().getFullYear();
-		document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
-		
 		priorYear = new Date().getFullYear()-1;
 		sessionStorage.setItem("prioryear", priorYear);
 		
@@ -26,25 +24,13 @@
     	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
     	$.getJSON('dbStatus', dbyearsparams, function(data)
     	{
-			var combo = document.getElementById("dbYears");
 			var yearCombo = document.getElementById("yearlist");
     		for (var i = data.length-1; i >= 0; i--)
     		{
     			var option = document.createElement("option");
     			option.text = data[i].id;
     	    	option.value = data[i].id;
-    	    	if(option.value != currYear)	//dont add current year to year selections
-    	    	{
-    	    		try 
-    	    		{
-    	        		combo.add(option, null); //Standard 
-    	    		} 
-    	    		catch(error) 
-    	    		{
-    	        		combo.add(option); // IE only
-    	    		}
-    	    	}
-    	    	
+
     	    	try 
 	    		{
 	        		yearCombo.add(option, null); //Standard 
@@ -54,145 +40,75 @@
 	        		yearCombo.add(option); // IE only
 	    		}
     		}
+    		
+    		getFamilyFromServer(2015, "170629");
+  
     	});
-    	
-    	//determine the color and enabling of the Refer New Family button
-		var btnRNF = document.getElementById('new');
-		if(sessionStorage.getItem('decemberCutoff') === 'disabled')
-		{
-			btnRNF.style.backgroundColor='Gray';
-        	btnRNF.disabled = true;
-		}
-    	
-    	//get the list of current year agents & familes from the server and display them
-    	//this also gets prior year families and displays them
-    	getCYAgentsAndFamiliesFromServer(currYear.toString());
     });
     
-    function getPYFamiliesFromServer(year)
+    function getFamilyFromServer(year, id)
     {
-    	familiesparams = "token=" + sessionStorage.getItem("token") + "&" +
-    	"year=" + sessionStorage.getItem("prioryear") + "&callback=?";
-    	$.getJSON('families', familiesparams, function(data)
+    	familyparams = "token=" + sessionStorage.getItem("token") +
+    	"&year=" + year +
+    	"&targetid=" + id + "&callback=?";
+    	$.getJSON('getfamily', familyparams, function(data)
     	{
-    		pyFamJson = data;
-    		updatePYTable();
+    		famJson = data;
+    		document.getElementById('onc').value= famJson.oncNum;
+			document.getElementById('ref').value= famJson.targetID;
+			document.getElementById('batch').value= "";
+			document.getElementById('dns').value= famJson.DNSCode;
+    		document.getElementById('hohfn').value= famJson.HOHFirstName;
+			document.getElementById('hohln').value= famJson.HOHLastName;
+			document.getElementById('famstat').value= famJson.fstatus;
+			document.getElementById('delstat').value= famJson.dstatus;
+			document.getElementById('mealstat').value= famJson.mealStatus;
+			document.getElementById('language').value= famJson.Language;
+			document.getElementById('homephone').value= famJson.HomePhone;
+			document.getElementById('cellphone').value= famJson.OtherPhone;
+			document.getElementById('email').value= famJson.FamilyEmail;
+			document.getElementById('housenum').value= famJson.HouseNum;
+			document.getElementById('street').value= famJson.Street;
+			document.getElementById('unit').value= famJson.UnitNum;
+			document.getElementById('city').value= famJson.City;
+			document.getElementById('zipcode').value= famJson.ZipCode;
+			document.getElementById('transport').value= famJson.transportation;
+			document.getElementById('detail').value= famJson.details;
+			
+			getAgentFromServer(year, famJson.agentID);
+			getFamiliesChildrenFromServer(year, famJson.targetID);
     	});
     }
     
-    function getCYFamiliesFromServer(year)
+    function getAgentFromServer(year, agtid)
     {
-    	familiesparams = "token=" + sessionStorage.getItem("token") + "&" +
-		  				 "year=" + currYear.toString() + "&callback=?";
-    	
-    	$.getJSON('families', familiesparams, function(data)
+    	agentparams = "token=" + sessionStorage.getItem("token") +
+    	"&year=" + year +
+    	"&agentid=" + agtid + "&callback=?";
+    	$.getJSON('getagent', agentparams, function(data)
     	{
-    		cyFamJson = data;
-    		updateCYTable();
+    		agtJson = data;
+    		document.getElementById('agentname').value= agtJson.name;
+			document.getElementById('agentorg').value= agtJson.org;
+			document.getElementById('agenttitle').value= agtJson.title;
+    		document.getElementById('agentphone').value= agtJson.phone;
+			document.getElementById('agentemail').value= agtJson.email;
     	});
     }
     
-    function getPYAgentsAndFamiliesFromServer(year)
+    function getFamiliesChildrenFromServer(year, targetid)
     {
-    	//get reference to agent combobox
-    	var agtcb = document.getElementById('pyagents');
-    	
-    	//clear the agent combobox
-    	agtcb.options.length = 0;
-		
-    	//get updated agentJson from server and place into combobox
-    	var agentsparams = "token=" + sessionStorage.getItem("token") + "&" +
-    						"year=" + sessionStorage.getItem("prioryear") + "&callback=?";
-    	
-    	$.getJSON('agents', agentsparams, function(data)
-    	{
-			//add the "Anyone" option if there is more than one agent object
-			if(data.length > 1)
-			{
-				var agtOption = document.createElement("option");
-				agtOption.text = "Anyone";
-	    		agtOption.value = -1;
-	    		try 
-	    		{
-	        		agtcb.add(agtOption, null); //Standard 
-	    		} 
-	    		catch(error) 
-	    		{
-	        		agtcb.add(agtOption); // IE only
-	    		}
-			}
-	    	
-	    	//add the agents for the year
-    		for (var i=0; i < data.length; i++)
-    		{
-    			var agtOption = document.createElement("option");
-    			agtOption.text = data[i].name;
-    	    	agtOption.value = data[i].id;
-    	    	try 
-    	    	{
-    	        	agtcb.add(agtOption, null); //Standard 
-    	    	}
-    	    	catch(error)
-    	    	{
-    	        	agtcb.add(agtOption); // IE only
-    	    	}  
-    		}
-	    	
-	    	getPYFamiliesFromServer(year);
-    	});
-    }
-    
-    function getCYAgentsAndFamiliesFromServer(year)
-    {
-    	//get reference to agent combobox
-    	var agtcb = document.getElementById('curragents');
-    	
-    	//clear the agent combobox
-    	agtcb.options.length = 0;
-		
-    	//get updated agentJson from server and place into combobox
-    	var agentsparams = "token=" + sessionStorage.getItem("token") + "&" +
-    						"year=" + currYear.toString() + "&callback=?";
-    	
-    	$.getJSON('agents', agentsparams, function(data)
-    	{
-			//add the "Anyone" option if there is more than one agent object
-			if(data.length > 1)
-			{
-				var agtOption = document.createElement("option");
-				agtOption.text = "Anyone";
-	    		agtOption.value = -1;
-	    		try 
-	    		{
-	        		agtcb.add(agtOption, null); //Standard 
-	    		} 
-	    		catch(error) 
-	    		{
-	        		agtcb.add(agtOption); // IE only
-	    		}
-			}
-	    	
-	    	//add the agents for the year
-    		for (var i=0; i < data.length; i++)
-    		{
-    			var agtOption = document.createElement("option");
-    			agtOption.text = data[i].name;
-    	    	agtOption.value = data[i].id;
-    	    	try 
-    	    	{
-    	        	agtcb.add(agtOption, null); //Standard 
-    	    	}
-    	    	catch(error)
-    	    	{
-    	        	agtcb.add(agtOption); // IE only
-    	    	}  
-    		}
-	    	
-    		getCYFamiliesFromServer(year);
-    		
-    		//get the list of prior year agents & families from the server and display them
-        	getPYAgentsAndFamiliesFromServer(priorYear.toString());
-    	});
+    	childrenparams=  "token=" + sessionStorage.getItem("token") + "&" +
+		"year=" + year + "&" +
+		"targetid=" + targetid + "&" +
+		"callback=?";
+
+		$.getJSON('children', childrenparams, function(data)
+		{
+			childrenJson = data;
+			updateChildTable();
+			updateWishTable();
+		});
     }
     
     function updateForYearSelection()
@@ -205,185 +121,172 @@
     	getPYAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
     }
     
-    function updatePYTable()
+    function updateChildTable()
     {
-    	$("#tbodyid").empty();
-    	var e = document.getElementById("pyagents");
-    	var agentID = e.options[e.selectedIndex].value;
+    	$("#tchildbody").empty();
     	
-    	for(var i=0; i<pyFamJson.length; i++)
+    	for(var i=0; i<childrenJson.length; i++)
 		{
-    		if(agentID == -1 || agentID == pyFamJson[i].agentID)
-    		{
-    			addPYTableRow(pyFamJson[i]);	//add row to table
-    		}
+    		addChildTableRow(i, childrenJson[i]);	//add row to table
 		}
     }
-    
-    function updateCYTable()
+	
+	function updateWishTable()
     {
-    	$("#tbodycurrid").empty();
-    	var e = document.getElementById("curragents");
-    	var agentID = e.options[e.selectedIndex].value;
+    	$("#twishbody").empty();
     	
-    	for(var i=0; i<cyFamJson.length; i++)
+    	for(var i=0; i<childrenJson.length; i++)
 		{
-    		if(agentID == -1 || agentID == cyFamJson[i].agentID)
-    		{
-    			addCYTableRow(cyFamJson[i]);	//add row to table
-    		}
+    		addWishTableRow(i, childrenJson[i]);	//add row to table
 		}
     }
-    
-    function addPYTableRow(family)
+	
+	function updateAdultTable()
     {
-        if (!document.getElementsByTagName) return;
+    	$("#tadultbody").empty();
+    	
+    	for(var i=0; i<adultsJson.length; i++)
+		{
+    		addAdultTableRow(i, adultsJson[i]);	//add row to table
+		}
+    }
+	
+	function addChildTableRow(cnum, child)
+    {
+        var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
+        var fieldname = ["childfn", "childln", "childdob", "childgender", "childschool"];
+        var fieldsize = [15, 16, 11, 11, 20];
         
-        var mealstatus;
-        if(family.mealStatus === 'Thanksgiving_Confirmed')
-        	mealstatus = 'Thanksgiving \u2713';
-        else if(family.mealStatus === 'December_Confirmed')
-        	mealstatus = 'December \u2713';
-        else if(family.mealStatus === 'Both_Confirmed')
-        	mealstatus = 'Both \u2713';
-        else
-        	mealstatus = family.mealStatus;
-        
-        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
-      					  family.fstatus, family.dstatus, mealstatus];
-        
-	    var tabBody = document.getElementById("pyTable").getElementsByTagName('tbody').item(0);
+	    var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
-         
-        for(index=0; index < familyinfo.length; index++)	//create the family info cells
+    	
+        for(index=0; index < childinfo.length; index++)	//create the child info cells
         {
-        	cell = document.createElement("td");
-        	cell.appendChild(document.createTextNode(familyinfo[index]));
+        	cell= document.createElement("td");
+    	    content= document.createElement("input");
+ 	    	content.type="text";
+ 	    	content.name=fieldname[index] + cnum;
+        	content.value = childinfo[index];
+        	content.setAttribute("size", fieldsize[index]);
+        	cell.appendChild(content);
         	row.appendChild(cell);
         }
         
         btn = document.createElement("button");
-        btn.value=family.idNum;
-        btn.innerHTML = "Refer";
-        btn.onclick=function() {referFamily(family.targetID);};
+        btn.value=cnum;
+        btn.type="button";
+        btn.innerHTML = "Remove";
+        btn.onclick=function() {removeChild(cnum);};
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+	
+	function addWishTableRow(cnum, child)
+    {
+		
+		var childinfo= [child.firstname, getAge(child.sDOB) + " " + child.gender.toLowerCase()];
+		var childfieldsize= [15, 14];
+		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
+        
+	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < childinfo.length; index++)	//create the child info cells
+        {
+        	cell= document.createElement("td");
+    	    content= document.createElement("input");
+ 	    	content.type="text";
+        	content.value = childinfo[index];
+        	content.readOnly = true;
+        	content.setAttribute("size", childfieldsize[index]);
+        	cell.appendChild(content);
+        	row.appendChild(cell);
+        }
 
-        if(alreadyReferred(family.targetID) === true)
+        for(wn=0; wn<wishplaceholder.length; wn++)
         {
-        	btn.style.backgroundColor='Red';
-        	btn.disabled = true;
+        	var wlcell= document.createElement("td");
+        	var wish= document.createElement("input");
+        	wish.type="text";
+        	wish.name="wish" + cnum + wn;
+        	wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
+        	wish.setAttribute("size", 22);
+        	wlcell.appendChild(wish);
+        	row.appendChild(wlcell);
         }
-        else if(sessionStorage.getItem('decemberCutoff') === 'disabled')
-        {
-        	btn.style.backgroundColor='Gray';
-        	btn.disabled = true;
-        }
-        row.appendChild(btn);
         
         tabBody.appendChild(row);
     }
-    
-    function addCYTableRow(family, tablename, buttonname)
+	
+	function addAdultTableRow(anum, adult)
     {
-        if (!document.getElementsByTagName) return;
-        
-        
-        var fstatus;
-        if(family.fstatus === 'Packaged')
-        	fstatus = 'Packaged \u2713';
-        else
-        	fstatus = family.fstatus;
-        
-        var dstatus;
-        if(family.dstatus === 'Delivered')
-        	dstatus = 'Delivered \u2713';
-        else if(family.dstatus === 'Empty')
-        	dstatus = 'None';
-        else
-        	dstatus = family.dstatus;
-        
-        var mealstatus;
-        if(family.mealStatus === 'Thanksgiving_Confirmed')
-        	mealstatus = 'Thanksgiving \u2713';
-        else if(family.mealStatus === 'December_Confirmed')
-        	mealstatus = 'December \u2713';
-        else if(family.mealStatus === 'Both_Confirmed')
-        	mealstatus = 'Both \u2713';
-        else
-        	mealstatus = family.mealStatus;
-        	
-        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
-      					  fstatus, dstatus, mealstatus];
-        
-	    var tabBody = document.getElementById("cyTable").getElementsByTagName('tbody').item(0);
+	    var tabBody = document.getElementById("adulttable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
-         
-        for(index=0; index < familyinfo.length; index++)	//create the family info cells
-        {
-        	cell = document.createElement("td");
-        	cell.appendChild(document.createTextNode(familyinfo[index]));
-        	row.appendChild(cell);
-        }
         
-        btn = document.createElement("button");
-        btn.value=family.id;
-		btn.value=family.HOHLastName;
-        btn.innerHTML = "Edit";
-        btn.onclick=function() {update(family.targetID);};
-        if(sessionStorage.getItem('editCutoff') === 'disabled')
-        {
-        	btn.style.backgroundColor='Gray';
-        	btn.disabled = true;
-        }
+        cell= document.createElement("td");
+        adultname= document.createElement("input");
+        adultname.type="text";
+        adultname.name="adultname" + anum;
+        adultname.value = adult.name;
+        adultname.setAttribute("size", 27);
+        cell.appendChild(adultname);
+        row.appendChild(cell);
+        
+        cell= document.createElement("td");
+        var adultgender= document.createElement("input");
+        adultgender.type="text";
+        adultgender.name="adultgender" + anum;
+        adultgender.value = adult.gender;
+        adultgender.setAttribute("size", 11);
+        cell.appendChild(adultgender);
+        row.appendChild(cell);
+        
+        var btn = document.createElement("button");
+        btn.value= anum;
+        btn.type="button";
+        btn.innerHTML = "Remove";
+        btn.onclick=function() {removeAdult(anum);};
         row.appendChild(btn);
         
         tabBody.appendChild(row);
     }
-    
-    function referFamily(targetID)
-    {
-    	sessionStorage.setItem("targetid", targetID);
-    	
-		var params = {}
-		params["year"] = priorYear.toString();
-		params["token"] = sessionStorage.getItem('token');
-		params["targetid"] = targetID;
+	
+	function getAge(birthdate)
+	{
+		var curryear = new Date().getFullYear();
+		var xmasday = new Date(curryear,11,25,0,0,0,0);
+		var birthdate= new Date(birthdate);
 		
-		post('referral', params);
-    }
-    
-    function newFamily()
-    {
-    	sessionStorage.setItem("targetid", "NNA");
-		sessionStorage.setItem("prioryear", new Date().getFullYear()-1);
-    	
-    	var params = {}
-		params["token"] = sessionStorage.getItem('token');
+		var age= [];
 		
-		post('newfamily', params);
-    }
-    
-    function alreadyReferred(targetID)
-    {
-    	var index = 0;
-    	while(index < cyFamJson.length && cyFamJson[index].targetID != targetID)
-    	    index++;
-    	
-    	if(index < cyFamJson.length)
-    		return true;
-    	else
-    	    return false;
-    }
-    
-    function update(targetID)
-    {
-    	sessionStorage.setItem("targetid", targetID);
-    	var params = {}
-		params["year"] = currYear.toString();
-		params["token"] = sessionStorage.getItem('token');
-		params["targetid"] = targetID;
-		
-		post('familyupdate', params);
-    }
+		if(birthdate >= xmasday)
+		{
+			age.push('Newborn');
+		}
+		else
+		{
+	    	var y= [xmasday.getFullYear(), birthdate.getFullYear()],
+	    	ydiff= y[0]-y[1],
+	    	m= [xmasday.getMonth(), birthdate.getMonth()],
+	    	mdiff= m[0]-m[1],
+	    	d= [xmasday.getDate(), birthdate.getDate()],
+	    	ddiff= d[0]-d[1];
+
+	    	if(mdiff < 0 || (mdiff=== 0 && ddiff<0))--ydiff;
+	    	if(mdiff<0) mdiff+= 12;
+	    	if(ddiff<0)
+	    	{
+	        	birthdate.setMonth(m[1]+1, 0);
+	        	ddiff= birthdate.getDate()-d[1]+d[0];
+	        	--mdiff;
+	    	}
+	    	
+	    	if(ydiff> 0) age.push(ydiff+ ' yr. old');
+	    	else if(mdiff> 0) age.push(mdiff+ ' mos. old');
+		}
+	    	return age.join('');
+	}
     
 	function post(path, params, method) 
 	{
@@ -424,97 +327,54 @@
     		float:left;
    			border: 0;
 		}
-		.tables
-		{
-			width:900px;
-			margin:0 auto;
-			background-color: #3CB371;
-			border: 1px solid black;
-		}
-        .scrolltable 
-        {
-            overflow-x: scroll;
-            height: 100%;
-            display: flex;
-            display: -webkit-flex;
-            flex-direction: column;
-            -webkit-flex-direction: column;
-        }
-        .scrolltable > .header {
-        }
-        .scrolltable > .body {
-            /*noinspection CssInvalidPropertyValue*/
-            width: -webkit-fit-content;
-            overflow-y: scroll;
-            flex: 1;
-            -webkit-flex: 1;
-        }
-        th, td {
-            min-width: 116px;
-        }
-        /* an outside constraint to react against */
-        #constrainer {
-            width: 880px;
-            height: 200px;
-        }
-        #constrainer2 {
-            width: 880px;
-            overflow-x: scroll;
-        }
-        #constrainer2 table {
-            overflow-y: scroll;
-        }
-        #constrainer2 tbody {
-            overflow-x: scroll;
-            display: block;
-            height: 200px;
-        }
-        #constrainer2 thead {
-            display: table-row;
-        }
-        /* only styling below here */
-        #constrainer, #constrainer2 {
-            border: 1px solid black;
-        }
-        table {
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid gray;
-        }
-        th {
-            background-color: lightgrey;
-            border-width: 1px;
-        }
-        td {
-            border-width: 1px;
-        }
-        tr:first-child td {
-            border-top-width: 0;
-        }
-        tr:nth-child(odd) {
-            background-color: #ffffff;
-        }
-        tr:nth-child(even) {
-            background-color: lightgrey;
-        }       
-        button
-        {
-        	background-color: #336699;
-        	color: #ffffff;
-        }      
-        #new
-        {
-       		float: right;
-        	background-color: #336699;
-        	color: #ffffff;
-        }
-        input
-        {
-        	float: right;
-        	background-color: #336699;
-        	color: #ffffff;
-        }
+		div.ui-datepicker
+	{
+		width:480px;
+  		background-color: lightgray;
+  		font-size:15px;
+	}
+	form
+	{
+		width:900px;
+		margin:0 auto;
+		background-color: #3CB371;
+		border: 1px solid black;
+	}
+	button
+    {
+        background-color: #336699;
+        color: #ffffff;
+    }      
+	.major
+	{
+  		padding: 0.2em 0.5em;
+  		border:2px solid black;
+  		background-color: #E5FFCC;
+  		font-size:80%;
+  		text-align:left;
+  	}
+  	#topbar p
+    {
+       	text-align: center;
+    }
+    #banner
+    {
+    	font-weight: bold;
+    	font-style: italic;
+    	font-size: 130%;
+	}
+	fieldset {background-color: #E8E8E8;}
+	#submitspan {float: right;}
+	#errormessage
+	{
+		float: left;
+		font-weight: bold;
+		font-style: italic;
+		color: red;
+	}
+	table, th, td {border: 1px solid black;}
+	th, td {min-width: 60px; }
+	button {background-color: #336699; color: #fffff;}
         #topbar p
         {
        		text-align: center;
@@ -630,6 +490,17 @@
 		{
 			background-color: rgba( 255, 255, 255, 0.1);
 		}
+		label 
+		{
+			font-size: 90%;
+ 			display: inline-block;
+ 			width: 116px;
+ 			text-align: left;
+		}
+		.shortlabel
+		{
+			width: 60px;
+		}
     </style>
 </head>
 <body>
@@ -655,47 +526,166 @@
 		<li><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
 	</ul>
   </nav>
-  <div class="tables">
+   <form id="familyreferral" action="referfamily" onsubmit="return submitReferral()" method="post">
+  <input id='token' type="hidden" name="token">
+  <input id='year' type="hidden" name="year">
+  <input id='targetid' type="hidden" name="targetid">
+  <br>
+  <fieldset>
+  <legend class="major">Family Information & Status</legend>
+    <label for="onc" class= 'shortlabel'>ONC #</label>
+    <label for="ref" class= 'shortlabel'>Ref #</label>
+    <label for="batch" class= 'shortlabel'>Batch #</label>
+    <label for="dns" class= 'shortlabel'>DNS</label>
+    <label for="hohfn">First Name</label>
+    <label for="hohln">Last Name</label>
+    <label for="famstat">Family Status</label>
+    <label for="selstat">Delivery Status</label>
+    <label for="mealstat">Meal Status</label>
+    <br>
+    <input id='onc' type="text" size="7">
+    <input id='ref' type="text" size="7">
+    <input id="batch" type="text" size="8">
+    <input id="dns" type="text" size="8">
+    <input id='hohfn' title="First Name" name="hohFN" type="text" size="16">
+    <input id='hohln' title="Last Name" name="hohLN" type="text" size="17">
+    <input id='famstat' title="Family Status" type="text" size="16">
+    <input id='delstat' title="Delivery Status" type="text" size="16">
+    <input id='mealstat' title="Meal Status" type="text" size="16">
+    <br>
+    <label for="language">Language</label>
+    <label for="homephone">Home Phone</label>
+    <label for="cellphone">Mobile Phone</label>
+    <label for="email">Email</label>
+    <br>
+    <input id= 'language' title="Primary language" name="language" type= "text" size="13">
+    <input id="homephone" title="Home Phone #" name="homephone" type="text" size="13">
+    <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="13">
+    <input id='email' title="E-mail address" name="email" type="email" size="30">
 	<br>
-	<form>
-		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
-		<label for="pyagents">Families Referred By:</label>
-		<select id="pyagents"  onchange="updatePYTable()" name="pyagtID"></select>
-	</form>
-	<div id="constrainer2">
-      <table id="pyTable">
-        <thead>
-        <tr>
-       		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
-        	<th>Family Status</th><th>Delivery Status</th><th>Meal Status</th>
-        </tr>
-        </thead>
-        <tbody id="tbodyid">
-        </tbody>
-	  </table>
-	</div>
-	<p><button id="new" onclick="newFamily()">Refer New Family</button></p>
-	<br>
-	<form>
-		<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
-		<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
-	</form>
-  	<div id="constrainer2">
-      <table id = cyTable>
-        <thead>
-        <tr>
-       		<th>ONC #</th><th>First Name</th><th>Last Name</th><th>DNS Code</th>
-        	<th>Family Status</th><th>Delivery Status</th><th>Meal Status</th>
-        </tr>
-        </thead>
-        <tbody id="tbodycurrid">
-        </tbody>
-	  </table>
-	</div>
-
-	<form action="logout?token=REPLACE_TOKEN" method="post">
-  		<input id="submit" type="submit" value="Logout">
-	</form>
+	<label for="housenum">House</label>
+    <label for="street">Street</label>
+    <label for="unit">Unit</label>
+    <label for="city">City</label>
+    <label for="zipcode">Zip</label>
+    <label for="transport">Transportation?</label>
+    <br>
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off">
+    <input id="city" title="City" name="city" onchange="cityChanged('city')">
+    <input id="zipcode" title="Zip Code" name="zipcode" onchange="onZipChanged('zipcode')">
+	<input id="transport" title="Family has own transportation" name="transport" type="text" size="12">
+	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Alt Address?
+  </fieldset>
+  <br>
+  <fieldset>
+  <legend class="major">Referring Agent Information</legend>
+    <label for="agentname">Name</label>
+    <label for="agentorg">Organization</label>
+    <label for="agenttitle">Title</label>
+    <label for="agentphone">Phone</label>
+    <label for="agentemail">Email</label>
+    <br>
+	<input id="agentname" title="Agent Name" name="agentfn" type="text" size="18">
+    <input id="agentorg" title="Agent Organization" name="agentln" type="text" size="18">
+    <input id="agenttitle" title="Agent Title" name="agenttitle" type="text" size="20">
+    <input id="agentphone" title="Agent Phone" name="agentphone" type="text", size="13">
+    <input id="agentemail" title="Agent Email" name="agentemail" type="text" size="30">
+  </fieldset>
+  <br>
+  <fieldset>
+  <legend class="major">Family Members</legend>
+  <fieldset class="gray">
+  	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS)</legend>
+  	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
+    <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
+    <input id="childdob" title="Date of birth for child to be added" type="text" size="12" placeholder="DoB">
+    <select id="childgender" title="Gender of child to be added">
+		<option value="Boy">Boy</option>
+		<option value="Girl">Girl</option>
+		<option value="Unknown">Unknown</option>
+	</select>
+	<input id="childschool" title="School attended, if any, for child to be added" type="text" size="20" placeholder="School">
+	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
+	<button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button>
+  <table id="childtable" border="1">
+  	<thead>
+    	<tr>
+        	<th>First Name</th>
+        	<th>Last Name</th>
+        	<th>DoB </th>
+        	<th>Gender </th>
+        	<th>School </th>
+    	</tr>
+      </thead>
+      <tbody id="tchildbody">
+      </tbody>
+  </table>
+  </fieldset>
+  <br>
+  <fieldset>
+  	<legend>Other adults in family (in addition to the head of household)</legend>
+  	<input id="adultname" title="Name" type="text" size="28" placeholder="First & Last Name">
+    <select id="adultgender" title="Gender">
+		<option value="Male">Male</option>
+		<option value="Female">Female</option>
+		<option value="Unknown">Unknown</option>
+	</select>
+	<button type="button" onclick="addAdult()" title="Click to add adult to family">Add Adult</button>
+	<button type="button" onclick="clearAddAdult()" title="Click to clear adult fields">Clear</button>
+  <table id="adulttable" border="1">
+  	<thead>
+    	<tr>
+        	<th>Name</th>
+        	<th>Gender </th>
+    	</tr>
+    </thead>
+    <tbody id="tadultbody">
+    </tbody>
+</table>
+  </fieldset>
+  </fieldset>
+  <br>
+  <fieldset>
+   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish, per child; if clothing or footwear, please include size</legend>
+  	 <table id="wishtable" border="1">
+  	<thead>
+    	<tr>
+        	<th>First Name</th>
+        	<th>Age/Gender</th>
+        	<th>Wish 1</th>
+        	<th>Wish 2</th>
+        	<th>Wish 3</th>
+        	<th>Alternate Wish</th>	
+    	</tr>
+      </thead>
+      <tbody id="twishbody">
+      </tbody>
+  </table>
+  </fieldset>
+  <br>
+  <fieldset>
+  <legend class="major">Meal Assistance: ONC will refer family to WFCM or other meal providing organizations</legend>
+	<input type="checkbox" onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
+    <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
+		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
+	</select>
+	<input id="dietres" type="text" name="dietres" size="68" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
+  </fieldset>
+  <br>
+  <fieldset>
+   <legend class="major">Family Details: Provide any additional details that may assist in serving this family</legend>
+	<input id="detail" type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
+  </fieldset>
+  <br>
+  <div>
+  	<span id="errormessage"></span>
+  	<span id="submitspan">
+  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
+  	  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC">
+  	</span>
   </div>
+</form>
 </body>
 </html>

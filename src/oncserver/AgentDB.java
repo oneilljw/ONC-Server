@@ -9,7 +9,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import ourneighborschild.Agent;
+import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCUser;
+import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.UserPermission;
 
 import com.google.gson.Gson;
@@ -104,6 +106,29 @@ public class AgentDB extends ONCServerDB
 		Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
 			
 		String response = gson.toJson(agentReferredInYearList, listtype);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	static HtmlResponse getAgentJSONP(int year, int agentID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		String response;
+	
+		List<Agent> agtAL = agentDB.get(year-BASE_YEAR).getList();
+		
+		int index=0;
+		while(index<agtAL.size() && agtAL.get(index).getID() != agentID)
+			index++;
+		
+		if(index<agtAL.size())
+		{
+			Agent agent = new Agent(agtAL.get(index));
+			response = gson.toJson(agent, Agent.class);
+		}
+		else
+			response = "";
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
