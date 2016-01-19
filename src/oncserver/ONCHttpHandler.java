@@ -134,6 +134,13 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = FamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
+    	else if(requestURI.contains("/references"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		
+    		HtmlResponse response = FamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
     	else if(requestURI.contains("/getfamily"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
@@ -164,6 +171,14 @@ public class ONCHttpHandler implements HttpHandler
     		int famID = FamilyDB.getFamilyID(year, (String) params.get("targetid"));
     		
     		HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
+    	else if(requestURI.contains("/wishes"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		int childID = Integer.parseInt((String) params.get("childid"));
+    		
+    		HtmlResponse response = ServerChildDB.getChildWishesJSONP(year, childID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/adults"))

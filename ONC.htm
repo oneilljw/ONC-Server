@@ -1,13 +1,17 @@
  <!DOCTYPE html>
 <html>
 <head lang="en">
-    <title>ONC Main Login Page</title>
-    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
-    <script>
+  <title>ONC Main Login Page</title>
+  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script>
 	var currYear;
 	var priorYear;
+	var familyRefs = {};
 	var famJson = {};
 	var agtJson;
+	var childrenJson = {};
+	var wishJson = {};
+	var famIndex = 0;
 	
 	sessionStorage.setItem('token', "REPLACE_TOKEN");
 	sessionStorage.setItem('thanksgivingCutoff', "THANKSGIVING_CUTOFF");
@@ -40,11 +44,29 @@
 	        		yearCombo.add(option); // IE only
 	    		}
     		}
-    		
-    		getFamilyFromServer(2015, "170629");
-  
+    		var year = yearCombo.options[yearCombo.selectedIndex].value;
+    		getFamilyReferencesFromServer(year);
     	});
     });
+    
+    function getFamilyReferencesFromServer(year)
+    {
+    	familyparams = "token=" + sessionStorage.getItem("token") +
+    	"&year=" + year + "&callback=?";
+    	$.getJSON('references', familyparams, function(data)
+    	{
+    		familyRefs = data;
+    		if(familyRefs.length > 0)
+    		{
+    			getFamilyFromServer(year, familyRefs[0].id)
+    		}
+    		else
+    		{
+    			document.getElementById('onc').value= "No";
+    			document.getElementById('ref').value= "Families";
+    		}
+    	});
+    }
     
     function getFamilyFromServer(year, id)
     {
@@ -107,37 +129,61 @@
 		{
 			childrenJson = data;
 			updateChildTable();
-			updateWishTable();
+			if(childrenJson.length > 0)
+			{
+				getChildWishesFromServer(year, childrenJson[0].id);
+			}
 		});
     }
     
-    function updateForYearSelection()
+    function getChildWishesFromServer(year, childid)
     {
-    	//get selected year
-    	var yearCB = document.getElementById("dbYears");
-		priorYear = yearCB.options[yearCB.selectedIndex].value;
-		sessionStorage.setItem("prioryear", priorYear);
-    	
-    	getPYAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
+    	childwishparams=  "token=" + sessionStorage.getItem("token") + "&" +
+		"year=" + year + "&" +
+		"childid=" + childid + "&" +
+		"callback=?";
+
+		$.getJSON('wishes', childwishparams, function(data)
+		{
+			wishJson = data;
+			updateWishTable(wishJson);
+		});
     }
-    
+   
     function updateChildTable()
     {
     	$("#tchildbody").empty();
     	
-    	for(var i=0; i<childrenJson.length; i++)
-		{
-    		addChildTableRow(i, childrenJson[i]);	//add row to table
-		}
-    }
-	
-	function updateWishTable()
-    {
-    	$("#twishbody").empty();
+    	var childSelect = document.getElementById("childfn");
+    	clearSelect(childSelect);
     	
     	for(var i=0; i<childrenJson.length; i++)
 		{
-    		addWishTableRow(i, childrenJson[i]);	//add row to table
+    		addChildTableRow(i, childrenJson[i]);	//add row to table
+    		
+    		var option = document.createElement("option"); //add child fn to select
+			option.text = childrenJson[i].firstname;
+	    	option.value = i;
+
+	    	try 
+    		{
+        		childSelect.add(option, null); //Standard 
+    		} 
+    		catch(error) 
+    		{
+        		childSelect.add(option); // IE only
+    		}
+    		
+   		}
+    }
+	
+	function updateWishTable(wishJson)
+    {
+    	$("#twishbody").empty();
+    	
+    	for(var i=0; i<wishJson.length; i++)
+		{
+    		addWishTableRow(i, wishJson[i]);	//add row to table
 		}
     }
 	
@@ -170,6 +216,7 @@
         	content.setAttribute("size", fieldsize[index]);
         	cell.appendChild(content);
         	row.appendChild(cell);
+        	
         }
         
         btn = document.createElement("button");
@@ -182,38 +229,26 @@
         tabBody.appendChild(row);
     }
 	
-	function addWishTableRow(cnum, child)
+	function addWishTableRow(wn, childwish)
     {
-		
-		var childinfo= [child.firstname, getAge(child.sDOB) + " " + child.gender.toLowerCase()];
-		var childfieldsize= [15, 14];
-		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
+		var wishinfo= [wn+1, childwish.name, childwish.detail, childwish.restriction, childwish.partner, childwish.status];
+		var columnsize= ['8px', '120px', '200px', '8px', '320px', '80px'];
+		var wishfieldsize= [1, 12, 32, 1, 32, 10];
         
 	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
-        for(index=0; index < childinfo.length; index++)	//create the child info cells
+        for(index=0; index < wishinfo.length; index++)	//create the child info cells
         {
         	cell= document.createElement("td");
+        	cell.style.width = columnsize[index];
     	    content= document.createElement("input");
  	    	content.type="text";
-        	content.value = childinfo[index];
+        	content.value = wishinfo[index];
         	content.readOnly = true;
-        	content.setAttribute("size", childfieldsize[index]);
+        	content.setAttribute("size", wishfieldsize[index]);
         	cell.appendChild(content);
         	row.appendChild(cell);
-        }
-
-        for(wn=0; wn<wishplaceholder.length; wn++)
-        {
-        	var wlcell= document.createElement("td");
-        	var wish= document.createElement("input");
-        	wish.type="text";
-        	wish.name="wish" + cnum + wn;
-        	wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
-        	wish.setAttribute("size", 22);
-        	wlcell.appendChild(wish);
-        	row.appendChild(wlcell);
         }
         
         tabBody.appendChild(row);
@@ -287,6 +322,73 @@
 		}
 	    	return age.join('');
 	}
+	
+	function updateForYearSelection()
+    {
+    	//get selected year
+    	var yearCB = document.getElementById("yearlist");
+		var year = yearCB.options[yearCB.selectedIndex].value;
+    	
+		getFamilyReferencesFromServer(year);
+    }
+	
+	function updateForChildSelection()
+    {
+    	//get selected year
+    	var childCB = document.getElementById("childfn");
+		var childid = childrenJson[childCB.selectedIndex].id;
+		var yearCB = document.getElementById("yearlist");
+		var year = yearCB.options[yearCB.selectedIndex].value;
+    	
+		getChildWishesFromServer(year, childid)	//get child wishes from server
+    }
+	
+	function clearSelect(select)
+	{
+		var i;
+		for(i=select.options.length-1;i>=0;i--)
+		{
+	    	select.remove(i);
+	    }
+	}
+	
+	function onNextFamily()
+	{
+		var yearCB = document.getElementById("yearlist");
+		var year = yearCB.options[yearCB.selectedIndex].value;
+		
+		if(familyRefs.length > 0 && famIndex < familyRefs.length)
+		{
+			famIndex++;
+			getFamilyFromServer(year, familyRefs[famIndex].id);
+		}
+		else if(familyRefs.length > 0 && famIndex < familyRefs.length)
+		{
+			famIndex= 0;
+			getFamilyFromServer(year, familyRefs[famIndex].id);
+		}
+	}
+	
+	function onPreviousFamily()
+	{
+		var yearCB = document.getElementById("yearlist");
+		var year = yearCB.options[yearCB.selectedIndex].value;
+		
+		if(familyRefs.length > 0 && famIndex > 0)
+		{
+			famIndex--;
+			getFamilyFromServer(year, familyRefs[famIndex].id);
+		}
+		else if(familyRefs.length > 0 && famIndex === 0)
+		{
+			famIndex= familyRefs.length-1;
+			getFamilyFromServer(year, familyRefs[famIndex].id);
+		}
+	}
+	function onSearch()
+	{
+		console.log("Searching");
+	}
     
 	function post(path, params, method) 
 	{
@@ -312,22 +414,22 @@
 	    document.body.appendChild(form);
 	    form.submit();
 	}
-    </script>
-    <style type="text/css">
-    	.topbar 
-    	{
-    		width:900px;
-    		height:72px;
-    		margin:0 auto;
-    		background-color: #FF0000;
-			border: 1px solid black;
-		}
-		.topbar img
-		{
-    		float:left;
-   			border: 0;
-		}
-		div.ui-datepicker
+  </script>
+  <style type="text/css">
+    .topbar 
+    {
+    	width:900px;
+    	height:72px;
+    	margin:0 auto;
+    	background-color: #FF0000;
+		border: 1px solid black;
+	}
+	.topbar img
+	{
+    	float:left;
+   		border: 0;
+	}
+	div.ui-datepicker
 	{
 		width:480px;
   		background-color: lightgray;
@@ -338,6 +440,13 @@
 		width:900px;
 		margin:0 auto;
 		background-color: #3CB371;
+		border: 1px solid black;
+	}
+	#controlbar
+	{
+		width:900px;
+		margin:0 auto;
+		background-color: #E8E8E8;
 		border: 1px solid black;
 	}
 	button
@@ -375,133 +484,134 @@
 	table, th, td {border: 1px solid black;}
 	th, td {min-width: 60px; }
 	button {background-color: #336699; color: #fffff;}
-        #topbar p
-        {
-       		text-align: center;
-        }
-        #banner
-        {
-    		font-weight: bold;
-    		font-style: italic;
-    		font-size: 130%;
-		}
-		nav 
-		{
-			background-color: #E5FFCC;
-			border: 1px solid #dedede;
-			border-radius: 4px;
-			box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.055);
-			color: #888;
-			display: block;
-			margin: 8px 22px 8px 22px;
-			overflow: hidden;
-/*			width: 90%; 	*/
-		}
-		nav ul 
-		{
-			margin: 0;
-			padding: 0;
-		}
-		nav ul li 
-		{
-			display: inline-block;
-			list-style-type: none;
+    #topbar p
+    {
+   		text-align: center;
+    }
+    #banner
+    {
+    	font-weight: bold;
+    	font-style: italic;
+    	font-size: 130%;
+	}
+	nav 
+	{
+		background-color: #E5FFCC;
+		border: 1px solid #dedede;
+		border-radius: 4px;
+		box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.055);
+		color: #888;
+		display: inline-block;
+		width:900px;
+		margin: 8px 22px 8px 22px;
+		overflow: hidden;
+	}
+	nav ul 
+	{
+		margin: 0;
+		padding: 0;
+		display: inline-block;
+	}
+	nav ul li 
+	{
+		display: inline-block;
+		list-style-type: none;
 		
-			-webkit-transition: all 0.2s;
-			-moz-transition: all 0.2s;
-			-ms-transition: all 0.2s;
-			-o-transition: all 0.2s;
-			transition: all 0.2s; 
-		}
-		nav > ul > li > a 
-		{
-			color: black;
-			display: block;
-			line-height: 36px;
-			padding: 0 24px;
-			text-decoration: none;
-		}
-		nav > ul > li > a > .caret 
-		{
-			border-top: 4px solid #aaa;
-			border-right: 4px solid transparent;
-			border-left: 4px solid transparent;
-			content: "";
-			display: inline-block;
-			height: 0;
-			width: 0;
-			vertical-align: middle;
+		-webkit-transition: all 0.2s;
+		-moz-transition: all 0.2s;
+		-ms-transition: all 0.2s;
+		-o-transition: all 0.2s;
+		transition: all 0.2s; 
+	}
+	nav > ul > li > a 
+	{
+		color: black;
+		display: block;
+		line-height: 36px;
+		padding: 0 24px;
+		text-decoration: none;
+	}
+	nav > ul > li > a > .caret 
+	{
+		border-top: 4px solid #aaa;
+		border-right: 4px solid transparent;
+		border-left: 4px solid transparent;
+		content: "";
+		display: inline-block;
+		height: 0;
+		width: 0;
+		vertical-align: middle;
 	
-			-webkit-transition: color 0.1s linear;
-			-moz-transition: color 0.1s linear;
-			-o-transition: color 0.1s linear;
-	  		transition: color 0.1s linear; 
-		}
-		nav > ul > li:hover 
-		{
-          background-color: rgb( 40, 44, 47 );
-        }
-        nav > ul > li:hover > a 
-        {
-          color: rgb( 0, 204, 0 );
-        }
-        nav > ul > li:hover > a > .caret 
-        {
-          border-top-color: rgb( 0, 204, 0 );
-        }
-        nav > ul > li > div 
-        {
-			background-color: rgb( 40, 44, 47 );
-			border-top: 0;
-			border-radius: 0 0 4px 4px;
-			box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.055);
-			display: none;
-			margin: 0;
-			opacity: 0;
-			position: absolute;
-			width: 165px;
-			visibility: hidden;
-			z-index: 100;
+		-webkit-transition: color 0.1s linear;
+		-moz-transition: color 0.1s linear;
+		-o-transition: color 0.1s linear;
+ 		transition: color 0.1s linear; 
+	}
+	nav > ul > li:hover 
+	{
+        background-color: rgb( 40, 44, 47 );
+    }
+    nav > ul > li:hover > a 
+    {
+        color: rgb( 0, 204, 0 );
+    }
+    nav > ul > li:hover > a > .caret 
+    {
+        border-top-color: rgb( 0, 204, 0 );
+    }
+    nav > ul > li > div 
+    {
+		background-color: rgb( 40, 44, 47 );
+		border-top: 0;
+		border-radius: 0 0 4px 4px;
+		box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.055);
+		display: none;
+		margin: 0;
+		opacity: 0;
+		position: absolute;
+		width: 165px;
+		visibility: hidden;
+		z-index: 100;
 	
-			-webkit-transiton: opacity 0.2s;
-			-moz-transition: opacity 0.2s;
-			-ms-transition: opacity 0.2s;
-			-o-transition: opacity 0.2s;
-			-transition: opacity 0.2s;
-		}
-		nav > ul > li:hover > div 
-		{
-			display: block;
-			opacity: 1;
-			visibility: visible;
-		}
-		nav > ul > li > div ul > li 
-		{
-			display: block;
-		}
-		nav > ul > li > div ul > li > a 
-		{
-			color: #fff;
-			display: block;
-			padding: 12px 24px;
-			text-decoration: none;
-		}
-		nav > ul > li > div ul > li:hover > a 
-		{
-			background-color: rgba( 255, 255, 255, 0.1);
-		}
-		label 
-		{
-			font-size: 90%;
- 			display: inline-block;
- 			width: 116px;
- 			text-align: left;
-		}
-		.shortlabel
-		{
-			width: 60px;
-		}
-    </style>
+		-webkit-transiton: opacity 0.2s;
+		-moz-transition: opacity 0.2s;
+		-ms-transition: opacity 0.2s;
+		-o-transition: opacity 0.2s;
+		-transition: opacity 0.2s;
+	}
+	nav > ul > li:hover > div 
+	{
+		display: block;
+		opacity: 1;
+		visibility: visible;
+	}
+	nav > ul > li > div ul > li 
+	{
+		display: block;
+	}
+	nav > ul > li > div ul > li > a 
+	{
+		color: #fff;
+		display: block;
+		padding: 12px 24px;
+		text-decoration: none;
+	}
+	nav > ul > li > div ul > li:hover > a 
+	{
+		background-color: rgba( 255, 255, 255, 0.1);
+	}
+	label 
+	{
+		font-size: 90%;
+ 		display: inline-block;
+ 		width: 116px;
+ 		text-align: left;
+	}
+	.shortlabel
+	{
+		width: 60px;
+	}
+  </style>
 </head>
 <body>
   <div id="topbar" class="topbar">
@@ -511,7 +621,7 @@
   </div>
   <nav>
 	<ul>
-		<li><select id="yearlist" name="yearlist"></select></li>
+		<li><select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select></li>
 		<li>
 			<a href="ONC Data.html">ONC Data <span class="caret"></span></a>
 			<div>
@@ -526,7 +636,13 @@
 		<li><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
 	</ul>
   </nav>
-   <form id="familyreferral" action="referfamily" onsubmit="return submitReferral()" method="post">
+  <div id='controlbar'>
+  	<button id="next" onclick="onNextFamily()">Next Family</button>
+  	<button id="previous" onclick="onPreviousFamily()">Previous Family</button>
+  	<label for="search">Search for:</label> 
+	<input id="search" type="search" placeholder="search" onsearch="onSearch()">
+  </div>
+  <form id="familyreferral" action="referfamily" onsubmit="return submitReferral()" method="post">
   <input id='token' type="hidden" name="token">
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
@@ -597,19 +713,8 @@
   <fieldset>
   <legend class="major">Family Members</legend>
   <fieldset class="gray">
-  	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS)</legend>
-  	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
-    <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
-    <input id="childdob" title="Date of birth for child to be added" type="text" size="12" placeholder="DoB">
-    <select id="childgender" title="Gender of child to be added">
-		<option value="Boy">Boy</option>
-		<option value="Girl">Girl</option>
-		<option value="Unknown">Unknown</option>
-	</select>
-	<input id="childschool" title="School attended, if any, for child to be added" type="text" size="20" placeholder="School">
-	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
-	<button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button>
-  <table id="childtable" border="1">
+  	<legend>Children in family</legend>
+    <table id="childtable" border="1">
   	<thead>
     	<tr>
         	<th>First Name</th>
@@ -648,16 +753,17 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish, per child; if clothing or footwear, please include size</legend>
-  	 <table id="wishtable" border="1">
+   <legend class="major">Children's Wishes</legend>
+   <select id="childfn" onchange="updateForChildSelection()"> </select>
+  	<table id="wishtable" border="1">
   	<thead>
     	<tr>
-        	<th>First Name</th>
-        	<th>Age/Gender</th>
-        	<th>Wish 1</th>
-        	<th>Wish 2</th>
-        	<th>Wish 3</th>
-        	<th>Alternate Wish</th>	
+        	<th>Wish #</th>
+        	<th>Name</th>
+        	<th>Detail</th>
+        	<th>Res</th>
+        	<th>Partner</th>
+        	<th>Status</th>	
     	</tr>
       </thead>
       <tbody id="twishbody">

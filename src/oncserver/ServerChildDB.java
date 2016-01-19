@@ -9,6 +9,8 @@ import java.util.List;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCWebChild;
+import ourneighborschild.Organization;
+import ourneighborschild.WebChildWish;
 import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
@@ -77,6 +79,78 @@ public class ServerChildDB extends ONCServerDB
 				responseList.add(new ONCWebChild(c));
 		
 		String response = gson.toJson(responseList, listOfChildren);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	static HtmlResponse getChildWishesJSONP(int year, int childID, String callbackFunction)
+	{	
+		//get references to wish catalog, partner data base
+		ServerChildWishDB childWishDB = null;
+		ServerWishCatalog wishCatalog = null;
+		PartnerDB partnerDB = null;
+		try 
+		{
+			childWishDB = ServerChildWishDB.getInstance();
+			wishCatalog = ServerWishCatalog.getInstance();
+			partnerDB = PartnerDB.getInstance();
+		} 
+		catch (FileNotFoundException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		Gson gson = new Gson();
+		Type listOfWishes = new TypeToken<ArrayList<WebChildWish>>(){}.getType();
+		
+		//get the child
+		List<ONCChild> searchList = childDB.get(year-BASE_YEAR).getList();
+		ArrayList<WebChildWish> responseList = new ArrayList<WebChildWish>();
+		
+		for(ONCChild c: searchList)
+			if(c.getID() == childID)
+			{
+				//found child, now create child wish list
+				for(int wn=0; wn < 3; wn++)
+				{
+					//has the wish been created?
+					if(c.getChildWishID(wn) == -1)
+					{
+						responseList.add(new WebChildWish());	//not created
+					}
+					else		
+					{
+						ONCChildWish cw = childWishDB.getWish(year, c.getChildWishID(wn));
+						int wishRestriction = cw.getChildWishIndicator();
+						String[] restrictions = {" ", "*", "#"};
+						String partner;
+						if(cw.getChildWishAssigneeID() < 1)
+						{
+							partner = "";		
+						}
+						else
+						{
+							Organization org = partnerDB.getPartner(year,cw.getChildWishAssigneeID());
+							partner = org.getName();
+						}
+						
+						responseList.add(new WebChildWish(wishCatalog.findWishNameByID(year, cw.getWishID()),
+															cw.getChildWishDetail(), 
+															restrictions[wishRestriction], 
+															partner, cw.getChildWishStatus()));
+					}
+				}
+			}
+		
+		
+		String response = gson.toJson(responseList, listOfWishes);
 
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		

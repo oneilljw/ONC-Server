@@ -123,6 +123,26 @@ public class FamilyDB extends ONCServerDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
+	static HtmlResponse getFamilyReferencesJSONP(int year, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfFamilyReferences = new TypeToken<ArrayList<FamilyReference>>(){}.getType();
+		
+		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
+		ArrayList<FamilyReference> responseList = new ArrayList<FamilyReference>();
+		
+		//sort the search list by ONC Number
+		Collections.sort(searchList, new ONCFamilyONCNumComparator());
+		
+		for(int i=0; i<searchList.size(); i++)
+			responseList.add(new FamilyReference(searchList.get(i).getODBFamilyNum()));
+		
+		String response = gson.toJson(responseList, listOfFamilyReferences);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
 	String update(int year, String familyjson, boolean bAutoAssign)
 	{
 		//Create a family object for the updated family
@@ -991,6 +1011,33 @@ public class FamilyDB extends ONCServerDB
     	return delCount;
     }
     
+    protected static boolean isNumeric(String str)
+	{
+		if(str == null || str.isEmpty())
+			return false;
+		else
+			return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
+	}
+    
+    private static class ONCFamilyONCNumComparator implements Comparator<ONCFamily>
+	{
+		@Override
+		public int compare(ONCFamily o1, ONCFamily o2)
+		{
+			if(isNumeric(o1.getONCNum()) && isNumeric(o2.getONCNum()))
+			{
+				Integer onc1 = Integer.parseInt(o1.getONCNum());
+				Integer onc2 = Integer.parseInt(o2.getONCNum());
+				return onc1.compareTo(onc2);
+			}
+			else if(isNumeric(o1.getONCNum()) && !isNumeric(o2.getONCNum()))
+				return -1;
+			else if(!isNumeric(o1.getONCNum()) && isNumeric(o2.getONCNum()))
+				return 1;
+			else
+				return o1.getONCNum().compareTo(o2.getONCNum());
+		}
+	}
     private static class ONCWebsiteFamilyLNComparator implements Comparator<ONCWebsiteFamily>
 	{
 		@Override
