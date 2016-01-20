@@ -149,7 +149,6 @@
 	
 	function addWishTableRow(cnum, child)
     {
-		
 		var childinfo= [child.firstname, getAge(child.sDOB) + " " + child.gender.toLowerCase()];
 		var childfieldsize= [15, 14];
 		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
@@ -333,7 +332,7 @@
 	    	}
 	    	
 	    	if(ydiff> 0) age.push(ydiff+ ' yr. old');
-	    	else if(mdiff> 0) age.push(mdiff+ ' mos. old');
+	    	else if(mdiff>= 0) age.push(mdiff+ ' mos. old');
 		}
 	    	return age.join('');
 	}

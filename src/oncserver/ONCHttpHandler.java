@@ -27,7 +27,6 @@ import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
-import ourneighborschild.ServerGVs;
 import ourneighborschild.Transportation;
 import ourneighborschild.UserPermission;
 
@@ -139,6 +138,14 @@ public class ONCHttpHandler implements HttpHandler
     		int year = Integer.parseInt((String) params.get("year"));
     		
     		HtmlResponse response = FamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
+    	else if(requestURI.contains("/familysearch"))
+    	{
+    		HtmlResponse response = FamilyDB.searchForFamilyReferencesJSONP(
+    									Integer.parseInt((String) params.get("year")),
+    									 (String) params.get("searchstring"),
+    									  (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/getfamily"))

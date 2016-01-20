@@ -24,7 +24,7 @@ public class ONCWebServer
 		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
 		
 		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents", "/families", 
-							"/getfamily", "/references", "/getagent", "/getmeal", "/children", 
+							"/getfamily", "/references", "/getagent", "/getmeal", "/children", "/familysearch", 
 							"/adults", "/wishes", "/oncsplash", "/onclogo", "/newfamily", "/address", 
 							"/referral", "/referfamily", "/familyupdate", "/updatefamily", "/changepw"};
 		

@@ -7,11 +7,14 @@
 	var currYear;
 	var priorYear;
 	var familyRefs = {};
+	var searchRefs = {};
 	var famJson = {};
 	var agtJson;
 	var childrenJson = {};
 	var wishJson = {};
 	var famIndex = 0;
+	var searchIndex = 0;
+	var adultsJson= [];
 	
 	sessionStorage.setItem('token', "REPLACE_TOKEN");
 	sessionStorage.setItem('thanksgivingCutoff', "THANKSGIVING_CUTOFF");
@@ -23,6 +26,10 @@
     	currYear = new Date().getFullYear();
 		priorYear = new Date().getFullYear()-1;
 		sessionStorage.setItem("prioryear", priorYear);
+		
+		//set the search nav buttons to hidden
+		document.getElementById('srch-prior').style.visibility = 'hidden';
+		document.getElementById('srch-next').style.visibility = 'hidden';
 		
     	//get the list of years from the data base and put it in the year combo box
     	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
@@ -68,6 +75,48 @@
     	});
     }
     
+    function searchForFamilyReferencesFromServer(year, searchstring)
+    {
+    	searchparams = "token=" + sessionStorage.getItem("token") +
+    	"&year=" + year + "&searchstring=" + searchstring + "&callback=?";
+    	$.getJSON('familysearch', searchparams, function(data)
+    	{
+    		searchRefs = data;
+    		if(searchRefs.length > 0)
+    		{
+    			//find the first family reference and fetch it
+    			findFamilyIndexAndGetFamily(year, searchRefs[0].id)
+    			
+    			//if more than one family reference was found, show buttons
+    			if(searchRefs.length === 1)
+    			{
+    				document.getElementById('srch-prior').style.visibility = 'hidden';
+    				document.getElementById('srch-next').style.visibility = 'hidden';
+    			}
+    			else
+    			{
+    				document.getElementById('srch-prior').style.visibility = 'visible';
+    				document.getElementById('srch-next').style.visibility = 'visible';
+    			}
+    		}
+    	});
+    }
+    
+    function findFamilyIndexAndGetFamily(year, searchref)
+    {
+		var index=0;
+		while(familyRefs[index].id !== searchref)
+		{
+			index++;
+		}
+		
+		if(index < familyRefs.length)
+		{
+			famIndex = index;
+			getFamilyFromServer(year, familyRefs[index].id)
+		}
+    }
+    
     function getFamilyFromServer(year, id)
     {
     	familyparams = "token=" + sessionStorage.getItem("token") +
@@ -78,7 +127,7 @@
     		famJson = data;
     		document.getElementById('onc').value= famJson.oncNum;
 			document.getElementById('ref').value= famJson.targetID;
-			document.getElementById('batch').value= "";
+			document.getElementById('batch').value= famJson.BatchNum;
 			document.getElementById('dns').value= famJson.DNSCode;
     		document.getElementById('hohfn').value= famJson.HOHFirstName;
 			document.getElementById('hohln').value= famJson.HOHLastName;
@@ -99,7 +148,45 @@
 			
 			getAgentFromServer(year, famJson.agentID);
 			getFamiliesChildrenFromServer(year, famJson.targetID);
+			getAdultsFromServer(year, famJson.targetID);
+			getMealFromServer(year, famJson.mealID);
     	});
+    }
+    
+    function getAdultsFromServer(year, targetid)
+    {
+    	adultsparams=  "token=" + sessionStorage.getItem("token") + "&" +
+			"year=" + year + "&" + "targetid=" + targetid + "&" + "callback=?";
+			
+		$.getJSON('adults', adultsparams, function(data)
+		{
+	    	adultsJson = data;
+	     	updateAdultTable();
+		});
+    }
+    
+    function getMealFromServer(year, mealid)
+    {
+    	//get meal and update if family meal id > 1
+	    if(mealid > -1)
+		{
+	     	var mealparams = "token=" + sessionStorage.getItem("token") + "&" +
+	     						"year=" + year + "&" +
+	     						"mealid=" + mealid + "&" +
+	     						"callback=?";	
+	     					
+	     	$.getJSON('getmeal', mealparams, function(meal)
+	     	{
+	       		document.getElementById('mealtype').value = meal.type;
+	   	  		document.getElementById('dietres').value = meal.dietaryRestrictions
+	   		});
+    	}
+	    else
+	    {
+	   		document.getElementById('mealstat').value = "None Requested";
+	   		document.getElementById('mealtype').value = "None";
+    		document.getElementById('dietres').value = "";
+    	}   		
     }
     
     function getAgentFromServer(year, agtid)
@@ -175,6 +262,13 @@
     		}
     		
    		}
+    	
+    	if(childrenJson.length > 0)
+    	{
+    		var child = childrenJson[0];
+    		var ageInput = document.getElementById('age');
+    		ageInput.value = getAge(child.sDOB) + " " + child.gender.toLowerCase();
+    	}
     }
 	
 	function updateWishTable(wishJson)
@@ -218,14 +312,14 @@
         	row.appendChild(cell);
         	
         }
-        
+/*        
         btn = document.createElement("button");
         btn.value=cnum;
         btn.type="button";
         btn.innerHTML = "Remove";
         btn.onclick=function() {removeChild(cnum);};
         row.appendChild(btn);
-        
+*/        
         tabBody.appendChild(row);
     }
 	
@@ -276,22 +370,23 @@
         adultgender.setAttribute("size", 11);
         cell.appendChild(adultgender);
         row.appendChild(cell);
-        
+/*        
         var btn = document.createElement("button");
         btn.value= anum;
         btn.type="button";
         btn.innerHTML = "Remove";
         btn.onclick=function() {removeAdult(anum);};
         row.appendChild(btn);
-        
+*/        
         tabBody.appendChild(row);
     }
 	
-	function getAge(birthdate)
+	function getAge(childbirthdate)
 	{
-		var curryear = new Date().getFullYear();
+		var yearCB = document.getElementById("yearlist");
+		var curryear = yearCB.options[yearCB.selectedIndex].value;
 		var xmasday = new Date(curryear,11,25,0,0,0,0);
-		var birthdate= new Date(birthdate);
+		var birthdate= new Date(childbirthdate);
 		
 		var age= [];
 		
@@ -308,17 +403,17 @@
 	    	d= [xmasday.getDate(), birthdate.getDate()],
 	    	ddiff= d[0]-d[1];
 
-	    	if(mdiff < 0 || (mdiff=== 0 && ddiff<0))--ydiff;
-	    	if(mdiff<0) mdiff+= 12;
-	    	if(ddiff<0)
+	    	if(mdiff < 0 || (mdiff === 0 && ddiff < 0))--ydiff;
+	    	if(mdiff < 0) mdiff+= 12;
+	    	if(ddiff < 0)
 	    	{
 	        	birthdate.setMonth(m[1]+1, 0);
 	        	ddiff= birthdate.getDate()-d[1]+d[0];
 	        	--mdiff;
 	    	}
 	    	
-	    	if(ydiff> 0) age.push(ydiff+ ' yr. old');
-	    	else if(mdiff> 0) age.push(mdiff+ ' mos. old');
+	    	if(ydiff > 0) age.push(ydiff+ ' yr. old');
+	    	else if(mdiff >= 0) age.push(mdiff+ ' mos. old');
 		}
 	    	return age.join('');
 	}
@@ -336,11 +431,14 @@
     {
     	//get selected year
     	var childCB = document.getElementById("childfn");
-		var childid = childrenJson[childCB.selectedIndex].id;
+		var child = childrenJson[childCB.selectedIndex];
 		var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
+		
+		var ageInput = document.getElementById('age');
+		ageInput.value = getAge(child.sDOB) + " " + child.gender.toLowerCase();
     	
-		getChildWishesFromServer(year, childid)	//get child wishes from server
+		getChildWishesFromServer(year, child.id)	//get child wishes from server
     }
 	
 	function clearSelect(select)
@@ -357,19 +455,19 @@
 		var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
 		
-		if(familyRefs.length > 0 && famIndex < familyRefs.length)
+		if(familyRefs.length > 0 && famIndex < familyRefs.length-1)
 		{
 			famIndex++;
 			getFamilyFromServer(year, familyRefs[famIndex].id);
 		}
-		else if(familyRefs.length > 0 && famIndex < familyRefs.length)
+		else if(familyRefs.length > 0 && famIndex === familyRefs.length-1)
 		{
 			famIndex= 0;
 			getFamilyFromServer(year, familyRefs[famIndex].id);
 		}
 	}
 	
-	function onPreviousFamily()
+	function onPriorFamily()
 	{
 		var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
@@ -385,9 +483,57 @@
 			getFamilyFromServer(year, familyRefs[famIndex].id);
 		}
 	}
+	
+	function onNextSearchFamily()
+	{
+		if(searchRefs.length > 0 && searchIndex < searchRefs.length-1)
+		{
+			searchIndex++;
+		}
+		else if(searchRefs.length > 0 && searchIndex === searchRefs.length-1)
+		{
+			searchIndex= 0;
+		}
+		
+		var yearCB = document.getElementById("yearlist");
+		var year = yearCB.options[yearCB.selectedIndex].value;
+		
+		findFamilyIndexAndGetFamily(year, searchRefs[searchIndex].id);
+	}
+	
+	function onPriorSearchFamily()
+	{
+		if(searchRefs.length > 0 && searchIndex > 0)
+		{
+			searchIndex--;
+		}
+		else if(searchRefs.length > 0 && searchIndex === 0)
+		{
+			searchIndex= searchRefs.length-1;
+		}
+		
+		var yearCB = document.getElementById("yearlist");
+		var year = yearCB.options[yearCB.selectedIndex].value;
+		
+		findFamilyIndexAndGetFamily(year, searchRefs[searchIndex].id);
+	}
+	
 	function onSearch()
 	{
-		console.log("Searching");
+		var yearCB = document.getElementById("yearlist");
+		var year = yearCB.options[yearCB.selectedIndex].value;
+		
+		var serchBox = document.getElementById("search");
+		
+		if(search.value !== "" && familyRefs.length > 0)
+		{
+			searchForFamilyReferencesFromServer(year, search.value)	
+		}
+		else
+		{
+			document.getElementById('srch-prior').style.visibility = 'hidden';
+			document.getElementById('srch-next').style.visibility = 'hidden';	
+		}
 	}
     
 	function post(path, params, method) 
@@ -400,8 +546,10 @@
 	    form.setAttribute("method", method);
 	    form.setAttribute("action", path);
 
-	    for(var key in params) {
-	        if(params.hasOwnProperty(key)) {
+	    for(var key in params) 
+	    {
+	        if(params.hasOwnProperty(key)) 
+	        {
 	            var hiddenField = document.createElement("input");
 	            hiddenField.setAttribute("type", "hidden");
 	            hiddenField.setAttribute("name", key);
@@ -449,6 +597,7 @@
 		background-color: #E8E8E8;
 		border: 1px solid black;
 	}
+	#searchbar {float: right;}
 	button
     {
         background-color: #336699;
@@ -473,14 +622,6 @@
     	font-size: 130%;
 	}
 	fieldset {background-color: #E8E8E8;}
-	#submitspan {float: right;}
-	#errormessage
-	{
-		float: left;
-		font-weight: bold;
-		font-style: italic;
-		color: red;
-	}
 	table, th, td {border: 1px solid black;}
 	th, td {min-width: 60px; }
 	button {background-color: #336699; color: #fffff;}
@@ -604,43 +745,73 @@
 	{
 		font-size: 90%;
  		display: inline-block;
- 		width: 116px;
  		text-align: left;
 	}
-	.shortlabel
-	{
-		width: 60px;
-	}
+	#lblonc { width: 52px }
+	#lblref { width: 56px }
+	#lblbatch { width: 64px }
+	#lbldns { width: 62px }
+	#lblhohfn { width: 114px }
+	#lblhohln { width: 120px }
+	#lblfamstat { width: 104px }
+	#lbldelstat { width: 104px }
+	#lblmealstat { width: 116px }
+    #lbllanguage { width: 100px }
+	#lblhomephone { width: 94px }
+	#lblcellphone { width: 96px }
+	#lblhousenum { width: 68px }
+	#lblstreet { width: 140px }
+    #lblunit { width: 64px }
+	#lblcity { width: 138px }
+	#lblzipcode { width: 56px }
+	#lblagentname { width: 132px }
+    #lblagentorg { width: 128px }
+	#lblagenttitle { width: 140px }
+	#lblagentphone { width: 96px }
   </style>
 </head>
 <body>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child Family Referral System</span><br>
+	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child Data Managment System</span><br>
 	<span id="message">USER_MESSAGE</span></p>
   </div>
   <nav>
 	<ul>
 		<li><select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select></li>
 		<li>
-			<a href="ONC Data.html">ONC Data <span class="caret"></span></a>
+			<a href="">Agents <span class="caret"></span></a>
 			<div>
 				<ul>
-					<li><a href="products.html#chair">Families</a></li>
-					<li><a href="products.html#table">Partners</a></li>
-					<li><a href="cooker.html">Wishes</a></li>
+					<li><a href="">Manage Agents</a></li>
 				</ul>
 			</div>
 		</li>
-		<li><a href="about.html">Profile</a></li>
+		<li>
+			<a href="">Families <span class="caret"></span></a>
+			<div>
+				<ul>
+					<li><a href="">Manage Families</a></li>
+					<li><a href="">Refer Family</a></li>
+				</ul>
+			</div>
+		</li>
+		<li><a href="">Wishes<span class="caret"></span></a></li>
+		<li><a href="">Partners<span class="caret"></span></a></li>
 		<li><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
 	</ul>
   </nav>
   <div id='controlbar'>
-  	<button id="next" onclick="onNextFamily()">Next Family</button>
-  	<button id="previous" onclick="onPreviousFamily()">Previous Family</button>
-  	<label for="search">Search for:</label> 
-	<input id="search" type="search" placeholder="search" onsearch="onSearch()">
+    <span id="navigatebar">
+  	  <button id="prior" onclick="onPriorFamily()">Prior Family</button>
+  	  <button id="next" onclick="onNextFamily()">Next Family</button>
+  	</span>
+  	<span id='searchbar'>  
+  	  <label for="search">Search for:</label> 
+	  <input id="search" type="search" placeholder="search" onsearch="onSearch()">
+	  <button id="srch-prior" onclick="onPriorSearchFamily()">Prior</button>
+  	  <button id="srch-next" onclick="onNextSearchFamily()">Next</button>
+    </span>
   </div>
   <form id="familyreferral" action="referfamily" onsubmit="return submitReferral()" method="post">
   <input id='token' type="hidden" name="token">
@@ -649,71 +820,71 @@
   <br>
   <fieldset>
   <legend class="major">Family Information & Status</legend>
-    <label for="onc" class= 'shortlabel'>ONC #</label>
-    <label for="ref" class= 'shortlabel'>Ref #</label>
-    <label for="batch" class= 'shortlabel'>Batch #</label>
-    <label for="dns" class= 'shortlabel'>DNS</label>
-    <label for="hohfn">First Name</label>
-    <label for="hohln">Last Name</label>
-    <label for="famstat">Family Status</label>
-    <label for="selstat">Delivery Status</label>
-    <label for="mealstat">Meal Status</label>
+    <label id='lblonc' for="onc">ONC #</label>
+    <label id= 'lblref' for="ref">Ref #</label>
+    <label id= 'lblbatch' for="batch">Batch #</label>
+    <label id= 'lbldns' for="dns">DNS</label>
+    <label id= 'lblhohfn' for="hohfn">First Name</label>
+    <label id= 'lblhohln' for="hohln">Last Name</label>
+    <label id= 'lblfamstat' for="famstat">Family Status</label>
+    <label id= 'lbldelstat' for="delstat">Delivery Status</label>
+    <label id= 'lblmealstat' for="mealstat">Meal Status</label>
     <br>
-    <input id='onc' type="text" size="7">
-    <input id='ref' type="text" size="7">
-    <input id="batch" type="text" size="8">
-    <input id="dns" type="text" size="8">
-    <input id='hohfn' title="First Name" name="hohFN" type="text" size="16">
-    <input id='hohln' title="Last Name" name="hohLN" type="text" size="17">
-    <input id='famstat' title="Family Status" type="text" size="16">
-    <input id='delstat' title="Delivery Status" type="text" size="16">
-    <input id='mealstat' title="Meal Status" type="text" size="16">
+    <input id='onc' type="text" size="6" readonly>
+    <input id='ref' type="text" size="7" readonly>
+    <input id="batch" type="text" size="8" readonly>
+    <input id="dns" type="text" size="8" readonly>
+    <input id='hohfn' title="First Name" name="hohFN" type="text" size="16" readonly>
+    <input id='hohln' title="Last Name" name="hohLN" type="text" size="17" readonly>
+    <input id='famstat' title="Family Status" type="text" size="14" readonly>
+    <input id='delstat' title="Delivery Status" type="text" size="14" readonly>
+    <input id='mealstat' title="Meal Status" type="text" size="24" readonly>
     <br>
-    <label for="language">Language</label>
-    <label for="homephone">Home Phone</label>
-    <label for="cellphone">Mobile Phone</label>
-    <label for="email">Email</label>
+    <label id= 'lbllanguage' for="language">Language</label>
+    <label id= 'lblhomephone' for="homephone">Home Phone</label>
+    <label id= 'lblcellphone' for="cellphone">Mobile Phone</label>
+    <label id= 'lblemail' for="email">Email</label>
     <br>
-    <input id= 'language' title="Primary language" name="language" type= "text" size="13">
-    <input id="homephone" title="Home Phone #" name="homephone" type="text" size="13">
-    <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="13">
-    <input id='email' title="E-mail address" name="email" type="email" size="30">
+    <input id= 'language' title="Primary language" name="language" type= "text" size="13" readonly>
+    <input id="homephone" title="Home Phone #" name="homephone" type="text" size="13" readonly>
+    <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="13" readonly>
+    <input id='email' title="E-mail address" name="email" type="email" size="30" readonly>
 	<br>
-	<label for="housenum">House</label>
-    <label for="street">Street</label>
-    <label for="unit">Unit</label>
-    <label for="city">City</label>
-    <label for="zipcode">Zip</label>
-    <label for="transport">Transportation?</label>
+	<label id="lblhousenum" for="housenum">House #</label>
+    <label id="lblstreet" for="street">Street</label>
+    <label id='lblunit' for="unit">Unit</label>
+    <label id='lblcity' for="city">City</label>
+    <label id='lblzipcode' for="zipcode">Zip</label>
+    <label id='lbltransport' for="transport">Transportation?</label>
     <br>
-	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required>
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off" required>
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off">
-    <input id="city" title="City" name="city" onchange="cityChanged('city')">
-    <input id="zipcode" title="Zip Code" name="zipcode" onchange="onZipChanged('zipcode')">
-	<input id="transport" title="Family has own transportation" name="transport" type="text" size="12">
+	<input id="housenum"name="housenum" type="text" size="8" readonly>
+    <input id="street" name="street" type="text" size="20"readonly>
+    <input id="unit" name="unit" type="text" size="8" readonly>
+    <input id="city" name="city" size='20'>
+    <input id="zipcode" name="zipcode" size='7'>
+	<input id="transport" name="transport" type="text" size="14">
 	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Alt Address?
   </fieldset>
   <br>
   <fieldset>
   <legend class="major">Referring Agent Information</legend>
-    <label for="agentname">Name</label>
-    <label for="agentorg">Organization</label>
-    <label for="agenttitle">Title</label>
-    <label for="agentphone">Phone</label>
-    <label for="agentemail">Email</label>
+    <label id='lblagentname' for="agentname">Name</label>
+    <label id='lblagentorg' for="agentorg">Organization</label>
+    <label id='lblagenttitle' for="agenttitle">Title</label>
+    <label id='lblagentphone' for="agentphone">Phone</label>
+    <label id='lblagentemail' for="agentemail">Email</label>
     <br>
-	<input id="agentname" title="Agent Name" name="agentfn" type="text" size="18">
-    <input id="agentorg" title="Agent Organization" name="agentln" type="text" size="18">
-    <input id="agenttitle" title="Agent Title" name="agenttitle" type="text" size="20">
-    <input id="agentphone" title="Agent Phone" name="agentphone" type="text", size="13">
-    <input id="agentemail" title="Agent Email" name="agentemail" type="text" size="30">
+	<input id="agentname" title="Agent Name" name="agentfn" type="text" size="18" readonly>
+    <input id="agentorg" title="Agent Organization" name="agentln" type="text" size="18" readonly>
+    <input id="agenttitle" title="Agent Title" name="agenttitle" type="text" size="20" readonly>
+    <input id="agentphone" title="Agent Phone" name="agentphone" type="text", size="13" readonly>
+    <input id="agentemail" title="Agent Email" name="agentemail" type="text" size="30" readonly>
   </fieldset>
   <br>
   <fieldset>
   <legend class="major">Family Members</legend>
   <fieldset class="gray">
-  	<legend>Children in family</legend>
+  	<legend>Children</legend>
     <table id="childtable" border="1">
   	<thead>
     	<tr>
@@ -730,16 +901,8 @@
   </fieldset>
   <br>
   <fieldset>
-  	<legend>Other adults in family (in addition to the head of household)</legend>
-  	<input id="adultname" title="Name" type="text" size="28" placeholder="First & Last Name">
-    <select id="adultgender" title="Gender">
-		<option value="Male">Male</option>
-		<option value="Female">Female</option>
-		<option value="Unknown">Unknown</option>
-	</select>
-	<button type="button" onclick="addAdult()" title="Click to add adult to family">Add Adult</button>
-	<button type="button" onclick="clearAddAdult()" title="Click to clear adult fields">Clear</button>
-  <table id="adulttable" border="1">
+  	<legend>Other adults (in addition to the head of household)</legend>
+    <table id="adulttable" border="1">
   	<thead>
     	<tr>
         	<th>Name</th>
@@ -748,13 +911,15 @@
     </thead>
     <tbody id="tadultbody">
     </tbody>
-</table>
+  </table>
   </fieldset>
   </fieldset>
   <br>
   <fieldset>
    <legend class="major">Children's Wishes</legend>
    <select id="childfn" onchange="updateForChildSelection()"> </select>
+   <label>is a</label>
+   <input id='age' type='text' size='13'>
   	<table id="wishtable" border="1">
   	<thead>
     	<tr>
@@ -772,26 +937,19 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Meal Assistance: ONC will refer family to WFCM or other meal providing organizations</legend>
-	<input type="checkbox" onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
-    <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
-		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
-	</select>
-	<input id="dietres" type="text" name="dietres" size="68" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
+  <legend class="major">Meal Assistance</legend>
+  	<label for="mealtype">Requested Holiday: </label>
+    <input id="mealtype" name="mealtype" size="18" readonly>
+    <label for="deitres">Restrictions: </label>
+	<input id="dietres" type="text" name="dietres" size="68" readonly>
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Family Details: Provide any additional details that may assist in serving this family</legend>
-	<input id="detail" type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
+   <legend class="major">Family Details</legend>
+<!--<input id="detail" type="text" name="detail" size="128">-->
+	<textarea id="detail", rows="2". cols="128"></textarea>
   </fieldset>
   <br>
-  <div>
-  	<span id="errormessage"></span>
-  	<span id="submitspan">
-  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  	  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC">
-  	</span>
-  </div>
 </form>
 </body>
 </html>

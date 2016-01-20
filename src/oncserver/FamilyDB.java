@@ -143,6 +143,59 @@ public class FamilyDB extends ONCServerDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
+	static HtmlResponse searchForFamilyReferencesJSONP(int year, String s, String callbackFunction)
+	{
+    	
+		Gson gson = new Gson();
+		Type listOfFamilyReferences = new TypeToken<ArrayList<FamilyReference>>(){}.getType();
+		
+    	List<ONCFamily> oncFamAL = familyDB.get(year-BASE_YEAR).getList();
+    	List<FamilyReference> resultList = new ArrayList<FamilyReference>();
+    	
+		//Determine the type of search based on characteristics of search string
+		if(s.matches("-?\\d+(\\.\\d+)?") && s.length() < 5)
+		{
+			for(ONCFamily f: oncFamAL)
+	    		if(s.equals(f.getONCNum()))
+	    			resultList.add(new FamilyReference(f.getODBFamilyNum()));	
+		}
+		else if((s.startsWith("ONC") || s.matches("-?\\d+(\\.\\d+)?")) && s.length() < 7)
+		{
+			for(ONCFamily f: oncFamAL)
+	    		if(s.equals(f.getODBFamilyNum()))
+	    			resultList.add(new FamilyReference(f.getODBFamilyNum())); 
+		}
+		else if(s.matches("-?\\d+(\\.\\d+)?") && s.length() < 13)
+		{
+			for(ONCFamily f:oncFamAL)
+	    	{
+	    		//Ensure just 10 digits, no dashes in numbers
+	    		String hp = f.getHomePhone().replaceAll("-", "");
+	    		String op = f.getOtherPhon().replaceAll("-", "");
+	    		String target = s.replaceAll("-", "");
+	    		
+	    		if(hp.contains(target) || op.contains(target))
+	    			resultList.add(new FamilyReference(f.getODBFamilyNum()));
+	    	}
+		}
+		else
+		{
+			//search the family db
+	    	for(ONCFamily f: oncFamAL)
+	    		if(f.getClientFamily().toLowerCase().contains(s.toLowerCase()))
+	    			resultList.add(new FamilyReference(f.getODBFamilyNum()));
+	    	
+	    	//search the child db
+//	    	childDB.searchForLastName(s, rAL);
+			
+		}
+		
+		String response = gson.toJson(resultList, listOfFamilyReferences);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
 	String update(int year, String familyjson, boolean bAutoAssign)
 	{
 		//Create a family object for the updated family
