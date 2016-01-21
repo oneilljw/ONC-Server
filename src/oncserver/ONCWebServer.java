@@ -23,7 +23,7 @@ public class ONCWebServer
 		HttpServer server = HttpServer.create(new InetSocketAddress(WEB_SERVER_PORT), 0);
 		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
 		
-		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents", "/families", 
+		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents", "/families", "/familystatus",
 							"/getfamily", "/references", "/getagent", "/getmeal", "/children", "/familysearch", 
 							"/adults", "/wishes", "/oncsplash", "/onclogo", "/newfamily", "/address", 
 							"/referral", "/referfamily", "/familyupdate", "/updatefamily", "/changepw"};

@@ -295,6 +295,36 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
+    	else if(requestURI.contains("/familystatus"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    			
+    		if((wc=clientMgr.findClient(sessionID)) != null)
+    		{
+    			wc.updateTimestamp();
+    			try
+    			{
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
+    				response = response.replace("USER_NAME", wc.getWebUser().getFirstname());
+    				response = response.replace("USER_MESSAGE", "");
+    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    				response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+    				response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+    				response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+    			}
+    			catch (IOException e) 
+    			{
+    				response = "<p>Family Table Unavailable</p>";
+    			}
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
     	else if(requestURI.contains("/referral"))
     	{
     		String sessionID = (String) params.get("token");
@@ -354,14 +384,15 @@ public class ONCHttpHandler implements HttpHandler
     				userFN = wc.getWebUser().getLastname();
     			else
     				userFN = wc.getWebUser().getFirstname();
-    				
-    			response = getFamilyTableHTML(DEFAULT_YEAR, -1);
-    			response= response.replace("USER_NAME", userFN);
-    			response= response.replace("USER_MESSAGE", frc.getMessage());
-    	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    	response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-    	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-    	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+    			
+    			response = getHomePageHTML(wc, userFN, frc.getMessage());
+//    			response = getFamilyTableHTML();
+//    			response= response.replace("USER_NAME", userFN);
+//    			response= response.replace("USER_MESSAGE", frc.getMessage());
+//    	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+//    	    	response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+//    	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+//    	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -420,13 +451,14 @@ public class ONCHttpHandler implements HttpHandler
     			else
     				userFN = wc.getWebUser().getFirstname();
     			
-    			response = getFamilyTableHTML(DEFAULT_YEAR, -1);
-    			response= response.replace("USER_NAME", userFN);
-    			response= response.replace("USER_MESSAGE", frc.getMessage());
-    	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    	response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-    	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-    	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+    			response = getHomePageHTML(wc, userFN, frc.getMessage());
+//    			response = getFamilyTableHTML();
+//    			response= response.replace("USER_NAME", userFN);
+//    			response= response.replace("USER_MESSAGE", frc.getMessage());
+//    	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+//    	    	response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+//    	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+//    	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -471,13 +503,14 @@ public class ONCHttpHandler implements HttpHandler
         				userFN = wc.getWebUser().getLastname();
         			else
         				userFN = wc.getWebUser().getFirstname();
-    				response = getFamilyTableHTML(DEFAULT_YEAR, -1);
-    				response = response.replace("USER_NAME", userFN);
-    				response = response.replace("USER_MESSAGE", "Your password change was successful!");
-    	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    	    		response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-        	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-        	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+        			response = getHomePageHTML(wc, userFN, "Your password change was successful!");
+//    				response = getFamilyTableHTML();
+//    				response = response.replace("USER_NAME", userFN);
+//    				response = response.replace("USER_MESSAGE", "Your password change was successful!");
+//    	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+//    	    		response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+//        	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+//        	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     			}
     			else if(retCode == -1)
     			{
@@ -592,7 +625,39 @@ public class ONCHttpHandler implements HttpHandler
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
-	    		else if(serverUser.getPermission() == UserPermission.SYS_ADMIN ) //send the family referral page or the elf home page
+//	    		else if(serverUser.getPermission() == UserPermission.SYS_ADMIN ) //send the elf home page
+//	    		{
+//	    			Gson gson = new Gson();
+//	    			String loginJson = gson.toJson(webUser, ONCUser.class);
+//	    		
+//	    			String mssg = "UPDATED_USER" + loginJson;
+//	    			clientMgr.notifyAllClients(mssg);
+//	    			
+//	    			//determine if user never visited or last login date
+//	    			String userMssg;
+//	    			if(nLogins == 0)
+//	    				userMssg = "This is your first visit!";
+//	    			else
+//	    			{
+//	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy h:mm a z");
+//	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
+//	    				sdf.setTimeZone(TimeZone.getDefault());
+//	    				userMssg = "You last visited " + sdf.format(lastLogin);
+//	    			}
+//	    		
+//	    			html = getONCElfPageHTML();
+//	    			
+//	    			if(serverUser.getFirstname().equals(""))
+//	    				html = html.replace("USER_NAME", serverUser.getLastname());
+//	    			else
+//	    				html = html.replace("USER_NAME", serverUser.getFirstname());
+//
+//	    			html = html.replace("USER_MESSAGE", userMssg);
+//	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+//	    			
+//	    			response = new HtmlResponse(html, HTTPCode.Ok);
+//	    		}
+	    		else //send the home page
 	    		{
 	    			Gson gson = new Gson();
 	    			String loginJson = gson.toJson(webUser, ONCUser.class);
@@ -611,54 +676,27 @@ public class ONCHttpHandler implements HttpHandler
 	    				sdf.setTimeZone(TimeZone.getDefault());
 	    				userMssg = "You last visited " + sdf.format(lastLogin);
 	    			}
-	    		
-	    			html = getONCElfPageHTML(DEFAULT_YEAR, -1);
 	    			
+	    			String username = "";
 	    			if(serverUser.getFirstname().equals(""))
-	    				html = html.replace("USER_NAME", serverUser.getLastname());
+	    				username = serverUser.getLastname();
 	    			else
-	    				html = html.replace("USER_NAME", serverUser.getFirstname());
-
-	    			html = html.replace("USER_MESSAGE", userMssg);
-	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-	    			html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-	    			html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
-	    			
-	    			response = new HtmlResponse(html, HTTPCode.Ok);
-	    		}
-	    		else //send the family referral page
-	    		{
-	    			Gson gson = new Gson();
-	    			String loginJson = gson.toJson(webUser, ONCUser.class);
+	    				username =  serverUser.getFirstname();
 	    		
-	    			String mssg = "UPDATED_USER" + loginJson;
-	    			clientMgr.notifyAllClients(mssg);
+	    			html = getHomePageHTML(wc, username, userMssg);
 	    			
-	    			//determine if user never visited or last login date
-	    			String userMssg;
-	    			if(nLogins == 0)
-	    				userMssg = "This is your first visit!";
-	    			else
-	    			{
-//	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy h:mm a z");
-	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
-	    				sdf.setTimeZone(TimeZone.getDefault());
-	    				userMssg = "You last visited " + sdf.format(lastLogin);
-	    			}
-	    		
-	    			html = getFamilyTableHTML(DEFAULT_YEAR, -1);
-	    			
-	    			if(serverUser.getFirstname().equals(""))
-	    				html = html.replace("USER_NAME", serverUser.getLastname());
-	    			else
-	    				html = html.replace("USER_NAME", serverUser.getFirstname());
-
-	    			html = html.replace("USER_MESSAGE", userMssg);
-	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-	    			html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-	    			html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+//	    			html = getFamilyTableHTML();
+//	    			
+//	    			if(serverUser.getFirstname().equals(""))
+//	    				html = html.replace("USER_NAME", serverUser.getLastname());
+//	    			else
+//	    				html = html.replace("USER_NAME", serverUser.getFirstname());
+//
+//	    			html = html.replace("USER_MESSAGE", userMssg);
+//	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+//	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+//	    			html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+//	    			html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -673,7 +711,48 @@ public class ONCHttpHandler implements HttpHandler
 		return response;
 	}
 	
-	String getFamilyTableHTML(int year, int agtID)
+	String getHomePageHTML(WebClient wc, String username, String message)
+	{
+		String homePageHTML;
+		//determine which home page, elf or agent
+		if(wc.getWebUser().getPermission() == UserPermission.ADMIN ||
+				wc.getWebUser().getPermission() == UserPermission.SYS_ADMIN)
+		{
+			//read the onc page html
+			try
+			{
+				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_ELF_PAGE_HTML));
+				homePageHTML = homePageHTML.replace("USER_NAME", username);
+				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
+				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+				return homePageHTML;
+			}
+			catch (IOException e) 
+			{
+				return "<p>ONC Elf Page Unavailable</p>";
+			}
+		}
+		else
+		{
+			try
+			{
+				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
+				homePageHTML = homePageHTML.replace("USER_NAME", username);
+				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
+				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+				homePageHTML = homePageHTML.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+				homePageHTML = homePageHTML.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+				homePageHTML = homePageHTML.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+				return homePageHTML;
+			}
+			catch (IOException e) 
+			{
+				return "<p>Family Table Unavailable</p>";
+			}
+		}
+	}
+	
+	String getFamilyTableHTML()
 	{
 		//read the family table html
 		String famTableHTML = null;
@@ -688,7 +767,7 @@ public class ONCHttpHandler implements HttpHandler
 		}
 	}
 	
-	String getONCElfPageHTML(int year, int agtID)
+	String getONCElfPageHTML()
 	{
 		//read the onc page html
 		String oncElfPageHTML = null;
