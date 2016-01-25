@@ -250,8 +250,8 @@ public class ONCHttpHandler implements HttpHandler
   	      	Headers h = t.getResponseHeaders();
   	      	h.add("Content-Type", "text/css");
 
-  	      	// onc splash screen
-  	      	String path = String.format("%s/oncstylesheet.css", System.getProperty("user.dir"));
+  	      	// onc style sheet
+  	      	String path = String.format("%s/ONCStyleSheet.css", System.getProperty("user.dir"));
   	      	File file = new File (path);
   	      	byte [] bytearray  = new byte [(int)file.length()];
   	      
@@ -260,7 +260,7 @@ public class ONCHttpHandler implements HttpHandler
   	      	BufferedInputStream bis = new BufferedInputStream(fis);
   	      	bis.read(bytearray, 0, bytearray.length);
   	      	bis.close();
-
+  	      	
   	      	//send the response.
   	      	t.sendResponseHeaders(HTTP_OK, file.length());
   	      	OutputStream os = t.getResponseBody();
