@@ -2,6 +2,7 @@
 <html>
 <head lang="en">
     <title>ONC Family Table</title>
+    <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
 	var currYear;
@@ -402,6 +403,7 @@
 	}
     </script>
     <style type="text/css">
+/*    
     	.topbar 
     	{
     		width:900px;
@@ -415,98 +417,7 @@
     		float:left;
    			border: 0;
 		}
-		.tables
-		{
-			width:900px;
-			margin:0 auto;
-			background-color: #3CB371;
-			border: 1px solid black;
-		}
-        .scrolltable 
-        {
-            overflow-x: scroll;
-            height: 100%;
-            display: flex;
-            display: -webkit-flex;
-            flex-direction: column;
-            -webkit-flex-direction: column;
-        }
-        .scrolltable > .header {
-        }
-        .scrolltable > .body {
-            /*noinspection CssInvalidPropertyValue*/
-            width: -webkit-fit-content;
-            overflow-y: scroll;
-            flex: 1;
-            -webkit-flex: 1;
-        }
-        th, td {
-            min-width: 116px;
-        }
-        /* an outside constraint to react against */
-        #constrainer {
-            width: 880px;
-            height: 200px;
-        }
-        #constrainer2 {
-            width: 880px;
-            overflow-x: scroll;
-        }
-        #constrainer2 table {
-            overflow-y: scroll;
-        }
-        #constrainer2 tbody {
-            overflow-x: scroll;
-            display: block;
-            height: 200px;
-        }
-        #constrainer2 thead {
-            display: table-row;
-        }
-        /* only styling below here */
-        #constrainer, #constrainer2 {
-            border: 1px solid black;
-        }
-        table {
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid gray;
-        }
-        th {
-            background-color: lightgrey;
-            border-width: 1px;
-        }
-        td {
-            border-width: 1px;
-        }
-        tr:first-child td {
-            border-top-width: 0;
-        }
-        tr:nth-child(odd) {
-            background-color: #ffffff;
-        }
-        tr:nth-child(even) {
-            background-color: lightgrey;
-        }       
-        button
-        {
-        	background-color: #336699;
-        	color: #ffffff;
-        }      
-        #new
-        {
-       		float: right;
-        	background-color: #336699;
-        	color: #ffffff;
-        }
-        input
-        {
-        	float: right;
-        	background-color: #336699;
-        	color: #ffffff;
-        }
-        #topbar p
+		#topbar p
         {
        		text-align: center;
         }
@@ -526,7 +437,6 @@
 			display: block;
 			margin: 8px 22px 8px 22px;
 			overflow: hidden;
-/*			width: 90%; 	*/
 		}
 		nav ul 
 		{
@@ -621,6 +531,102 @@
 		{
 			background-color: rgba( 255, 255, 255, 0.1);
 		}
+		button
+        {
+        	background-color: #336699;
+        	color: #ffffff;
+        }
+*/              
+		.tables
+		{
+/*
+			width:900px;
+			margin:0 auto;
+*/
+			width: 90%;			
+			margin-left: auto;
+			margin-right: auto;
+			background-color: #3CB371;
+			border: 1px solid black;
+		}
+        .scrolltable 
+        {
+            overflow-x: scroll;
+            height: 100%;
+            display: flex;
+            display: -webkit-flex;
+            flex-direction: column;
+            -webkit-flex-direction: column;
+        }
+        .scrolltable > .header 
+        {
+        }
+        .scrolltable > .body 
+        {
+            /*noinspection CssInvalidPropertyValue*/
+            width: -webkit-fit-content;
+            overflow-y: scroll;
+            flex: 1;
+            -webkit-flex: 1;
+        }
+        th, td 
+        {
+            min-width: 116px;
+        }
+        /* an outside constraint to react against */
+        #constrainer 
+        {
+            width: 880px;
+            height: 200px;
+        }
+        #constrainer2 
+        {
+            width: 880px;
+            overflow-x: scroll;
+        }
+        #constrainer2 table {
+            overflow-y: scroll;
+        }
+        #constrainer2 tbody {
+            overflow-x: scroll;
+            display: block;
+            height: 200px;
+        }
+        #constrainer2 thead {
+            display: table-row;
+        }
+        /* only styling below here */
+        #constrainer, #constrainer2 {
+            border: 1px solid black;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid gray;
+        }
+        th {
+            background-color: lightgrey;
+            border-width: 1px;
+        }
+        td {
+            border-width: 1px;
+        }
+        tr:first-child td {
+            border-top-width: 0;
+        }
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        tr:nth-child(even) {
+            background-color: lightgrey;
+        }       
+        #new
+        {
+       		float: right;
+        	background-color: #336699;
+        	color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -632,16 +638,17 @@
   <nav>
 	<ul>
 		<li><a href="about.html">Profile</a></li>
-		<li><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
+	</ul>
+	<ul class='floatright'>
+	    <li id="logoutli"><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
 	</ul>
   </nav>
-  <div class="tables">
-	<br>
-	<form>
+  <form>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="pyagents">Families Referred By:</label>
 		<select id="pyagents"  onchange="updatePYTable()" name="pyagtID"></select>
-	</form>
+  </form>
+  <div class="tables">
 	<div id="constrainer2">
       <table id="pyTable">
         <thead>
@@ -654,12 +661,16 @@
         </tbody>
 	  </table>
 	</div>
-	<p><button id="new" onclick="newFamily()">Refer New Family</button></p>
-	<br>
-	<form>
-		<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
-		<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
-	</form>
+  </div>
+  <form>
+  <button id="new" onclick="newFamily()">Refer New Family</button>
+  </form>
+  <br><br>
+  <form>
+	<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
+	<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
+  </form>
+  <div class="tables">
   	<div id="constrainer2">
       <table id = cyTable>
         <thead>
@@ -672,10 +683,9 @@
         </tbody>
 	  </table>
 	</div>
-
-	<form action="logout?token=REPLACE_TOKEN" method="post">
-  		<input id="submit" type="submit" value="Logout">
-	</form>
+<!--<form action="logout?token=REPLACE_TOKEN" method="post">  -->
+<!-- <input id="submit" type="submit" value="Logout"> -->
+<!--</form>  -->	
   </div>
 </body>
 </html>

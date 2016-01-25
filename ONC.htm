@@ -2,6 +2,7 @@
 <html>
 <head lang="en">
   <title>ONC Main Login Page</title>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script>
 	var currYear;
@@ -560,242 +561,75 @@
 	    form.submit();
 	}
   </script>
-  <style type="text/css">
-    .topbar 
-    {
-    	width:900px;
-    	height:72px;
-    	margin:0 auto;
-    	background-color: #FF0000;
-		border: 1px solid black;
-	}
-	.topbar img
-	{
-    	float:left;
-   		border: 0;
-	}
-	div.ui-datepicker
-	{
-		width:480px;
-  		background-color: lightgray;
-  		font-size:15px;
-	}
-	form
-	{
-		width:900px;
-		margin:0 auto;
-		background-color: #3CB371;
-		border: 1px solid black;
-	}
-	#controlbar
-	{
-		width:900px;
-		margin:0 auto;
-		background-color: #E8E8E8;
-		border: 1px solid black;
-	}
-	#searchbar {float: right;}
-	button
-    {
-        background-color: #336699;
-        color: #ffffff;
-    }      
-	.major
-	{
-  		padding: 0.2em 0.5em;
-  		border:2px solid black;
-  		background-color: #E5FFCC;
-  		font-size:80%;
-  		text-align:left;
-  	}
-  	#topbar p
-    {
-       	text-align: center;
-    }
-    #banner
-    {
-    	font-weight: bold;
-    	font-style: italic;
-    	font-size: 130%;
-	}
-	fieldset {background-color: #E8E8E8;}
-	table, th, td {border: 1px solid black;}
-	th, td {min-width: 60px; }
-	button {background-color: #336699; color: #fffff;}
-    #topbar p
-    {
-   		text-align: center;
-    }
-    #banner
-    {
-    	font-weight: bold;
-    	font-style: italic;
-    	font-size: 130%;
-	}
-	nav 
-	{
-		background-color: #E5FFCC;
-		border: 1px solid #dedede;
-		border-radius: 4px;
-		box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.055);
-		color: #888;
-		display: inline-block;
-		width:900px;
-		margin: 8px 22px 8px 22px;
-		overflow: hidden;
-	}
-	nav ul 
-	{
-		margin: 0;
-		padding: 0;
-		display: inline-block;
-	}
-	nav ul li 
-	{
-		display: inline-block;
-		list-style-type: none;
-		
-		-webkit-transition: all 0.2s;
-		-moz-transition: all 0.2s;
-		-ms-transition: all 0.2s;
-		-o-transition: all 0.2s;
-		transition: all 0.2s; 
-	}
-	nav > ul > li > a 
-	{
-		color: black;
-		display: block;
-		line-height: 36px;
-		padding: 0 24px;
-		text-decoration: none;
-	}
-	nav > ul > li > a > .caret 
-	{
-		border-top: 4px solid #aaa;
-		border-right: 4px solid transparent;
-		border-left: 4px solid transparent;
-		content: "";
-		display: inline-block;
-		height: 0;
-		width: 0;
-		vertical-align: middle;
-	
-		-webkit-transition: color 0.1s linear;
-		-moz-transition: color 0.1s linear;
-		-o-transition: color 0.1s linear;
- 		transition: color 0.1s linear; 
-	}
-	nav > ul > li:hover 
-	{
-        background-color: rgb( 40, 44, 47 );
-    }
-    nav > ul > li:hover > a 
-    {
-        color: rgb( 0, 204, 0 );
-    }
-    nav > ul > li:hover > a > .caret 
-    {
-        border-top-color: rgb( 0, 204, 0 );
-    }
-    nav > ul > li > div 
-    {
-		background-color: rgb( 40, 44, 47 );
-		border-top: 0;
-		border-radius: 0 0 4px 4px;
-		box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.055);
-		display: none;
-		margin: 0;
-		opacity: 0;
-		position: absolute;
-		width: 165px;
-		visibility: hidden;
-		z-index: 100;
-	
-		-webkit-transiton: opacity 0.2s;
-		-moz-transition: opacity 0.2s;
-		-ms-transition: opacity 0.2s;
-		-o-transition: opacity 0.2s;
-		-transition: opacity 0.2s;
-	}
-	nav > ul > li:hover > div 
-	{
-		display: block;
-		opacity: 1;
-		visibility: visible;
-	}
-	nav > ul > li > div ul > li 
-	{
-		display: block;
-	}
-	nav > ul > li > div ul > li > a 
-	{
-		color: #fff;
-		display: block;
-		padding: 12px 24px;
-		text-decoration: none;
-	}
-	nav > ul > li > div ul > li:hover > a 
-	{
-		background-color: rgba( 255, 255, 255, 0.1);
-	}
+  <style type="text/css">	
 	label 
 	{
 		font-size: 90%;
  		display: inline-block;
  		text-align: left;
 	}
-	#lblonc { width: 52px }
-	#lblref { width: 56px }
-	#lblbatch { width: 64px }
-	#lbldns { width: 62px }
-	#lblhohfn { width: 114px }
-	#lblhohln { width: 120px }
-	#lblfamstat { width: 104px }
-	#lbldelstat { width: 104px }
-	#lblmealstat { width: 116px }
-    #lbllanguage { width: 100px }
-	#lblhomephone { width: 94px }
-	#lblcellphone { width: 96px }
-	#lblhousenum { width: 68px }
-	#lblstreet { width: 140px }
-    #lblunit { width: 64px }
-	#lblcity { width: 138px }
-	#lblzipcode { width: 56px }
-	#lblagentname { width: 132px }
-    #lblagentorg { width: 128px }
-	#lblagenttitle { width: 140px }
-	#lblagentphone { width: 96px }
+	#controlbar
+	{
+		width:90%;
+		margin:0 auto;
+		background-color: #E8E8E8;
+		border: 1px solid black;
+	}
+	table, th, td {border: 1px solid black;}
+	th, td {min-width: 60px; }
+	#searchbar {float: right;}
+	#lblonc { width: 52px; }
+	#lblref { width: 56px; }
+	#lblbatch { width: 64px; }
+	#lbldns { width: 62px; }
+	#lblhohfn { width: 114px; }
+	#lblhohln { width: 120px; }
+	#lblfamstat { width: 104px; }
+	#lbldelstat { width: 104px; }
+	#lblmealstat { width: 116px; }
+    #lbllanguage { width: 100px; }
+	#lblhomephone { width: 94px; }
+	#lblcellphone { width: 96px; }
+	#lblhousenum { width: 68px; }
+	#lblstreet { width: 140px; }
+    #lblunit { width: 64px; }
+	#lblcity { width: 138px; }
+	#lblzipcode { width: 56px; }
+	#lblagentname { width: 132px; }
+    #lblagentorg { width: 128px; }
+	#lblagenttitle { width: 140px; }
+	#lblagentphone { width: 96px; }
   </style>
 </head>
 <body>
-  <div id="topbar" class="topbar">
+  <div id='topbar' class="topbar">
     <img src="onclogo" height="55" width="75"/>
 	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child Data Managment System</span><br>
 	<span id="message">USER_MESSAGE</span></p>
   </div>
   <nav>
 	<ul>
-		<li><select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select></li>
-		<li>
-			<a href="">Agents <span class="caret"></span></a>
-			<div>
-				<ul>
-					<li><a href="">Manage Agents</a></li>
-				</ul>
-			</div>
-		</li>
-		<li>
-			<a href="">Families <span class="caret"></span></a>
-			<div>
-				<ul>
-					<li><a href="">Manage Families</a></li>
-					<li><a href="familystatus?token=REPLACE_TOKEN">Refer Family</a></li>
-				</ul>
-			</div>
-		</li>
-		<li><a href="">Wishes<span class="caret"></span></a></li>
-		<li><a href="">Partners<span class="caret"></span></a></li>
-		<li><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
+	    <li><select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select></li>
+	     <li><a href="">Agents <span class="caret"></span></a>
+		  <div>
+		    <ul>
+			  <li><a href="">Manage Agents</a></li>
+		    </ul>
+		  </div>
+	    </li>
+	    <li><a href="">Families <span class="caret"></span></a>
+		  <div>
+		    <ul>
+			  <li><a href="">Manage Families</a></li>
+			  <li><a href="familystatus?token=REPLACE_TOKEN">Refer Family</a></li>
+		    </ul>
+		  </div>
+	    </li>
+	    <li><a href="">Wishes<span class="caret"></span></a></li>
+	    <li><a href="">Partners<span class="caret"></span></a></li>
+	</ul>
+	<ul class='floatright'>
+	    <li id="logoutli"><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
 	</ul>
   </nav>
   <div id='controlbar'>
@@ -816,7 +650,7 @@
   <input id='targetid' type="hidden" name="targetid">
   <br>
   <fieldset>
-  <legend class="major">Family Information & Status</legend>
+  <legend class="legend-major">Family Information & Status</legend>
     <label id='lblonc' for="onc">ONC #</label>
     <label id= 'lblref' for="ref">Ref #</label>
     <label id= 'lblbatch' for="batch">Batch #</label>
@@ -835,7 +669,7 @@
     <input id='hohln' title="Last Name" name="hohLN" type="text" size="17" readonly>
     <input id='famstat' title="Family Status" type="text" size="14" readonly>
     <input id='delstat' title="Delivery Status" type="text" size="14" readonly>
-    <input id='mealstat' title="Meal Status" type="text" size="24" readonly>
+    <input id='mealstat' title="Meal Status" type="text" size="20" readonly>
     <br>
     <label id= 'lbllanguage' for="language">Language</label>
     <label id= 'lblhomephone' for="homephone">Home Phone</label>
@@ -864,7 +698,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Referring Agent Information</legend>
+  <legend class="legend-major">Referring Agent Information</legend>
     <label id='lblagentname' for="agentname">Name</label>
     <label id='lblagentorg' for="agentorg">Organization</label>
     <label id='lblagenttitle' for="agenttitle">Title</label>
@@ -879,7 +713,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Family Members</legend>
+  <legend class="legend-major">Family Members</legend>
   <fieldset class="gray">
   	<legend>Children</legend>
     <table id="childtable" border="1">
@@ -913,7 +747,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Children's Wishes</legend>
+   <legend class="legend-major">Children's Wishes</legend>
    <select id="childfn" onchange="updateForChildSelection()"> </select>
    <label>is a</label>
    <input id='age' type='text' size='13'>
@@ -934,7 +768,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Meal Assistance</legend>
+  <legend class="legend-major">Meal Assistance</legend>
   	<label for="mealtype">Requested Holiday: </label>
     <input id="mealtype" name="mealtype" size="18" readonly>
     <label for="deitres">Restrictions: </label>
@@ -942,9 +776,9 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Family Details</legend>
+   <legend class="legend-major">Family Details</legend>
 <!--<input id="detail" type="text" name="detail" size="128">-->
-	<textarea id="detail", rows="2". cols="128"></textarea>
+	<textarea id="detail", rows="2". cols="126"></textarea>
   </fieldset>
   <br>
 </form>
