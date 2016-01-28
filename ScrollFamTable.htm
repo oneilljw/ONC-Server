@@ -1,10 +1,10 @@
  <!DOCTYPE html>
 <html>
 <head lang="en">
-    <title>ONC Family Table</title>
-    <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
-    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
-    <script>
+  <title>ONC Family Table</title>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script>
 	var currYear;
 	var priorYear;
 	var pyFamJson = [];
@@ -14,9 +14,27 @@
 	sessionStorage.setItem('thanksgivingCutoff', "THANKSGIVING_CUTOFF");
 	sessionStorage.setItem('decemberCutoff', "DECEMBER_CUTOFF");
 	sessionStorage.setItem('editCutoff', "EDIT_CUTOFF");
+	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
     $( document ).ready(function()
     {
+    	//update the nav bar links with token and set home link presence
+    	if(sessionStorage.getItem('homelinkVisibility') === 'visible')
+    	{
+    		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token');
+    		
+    		var clientserviceli = document.getElementById('clientserviceli');
+    		clientserviceli.parentNode.removeChild(clientserviceli);
+    	}
+    	else
+    	{
+    		var homelinkli = document.getElementById('homelinkli');
+    		homelinkli.parentNode.removeChild(homelinkli);
+    	}
+ 
+  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
+//  	document.getElementById('editprofilelink').href="editprofile?token=" + sessionStorage.getItem('token');
+  		
     	currYear = new Date().getFullYear();
 		document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
 		
@@ -88,7 +106,7 @@
     function getPYFamiliesFromServer(year)
     {
     	familiesparams = "token=" + sessionStorage.getItem("token") + "&" +
-    	"year=" + sessionStorage.getItem("prioryear") + "&callback=?";
+    					 "year=" + sessionStorage.getItem("prioryear") + "&callback=?";
     	$.getJSON('families', familiesparams, function(data)
     	{
     		pyFamJson = data;
@@ -100,7 +118,6 @@
     {
     	familiesparams = "token=" + sessionStorage.getItem("token") + "&" +
 		  				 "year=" + currYear.toString() + "&callback=?";
-    	
     	$.getJSON('families', familiesparams, function(data)
     	{
     		cyFamJson = data;
@@ -223,7 +240,7 @@
     
     function updatePYTable()
     {
-    	$("#tbodyid").empty();
+    	$("#pytbody").empty();
     	var e = document.getElementById("pyagents");
     	var agentID = e.options[e.selectedIndex].value;
     	
@@ -231,7 +248,7 @@
 		{
     		if(agentID == -1 || agentID == pyFamJson[i].agentID)
     		{
-    			addPYTableRow(pyFamJson[i]);	//add row to table
+    			addTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
     		}
 		}
     	
@@ -242,7 +259,7 @@
     
     function updateCYTable()
     {
-    	$("#tbodycurrid").empty();
+    	$("#cytbody").empty();
     	var e = document.getElementById("curragents");
     	var agentID = e.options[e.selectedIndex].value;
     	
@@ -250,7 +267,7 @@
 		{
     		if(agentID == -1 || agentID == cyFamJson[i].agentID)
     		{
-    			addCYTableRow(cyFamJson[i]);	//add row to table
+    			addTableRow(cyFamJson[i], cyTable, "Edit");	//add row to table
     		}
 		}
     	
@@ -258,76 +275,10 @@
     	var searchbox = document.getElementById('cysearch');
     	searchbox.value = "";
     }
-    
-    function addPYTableRow(family)
-    {
-        if (!document.getElementsByTagName) return;
-        
-        var fstatus;
-        if(family.fstatus === 'Packaged')
-        	fstatus = 'Packaged \u2713';
-        else
-        	fstatus = family.fstatus;
-        
-        var dstatus;
-        if(family.dstatus === 'Delivered')
-        	dstatus = 'Delivered \u2713';
-        else if(family.dstatus === 'Empty')
-        	dstatus = 'None';
-        else
-        	dstatus = family.dstatus;
-        
-        var mealstatus;
-        if(family.mealStatus === 'Thanksgiving_Confirmed')
-        	mealstatus = 'Thanksgiving \u2713';
-        else if(family.mealStatus === 'December_Confirmed')
-        	mealstatus = 'December \u2713';
-        else if(family.mealStatus === 'Both_Confirmed')
-        	mealstatus = 'Both \u2713';
-        else
-        	mealstatus = family.mealStatus;
-        
-        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
-                          fstatus, dstatus, mealstatus];
-        
-        var cellwidth = ['54px', '170px', '170px', '86px', '136px', '136px', '136px', '54px'];
-        
-	    var tabBody = document.getElementById("pyTable").getElementsByTagName('tbody').item(0);
-        row=document.createElement("tr");
-         
-        for(index=0; index < familyinfo.length; index++)	//create the family info cells
-        {
-        	cell = document.createElement("td");
-        	cell.appendChild(document.createTextNode(familyinfo[index]));
-        	cell.style.width = cellwidth[index];
-        	row.appendChild(cell);
-        }
-        
-        btn = document.createElement("button");
-        btn.value=family.idNum;
-        btn.innerHTML = "Refer";
-        btn.style.width = cellwidth[index];
-        btn.onclick=function() {referFamily(family.targetID);};
 
-        if(alreadyReferred(family.targetID) === true)
-        {
-        	btn.style.backgroundColor='Red';
-        	btn.disabled = true;
-        }
-        else if(sessionStorage.getItem('decemberCutoff') === 'disabled')
-        {
-        	btn.style.backgroundColor='Gray';
-        	btn.disabled = true;
-        }
-        row.appendChild(btn);
-        
-        tabBody.appendChild(row);
-    }
-    
-    function addCYTableRow(family, tablename, buttonname)
+    function addTableRow(family, table, buttontext)
     {
         if (!document.getElementsByTagName) return;
-        
         
         var fstatus;
         if(family.fstatus === 'Packaged')
@@ -358,7 +309,7 @@
         
         var cellwidth = ['54px', '170px', '170px', '86px', '136px', '136px', '136px', '54px'];
         
-	    var tabBody = document.getElementById("cyTable").getElementsByTagName('tbody').item(0);
+	    var tabBody = table.getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
         for(index=0; index < familyinfo.length; index++)	//create the family info cells
@@ -370,31 +321,56 @@
         }
         
         btn = document.createElement("button");
-        btn.value=family.id;
-		btn.value=family.HOHLastName;
-        btn.innerHTML = "Edit";
+        btn.innerHTML = buttontext;
         btn.style.width = cellwidth[index];
-        btn.onclick=function() {update(family.targetID);};
-        if(sessionStorage.getItem('editCutoff') === 'disabled')
-        {
-        	btn.style.backgroundColor='Gray';
-        	btn.disabled = true;
-        }
+        btn.onclick=function() {familyAction(table, family.targetID);};
+        
+		setButtonStatus(family, table, btn);
         row.appendChild(btn);
         
         tabBody.appendChild(row);
     }
     
-    function referFamily(targetID)
+    function setButtonStatus(family, table, btn)
+    {
+    	if(table=== document.getElementById('pyTable'))
+    	{
+    		if(alreadyReferred(family.targetID) === true)
+            {
+            	btn.style.backgroundColor='Red';
+            	btn.disabled = true;
+            }
+            else if(sessionStorage.getItem('decemberCutoff') === 'disabled')
+            {
+            	btn.style.backgroundColor='Gray';
+            	btn.disabled = true;
+            }
+    	}
+    	else if(sessionStorage.getItem('editCutoff') === 'disabled')
+        {
+            btn.style.backgroundColor='Gray';
+            btn.disabled = true;
+    	}
+    }
+
+    function familyAction(table, targetID)
     {
     	sessionStorage.setItem("targetid", targetID);
-    	
 		var params = {}
-		params["year"] = priorYear.toString();
+		
 		params["token"] = sessionStorage.getItem('token');
 		params["targetid"] = targetID;
 		
-		post('referral', params);
+		if(table=== document.getElementById('pyTable'))
+		{
+			params["year"] = priorYear.toString();
+			post('referral', params);
+		}
+		else
+		{
+			params["year"] = currYear.toString();
+			post('familyupdate', params);
+		}
     }
     
     function newFamily()
@@ -420,17 +396,6 @@
     	    return false;
     }
     
-    function update(targetID)
-    {
-    	sessionStorage.setItem("targetid", targetID);
-    	var params = {}
-		params["year"] = currYear.toString();
-		params["token"] = sessionStorage.getItem('token');
-		params["targetid"] = targetID;
-		
-		post('familyupdate', params);
-    }
-    
 	function post(path, params, method) 
 	{
 	    method = method || "post"; // Set method to post by default if not specified.
@@ -441,117 +406,47 @@
 	    form.setAttribute("method", method);
 	    form.setAttribute("action", path);
 
-	    for(var key in params) {
-	        if(params.hasOwnProperty(key)) {
+	    for(var key in params) 
+	    {
+	    	if(params.hasOwnProperty(key))
+	        {
 	            var hiddenField = document.createElement("input");
 	            hiddenField.setAttribute("type", "hidden");
 	            hiddenField.setAttribute("name", key);
 	            hiddenField.setAttribute("value", params[key]);
 
-	            form.appendChild(hiddenField);
-	         }
+	        	form.appendChild(hiddenField);
+	        }
 	    }
 
 	    document.body.appendChild(form);
 	    form.submit();
 	}
     </script>
-    <style type="text/css"> 
-/*    
-		.tables
-		{
-
-			width:900px;
-			margin:0 auto;
-
-			width: 90%;		
-			margin-left: auto;
-			margin-right: auto;
-			background-color: #3CB371;
-			border: 1px solid black;
-		}
-*/
-/*		
-        .scrolltable 
-        {
-            overflow-x: scroll;
-            height: 100%;
-            display: flex;
-            display: -webkit-flex;
-            flex-direction: column;
-            -webkit-flex-direction: column;
-        }
-        .scrolltable > .header 
-        {
-        }
-        .scrolltable > .body 
-        {
-            /*noinspection CssInvalidPropertyValue*/
-/*            width: -webkit-fit-content;
-            overflow-y: scroll;
-            flex: 1;
-            -webkit-flex: 1;
-        }
-*/        
-        th, td 
-        {
-/*        	min-width: 116px;	*/
-        }
-        /* an outside constraint to react against */
-/*        
-        #constrainer 
-        {
-        	width: 90%;
-	        width: 880px;	
-            height: 200px;
-        }
-*/        
-        #constrainer2 
+    <style type="text/css">         
+    	.constrainer 
         {
          	width: 90%;
-/*          width: 880px; */
 			margin-left: auto;
 			margin-right: auto;
-/*          overflow-x: scroll;	*/
             background-color: #3CB371;
+            border: 1px solid black;
         }
-        #constrainer2 table 
-        {
-        	overflow-y: scroll; 
-        }
-        #constrainer2 tbody
+        .constrainer table { overflow-y: scroll; }
+        .constrainer thead { display: table-row; }
+        .constrainer tbody
         {
             overflow-x: scroll;
             display: block;
             height: 208px;
         }
-        #constrainer2 thead { display: table-row; }
-        
-        #constrainer3 
-        {
-         	width: 90%;
-/*          width: 880px; */
-			margin-left: auto;
-			margin-right: auto;
-/*          overflow-x: scroll;	*/
-            background-color: #3CB371;
-        }
-        #constrainer3 table {overflow-y: scroll; }
-        #constrainer3 tbody
-        {
-            overflow-x: scroll;
-            display: block;
-            height: 208px;
-        }
-        #constrainer3 thead { display: table-row; }
-        
-        .onccol { width: 54px;}
-        .namecol { width: 170px;}
-        .dnscol { width: 86px;}
-        .statcol { width: 136px;}
+
+        .onccol { width: 54px; }
+        .namecol { width: 170px; }
+        .dnscol { width: 86px; }
+        .statcol { width: 136px; }
         
         /* only styling below here */
-        #constrainer3, #constrainer2 {  border: 1px solid black; }
         table { border-collapse: collapse; }       
         th, td { border: 1px solid gray; }
         th 
@@ -564,16 +459,13 @@
         tr:nth-child(odd) { background-color: #ffffff; }
         tr:nth-child(even) { background-color: lightgrey; } 
         .controlbar
-	{
-		width:90%;
-		margin:0 auto;
-		background-color: #3CB371;
-		border: 1px solid black;
-	}
-	 #newbar
-	{
-		text-align: right;
-	}
+		{
+			width:90%;
+			margin:0 auto;
+			background-color: #3CB371;
+			border: 1px solid black;
+		}
+		#newbar { text-align: right; }
     </style>
 </head>
 <body>
@@ -583,11 +475,18 @@
 	<span id="message">USER_MESSAGE</span></p>
   </div>
   <nav>
-	<ul>
-		<li><a href="about.html">Profile</a></li>
+   <ul>
+	    <li id="homelinkli"><a id='homelink'>Home</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
+		<li id='clientserviceli'><a href="">Client Service <span class="caret"></span></a>
+		  <div>
+		    <ul>
+			  <li><a id='editprofilelink' href="">Edit My Profile</a></li>
+		    </ul>
+		  </div>
+	    </li>
+	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
 	</ul>
   </nav>
   <div class='controlbar'>
@@ -599,10 +498,9 @@
 		  <input type="text" id="pysearch" placeholder="Type to search..." />
 		</span>
   </div>
-  <!--  <div class="tables"> -->
-	<div id="constrainer2">
-      <table id="pyTable">
-        <thead>
+  <div class="constrainer">
+	<table id="pyTable">
+      <thead>
         <tr>
        		<th class='onccol'>ONC #</th>
        		<th class='namecol'>First Name</th>
@@ -613,12 +511,11 @@
         	<th class='statcol'>Meal Status</th>
         	<th class='onccol'>Action</th>
         </tr>
-        </thead>
-        <tbody id="tbodyid">
-        </tbody>
-	  </table>
-	</div>
- <!-- </div>  -->
+      </thead>
+      <tbody id='pytbody'>
+      </tbody>
+	</table>
+  </div>
   <div id='newbar' class='controlbar'>
     <button id="new" onclick="newFamily()">Refer New Family</button>
   </div>
@@ -631,10 +528,9 @@
 	  <input type="text" id="cysearch" placeholder="Type to search..." />
 	</span>
   </div>
-  <!-- <div class="tables">  -->
-  	<div id="constrainer3">
-      <table id = cyTable>
-        <thead>
+  <div class="constrainer">
+    <table id= 'cyTable'>
+      <thead>
         <tr>
        		<th class='onccol'>ONC #</th>
        		<th class='namecol'>First Name</th>
@@ -645,14 +541,10 @@
         	<th class='statcol'>Meal Status</th>
         	<th class='onccol'>Action</th>
         </tr>
-        </thead>
-        <tbody id="tbodycurrid">
-        </tbody>
-	  </table>
-	<!-- </div>  -->
-<!--<form action="logout?token=REPLACE_TOKEN" method="post">  -->
-<!-- <input id="submit" type="submit" value="Logout"> -->
-<!--</form>  -->	
+      </thead>
+      <tbody id='cytbody'>
+      </tbody>
+	</table>
   </div>
 </body>
 </html>

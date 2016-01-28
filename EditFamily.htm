@@ -2,6 +2,7 @@
 <html>
 <head lang="en">
   <title>ONC Family Contact Info Update</title>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   <script> 
 	var hohAddressGood = false;
@@ -14,6 +15,10 @@
   		document.getElementById('year').value= new Date().getFullYear().toString();
   		document.getElementById('token').value= sessionStorage.getItem("token");
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
+  		
+  		//update the nav bar links with token
+  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token');
+  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token');
   		
   		var urlmode = window.location.href;
   		if(urlmode.indexOf("familyupdate") > -1)
@@ -396,57 +401,6 @@
 	}
   </script>
   <style>
-  	.topbar 
-    {
-    	width:900px;
-    	height:72px;
-    	margin:0 auto;
-    	background-color: #FF0000;
-		border: 1px solid black;
-	}
-	.topbar img
-	{
-    	float:left;
-   		border: 0;
-	}
-	div.ui-datepicker
-	{
-		width:480px;
-  		background-color: lightgray;
-  		font-size:15px;
-	}
-	form
-	{
-		width:900px;
-		margin:0 auto;
-		background-color: #3CB371;
-		border: 1px solid black;
-	}
-	button
-    {
-        background-color: #336699;
-        color: #ffffff;
-    }      
-	.major
-	{
-  		padding: 0.2em 0.5em;
-  		border:2px solid black;
-/*  		background-color: #E8E8E8;	*/
-  		background-color: #E5FFCC;
-  		font-size:80%;
-  		text-align:left;
-  	}
-  	#topbar p
-    {
-       	text-align: center;
-    }
-    #banner
-    {
-    	font-weight: bold;
-    	font-style: italic;
-    	font-size: 130%;
-	}
-	fieldset {background-color: #E8E8E8;}
 	#submitspan {float: right;}
 	#errormessage
 	{
@@ -455,7 +409,6 @@
 		font-style: italic;
 		color: red;
 	}
-	button { background-color: #336699; color: #fffff; }
   </style>
 </head>
 <body>
@@ -464,13 +417,21 @@
     <p><span id="banner">ONC Family Contact Information Update Form</span><br>
 	<span id="message">(please edit and click Submit To ONC to update contact info)</span></p>
   </div>
+  <nav>
+    <ul>
+	    <li id="homeli"><a id='homelink'>Home</a></li>
+	</ul>
+	<ul class='floatright'>
+	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	</ul>
+  </nav>
   <form id="updatefamily" action="updatefamily" onsubmit="return submitUpdate()" method="post">
   <input id='token' type="hidden" name="token">
   <input id="year" type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
   <br>
   <fieldset>
-  <legend class="major">Head of Household (HOH) Information</legend>
+  <legend class="legend-major">Head of Household (HOH) Information</legend>
     <input id="hohfn" title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFN" required>
     <input id="hohln" title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLN" required>
     <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
@@ -508,7 +469,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Delivery Address: Update address that ONC will use for gift delivery</legend>
+  <legend class="legend-major">Delivery Address: Update address that ONC will use for gift delivery</legend>
 	<input id="checkbox" type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onchange="verifyDeliveryAddress()" autocomplete="off" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onchange="verifyDeliveryAddress()" autocomplete="off" required>
@@ -531,7 +492,7 @@
   </fieldset>
   <br>
    <fieldset>
-  <legend class="major">Meal Assistance Request Status</legend>
+  <legend class="legend-major">Meal Assistance Request Status</legend>
  	<label for='mealstatus'>Status:</label>
 	<input id='mealstatus' type="text" size="22" title="Status of meal request" disabled>
 	<label for='mealtype'>Requested For:</label>
@@ -546,7 +507,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Family Details: Update details (if any) about family you think ONC should know</legend>
+   <legend class="legend-major">Family Details: Update details (if any) about family you think ONC should know</legend>
 	<input id="detail" type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <br>

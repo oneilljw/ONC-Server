@@ -26,7 +26,8 @@ public class ONCWebServer
 		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents", "/families", "/familystatus",
 							"/getfamily", "/references", "/getagent", "/getmeal", "/children", "/familysearch", 
 							"/adults", "/wishes", "/oncsplash", "/onclogo", "/oncstylesheet", "/newfamily",
-							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily", "/changepw"};
+							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
+							"/changepw", "/startpage"};
 		
 		HttpContext context;
 //		Filter paramFilter = new ParameterFilter();

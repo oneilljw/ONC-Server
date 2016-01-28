@@ -105,6 +105,35 @@ public class ONCHttpHandler implements HttpHandler
     		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
     		
     	}
+    	else if(requestURI.contains("/startpage"))
+    	{
+    		//authenticate the web client by token and activity
+    		WebClient wc = null;
+    		if(params.containsKey("token"))
+    		{	
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			
+    			wc = clientMgr.findClient(sessionID);
+    		}
+    			
+    		if(wc != null)	//if the web client is authenticated, send the home page
+    		{
+    			//update time stamp, get the home page html and return it
+    			wc.updateTimestamp();
+    			
+    			String response = getHomePageHTML(wc, wc.getWebUser().getFirstname(), "");
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
+    		else
+    		{	
+    			Headers header = t.getResponseHeaders();
+    			ArrayList<String> headerList = new ArrayList<String>();
+    			headerList.add("http://www.ourneighborschild.org");
+    			header.put("Location", headerList);
+    			sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
+    		}	
+    	}
     	else if(requestURI.contains("/login"))
     	{
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
@@ -338,6 +367,7 @@ public class ONCHttpHandler implements HttpHandler
     				response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
     				response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
     				response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+    				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
     			}
     			catch (IOException e) 
     			{
@@ -767,6 +797,7 @@ public class ONCHttpHandler implements HttpHandler
 				homePageHTML = homePageHTML.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
 				homePageHTML = homePageHTML.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
 				homePageHTML = homePageHTML.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+				homePageHTML = homePageHTML.replace("HOME_LINK_VISIBILITY", "hidden");
 				return homePageHTML;
 			}
 			catch (IOException e) 
@@ -774,6 +805,17 @@ public class ONCHttpHandler implements HttpHandler
 				return "<p>Family Table Unavailable</p>";
 			}
 		}
+	}
+	
+	String getHomeLinkVisibility(WebClient wc)
+	{
+		if(wc.getWebUser().getPermission() == UserPermission.ADMIN ||
+				wc.getWebUser().getPermission() == UserPermission.SYS_ADMIN)
+		{
+			return "visible";
+		}
+		else
+			return "hidden";
 	}
 	
 	String getFamilyTableHTML()

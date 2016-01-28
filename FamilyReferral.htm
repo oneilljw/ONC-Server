@@ -5,6 +5,7 @@
   <title>ONC Family Assistance Request</title>
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
   <script> 
   	var childrenJson= [];
@@ -26,6 +27,10 @@
   		document.getElementById('year').value= new Date().getFullYear().toString();
   		document.getElementById('token').value= sessionStorage.getItem("token");
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
+  		
+  		//update the nav bar links with token
+  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
+  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token'); 
   		
   		var urlmode = window.location.href;
   		if(urlmode.indexOf("referral") > -1)
@@ -665,57 +670,12 @@
 	}
   </script>
   <style>
-  	.topbar 
-    {
-    	width:900px;
-    	height:72px;
-    	margin:0 auto;
-    	background-color: #FF0000;
-		border: 1px solid black;
-	}
-	.topbar img
-	{
-    	float:left;
-   		border: 0;
-	}
 	div.ui-datepicker
 	{
 		width:480px;
   		background-color: lightgray;
   		font-size:15px;
-	}
-	form
-	{
-		width:900px;
-		margin:0 auto;
-		background-color: #3CB371;
-		border: 1px solid black;
-	}
-	button
-    {
-        background-color: #336699;
-        color: #ffffff;
-    }      
-	.major
-	{
-  		padding: 0.2em 0.5em;
-  		border:2px solid black;
-/*  		background-color: #E8E8E8;	*/
-  		background-color: #E5FFCC;
-  		font-size:80%;
-  		text-align:left;
-  	}
-  	#topbar p
-    {
-       	text-align: center;
-    }
-    #banner
-    {
-    	font-weight: bold;
-    	font-style: italic;
-    	font-size: 130%;
-	}
-	fieldset {background-color: #E8E8E8;}
+	}  
 	#submitspan {float: right;}
 	#errormessage
 	{
@@ -726,7 +686,6 @@
 	}
 	table, th, td {border: 1px solid black;}
 	th, td {min-width: 60px; }
-	button {background-color: #336699; color: #fffff;}
   </style>
 </head>
 <body>
@@ -735,13 +694,21 @@
     <p><span id="banner">ONC Family Assistance Referral Form</span><br>
 	<span id="message">(please complete and click Submit To ONC)</span></p>
   </div>
+  <nav>
+    <ul>
+	    <li id="homeli"><a id='homelink'>Home</a></li>
+	</ul>
+	<ul class='floatright'>
+	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	</ul>
+  </nav>
   <form id="familyreferral" action="referfamily" onsubmit="return submitReferral()" method="post">
   <input id='token' type="hidden" name="token">
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
   <br>
   <fieldset>
-  <legend class="major">Head of Household (HOH) Information</legend>
+  <legend class="legend-major">Head of Household (HOH) Information</legend>
     <input id='hohfn' title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" required>
     <input id='hohln' title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name" required>
     <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
@@ -775,7 +742,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Delivery Address & Transportation: Provide address that ONC will use for gift delivery & family's access to transportation</legend>
+  <legend class="legend-major">Delivery Address & Transportation: Provide address that ONC will use for gift delivery & family's access to transportation</legend>
 	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onchange="verifyDeliveryAddress()" autocomplete="off" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onchange="verifyDeliveryAddress()" autocomplete="off" required>
@@ -798,7 +765,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Family Members</legend>
+  <legend class="legend-major">Family Members</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS)</legend>
   	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
@@ -817,9 +784,10 @@
     	<tr>
         	<th>First Name</th>
         	<th>Last Name</th>
-        	<th>DoB </th>
-        	<th>Gender </th>
-        	<th>School </th>
+        	<th>DoB</th>
+        	<th>Gender</th>
+        	<th>School</th>
+        	<th>Action</th>
     	</tr>
       </thead>
       <tbody id="tchildbody">
@@ -841,7 +809,8 @@
   	<thead>
     	<tr>
         	<th>Name</th>
-        	<th>Gender </th>
+        	<th>Gender</th>
+        	<th>Action</th>
     	</tr>
     </thead>
     <tbody id="tadultbody">
@@ -851,7 +820,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish, per child; if clothing or footwear, please include size</legend>
+   <legend class="legend-major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish, per child; if clothing or footwear, please include size</legend>
   	 <table id="wishtable" border="1">
   	<thead>
     	<tr>
@@ -869,7 +838,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="major">Meal Assistance: ONC will refer family to WFCM or other meal providing organizations</legend>
+  <legend class="legend-major">Meal Assistance: ONC will refer family to WFCM or other meal providing organizations</legend>
 	<input type="checkbox" onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
     <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
 		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
@@ -878,7 +847,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="major">Family Details: Provide any additional details that may assist in serving this family</legend>
+   <legend class="legend-major">Family Details: Provide any additional details that may assist in serving this family</legend>
 	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <br>
