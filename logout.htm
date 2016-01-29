@@ -2,17 +2,16 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-    <title>Our Neighbor's Child</title>
-    <style>
+    <title>Our Neighbor's Child Login</title>
+    <style>     
     body
     {
-		height: 0;
-    	padding: 0;
-/*    	padding-bottom: 50%;	*/
+    	background-color: black; 
     	background-image: url(oncsplash.gif);
-/*    	background-position: center center;	*/
-    	background-size: 100%;
+/*    	background-size: 70%;	*/
     	background-repeat: no-repeat;
+    	background-attachment: fixed;
+   		background-position: center;    	
     }
     label
     {
@@ -52,6 +51,10 @@
     	border: 1px solid #781351;
     	padding: 2px 6px
     }
+    .bgimg
+    {
+    	background-image: url(oncsplash.gif);
+    }
     #inner
     {
     	width:300px;
@@ -64,18 +67,16 @@
     </style>
 </head>
 <body>
-  <div id="outer" style="width:100%">
-	<div id="inner">
+ <div id="inner">
     	<form action="login" method="post">
     		<fieldset>
-    			<legend>ONC User Login</legend>
+    			<legend>Our Neighbor's Child Login</legend>
     			<p align="center"><b><i>WELCOME_MESSAGE</i></b></p>
     		    <p><label for="username">User Name:</label> <input type="text" id="username" name="field1" autofocus/></p>
     		    <p><label for="password">Password:</label> <input type="password" id="password" name="field2"/><br /></p>
     		    <p><input id="submit" type="submit" value="Login" /></p>
     		</fieldset>
     	</form>
-    </div>
-  </div>
+    </div>  
 </body>
 </html>
