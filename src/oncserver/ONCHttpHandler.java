@@ -273,6 +273,30 @@ public class ONCHttpHandler implements HttpHandler
   	      	os.close();
   	      	t.close();
     	}
+    	else if(requestURI.contains("/vanilla.ttf"))
+    	{
+    		// add the required response header for a PDF file
+  	      	Headers h = t.getResponseHeaders();
+  	      	h.add("Content-Type", "application/octet-stream");
+
+  	      	// onc splash screen
+  	      	String path = String.format("%s/vanilla.ttf", System.getProperty("user.dir"));
+  	      	File file = new File (path);
+  	      	byte [] bytearray  = new byte [(int)file.length()];
+  	      
+  	      	FileInputStream fis = new FileInputStream(file);
+  	      
+  	      	BufferedInputStream bis = new BufferedInputStream(fis);
+  	      	bis.read(bytearray, 0, bytearray.length);
+  	      	bis.close();
+
+  	      	//send the response.
+  	      	t.sendResponseHeaders(HTTP_OK, file.length());
+  	      	OutputStream os = t.getResponseBody();
+  	      	os.write(bytearray,0,bytearray.length);
+  	      	os.close();
+  	      	t.close();
+    	}
     	else if(requestURI.contains("/oncstylesheet"))
     	{
     		// add the required response header for a css style sheet

@@ -51,9 +51,16 @@
     	border: 1px solid #781351;
     	padding: 2px 6px
     }
-    .bgimg
+    @font-face 
     {
-    	background-image: url(oncsplash.gif);
+  		font-family: 'vanilla';
+  		src: url('vanilla.ttf');
+	}
+    #header
+    {
+   		font-family:"vanilla" !important;
+   		font-size:40px !important;
+   		color:#FFFFFF !important;
     }
     #inner
     {
@@ -67,16 +74,17 @@
     </style>
 </head>
 <body>
+<div><p id='header'>Our Neighbor's Child<p></div>
  <div id="inner">
-    	<form action="login" method="post">
-    		<fieldset>
-    			<legend>Our Neighbor's Child Login</legend>
-    			<p align="center"><b><i>WELCOME_MESSAGE</i></b></p>
-    		    <p><label for="username">User Name:</label> <input type="text" id="username" name="field1" autofocus/></p>
-    		    <p><label for="password">Password:</label> <input type="password" id="password" name="field2"/><br /></p>
-    		    <p><input id="submit" type="submit" value="Login" /></p>
-    		</fieldset>
-    	</form>
-    </div>  
+	<form action="login" method="post">
+      <fieldset>
+    	<legend>Our Neighbor's Child Login</legend>
+    	<p align="center"><b><i>WELCOME_MESSAGE</i></b></p>
+    	<p><label for="username">User Name:</label> <input type="text" id="username" name="field1" autofocus/></p>
+    	<p><label for="password">Password:</label> <input type="password" id="password" name="field2"/><br /></p>
+    	<p><input id="submit" type="submit" value="Login" /></p>
+    	</fieldset>
+    </form>
+  </div>  
 </body>
 </html>
