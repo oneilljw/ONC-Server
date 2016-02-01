@@ -44,6 +44,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
+	private static final String EDIT_PROFILE_HTML = "profile.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
@@ -191,6 +192,13 @@ public class ONCHttpHandler implements HttpHandler
     		int agtID = Integer.parseInt((String) params.get("agentid"));
     		
     		HtmlResponse response = AgentDB.getAgentJSONP(year, agtID, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
+    	else if(requestURI.contains("/getuser"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		
+    		HtmlResponse response = ClientManager.getClientJSONP(sessionID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/getmeal"))
@@ -603,6 +611,21 @@ public class ONCHttpHandler implements HttpHandler
     		}
     		else
     			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/profile"))
+    	{
+    		String response = null;
+    		try 
+    		{
+    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), EDIT_PROFILE_HTML));
+    		}
+    		catch (IOException e) 
+    		{
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}

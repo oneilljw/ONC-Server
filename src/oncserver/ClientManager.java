@@ -12,6 +12,7 @@ import java.util.UUID;
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
 
+import ourneighborschild.Agent;
 import ourneighborschild.ONCUser;
 
 import com.google.gson.Gson;
@@ -153,6 +154,35 @@ public class ClientManager implements ActionListener
 			return webClientAL.get(index);
 		else
 			return null;	//client not found
+	}
+	
+	static HtmlResponse getClientJSONP(String sessionID, String callbackFunction)
+	{		
+//		Gson gson = new Gson();
+		String response;
+			
+		int index = 0;
+		while(index < webClientAL.size() && !webClientAL.get(index).getSessionID().equals(sessionID))
+			index++;
+			
+		if(index < webClientAL.size())
+		{
+			response = "{"
+						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstname() + "\"," 
+						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastname() + "\","
+//						+ "\"title\":" + "\"King of the Jungle\""
+						+ "\"title\":" + "\"King of the Jungle\"" + "," 
+						+ "\"org\":" + "\"ONC\"" + ","
+						+ "\"email\":" + "\"johnwoneill1@gmail.com\"" + ","
+						+ "\"phone\":" + "\"571-344-0902\""
+						+ "}";
+//			response = gson.toJson(webClientAL.get(index).getWebUser(), ONCUser.class);
+		}
+		else
+			response = "";
+			
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
 	/*************************************************************************************
