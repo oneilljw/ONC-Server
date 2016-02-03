@@ -190,6 +190,17 @@ public class ClientManager implements ActionListener
 						+ "\"phone\":" + "\"703-926-2396\""
 						+ "}";
 			}
+			else if(user.getFirstname().equalsIgnoreCase("nicole"))
+			{
+				response = "{"
+						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstname() + "\"," 
+						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastname() + "\","
+						+ "\"title\":" + "\"Director, Family Management\"" + "," 
+						+ "\"org\":" + "\"Our Neighbor's Child\"" + ","
+						+ "\"email\":" + "\"mnrogers123@msn.com\"" + ","
+						+ "\"phone\":" + "\"703-283-3089\""
+						+ "}";
+			}
 			else
 				response = "";
 		}
