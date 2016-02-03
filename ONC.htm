@@ -314,7 +314,8 @@
     {
         var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
         var fieldname = ["childfn", "childln", "childdob", "childgender", "childschool"];
-        var fieldsize = [15, 16, 11, 11, 20];
+        var columnsize= ['108px', '116px', '72px', '56px', '144px'];
+        var fieldsize = [15, 16, 10, 6, 20];
         
 	    var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -322,6 +323,7 @@
         for(index=0; index < childinfo.length; index++)	//create the child info cells
         {
         	cell= document.createElement("td");
+        	cell.style.width = columnsize[index];
     	    content= document.createElement("input");
  	    	content.type="text";
  	    	content.name=fieldname[index] + cnum;
@@ -345,7 +347,7 @@
 	function addWishTableRow(wn, childwish)
     {
 		var wishinfo= [wn+1, childwish.name, childwish.detail, childwish.restriction, childwish.partner, childwish.status];
-		var columnsize= ['8px', '120px', '200px', '8px', '320px', '80px'];
+		var wishcolumnsize= ['56px', '120px', '240px', '8px', '240px', '80px'];
 		var wishfieldsize= [1, 12, 32, 1, 32, 10];
         
 	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
@@ -354,7 +356,7 @@
         for(index=0; index < wishinfo.length; index++)	//create the child info cells
         {
         	cell= document.createElement("td");
-        	cell.style.width = columnsize[index];
+        	cell.style.width = wishcolumnsize[index];
     	    content= document.createElement("input");
  	    	content.type="text";
         	content.value = wishinfo[index];
@@ -377,7 +379,7 @@
         adultname.type="text";
         adultname.name="adultname" + anum;
         adultname.value = adult.name;
-        adultname.setAttribute("size", 27);
+        adultname.setAttribute("size", 22);
         cell.appendChild(adultname);
         row.appendChild(cell);
         
@@ -386,7 +388,7 @@
         adultgender.type="text";
         adultgender.name="adultgender" + anum;
         adultgender.value = adult.gender;
-        adultgender.setAttribute("size", 11);
+        adultgender.setAttribute("size", 8);
         cell.appendChild(adultgender);
         row.appendChild(cell);
 /*        
@@ -542,7 +544,7 @@
 		var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
 		
-		var serchBox = document.getElementById("search");
+		var search = document.getElementById("search");
 		
 		if(search.value !== "" && familyRefs.length > 0)
 		{
@@ -607,7 +609,6 @@
 		border: 1px solid black;
 	}
 	table, th, td {border: 1px solid black;}
-	th, td {min-width: 60px; }
 	#searchbar {float: right;}
 	#lblonc { width: 52px; }
 	#lblref { width: 56px; }
@@ -629,7 +630,7 @@
 	#lblagentname { width: 132px; }
     #lblagentorg { width: 128px; }
 	#lblagenttitle { width: 140px; }
-	#lblagentphone { width: 96px; }	
+	#lblagentphone { width: 96px; }
   </style>
 </head>
 <body>
@@ -749,37 +750,36 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="legend-major">Family Members</legend>
-  <fieldset class="gray">
-  	<legend>Children</legend>
-    <table id="childtable" border="1">
-  	<thead>
-    	<tr>
-        	<th>First Name</th>
-        	<th>Last Name</th>
-        	<th>DoB </th>
-        	<th>Gender </th>
-        	<th>School </th>
-    	</tr>
-      </thead>
-      <tbody id="tchildbody">
-      </tbody>
-  </table>
-  </fieldset>
-  <br>
-  <fieldset>
-  	<legend>Other adults (in addition to the head of household)</legend>
-    <table id="adulttable" border="1">
-  	<thead>
-    	<tr>
-        	<th>Name</th>
-        	<th>Gender </th>
-    	</tr>
-    </thead>
-    <tbody id="tadultbody">
-    </tbody>
-  </table>
-  </fieldset>
+	<legend class="legend-major">Family Members</legend>
+      <fieldset class='floatleft'> 
+	  <legend>Children</legend>
+	  <table id='childtable'>
+	  	<thead>
+    		<tr>
+        		<th>First Name</th>
+        		<th>Last Name</th>
+        		<th>DoB </th>
+        		<th>Gender </th>
+        		<th>School </th>
+    		</tr>
+        </thead>
+      	<tbody id="tchildbody">
+      	</tbody>
+      </table>
+  	</fieldset>
+	<fieldset class='floatleft'>
+	  <legend>Additional Adults</legend>
+	  <table id='adulttable'>
+	  	<thead>
+    		<tr>
+        		<th>Name</th>
+        		<th>Gender </th>
+    		</tr>
+    	</thead>
+    	<tbody id="tadultbody">
+    	</tbody>
+      </table>
+    </fieldset> 
   </fieldset>
   <br>
   <fieldset>
