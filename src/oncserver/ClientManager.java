@@ -167,16 +167,31 @@ public class ClientManager implements ActionListener
 			
 		if(index < webClientAL.size())
 		{
-			response = "{"
+			ONCUser user = webClientAL.get(index).getWebUser();
+			if(user.getFirstname().equalsIgnoreCase("john"))
+			{
+				response = "{"
 						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstname() + "\"," 
 						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastname() + "\","
-//						+ "\"title\":" + "\"King of the Jungle\""
-						+ "\"title\":" + "\"King of the Jungle\"" + "," 
+						+ "\"title\":" + "\"Dir., Information Technology\"" + "," 
 						+ "\"org\":" + "\"ONC\"" + ","
 						+ "\"email\":" + "\"johnwoneill1@gmail.com\"" + ","
 						+ "\"phone\":" + "\"571-344-0902\""
 						+ "}";
-//			response = gson.toJson(webClientAL.get(index).getWebUser(), ONCUser.class);
+			}
+			else if(user.getFirstname().equalsIgnoreCase("kelly"))
+			{
+				response = "{"
+						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstname() + "\"," 
+						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastname() + "\","
+						+ "\"title\":" + "\"Executive Director\"" + "," 
+						+ "\"org\":" + "\"Our Neighbor's Child\"" + ","
+						+ "\"email\":" + "\"kellylavin1@gmail.com\"" + ","
+						+ "\"phone\":" + "\"703-926-2396\""
+						+ "}";
+			}
+			else
+				response = "";
 		}
 		else
 			response = "";

@@ -1,8 +1,9 @@
  <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>ONC Main Login Page</title>
+  <title>ONC Elf Main Page</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script>
 	var currYear;
@@ -53,6 +54,26 @@
     		getFamilyReferencesFromServer(year);
     	});
     });
+
+    function showEditProfileDialog() 
+    {
+    	var params = "token=" + sessionStorage.getItem("token") + "&" + "callback=?";
+			
+    	$.getJSON('getuser', params, function(user)
+    	{
+    		userJson = user;
+    		console.log(user);
+    		if(userJson.firstname !== '')
+    		{
+    			document.getElementById('userfirstname').value = user.firstname;
+    	    	document.getElementById('userlastname').value = user.lastname;
+    	    	document.getElementById('userorg').value = user.org;
+    	    	document.getElementById('usertitle').value = user.title;
+    	    	document.getElementById('useremail').value = user.email;
+    	    	document.getElementById('userphone').value = user.phone;
+    		}
+    	});
+    }
     
     function getFamilyReferencesFromServer(year)
     {
@@ -534,17 +555,15 @@
 		}
 	}
 	
-	var popupWindow = null;
-	function centeredPopup(url,winName,w,h,scroll)
-	{
-		LeftPosition = window.screenX + window.innerWidth/2 - w/2;
-		TopPosition = window.screenY + window.innerHeight/2 - h/2;
-		
-		settings = 'height='+h+',width='+w+',top='+TopPosition+',left='+LeftPosition+',scrollbars='
-					+scroll+',resizable';
-		
-		popupWindow = window.open(url,winName,settings);
-	}
+	function onCancel()
+    {
+		window.location=document.getElementById('closepopup').href;
+    }
+	
+	function onUpdate()
+    {
+		window.location=document.getElementById('closepopup').href;
+    }
 	
 	function post(path, params, method) 
 	{
@@ -574,7 +593,7 @@
 	}
   </script>
   <style type="text/css">	
-	label 
+	form label 
 	{
 		font-size: 90%;
  		display: inline-block;
@@ -611,6 +630,7 @@
     #lblagentorg { width: 128px; }
 	#lblagenttitle { width: 140px; }
 	#lblagentphone { width: 96px; }
+	
   </style>
 </head>
 <body>
@@ -642,8 +662,7 @@
 	<li><a href="">Client Service <span class="caret"></span></a>
 		  <div>
 		    <ul>
-<!--  		  <li><a id='editprofilelink' href="">Edit My Profile</a></li>	-->	
-			  <li><a href="profile?token=REPLACE_TOKEN" onclick="centeredPopup(this.href,'Profile','362','380','yes');return false">Edit My Profile</a><li>
+			  <li><a href="#openModal" onclick='showEditProfileDialog()'>Edit Profile</a></li>
 		    </ul>
 		  </div>
 	    </li>	    
@@ -799,5 +818,30 @@
   </fieldset>
   <br>
 </form>
+  <div id="openModal" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Edit ONC Profile</span>
+		</div>
+    	<p><label for="userfirstname">First Name:</label>
+    	<input type="text" id="userfirstname" name="firstname" autofocus></p>
+    	<p><label for="userlastname">Last Name:</label>
+    	<input type="text" id="userlastname" name="lastname"><br></p>
+    	<p><label for="userorg" >Organization:</label>
+    	<input type="text" id="userorg" name="org"></p>
+    	<p><label for="usertitle">Title:</label>
+    	<input type="text" id="usertitle" name="title"><br></p>
+    	<p><label for="useremail">E-Mail:</label>
+    	<input type="text" id="useremail" name="email"></p>
+    	<p><label for="userphone">Phone:</label>
+    	<input type="text" id="userphone" name="phone"><br></p>
+    	<div id='buttonbar'>
+      	  <button id="cancel" onclick="onCancel()">Cancel</button>
+      	  <button id="update" onclick="onUpdate()">Update</button>
+    	</div> 
+	</div>
+  </div>
 </body>
 </html>

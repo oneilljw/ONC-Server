@@ -50,11 +50,6 @@ public class ONCHttpHandler implements HttpHandler
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
 	private static final int HTTP_OK = 200;
 	
-	public ONCHttpHandler()
-	{
-		
-	}
-	
 	public void handle(HttpExchange t) throws IOException 
     {
     	@SuppressWarnings("unchecked")
@@ -235,99 +230,23 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/oncsplash"))
     	{
-    		// add the required response header for a PDF file
-  	      	Headers h = t.getResponseHeaders();
-  	      	h.add("Content-Type", "image/gif");
-
-  	      	// onc splash screen
-  	      	String path = String.format("%s/oncsplash.gif", System.getProperty("user.dir"));
-  	      	File file = new File (path);
-  	      	byte [] bytearray  = new byte [(int)file.length()];
-  	      
-  	      	FileInputStream fis = new FileInputStream(file);
-  	      
-  	      	BufferedInputStream bis = new BufferedInputStream(fis);
-  	      	bis.read(bytearray, 0, bytearray.length);
-  	      	bis.close();
-
-  	      	//send the response.
-  	      	t.sendResponseHeaders(HTTP_OK, file.length());
-  	      	OutputStream os = t.getResponseBody();
-  	      	os.write(bytearray,0,bytearray.length);
-  	      	os.close();
-  	      	t.close();
+    		sendFile(t, "image/gif", "oncsplash.gif");
     	}
     	else if(requestURI.contains("/onclogo"))
     	{
-    		// add the required response header for a PDF file
-  	      	Headers h = t.getResponseHeaders();
-  	      	h.add("Content-Type", "image/gif");
-
-  	      	// onc splash screen
-  	      	String path = String.format("%s/onclogosmall.gif", System.getProperty("user.dir"));
-  	      	File file = new File (path);
-  	      	byte [] bytearray  = new byte [(int)file.length()];
-  	      
-  	      	FileInputStream fis = new FileInputStream(file);
-  	      
-  	      	BufferedInputStream bis = new BufferedInputStream(fis);
-  	      	bis.read(bytearray, 0, bytearray.length);
-  	      	bis.close();
-
-  	      	//send the response.
-  	      	t.sendResponseHeaders(HTTP_OK, file.length());
-  	      	OutputStream os = t.getResponseBody();
-  	      	os.write(bytearray,0,bytearray.length);
-  	      	os.close();
-  	      	t.close();
-    	}
+    		sendFile(t, "image/gif", "oncsplash.gif");    	
+    	}   	
     	else if(requestURI.contains("/vanilla.ttf"))
     	{
-    		// add the required response header for a PDF file
-  	      	Headers h = t.getResponseHeaders();
-  	      	h.add("Content-Type", "application/octet-stream");
-
-  	      	// onc splash screen
-  	      	String path = String.format("%s/vanilla.ttf", System.getProperty("user.dir"));
-  	      	File file = new File (path);
-  	      	byte [] bytearray  = new byte [(int)file.length()];
-  	      
-  	      	FileInputStream fis = new FileInputStream(file);
-  	      
-  	      	BufferedInputStream bis = new BufferedInputStream(fis);
-  	      	bis.read(bytearray, 0, bytearray.length);
-  	      	bis.close();
-
-  	      	//send the response.
-  	      	t.sendResponseHeaders(HTTP_OK, file.length());
-  	      	OutputStream os = t.getResponseBody();
-  	      	os.write(bytearray,0,bytearray.length);
-  	      	os.close();
-  	      	t.close();
+    		sendFile(t, "application/octet-stream", "vanilla.ttf");  	
     	}
     	else if(requestURI.contains("/oncstylesheet"))
     	{
-    		// add the required response header for a css style sheet
-  	      	Headers h = t.getResponseHeaders();
-  	      	h.add("Content-Type", "text/css");
-
-  	      	// onc style sheet
-  	      	String path = String.format("%s/ONCStyleSheet.css", System.getProperty("user.dir"));
-  	      	File file = new File (path);
-  	      	byte [] bytearray  = new byte [(int)file.length()];
-  	      
-  	      	FileInputStream fis = new FileInputStream(file);
-  	      
-  	      	BufferedInputStream bis = new BufferedInputStream(fis);
-  	      	bis.read(bytearray, 0, bytearray.length);
-  	      	bis.close();
-  	      	
-  	      	//send the response.
-  	      	t.sendResponseHeaders(HTTP_OK, file.length());
-  	      	OutputStream os = t.getResponseBody();
-  	      	os.write(bytearray,0,bytearray.length);
-  	      	os.close();
-  	      	t.close();
+    		sendFile(t, "text/css", "ONCStyleSheet.css");
+    	}
+    	else if(requestURI.contains("/oncdialogstylesheet"))
+    	{
+    		sendFile(t, "text/css", "ONCDialogStyleSheet.css");
     	}
     	else if(requestURI.contains("/newfamily"))
     	{
@@ -344,14 +263,7 @@ public class ONCHttpHandler implements HttpHandler
     			} catch (IOException e) {
     				System.out.println("Couldn't open/find " + REFERRAL_HTML);
     				e.printStackTrace();
-    			}
-   			
-    			//remove the place holders
-/*    			response = response.replace("REPLACE_TOKEN", sessionID);
-    			response = response.replace("TARGETID","NNA");
-    			response = response.replace("value=\"HOHFN\"","");
-    			response = response.replace("value=\"HOHLN\"", "");
-*/    			
+    			}		
     		}
     		else
     			response = invalidTokenReceived();
@@ -426,21 +338,7 @@ public class ONCHttpHandler implements HttpHandler
     			} catch (IOException e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
-    			}
-/*    			
-    			//get the family
-    			int year = Integer.parseInt((String) params.get("year"));
-    			String targetID = (String) params.get("targetid");
-    		
-    			FamilyDB famDB = FamilyDB.getInstance();
-    			ONCFamily fam = famDB.getFamilyByTargetID(year, targetID);    		
-    			//replace the place holders
-    			response = response.replace("REPLACE_TOKEN", sessionID);
-    			response = response.replace("YEAR",(String) params.get("year"));
-    			response = response.replace("TARGETID",targetID);
-    			response = response.replace("HOHFN",fam.getHOHFirstName());
-    			response = response.replace("HOHLN", fam.getHOHLastName());
-*/    			
+    			}  			
     		}
     		else
     			response = invalidTokenReceived();
@@ -472,13 +370,6 @@ public class ONCHttpHandler implements HttpHandler
     				userFN = wc.getWebUser().getFirstname();
     			
     			response = getHomePageHTML(wc, userFN, frc.getMessage());
-//    			response = getFamilyTableHTML();
-//    			response= response.replace("USER_NAME", userFN);
-//    			response= response.replace("USER_MESSAGE", frc.getMessage());
-//    	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-//    	    	response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-//    	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-//    	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -501,12 +392,6 @@ public class ONCHttpHandler implements HttpHandler
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
-/*    		
-    			//replace the place holders
-    			response = response.replace("REPLACE_TOKEN", sessionID);
-    			response = response.replace("YEAR",(String) params.get("year"));
-    			response = response.replace("TARGETID", (String) params.get("targetid"));
-*/    			
     		}
     		else
     			response = invalidTokenReceived();
@@ -538,13 +423,6 @@ public class ONCHttpHandler implements HttpHandler
     				userFN = wc.getWebUser().getFirstname();
     			
     			response = getHomePageHTML(wc, userFN, frc.getMessage());
-//    			response = getFamilyTableHTML();
-//    			response= response.replace("USER_NAME", userFN);
-//    			response= response.replace("USER_MESSAGE", frc.getMessage());
-//    	    	response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-//    	    	response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-//    	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-//    	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -590,13 +468,6 @@ public class ONCHttpHandler implements HttpHandler
         			else
         				userFN = wc.getWebUser().getFirstname();
         			response = getHomePageHTML(wc, userFN, "Your password change was successful!");
-//    				response = getFamilyTableHTML();
-//    				response = response.replace("USER_NAME", userFN);
-//    				response = response.replace("USER_MESSAGE", "Your password change was successful!");
-//    	    		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-//    	    		response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-//        	    	response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-//        	    	response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     			}
     			else if(retCode == -1)
     			{
@@ -638,6 +509,31 @@ public class ONCHttpHandler implements HttpHandler
 		os.write(html.getResponse().getBytes());
 		os.close();
 		t.close();
+	}
+	
+	void sendFile(HttpExchange t, String mimetype, String sheetname) throws IOException
+	{
+		// add the required response header
+	    Headers h = t.getResponseHeaders();
+	    h.add("Content-Type", mimetype);
+
+	    //get file
+	    String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
+	    File file = new File (path);
+	    byte [] bytearray  = new byte [(int)file.length()];
+	      
+	    FileInputStream fis = new FileInputStream(file);
+	      
+	    BufferedInputStream bis = new BufferedInputStream(fis);
+	    bis.read(bytearray, 0, bytearray.length);
+	    bis.close();
+	      	
+	    //send the response.
+	    t.sendResponseHeaders(HTTP_OK, file.length());
+	    OutputStream os = t.getResponseBody();
+	    os.write(bytearray,0,bytearray.length);
+	    os.close();
+	    t.close();
 	}
 	
 	HtmlResponse loginRequest(String method, Map<String, Object> params, HttpExchange t)
@@ -726,38 +622,6 @@ public class ONCHttpHandler implements HttpHandler
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
-//	    		else if(serverUser.getPermission() == UserPermission.SYS_ADMIN ) //send the elf home page
-//	    		{
-//	    			Gson gson = new Gson();
-//	    			String loginJson = gson.toJson(webUser, ONCUser.class);
-//	    		
-//	    			String mssg = "UPDATED_USER" + loginJson;
-//	    			clientMgr.notifyAllClients(mssg);
-//	    			
-//	    			//determine if user never visited or last login date
-//	    			String userMssg;
-//	    			if(nLogins == 0)
-//	    				userMssg = "This is your first visit!";
-//	    			else
-//	    			{
-//	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy h:mm a z");
-//	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
-//	    				sdf.setTimeZone(TimeZone.getDefault());
-//	    				userMssg = "You last visited " + sdf.format(lastLogin);
-//	    			}
-//	    		
-//	    			html = getONCElfPageHTML();
-//	    			
-//	    			if(serverUser.getFirstname().equals(""))
-//	    				html = html.replace("USER_NAME", serverUser.getLastname());
-//	    			else
-//	    				html = html.replace("USER_NAME", serverUser.getFirstname());
-//
-//	    			html = html.replace("USER_MESSAGE", userMssg);
-//	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-//	    			
-//	    			response = new HtmlResponse(html, HTTPCode.Ok);
-//	    		}
 	    		else //send the home page
 	    		{
 	    			Gson gson = new Gson();
@@ -785,19 +649,6 @@ public class ONCHttpHandler implements HttpHandler
 	    				username =  serverUser.getFirstname();
 	    		
 	    			html = getHomePageHTML(wc, username, userMssg);
-	    			
-//	    			html = getFamilyTableHTML();
-//	    			
-//	    			if(serverUser.getFirstname().equals(""))
-//	    				html = html.replace("USER_NAME", serverUser.getLastname());
-//	    			else
-//	    				html = html.replace("USER_NAME", serverUser.getFirstname());
-//
-//	    			html = html.replace("USER_MESSAGE", userMssg);
-//	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-//	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-//	    			html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-//	    			html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -1450,90 +1301,7 @@ public class ONCHttpHandler implements HttpHandler
     	//then convert the Calendar to a Date in Millis and return it
     	return gmtDOB.getTimeInMillis();
     }
-/**** THIS WAS CREATED AS AN ALTERNATIVE TO USING SIMPLEDATEFORMAT TO PARSE DOB's
- *     
- * @param dob
- * @return
- */
- /*   
-    Long newCreateChildDOB(String dob)
-    {
-    	//get current GMT time
-    	TimeZone timezone = TimeZone.getTimeZone("GMT");
-		Calendar gmtDOB = Calendar.getInstance(timezone);
-		
-		//set time to 0:00:00:000 (midnight GMT)
-		gmtDOB.set(Calendar.HOUR_OF_DAY, 0);
-		gmtDOB.set(Calendar.MINUTE, 0);
-		gmtDOB.set(Calendar.SECOND, 0);
-		gmtDOB.set(Calendar.MILLISECOND, 0);
-		
-		//begin parse tree
-		String[] dateParts = null;
-		if(dob.contains("/"))
-			dateParts = dob.split("/");
-		else if(dob.contains("-"))
-			dateParts = dob.split("-");
-		
-		if(dateParts != null && dateParts.length == 3)
-		{
-			int calYear = parseYear(dateParts[2], gmtDOB.get(Calendar.YEAR));
-			int calMonth = parseMonth(dateParts[0].trim());
-			int calDay = Integer.parseInt(dateParts[1].trim(), calMonth);
-			
-			if(calYear > -1 && calMonth > -1 && calYear > -1)
-			{
-				gmtDOB.set(Calendar.YEAR, calYear);
-				gmtDOB.set(Calendar.MONTH, calMonth);
-				gmtDOB.set(Calendar.DAY_OF_MONTH, calDay);
-			}
-		}
-		
-		return gmtDOB.getTimeInMillis();
-    }
-    
-    int parseYear(String zYear, int currentYear)
-    {
-    	int currentCentury = currentYear/100;
-    	int yearInCentury = currentYear % 100;
-    	
-    	int year = -1;
-    	if(zYear.length() == 2)
-    	{
-    		int tempYear = Integer.parseInt(zYear);
-    		if(tempYear < 80)
-    			year = currentCentury + yearInCentury;
-    		else
-    			year = currentCentury -1 + yearInCentury;		
-    	}
-    	else if(zYear.length() == 4)
-    		year = Integer.parseInt(zYear);
-    	
-    	return year;	
-    }
-    
-    int parseMonth(String zMonth)
-    {
-    	int month = Integer.parseInt(zMonth.trim());
-    	if(month > 0 && month < 13)
-    		return month-1;
-    	else
-    		return -1;	
-    }
-    
-    int parseDay(String zDay, int month)
-    {
-    	int day = Integer.parseInt(zDay.trim());
-    	if(month == 2 && (day==28 || day==29))
-    		return day;
-    	else if((month == 4 || month == 6 || month == 9 || month == 11) && day > 0 && day < 31)
-    		return day;
-    	else if(month > 0 && month < 13 && day > 0 && day < 31)
-    		return day;	
-    	else
-    		return -1;
-    }
-*/	
+
 	String createWishList(Map<String, Object> params)
 	{
 		StringBuffer buff = new StringBuffer();
@@ -1662,16 +1430,13 @@ public class ONCHttpHandler implements HttpHandler
 	
 	private class FamilyResponseCode
 	{
-//		private int returnCode;
 		private String message;
 		
 		FamilyResponseCode(int rc, String mssg)
 		{
-//			this.returnCode = rc;
 			this.message = mssg;
 		}
 		
-//		int getReturnCode() { return returnCode; }
 		String getMessage() { return message; }
 	}
 }
