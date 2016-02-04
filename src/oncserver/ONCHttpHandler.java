@@ -105,7 +105,7 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		//authenticate the web client by token and activity
     		WebClient wc = null;
-    		if(params.containsKey("token"))
+    		if(params.containsKey("token") && params.containsKey("year") && params.containsKey("famref"))
     		{	
     			String sessionID = (String) params.get("token");
     			ClientManager clientMgr = ClientManager.getInstance();
@@ -118,7 +118,8 @@ public class ONCHttpHandler implements HttpHandler
     			//update time stamp, get the home page html and return it
     			wc.updateTimestamp();
     			
-    			String response = getHomePageHTML(wc, wc.getWebUser().getFirstname(), "");
+    			String response = getHomePageHTML(wc, wc.getWebUser().getFirstname(), "",
+    					(String) params.get("year"), (String) params.get("famref"));
     			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     		}
     		else
@@ -352,8 +353,9 @@ public class ONCHttpHandler implements HttpHandler
     		String response = null;
     		WebClient wc;
     		
-    		if((wc=clientMgr.findClient(sessionID)) != null && 
-    				t.getRequestMethod().toLowerCase().equals("post"))
+    		if(t.getRequestMethod().toLowerCase().equals("post") && 
+    			params.containsKey("token") && params.containsKey("year") &&
+    			 (wc=clientMgr.findClient(sessionID)) != null) 
     		{
     			wc.updateTimestamp();
 //    			Set<String> keyset = params.keySet();
@@ -369,7 +371,8 @@ public class ONCHttpHandler implements HttpHandler
     			else
     				userFN = wc.getWebUser().getFirstname();
     			
-    			response = getHomePageHTML(wc, userFN, frc.getMessage());
+    			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
+    					frc.getFamRef());
     		}
     		else
     			response = invalidTokenReceived();
@@ -409,8 +412,9 @@ public class ONCHttpHandler implements HttpHandler
 //    		for(String key:keyset)
 //    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
     		
-    		if((wc=clientMgr.findClient(sessionID)) != null && 
-    				t.getRequestMethod().toLowerCase().equals("post"))
+    		if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("token") &&
+    				params.containsKey("year") && params.containsKey("famref") &&
+    				(wc=clientMgr.findClient(sessionID)) != null)
     		{
     			wc.updateTimestamp();
     			FamilyResponseCode frc = processFamilyUpdate(wc, params);
@@ -422,7 +426,8 @@ public class ONCHttpHandler implements HttpHandler
     			else
     				userFN = wc.getWebUser().getFirstname();
     			
-    			response = getHomePageHTML(wc, userFN, frc.getMessage());
+    			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
+    					(String) params.get("targetid"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -436,8 +441,8 @@ public class ONCHttpHandler implements HttpHandler
     		String response = null;
     		WebClient wc;
     		
-    		if((wc=clientMgr.findClient(sessionID)) != null && 
-    				t.getRequestMethod().toLowerCase().equals("post"))
+    		if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("token") &&
+    				(wc=clientMgr.findClient(sessionID)) != null)
     		{
     			wc.updateTimestamp();
     			
@@ -467,7 +472,8 @@ public class ONCHttpHandler implements HttpHandler
         				userFN = wc.getWebUser().getLastname();
         			else
         				userFN = wc.getWebUser().getFirstname();
-        			response = getHomePageHTML(wc, userFN, "Your password change was successful!");
+        			response = getHomePageHTML(wc, userFN, "Your password change was successful!",
+        					DBManager.getMostCurrentYear(), "NNA");
     			}
     			else if(retCode == -1)
     			{
@@ -648,7 +654,7 @@ public class ONCHttpHandler implements HttpHandler
 	    			else
 	    				username =  serverUser.getFirstname();
 	    		
-	    			html = getHomePageHTML(wc, username, userMssg);
+	    			html = getHomePageHTML(wc, username, userMssg, DBManager.getMostCurrentYear(), "NNA");
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -663,7 +669,7 @@ public class ONCHttpHandler implements HttpHandler
 		return response;
 	}
 	
-	String getHomePageHTML(WebClient wc, String username, String message)
+	String getHomePageHTML(WebClient wc, String username, String message, String year, String famRef)
 	{
 		String homePageHTML;
 		//determine which home page, elf or agent
@@ -677,6 +683,8 @@ public class ONCHttpHandler implements HttpHandler
 				homePageHTML = homePageHTML.replace("USER_NAME", username);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
 				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+				homePageHTML = homePageHTML.replace("REPLACE_YEAR", year);
+				homePageHTML = homePageHTML.replace("REPLACE_FAM_REF", famRef);
 				return homePageHTML;
 			}
 			catch (IOException e) 
@@ -715,7 +723,7 @@ public class ONCHttpHandler implements HttpHandler
 		else
 			return "hidden";
 	}
-	
+/*	
 	String getFamilyTableHTML()
 	{
 		//read the family table html
@@ -745,7 +753,7 @@ public class ONCHttpHandler implements HttpHandler
 			return "<p>ONC Elf Page Unavailable</p>";
 		}
 	}
-	
+*/	
 	String invalidTokenReceived()
 	{
 		String response = null;
@@ -1090,7 +1098,8 @@ public class ONCHttpHandler implements HttpHandler
 			
 		}
 		
-		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted");
+		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted",
+										addedFamily.getODBFamilyNum());
 	}
 	
 	String ensureUpperCaseStreetName(String street)
@@ -1431,12 +1440,21 @@ public class ONCHttpHandler implements HttpHandler
 	private class FamilyResponseCode
 	{
 		private String message;
+		private String famRef;
+		
+		FamilyResponseCode(int rc, String mssg, String famRef)
+		{
+			this.message = mssg;
+			this.famRef = famRef;
+		}
 		
 		FamilyResponseCode(int rc, String mssg)
 		{
 			this.message = mssg;
+			this.famRef = "NNA";
 		}
 		
 		String getMessage() { return message; }
+		String getFamRef() { return famRef; }
 	}
 }

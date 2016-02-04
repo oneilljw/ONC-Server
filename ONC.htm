@@ -7,7 +7,7 @@
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script>
 	var currYear;
-	var priorYear;
+	var currFamRef;
 	var familyRefs = {};
 	var searchRefs = {};
 	var famJson = {};
@@ -19,13 +19,11 @@
 	var adultsJson= [];
 	
 	sessionStorage.setItem('token', "REPLACE_TOKEN");
+	sessionStorage.setItem('curryear', "REPLACE_YEAR");
+	sessionStorage.setItem('famref', "REPLACE_FAM_REF");
 	
     $( document ).ready(function()
     {
-    	currYear = new Date().getFullYear();
-		priorYear = new Date().getFullYear()-1;
-		sessionStorage.setItem("prioryear", priorYear);
-		
 		//set the search buttons to hidden
 		document.getElementById('srch-prior').style.visibility = 'hidden';
 		document.getElementById('srch-next').style.visibility = 'hidden';
@@ -34,10 +32,10 @@
     	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
     	$.getJSON('dbStatus', dbyearsparams, function(data)
     	{
-			var yearCombo = document.getElementById("yearlist");
+			var yearCombo = document.getElementById('yearlist');
     		for (var i = data.length-1; i >= 0; i--)
     		{
-    			var option = document.createElement("option");
+    			var option = document.createElement('option');
     			option.text = data[i].id;
     	    	option.value = data[i].id;
 
@@ -50,8 +48,9 @@
 	        		yearCombo.add(option); // IE only
 	    		}
     		}
-    		var year = yearCombo.options[yearCombo.selectedIndex].value;
-    		getFamilyReferencesFromServer(year);
+
+    		document.getElementById('yearlist').value= sessionStorage.getItem('curryear');
+    		getFamilyReferencesFromServer(sessionStorage.getItem('curryear'));
     	});
     	
     	$("#search").keyup(function (e) {
@@ -106,15 +105,22 @@
     	$.getJSON('references', familyparams, function(data)
     	{
     		familyRefs = data;
-    		if(familyRefs.length > 0)
+    		if(familyRefs.length=== 0)
     		{
-    			getFamilyFromServer(year, familyRefs[0].id)
-    		}
-    		else
-    		{
+    			clearPageData();
     			document.getElementById('onc').value= "No";
     			document.getElementById('ref').value= "Families";
     		}
+    		else if(sessionStorage.getItem('famref')=== 'NNA')
+    		{
+    			famIndex= 0;
+    			getFamilyFromServer(year, familyRefs[0].id);
+    		}
+    		else
+    		{
+//    			getFamilyFromServer(year, sessionStorage.getItem('famref'));
+    			findFamilyIndexAndGetFamily(year, sessionStorage.getItem('famref'))
+    		}	
     	});
     }
     
@@ -194,7 +200,50 @@
 			getFamiliesChildrenFromServer(year, famJson.targetID);
 			getAdultsFromServer(year, famJson.targetID);
 			getMealFromServer(year, famJson.mealID);
+			
+			sessionStorage.setItem("famref", id);
     	});
+    }
+    
+    function clearPageData()
+    {
+    	document.getElementById('onc').value= '';
+		document.getElementById('ref').value= '';
+		document.getElementById('batch').value= '';
+		document.getElementById('dns').value= '';
+		document.getElementById('hohfn').value= '';
+		document.getElementById('hohln').value= '';
+		document.getElementById('famstat').value= '';
+		document.getElementById('delstat').value= '';
+		document.getElementById('mealstat').value= '';
+		document.getElementById('language').value= '';
+		document.getElementById('homephone').value= '';
+		document.getElementById('cellphone').value= '';
+		document.getElementById('email').value= '';
+		document.getElementById('housenum').value= famJson.HouseNum;
+		document.getElementById('street').value= '';
+		document.getElementById('unit').value= '';
+		document.getElementById('city').value= '';
+		document.getElementById('zipcode').value= '';
+		document.getElementById('transport').value= '';
+		document.getElementById('detail').value= '';
+		
+		document.getElementById('agentname').value= '';
+		document.getElementById('agentorg').value= '';
+		document.getElementById('agenttitle').value= '';
+		document.getElementById('agentphone').value= '';
+		document.getElementById('agentemail').value= '';
+		
+		$("#tchildbody").empty();
+		$("#adultbody").empty();
+		
+		removeOptions(document.getElementById("childfn"));
+		document.getElementById('age').value= '';
+		
+		$("#twishbody").empty();
+		
+		document.getElementById('mealtype').value = '';
+	  	document.getElementById('dietres').value = '';
     }
     
     function getAdultsFromServer(year, targetid)
@@ -222,7 +271,7 @@
 	     	$.getJSON('getmeal', mealparams, function(meal)
 	     	{
 	       		document.getElementById('mealtype').value = meal.type;
-	   	  		document.getElementById('dietres').value = meal.dietaryRestrictions
+	   	  		document.getElementById('dietres').value = meal.dietaryRestrictions;
 	   		});
     	}
 	    else
@@ -358,14 +407,7 @@
         	row.appendChild(cell);
         	
         }
-/*        
-        btn = document.createElement("button");
-        btn.value=cnum;
-        btn.type="button";
-        btn.innerHTML = "Remove";
-        btn.onclick=function() {removeChild(cnum);};
-        row.appendChild(btn);
-*/        
+
         tabBody.appendChild(row);
     }
 	
@@ -416,14 +458,7 @@
         adultgender.setAttribute("size", 8);
         cell.appendChild(adultgender);
         row.appendChild(cell);
-/*        
-        var btn = document.createElement("button");
-        btn.value= anum;
-        btn.type="button";
-        btn.innerHTML = "Remove";
-        btn.onclick=function() {removeAdult(anum);};
-        row.appendChild(btn);
-*/        
+
         tabBody.appendChild(row);
     }
 	
@@ -469,7 +504,8 @@
     	//get selected year
     	var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
-    	
+		
+		sessionStorage.setItem('curryear', year);
 		getFamilyReferencesFromServer(year);
     }
 	
@@ -596,6 +632,15 @@
     {
 		window.location=document.getElementById('closepopup').href;
     }
+	
+	function removeOptions(selectbox)
+	{
+	    var i;
+	    for(i=selectbox.options.length-1;i>=0;i--)
+	    {
+	        selectbox.remove(i);
+	    }
+	}
 	
 	function post(path, params, method) 
 	{

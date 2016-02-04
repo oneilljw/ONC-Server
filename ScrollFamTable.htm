@@ -21,7 +21,11 @@
     	//update the nav bar links with token and set home link presence
     	if(sessionStorage.getItem('homelinkVisibility') === 'visible')
     	{
-    		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token');
+    		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+    				+'&year=' + sessionStorage.getItem('curryear')
+    				+'&famref=' + sessionStorage.getItem('famref');
+    		
+    		console.log('scrollfam curryear is: ' + sessionStorage.getItem('curryear'));
     		
     		var clientserviceli = document.getElementById('clientserviceli');
     		clientserviceli.parentNode.removeChild(clientserviceli);

@@ -205,6 +205,14 @@ public class DBManager
 	
 	static int getNumberOfYears() { return dbYearList.size(); }
 	
+	static String getMostCurrentYear()
+	{
+		if(dbYearList.isEmpty())
+			return "No Years";
+		else
+			return Integer.toString(dbYearList.get(dbYearList.size()-1).getYear());
+	}
+	
 	void exportDBYearsList()
 	{
 		String[] header = {"Year", "Locked?"};
