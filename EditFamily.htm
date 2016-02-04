@@ -18,7 +18,8 @@
   		
   		//update the nav bar links with token
   		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token');
-  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token');
+  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
   		
   		var urlmode = window.location.href;
   		if(urlmode.indexOf("familyupdate") > -1)

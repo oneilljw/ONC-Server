@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import ourneighborschild.Agent;
@@ -358,9 +359,9 @@ public class ONCHttpHandler implements HttpHandler
     			 (wc=clientMgr.findClient(sessionID)) != null) 
     		{
     			wc.updateTimestamp();
-//    			Set<String> keyset = params.keySet();
-//    			for(String key:keyset)
-//    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+    			Set<String> keyset = params.keySet();
+    			for(String key:keyset)
+    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
     			FamilyResponseCode frc = processFamilyReferral(wc, params);
     			

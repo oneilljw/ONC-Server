@@ -30,7 +30,8 @@
   		
   		//update the nav bar links with token
   		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
-  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token'); 
+  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
   		
   		var urlmode = window.location.href;
   		if(urlmode.indexOf("referral") > -1)
@@ -179,6 +180,8 @@
         	var wish= document.createElement("input");
         	wish.type="text";
         	wish.name="wish" + cnum + wn;
+        	wish.id="wish" + cnum + wn;
+        	wish.disabled = true;
         	wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
         	wish.setAttribute("size", 22);
         	wlcell.appendChild(wish);
@@ -441,6 +444,19 @@
 			verifyDeliveryAddress();	
 	}
 	
+	function onGiftAssistanceClicked(cb)
+	{
+		for(var cnum=0; cnum<childrenJson.length; cnum++)
+		{
+			for(var wn=0; wn<4; wn++)
+			{
+				var wishElement = document.getElementById('wish' + cnum + wn);
+				wishElement.value = '';
+				wishElement.disabled = !cb.checked;
+			}	
+		}
+	}
+	
 	function mealRqrdClicked(cb)
 	{
 		var mealCombo = document.getElementById('mealtype');
@@ -598,26 +614,18 @@
 		
 		return addressparams;
 	}
+	
 	function verifyPhoneNumbers()
 	{
 		var errorMssg= "";
-		
 		var phoneName= ["Primary", "Alternate", "2nd Alternate"];
-		
-//		if(document.getElementById('homephone').value=="")
-//		{
-//			document.getElementById('homephone').style.backgroundColor= errorColor;
-//			errorMssg= "Submission Error: Primary Phone # missing"
-//		}
-//		else
-//		{
-			var index=0;
-			while(index<phoneName.length && verifyPhoneNumber(index))
-				index++;
+
+		var index=0;
+		while(index<phoneName.length && verifyPhoneNumber(index))
+			index++;
 			
-			if(index < phoneName.length)	
-				errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
-//		}
+		if(index < phoneName.length)	
+			errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
 		
 		return errorMssg;	
 	}
@@ -820,7 +828,8 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="legend-major">Gift Assistance: Provide 3 wishes, in priority order, plus an alternate wish, per child; if clothing or footwear, please include size</legend>
+   <legend class="legend-major">Gift Assistance: Check if family requests gifts and provide 3 wishes per child, in priority order, plus an alternate wish. If clothing or footwear, please include size</legend>
+     <input type="checkbox" name='giftreq' onclick='onGiftAssistanceClicked(this)' title="Check if family wants gift assistance">Check to request gift assistance and complete below:
   	 <table id="wishtable" border="1">
   	<thead>
     	<tr>
