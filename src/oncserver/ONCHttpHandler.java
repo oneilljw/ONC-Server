@@ -266,7 +266,7 @@ public class ONCHttpHandler implements HttpHandler
     			try {	
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_HTML));
     			} catch (IOException e) {
-    				System.out.println("Couldn't open/find " + REFERRAL_HTML);
+//    				System.out.println("Couldn't open/find " + REFERRAL_HTML);
     				e.printStackTrace();
     			}		
     		}
@@ -362,9 +362,9 @@ public class ONCHttpHandler implements HttpHandler
     			 (wc=clientMgr.findClient(sessionID)) != null) 
     		{
     			wc.updateTimestamp();
-    			Set<String> keyset = params.keySet();
-    			for(String key:keyset)
-    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
     			FamilyResponseCode frc = processFamilyReferral(wc, params);
     			
