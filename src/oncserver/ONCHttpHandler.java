@@ -50,6 +50,9 @@ public class ONCHttpHandler implements HttpHandler
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
 	private static final int HTTP_OK = 200;
+	private static final int NUM_OF_WISHES_PROVIDED = 4;
+	private static final String NO_WISH_PROVIDED_TEXT = "none";
+	private static final String GIFTS_REQUESTED_KEY = "giftreq";
 	
 	public void handle(HttpExchange t) throws IOException 
     {
@@ -1314,8 +1317,10 @@ public class ONCHttpHandler implements HttpHandler
 
 	String createWishList(Map<String, Object> params)
 	{
-		if(params.containsKey("giftreq") && params.get("giftreq").equals("on"))
+		//check to see if gift assistance was requested. If not, simply return a message saying that
+		if(params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"))
 		{
+			//gift assistance was requested
 			StringBuffer buff = new StringBuffer();
 			int cn = 0;
 			String key = "childfn" + Integer.toString(cn);
@@ -1329,10 +1334,14 @@ public class ONCHttpHandler implements HttpHandler
 				buff.append((String) params.get("childln" + Integer.toString(cn)));
 				buff.append(": ");
 				
-				for(int wn=0; wn<4; wn++)
+				for(int wn=0; wn<NUM_OF_WISHES_PROVIDED; wn++)
 				{
-					buff.append((String) params.get("wish" + Integer.toString(cn) + Integer.toString(wn)));
-					buff.append(wn < 3 ? ", " : ";");
+					String wishtext = (String) params.get("wish" + Integer.toString(cn) + Integer.toString(wn));
+					if(wishtext == null || wishtext.equals("null"))
+						buff.append(NO_WISH_PROVIDED_TEXT);
+					else
+						buff.append(wishtext);
+					buff.append(wn < NUM_OF_WISHES_PROVIDED-1 ? ", " : ";");
 				}
 				
 				cn++;
