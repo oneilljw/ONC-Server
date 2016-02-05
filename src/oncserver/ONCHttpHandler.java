@@ -1314,34 +1314,40 @@ public class ONCHttpHandler implements HttpHandler
 
 	String createWishList(Map<String, Object> params)
 	{
-		StringBuffer buff = new StringBuffer();
-		int cn = 0;
-		String key = "childfn" + Integer.toString(cn);
-		
-		//using child first name as the iterator, build a wish list string for each 
-		//child in the family
-		while(params.containsKey(key))
+		if(params.containsKey("giftreq") && params.get("giftreq").equals("on"))
 		{
-			buff.append((String) params.get(key));
-			buff.append(" ");
-			buff.append((String) params.get("childln" + Integer.toString(cn)));
-			buff.append(": ");
+			StringBuffer buff = new StringBuffer();
+			int cn = 0;
+			String key = "childfn" + Integer.toString(cn);
 			
-			for(int wn=0; wn<4; wn++)
+			//using child first name as the iterator, build a wish list string for each 
+			//child in the family
+			while(params.containsKey(key))
 			{
-				buff.append((String) params.get("wish" + Integer.toString(cn) + Integer.toString(wn)));
-				buff.append(wn < 3 ? ", " : ";");
+				buff.append((String) params.get(key));
+				buff.append(" ");
+				buff.append((String) params.get("childln" + Integer.toString(cn)));
+				buff.append(": ");
+				
+				for(int wn=0; wn<4; wn++)
+				{
+					buff.append((String) params.get("wish" + Integer.toString(cn) + Integer.toString(wn)));
+					buff.append(wn < 3 ? ", " : ";");
+				}
+				
+				cn++;
+				key = "childfn" + Integer.toString(cn);	//get next child key
+				if(params.containsKey(key))	//if that wasn't the last child, add 2 newlines
+					buff.append("\n\n");
+				else
+					break;
 			}
 			
-			cn++;
-			key = "childfn" + Integer.toString(cn);	//get next child key
-			if(params.containsKey(key))	//if that wasn't the last child, add 2 newlines
-				buff.append("\n\n");
-			else
-				break;
+			return buff.toString();
 		}
+		else
+			return "Gift assistance not requested";
 		
-		return buff.toString();
 	}
 	
 	boolean isHOHAddressValid(Map<String, Object> params)
