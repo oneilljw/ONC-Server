@@ -30,6 +30,7 @@ import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.Transportation;
 import ourneighborschild.UserPermission;
+import ourneighborschild.UserStatus;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -579,7 +580,7 @@ public class ONCHttpHandler implements HttpHandler
 	    		html += "</i></b></p><p>User name not found</p></body></html>";
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
-	    	else if(serverUser != null && serverUser.getPermission() == UserPermission.INACTIVE)	//can't find the user in the data base
+	    	else if(serverUser != null && serverUser.getStatus() == UserStatus.Inactive)	//can't find the user in the data base
 	    	{
 	    		html += "</i></b></p><p>Inactive user account, please contact the executive director</p></body></html>";
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
@@ -677,8 +678,8 @@ public class ONCHttpHandler implements HttpHandler
 	{
 		String homePageHTML;
 		//determine which home page, elf or agent
-		if(wc.getWebUser().getPermission() == UserPermission.ADMIN ||
-				wc.getWebUser().getPermission() == UserPermission.SYS_ADMIN)
+		if(wc.getWebUser().getPermission() == UserPermission.Admin ||
+				wc.getWebUser().getPermission() == UserPermission.Sys_Admin)
 		{
 			//read the onc page html
 			try
@@ -719,8 +720,8 @@ public class ONCHttpHandler implements HttpHandler
 	
 	String getHomeLinkVisibility(WebClient wc)
 	{
-		if(wc.getWebUser().getPermission() == UserPermission.ADMIN ||
-				wc.getWebUser().getPermission() == UserPermission.SYS_ADMIN)
+		if(wc.getWebUser().getPermission() == UserPermission.Admin ||
+				wc.getWebUser().getPermission() == UserPermission.Sys_Admin)
 		{
 			return "visible";
 		}

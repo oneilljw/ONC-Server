@@ -82,7 +82,7 @@ public class AgentDB extends ONCServerDB
 		
 		//if user permission is AGENT, only return a list of that agent, else return all agents
 		//that referred
-		if(user.getPermission().compareTo(UserPermission.AGENT) == 0)
+		if(user.getPermission().compareTo(UserPermission.Agent) == 0)
 		{
 			String userName = user.getFirstname() + " " + user.getLastname();
  			agentYearList = agentDB.get(year - BASE_YEAR).getList();

@@ -13,6 +13,7 @@ import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.UserStatus;
 import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
@@ -20,7 +21,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerUserDB extends ONCServerDB
 {
-	private static final int USER_RECORD_LENGTH = 14;
+	private static final int USER_RECORD_LENGTH = 16;
 	private static final String USER_PASSWORD_PREFIX = "onc";
 	private static ServerUserDB instance  = null;
 	
@@ -54,7 +55,7 @@ public class ServerUserDB extends ONCServerDB
 		
 		su.setID(id++);	//Set id for new user
 		su.setUserPW("onc" + su.getPermission().toString());
-		su.setPasswordChangeRqrd(true);
+		su.setStatus(UserStatus.Change_PW);
 	
 		userAL.add(su); //Add new user to data base
 		
@@ -82,7 +83,7 @@ public class ServerUserDB extends ONCServerDB
 			if(updatedUser.changePasswordRqrd())
 			{
 				su.setUserPW(USER_PASSWORD_PREFIX + updatedUser.getPermission().toString());
-				su.setPasswordChangeRqrd(updatedUser.changePasswordRqrd());
+				su.setStatus(UserStatus.Change_PW);
 			}
 			
 			save(year);
@@ -162,7 +163,7 @@ public class ServerUserDB extends ONCServerDB
 					if(su.changePasswordRqrd())
 					{
 						//need to notify other clients of update to user
-						su.setPasswordChangeRqrd(false);
+						su.setStatus(UserStatus.Update_Profile);
 
 				    	String change = "UPDATED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class);
 				    	clientMgr.notifyAllOtherClients(requestingClient, change);	//null to notify all clients
@@ -209,7 +210,7 @@ public class ServerUserDB extends ONCServerDB
 				if(su.changePasswordRqrd())
 				{
 					//need to notify other clients of update to user
-					su.setPasswordChangeRqrd(false);
+					su.setStatus(UserStatus.Update_Profile);
 
 					Gson gson = new Gson();
 				    String change = "UPDATED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class);
@@ -232,16 +233,13 @@ public class ServerUserDB extends ONCServerDB
 	{
 		Calendar date_changed = Calendar.getInstance();
 		if(!nextLine[6].isEmpty())
-			date_changed.setTimeInMillis(Long.parseLong(nextLine[6]));
+			date_changed.setTimeInMillis(Long.parseLong(nextLine[8]));
 		
 		Calendar last_login = Calendar.getInstance();
-		if(!nextLine[12].isEmpty())
-			last_login.setTimeInMillis(Long.parseLong(nextLine[12]));
-		
-		boolean bResetPassword = nextLine[13].charAt(0) == 'T' ? true : false;
+		if(!nextLine[14].isEmpty())
+			last_login.setTimeInMillis(Long.parseLong(nextLine[14]));
 			
-		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime(),
-										bResetPassword));
+		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime()));
 		
 	}
 
@@ -254,9 +252,9 @@ public class ServerUserDB extends ONCServerDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"ID", "Username", "Password", "Permission", "First Name", "Last Name",
-							"Date Changed", "Changed By", "SL Position", "SL Message", "SL Changed By",
-							"Sessions", "Last Login", "Reset Password"};
+		String[] header = {"ID", "Username", "Password", "Status", "Access", "Permission", "First Name",
+							"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 
+							"SL Changed By", "Sessions", "Last Login", "Agent ID"};
 		
 		String path = System.getProperty("user.dir") + "/users.csv";
 		File oncwritefile = new File(path);

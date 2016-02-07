@@ -22,6 +22,7 @@ import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserPermission;
+import ourneighborschild.UserStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -754,7 +755,7 @@ public class DesktopClient extends Thread
     				+ " User name not found", id, lo.getVersion()));
     		value += "User Name not found";
     	}
-    	else if(serverUser != null && serverUser.getPermission() == UserPermission.INACTIVE)	//can't find the user in the data base
+    	else if(serverUser != null && serverUser.getStatus() == UserStatus.Inactive)	//can't find the user in the data base
     	{
     		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
     				+ " User account is inactive", id, lo.getVersion()));
