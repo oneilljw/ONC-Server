@@ -9,9 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import ourneighborschild.Agent;
-import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
-import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.UserPermission;
 
 import com.google.gson.Gson;
@@ -252,7 +251,6 @@ public class AgentDB extends ONCServerDB
 		while(index < objAL.size() && objAL.get(index).getID() != user.getID())	//agent id == user id
 			index++;
 		
-		//wish must be present in catalog to be deleted
 		if(index < objAL.size())
 			return objAL.get(index);
 		else

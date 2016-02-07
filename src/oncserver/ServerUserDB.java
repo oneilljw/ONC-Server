@@ -1,6 +1,7 @@
 package oncserver;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -13,6 +14,7 @@ import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.UserPermission;
 import ourneighborschild.UserStatus;
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -79,6 +81,8 @@ public class ServerUserDB extends ONCServerDB
 			ONCServerUser su = userAL.get(index);
 			su.setLastname(updatedUser.getLastname());
 			su.setFirstname(updatedUser.getFirstname());
+			su.setStatus(updatedUser.getStatus());
+			su.setAccess(updatedUser.getAccess());
 			su.setPermission(updatedUser.getPermission());
 			if(updatedUser.changePasswordRqrd())
 			{
@@ -93,6 +97,22 @@ public class ServerUserDB extends ONCServerDB
 		}
 		else 
 			return "UPDATE_FAILED";
+	}
+	
+	void checkAgentStatus(ONCUser user)
+	{
+		
+		int year = DBManager.getCurrentYear();
+		Agent agent = AgentDB.getAgent(year,  user);
+		
+		if(agent == null && user.getPermission().compareTo(UserPermission.Agent) >= 0)
+		{
+			
+		}
+		else if(agent != null && user.getPermission().compareTo(UserPermission.Agent) < 0)
+		{
+			//Agent id should be set to -1, they have permission less than agent
+		}
 	}
 	
 	ONCServerUser find(String uid)

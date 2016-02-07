@@ -205,12 +205,17 @@ public class DBManager
 	
 	static int getNumberOfYears() { return dbYearList.size(); }
 	
-	static String getMostCurrentYear()
+	static int getCurrentYear()
 	{
 		if(dbYearList.isEmpty())
-			return "No Years";
+			return -1;
 		else
-			return Integer.toString(dbYearList.get(dbYearList.size()-1).getYear());
+			return dbYearList.get(dbYearList.size()-1).getYear();
+	}
+	
+	static String getMostCurrentYear()
+	{
+		return getCurrentYear() > -1 ? Integer.toString(dbYearList.get(dbYearList.size()-1).getYear()) : "No Years";
 	}
 	
 	void exportDBYearsList()
