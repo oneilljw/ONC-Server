@@ -29,6 +29,7 @@ import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.Transportation;
+import ourneighborschild.UserAccess;
 import ourneighborschild.UserPermission;
 import ourneighborschild.UserStatus;
 
@@ -628,7 +629,6 @@ public class ONCHttpHandler implements HttpHandler
 	    	//don't want a reference here, want a new object. A user can be logged in more than once.
 	    	//However, never can use this object to update a user's info
 	    	ONCServerUser serverUser = (ONCServerUser) userDB.find(userID);
-	  
 	    	if(serverUser == null)	//can't find the user in the data base
 	    	{
 	    		html += "</i></b></p><p>User name not found</p></body></html>";
@@ -637,6 +637,12 @@ public class ONCHttpHandler implements HttpHandler
 	    	else if(serverUser != null && serverUser.getStatus() == UserStatus.Inactive)	//can't find the user in the data base
 	    	{
 	    		html += "</i></b></p><p>Inactive user account, please contact the executive director</p></body></html>";
+	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    	}
+	    	else if(serverUser != null && !(serverUser.getAccess().equals(UserAccess.Website) ||
+	    			serverUser.getAccess().equals(UserAccess.AppAndWebsite)))	//can't find the user in the data base
+	    	{
+	    		html += "</i></b></p><p>User account not authorized for website access, please contact the executive director</p></body></html>";
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect

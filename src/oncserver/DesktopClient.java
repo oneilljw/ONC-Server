@@ -21,6 +21,7 @@ import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.UserAccess;
 import ourneighborschild.UserPermission;
 import ourneighborschild.UserStatus;
 
@@ -728,10 +729,7 @@ public class DesktopClient extends Thread
     {
     	Gson gson = new Gson();
     	Login lo = gson.fromJson(loginjson, Login.class);
-    	
-//    	String userID = lo.getUserID();
-//    	String password = lo.getPassword();
-    	
+ 
     	String userID = ONCEncryptor.decrypt(lo.getUserID());
     	String password = ONCEncryptor.decrypt(lo.getPassword());
     	
@@ -743,7 +741,7 @@ public class DesktopClient extends Thread
     	//However, never can use this object to update a user's info
     	ONCServerUser serverUser = (ONCServerUser) userDB.find(userID);
   
-    	if(lo_version < MINIMUM_CLIENT_VERSION)
+    	if(lo_version < MINIMUM_CLIENT_VERSION)	//Is client connecting with current software?
     	{
     		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed: "
     				+ "Downlevel Client, v%s",  id, lo.getVersion()));
@@ -755,17 +753,24 @@ public class DesktopClient extends Thread
     				+ " User name not found", id, lo.getVersion()));
     		value += "User Name not found";
     	}
-    	else if(serverUser != null && serverUser.getStatus() == UserStatus.Inactive)	//can't find the user in the data base
+    	else if(serverUser != null && serverUser.getStatus().equals(UserStatus.Inactive))	//can't find the user in the data base
     	{
     		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
     				+ " User account is inactive", id, lo.getVersion()));
-    		value += "Inactive user account";
+    		value += "Inactive account, contact Exec. Dir.";
+    	}
+    	else if(serverUser != null && !(serverUser.getAccess().equals(UserAccess.App) ||
+    			serverUser.getAccess().equals(UserAccess.AppAndWebsite)))	//user doesn't have app access
+    	{
+    		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
+    				+ " Website only user account", id, lo.getVersion()));
+    		value += "Website acct: use www.ourneighborschild.org";
     	}
     	else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
     	{
     		clientMgr.clientLoginAttempt(false, String.format("Client %d login request failed with v%s:"
     				+ " Incorrect password", id, lo.getVersion()));
-    		value += "Incorrect password";
+    		value += "Incorrect password, please try again";
     	}
     	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
     	{
