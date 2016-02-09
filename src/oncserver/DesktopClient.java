@@ -182,7 +182,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<online_users>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = clientMgr.getOnlineUsers();
+                	String response = clientMgr.getOnlineAppUsers();
                 	output.println(response);
                 	clientMgr.addLogMessage(response);               	
                 }

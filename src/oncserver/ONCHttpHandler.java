@@ -129,6 +129,7 @@ public class ONCHttpHandler implements HttpHandler
     		}
     		else
     		{	
+    			//send the user back to the ONC general web site
     			Headers header = t.getResponseHeaders();
     			ArrayList<String> headerList = new ArrayList<String>();
     			headerList.add("http://www.ourneighborschild.org");
@@ -166,6 +167,14 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/references"))
     	{
+    		//update the client time stamp
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			wc.updateTimestamp();
+    		
+    		//get the JSON of family reference list
     		int year = Integer.parseInt((String) params.get("year"));
     		
     		HtmlResponse response = FamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
@@ -199,8 +208,46 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		String sessionID = (String) params.get("token");
     		
+    		//client time stamp updated in .getClientJSONP method
     		HtmlResponse response = ClientManager.getClientJSONP(sessionID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
+    	}
+    	else if(requestURI.contains("/updateuser"))
+    	{	
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String responseJson;
+    		WebClient wc;
+    		
+    		//determine if a valid request from a logged in user. If so, process the update
+    		if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    		{
+    			wc.updateTimestamp();
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+    			
+    			ServerUserDB userDB = ServerUserDB.getInstance();
+    			ONCServerUser updatedUser = userDB.updateProfile(wc.getWebUser(), params);
+    			
+    			if(updatedUser != null)	//test to see if the update was required and successful
+    			{
+    				//if successful, notify all Clients of update and return a message to the web user
+    				Gson gson = new Gson();
+    				clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
+    											ONCUser.class));
+    				
+    				//return response
+    				responseJson =  "{\"message\":\"User Profile Update Accepted\"}";
+    			}
+    			else	//no change detected 
+    				responseJson =  "{\"message\":\"User Profile Not Updated, No Change Detected\"}";
+    		}
+    		else	//invalid user, return a failure message
+    			responseJson =  "{\"message\":\"Invalid User\"}";
+    		
+    		HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
+					HTTPCode.Ok);
+    		sendHTMLResponse(t, htmlresponse);
     	}
     	else if(requestURI.contains("/getmeal"))
     	{
@@ -220,6 +267,13 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/wishes"))
     	{
+    		//update the client time stamp
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			wc.updateTimestamp();
+    		
     		int year = Integer.parseInt((String) params.get("year"));
     		int childID = Integer.parseInt((String) params.get("childid"));
     		
@@ -602,7 +656,7 @@ public class ONCHttpHandler implements HttpHandler
 	    		
 	    		ONCUser webUser = serverUser.getUserFromServerUser();
 	    		ClientManager clientMgr = ClientManager.getInstance();
-    			WebClient wc = clientMgr.addWebClient(t, webUser);
+    			WebClient wc = clientMgr.addWebClient(t, serverUser);
     			
 	    		//has the current password expired? If so, send change password page
 	    		if(serverUser.changePasswordRqrd())
@@ -1247,7 +1301,7 @@ public class ONCHttpHandler implements HttpHandler
 		
 		return new FamilyResponseCode(-1, "Family Referral Rejected: Family Not Found");
 	}
-
+	
 	Map<String, String> createMap(Map<String, Object> params, String[] keys)
 	{
 		Map<String, String> map = new HashMap<String, String>();

@@ -17,6 +17,7 @@
 	var famIndex = 0;
 	var searchIndex = 0;
 	var adultsJson= [];
+	var userJson= {};
 	
 	sessionStorage.setItem('token', "REPLACE_TOKEN");
 	sessionStorage.setItem('curryear', "REPLACE_YEAR");
@@ -85,8 +86,7 @@
     	$.getJSON('getuser', params, function(user)
     	{
     		userJson = user;
-    		console.log(user);
-    		if(userJson.firstname !== '')
+    		if(userJson.lastname !== '')
     		{
     			document.getElementById('userfirstname').value = user.firstname;
     	    	document.getElementById('userlastname').value = user.lastname;
@@ -96,6 +96,37 @@
     	    	document.getElementById('userphone').value = user.phone;
     		}
     	});
+    }
+    
+    function onUpdateProfile()
+    {
+    	if(document.getElementById('userfirstname').value !== userJson.firstname ||
+    		document.getElementById('userlastname').value !== userJson.lastname ||
+    		 document.getElementById('userorg').value !== userJson.org ||
+    		  document.getElementById('usertitle').value !== userJson.title ||
+    		   document.getElementById('useremail').value !== userJson.email ||
+    		    document.getElementById('userphone').value !== userJson.phone)
+    	{
+    		var params = "token=" + sessionStorage.getItem("token")
+			+ "&" + "firstname=" + document.getElementById('userfirstname').value
+			+ "&" + "lastname=" + document.getElementById('userlastname').value
+			+ "&" + "org=" + document.getElementById('userorg').value
+			+ "&" + "title=" + document.getElementById('usertitle').value
+			+ "&" + "email=" + document.getElementById('useremail').value
+			+ "&" + "phone=" + document.getElementById('userphone').value
+			+ "&" + "callback=?"
+		
+			$.getJSON('updateuser', params, function(mssgJson)
+			{
+				document.getElementById('message').textContent= mssgJson.message;
+			});
+    	}
+    	else
+    	{
+    		document.getElementById('message').textContent= 'No change made to User Profile';
+    	}
+    	
+    	window.location=document.getElementById('closepopup').href;
     }
     
     function getFamilyReferencesFromServer(year)
@@ -629,11 +660,6 @@
 		window.location=document.getElementById('closepopup').href;
     }
 	
-	function onUpdate()
-    {
-		window.location=document.getElementById('closepopup').href;
-    }
-	
 	function removeOptions(selectbox)
 	{
 	    var i;
@@ -927,7 +953,7 @@
     	<input type="text" id="userphone" name="phone"><br></p>
     	<div id='buttonbar'>
       	  <button id="cancel" onclick="onCancel()">Cancel</button>
-      	  <button id="update" onclick="onUpdate()">Update</button>
+      	  <button id="update" onclick="onUpdateProfile()">Update</button>
     	</div> 
 	</div>
   </div>

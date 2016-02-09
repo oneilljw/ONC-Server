@@ -5,7 +5,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 
-import ourneighborschild.ONCUser;
+import ourneighborschild.ONCServerUser;
 
 public class WebClient
 {
@@ -13,9 +13,9 @@ public class WebClient
 	private UUID sessionID;
 	private long loginTimestamp;
 	private long lastTimestamp;
-	private ONCUser webUser;
+	private ONCServerUser webUser;
 	
-	WebClient(UUID sessionID, ONCUser webUser)
+	WebClient(UUID sessionID, ONCServerUser webUser)
 	{
 		this.state = ClientState.Connected;
 		this.sessionID = sessionID;
@@ -29,7 +29,7 @@ public class WebClient
 	String getSessionID() { return sessionID.toString(); }
 	long getloginTimeStamp() { return loginTimestamp; }
 	long getLastTimeStamp() { return lastTimestamp; }
-	ONCUser getWebUser() { return webUser; }
+	ONCServerUser getWebUser() { return webUser; }
 	
 	//setters
 	void setClientState(ClientState state) {this.state = state; }

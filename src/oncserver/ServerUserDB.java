@@ -1,13 +1,13 @@
 package oncserver;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 import ourneighborschild.Agent;
 import ourneighborschild.ChangePasswordRequest;
@@ -23,13 +23,13 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerUserDB extends ONCServerDB
 {
-	private static final int USER_RECORD_LENGTH = 16;
+	private static final int USER_RECORD_LENGTH = 20;
 	private static final String USER_PASSWORD_PREFIX = "onc";
 	private static ServerUserDB instance  = null;
 	
 	private static ClientManager clientMgr;
 	
-	private List<ONCServerUser> userAL;
+	private static List<ONCServerUser> userAL;
 	private int id;
 	
 	private ServerUserDB() throws NumberFormatException, IOException
@@ -66,6 +66,7 @@ public class ServerUserDB extends ONCServerDB
 		return "ADDED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class) ;
 	}
 	
+	//update from desktop client
 	String update(int year, String json)	//User DB currently not implemented by year
 	{
 		Gson gson = new Gson();
@@ -84,6 +85,10 @@ public class ServerUserDB extends ONCServerDB
 			su.setStatus(updatedUser.getStatus());
 			su.setAccess(updatedUser.getAccess());
 			su.setPermission(updatedUser.getPermission());
+			su.setOrg(updatedUser.getOrg());
+			su.setTitle(updatedUser.getTitle());
+			su.setEmail(updatedUser.getEmail());
+			su.setPhone(updatedUser.getPhone());
 			if(updatedUser.changePasswordRqrd())
 			{
 				su.setUserPW(USER_PASSWORD_PREFIX + updatedUser.getPermission().toString());
@@ -97,6 +102,33 @@ public class ServerUserDB extends ONCServerDB
 		}
 		else 
 			return "UPDATE_FAILED";
+	}
+	
+	//update from web site
+	ONCServerUser updateProfile(ONCServerUser su, Map<String, Object> params)
+	{
+		//determine if there is a change to the ONCServerUser object
+		if(!su.getFirstname().equals((String) params.get("firstname")) || 
+			!su.getLastname().equals((String)params.get("lastname")) ||
+			 !su.getOrg().equals((String)params.get("org")) ||
+			  !su.getTitle().equals((String)params.get("title")) ||
+			   !su.getEmail().equals((String)params.get("email")) ||
+			    !su.getPhone().equals((String)params.get("phone")))
+		{
+			//there was a change, so update the profile fields and save ONCServerUser object
+			su.setFirstname((String) params.get("firstname"));
+			su.setLastname((String) params.get("lastname"));
+			su.setOrg((String) params.get("org"));
+			su.setTitle((String) params.get("title"));
+			su.setEmail((String) params.get("email"));
+			su.setPhone((String) params.get("phone"));
+			
+			save(-1);	//users not implemented by year currently
+			
+			return su;
+		}
+		else
+			return null; //no change detected
 	}
 	
 	void checkAgentStatus(ONCUser user)
@@ -274,7 +306,8 @@ public class ServerUserDB extends ONCServerDB
 	{
 		String[] header = {"ID", "Username", "Password", "Status", "Access", "Permission", "First Name",
 							"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 
-							"SL Changed By", "Sessions", "Last Login", "Agent ID"};
+							"SL Changed By", "Sessions", "Last Login", "Orginization", "Title",
+							"Email", "Phone", "Agent ID"};
 		
 		String path = System.getProperty("user.dir") + "/users.csv";
 		File oncwritefile = new File(path);

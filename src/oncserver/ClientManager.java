@@ -12,7 +12,7 @@ import java.util.UUID;
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
 
-import ourneighborschild.Agent;
+import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 
 import com.google.gson.Gson;
@@ -110,7 +110,7 @@ public class ClientManager implements ActionListener
 		return c; 
 	}
 	
-	synchronized WebClient addWebClient(HttpExchange t, ONCUser webUser)
+	synchronized WebClient addWebClient(HttpExchange t, ONCServerUser webUser)
 	{
 		WebClient wc = new WebClient(UUID.randomUUID(), webUser);
 		webClientAL.add(wc);
@@ -166,43 +166,16 @@ public class ClientManager implements ActionListener
 			index++;
 			
 		if(index < webClientAL.size())
-		{
-			ONCUser user = webClientAL.get(index).getWebUser();
-			if(user.getFirstname().equalsIgnoreCase("john"))
-			{
-				response = "{"
+		{	
+			webClientAL.get(index).updateTimestamp();
+			response = "{"
 						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstname() + "\"," 
 						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastname() + "\","
-						+ "\"title\":" + "\"Dir., Information Technology\"" + "," 
-						+ "\"org\":" + "\"ONC\"" + ","
-						+ "\"email\":" + "\"johnwoneill1@gmail.com\"" + ","
-						+ "\"phone\":" + "\"571-344-0902\""
+						+ "\"title\":\"" + webClientAL.get(index).getWebUser().getTitle() + "\","
+						+ "\"org\":\"" + webClientAL.get(index).getWebUser().getOrg() + "\","
+						+ "\"email\":\"" + webClientAL.get(index).getWebUser().getEmail() + "\","
+						+ "\"phone\":\"" + webClientAL.get(index).getWebUser().getPhone() + "\","
 						+ "}";
-			}
-			else if(user.getFirstname().equalsIgnoreCase("kelly"))
-			{
-				response = "{"
-						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstname() + "\"," 
-						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastname() + "\","
-						+ "\"title\":" + "\"Executive Director\"" + "," 
-						+ "\"org\":" + "\"Our Neighbor's Child\"" + ","
-						+ "\"email\":" + "\"kellylavin1@gmail.com\"" + ","
-						+ "\"phone\":" + "\"703-926-2396\""
-						+ "}";
-			}
-			else if(user.getFirstname().equalsIgnoreCase("nicole"))
-			{
-				response = "{"
-						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstname() + "\"," 
-						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastname() + "\","
-						+ "\"title\":" + "\"Director, Family Management\"" + "," 
-						+ "\"org\":" + "\"Our Neighbor's Child\"" + ","
-						+ "\"email\":" + "\"mnrogers123@msn.com\"" + ","
-						+ "\"phone\":" + "\"703-283-3089\""
-						+ "}";
-			}
-			else
-				response = "";
 		}
 		else
 			response = "";
@@ -250,7 +223,7 @@ public class ClientManager implements ActionListener
 		serverUI.addLogMessage(mssg);
 	}
 	
-	String getOnlineUsers()
+	String getOnlineAppUsers()
 	{
 		List<ONCUser> userList= new ArrayList<ONCUser>();
 		for(DesktopClient c:dtClientAL)
