@@ -22,7 +22,6 @@ import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserAccess;
-import ourneighborschild.UserPermission;
 import ourneighborschild.UserStatus;
 
 import com.google.gson.Gson;

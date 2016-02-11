@@ -21,7 +21,7 @@
 }
 .modalDialog > div 
 {
-	width: 280px;
+	width: 296px;
 	position: relative;
 	margin: 10% auto;
 	padding: 5px 10px 5px 10px;
@@ -53,17 +53,28 @@
 .close:hover { background: #00d9ff; }
 .modalDialog label
 {
-    width: 6em;
-    float: left;
+	float: left;
     text-align: right;
     margin-right: 0.5em;
     display: block;
     color: black;
     font-size: 85%;
 }
-.modalDialog input
+.lbl_ep
+{
+    width: 6em;    
+}
+.inp_ep
 {
 	width: 180px;
+}
+.lbl_pw
+{
+    width: 10em;
+}
+.inp_pw
+{
+	width: 120px;
 }
 .dialogtopbar
 {

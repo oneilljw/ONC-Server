@@ -24,7 +24,6 @@ public class ClientManager implements ActionListener
 	private static final boolean CLIENT_TIMER_ENABLED = true;
 	private static final int CLIENT_HEARTBEAT_SAMPLE_RATE = 1000 * 60 * 1; //one minute
 	private static final int DESKTOP_CLIENT_INACTIVE_LIMIT = 1000 * 60 * 3; //three minutes
-	private static final int WEB_CLIENT_LOGIN_LIMIT = 1000 * 60 * 1; //one minute
 	private static final int DESKTOP_CLIENT_TERMINAL_LIMIT = 1000 * 60 * 10; //ten minutes
 	private static final int WEB_CLIENT_TERMINAL_LIMIT = 1000 * 60 * 20; //twenty minutes
 	

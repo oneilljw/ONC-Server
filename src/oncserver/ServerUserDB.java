@@ -9,12 +9,11 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-import ourneighborschild.Agent;
 import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
-import ourneighborschild.UserPermission;
+import ourneighborschild.UserAccess;
 import ourneighborschild.UserStatus;
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -28,6 +27,7 @@ public class ServerUserDB extends ONCServerDB
 	private static ServerUserDB instance  = null;
 	
 	private static ClientManager clientMgr;
+	private static AgentDB agentDB;
 	
 	private static List<ONCServerUser> userAL;
 	private int id;
@@ -35,6 +35,7 @@ public class ServerUserDB extends ONCServerDB
 	private ServerUserDB() throws NumberFormatException, IOException
 	{
 		clientMgr = ClientManager.getInstance();
+		agentDB = AgentDB.getInstance();
 		
 		userAL = new ArrayList<ONCServerUser>();
 		importDB(0, System.getProperty("user.dir") + "/users.csv", "User DB", USER_RECORD_LENGTH);
@@ -58,10 +59,16 @@ public class ServerUserDB extends ONCServerDB
 		su.setID(id++);	//Set id for new user
 		su.setUserPW("onc" + su.getPermission().toString());
 		su.setStatus(UserStatus.Change_PW);
-	
-		userAL.add(su); //Add new user to data base
 		
-		save(year);
+		//If the user has web site access, ask the Agent DB to add the agent if there not already there.
+		//Set the agentID field to the agentID. If not web site access, set the agentID to -1;
+		if(su.getAccess() == UserAccess.Website || su.getAccess() == UserAccess.AppAndWebsite)
+			su.setAgentID(agentDB.checkForAgent(DBManager.getCurrentYear(), su));
+		else
+			su.setAgentID(-1);
+		
+		userAL.add(su); //Add new user to data base
+		save(-1);	//userDB not implemented by year
 		
 		return "ADDED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class) ;
 	}
@@ -83,19 +90,33 @@ public class ServerUserDB extends ONCServerDB
 			su.setLastname(updatedUser.getLastname());
 			su.setFirstname(updatedUser.getFirstname());
 			su.setStatus(updatedUser.getStatus());
-			su.setAccess(updatedUser.getAccess());
 			su.setPermission(updatedUser.getPermission());
 			su.setOrg(updatedUser.getOrg());
 			su.setTitle(updatedUser.getTitle());
 			su.setEmail(updatedUser.getEmail());
 			su.setPhone(updatedUser.getPhone());
-			if(updatedUser.changePasswordRqrd())
+			if(updatedUser.changePasswordRqrd())	//check for password reset
 			{
 				su.setUserPW(USER_PASSWORD_PREFIX + updatedUser.getPermission().toString());
 				su.setStatus(UserStatus.Change_PW);
 			}
+			if((su.getAccess()==UserAccess.Website || su.getAccess()==UserAccess.AppAndWebsite) &&
+				updatedUser.getAccess()==UserAccess.App) 
+			{
+				//UserAccess to web site is being removed, set the Agent ID to -1
+				su.setAgentID(-1);
+				su.setAccess(updatedUser.getAccess());	
+			}
+			else if(su.getAccess()==UserAccess.App &&
+					(updatedUser.getAccess()==UserAccess.Website || 
+					  updatedUser.getAccess()==UserAccess.AppAndWebsite))
+			{
+				//UserAccess to web site is being added, need to check for adding agent
+				su.setAgentID(agentDB.checkForAgent(DBManager.getCurrentYear(), su));
+				su.setAccess(updatedUser.getAccess());
+			}
 			
-			save(year);
+			save(-1);	//userDB not implemented by year
 			
 			ONCUser updateduser = su.getUserFromServerUser();
 			return "UPDATED_USER" + gson.toJson(updateduser, ONCUser.class);
@@ -123,28 +144,12 @@ public class ServerUserDB extends ONCServerDB
 			su.setEmail((String) params.get("email"));
 			su.setPhone((String) params.get("phone"));
 			
-			save(-1);	//users not implemented by year currently
+			save(-1);	//userDB not implemented by year currently
 			
 			return su;
 		}
 		else
 			return null; //no change detected
-	}
-	
-	void checkAgentStatus(ONCUser user)
-	{
-		
-		int year = DBManager.getCurrentYear();
-		Agent agent = AgentDB.getAgent(year,  user);
-		
-		if(agent == null && user.getPermission().compareTo(UserPermission.Agent) >= 0)
-		{
-			
-		}
-		else if(agent != null && user.getPermission().compareTo(UserPermission.Agent) < 0)
-		{
-			//Agent id should be set to -1, they have permission less than agent
-		}
 	}
 	
 	ONCServerUser find(String uid)

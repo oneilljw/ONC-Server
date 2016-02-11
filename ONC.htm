@@ -98,6 +98,27 @@
     	});
     }
     
+    function onChangePW() 
+    {
+    	if(validate())
+    	{
+			var params = {}	
+			params["token"] = sessionStorage.getItem('token');
+			params["field1"] = document.getElementById('currpw').value;
+			params["field2"] = document.getElementById('newpw').value;
+    		$.post('reqchangepw', params, function(response)
+    		{
+    			console.log(response);
+    			document.getElementById('message').textContent= response;
+    		});
+    		
+    		document.getElementById('currpw').value = "";
+	    	document.getElementById('newpw').value = "";
+	    	document.getElementById('verifypw').value = "";
+    		window.location=document.getElementById('closepopup').href;
+    	}
+    }
+    
     function onUpdateProfile()
     {
     	if(document.getElementById('userfirstname').value !== userJson.firstname ||
@@ -251,7 +272,7 @@
 		document.getElementById('homephone').value= '';
 		document.getElementById('cellphone').value= '';
 		document.getElementById('email').value= '';
-		document.getElementById('housenum').value= famJson.HouseNum;
+		document.getElementById('housenum').value= '';
 		document.getElementById('street').value= '';
 		document.getElementById('unit').value= '';
 		document.getElementById('city').value= '';
@@ -669,6 +690,37 @@
 	    }
 	}
 	
+	function validate()
+    {
+		var mssgEl = document.getElementById("pw_mssg");
+    	var currpwEl = document.getElementById("currpw");
+        var pass1El = document.getElementById("newpw");
+        var pass2El = document.getElementById("verifypw");
+        var ok = true;
+        
+        if(currpwEl.value == "")
+        {
+        	//alert("current password field empty");
+            currpwEl.style.borderColor = "#E34234";
+            
+            mssgEl.style.color = "Red";
+            mssgEl.textContent = "Current password not provided, please try again!";
+            ok = false;
+        }
+        else if(pass1El.value !== pass2El.value)
+        {
+            //alert("New and Verify Passwords do not match");
+            pass1El.style.borderColor = "#E34234";
+            pass2El.style.borderColor = "#E34234";
+            
+            mssgEl.style.color = "Red";
+            mssgEl.textContent = "New and Verify passwords don't match, please try again!";
+            ok = false;
+        }
+
+        return ok;
+    }
+	
 	function post(path, params, method) 
 	{
 	    method = method || "post"; // Set method to post by default if not specified.
@@ -745,6 +797,12 @@
 	.clearable.x  { background-position: right 5px center; } /* (jQ) Show icon */
 	.clearable.onX{ cursor: pointer; }              /* (jQ) hover cursor style */
 	.clearable::-ms-clear {display: none; width:0; height:0;} /* Remove IE default X */
+	#pw_mssg
+	{
+		color: blue;
+		font-style: italic;
+		text-align: center;
+	}
   </style>
 </head>
 <body>
@@ -763,7 +821,7 @@
 		    </ul>
 		  </div>
 	    </li> `-->
-	    <li><a href="">Families <span class="caret"></span></a>
+	    <li><a href="#">Families <span class="caret"></span></a>
 		  <div>
 		    <ul>
 <!-- 		  <li><a href="">Manage Families</a></li>  -->	
@@ -773,10 +831,11 @@
 	    </li>
 	</ul>
 	<ul class='floatright'>
-	<li><a href="">Client Service <span class="caret"></span></a>
+	<li><a href="#">Profile <span class="caret"></span></a>
 		  <div>
 		    <ul>
 			  <li><a href="#openModal" onclick='showEditProfileDialog()'>Edit Profile</a></li>
+			  <li><a href="#chgpwdlg">Change Password</a></li>
 		    </ul>
 		  </div>
 	    </li>	    
@@ -788,6 +847,7 @@
   	  <button id="prior" onclick="onPriorFamily()">Prior Family</button>
   	  <button id="next" onclick="onNextFamily()">Next Family</button>
   	</span>
+  	<span id='resultbar'></span>
   	<span id='searchbar'>  
   	  <label for="search">Search for:</label> 
 	  <input class='clearable' id="search" type="text" placeholder="search text <enter>">
@@ -939,23 +999,44 @@
 		  <img src="onclogo" height="45" width="65"/>
 		  <span id='dialogmssg'>Edit ONC Profile</span>
 		</div>
-    	<p><label for="userfirstname">First Name:</label>
-    	<input type="text" id="userfirstname" name="firstname" autofocus></p>
-    	<p><label for="userlastname">Last Name:</label>
-    	<input type="text" id="userlastname" name="lastname"><br></p>
-    	<p><label for="userorg" >Organization:</label>
-    	<input type="text" id="userorg" name="org"></p>
-    	<p><label for="usertitle">Title:</label>
-    	<input type="text" id="usertitle" name="title"><br></p>
-    	<p><label for="useremail">E-Mail:</label>
-    	<input type="text" id="useremail" name="email"></p>
-    	<p><label for="userphone">Phone:</label>
-    	<input type="text" id="userphone" name="phone"><br></p>
+    	<p><label class='lbl_ep' for="userfirstname">First Name:</label>
+    	<input class='inp_ep' type="text" id="userfirstname" name="firstname" autofocus></p>
+    	<p><label class='lbl_ep' for="userlastname">Last Name:</label>
+    	<input class='inp_ep' type="text" id="userlastname" name="lastname"><br></p>
+    	<p><label class='lbl_ep' for="userorg" >Organization:</label>
+    	<input class='inp_ep' type="text" id="userorg" name="org"></p>
+    	<p><label class='lbl_ep' for="usertitle">Title:</label>
+    	<input class='inp_ep' type="text" id="usertitle" name="title"><br></p>
+    	<p><label class='lbl_ep' for="useremail">E-Mail:</label>
+    	<input class='inp_ep' type="text" id="useremail" name="email"></p>
+    	<p><label class='lbl_ep' for="userphone">Phone:</label>
+    	<input class='inp_ep' type="text" id="userphone" name="phone"><br></p>
     	<div id='buttonbar'>
       	  <button id="cancel" onclick="onCancel()">Cancel</button>
       	  <button id="update" onclick="onUpdateProfile()">Update</button>
     	</div> 
 	</div>
   </div>
+<!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Change Password</span>
+		</div>
+		<p id='pw_mssg'>Enter current and new password:</p>
+    	<p><label class='lbl_pw' for="currpw">Current Password:</label>
+    	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
+    	<p><label class='lbl_pw'for="newpw">New Password:</label>
+    	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
+    	<p><label class='lbl_pw'for="verifypw" >Verify Password:</label>
+    	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
+    	<div id='buttonbar'>
+      	  <button id="cancel" onclick="onCancel()">Cancel</button>
+      	  <button id="submit" onclick="onChangePW()">Change Password</button>
+    	</div> 
+	</div>
+  </div>  
 </body>
 </html>

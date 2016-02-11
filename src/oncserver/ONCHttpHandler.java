@@ -47,7 +47,6 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
-	private static final String EDIT_PROFILE_HTML = "profile.htm";
 	private static final int DEFAULT_YEAR = 2014;
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
@@ -494,7 +493,7 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	else if(requestURI.contains("/changepw"))
+    	else if(requestURI.contains("/changepw"))	//from separate page
     	{
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
@@ -551,20 +550,44 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	else if(requestURI.contains("/profile"))
+    	else if(requestURI.contains("/reqchangepw"))	//from web dialog box
     	{
-    		String response = null;
-    		try 
-    		{
-    			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), EDIT_PROFILE_HTML));
-    		}
-    		catch (IOException e) 
-    		{
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response;
+    		WebClient wc;
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		//determine if a valid request from a logged in user. If so, process the pw change
+    		if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    		{
+    			wc.updateTimestamp();
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+    			
+    			ServerUserDB userDB = ServerUserDB.getInstance();
+    			int retCode = userDB.changePassword((String) params.get("field1"), (String) params.get("field2"), wc);
+    			
+    			if(retCode == 0)
+    			{
+    				//submission successful, send the family table page back to the user
+    				String userFN = wc.getWebUser().getFirstname().equals("") ? 
+        				 wc.getWebUser().getLastname() : wc.getWebUser().getFirstname();
+    				response =  String.format("%s, your password was successfully changed!", userFN);
+    			}
+    			else if(retCode == -1)
+    			{
+    				response = "Password Change Failed: Current password incorrect";		
+    			}
+    			else
+    			{
+    				response = "Password Change Failed: User couldn't be located";
+    			}    			
+    		}
+    		else	//invalid user, return a failure message
+    			response =  "Invalid Session ID";
+    		
+    		HtmlResponse htmlresponse = new HtmlResponse(response, HTTPCode.Ok);
+    		sendHTMLResponse(t, htmlresponse);
     	}
     }
 	
@@ -895,9 +918,8 @@ public class ONCHttpHandler implements HttpHandler
 	{
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
-		Agent agt = AgentDB.getAgent(year, wc.getWebUser());
-		
-		if(agt == null)
+		Agent agt = null;
+		if(wc.getWebUser().getAgentID() == -1 || (agt=AgentDB.getAgent(year, wc.getWebUser())) == null)
 		{
 			return new FamilyResponseCode(-1, "Family Referral Rejected: Referring Agent Not Found");
 		}
@@ -1216,9 +1238,8 @@ public class ONCHttpHandler implements HttpHandler
 	{
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
-		Agent agt = AgentDB.getAgent(year, wc.getWebUser());
 		
-		if(agt == null)
+		if(wc.getWebUser().getAgentID() == -1  || AgentDB.getAgent(year, wc.getWebUser()) == null)
 		{
 			return new FamilyResponseCode(-1, "Family Referral Rejected: Referring Agent Not Found");
 		}

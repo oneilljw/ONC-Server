@@ -173,11 +173,7 @@ public class AgentDB extends ONCServerDB
 		
 		//check to see if the agent already exists by name. If so, don't create a new
 		//agent and add to the db, it they do exist return the existing agent
-		//NEED TO CHANGE HOW THE SEARCH IS DONE Nancy McMillen didn't match Nancy  McMillen
 		int index = 0;
-//		while(index < agtAL.size() && 
-//				!reqAddAgt.getAgentName().equalsIgnoreCase(agtAL.get(index).getAgentName()))		
-//			index++;
 		while(index < agtAL.size() && !agtAL.get(index).doesAgentNameMatch(reqAddAgt.getAgentName()))
 				index++;
 		
@@ -247,14 +243,79 @@ public class AgentDB extends ONCServerDB
 	{
 		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
 		List<Agent> objAL = agentDBYear.getList();
+		
+		//check each agent for agent id = user.agentID
 		int index = 0;
-		while(index < objAL.size() && objAL.get(index).getID() != user.getID())	//agent id == user id
+		while(index < objAL.size() && objAL.get(index).getID() != user.getAgentID())
 			index++;
 		
 		if(index < objAL.size())
 			return objAL.get(index);
 		else
 			return null;
+	}
+	/*******
+	 * Called to check if a new user is already an agent. If they are, simply return the agent ID.
+	 * If they aren't, the method adds them as a new agent, notifies the in-year clients and
+	 * returns the new agents ID.
+	 * @param year
+	 * @param su
+	 * @return
+	 ****************************************/
+	int checkForAgent(int year, ONCServerUser su)
+	{	
+		//get access to Client Manager instance
+		ClientManager clientMgr = ClientManager.getInstance();
+		
+		//get the agent list for the requested year
+		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
+		List<Agent> agtAL = agentDBYear.getList();
+		
+		//check each agent by agent name == user name, since new users don't have agent ID set
+		int index = 0;
+		while(index < agtAL.size() && !
+				agtAL.get(index).doesAgentNameMatch(su.getFirstname() + " " +  su.getLastname())) 
+			index++;
+		
+		if(index < agtAL.size())	//have a match by name?
+		{
+			//match found, check for updated agent contact info, make updates as 
+			//necessary and return agentID
+			Agent agent = agtAL.get(index);
+			if(!agent.getAgentOrg().equals(su.getOrg()) || !agent.getAgentTitle().equals(su.getTitle()) ||
+					!agent.getAgentEmail().equals(su.getEmail()) || !agent.getAgentPhone().equals(su.getPhone()))
+			{	
+				agent.setAgentOrg(su.getOrg());
+				agent.setAgentTitle(su.getTitle());
+				agent.setAgentEmail(su.getEmail());
+				agent.setAgentPhone(su.getPhone());
+				
+				agentDBYear.setChanged(true);	//mark the database for save
+				
+				//notify clients of updated agent
+				Gson gson = new Gson();
+				String updateMssg = "UPDATED_AGENT" + gson.toJson(agent, Agent.class);
+				clientMgr.notifyAllInYearClients(year, updateMssg);
+			}
+			
+			return agent.getID();
+		}
+		else
+		{
+			//add new user as an agent, notify in-year clients and return agent ID
+			Agent newAgent = new Agent(agentDBYear.getNextID(), su.getFirstname() + " " + su.getLastname(),
+					su.getOrg(), su.getTitle(), su.getEmail(), su.getPhone());
+			
+			agentDBYear.add(newAgent);
+			agentDBYear.setChanged(true);
+			
+			//notify clients of added agent
+			Gson gson = new Gson();
+			String updateMssg = "ADDED_AGENT" + gson.toJson(newAgent, Agent.class);
+			clientMgr.notifyAllInYearClients(year, updateMssg);
+			
+			return newAgent.getID();
+		}
 	}
 /*	
 	void exportFamilyDBToCSV(ArrayList<Agent>eAL, String path)
