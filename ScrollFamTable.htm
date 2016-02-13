@@ -3,6 +3,7 @@
 <head lang="en">
   <title>ONC Family Referral</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script>
 	var currYear;
@@ -25,8 +26,8 @@
     				+'&year=' + sessionStorage.getItem('curryear')
     				+'&famref=' + sessionStorage.getItem('famref');
     		
-    		var clientserviceli = document.getElementById('clientserviceli');
-    		clientserviceli.parentNode.removeChild(clientserviceli);
+    		var profileli = document.getElementById('profileli');
+    		profileli.parentNode.removeChild(profileli);
     	}
     	else
     	{
@@ -398,6 +399,113 @@
     	    return false;
     }
     
+    function showEditProfileDialog() 
+    {
+    	var params = "token=" + sessionStorage.getItem("token") + "&" + "callback=?";
+			
+    	$.getJSON('getuser', params, function(user)
+    	{
+    		userJson = user;
+    		if(userJson.lastname !== '')
+    		{
+    			document.getElementById('userfirstname').value = user.firstname;
+    	    	document.getElementById('userlastname').value = user.lastname;
+    	    	document.getElementById('userorg').value = user.org;
+    	    	document.getElementById('usertitle').value = user.title;
+    	    	document.getElementById('useremail').value = user.email;
+    	    	document.getElementById('userphone').value = user.phone;
+    		}
+    	});
+    }
+    
+    function onChangePW() 
+    {
+    	if(validate())
+    	{
+			var params = {}	
+			params["token"] = sessionStorage.getItem('token');
+			params["field1"] = document.getElementById('currpw').value;
+			params["field2"] = document.getElementById('newpw').value;
+    		$.post('reqchangepw', params, function(response)
+    		{
+    			console.log(response);
+    			document.getElementById('message').textContent= response;
+    		});
+    		
+    		document.getElementById('currpw').value = "";
+	    	document.getElementById('newpw').value = "";
+	    	document.getElementById('verifypw').value = "";
+    		window.location=document.getElementById('closepopup').href;
+    	}
+    }
+    
+    function onUpdateProfile()
+    {
+    	if(document.getElementById('userfirstname').value !== userJson.firstname ||
+    		document.getElementById('userlastname').value !== userJson.lastname ||
+    		 document.getElementById('userorg').value !== userJson.org ||
+    		  document.getElementById('usertitle').value !== userJson.title ||
+    		   document.getElementById('useremail').value !== userJson.email ||
+    		    document.getElementById('userphone').value !== userJson.phone)
+    	{
+    		var params = "token=" + sessionStorage.getItem("token")
+			+ "&" + "firstname=" + document.getElementById('userfirstname').value
+			+ "&" + "lastname=" + document.getElementById('userlastname').value
+			+ "&" + "org=" + document.getElementById('userorg').value
+			+ "&" + "title=" + document.getElementById('usertitle').value
+			+ "&" + "email=" + document.getElementById('useremail').value
+			+ "&" + "phone=" + document.getElementById('userphone').value
+			+ "&" + "callback=?"
+		
+			$.getJSON('updateuser', params, function(mssgJson)
+			{
+				document.getElementById('message').textContent= mssgJson.message;
+			});
+    	}
+    	else
+    	{
+    		document.getElementById('message').textContent= 'No change made to User Profile';
+    	}
+    	
+    	window.location=document.getElementById('closepopup').href;
+    }
+    
+    function onCancel()
+    {
+		window.location=document.getElementById('closepopup').href;
+    }
+	
+	function validate()
+    {
+		var mssgEl = document.getElementById("pw_mssg");
+    	var currpwEl = document.getElementById("currpw");
+        var pass1El = document.getElementById("newpw");
+        var pass2El = document.getElementById("verifypw");
+        var ok = true;
+        
+        if(currpwEl.value == "")
+        {
+        	//alert("current password field empty");
+            currpwEl.style.borderColor = "#E34234";
+            
+            mssgEl.style.color = "Red";
+            mssgEl.textContent = "Current password not provided, please try again!";
+            ok = false;
+        }
+        else if(pass1El.value !== pass2El.value)
+        {
+            //alert("New and Verify Passwords do not match");
+            pass1El.style.borderColor = "#E34234";
+            pass2El.style.borderColor = "#E34234";
+            
+            mssgEl.style.color = "Red";
+            mssgEl.textContent = "New and Verify passwords don't match, please try again!";
+            ok = false;
+        }
+
+        return ok;
+    }
+    
 	function post(path, params, method) 
 	{
 	    method = method || "post"; // Set method to post by default if not specified.
@@ -481,13 +589,14 @@
 	    <li id="homelinkli"><a id='homelink'>Home</a></li>
 	</ul>
 	<ul class='floatright'>
-		<li id='clientserviceli'><a href="">Client Service <span class="caret"></span></a>
+		<li id='profileli'><a href="#">Profile <span class="caret"></span></a>
 		  <div>
 		    <ul>
-			  <li><a id='editprofilelink' href="">Edit My Profile</a></li>
+			  <li><a href="#openModal" onclick='showEditProfileDialog()'>Edit Profile</a></li>
+			  <li><a href="#chgpwdlg">Change Password</a></li>
 		    </ul>
 		  </div>
-	    </li>
+	  </li>
 	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
 	</ul>
   </nav>
@@ -548,5 +657,52 @@
       </tbody>
 	</table>
   </div>
+  <!-- Edit Profile Dialog -->
+  <div id="openModal" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Edit Profile</span>
+		</div>
+    	<p><label class='lbl_ep' for="userfirstname">First Name:</label>
+    	<input class='inp_ep' type="text" id="userfirstname" name="firstname" autofocus></p>
+    	<p><label class='lbl_ep' for="userlastname">Last Name:</label>
+    	<input class='inp_ep' type="text" id="userlastname" name="lastname"><br></p>
+    	<p><label class='lbl_ep' for="userorg" >Organization:</label>
+    	<input class='inp_ep' type="text" id="userorg" name="org"></p>
+    	<p><label class='lbl_ep' for="usertitle">Title:</label>
+    	<input class='inp_ep' type="text" id="usertitle" name="title"><br></p>
+    	<p><label class='lbl_ep' for="useremail">E-Mail:</label>
+    	<input class='inp_ep' type="text" id="useremail" name="email"></p>
+    	<p><label class='lbl_ep' for="userphone">Phone:</label>
+    	<input class='inp_ep' type="text" id="userphone" name="phone"><br></p>
+    	<div id='buttonbar'>
+      	  <button id="cancel" onclick="onCancel()">Cancel</button>
+      	  <button id="update" onclick="onUpdateProfile()">Update</button>
+    	</div> 
+	</div>
+  </div>
+<!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Change Password</span>
+		</div>
+		<p id='pw_mssg'>Enter current and new password:</p>
+    	<p><label class='lbl_pw' for="currpw">Current Password:</label>
+    	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
+    	<p><label class='lbl_pw'for="newpw">New Password:</label>
+    	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
+    	<p><label class='lbl_pw'for="verifypw" >Verify Password:</label>
+    	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
+    	<div id='buttonbar'>
+      	  <button id="cancel" onclick="onCancel()">Cancel</button>
+      	  <button id="submit" onclick="onChangePW()">Change Password</button>
+    	</div> 
+	</div>
+  </div>  
 </body>
 </html>

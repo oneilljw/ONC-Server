@@ -157,6 +157,22 @@ public class AgentDB extends ONCServerDB
 		{
 			objAL.set(index, reqObj);
 			agentDBYear.setChanged(true);
+			
+			//notify the userDB so agent profile and user profile can stay in sync
+			//get a reference to the ServerUser data base
+			ServerUserDB userDB;
+			try 
+			{
+				userDB = ServerUserDB.getInstance();
+				userDB.processAgentUpdate(reqObj);
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			return "UPDATED_AGENT" + json;
 		}
 	}
@@ -315,6 +331,44 @@ public class AgentDB extends ONCServerDB
 			clientMgr.notifyAllInYearClients(year, updateMssg);
 			
 			return newAgent.getID();
+		}
+	}
+	
+	/*********
+	 * When a user is updated, need to keep the user profile and the agent profile in sync. This
+	 * method updates the agent profile
+	 * @param agentID
+	 */
+	void processUserUpdate(int year, ONCServerUser updatedUser)
+	{
+		//get access to Client Manager instance
+		ClientManager clientMgr = ClientManager.getInstance();
+				
+		//get the agent list for the requested year
+		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
+		List<Agent> agtAL = agentDBYear.getList();
+				
+		//check each agent by agent name == user name, since new users don't have agent ID set
+		int index = 0;
+		while(index < agtAL.size() && agtAL.get(index).getID() != updatedUser.getAgentID())
+			index++;
+				
+		if(index < agtAL.size())	//agent found? If so, update the profile
+		{
+			Agent updatedAgent = agtAL.get(index);
+			updatedAgent.setAgentName(updatedUser.getFirstname() + " " + updatedUser.getLastname());
+			updatedAgent.setAgentOrg(updatedUser.getOrg());
+			updatedAgent.setAgentTitle(updatedUser.getTitle());
+			updatedAgent.setAgentEmail(updatedUser.getEmail());
+			updatedAgent.setAgentPhone(updatedUser.getPhone());
+			
+			//mark the db for save and notify all in year clients of update
+			agentDBYear.setChanged(true);	//mark the database for save
+			
+			//notify clients of updated agent
+			Gson gson = new Gson();
+			String updateMssg = "UPDATED_AGENT" + gson.toJson(updatedAgent, Agent.class);
+			clientMgr.notifyAllInYearClients(year, updateMssg);
 		}
 	}
 /*	

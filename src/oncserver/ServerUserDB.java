@@ -9,6 +9,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
+import ourneighborschild.Agent;
 import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
@@ -93,8 +94,10 @@ public class ServerUserDB extends ONCServerDB
 			su.setPermission(updatedUser.getPermission());
 			su.setOrg(updatedUser.getOrg());
 			su.setTitle(updatedUser.getTitle());
-			su.setEmail(updatedUser.getEmail());
 			su.setPhone(updatedUser.getPhone());
+			if(!su.getEmail().equals(updatedUser.getEmail()))
+				updateUserEmail(su, updatedUser.getEmail());	//special processing on email change
+
 			if(updatedUser.changePasswordRqrd())	//check for password reset
 			{
 				su.setUserPW(USER_PASSWORD_PREFIX + updatedUser.getPermission().toString());
@@ -118,11 +121,30 @@ public class ServerUserDB extends ONCServerDB
 			
 			save(-1);	//userDB not implemented by year
 			
+			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
+			if(su.getAgentID() > -1)	//notify AgentDB of email change
+				agentDB.processUserUpdate(DBManager.getCurrentYear(), su);
+			
 			ONCUser updateduser = su.getUserFromServerUser();
 			return "UPDATED_USER" + gson.toJson(updateduser, ONCUser.class);
 		}
 		else 
 			return "UPDATE_FAILED";
+	}
+	
+	/*********************
+	 * Email addresses are stored for both agents and users. Also, some users use there email address as
+	 * their user id. Special processing is necessary when the email is updated. If the email and the user
+	 * id are the same, update both.
+	 * @param su
+	 * @param email
+	 */
+	void updateUserEmail(ONCServerUser su, String newEmailAddress)
+	{
+		if(su.getUserID().equals(su.getEmail()))  //email address is user id, so need to update that too
+			su.setUserID(newEmailAddress);
+		
+		su.setEmail(newEmailAddress);
 	}
 	
 	//update from web site
@@ -141,15 +163,73 @@ public class ServerUserDB extends ONCServerDB
 			su.setLastname((String) params.get("lastname"));
 			su.setOrg((String) params.get("org"));
 			su.setTitle((String) params.get("title"));
+			
+			if(!su.getEmail().equals((String)params.get("email")))
+				updateUserEmail(su, (String)params.get("email"));
+			
 			su.setEmail((String) params.get("email"));
 			su.setPhone((String) params.get("phone"));
 			
 			save(-1);	//userDB not implemented by year currently
 			
+			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
+			if(su.getAgentID() > -1)	//notify AgentDB of email change
+				agentDB.processUserUpdate(DBManager.getCurrentYear(), su);
+			
 			return su;
 		}
 		else
 			return null; //no change detected
+	}
+	
+	void processAgentUpdate(Agent updatedAgent)
+	{
+		//see if the agent is a user, using agent id match
+		int index=0;
+		while(index < userAL.size() && userAL.get(index).getAgentID() != updatedAgent.getID())
+			index++;
+		
+		if(index < userAL.size())
+		{
+			//User found, update the profile, paying special attention to the email address
+			ONCServerUser updatedUser = userAL.get(index);
+			
+			//deal with the agent name
+			String[] name_parts = updatedAgent.getAgentName().trim().split(" ");
+			if(name_parts.length == 0)
+			{
+				updatedUser.setFirstname("");
+				updatedUser.setLastname("");
+			}
+			else if(name_parts.length == 1)
+			{
+				updatedUser.setFirstname("");
+				updatedUser.setLastname(name_parts[0]);
+			}
+			else if(name_parts.length == 2)
+			{
+				updatedUser.setFirstname(name_parts[0]);
+				updatedUser.setLastname(name_parts[1]);
+			}
+			else
+			{
+				updatedUser.setFirstname(name_parts[0] + " " + name_parts[1]);
+				updatedUser.setLastname(name_parts[2]);
+			}
+			
+			updatedUser.setOrg(updatedAgent.getAgentOrg());
+			updatedUser.setTitle(updatedAgent.getAgentTitle());
+			updatedUser.setPhone(updatedAgent.getAgentPhone());
+			if(!updatedUser.getEmail().equals(updatedAgent.getAgentEmail()))
+				updateUserEmail(updatedUser, updatedAgent.getAgentEmail());
+			
+			//notify all clients of the change
+			ONCUser user = new ONCUser(updatedUser); //create a ONCUSer for ONCServerUser
+			Gson gson = new Gson();
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(user, ONCUser.class));
+		}
+		
 	}
 	
 	ONCServerUser find(String uid)
