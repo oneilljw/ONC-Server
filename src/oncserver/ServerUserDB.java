@@ -139,7 +139,7 @@ public class ServerUserDB extends ONCServerDB
 	 * @param su
 	 * @param email
 	 */
-	void updateUserEmail(ONCServerUser su, String newEmailAddress)
+	static void updateUserEmail(ONCServerUser su, String newEmailAddress)
 	{
 		if(su.getUserID().equals(su.getEmail()))  //email address is user id, so need to update that too
 			su.setUserID(newEmailAddress);
@@ -182,7 +182,7 @@ public class ServerUserDB extends ONCServerDB
 			return null; //no change detected
 	}
 	
-	void processAgentUpdate(Agent updatedAgent)
+	static void processAgentUpdate(Agent updatedAgent)
 	{
 		//see if the agent is a user, using agent id match
 		int index=0;

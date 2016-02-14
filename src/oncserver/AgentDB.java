@@ -27,9 +27,6 @@ public class AgentDB extends ONCServerDB
 	{
 		//create the agent data base
 		agentDB = new ArrayList<AgentDBYear>();
-		
-		//link to SeverUserDB
-		userDB = ServerUserDB.getInstance();
 						
 		//populate the agent data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -164,7 +161,7 @@ public class AgentDB extends ONCServerDB
 			
 			//notify the userDB so agent profile and user profile can stay in sync
 			//get a reference to the ServerUser data base
-			userDB.processAgentUpdate(reqObj);
+			ServerUserDB.processAgentUpdate(reqObj);
 			
 			return "UPDATED_AGENT" + json;
 		}
@@ -198,7 +195,7 @@ public class AgentDB extends ONCServerDB
 			agentDBYear.setChanged(true);
 			
 			//keep the userDB in sync from profile perspective
-			userDB.processAgentUpdate(existingAgent);
+			ServerUserDB.processAgentUpdate(existingAgent);
 			
 			return "UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class);
 		}
