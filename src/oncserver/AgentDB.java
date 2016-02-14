@@ -21,11 +21,15 @@ public class AgentDB extends ONCServerDB
 	private static final int AGENT_DB_HEADER_LENGTH = 6;
 	private static List<AgentDBYear> agentDB;
 	private static AgentDB instance = null;
+	private static ServerUserDB userDB;
 	
 	private AgentDB() throws FileNotFoundException, IOException
 	{
 		//create the agent data base
 		agentDB = new ArrayList<AgentDBYear>();
+		
+		//link to SeverUserDB
+		userDB = ServerUserDB.getInstance();
 						
 		//populate the agent data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -160,18 +164,7 @@ public class AgentDB extends ONCServerDB
 			
 			//notify the userDB so agent profile and user profile can stay in sync
 			//get a reference to the ServerUser data base
-			ServerUserDB userDB;
-			try 
-			{
-				userDB = ServerUserDB.getInstance();
-				userDB.processAgentUpdate(reqObj);
-			} catch (NumberFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			userDB.processAgentUpdate(reqObj);
 			
 			return "UPDATED_AGENT" + json;
 		}
@@ -203,6 +196,10 @@ public class AgentDB extends ONCServerDB
 			if(!reqAddAgt.getAgentEmail().trim().isEmpty()) {existingAgent.setAgentEmail(reqAddAgt.getAgentEmail().trim()); }
 			if(!reqAddAgt.getAgentPhone().trim().isEmpty()) {existingAgent.setAgentPhone(reqAddAgt.getAgentPhone().trim()); }
 			agentDBYear.setChanged(true);
+			
+			//keep the userDB in sync from profile perspective
+			userDB.processAgentUpdate(existingAgent);
+			
 			return "UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class);
 		}
 		else
