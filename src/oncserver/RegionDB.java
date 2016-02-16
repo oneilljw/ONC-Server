@@ -24,15 +24,15 @@ public class RegionDB
 	
 	private static RegionDB instance = null;
 	private static ArrayList<Region> regAL = new ArrayList<Region>();
-	private static String[] regions = {"?", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K",
-									   "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"};
+	private static String[] regions = {"?", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
+										"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
 	private ImageIcon oncIcon;
 	
 	protected RegionDB(ImageIcon appicon) throws FileNotFoundException, IOException
 	{
 		oncIcon = appicon;
 		if(regAL.size() == 0)
-			getONCRegions(System.getProperty("user.dir") +"/regions.csv");
+			getONCRegions(System.getProperty("user.dir") +"/regions_2015.csv");
 	}
 	
 	public static RegionDB getInstance(ImageIcon appicon) throws FileNotFoundException, IOException
@@ -46,7 +46,7 @@ public class RegionDB
 	String getRegions()
 	{
 		if(regions != null)
-			return "REGIONS" + "?,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W";
+			return "REGIONS" + "?,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z";
 		else
 			return "NO_REGIONS";
 	}
