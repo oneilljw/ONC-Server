@@ -1148,7 +1148,6 @@ public class ONCHttpHandler implements HttpHandler
 				an++;
 				key = "adultname" + Integer.toString(an);	//get next adult key
 			}
-			
 		}
 		
 		//successfully process meals, family, children and adults. Notify the desktop
@@ -1182,7 +1181,6 @@ public class ONCHttpHandler implements HttpHandler
 				mssg = "ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class);
 				clientMgr.notifyAllInYearClients(year, mssg);
 			}
-			
 		}
 		
 		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted",

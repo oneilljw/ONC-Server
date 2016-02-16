@@ -48,8 +48,8 @@ public class FamilyDB extends ONCServerDB
 	private static ClientManager clientMgr;
 	
 	//THIS IS A TEMPORARY HACK FOR 2015 - NEED TO HAVE ONC NUM RANGES GENERATED AUTOMATICALLY
-	int[] oncnumRegionRanges = {1000,100,124,142,234,444,454,479,514,587,619,643,650,656,662,
-								671,791,817,941,944,949,954,966,990};
+	int[] oncnumRegionRanges = {1025,100,124,142,234,444,454,479,514,587,619,643,650,656,662,
+								671,791,817,941,944,949,954,966,990,1000,1001,1002};
 	
 	private FamilyDB() throws FileNotFoundException, IOException
 	{
@@ -315,6 +315,7 @@ public class FamilyDB extends ONCServerDB
 			reg = regionDB.getRegionMatch(updatedFamily.getHouseNum(),
 											updatedFamily.getStreet(),
 											  updatedFamily.getZipCode());
+			
 			updatedFamily.setRegion(reg);
 		}
 		
@@ -369,7 +370,7 @@ public class FamilyDB extends ONCServerDB
 			//set region for family
 			int region = updateRegion(addedFam);
 			addedFam.setRegion(region);
-	
+			
 			//create the ONC number
 			String oncNum = generateONCNumber(year, region);
 			addedFam.setONCNum(oncNum);
@@ -388,7 +389,7 @@ public class FamilyDB extends ONCServerDB
 			//add to the family data base
 			fDBYear.add(addedFam);
 			fDBYear.setChanged(true);
-		
+			
 			//return the new family
 			return addedFam;
 		}

@@ -159,9 +159,8 @@
     		familyRefs = data;
     		if(familyRefs.length=== 0)
     		{
+    			famIndex=0;
     			clearPageData();
-    			document.getElementById('onc').value= "No";
-    			document.getElementById('ref').value= "Families";
     		}
     		else if(sessionStorage.getItem('famref')=== 'NNA')
     		{
@@ -170,9 +169,11 @@
     		}
     		else
     		{
-//    			getFamilyFromServer(year, sessionStorage.getItem('famref'));
     			findFamilyIndexAndGetFamily(year, sessionStorage.getItem('famref'))
-    		}	
+    		}
+    		
+    		var resultEl = document.getElementById('resultbar');
+			resultEl.textContent = "Families: " + familyRefs.length.toString();
     	});
     }
     
@@ -201,6 +202,8 @@
     			}
     		}
     		
+    		var resultEl = document.getElementById('resultbar');
+			resultEl.textContent = "Families: " + familyRefs.length.toString() + ", Families Found: " + searchRefs.length.toString();
     	});
     }
     
@@ -253,6 +256,11 @@
 			getAdultsFromServer(year, famJson.targetID);
 			getMealFromServer(year, famJson.mealID);
 			
+			if(famJson.DNSCode === '')
+				document.getElementById('faminfofs').style.backgroundColor = "#E8E8E8";
+			else
+				document.getElementById('faminfofs').style.backgroundColor = "#FF3333";
+			
 			sessionStorage.setItem("famref", id);
     	});
     }
@@ -296,6 +304,8 @@
 		
 		document.getElementById('mealtype').value = '';
 	  	document.getElementById('dietres').value = '';
+	  	
+	  	document.getElementById('faminfofs').style.backgroundColor = "#E8E8E8";
     }
     
     function getAdultsFromServer(year, targetid)
@@ -673,7 +683,10 @@
 	function onClearSearch()
 	{
 		document.getElementById('srch-prior').style.visibility = 'hidden';
-		document.getElementById('srch-next').style.visibility = 'hidden';	
+		document.getElementById('srch-next').style.visibility = 'hidden';
+		
+		var resultEl = document.getElementById('resultbar');
+		resultEl.textContent = "Families: " + familyRefs.length.toString();
 	}
 	
 	function removeOptions(selectbox)
@@ -765,27 +778,10 @@
 	}
 	table, th, td {border: 1px solid black;}
 	#searchbar {float: right;}
-	#lblonc { width: 52px; }
-	#lblref { width: 56px; }
-	#lblbatch { width: 64px; }
-	#lbldns { width: 62px; }
-	#lblhohfn { width: 114px; }
-	#lblhohln { width: 120px; }
-	#lblfamstat { width: 104px; }
-	#lbldelstat { width: 104px; }
-	#lblmealstat { width: 116px; }
-    #lbllanguage { width: 100px; }
-	#lblhomephone { width: 94px; }
-	#lblcellphone { width: 96px; }
-	#lblhousenum { width: 68px; }
-	#lblstreet { width: 140px; }
-    #lblunit { width: 64px; }
-	#lblcity { width: 138px; }
-	#lblzipcode { width: 56px; }
-	#lblagentname { width: 132px; }
-    #lblagentorg { width: 128px; }
-	#lblagenttitle { width: 140px; }
-	#lblagentphone { width: 96px; }
+	#resultbar 
+	{
+		margin-left: 20px;
+	}
 	.clearable
 	{
   		background: #fff url(http://i.stack.imgur.com/mJotv.gif) no-repeat right -10px center;
@@ -854,66 +850,63 @@
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
   <br>
-  <fieldset>
+  <fieldset id='faminfofs'>
   <legend class="legend-major">Family Information & Status</legend>
-    <label id='lblonc' for="onc">ONC #</label>
-    <label id= 'lblref' for="ref">Ref #</label>
-    <label id= 'lblbatch' for="batch">Batch #</label>
-    <label id= 'lbldns' for="dns">DNS</label>
-    <label id= 'lblhohfn' for="hohfn">First Name</label>
-    <label id= 'lblhohln' for="hohln">Last Name</label>
-    <label id= 'lblfamstat' for="famstat">Family Status</label>
-    <label id= 'lbldelstat' for="delstat">Delivery Status</label>
-    <label id= 'lblmealstat' for="mealstat">Meal Status</label>
-    <br>
-    <input id='onc' type="text" size="6" readonly>
-    <input id='ref' type="text" size="7" readonly>
-    <input id="batch" type="text" size="8" readonly>
-    <input id="dns" type="text" size="8" readonly>
-    <input id='hohfn' title="First Name" name="hohFN" type="text" size="16" readonly>
+    <label id= 'lblhohln' for="hohln">Last Name:</label>
     <input id='hohln' title="Last Name" name="hohLN" type="text" size="17" readonly>
+    <label id= 'lblhohfn' for="hohfn">First Name:</label>
+    <input id='hohfn' title="First Name" name="hohFN" type="text" size="16" readonly>
+    <label id='lblonc' for="onc">ONC #:</label>
+    <input id='onc' type="text" size="5" readonly>
+    <label id='lblref' for="ref">Ref #:</label>
+    <input id='ref' type="text" size="7" readonly>
+    <label id='lblbatch' for="batch">Batch #:</label>
+    <input id="batch" type="text" size="6" readonly>
+    <label id='lbldns' for="dns">DNS:</label>
+    <input id="dns" type="text" size="6" readonly>
+    <br>
+    <label id= 'lblfamstat' for="famstat">Family Status:</label>
     <input id='famstat' title="Family Status" type="text" size="14" readonly>
+    <label id= 'lbldelstat' for="delstat">Delivery Status:</label>
     <input id='delstat' title="Delivery Status" type="text" size="14" readonly>
+    <label id= 'lblmealstat' for="mealstat">Meal Status:</label>
     <input id='mealstat' title="Meal Status" type="text" size="20" readonly>
     <br>
-    <label id= 'lbllanguage' for="language">Language</label>
-    <label id= 'lblhomephone' for="homephone">Home Phone</label>
-    <label id= 'lblcellphone' for="cellphone">Mobile Phone</label>
-    <label id= 'lblemail' for="email">Email</label>
-    <br>
-    <input id= 'language' title="Primary language" name="language" type= "text" size="13" readonly>
+    <label id='lblhomephone' for="homephone">Home Phone:</label>
     <input id="homephone" title="Home Phone #" name="homephone" type="text" size="13" readonly>
-    <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="13" readonly>
+    <label id='lblcellphone' for="cellphone">Mobile Phone:</label>
+    <input id="cellphone" title="Cell Phone #" name="cellphone" type="text" size="13" readonly>
+    <label id='lblemail' for="email">Email:</label>
     <input id='email' title="E-mail address" name="email" type="email" size="30" readonly>
+    <label id='lbllanguage' for="language">Language:</label>
+    <input id='language' title="Primary language" name="language" type= "text" size="13" readonly>
 	<br>
-	<label id="lblhousenum" for="housenum">House #</label>
-    <label id="lblstreet" for="street">Street</label>
-    <label id='lblunit' for="unit">Unit</label>
-    <label id='lblcity' for="city">City</label>
-    <label id='lblzipcode' for="zipcode">Zip</label>
-    <label id='lbltransport' for="transport">Transportation?</label>
-    <br>
+    <label id="lblhousenum" for="housenum">House #:</label>
 	<input id="housenum"name="housenum" type="text" size="8" readonly>
+	<label id="lblstreet" for="street">Street:</label>
     <input id="street" name="street" type="text" size="20"readonly>
+    <label id='lblunit' for="unit">Unit:</label>
     <input id="unit" name="unit" type="text" size="8" readonly>
+    <label id='lblcity' for="city">City:</label>
     <input id="city" name="city" size='20'>
+    <label id='lblzipcode' for="zipcode">Zip:</label>
     <input id="zipcode" name="zipcode" size='7'>
-	<input id="transport" name="transport" type="text" size="14">
+    <label id='lbltransport' for="transport">Transportation:</label>
+	<input id="transport" name="transport" type="text" size="4">
 	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Alt Address?
   </fieldset>
   <br>
   <fieldset>
   <legend class="legend-major">Referring Agent Information</legend>
-    <label id='lblagentname' for="agentname">Name</label>
-    <label id='lblagentorg' for="agentorg">Organization</label>
-    <label id='lblagenttitle' for="agenttitle">Title</label>
-    <label id='lblagentphone' for="agentphone">Phone</label>
-    <label id='lblagentemail' for="agentemail">Email</label>
-    <br>
-	<input id="agentname" title="Agent Name" name="agentfn" type="text" size="18" readonly>
-    <input id="agentorg" title="Agent Organization" name="agentln" type="text" size="18" readonly>
-    <input id="agenttitle" title="Agent Title" name="agenttitle" type="text" size="20" readonly>
-    <input id="agentphone" title="Agent Phone" name="agentphone" type="text", size="13" readonly>
+    <label id='lblagentname' for="agentname">Name:</label>
+	<input id="agentname" title="Agent Name" name="agentfn" type="text" size="16" readonly>
+	<label id='lblagentorg' for="agentorg">Org:</label>
+    <input id="agentorg" title="Agent Organization" name="agentln" type="text" size="16" readonly>
+    <label id='lblagenttitle' for="agenttitle">Title:</label>
+    <input id="agenttitle" title="Agent Title" name="agenttitle" type="text" size="28" readonly>
+    <label id='lblagentphone' for="agentphone">Phone:</label>
+    <input id="agentphone" title="Agent Phone" name="agentphone" type="text", size="12" readonly>
+    <label id='lblagentemail' for="agentemail">Email:</label>
     <input id="agentemail" title="Agent Email" name="agentemail" type="text" size="30" readonly>
   </fieldset>
   <br>
