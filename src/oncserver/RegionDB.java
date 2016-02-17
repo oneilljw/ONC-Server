@@ -220,6 +220,16 @@ public class RegionDB
 		return index;
 	}
 	
+	static String getRegion(int regnum)
+	{
+		String region = "?";
+		
+		if(regnum > 0 && regnum < regions.length)
+			region = regions[regnum];
+		
+		return region;
+	}
+	
 	void getONCRegions(String path) throws FileNotFoundException, IOException
 	{		
     	CSVReader reader = new CSVReader(new FileReader(path));

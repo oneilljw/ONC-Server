@@ -248,6 +248,7 @@
 			document.getElementById('unit').value= famJson.UnitNum;
 			document.getElementById('city').value= famJson.City;
 			document.getElementById('zipcode').value= famJson.ZipCode;
+			document.getElementById('region').value= famJson.Region;
 			document.getElementById('transport').value= famJson.transportation;
 			document.getElementById('detail').value= famJson.details;
 			
@@ -285,6 +286,7 @@
 		document.getElementById('unit').value= '';
 		document.getElementById('city').value= '';
 		document.getElementById('zipcode').value= '';
+		document.getElementById('region').value= '';
 		document.getElementById('transport').value= '';
 		document.getElementById('detail').value= '';
 		
@@ -891,6 +893,8 @@
     <input id="city" name="city" size='20'>
     <label id='lblzipcode' for="zipcode">Zip:</label>
     <input id="zipcode" name="zipcode" size='7'>
+    <label id='lblregion' for="region">Region:</label>
+    <input id="region" name="region" size='3'>
     <label id='lbltransport' for="transport">Transportation:</label>
 	<input id="transport" name="transport" type="text" size="4">
 	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Alt Address?

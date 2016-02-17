@@ -473,8 +473,9 @@ public class FamilyDB extends ONCServerDB
 		
 		if(index<fAL.size())
 		{
-			ONCWebsiteFamilyExtended family = new ONCWebsiteFamilyExtended(fAL.get(index));
-			response = gson.toJson(family, ONCWebsiteFamilyExtended.class);
+			ONCFamily fam = fAL.get(index);
+			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,RegionDB.getRegion(fam.getRegion()));
+			response = gson.toJson(webFam, ONCWebsiteFamilyExtended.class);
 		}
 		else
 			response = "";

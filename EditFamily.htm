@@ -115,12 +115,6 @@
   			cityChanged('delcity');
   			document.getElementById('delzipcode') = deliveryAddr[4];
   		}
-  		else	//delivery address is the same
-  		{
-  			var cb = document.getElementById("checkbox");
-  			cb.checked= true;
-  			sameAddressClicked(cb);
-  		}		
   	}
   	
   	function updateMealRequest(family, meal)
@@ -132,7 +126,15 @@
 	
   	function sameAddressClicked(cb)
 	{
-		var addrInputElements = [document.getElementById('housenum'),
+		if(cb.checked == true)	//copy the address input elements to delivery address elements and verify	
+			copyAddressToDeliveryAddress();	
+		else	//clear the delivery address elements
+			clearDeliveryAddress();
+	}
+  	
+  	function copyAddressToDeliveryAddress()
+  	{
+  		var addrInputElements = [document.getElementById('housenum'),
 				                    document.getElementById('street'),
 				                    document.getElementById('unit')];
 		
@@ -146,48 +148,56 @@
 		var delSelectElements = [document.getElementById('delcity'),
 		                          document.getElementById('delzipcode')];
 		
-		if(cb.checked == true)
-		{	
-			//copy the address input elements to delivery address elements
-			for(var i=0; i<addrInputElements.length; i++)
-				delInputElements[i].value = addrInputElements[i].value;
-			
-			delSelectElements[0].value = addrSelectElements[0].value;
-			cityChanged('delcity');
-			delSelectElements[1].value = addrSelectElements[1].value;
-			
-			//set read only
-			for(var i=0; i<addrInputElements.length; i++)
-			{
-				delInputElements[i].readOnly = true;
-				addrInputElements[i].readOnly = true;
-			}
-			
-			//verify the address
-			verifyDeliveryAddress();	
-		}
-		else
-		{
-			//clear the delivery address elements
-			for(var i=0; i<delInputElements.length; i++)
-				delInputElements[i].value = "";
-			
-			delSelectElements[0].selectedIndex = 0;
-			cityChanged('delcity');
-			delSelectElements[1].selectedIndex = 0;
+		//copy the address input elements to delivery address elements
+		for(var i=0; i<addrInputElements.length; i++)
+			delInputElements[i].value = addrInputElements[i].value;
 		
-			//clear read only for delivery input elements
-			for(var i=0; i<addrInputElements.length; i++)
-			{
-				delInputElements[i].readOnly = false;
-				addrInputElements[i].readOnly = false;
-			}
-			
-			//clear background color
-			changeAddressBackground(delInputElements, '#FFFFFF')
-			changeAddressBackground(delSelectElements, '#FFFFFF')
+		delSelectElements[0].value = addrSelectElements[0].value;
+		cityChanged('delcity');
+		delSelectElements[1].value = addrSelectElements[1].value;
+		
+		//set read only
+		for(var i=0; i<addrInputElements.length; i++)
+		{
+			delInputElements[i].readOnly = true;
+			addrInputElements[i].readOnly = true;
 		}
-	}
+		
+		verifyDeliveryAddress();
+  	}
+  	
+  	function clearDeliveryAddress()
+  	{
+  		var addrInputElements = [document.getElementById('housenum'),
+				                    document.getElementById('street'),
+				                    document.getElementById('unit')];
+		                          
+		var delInputElements = [document.getElementById('delhousenum'),
+				                 document.getElementById('delstreet'),
+				                 document.getElementById('delunit')];
+		
+		var delSelectElements = [document.getElementById('delcity'),
+		                          document.getElementById('delzipcode')];
+		
+		//clear the delivery address elements
+		for(var i=0; i<delInputElements.length; i++)
+			delInputElements[i].value = "";
+		
+		delSelectElements[0].selectedIndex = 0;
+		cityChanged('delcity');
+		delSelectElements[1].selectedIndex = 0;
+	
+		//clear read only for delivery input elements
+		for(var i=0; i<addrInputElements.length; i++)
+		{
+			delInputElements[i].readOnly = false;
+			addrInputElements[i].readOnly = false;
+		}
+		
+		//clear background color
+		changeAddressBackground(delInputElements, '#FFFFFF');
+		changeAddressBackground(delSelectElements, '#FFFFFF');
+  	}
   	
   	function cityChanged(elementName)
 	{
