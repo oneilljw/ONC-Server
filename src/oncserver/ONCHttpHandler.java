@@ -467,12 +467,12 @@ public class ONCHttpHandler implements HttpHandler
     		String response = null;
     		WebClient wc; 		
        		
-//    		Set<String> keyset = params.keySet();
-//    		for(String key:keyset)
-//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+    		Set<String> keyset = params.keySet();
+    		for(String key:keyset)
+    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
     		
     		if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("token") &&
-    				params.containsKey("year") && params.containsKey("famref") &&
+    				params.containsKey("year") && params.containsKey("targetid") &&
     				(wc=clientMgr.findClient(sessionID)) != null)
     		{
     			wc.updateTimestamp();
@@ -1287,9 +1287,10 @@ public class ONCHttpHandler implements HttpHandler
 				 familyMap.get("unit").equals(familyMap.get("delunit")) &&
 				  familyMap.get("city").equals(familyMap.get("delcity")) &&
 				   familyMap.get("zipcode").equals(familyMap.get("delzipcode")))
-				   {
-					  updateFam.setSubstituteDeliveryAddress("");
-				   }
+			{
+				System.out.println(String.format("HTTPHandler.processFamilyUpdate: delAddress = homeAddress"));
+				updateFam.setSubstituteDeliveryAddress("");
+			}
 			else
 			{
 				String altAddress = familyMap.get("delhousenum") + "_" +
@@ -1297,6 +1298,9 @@ public class ONCHttpHandler implements HttpHandler
 									familyMap.get("delunit") + "_" +
 									familyMap.get("delcity") + "_" +
 									familyMap.get("delzipcode");
+				
+				System.out.println(String.format("HTTPHandler.processFamilyUpdate: altAddress= %s", altAddress));
+				
 				updateFam.setSubstituteDeliveryAddress(altAddress);
 			}
 			

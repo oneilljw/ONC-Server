@@ -64,8 +64,8 @@ public class RegionDB
 		Gson gson = new Gson();
 		Address matchAddress = gson.fromJson(addressjson, Address.class);
 		
-		String[] searchAddress = createSearchAddress(matchAddress.getStreetnum(),
-													  matchAddress.getStreetname(),
+		String[] searchAddress = createSearchAddress(matchAddress.getStreetNum(),
+													  matchAddress.getStreetName(),
 													   matchAddress.getZipCode());
 		
 		//Must have a valid street number and street name to search

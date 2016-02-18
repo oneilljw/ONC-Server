@@ -897,7 +897,21 @@
     <input id="region" name="region" size='3'>
     <label id='lbltransport' for="transport">Transportation:</label>
 	<input id="transport" name="transport" type="text" size="4">
-	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Alt Address?
+  </fieldset>
+  <br>
+  <fieldset>
+    <legend class="legend-major">Delivery Address</legend>
+    <label id="lbldelhousenum" for="delhousenum">House #:</label>
+	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onchange="verifyDeliveryAddress()" autocomplete="off" required>
+	<label id="lbldelstreet" for="delstreet">Street:</label>
+    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onchange="verifyDeliveryAddress()" autocomplete="off" required>
+    <label id="lbldelunit" for="delunit">Unit:</label>
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" onchange="verifyDeliveryAddress()" autocomplete="off">
+    <label id="lbldelcity" for="delcity">City:</label>
+    <input id="delcity" title="Delivery City" name="delcity" type= 'text' size='8'>
+    <label id="lbldelzipcode" for="delzipcode">Zip:</label>
+    <input id="delzipcode" title="Deleivery Zip Code" name="delzipcode"  type='text' size='8'>
+    <input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Different Address from Home Address?
   </fieldset>
   <br>
   <fieldset>

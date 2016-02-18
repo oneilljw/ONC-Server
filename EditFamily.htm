@@ -86,8 +86,6 @@
   		
   		//set zip code -- update select options for city first
   		cityChanged('city');
-  		console.log(document.getElementById('zipcode').value);
-  		console.log(family.ZipCode);
   		document.getElementById('zipcode').value = family.ZipCode;
   	
   		//set phone elements
@@ -113,7 +111,7 @@
   				document.getElementById(delAddrElements[i]).value = deliveryAddr[i];
   			
   			cityChanged('delcity');
-  			document.getElementById('delzipcode') = deliveryAddr[4];
+  			document.getElementById('delzipcode').value = deliveryAddr[4];
   		}
   	}
   	
