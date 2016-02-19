@@ -25,7 +25,7 @@ public class ONCWebServer
 		
 		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents", "/families", "/familystatus",
 							"/getfamily", "/references", "/getagent", "/getmeal", "/children", "/familysearch", 
-							"/adults", "/wishes", "/oncsplash", "/onclogo", "/oncstylesheet", 
+							"/adults", "/wishes", "/oncsplash", "/clearx", "/onclogo", "/oncstylesheet", 
 							"/oncdialogstylesheet", "/newfamily", "/reqchangepw",
 							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
 							"/changepw", "/startpage", "/vanilla", "/getuser", "/updateuser"};

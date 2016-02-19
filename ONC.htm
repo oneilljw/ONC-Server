@@ -251,7 +251,22 @@
 			document.getElementById('region').value= famJson.Region;
 			document.getElementById('transport').value= famJson.transportation;
 			document.getElementById('detail').value= famJson.details;
+			document.getElementById('notes').value= famJson.notes;
+			document.getElementById('delInstr').value= famJson.delInstr;
 			
+			var deliveryAddr = famJson.substituteDeliveryAddress.split('_');
+	  		var delAddrElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
+	  		if(deliveryAddr.length === delAddrElements.length)	//delivery address is different
+	  		{
+	  			for(var i=0; i<deliveryAddr.length; i++)
+	  				document.getElementById(delAddrElements[i]).value = deliveryAddr[i];
+	  		}
+	  		else	//address is the same
+	  		{
+	  			for(var i=0; i<hohAddrParts.length; i++)	
+	  				document.getElementById(delAddrElements[i]).value = hohAddrParts[i];
+	  		}
+	  			
 			getAgentFromServer(year, famJson.agentID);
 			getFamiliesChildrenFromServer(year, famJson.targetID);
 			getAdultsFromServer(year, famJson.targetID);
@@ -289,6 +304,14 @@
 		document.getElementById('region').value= '';
 		document.getElementById('transport').value= '';
 		document.getElementById('detail').value= '';
+		document.getElementById('notes').value= '';
+		document.getElementById('delInstr').value= '';
+		
+		document.getElementById('delhousenum').value = '';
+		document.getElementById('delstreet').value= '';
+		document.getElementById('delunit').value= '';
+		document.getElementById('delcity').value= '';
+		document.getElementById('delzipcode').value= '';
 		
 		document.getElementById('agentname').value= '';
 		document.getElementById('agentorg').value= '';
@@ -786,7 +809,7 @@
 	}
 	.clearable
 	{
-  		background: #fff url(http://i.stack.imgur.com/mJotv.gif) no-repeat right -10px center;
+  		background: #fff url(/clearx) no-repeat right -10px center;
   		border: 1px solid #999;
   		padding: 3px 18px 3px 4px;     /* Use the same right padding (18) in jQ! */
   		border-radius: 3px;
@@ -842,7 +865,7 @@
   	<span id='resultbar'></span>
   	<span id='searchbar'>  
   	  <label for="search">Search for:</label> 
-	  <input class='clearable' id="search" type="text" placeholder="search text <enter>">
+	  <input class='clearable' id="search" type="text" placeholder="type search text <enter>">
 	  <button id="srch-prior" onclick="onPriorSearchFamily()">Prior</button>
   	  <button id="srch-next" onclick="onNextSearchFamily()">Next</button>
     </span>
@@ -890,11 +913,11 @@
     <label id='lblunit' for="unit">Unit:</label>
     <input id="unit" name="unit" type="text" size="8" readonly>
     <label id='lblcity' for="city">City:</label>
-    <input id="city" name="city" size='20'>
+    <input id="city" name="city" size='16'>
     <label id='lblzipcode' for="zipcode">Zip:</label>
     <input id="zipcode" name="zipcode" size='7'>
     <label id='lblregion' for="region">Region:</label>
-    <input id="region" name="region" size='3'>
+    <input id="region" name="region" size='2'>
     <label id='lbltransport' for="transport">Transportation:</label>
 	<input id="transport" name="transport" type="text" size="4">
   </fieldset>
@@ -908,24 +931,23 @@
     <label id="lbldelunit" for="delunit">Unit:</label>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" onchange="verifyDeliveryAddress()" autocomplete="off">
     <label id="lbldelcity" for="delcity">City:</label>
-    <input id="delcity" title="Delivery City" name="delcity" type= 'text' size='8'>
+    <input id="delcity" title="Delivery City" name="delcity" type= 'text' size='16'>
     <label id="lbldelzipcode" for="delzipcode">Zip:</label>
     <input id="delzipcode" title="Deleivery Zip Code" name="delzipcode"  type='text' size='8'>
-    <input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Different Address from Home Address?
   </fieldset>
   <br>
   <fieldset>
-  <legend class="legend-major">Referring Agent Information</legend>
+  <legend class="legend-major">Referring Agent</legend>
     <label id='lblagentname' for="agentname">Name:</label>
 	<input id="agentname" title="Agent Name" name="agentfn" type="text" size="16" readonly>
 	<label id='lblagentorg' for="agentorg">Org:</label>
     <input id="agentorg" title="Agent Organization" name="agentln" type="text" size="16" readonly>
     <label id='lblagenttitle' for="agenttitle">Title:</label>
-    <input id="agenttitle" title="Agent Title" name="agenttitle" type="text" size="28" readonly>
+    <input id="agenttitle" title="Agent Title" name="agenttitle" type="text" size="24" readonly>
     <label id='lblagentphone' for="agentphone">Phone:</label>
     <input id="agentphone" title="Agent Phone" name="agentphone" type="text", size="12" readonly>
     <label id='lblagentemail' for="agentemail">Email:</label>
-    <input id="agentemail" title="Agent Email" name="agentemail" type="text" size="30" readonly>
+    <input id="agentemail" title="Agent Email" name="agentemail" type="text" size="28" readonly>
   </fieldset>
   <br>
   <fieldset>
@@ -962,7 +984,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="legend-major">Children's Wishes</legend>
+   <legend class="legend-major">Gift Assistance</legend>
    <select id="childfn" onchange="updateForChildSelection()"> </select>
    <label>is a</label>
    <input id='age' type='text' size='13'>
@@ -991,8 +1013,19 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="legend-major">Family Details</legend>
-	<textarea id="detail", rows="3". cols="80"></textarea>
+   <legend class="legend-major">Family Details, Notes & Instructions</legend>
+    <fieldset class='floatleft'>
+		<legend>Details</legend> 
+		<textarea id="detail" rows="4" cols="36"></textarea>  
+    </fieldset>
+    <fieldset class='floatleft'>
+		<legend>ONC Notes</legend> 
+		<textarea id="notes" rows="4" cols="36"></textarea>
+	</fieldset>
+	<fieldset class='floatleft'>	
+	<legend>Delivery Instructions</legend>
+	<textarea id="delInstr" rows="4" cols="36"></textarea>
+	</fieldset>
   </fieldset>
   <br>
 </form>

@@ -292,6 +292,10 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		sendFile(t, "image/gif", "oncsplash.gif");
     	}
+    	else if(requestURI.contains("/clearx"))
+    	{
+    		sendFile(t, "image/gif", "clear_x.gif");
+    	}
     	else if(requestURI.contains("/onclogo"))
     	{
     		sendFile(t, "image/gif", "oncsplash.gif");    	
