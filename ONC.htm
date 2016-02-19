@@ -263,6 +263,7 @@
 	  		}
 	  		else	//address is the same
 	  		{
+	  			var hohAddrParts = [famJson.HouseNum, famJson.Street, famJson.UnitNum, famJson.City, famJson.ZipCode];
 	  			for(var i=0; i<hohAddrParts.length; i++)	
 	  				document.getElementById(delAddrElements[i]).value = hohAddrParts[i];
 	  		}
