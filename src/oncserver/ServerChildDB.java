@@ -198,6 +198,32 @@ public class ServerChildDB extends ONCServerDB
 		return addedChild;
 	}
 	
+	void searchForLastName(int year, String s, List<FamilyReference> resultAL)
+    {	
+		//create the child list for the year
+		ChildDBYear childDBYear = childDB.get(year-BASE_YEAR);
+		List<ONCChild> childAL = childDBYear.getList();
+
+		int lastFamIDAdded = -1;	//prevent searching for same family id twice in a row
+    	for(ONCChild c: childAL)
+    		if(c.getFamID() != lastFamIDAdded && c.getChildLastName().toLowerCase().contains(s.toLowerCase()))
+    		{
+    			//check to see that the family hasn't already been found
+    			//if it hasn't, add it. To do this, need to get Fam Ref ID
+    			String refNum = FamilyDB.getFamilyRefNum(year, c.getFamID());
+    			int index=0;
+    			while(refNum != null && index < resultAL.size() &&
+    					!resultAL.get(index).getReferenceID().equals(refNum))
+    				index++;
+    			
+    			if(index == resultAL.size())
+    			{
+    				resultAL.add(new FamilyReference(refNum)); 
+    				lastFamIDAdded = c.getFamID();
+    			}
+    		}	
+    }
+	
 	int searchForPriorYearMatch(int year, ONCChild child)
 	{
 		PriorYearDB pyDB = null;

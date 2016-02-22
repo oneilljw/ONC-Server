@@ -159,7 +159,19 @@ public class FamilyDB extends ONCServerDB
 	    		if(s.equals(f.getONCNum()))
 	    			resultList.add(new FamilyReference(f.getODBFamilyNum()));	
 		}
-		else if((s.startsWith("ONC") || s.matches("-?\\d+(\\.\\d+)?")) && s.length() < 7)
+		else if((s.matches("-?\\d+(\\.\\d+)?")) && s.length() < 7)
+		{
+			for(ONCFamily f: oncFamAL)
+	    		if(s.equals(f.getODBFamilyNum()))
+	    			resultList.add(new FamilyReference(f.getODBFamilyNum())); 
+		}
+		else if((s.startsWith("C") && s.substring(1).matches("-?\\d+(\\.\\d+)?")) && s.length() < 7)
+		{
+			for(ONCFamily f: oncFamAL)
+	    		if(s.equals(f.getODBFamilyNum()))
+	    			resultList.add(new FamilyReference(f.getODBFamilyNum())); 
+		}
+		else if((s.startsWith("W") && s.substring(1).matches("-?\\d+(\\.\\d+)?")) && s.length() < 6)
 		{
 			for(ONCFamily f: oncFamAL)
 	    		if(s.equals(f.getODBFamilyNum()))
@@ -186,8 +198,7 @@ public class FamilyDB extends ONCServerDB
 	    			resultList.add(new FamilyReference(f.getODBFamilyNum()));
 	    	
 	    	//search the child db
-//	    	childDB.searchForLastName(s, rAL);
-			
+	    	childDB.searchForLastName(year, s, resultList);
 		}
 		
 		String response = gson.toJson(resultList, listOfFamilyReferences);
@@ -493,6 +504,19 @@ public class FamilyDB extends ONCServerDB
 		
 		if(index < fAL.size())
 			return fAL.get(index);
+		else
+			return null;
+	}
+	
+	static String getFamilyRefNum(int year, int id)	//id number set each year
+	{
+		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
+		int index = 0;	
+		while(index < fAL.size() && fAL.get(index).getID() != id)
+			index++;
+		
+		if(index < fAL.size())
+			return fAL.get(index).getODBFamilyNum();
 		else
 			return null;
 	}
