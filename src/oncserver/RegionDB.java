@@ -4,6 +4,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -28,11 +31,35 @@ public class RegionDB
 										"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
 	private ImageIcon oncIcon;
 	
+	private static List<Integer> hashIndex;
+	
 	protected RegionDB(ImageIcon appicon) throws FileNotFoundException, IOException
 	{
 		oncIcon = appicon;
 		if(regAL.size() == 0)
 			getONCRegions(System.getProperty("user.dir") +"/regions_2015.csv");
+		
+		//build hash index array. Used to quickly search the regions list. Hash is based on first character
+		//in street name. Prior to building, sort the region list alphabetically by street name , with street
+		//names that start with a digit at the top of the list
+		Collections.sort(regAL, new RegionStreetNameComparator());	//sort region list by street name
+		
+		hashIndex = new ArrayList<Integer>();
+		int index = 0;	//used to iterate the region list
+		int regionIndex = 1;	//used to iterate the regions array
+		
+		hashIndex.add(0);	//add the first row to the hash: it's the streets that start with a digit
+		while(index < regAL.size() && regionIndex < regions.length)		
+		{
+			if(regAL.get(index).getStreetName().charAt(0) == regions[regionIndex].charAt(0))
+			{
+				hashIndex.add(index++);
+				regionIndex++;
+			}
+			else
+				index++;
+		}
+		hashIndex.add(regAL.size());	//add the last index into the hash table
 	}
 	
 	public static RegionDB getInstance(ImageIcon appicon) throws FileNotFoundException, IOException
@@ -50,8 +77,6 @@ public class RegionDB
 		else
 			return "NO_REGIONS";
 	}
-	
-	
 	
 	/********************************************************************************************
 	 * An address for region match requires four parts: Street Number, Street Direction, Street Name 
@@ -184,33 +209,38 @@ public class RegionDB
 		return output;
 	}
 	
-	int searchForRegionMatch(String[] searchAddress)
+	static int searchForRegionMatch(String[] searchAddress)
 	{	
-		int ri = 0;
-		
-		while(ri < regAL.size() && !regAL.get(ri).isRegionMatch(searchAddress))
-			ri++;
+		//determine which part of the region list to search based on street name. Street names that start
+		//with a digit are first in the region list. searchAddres[2] is the street name
+		int searchIndex, endIndex;
+		if(Character.isDigit(searchAddress[2].charAt(0)))
+		{	
+			searchIndex = 0;
+			endIndex = hashIndex.get(1);
+		}
+		else
+		{
+			int index = searchAddress[2].charAt(0) - 'A' + 1;	//'A'
+			searchIndex = hashIndex.get(index);
+			endIndex = hashIndex.get(index+1);
+		}
+
+		while(searchIndex < endIndex && !regAL.get(searchIndex).isRegionMatch(searchAddress))
+			searchIndex++;
 		
 		//If match not found return region = 0, else return region
-		if(ri == regAL.size())
-			return 0;
-		else
-			return getRegionNumber(regAL.get(ri).getRegion());
+		return searchIndex == endIndex ? 0 : getRegionNumber(regAL.get(searchIndex).getRegion());
 	}
 	
 	static boolean isAddressValid(String streetNum, String streetName, String zip)
 	{
 		String[] searchAddress = createSearchAddress(streetNum, streetName, zip);
 		
-		int ri = 0;
-		while(ri < regAL.size() && !regAL.get(ri).isRegionMatch(searchAddress))
-			ri++;
-		
-		//If match not found return region = 0, else return region
-		return ri < regAL.size();		
+		return searchForRegionMatch(searchAddress) > 0;		
 	}
 	
-	int getRegionNumber(String r) //Returns 0 if r is null or empty, number corresponding to letter otherwise
+	static int getRegionNumber(String r) //Returns 0 if r is null or empty, number corresponding to letter otherwise
 	{
 		int index = 0;
 		if(r != null && !r.isEmpty())
@@ -256,4 +286,27 @@ public class RegionDB
 	
 	int getNumberOfRegions() { return regions.length; }
 	boolean isRegionValid(int region) { return region >=0 && region < regions.length; }
+	
+	private class RegionStreetNameComparator implements Comparator<Region>
+	{
+		@Override
+		public int compare(Region region1, Region region2)
+		{
+			String streetname1 = region1.getStreetName();
+			String streetname2 = region2.getStreetName();
+			
+			Integer si1 = Character.getNumericValue(streetname1.charAt(0));	//non digit returns -1
+			Integer si2 = Character.getNumericValue(streetname2.charAt(0));
+			
+			if(si1 != -1  && si2 != -1)
+				return si1.compareTo(si2);
+			
+			else if(si1 != -1 && si2 == -1)
+				return -1;
+			else if(si1 == -1 && si2 != -1)
+				return 1;
+			else
+				return streetname1.compareTo(streetname2);
+		}
+	}
 }
