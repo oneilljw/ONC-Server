@@ -148,6 +148,21 @@ public class ServerWishCatalog extends ONCServerDB
 			return "No Wish Found";
 	}
 	
+	static int findWishIDByName(int year, String wishname)
+	{
+		//get list for year
+		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
+		List<ONCWish> wishCatalog = catalogDBYear.getList();
+				
+		int index=0;
+		while(index < wishCatalog.size() &&!wishCatalog.get(index).getName().equals(wishname))
+			index++;
+				
+		if(index < wishCatalog.size())
+			return wishCatalog.get(index).getID();
+		else
+			return -1;
+	}
 
 	@Override
 	void addObject(int year, String[] nextLine)

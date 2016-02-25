@@ -273,10 +273,12 @@
 			getAdultsFromServer(year, famJson.targetID);
 			getMealFromServer(year, famJson.mealID);
 			
-			if(famJson.DNSCode === '')
-				document.getElementById('faminfofs').style.backgroundColor = "#E8E8E8";
-			else
+			if(famJson.DNSCode !== '')
 				document.getElementById('faminfofs').style.backgroundColor = "#FF3333";
+			else if(famJson.bGiftCardOnly === true)
+				document.getElementById('faminfofs').style.backgroundColor = "#00FF00";
+			else
+				document.getElementById('faminfofs').style.backgroundColor = "#E8E8E8";
 			
 			sessionStorage.setItem("famref", id);
     	});

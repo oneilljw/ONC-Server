@@ -25,7 +25,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class FamilyDB extends ONCServerDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 41;
+	private static final int FAMILYDB_HEADER_LENGTH = 42;
 	
 	private static final int FAMILY_STATUS_UNVERIFIED = 0;
 	private static final int FAMILY_STATUS_INFO_VERIFIED = 1;
@@ -36,6 +36,7 @@ public class FamilyDB extends ONCServerDB
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
+	private static final String GIFT_CARD_WISH_NAME = "Gift Card";
 	
 	private static List<FamilyDBYear> familyDB;
 	private static FamilyDB instance = null;
@@ -421,7 +422,7 @@ public class FamilyDB extends ONCServerDB
 		if(famToCheck != null)
 		{
 			//get the children to check from the family to check
-			List<ONCChild> famChildrenToCheck = childDB.getChildList(year, famToCheck.getID());
+			List<ONCChild> famChildrenToCheck = ServerChildDB.getChildList(year, famToCheck.getID());
 			
 			ONCFamily dupFamily = getDuplicateFamily(year, famToCheck, famChildrenToCheck);
 			if(dupFamily != null)
@@ -548,25 +549,70 @@ public class FamilyDB extends ONCServerDB
 			return null;
 	}
 	
-	void checkFamilyStatusOnWishStatusChange(int year, int childid)
+	void checkFamilyStatusAndGiftCardOnlyOnWishAdded(int year, int childid)
 	{
 		int famID = childDB.getChildsFamilyID(year, childid);
 		
 		ONCFamily fam = getFamily(year, famID);
 		
-	    //determine the proper family status for the family the child is in 	
+	    //determine the proper family status for the family after adding the wish
 	    int newStatus = getLowestFamilyStatus(year, famID);
+	    
+	    //determine if the families gift card only status after adding the wish
+	    boolean bNewGiftCardOnlyFamily = isGiftCardOnlyFamily(year, famID);
 	   
 	    //if family status has changed, update the data base and notify clients
-	    if(newStatus != fam.getFamilyStatus())
+	    if(newStatus != fam.getFamilyStatus() || bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
 	    {
 	    	fam.setFamilyStatus(newStatus);
+	    	fam.setGiftCardOnly(bNewGiftCardOnlyFamily);
 	    	familyDB.get(year - BASE_YEAR).setChanged(true);
 	    	
 	    	Gson gson = new Gson();
 	    	String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
 	    	clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 	    }
+	}
+	
+	boolean isGiftCardOnlyFamily(int year, int famid)
+	{
+		//set a return variable to true. If we find one instance, we'll set it to false
+		boolean bGiftCardOnlyFamily = true;
+		
+		//first, determine if gift cards are even in the catalog. If they aren't, return false as
+		//it can't be a gift card only family
+		int giftCardID = ServerWishCatalog.findWishIDByName(year, GIFT_CARD_WISH_NAME);
+		if(giftCardID == -1)
+			bGiftCardOnlyFamily = false;
+		else
+		{	
+			List<ONCChild> childList = ServerChildDB.getChildList(year, famid);	//get the children in the family
+		
+			//examine each child to see if their assigned gifts are gift cards. If gift is not
+			//assigned or not a gift card, then it's not a gift card only family
+			int childindex=0;
+			while(childindex < childList.size() && bGiftCardOnlyFamily)
+			{
+				ONCChild c = childList.get(childindex++);	//get the child
+				
+				//if all gifts aren't assigned, then not a gift card only family
+				int wn = 0;
+				while(wn < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
+					if(c.getChildWishID(wn++) == -1)
+						bGiftCardOnlyFamily = false;
+				
+				//if all are assigned, examine each gift to see if it's a gift card
+				int giftindex = 0;
+				while(giftindex < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
+				{
+					ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildWishID(giftindex++));
+					if(cw.getWishID() != giftCardID)	//gift card?
+						bGiftCardOnlyFamily = false;
+				}	
+			}
+		}
+		
+		return bGiftCardOnlyFamily;
 	}
 	
 	/*************************************************************************************************************
@@ -595,17 +641,17 @@ public class FamilyDB extends ONCServerDB
 			
 		//Check for all gifts selected
 		int lowestfamstatus = FAMILY_STATUS_GIFTS_VERIFIED;
-		for(ONCChild c:childDB.getChildList(year, famid))
+		for(ONCChild c:ServerChildDB.getChildList(year, famid))
 		{
 			for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
 			{
-				ONCChildWish cw = childwishDB.getWish(year, c.getChildWishID(wn));
+				ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildWishID(wn));
 				
 				//if cw is null, it means that the wish doesn't exist yet. If that's the case, 
 				//set the status to the lowest status possible as if the wish existed
 				WishStatus childwishstatus = WishStatus.Not_Selected;	//Lowest possible child wish status
 				if(cw != null)
-					childwishstatus = childwishDB.getWish(year, c.getChildWishID(wn)).getChildWishStatus();
+					childwishstatus = ServerChildWishDB.getWish(year, c.getChildWishID(wn)).getChildWishStatus();
 					
 				if(wishstatusmatrix[childwishstatus.statusIndex()] < lowestfamstatus)
 					lowestfamstatus = wishstatusmatrix[childwishstatus.statusIndex()];
@@ -677,7 +723,7 @@ public class FamilyDB extends ONCServerDB
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
 				"ODB Details", "Children Names", "Schools", "ODB WishList",
 				"Adopted For", "Agent ID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
-				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation"};
+				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only"};
 		
 		FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 		if(fDBYear.isUnsaved())
@@ -872,7 +918,7 @@ public class FamilyDB extends ONCServerDB
 //					dupFamily.getID(), dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
 //					addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
     		
-    		List<ONCChild> dupChildList = childDB.getChildList(year, dupFamily.getID());
+    		List<ONCChild> dupChildList = ServerChildDB.getChildList(year, dupFamily.getID());
     		
 //    		if(dupChildList == null)
 //   			System.out.println("FamilyDB.getDuplicateFamily: dupChildList is null");
@@ -920,7 +966,7 @@ public class FamilyDB extends ONCServerDB
     		while(pyFamilyIndex < pyFamilyList.size() && !bFamilyIsInPriorYear)
     		{
     			pyFamily = pyFamilyList.get(pyFamilyIndex++);
-    			List<ONCChild> pyChildList = childDB.getChildList(yearIndex, pyFamily.getID());
+    			List<ONCChild> pyChildList = ServerChildDB.getChildList(yearIndex, pyFamily.getID());
     			
     			bFamilyIsInPriorYear = areFamiliesTheSame(pyFamily, pyChildList, addedFamily, addedChildList);	
     		}

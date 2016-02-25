@@ -25,7 +25,7 @@ public class ServerChildWishDB extends ONCServerDB
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
 	private static ServerChildWishDB instance = null;
 
-	private List<ChildWishDBYear> childwishDB;
+	private static List<ChildWishDBYear> childwishDB;
 	private ServerChildDB childDB; //Reference used to update ChildWishID's 
 	private PartnerDB partnerDB;
 	
@@ -161,7 +161,7 @@ public class ServerChildWishDB extends ONCServerDB
 			e.printStackTrace();
 		}
 	
-		familyDB.checkFamilyStatusOnWishStatusChange(year, addedWish.getChildID());
+		familyDB.checkFamilyStatusAndGiftCardOnlyOnWishAdded(year, addedWish.getChildID());
 		
 		//test to see if assignee are changing, if the old wish exists	
 		if(oldWish != null && oldWish.getChildWishAssigneeID() != addedWish.getChildWishAssigneeID())
@@ -232,7 +232,7 @@ public class ServerChildWishDB extends ONCServerDB
 	 * @param wishID
 	 * @return
 	 */
-	ONCChildWish getWish(int year, int wishID)
+	static ONCChildWish getWish(int year, int wishID)
 	{
 		List<ONCChildWish> cwAL = childwishDB.get(year - BASE_YEAR).getList();	//Get the child wish AL for the year
 		

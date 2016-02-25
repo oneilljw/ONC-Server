@@ -87,12 +87,10 @@ public class ServerChildDB extends ONCServerDB
 	static HtmlResponse getChildWishesJSONP(int year, int childID, String callbackFunction)
 	{	
 		//get references to wish catalog, partner data base
-		ServerChildWishDB childWishDB = null;
 		ServerWishCatalog wishCatalog = null;
 		PartnerDB partnerDB = null;
 		try 
 		{
-			childWishDB = ServerChildWishDB.getInstance();
 			wishCatalog = ServerWishCatalog.getInstance();
 			partnerDB = PartnerDB.getInstance();
 		} 
@@ -127,7 +125,7 @@ public class ServerChildDB extends ONCServerDB
 					}
 					else		
 					{
-						ONCChildWish cw = childWishDB.getWish(year, c.getChildWishID(wn));
+						ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildWishID(wn));
 						int wishRestriction = cw.getChildWishIndicator();
 						String[] restrictions = {" ", "*", "#"};
 						String partner;
@@ -285,7 +283,7 @@ public class ServerChildDB extends ONCServerDB
 				
 				if(childWishID != -1)	//does the wish exist?
 				{
-					ONCChildWish cw = cwDB.getWish(year, childWishID);
+					ONCChildWish cw = ServerChildWishDB.getWish(year, childWishID);
 
 					//if wish has been assigned, then we have to decrement the partner
 					if(partnerDB != null && cw != null && 
@@ -386,7 +384,7 @@ public class ServerChildDB extends ONCServerDB
 		}
 	}
 	
-	ArrayList<ONCChild> getChildList(int year, int famid)
+	static List<ONCChild> getChildList(int year, int famid)
 	{
 		List<ONCChild> cAL = childDB.get(year-BASE_YEAR).getList();
 		ArrayList<ONCChild> fChildrenAL = new ArrayList<ONCChild>();

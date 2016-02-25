@@ -863,7 +863,7 @@ public class DesktopClient extends Thread
     	for(ONCChild c:childDB.getList(year))
     		for(int wn=0; wn < NUMBER_OF_WISHES_PER_CHILD; wn++)		
     			if(c.getChildWishID(wn) > -1) //Wish must have a valid ID
-    				childwishAL.add(childwishDB.getWish(year, c.getChildWishID(wn)));
+    				childwishAL.add(ServerChildWishDB.getWish(year, c.getChildWishID(wn)));
 
     	//Convert the array list to a json and return it
     	Gson gson = new Gson();
