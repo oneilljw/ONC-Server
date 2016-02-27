@@ -143,7 +143,11 @@
     	$.getJSON('agents', agentsparams, function(data)
     	{
 			//add the "Anyone" option if there is more than one agent object
-			if(data.length > 1)
+			if(data.hasOwnProperty('error'))
+	      	{
+				window.location=document.getElementById('timeoutanchor').href;
+	      	}
+			else if(data.length > 1)
 			{
 				var agtOption = document.createElement("option");
 				agtOption.text = "Anyone";
@@ -406,7 +410,11 @@
     	$.getJSON('getuser', params, function(user)
     	{
     		userJson = user;
-    		if(userJson.lastname !== '')
+    		if(userJson.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+    		else if(userJson.lastname !== '')
     		{
     			document.getElementById('userfirstname').value = user.firstname;
     	    	document.getElementById('userlastname').value = user.lastname;
@@ -505,6 +513,11 @@
 
         return ok;
     }
+	
+	function onSessionTimeout()
+	{
+		 window.location.assign('timeout');
+	}
     
 	function post(path, params, method) 
 	{
@@ -579,6 +592,7 @@
     </style>
 </head>
 <body>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
 	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child Family Referral System</span><br>
@@ -703,6 +717,19 @@
       	  <button id="submit" onclick="onChangePW()">Change Password</button>
     	</div> 
 	</div>
-  </div>  
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div id='inner'>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="submit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>
 </body>
 </html>

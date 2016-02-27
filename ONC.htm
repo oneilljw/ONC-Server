@@ -86,7 +86,11 @@
     	$.getJSON('getuser', params, function(user)
     	{
     		userJson = user;
-    		if(userJson.lastname !== '')
+    		if(userJson.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+    		else if(userJson.lastname !== '')
     		{
     			document.getElementById('userfirstname').value = user.firstname;
     	    	document.getElementById('userlastname').value = user.lastname;
@@ -108,7 +112,6 @@
 			params["field2"] = document.getElementById('newpw').value;
     		$.post('reqchangepw', params, function(response)
     		{
-    			console.log(response);
     			document.getElementById('message').textContent= response;
     		});
     		
@@ -157,7 +160,11 @@
     	$.getJSON('references', familyparams, function(data)
     	{
     		familyRefs = data;
-    		if(familyRefs.length=== 0)
+    		if(familyRefs.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+    		else if(familyRefs.length=== 0)
     		{
     			famIndex=0;
     			clearPageData();
@@ -184,7 +191,11 @@
     	$.getJSON('familysearch', searchparams, function(data)
     	{
     		searchRefs = data;
-    		if(searchRefs.length > 0)
+    		if(searchRefs.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+    		else if(searchRefs.length > 0)
     		{
     			//find the first family reference and fetch it
     			findFamilyIndexAndGetFamily(year, searchRefs[0].id)
@@ -230,57 +241,64 @@
     	$.getJSON('getfamily', familyparams, function(data)
     	{
     		famJson = data;
-    		document.getElementById('onc').value= famJson.oncNum;
-			document.getElementById('ref').value= famJson.targetID;
-			document.getElementById('batch').value= famJson.BatchNum;
-			document.getElementById('dns').value= famJson.DNSCode;
-    		document.getElementById('hohfn').value= famJson.HOHFirstName;
-			document.getElementById('hohln').value= famJson.HOHLastName;
-			document.getElementById('famstat').value= famJson.fstatus;
-			document.getElementById('delstat').value= famJson.dstatus;
-			document.getElementById('mealstat').value= famJson.mealStatus;
-			document.getElementById('language').value= famJson.Language;
-			document.getElementById('homephone').value= famJson.HomePhone;
-			document.getElementById('cellphone').value= famJson.OtherPhone;
-			document.getElementById('email').value= famJson.FamilyEmail;
-			document.getElementById('housenum').value= famJson.HouseNum;
-			document.getElementById('street').value= famJson.Street;
-			document.getElementById('unit').value= famJson.UnitNum;
-			document.getElementById('city').value= famJson.City;
-			document.getElementById('zipcode').value= famJson.ZipCode;
-			document.getElementById('region').value= famJson.Region;
-			document.getElementById('transport').value= famJson.transportation;
-			document.getElementById('detail').value= famJson.details;
-			document.getElementById('notes').value= famJson.notes;
-			document.getElementById('delInstr').value= famJson.delInstr;
+    		if(famJson.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+    		else
+    		{	
+    			document.getElementById('onc').value= famJson.oncNum;
+				document.getElementById('ref').value= famJson.targetID;
+				document.getElementById('batch').value= famJson.BatchNum;
+				document.getElementById('dns').value= famJson.DNSCode;
+    			document.getElementById('hohfn').value= famJson.HOHFirstName;
+				document.getElementById('hohln').value= famJson.HOHLastName;
+				document.getElementById('famstat').value= famJson.fstatus;
+				document.getElementById('delstat').value= famJson.dstatus;
+				document.getElementById('mealstat').value= famJson.mealStatus;
+				document.getElementById('language').value= famJson.Language;
+				document.getElementById('homephone').value= famJson.HomePhone;
+				document.getElementById('cellphone').value= famJson.OtherPhone;
+				document.getElementById('email').value= famJson.FamilyEmail;
+				document.getElementById('housenum').value= famJson.HouseNum;
+				document.getElementById('street').value= famJson.Street;
+				document.getElementById('unit').value= famJson.UnitNum;
+				document.getElementById('city').value= famJson.City;
+				document.getElementById('zipcode').value= famJson.ZipCode;
+				document.getElementById('region').value= famJson.Region;
+				document.getElementById('transport').value= famJson.transportation;
+				document.getElementById('detail').value= famJson.details;
+				document.getElementById('notes').value= famJson.notes;
+				document.getElementById('delInstr').value= famJson.delInstr;
 			
-			var deliveryAddr = famJson.substituteDeliveryAddress.split('_');
-	  		var delAddrElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
-	  		if(deliveryAddr.length === delAddrElements.length)	//delivery address is different
-	  		{
-	  			for(var i=0; i<deliveryAddr.length; i++)
-	  				document.getElementById(delAddrElements[i]).value = deliveryAddr[i];
-	  		}
-	  		else	//address is the same
-	  		{
-	  			var hohAddrParts = [famJson.HouseNum, famJson.Street, famJson.UnitNum, famJson.City, famJson.ZipCode];
-	  			for(var i=0; i<hohAddrParts.length; i++)	
-	  				document.getElementById(delAddrElements[i]).value = hohAddrParts[i];
-	  		}
+				var deliveryAddr = famJson.substituteDeliveryAddress.split('_');
+	  			var delAddrElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
+	  			if(deliveryAddr.length === delAddrElements.length)	//delivery address is different
+	  			{
+	  				for(var i=0; i<deliveryAddr.length; i++)
+	  					document.getElementById(delAddrElements[i]).value = deliveryAddr[i];
+	  			}
+	  			else	//address is the same
+	  			{
+	  				var hohAddrParts = [famJson.HouseNum, famJson.Street, famJson.UnitNum, famJson.City, famJson.ZipCode];
+	  				for(var i=0; i<hohAddrParts.length; i++)	
+	  					document.getElementById(delAddrElements[i]).value = hohAddrParts[i];
+	  			}
 	  			
-			getAgentFromServer(year, famJson.agentID);
-			getFamiliesChildrenFromServer(year, famJson.targetID);
-			getAdultsFromServer(year, famJson.targetID);
-			getMealFromServer(year, famJson.mealID);
+				getAgentFromServer(year, famJson.agentID);
+				getFamiliesChildrenFromServer(year, famJson.targetID);
+				getAdultsFromServer(year, famJson.targetID);
+				getMealFromServer(year, famJson.mealID);
 			
-			if(famJson.DNSCode !== '')
-				document.getElementById('faminfofs').style.backgroundColor = "#FF3333";
-			else if(famJson.bGiftCardOnly === true)
-				document.getElementById('faminfofs').style.backgroundColor = "#00FF00";
-			else
-				document.getElementById('faminfofs').style.backgroundColor = "#E8E8E8";
+				if(famJson.DNSCode !== '')
+					document.getElementById('faminfofs').style.backgroundColor = "#FF3333";
+				else if(famJson.bGiftCardOnly === true)
+					document.getElementById('faminfofs').style.backgroundColor = "#00FF00";
+				else
+					document.getElementById('faminfofs').style.backgroundColor = "#E8E8E8";
 			
-			sessionStorage.setItem("famref", id);
+				sessionStorage.setItem("famref", id);
+    		}
     	});
     }
     
@@ -416,7 +434,10 @@
 		$.getJSON('wishes', childwishparams, function(data)
 		{
 			wishJson = data;
-			updateWishTable(wishJson);
+			if(wishJson.hasOwnProperty('error'))
+				window.location=document.getElementById('timeoutanchor').href;
+			else
+				updateWishTable(wishJson);
 		});
     }
    
@@ -762,6 +783,11 @@
         return ok;
     }
 	
+	function onSessionTimeout()
+	{
+		 window.location.assign('timeout');
+	}
+	
 	function post(path, params, method) 
 	{
 	    method = method || "post"; // Set method to post by default if not specified.
@@ -824,6 +850,7 @@
   </style>
 </head>
 <body>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id='topbar' class="topbar">
     <img src="onclogo" height="55" width="75"/>
 	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child Data Managment System</span><br>
@@ -1078,6 +1105,19 @@
       	  <button id="submit" onclick="onChangePW()">Change Password</button>
     	</div> 
 	</div>
-  </div>  
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div id='inner'>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="submit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>    
 </body>
 </html>

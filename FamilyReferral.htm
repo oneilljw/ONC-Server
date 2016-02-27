@@ -6,6 +6,7 @@
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
   <script> 
   	var childrenJson= [];
@@ -695,13 +696,16 @@
 		{
 			//form the address url
 	        var addressparams = createAddressParams(addrElement);
-
 	        var addrresponse;
 	        $.getJSON('address', addressparams, function(data)
 	      	{
 	      		addresponse = data;
 	      		
-	      		if(addresponse.errorCode === 0)
+	      		if(addresponse.hasOwnProperty('error'))
+	      		{
+					window.location=document.getElementById('timeoutanchor').href;
+	      		}
+	      		else if(addresponse.errorCode === 0)
 	      		{
 	      			changeAddressBackground(addrElement, '#FFFFFF');
 	      			hohAddressGood = true;
@@ -744,7 +748,11 @@
 	      	{
 	      		addresponse = data;
 	      		
-	      		if(addresponse.errorCode === 0)
+	      		if(addresponse.hasOwnProperty('error'))
+	      		{
+					window.location=document.getElementById('timeoutanchor').href;
+	      		}
+	      		else if(addresponse.errorCode === 0)
 	      		{
 	      			changeAddressBackground(addrElement, '#FFFFFF');
 	      			delAddressGood = true;
@@ -833,6 +841,12 @@
 		
 		return numberGood;
 	}
+	
+	function onSessionTimeout()
+	{
+		 window.location.assign('timeout');
+	}
+	
 	function submitReferral()
 	{
 		var phoneNumbersGood= true;
@@ -876,6 +890,7 @@
   </style>
 </head>
 <body>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
     <p><span id="banner">ONC Family Assistance Referral Form</span><br>
@@ -1115,5 +1130,18 @@
   	</span>
   </div>
 </form>
+<!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div id='inner'>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="submit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>    
 </body>
 </html>   

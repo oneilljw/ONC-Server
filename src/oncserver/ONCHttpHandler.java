@@ -87,6 +87,27 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
+    	if(requestURI.equals("/timeout"))
+    	{
+    		String response = null;
+    		try {
+    			if(ONCWebServer.isWebsiteOnline())
+    			{
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
+    				response = response.replace("WELCOME_MESSAGE", "Your last session expired, please login again:");
+    			}
+    			else
+    			{
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
+    				response = response.replace("TIME_BACK_UP", ONCWebServer.getWebsiteTimeBackOnline());
+    			}
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
     	else if(requestURI.contains("/logout"))
     	{
     		if(params.containsKey("token"))
@@ -151,12 +172,21 @@ public class ONCHttpHandler implements HttpHandler
     		
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient client = clientMgr.findClient(sessionID);
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
     		
-    		HtmlResponse response = AgentDB.getAgentsJSONP(year, 
-    				client.getWebUser(), (String) params.get("callback"));
+    		if((wc=clientMgr.findClient(sessionID)) != null)	
+    		{
+    			wc.updateTimestamp();
+    			htmlResponse = AgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}	
     		
-    		sendHTMLResponse(t, response);
+    		sendHTMLResponse(t, htmlResponse);	
     	}
     	else if(requestURI.contains("/families"))
     	{
@@ -170,31 +200,67 @@ public class ONCHttpHandler implements HttpHandler
     		//update the client time stamp
     		ClientManager clientMgr = ClientManager.getInstance();
     		WebClient wc;
+    		HtmlResponse htmlResponse;
     		
     		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		{
     			wc.updateTimestamp();
+    			//get the JSON of family reference list
+    			int year = Integer.parseInt((String) params.get("year"));
     		
-    		//get the JSON of family reference list
-    		int year = Integer.parseInt((String) params.get("year"));
-    		
-    		HtmlResponse response = FamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
+    			htmlResponse = FamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
+    		sendHTMLResponse(t, htmlResponse);
     	}
     	else if(requestURI.contains("/familysearch"))
     	{
-    		HtmlResponse response = FamilyDB.searchForFamilyReferencesJSONP(
-    									Integer.parseInt((String) params.get("year")),
-    									 (String) params.get("searchstring"),
-    									  (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
+    		//update the client time stamp
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
+    		
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		{
+    			wc.updateTimestamp();
+    			//get the JSON of family reference list
+    			htmlResponse = FamilyDB.searchForFamilyReferencesJSONP(
+						Integer.parseInt((String) params.get("year")),
+						 (String) params.get("searchstring"),
+						  (String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
+    		sendHTMLResponse(t, htmlResponse);
     	}
     	else if(requestURI.contains("/getfamily"))
     	{
-    		int year = Integer.parseInt((String) params.get("year"));
-    		String targetID = (String) params.get("targetid");
+    		//update the client time stamp
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
     		
-    		HtmlResponse response = FamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		{
+    			wc.updateTimestamp();
+    			int year = Integer.parseInt((String) params.get("year"));
+        		String targetID = (String) params.get("targetid");
+        		
+        		htmlResponse = FamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
+    		sendHTMLResponse(t, htmlResponse);
     	}
     	else if(requestURI.contains("/getagent"))
     	{
@@ -206,11 +272,23 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/getuser"))
     	{
-    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
     		
-    		//client time stamp updated in .getClientJSONP method
-    		HtmlResponse response = ClientManager.getClientJSONP(sessionID, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		{
+    			wc.updateTimestamp();
+        		htmlResponse = ClientManager.getClientJSONP((String) params.get("token"), 
+        													(String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
+    		
+    		sendHTMLResponse(t, htmlResponse);
     	}
     	else if(requestURI.contains("/updateuser"))
     	{	
@@ -270,15 +348,23 @@ public class ONCHttpHandler implements HttpHandler
     		//update the client time stamp
     		ClientManager clientMgr = ClientManager.getInstance();
     		WebClient wc;
+    		HtmlResponse htmlResponse;
     		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)
+    		{	
     			wc.updateTimestamp();
+    			int year = Integer.parseInt((String) params.get("year"));
+    			int childID = Integer.parseInt((String) params.get("childid"));
     		
-    		int year = Integer.parseInt((String) params.get("year"));
-    		int childID = Integer.parseInt((String) params.get("childid"));
+    			htmlResponse = ServerChildDB.getChildWishesJSONP(year, childID, (String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
     		
-    		HtmlResponse response = ServerChildDB.getChildWishesJSONP(year, childID, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
+    		sendHTMLResponse(t, htmlResponse);
     	}
     	else if(requestURI.contains("/adults"))
     	{
@@ -352,7 +438,7 @@ public class ONCHttpHandler implements HttpHandler
     			response = verifyAddress(params);	//verify the address and send response
     		}
     		else
-    			response = invalidTokenReceived();
+    			response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
@@ -471,9 +557,9 @@ public class ONCHttpHandler implements HttpHandler
     		String response = null;
     		WebClient wc; 		
        		
-    		Set<String> keyset = params.keySet();
-    		for(String key:keyset)
-    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+//    		Set<String> keyset = params.keySet();
+//    		for(String key:keyset)
+//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
     		
     		if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("token") &&
     				params.containsKey("year") && params.containsKey("targetid") &&
@@ -853,7 +939,7 @@ public class ONCHttpHandler implements HttpHandler
 			if(ONCWebServer.isWebsiteOnline())
 			{
 				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
-				response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
+				response = response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
 			}
 			else
 			{
@@ -866,6 +952,14 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return response;
+	}
+	
+	String invalidTokenReceivedToJsonRequest(String mssg, String callback)
+	{
+		//send an error message json that will trigger a dialog box in the client
+		String json = "{\"error\":\"Your seesion expired due to inactivity\"}";
+		
+		return callback +"(" + json +")";
 	}
 
 	private String readFile( String file ) throws IOException
@@ -1292,7 +1386,6 @@ public class ONCHttpHandler implements HttpHandler
 				  familyMap.get("city").equals(familyMap.get("delcity")) &&
 				   familyMap.get("zipcode").equals(familyMap.get("delzipcode")))
 			{
-				System.out.println(String.format("HTTPHandler.processFamilyUpdate: delAddress = homeAddress"));
 				updateFam.setSubstituteDeliveryAddress("");
 			}
 			else
@@ -1302,8 +1395,6 @@ public class ONCHttpHandler implements HttpHandler
 									familyMap.get("delunit") + "_" +
 									familyMap.get("delcity") + "_" +
 									familyMap.get("delzipcode");
-				
-				System.out.println(String.format("HTTPHandler.processFamilyUpdate: altAddress= %s", altAddress));
 				
 				updateFam.setSubstituteDeliveryAddress(altAddress);
 			}
