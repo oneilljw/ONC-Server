@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import ourneighborschild.AdultGender;
 import ourneighborschild.Agent;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
@@ -1225,7 +1226,8 @@ public class ONCHttpHandler implements HttpHandler
 			}
 			
 			//create the other adults in the family
-			String adultName, adultGender;
+			String adultName;
+			AdultGender adultGender;
 			
 			int an = 0;
 			key = "adultname" + Integer.toString(an);
@@ -1235,7 +1237,7 @@ public class ONCHttpHandler implements HttpHandler
 			while(params.containsKey(key))
 			{
 				adultName = (String) params.get(key);
-				adultGender = (String) params.get("adultgender" + Integer.toString(an));
+				adultGender = AdultGender.valueOf((String) params.get("adultgender" + Integer.toString(an)));
 				
 				if(!adultName.isEmpty())
 				{

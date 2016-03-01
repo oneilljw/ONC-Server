@@ -95,7 +95,7 @@ public class ServerAdultDB extends ONCServerDB
 		adultDBYear.add(addedAdult);
 		adultDBYear.setChanged(true);
 							
-		return "ADULT_ADDED" + gson.toJson(addedAdult, ONCAdult.class);
+		return "ADDED_ADULT" + gson.toJson(addedAdult, ONCAdult.class);
 	}
 	
 	ONCAdult add(int year, ONCAdult addedAdult)
