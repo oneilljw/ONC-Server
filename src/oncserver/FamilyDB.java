@@ -346,6 +346,10 @@ public class FamilyDB extends ONCServerDB
 			//get the family data base for the correct year
 			FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 			
+			//check to see if the reference number is provided, if not, generate one
+			if(addedFam.getODBFamilyNum().equals("NNA"))
+				addedFam.setODBFamilyNum(generateReferenceNumber());
+			
 			//check to see if family is already in the data base, if so, mark it as
 			//a duplicate family. 
 			
