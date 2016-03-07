@@ -44,7 +44,7 @@ public class FamilyDB extends ONCServerDB
 //	private static List<int[]> oncNumRanges;
 	
 	private static ServerChildDB childDB;
-	private static ServerChildWishDB childwishDB;
+//	private static ServerChildWishDB childwishDB;
 	
 	private static ClientManager clientMgr;
 	
@@ -82,7 +82,7 @@ public class FamilyDB extends ONCServerDB
 		
 		//set references to associated data bases
 		childDB = ServerChildDB.getInstance();
-		childwishDB = ServerChildWishDB.getInstance();
+//		childwishDB = ServerChildWishDB.getInstance();
 		
 		clientMgr = ClientManager.getInstance();
 	}
@@ -825,12 +825,20 @@ public class FamilyDB extends ONCServerDB
 	@Override
 	void createNewYear(int newYear)
 	{
+		//test to see if prior year existed. If it did, need to add to the ApartmentDB the families who's
+		//addresses had units.
+		if(!familyDB.isEmpty())
+		{
+			FamilyDBYear fDBYear = familyDB.get(familyDB.size()-1);	//prior year familyDBYear
+			ApartmentDB.addPriorYearApartments(fDBYear.getList());	//prior year list of ONCFamily
+		}
+		
 		//create a new family data base year for the year provided in the newYear parameter
 		//The family db year is initially empty prior to the import of families, so all we
 		//do here is create a new FamilyDBYear for the newYear and save it.
 		FamilyDBYear famDBYear = new FamilyDBYear(newYear);
 		familyDB.add(famDBYear);
-		famDBYear.setChanged(true);	//mark this db for persistent saving on the next save event	
+		famDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 	
 	 /******************************************************************************************

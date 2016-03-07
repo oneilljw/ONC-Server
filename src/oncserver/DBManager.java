@@ -64,6 +64,7 @@ public class DBManager
 		{
 			ServerUserDB.getInstance();	//saved whenever its changed
 			RegionDB.getInstance(appicon);	//never changed
+			ApartmentDB.getInstance(); //never changed
 			dbAutosaveList.add(GlobalVariableDB.getInstance());
 			dbAutosaveList.add(PartnerDB.getInstance());
 			dbAutosaveList.add(ServerChildDB.getInstance());
