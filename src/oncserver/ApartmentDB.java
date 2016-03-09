@@ -73,9 +73,14 @@ public class ApartmentDB
 	
 	static boolean isAddressAnApartment(String streetNum, String streetName)
 	{
+		//break streetName into name and type
+		String[] streetNameAndType = getStreetNameAndType(streetName);
+		
 		//determine which part of the apartment list to search based on street name. Street names that start
 		//with a digit are first in the apartment list.
 		int searchIndex, endIndex;
+		System.out.println(String.format("ApartmentDB.isAddressAnApartment: Checking %s %s %s", 
+								streetNum, streetNameAndType[0], streetNameAndType[1]));
 		if(Character.isDigit(streetName.charAt(0)))
 		{	
 			searchIndex = 0;
@@ -88,12 +93,12 @@ public class ApartmentDB
 			endIndex = hashIndex.get(index+1);
 		}
 
-		while(searchIndex < endIndex && !(aptList.get(searchIndex).getStreetname().equalsIgnoreCase(streetName) &&
+		while(searchIndex < endIndex && !(aptList.get(searchIndex).getStreetname().equalsIgnoreCase(streetNameAndType[0]) &&
 										  aptList.get(searchIndex).getHousenum().equals(streetNum)))
 			searchIndex++;
 				
 		//If match not found return false, else return true
-		return searchIndex == endIndex;	
+		return searchIndex != endIndex;	
 	}
 	
 	void readApartmentDBFromFile(String path) throws FileNotFoundException, IOException
@@ -127,21 +132,26 @@ public class ApartmentDB
 		{
 			//see if the address is has a unit and  already in the data base
 			//if they aren't in the database add them.
-			String[] nameAndType = getStreetNameAndType(f.getStreet());
-			if(!f.getUnitNum().isEmpty() && !isAddressAnApartment(f.getHouseNum(), nameAndType[0]))
+			if(f.getUnitNum().trim().length() > 0)
 			{
-				Apartment newApt = new Apartment(f.getHouseNum(), nameAndType[0], nameAndType[1], 
+				//it had a unit number in prior year, so need to check to see if it's in the
+				//apartment list already.		
+				if(!isAddressAnApartment(f.getHouseNum(), f.getStreet()))
+				{
+					//ots not in the list, we need to add it
+					String[] nameAndType = getStreetNameAndType(f.getStreet());
+					Apartment newApt = new Apartment(f.getHouseNum(), nameAndType[0], nameAndType[1], 
 						f.getUnitNum(), f.getCity(), f.getZipCode());
 				
-				aptList.add(newApt);
-				
-				System.out.println(String.format("Added apartment at %s %s", newApt.getHousenum(), newApt.getStreetname()));
-				
-				Collections.sort(aptList, new ApartmentComparator());	//sort region list by street name
-				createHashTable();
-				save();
+					aptList.add(newApt);
+			
+					Collections.sort(aptList, new ApartmentComparator());	//sort region list by street name
+					createHashTable();
+				}
 			}
 		}
+		
+		save();
 	}
 	
 	static void save()
@@ -178,9 +188,9 @@ public class ApartmentDB
 		if(streetParts.length > 1)	//must have at least two parts - name and type, else return the input
 		{
 			int partsIndex = 1;
-			StringBuilder buff = new StringBuilder(streetParts[0]);
+			StringBuilder buff = new StringBuilder(streetParts[0].trim());
 			while(partsIndex < streetParts.length-1)
-				buff.append(" " + streetParts[partsIndex++]);
+				buff.append(" " + streetParts[partsIndex++].trim());
 			
 			result[0] = buff.toString();
 			result[1] = streetParts[partsIndex];

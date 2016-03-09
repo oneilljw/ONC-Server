@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import ourneighborschild.AddressValidation;
 import ourneighborschild.AdultGender;
 import ourneighborschild.Agent;
 import ourneighborschild.MealStatus;
@@ -994,12 +995,9 @@ public class ONCHttpHandler implements HttpHandler
 		boolean bAddressValid  = RegionDB.isAddressValid(addressMap.get("housenum"), addressMap.get("street"), addressMap.get("zipcode"));
 		int errorCode = bAddressValid ? 0 : 1;
 		
-		int priorYear = Integer.parseInt((String)params.get("prioryear"));
-		
-		boolean bUnitMissing = addressMap.get("unit").isEmpty() && FamilyDB.shouldAddressHaveUnit(priorYear,
-														addressMap.get("housenum"),
-														addressMap.get("street"),
-														addressMap.get("zipcode"));
+		//check that a unit might be missing. If a unit is already provided, no need to perform the check.
+		boolean bUnitMissing = addressMap.get("unit").trim().isEmpty() && 
+							ApartmentDB.isAddressAnApartment(addressMap.get("housenum"), addressMap.get("street"));
 		
 		if(bUnitMissing)
 			errorCode += 2;
