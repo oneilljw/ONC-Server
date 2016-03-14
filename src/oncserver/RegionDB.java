@@ -87,22 +87,22 @@ public class RegionDB
 	String getRegionMatch(String addressjson)
 	{
 		Gson gson = new Gson();
-		Address matchAddress = gson.fromJson(addressjson, Address.class);
+		Address searchAddress = gson.fromJson(addressjson, Address.class);
 		
-		String[] searchAddress = createSearchAddress(matchAddress.getStreetNum(),
-													  matchAddress.getStreetName(),
-													   matchAddress.getZipCode());
+//		String[] searchAddress = createSearchAddress(matchAddress.getStreetNum(),
+//													  matchAddress.getStreetName(),
+//													   matchAddress.getZipCode());
 		
 		//Must have a valid street number and street name to search
-		if(searchAddress[0].isEmpty() || searchAddress[2].isEmpty())
+		if(searchAddress.getStreetNum().isEmpty() || searchAddress.getStreetName().isEmpty())
 			return "NO_MATCH" + Integer.toString(0);
 		else	
 			return "MATCH" + Integer.toString(searchForRegionMatch(searchAddress));		
 	}
-	
-	int getRegionMatch(String streetnum, String streetname, String zipcode)
+/*	
+	int getRegionMatch(Address matchAddress)
 	{
-		return searchForRegionMatch(createSearchAddress(streetnum, streetname, zipcode));
+		return searchForRegionMatch(matchAddress);
 	}
 	
 	static String[] createSearchAddress(String streetnum, String streetname, String zipcode)
@@ -123,7 +123,7 @@ public class RegionDB
 		searchAddress[0] = step1[0];	//Street Number
 		searchAddress[1] = step2[0];	//Street Direction
 		searchAddress[2] = step3[0];	//Street Name
-		searchAddress[3] = step3[1];	//Street Suffix
+		searchAddress[3] = step3[1];	//Street Type
 		searchAddress[4] = zipcode;		//zip code
 		
 		if(searchAddress[0].isEmpty())	//Street number may not be contained in street name
@@ -141,6 +141,7 @@ public class RegionDB
 	 * return a two element string array with the leading digits as element 1 and the remainder
 	 * of the string past the blank space as element 2. If there are no leading digits, element 1
 	 ***********************************************************************************/
+/*	
 	static String[] separateLeadingDigits(String src)
 	{
 		String[] output = {"",""};
@@ -167,7 +168,7 @@ public class RegionDB
 
 		return output;		
 	}
-	
+*/	
 	/*********************************************************************************
 	 * This method takes a string and separates the street direction. If the first character
 	 * is a N or a S and and the second character is a period or a blank space, a direction
@@ -175,7 +176,9 @@ public class RegionDB
 	 * character as element 0 and the remainder of the string as element 1. If a street
 	 * direction is not present, element 0 will be empty and element 1 will contain the 
 	 * original street parameter
+
 	 ***********************************************************************************/
+/*	
 	static String[] separateStreetDirection(String street)
 	{
 		String[] output = new String[2];
@@ -194,7 +197,8 @@ public class RegionDB
 	
 		return output;
 	}
-	
+*/	
+/*	
 	static String[] separateStreetSuffix(String streetname)
 	{
 		StringBuffer buf = new StringBuffer("");
@@ -208,20 +212,20 @@ public class RegionDB
 		String[] output = {buf.toString().trim(), stnameparts[index].trim()};
 		return output;
 	}
-	
-	static int searchForRegionMatch(String[] searchAddress)
+*/	
+	static int searchForRegionMatch(Address searchAddress)
 	{	
 		//determine which part of the region list to search based on street name. Street names that start
 		//with a digit are first in the region list. searchAddres[2] is the street name
 		int searchIndex, endIndex;
-		if(Character.isDigit(searchAddress[2].charAt(0)))
+		if(Character.isDigit(searchAddress.getStreetName().charAt(0)))
 		{	
 			searchIndex = 0;
 			endIndex = hashIndex.get(1);
 		}
 		else
 		{
-			int index = searchAddress[2].charAt(0) - 'A' + 1;	//'A'
+			int index = searchAddress.getStreetName().charAt(0) - 'A' + 1;	//'A'
 			searchIndex = hashIndex.get(index);
 			endIndex = hashIndex.get(index+1);
 		}
@@ -233,11 +237,9 @@ public class RegionDB
 		return searchIndex == endIndex ? 0 : getRegionNumber(regAL.get(searchIndex).getRegion());
 	}
 	
-	static boolean isAddressValid(String streetNum, String streetName, String zip)
+	static boolean isAddressValid(Address chkAddress)
 	{
-		String[] searchAddress = createSearchAddress(streetNum, streetName, zip);
-		
-		return searchForRegionMatch(searchAddress) > 0;		
+		return searchForRegionMatch(chkAddress) > 0;		
 	}
 	
 	static int getRegionNumber(String r) //Returns 0 if r is null or empty, number corresponding to letter otherwise

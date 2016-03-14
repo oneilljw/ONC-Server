@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import ourneighborschild.Address;
 import ourneighborschild.AddressValidation;
 import ourneighborschild.AdultGender;
 import ourneighborschild.Agent;
@@ -986,18 +987,22 @@ public class ONCHttpHandler implements HttpHandler
 		String callback = (String) params.get("callback");
 		
 		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode"};
-		
 		Map<String, String> addressMap = createMap(params, addressKeys);
 		
 //		for(String key:addressMap.keySet())
-//			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));	
+//			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));
+		
+		Address chkAddress = new Address(addressMap.get("housenum"), addressMap.get("street"),
+								addressMap.get("unit"), addressMap.get("city"), addressMap.get("zipcode"));
+		
+		//diagnostic print
+//		System.out.println(chkAddress.getPrintableAddress());
 
-		boolean bAddressValid  = RegionDB.isAddressValid(addressMap.get("housenum"), addressMap.get("street"), addressMap.get("zipcode"));
+		boolean bAddressValid  = RegionDB.isAddressValid(chkAddress);
 		int errorCode = bAddressValid ? 0 : 1;
 		
 		//check that a unit might be missing. If a unit is already provided, no need to perform the check.
-		boolean bUnitMissing = addressMap.get("unit").trim().isEmpty() && 
-							ApartmentDB.isAddressAnApartment(addressMap.get("housenum"), addressMap.get("street"));
+		boolean bUnitMissing = addressMap.get("unit").trim().isEmpty() && ApartmentDB.isAddressAnApartment(chkAddress);
 		
 		if(bUnitMissing)
 			errorCode += 2;
@@ -1546,7 +1551,14 @@ public class ONCHttpHandler implements HttpHandler
 			&& params.containsKey("street") && (streetName = (String) params.get("street")) != null 
 			 && params.containsKey("zipcode") && (zipCode = (String) params.get("zipcode")) != null)
 		{
-			bAddressGood = RegionDB.isAddressValid(houseNum, streetName, zipCode);
+			//dont need unit and city in Address to check region validity
+			Address chkAddress = new Address(houseNum, streetName, "", "", zipCode);
+			//diagnostic print
+			String postDir = chkAddress.getStreetPostDir().isEmpty() ? "" : "-" + chkAddress.getStreetPostDir();
+				String direction = chkAddress.getStreetDir().isEmpty() ? "" : chkAddress.getStreetDir() + ".";
+				System.out.println(String.format("%s%s %s%s %s %s %s %s",chkAddress.getStreetNum(), postDir, direction, 
+						chkAddress.getStreetName(), chkAddress.getStreetType(), chkAddress.getUnit(), chkAddress.getCity(), chkAddress.getZipCode()));
+			bAddressGood = RegionDB.isAddressValid(chkAddress);
 		}
 		
 		return bAddressGood;
@@ -1560,7 +1572,8 @@ public class ONCHttpHandler implements HttpHandler
 			&& params.containsKey("delstreet") && (streetName = (String) params.get("delstreet")) != null
 			 && params.containsKey("delzipcode") && (zipCode = (String) params.get("delzipcode")) != null)
 		{
-			bAddressGood = RegionDB.isAddressValid(houseNum, streetName, zipCode);
+			//don't need unit or city to check region validity
+			bAddressGood = RegionDB.isAddressValid(new Address(houseNum, streetName, "", "", zipCode));
 		}
 		
 		return bAddressGood;

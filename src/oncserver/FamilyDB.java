@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import ourneighborschild.Address;
 import ourneighborschild.MealStatus;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
@@ -324,9 +325,9 @@ public class FamilyDB extends ONCServerDB
 		
 		if(regionDB != null)
 		{
-			reg = regionDB.getRegionMatch(updatedFamily.getHouseNum(),
-											updatedFamily.getStreet(),
-											  updatedFamily.getZipCode());
+			reg = RegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
+											updatedFamily.getStreet(), updatedFamily.getUnitNum(),
+											  updatedFamily.getCity(), updatedFamily.getZipCode()));
 			
 			updatedFamily.setRegion(reg);
 		}

@@ -12,27 +12,28 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import ourneighborschild.Address;
 import ourneighborschild.ONCFamily;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
 public class ApartmentDB 
 {
-	private static final int APARTMENTDB_HEADER_LENGTH = 6;
+	private static final int APARTMENTDB_HEADER_LENGTH = 9;
 	
 	private static ApartmentDB instance = null;
-	private static List<Apartment> aptList;
+	private static List<Address> aptList;
 	private static List<Integer> hashIndex;
 	private static char[] streetLetter = {'?','A','B','C','D','E','F','G','H','I','J','K','L','M',
 										 'N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
 
 	public ApartmentDB() throws FileNotFoundException, IOException
 	{
-		aptList = new ArrayList<Apartment>();
+		aptList = new ArrayList<Address>();
 		if(aptList.size() == 0)
 		{
 			readApartmentDBFromFile(System.getProperty("user.dir") +"/ApartmentDB.csv");
-			Collections.sort(aptList, new ApartmentComparator());	//sort region list by street name
+			Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
 			createHashTable();
 		}
 	}
@@ -48,8 +49,7 @@ public class ApartmentDB
 	static void createHashTable()
 	{
 		//build hash index array. Used to quickly search the regions list. Hash is based on first character
-		//in street name. Prior to building, sort the region list alphabetically by street name , with street
-		//names that start with a digit at the top of the list			
+		//in street name.			
 		hashIndex = new ArrayList<Integer>();
 		int letterIndex = 1;	//used to iterate the regions array
 						
@@ -58,7 +58,7 @@ public class ApartmentDB
 		{
 			//find street that starts with the current street letter
 			int index = 0;
-			while(index < aptList.size() && aptList.get(index).getStreetname().charAt(0) != streetLetter[letterIndex])
+			while(index < aptList.size() && aptList.get(index).getStreetName().charAt(0) != streetLetter[letterIndex])
 				index++;
 			
 			if(index < aptList.size())	//first street found
@@ -71,30 +71,25 @@ public class ApartmentDB
 		hashIndex.add(aptList.size());	//add the last index into the hash table
 	}
 	
-	static boolean isAddressAnApartment(String streetNum, String streetName)
+	static boolean isAddressAnApartment(Address checkAddress)
 	{
-		//break streetName into name and type
-		String[] streetNameAndType = getStreetNameAndType(streetName);
-		
 		//determine which part of the apartment list to search based on street name. Street names that start
 		//with a digit are first in the apartment list.
 		int searchIndex, endIndex;
-		System.out.println(String.format("ApartmentDB.isAddressAnApartment: Checking %s %s %s", 
-								streetNum, streetNameAndType[0], streetNameAndType[1]));
-		if(Character.isDigit(streetName.charAt(0)))
+		if(Character.isDigit(checkAddress.getStreetName().charAt(0)))
 		{	
 			searchIndex = 0;
 			endIndex = hashIndex.get(1);
 		}
 		else
 		{
-			int index = streetName.toUpperCase().charAt(0) - 'A' + 1;	//'A'
+			int index = checkAddress.getStreetName().toUpperCase().charAt(0) - 'A' + 1;	//'A'
 			searchIndex = hashIndex.get(index);
 			endIndex = hashIndex.get(index+1);
 		}
 
-		while(searchIndex < endIndex && !(aptList.get(searchIndex).getStreetname().equalsIgnoreCase(streetNameAndType[0]) &&
-										  aptList.get(searchIndex).getHousenum().equals(streetNum)))
+		while(searchIndex < endIndex && !(aptList.get(searchIndex).getStreetName().equalsIgnoreCase(checkAddress.getStreetName()) &&
+										  aptList.get(searchIndex).getStreetNum().equals(checkAddress.getStreetNum())))
 			searchIndex++;
 				
 		//If match not found return false, else return true
@@ -112,7 +107,7 @@ public class ApartmentDB
     		if(header.length == APARTMENTDB_HEADER_LENGTH)
     		{
     			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of values from the line
-    				aptList.add(new Apartment(nextLine));
+    				aptList.add(new Address(nextLine));
     		}
     		else
     			JOptionPane.showMessageDialog(null, "ApartmentDB file corrupted, header length = " + Integer.toString(header.length), 
@@ -130,22 +125,20 @@ public class ApartmentDB
 		//add the prior year addresses that had units that weren't already in the db
 		for(ONCFamily f:famList)
 		{
-			//see if the address is has a unit and  already in the data base
+			//see if the family was served and address had a unit and  already in the data base
 			//if they aren't in the database add them.
-			if(f.getUnitNum().trim().length() > 0)
+			if(f.getDNSCode().isEmpty() && f.getUnitNum().trim().length() > 0)
 			{
-				//it had a unit number in prior year, so need to check to see if it's in the
-				//apartment list already.		
-				if(!isAddressAnApartment(f.getHouseNum(), f.getStreet()))
-				{
-					//ots not in the list, we need to add it
-					String[] nameAndType = getStreetNameAndType(f.getStreet());
-					Apartment newApt = new Apartment(f.getHouseNum(), nameAndType[0], nameAndType[1], 
-						f.getUnitNum(), f.getCity(), f.getZipCode());
+				//family was served and had a unit number in prior year, so need to check to see if it's in the
+				//apartment list already. Convert family address into an Address Object
+				Address famAddress = new Address(f.getHouseNum(), f.getStreet(), f.getUnitNum(), f.getCity(), f.getZipCode());
 				
-					aptList.add(newApt);
+				if(!isAddressAnApartment(famAddress))
+				{
+					//its not in the list, we need to add it
+					aptList.add(famAddress);
 			
-					Collections.sort(aptList, new ApartmentComparator());	//sort region list by street name
+					Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
 					createHashTable();
 				}
 			}
@@ -156,7 +149,8 @@ public class ApartmentDB
 	
 	static void save()
 	{
-		String[] header = {"House #", "Street Name", "Street Type", "Unit #", "City", "Zip Code"};
+		String[] header = {"House #", "Suffix", "Post Dir", "Direction", "Street Name", "Street Type", 
+							"Unit #", "City", "Zip Code"};
 		
 		String path = System.getProperty("user.dir") + "/ApartmentDB.csv";
 		File oncwritefile = new File(path);
@@ -166,7 +160,7 @@ public class ApartmentDB
 	    	CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
 	    	writer.writeNext(header);
 	    	
-	    	for(Apartment a: aptList)
+	    	for(Address a: aptList)
 	    		writer.writeNext(a.getExportRow());	//Write server Apartment row
 	    	
 	    	writer.close();
@@ -176,46 +170,12 @@ public class ApartmentDB
 	    	System.err.format("IO Exception: %s%n", x);
 	    }
 	}
-	
-	static String[] getStreetNameAndType(String streetName)
-	{
-		String[] result = new String[2];
-		result[0] = streetName;
-		result[1] = "";
-		
-		//separate the street name and street type. Street type is always at the end
-		String[] streetParts = streetName.split(" ");
-		if(streetParts.length > 1)	//must have at least two parts - name and type, else return the input
-		{
-			int partsIndex = 1;
-			StringBuilder buff = new StringBuilder(streetParts[0].trim());
-			while(partsIndex < streetParts.length-1)
-				buff.append(" " + streetParts[partsIndex++].trim());
-			
-			result[0] = buff.toString();
-			result[1] = streetParts[partsIndex];
-		}
-			
-		return result;
-	}
-	
-	private static class ApartmentComparator implements Comparator<Apartment>
+	private static class AddressStreetNameComparator implements Comparator<Address>
 	{
 		@Override
-		public int compare(Apartment apt1, Apartment apt2)
+		public int compare(Address a1, Address a2)
 		{
-			Integer si1 = Character.getNumericValue(apt1.getStreetname().charAt(0));	//non digit returns -1
-			Integer si2 = Character.getNumericValue(apt2.getStreetname().charAt(0));
-			
-			if(si1 != -1  && si2 != -1)
-				return si1.compareTo(si2);
-			else if(si1 != -1 && si2 == -1)
-				return -1;
-			else if(si1 == -1 && si2 != -1)
-				return 1;
-			else
-				return apt1.getStreetname().compareTo(apt2.getStreetname());
+			return a1.getStreetName().compareTo(a2.getStreetName());
 		}
 	}
-
 }

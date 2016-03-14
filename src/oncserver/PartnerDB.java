@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ourneighborschild.Address;
 import ourneighborschild.DataChange;
 import ourneighborschild.Organization;
 
@@ -172,9 +173,9 @@ public class PartnerDB extends ONCServerDB
 		
 		if(regionDB != null)
 		{
-			reg = regionDB.getRegionMatch(Integer.toString(updatedOrg.getStreetnum()),
-											updatedOrg.getStreetname(),
-											 updatedOrg.getZipcode());
+			reg = RegionDB.searchForRegionMatch(new Address(Integer.toString(updatedOrg.getStreetnum()),
+											updatedOrg.getStreetname(), "",  updatedOrg.getCity(),
+											 updatedOrg.getZipcode()));
 			updatedOrg.setRegion(reg);
 		}
 		
@@ -206,9 +207,9 @@ public class PartnerDB extends ONCServerDB
 		}
 		
 		if(regionDB != null)
-			addedPartner.setRegion(regionDB.getRegionMatch(Integer.toString(addedPartner.getStreetnum()), 
-															addedPartner.getStreetname(),
-															addedPartner.getZipcode()));
+			addedPartner.setRegion(RegionDB.searchForRegionMatch(new Address(Integer.toString(addedPartner.getStreetnum()), 
+															addedPartner.getStreetname(), "", addedPartner.getCity(),
+															addedPartner.getZipcode())));
 		else
 			addedPartner.setRegion(0);
 		

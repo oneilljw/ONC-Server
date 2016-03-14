@@ -13,8 +13,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
+import ourneighborschild.Address;
+import ourneighborschild.AddressValidation;
 import ourneighborschild.Login;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
@@ -872,5 +875,28 @@ public class DesktopClient extends Thread
     	return gson.toJson(childwishAL, listtype);
     }
     
-    int getYear() { return year; } 
+    int getYear() { return year; }
+    
+    String verifyAddress(String jsonAddress)
+	{
+    	Gson gson = new Gson();
+    	Address address = gson.fromJson(jsonAddress, Address.class);
+
+		boolean bAddressValid  = RegionDB.isAddressValid(address);
+		int errorCode = bAddressValid ? 0 : 1;
+		
+		//check that a unit might be missing. If a unit is already provided, no need to perform the check.
+		boolean bUnitMissing = address.getUnit().trim().isEmpty() && 
+							ApartmentDB.isAddressAnApartment(address);
+		
+		if(bUnitMissing)
+			errorCode += 2;
+		
+//		System.out.println("HttpHandler.verifyAddress: ErrorCode: "+ errorCode);		
+		boolean bAddressGood = bAddressValid && !bUnitMissing;
+		
+		String jsonResult = gson.toJson(new AddressValidation(bAddressGood, errorCode), AddressValidation.class);
+		
+		return jsonResult;
+	}
 }
