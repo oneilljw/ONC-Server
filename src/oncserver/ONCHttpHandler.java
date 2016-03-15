@@ -1060,7 +1060,7 @@ public class ONCHttpHandler implements HttpHandler
 
 			if(!mealMap.get(mealKeys[0]).equals("No Assistance Rqrd"))
 			{
-				mealReq = new ONCMeal(-1, -1, MealType.valueOf(mealMap.get(mealKeys[0])),
+				mealReq = new ONCMeal(-1, -1, MealStatus.Requested, MealType.valueOf(mealMap.get(mealKeys[0])),
 								mealMap.get(mealKeys[1]), -1, wc.getWebUser().getLNFI(), new Date(), 3,
 								"Family Referred", wc.getWebUser().getLNFI());
 			

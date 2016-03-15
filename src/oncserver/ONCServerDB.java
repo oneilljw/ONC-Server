@@ -16,7 +16,6 @@ import au.com.bytecode.opencsv.CSVWriter;
 public abstract class ONCServerDB
 {
 	protected static final int BASE_YEAR = 2012;
-//	protected static final int TOTAL_YEARS = 3;
 	
 	abstract String add(int year, String userjson);
 	

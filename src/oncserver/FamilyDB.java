@@ -579,6 +579,28 @@ public class FamilyDB extends ONCServerDB
 	    }
 	}
 	
+	/********
+	 * Whenever meal is added, the meal database notifies the family database to update
+	 * the id for the families meal and the meal status field.
+	 * The meal status field is redundant in the ONC Family object for performance considerations. 
+	 * @param year
+	 * @param addedMeal
+	 */
+	void familyMealAdded(int year, ONCMeal addedMeal)
+	{
+		ONCFamily fam = getFamily(year, addedMeal.getFamilyID());
+		if(fam != null && fam.getMealStatus() != addedMeal.getStatus())
+		{
+			fam.setMealID(addedMeal.getID());
+			fam.setMealStatus(addedMeal.getStatus());
+			familyDB.get(year - BASE_YEAR).setChanged(true);
+			
+			Gson gson = new Gson();
+	    	String changeJson = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+	    	clientMgr.notifyAllInYearClients(year, changeJson);	//null to notify all clients
+		}
+	}
+	
 	boolean isGiftCardOnlyFamily(int year, int famid)
 	{
 		//set a return variable to true. If we find one instance, we'll set it to false
@@ -682,7 +704,7 @@ public class FamilyDB extends ONCServerDB
     	String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
     	clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients	
 	}
-	
+/*	
 	void updateFamilyMeal(int year, ONCMeal addedMeal)
 	{
 		//try to find the family the meal belongs to. In order to add the meal, the family
@@ -708,6 +730,7 @@ public class FamilyDB extends ONCServerDB
 			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 		}
 	}
+*/	
 
 	void addObject(int year, String[] nextLine)
 	{

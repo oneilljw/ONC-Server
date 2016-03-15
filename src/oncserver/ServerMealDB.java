@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import ourneighborschild.MealStatus;
 import ourneighborschild.ONCMeal;
 
 import com.google.gson.Gson;
@@ -14,7 +15,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerMealDB extends ONCServerDB
 {
-	private static final int MEAL_DB_HEADER_LENGTH = 10;
+	private static final int MEAL_DB_HEADER_LENGTH = 11;
 	private static final int BASE_YEAR = 2012;
 	private static ServerMealDB instance = null;
 
@@ -93,16 +94,29 @@ public class ServerMealDB extends ONCServerDB
 		//retrieve the meal data base for the year
 		MealDBYear mealDBYear = mealDB.get(year - BASE_YEAR);
 		
+		//retrieve the current meal for family, if any
+		ONCMeal currMeal = findCurrentMealForFamily(year, addedMeal.getFamilyID());
+		
 		//set the new ID and time stamp for the added ONCMeal
 		addedMeal.setID(mealDBYear.getNextID());
 		addedMeal.setDateChanged(new Date());
+		
+		//set the status of the added meal relative to a parter change.
+		//This is the rules engine that governs meal status
+		if(currMeal.getPartnerID() != addedMeal.getPartnerID())
+		{
+			if(addedMeal.getPartnerID() == -1)
+				addedMeal.setMealStatus(MealStatus.Requested);
+			else
+				addedMeal.setMealStatus(MealStatus.Assigned);
+		}
 		
 		//notify the family database of an added meal
 		FamilyDB familyDB = null;
 		try
 		{
 			familyDB = FamilyDB.getInstance();
-			familyDB.updateFamilyMeal(year, addedMeal);
+			familyDB.familyMealAdded(year, addedMeal);
 		}
 		catch (FileNotFoundException e) 
 		{
@@ -209,6 +223,24 @@ public class ServerMealDB extends ONCServerDB
 		else
 			return "DELETE_FAILED";	
 	}
+	
+	ONCMeal findCurrentMealForFamily(int year, int famid)
+	{
+		ONCMeal currMeal = null;
+		
+		MealDBYear mealDBYear = mealDB.get(year-BASE_YEAR);
+		List<ONCMeal> mealAL = mealDBYear.getList();
+		
+		//go thru each meal in the db to determine the most current meal for family
+		for(ONCMeal meal:mealAL)
+			if(meal.getFamilyID() == famid && (currMeal == null || currMeal != null &&
+				currMeal.getDateChanged().before(meal.getDateChanged())))
+			{
+				currMeal = meal;	//found a more recent meal for family
+			}
+		
+		return currMeal;
+	}
 
 	@Override
 	void createNewYear(int newYear)
@@ -232,7 +264,7 @@ public class ServerMealDB extends ONCServerDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Meal ID", "Family ID", "Type", "Partner ID",
+		String[] header = {"Meal ID", "Family ID", "Status", "Type", "Partner ID",
 	 			"Restrictions", "Changed By", "Time Stamp", "SL Pos",
 	 			"SL Mssg", "SL Changed By"};
 		
