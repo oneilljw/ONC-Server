@@ -117,7 +117,7 @@ public class DBManager
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + gson.toJson(dbYearList, listOfDBs) +")", HTTPCode.Ok);		
 	}
-	
+/*	
 	static String getDatabaseStatusJSON()
 	{		
 		Gson gson = new Gson();
@@ -126,7 +126,7 @@ public class DBManager
 		String response = gson.toJson(dbYearList, listOfDBs);
 		return response;		
 	}
-	
+*/	
 	String updateDBYear(int year, String json)
 	{
 		Gson gson = new Gson();

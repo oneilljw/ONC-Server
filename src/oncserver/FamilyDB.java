@@ -442,14 +442,10 @@ public class FamilyDB extends ONCServerDB
 				
 				//notify all in year clients of change to famToCheck
 				String famToCheckJson = gson.toJson(famToCheck, ONCFamily.class);
-				ClientManager clientMgr = ClientManager.getInstance();
 				clientMgr.notifyAllInYearClients(year, "UPDATED_FAMILY" + famToCheckJson);
 				
 				result = "DUPLICATE_FAMILY";
-			}	
-								
-			
-			
+			}		
 		}
 		
 		return result;
