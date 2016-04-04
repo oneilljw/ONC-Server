@@ -69,7 +69,7 @@ public class DBManager
 			dbAutosaveList.add(PartnerDB.getInstance());
 			dbAutosaveList.add(ServerChildDB.getInstance());
 			dbAutosaveList.add(ServerChildWishDB.getInstance());
-			dbAutosaveList.add(FamilyDB.getInstance());
+			dbAutosaveList.add(ServerFamilyDB.getInstance());
 			dbAutosaveList.add(AgentDB.getInstance());
 			dbAutosaveList.add(ServerDriverDB.getInstance());
 			dbAutosaveList.add(ServerDeliveryDB.getInstance());

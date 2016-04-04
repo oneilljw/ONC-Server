@@ -215,12 +215,12 @@ public class PriorYearDB extends ONCServerDB
 //		System.out.println(String.format("Resultant size of 2015 Prior Year Child list: %d", pycAL.size()));
 		
 		//get references to last years family, child, child wish and wish catalog data bases
-		FamilyDB familyDB = null;
+		ServerFamilyDB serverFamilyDB = null;
 		ServerChildDB serverChildDB = null;
 		ServerChildWishDB childwishDB = null;
 		ServerWishCatalog cat = null;
 		try {
-			familyDB = FamilyDB.getInstance();
+			serverFamilyDB = ServerFamilyDB.getInstance();
 			serverChildDB = ServerChildDB.getInstance();
 			childwishDB = ServerChildWishDB.getInstance();
 			cat = ServerWishCatalog.getInstance();
@@ -242,7 +242,7 @@ public class PriorYearDB extends ONCServerDB
 //		int nNew = 0;
 		for(ONCChild lyc:lycList)
 		{
-			ONCFamily lyfam = familyDB.getFamily(newYear-1, lyc.getFamID());
+			ONCFamily lyfam = serverFamilyDB.getFamily(newYear-1, lyc.getFamID());
 			if(isNumeric(lyfam.getONCNum()) && Integer.parseInt(lyfam.getONCNum()) >= 100)
 			{
 				ONCChildWish lyChildWish1 = ServerChildWishDB.getWish(newYear-1, lyc.getChildWishID(0));

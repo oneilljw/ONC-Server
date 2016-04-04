@@ -112,11 +112,11 @@ public class ServerMealDB extends ONCServerDB
 		}
 		
 		//notify the family database of an added meal
-		FamilyDB familyDB = null;
+		ServerFamilyDB serverFamilyDB = null;
 		try
 		{
-			familyDB = FamilyDB.getInstance();
-			familyDB.familyMealAdded(year, addedMeal);
+			serverFamilyDB = ServerFamilyDB.getInstance();
+			serverFamilyDB.familyMealAdded(year, addedMeal);
 		}
 		catch (FileNotFoundException e) 
 		{

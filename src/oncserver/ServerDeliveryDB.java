@@ -116,10 +116,10 @@ public class ServerDeliveryDB extends ONCServerDB
 		
 		//notify the corresponding family that delivery has changed and
 		//check to see if new delivery assigned or removed a delivery from a driver
-		FamilyDB familyDB = null;
+		ServerFamilyDB serverFamilyDB = null;
 		ServerDriverDB driverDB = null;
 		try {
-			familyDB = FamilyDB.getInstance();
+			serverFamilyDB = ServerFamilyDB.getInstance();
 			driverDB = ServerDriverDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -130,7 +130,7 @@ public class ServerDeliveryDB extends ONCServerDB
 		}
 		
 		//get prior delivery for this family
-		ONCFamily fam = familyDB.getFamily(year, addedDelivery.getFamID());
+		ONCFamily fam = serverFamilyDB.getFamily(year, addedDelivery.getFamID());
 		ONCDelivery priorDelivery = getDelivery(year, fam.getDeliveryID());
 		
 		//if there was a prior delivery, then update the status and counts
@@ -158,8 +158,8 @@ public class ServerDeliveryDB extends ONCServerDB
 			}
 		}
 		//Update the family object with new delivery
-		if(familyDB != null)
-			familyDB.updateFamilyDelivery(year, addedDelivery);
+		if(serverFamilyDB != null)
+			serverFamilyDB.updateFamilyDelivery(year, addedDelivery);
 					
 		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCDelivery.class);
 	}
@@ -175,10 +175,10 @@ public class ServerDeliveryDB extends ONCServerDB
 		
 		//notify the corresponding family that delivery has changed and
 		//check to see if new delivery assigned or removed a delivery from a driver
-		FamilyDB familyDB = null;
+		ServerFamilyDB serverFamilyDB = null;
 		ServerDriverDB driverDB = null;
 		try {
-			familyDB = FamilyDB.getInstance();
+			serverFamilyDB = ServerFamilyDB.getInstance();
 			driverDB = ServerDriverDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -189,7 +189,7 @@ public class ServerDeliveryDB extends ONCServerDB
 		}
 		
 		//get prior delivery for this family
-		ONCFamily fam = familyDB.getFamily(year, addedDelivery.getFamID());
+		ONCFamily fam = serverFamilyDB.getFamily(year, addedDelivery.getFamID());
 		ONCDelivery priorDelivery = getDelivery(year, fam.getDeliveryID());
 		
 		//if there was a prior delivery, then update the status and counts
@@ -217,8 +217,8 @@ public class ServerDeliveryDB extends ONCServerDB
 			}
 		}
 		//Update the family object with new delivery
-		if(familyDB != null)
-			familyDB.updateFamilyDelivery(year, addedDelivery);
+		if(serverFamilyDB != null)
+			serverFamilyDB.updateFamilyDelivery(year, addedDelivery);
 
 		Gson gson = new Gson();
 		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCDelivery.class);

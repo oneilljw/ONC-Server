@@ -23,7 +23,7 @@ import ourneighborschild.WishStatus;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class FamilyDB extends ONCServerDB
+public class ServerFamilyDB extends ONCServerDB
 {
 	private static final int FAMILYDB_HEADER_LENGTH = 42;
 	
@@ -39,7 +39,7 @@ public class FamilyDB extends ONCServerDB
 	private static final String GIFT_CARD_WISH_NAME = "Gift Card";
 	
 	private static List<FamilyDBYear> familyDB;
-	private static FamilyDB instance = null;
+	private static ServerFamilyDB instance = null;
 	private static int highestRefNum;
 //	private static List<int[]> oncNumRanges;
 	
@@ -52,7 +52,7 @@ public class FamilyDB extends ONCServerDB
 	int[] oncnumRegionRanges = {1025,100,124,142,234,444,454,479,514,587,619,643,650,656,662,
 								671,791,817,941,944,949,954,966,990,1000,1001,1002};
 	
-	private FamilyDB() throws FileNotFoundException, IOException
+	private ServerFamilyDB() throws FileNotFoundException, IOException
 	{
 		//create the family data bases for the years of ONC Server operation starting with 2012
 //		oncNumRanges = new ArrayList<int[]>();
@@ -87,10 +87,10 @@ public class FamilyDB extends ONCServerDB
 		clientMgr = ClientManager.getInstance();
 	}
 	
-	public static FamilyDB getInstance() throws FileNotFoundException, IOException
+	public static ServerFamilyDB getInstance() throws FileNotFoundException, IOException
 	{
 		if(instance == null)
-			instance = new FamilyDB();
+			instance = new ServerFamilyDB();
 
 		return instance;
 	}

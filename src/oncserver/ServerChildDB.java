@@ -208,7 +208,7 @@ public class ServerChildDB extends ONCServerDB
     		{
     			//check to see that the family hasn't already been found
     			//if it hasn't, add it. To do this, need to get Fam Ref ID
-    			String refNum = FamilyDB.getFamilyRefNum(year, c.getFamID());
+    			String refNum = ServerFamilyDB.getFamilyRefNum(year, c.getFamID());
     			int index=0;
     			while(refNum != null && index < resultAL.size() &&
     					!resultAL.get(index).getReferenceID().equals(refNum))

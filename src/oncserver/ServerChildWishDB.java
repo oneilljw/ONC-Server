@@ -150,9 +150,9 @@ public class ServerChildWishDB extends ONCServerDB
 	void processWishAdded(int year, ONCChildWish oldWish, ONCChildWish addedWish)
 	{
 		//test to see if the family status needs to change
-		FamilyDB familyDB = null;
+		ServerFamilyDB serverFamilyDB = null;
 		try {
-			familyDB = FamilyDB.getInstance();
+			serverFamilyDB = ServerFamilyDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -161,7 +161,7 @@ public class ServerChildWishDB extends ONCServerDB
 			e.printStackTrace();
 		}
 	
-		familyDB.checkFamilyStatusAndGiftCardOnlyOnWishAdded(year, addedWish.getChildID());
+		serverFamilyDB.checkFamilyStatusAndGiftCardOnlyOnWishAdded(year, addedWish.getChildID());
 		
 		//test to see if assignee are changing, if the old wish exists	
 		if(oldWish != null && oldWish.getChildWishAssigneeID() != addedWish.getChildWishAssigneeID())

@@ -98,7 +98,7 @@ public class AgentDB extends ONCServerDB
 			agentYearList = agentDB.get(year - BASE_YEAR).getList();
 			
 			for(Agent agent : agentYearList)
-				if(FamilyDB.didAgentReferInYear(agent.getID(), year))
+				if(ServerFamilyDB.didAgentReferInYear(agent.getID(), year))
 					agentReferredInYearList.add(agent);
 		}
 		

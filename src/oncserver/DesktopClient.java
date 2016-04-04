@@ -51,7 +51,7 @@ public class DesktopClient extends Thread
     private ServerUserDB userDB;
     private RegionDB regionDB;
     private GlobalVariableDB globalvariableDB;
-    private FamilyDB familyDB;
+    private ServerFamilyDB serverFamilyDB;
     private AgentDB agentDB;
     private ServerChildDB childDB;
     private ServerChildWishDB childwishDB;
@@ -97,7 +97,7 @@ public class DesktopClient extends Thread
 			userDB = ServerUserDB.getInstance();
 			regionDB = RegionDB.getInstance(clientMgr.getAppIcon());
 	        globalvariableDB = GlobalVariableDB.getInstance();
-	        familyDB = FamilyDB.getInstance();
+	        serverFamilyDB = ServerFamilyDB.getInstance();
 	        agentDB = AgentDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildWishDB.getInstance();
@@ -217,7 +217,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<familys>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = familyDB.getFamilies(year);
+                	String response = serverFamilyDB.getFamilies(year);
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<agents>"))
@@ -229,7 +229,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<family>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = familyDB.getFamily(year, command.substring(11));
+                	String response = serverFamilyDB.getFamily(year, command.substring(11));
                 	output.println(response);		
                 }
                 else if(command.startsWith("GET<children>"))
@@ -369,9 +369,9 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(command);
                 	String response;
                 	if(command.contains("_oncnum>"))
-                		response = familyDB.update(year, command.substring(26), true);
+                		response = serverFamilyDB.update(year, command.substring(26), true);
                 	else
-                		response = familyDB.update(year, command.substring(19), false);
+                		response = serverFamilyDB.update(year, command.substring(19), false);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
@@ -379,7 +379,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_family>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = familyDB.add(year, command.substring(16));
+                	String response = serverFamilyDB.add(year, command.substring(16));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
@@ -387,7 +387,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<check_duplicatefamily>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = familyDB.checkForDuplicateFamily(year, command.substring(27), clientUser);
+                	String response = serverFamilyDB.checkForDuplicateFamily(year, command.substring(27), clientUser);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 }

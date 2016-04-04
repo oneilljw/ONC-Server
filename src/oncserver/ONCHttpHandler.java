@@ -195,7 +195,7 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		int year = Integer.parseInt((String) params.get("year"));
     		
-    		HtmlResponse response = FamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
+    		HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/references"))
@@ -211,7 +211,7 @@ public class ONCHttpHandler implements HttpHandler
     			//get the JSON of family reference list
     			int year = Integer.parseInt((String) params.get("year"));
     		
-    			htmlResponse = FamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
+    			htmlResponse = ServerFamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
     		}
     		else
     		{
@@ -231,7 +231,7 @@ public class ONCHttpHandler implements HttpHandler
     		{
     			wc.updateTimestamp();
     			//get the JSON of family reference list
-    			htmlResponse = FamilyDB.searchForFamilyReferencesJSONP(
+    			htmlResponse = ServerFamilyDB.searchForFamilyReferencesJSONP(
 						Integer.parseInt((String) params.get("year")),
 						 (String) params.get("searchstring"),
 						  (String) params.get("callback"));
@@ -256,7 +256,7 @@ public class ONCHttpHandler implements HttpHandler
     			int year = Integer.parseInt((String) params.get("year"));
         		String targetID = (String) params.get("targetid");
         		
-        		htmlResponse = FamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
+        		htmlResponse = ServerFamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
     		}
     		else
     		{
@@ -341,7 +341,7 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/children"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
-    		int famID = FamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    		int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
     		
     		HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
@@ -372,7 +372,7 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/adults"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
-    		int famID = FamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    		int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
     		
     		HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
@@ -1028,14 +1028,14 @@ public class ONCHttpHandler implements HttpHandler
 
 		//get database references
 		ServerMealDB mealDB = null;
-		FamilyDB familyDB= null;
+		ServerFamilyDB serverFamilyDB= null;
 		ServerChildDB childDB = null;
 		ServerAdultDB adultDB = null;
 		
 		try
 		{
 			mealDB = ServerMealDB.getInstance();
-			familyDB = FamilyDB.getInstance();
+			serverFamilyDB = ServerFamilyDB.getInstance();
 			childDB = ServerChildDB.getInstance();
 			adultDB = ServerAdultDB.getInstance();
 		} 
@@ -1094,7 +1094,7 @@ public class ONCHttpHandler implements HttpHandler
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
 					Transportation.valueOf(familyMap.get("transportation")));
 			
-		ONCFamily addedFamily = familyDB.add(year, fam);
+		ONCFamily addedFamily = serverFamilyDB.add(year, fam);
 		
 		List<ONCChild> addedChildList = new ArrayList<ONCChild>();
 		List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
@@ -1135,7 +1135,7 @@ public class ONCHttpHandler implements HttpHandler
 			}
 			
 			//now that we have added children, we can check for duplicate family in this year.
-			ONCFamily dupFamily = familyDB.getDuplicateFamily(year, addedFamily, addedChildList);
+			ONCFamily dupFamily = serverFamilyDB.getDuplicateFamily(year, addedFamily, addedChildList);
 			
 //			if(dupFamily != null)
 //				System.out.println(String.format("HttpHandler.processFamilyReferral: "
@@ -1151,13 +1151,13 @@ public class ONCHttpHandler implements HttpHandler
 				ONCFamily pyFamily = null;
 				if(bNewFamily)	
 				{
-					pyFamily = familyDB.isPriorYearFamily(year, addedFamily, addedChildList);
+					pyFamily = serverFamilyDB.isPriorYearFamily(year, addedFamily, addedChildList);
 					if(pyFamily != null)
 					{				
 						//added new family was in prior year, keep the prior year reference # 
 						//and reset the newly assigned target id index
 						addedFamily.setODBFamilyNum(pyFamily.getODBFamilyNum());
-						familyDB.decrementReferenceNumber();
+						serverFamilyDB.decrementReferenceNumber();
 					}
 				}
 			}
@@ -1178,7 +1178,7 @@ public class ONCHttpHandler implements HttpHandler
 				addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 				addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
 				addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
-				familyDB.decrementReferenceNumber();
+				serverFamilyDB.decrementReferenceNumber();
 			}	
 			else if(dupFamily.getODBFamilyNum().startsWith("C") && 
 					!addedFamily.getODBFamilyNum().startsWith("C"))
@@ -1214,7 +1214,7 @@ public class ONCHttpHandler implements HttpHandler
 					addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
 					addedFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
 					addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
-					familyDB.decrementReferenceNumber();
+					serverFamilyDB.decrementReferenceNumber();
 				}
 				else
 				{
@@ -1346,11 +1346,11 @@ public class ONCHttpHandler implements HttpHandler
 		}
 
 		//get database references
-		FamilyDB familyDB= null;
+		ServerFamilyDB serverFamilyDB= null;
 		
 		try
 		{
-			familyDB = FamilyDB.getInstance();
+			serverFamilyDB = ServerFamilyDB.getInstance();
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -1365,7 +1365,7 @@ public class ONCHttpHandler implements HttpHandler
 		
 		//get the family object from the database
 		String targetID = (String) params.get("targetid");
-		ONCFamily updateFam = familyDB.getFamilyByTargetID(year, targetID);
+		ONCFamily updateFam = serverFamilyDB.getFamilyByTargetID(year, targetID);
 		
 		//if found, make the changes to the family object
 		if(updateFam != null)
@@ -1414,7 +1414,7 @@ public class ONCHttpHandler implements HttpHandler
 			updateFam.setDetails(familyMap.get("detail"));	
 			
 			//if changes detected, update the family in the db
-			if(familyDB.update(year, updateFam, true) != null)
+			if(serverFamilyDB.update(year, updateFam, true) != null)
 			{
 				//successfully updated family. Notify the desktop clients so they refresh
 				ClientManager clientMgr = ClientManager.getInstance();
