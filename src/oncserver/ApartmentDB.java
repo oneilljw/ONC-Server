@@ -83,7 +83,7 @@ public class ApartmentDB
 		}
 		else
 		{
-			int index = checkAddress.getStreetName().toUpperCase().charAt(0) - 'A' + 1;	//'A'
+			int index = Character.toUpperCase(checkAddress.getStreetName().charAt(0)) - 'A' + 1;	//'A'
 			searchIndex = hashIndex.get(index);
 			endIndex = hashIndex.get(index+1);
 		}

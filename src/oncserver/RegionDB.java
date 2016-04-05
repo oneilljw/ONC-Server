@@ -225,7 +225,7 @@ public class RegionDB
 		}
 		else
 		{
-			int index = searchAddress.getStreetName().charAt(0) - 'A' + 1;	//'A'
+			int index = Character.toUpperCase(searchAddress.getStreetName().charAt(0)) - 'A' + 1;	//'A'
 			searchIndex = hashIndex.get(index);
 			endIndex = hashIndex.get(index+1);
 		}
