@@ -27,7 +27,7 @@ public class ServerChildWishDB extends ONCServerDB
 
 	private static List<ChildWishDBYear> childwishDB;
 	private ServerChildDB childDB; //Reference used to update ChildWishID's 
-	private PartnerDB partnerDB;
+	private ServerPartnerDB serverPartnerDB;
 	
 	private ServerChildWishDB() throws FileNotFoundException, IOException
 	{
@@ -53,7 +53,7 @@ public class ServerChildWishDB extends ONCServerDB
 		}
 
 		childDB = ServerChildDB.getInstance();
-		partnerDB = PartnerDB.getInstance();
+		serverPartnerDB = ServerPartnerDB.getInstance();
 	}
 	
 	public static ServerChildWishDB getInstance() throws FileNotFoundException, IOException
@@ -167,7 +167,7 @@ public class ServerChildWishDB extends ONCServerDB
 		if(oldWish != null && oldWish.getChildWishAssigneeID() != addedWish.getChildWishAssigneeID())
 		{
 			//assignee change -- need to adjust partner gift assignment counts in partner DB
-			partnerDB.updateGiftAssignees(year, oldWish.getChildWishAssigneeID(), 
+			serverPartnerDB.updateGiftAssignees(year, oldWish.getChildWishAssigneeID(), 
 												addedWish.getChildWishAssigneeID());
 		}
 	}

@@ -55,7 +55,7 @@ public class DesktopClient extends Thread
     private AgentDB agentDB;
     private ServerChildDB childDB;
     private ServerChildWishDB childwishDB;
-    private PartnerDB partnerDB;
+    private ServerPartnerDB serverPartnerDB;
     private ServerDriverDB driverDB;
     private ServerDeliveryDB deliveryDB;
     private ServerWishCatalog wishCatalog;
@@ -101,7 +101,7 @@ public class DesktopClient extends Thread
 	        agentDB = AgentDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildWishDB.getInstance();
-	        partnerDB = PartnerDB.getInstance();
+	        serverPartnerDB = ServerPartnerDB.getInstance();
 	        driverDB = ServerDriverDB.getInstance();
 	        deliveryDB = ServerDeliveryDB.getInstance();
 	        wishCatalog = ServerWishCatalog.getInstance();
@@ -247,7 +247,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<partners>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = partnerDB.getPartners(year);
+                	String response = serverPartnerDB.getPartners(year);
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<drivers>"))
@@ -418,7 +418,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<update_partner>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = partnerDB.update(year, command.substring(20));
+                	String response = serverPartnerDB.update(year, command.substring(20));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
@@ -426,14 +426,14 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_partner>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = partnerDB.add(year, command.substring(17));
+                	String response = serverPartnerDB.add(year, command.substring(17));
                 	output.println(response);
                 	clientMgr.dataChanged(this, response);
                 }
                 else if(command.startsWith("POST<delete_partner>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = partnerDB.delete(year, command.substring(20));
+                	String response = serverPartnerDB.delete(year, command.substring(20));
                 	output.println(response);
                 	clientMgr.dataChanged(this, response);
                 }

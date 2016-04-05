@@ -8,12 +8,12 @@ import java.util.List;
 
 import ourneighborschild.Address;
 import ourneighborschild.DataChange;
-import ourneighborschild.Organization;
+import ourneighborschild.ONCPartner;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class PartnerDB extends ONCServerDB
+public class ServerPartnerDB extends ONCServerDB
 {
 	private static final int ORGANIZATION_DB_HEADER_LENGTH = 33;
 	private static final int STATUS_CONFIRMED = 5;
@@ -21,10 +21,10 @@ public class PartnerDB extends ONCServerDB
 	private static List<PartnerDBYear> partnerDB;
 	
 //	private static List<List<Organization>> orgAL;
-	private static PartnerDB instance = null;
+	private static ServerPartnerDB instance = null;
 //	private static List<Integer> nextID;
 	
-	private PartnerDB() throws FileNotFoundException, IOException
+	private ServerPartnerDB() throws FileNotFoundException, IOException
 	{
 		//create the partner data bases for TOTAL_YEARS number of years
 		partnerDB = new ArrayList<PartnerDBYear>();
@@ -62,10 +62,10 @@ public class PartnerDB extends ONCServerDB
 		}
 	}
 	
-	public static PartnerDB getInstance() throws FileNotFoundException, IOException
+	public static ServerPartnerDB getInstance() throws FileNotFoundException, IOException
 	{
 		if(instance == null)
-			instance = new PartnerDB();
+			instance = new ServerPartnerDB();
 		
 		return instance;
 	}
@@ -73,7 +73,7 @@ public class PartnerDB extends ONCServerDB
 	String getPartners(int year)
 	{
 		Gson gson = new Gson();
-		Type listOfPartners = new TypeToken<ArrayList<Organization>>(){}.getType();
+		Type listOfPartners = new TypeToken<ArrayList<ONCPartner>>(){}.getType();
 		
 		String response = gson.toJson(partnerDB.get(year - BASE_YEAR).getList(), listOfPartners);
 		return response;	
@@ -84,7 +84,7 @@ public class PartnerDB extends ONCServerDB
 		int id = Integer.parseInt(zID);
 		int index = 0;
 		
-		List<Organization> orgAL = partnerDB.get(year-BASE_YEAR).getList();
+		List<ONCPartner> orgAL = partnerDB.get(year-BASE_YEAR).getList();
 		
 		while(index < orgAL.size() && orgAL.get(index).getID() != id)
 			index++;
@@ -92,7 +92,7 @@ public class PartnerDB extends ONCServerDB
 		if(index < orgAL.size())
 		{
 			Gson gson = new Gson();
-			String partnerjson = gson.toJson(orgAL.get(index), Organization.class);
+			String partnerjson = gson.toJson(orgAL.get(index), ONCPartner.class);
 			
 			return "PARTNER" + partnerjson;
 		}
@@ -100,9 +100,9 @@ public class PartnerDB extends ONCServerDB
 			return "PARTNER_NOT_FOUND";
 	}
 	
-	Organization getPartner(int year, int partID)
+	ONCPartner getPartner(int year, int partID)
 	{
-		List<Organization> oAL = partnerDB.get(year - BASE_YEAR).getList();
+		List<ONCPartner> oAL = partnerDB.get(year - BASE_YEAR).getList();
 		
 		int index = 0;
 		while(index < oAL.size() && oAL.get(index).getID() != partID)
@@ -120,11 +120,11 @@ public class PartnerDB extends ONCServerDB
 	{
 		//Create a organization object for the updated partner
 		Gson gson = new Gson();
-		Organization reqOrg = gson.fromJson(json, Organization.class);
+		ONCPartner reqOrg = gson.fromJson(json, ONCPartner.class);
 		
 		//Find the position for the current family being replaced
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
-		List<Organization> oAL = partnerDBYear.getList();
+		List<ONCPartner> oAL = partnerDBYear.getList();
 		int index = 0;
 		while(index < oAL.size() && oAL.get(index).getID() != reqOrg.getID())
 			index++;
@@ -139,7 +139,7 @@ public class PartnerDB extends ONCServerDB
 		}
 		else
 		{
-			Organization currOrg = oAL.get(index);
+			ONCPartner currOrg = oAL.get(index);
 			//check if partner address has changed and a region update check is required
 			if(currOrg.getStreetnum() != reqOrg.getStreetnum() ||
 				!currOrg.getStreetname().equals(reqOrg.getStreetname()) ||
@@ -151,11 +151,11 @@ public class PartnerDB extends ONCServerDB
 			}
 			oAL.set(index, reqOrg);
 			partnerDBYear.setChanged(true);
-			return "UPDATED_PARTNER" + gson.toJson(reqOrg, Organization.class);
+			return "UPDATED_PARTNER" + gson.toJson(reqOrg, ONCPartner.class);
 		}
 	}
 	
-	int updateRegion(Organization updatedOrg)
+	int updateRegion(ONCPartner updatedOrg)
 	{
 		int reg = 0; //initialize return value to no region found
 		
@@ -187,7 +187,7 @@ public class PartnerDB extends ONCServerDB
 	{
 		//Create a organization object for the updated partner
 		Gson gson = new Gson();
-		Organization addedPartner = gson.fromJson(json, Organization.class);
+		ONCPartner addedPartner = gson.fromJson(json, ONCPartner.class);
 	
 		//set the new ID for the catalog wish
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
@@ -217,18 +217,18 @@ public class PartnerDB extends ONCServerDB
 		partnerDBYear.add(addedPartner);
 		partnerDBYear.setChanged(true);
 		
-		return "ADDED_PARTNER" + gson.toJson(addedPartner, Organization.class);
+		return "ADDED_PARTNER" + gson.toJson(addedPartner, ONCPartner.class);
 	}
 	
 	String delete(int year, String json)
 	{
 		//Create a organization object for the updated partner
 		Gson gson = new Gson();
-		Organization reqDelPartner = gson.fromJson(json, Organization.class);
+		ONCPartner reqDelPartner = gson.fromJson(json, ONCPartner.class);
 	
 		//find the partner in the db
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
-		List<Organization> oAL = partnerDBYear.getList();
+		List<ONCPartner> oAL = partnerDBYear.getList();
 		int index = 0;
 		while(index < oAL.size() && oAL.get(index).getID() != reqDelPartner.getID())
 			index++;
@@ -252,7 +252,7 @@ public class PartnerDB extends ONCServerDB
 		//Find the the current partner &  decrement gift count if found
 		if(oldPartnerID > 0)
 		{
-			Organization oldPartner = getPartner(year, oldPartnerID);
+			ONCPartner oldPartner = getPartner(year, oldPartnerID);
 			if(oldPartner != null)
 			{
 				oldPartner.decrementOrnAssigned();
@@ -263,7 +263,7 @@ public class PartnerDB extends ONCServerDB
 		if(newPartnerID > 0)
 		{
 			//Find the the current partner &  increment gift count if found
-			Organization newPartner = getPartner(year, newPartnerID);
+			ONCPartner newPartner = getPartner(year, newPartnerID);
 			if(newPartner != null)
 			{
 				newPartner.incrementOrnAssigned();
@@ -279,7 +279,7 @@ public class PartnerDB extends ONCServerDB
 		DataChange change = gson.fromJson(json, DataChange.class);
 		
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
-		List<Organization> oAL = partnerDBYear.getList();
+		List<ONCPartner> oAL = partnerDBYear.getList();
 		
 		//Find the the current partner being decremented
 		int index = 0;
@@ -311,7 +311,7 @@ public class PartnerDB extends ONCServerDB
 	void decrementGiftCount(int year, int partnerID)
 	{
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
-		List<Organization> oAL = partnerDBYear.getList();
+		List<ONCPartner> oAL = partnerDBYear.getList();
 		int index=0;
 		while(index < oAL.size() && oAL.get(index).getID() != partnerID)
 			index ++;
@@ -328,7 +328,7 @@ public class PartnerDB extends ONCServerDB
 	void addObject(int year, String[] nextLine)
 	{
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
-		partnerDBYear.add(new Organization(nextLine));
+		partnerDBYear.add(new ONCPartner(nextLine));
 	}
 
 	@Override
@@ -340,16 +340,16 @@ public class PartnerDB extends ONCServerDB
 		//Mark the newly created WishCatlogDBYear for saving during the next save event
 				
 		//get a reference to the prior years wish catalog
-		List<Organization> lyPartnerList = partnerDB.get(partnerDB.size()-1).getList();
+		List<ONCPartner> lyPartnerList = partnerDB.get(partnerDB.size()-1).getList();
 				
 		//create the new PartnerDBYear
 		PartnerDBYear partnerDBYear = new PartnerDBYear(newYear);
 		partnerDB.add(partnerDBYear);
 				
 		//add last years catalog wishes to the new years catalog
-		for(Organization lyPartner : lyPartnerList)
+		for(ONCPartner lyPartner : lyPartnerList)
 		{
-			Organization newPartner = new Organization(lyPartner);	//makes a copy of last year
+			ONCPartner newPartner = new ONCPartner(lyPartner);	//makes a copy of last year
 			newPartner.setStatus(0);	//reset status to NO_ACTION_YET
 			newPartner.setNumberOfOrnamentsRequested(0);	//reset requested to 0
 			newPartner.setNumberOfOrnamentsAssigned(0);	//reset assigned to 0
@@ -396,12 +396,12 @@ public class PartnerDB extends ONCServerDB
 		for(PriorYearPartnerPerformance pyPerf: pyPartnerPerformanceList)
 		{
 			//find the partner the wish was assigned to and increment their prior year assigned count
-			Organization wishAssigneePartner = getPartner(newYear, pyPerf.getPYPartnerWishAssigneeID());
+			ONCPartner wishAssigneePartner = getPartner(newYear, pyPerf.getPYPartnerWishAssigneeID());
 			if(wishAssigneePartner != null)
 				wishAssigneePartner.incrementPYAssigned();
 			
 			//find the partner the wish was received from and increment their prior year received count
-			Organization wishReceivedPartner = getPartner(newYear, pyPerf.getPYPartnerWishReceivedID());
+			ONCPartner wishReceivedPartner = getPartner(newYear, pyPerf.getPYPartnerWishReceivedID());
 			if(wishReceivedPartner != null)
 				wishReceivedPartner.incrementPYReceived();
 		}
@@ -413,18 +413,18 @@ public class PartnerDB extends ONCServerDB
 	
 	private class PartnerDBYear extends ServerDBYear
 	{
-		private List<Organization> pList;
+		private List<ONCPartner> pList;
 	    	
 	    PartnerDBYear(int year)
 	    {
 	    	super();
-	    	pList = new ArrayList<Organization>();
+	    	pList = new ArrayList<ONCPartner>();
 	    }
 	    	
 	    	//getters
-	    	List<Organization> getList() { return pList; }
+	    	List<ONCPartner> getList() { return pList; }
 	    	
-	    	void add(Organization addedOrg) { pList.add(addedOrg); }
+	    	void add(ONCPartner addedOrg) { pList.add(addedOrg); }
 	}
 
 	@Override

@@ -66,7 +66,7 @@ public class DBManager
 			RegionDB.getInstance(appicon);	//never changed
 			ApartmentDB.getInstance(); //never changed
 			dbAutosaveList.add(GlobalVariableDB.getInstance());
-			dbAutosaveList.add(PartnerDB.getInstance());
+			dbAutosaveList.add(ServerPartnerDB.getInstance());
 			dbAutosaveList.add(ServerChildDB.getInstance());
 			dbAutosaveList.add(ServerChildWishDB.getInstance());
 			dbAutosaveList.add(ServerFamilyDB.getInstance());

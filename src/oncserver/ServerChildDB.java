@@ -9,7 +9,7 @@ import java.util.List;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCWebChild;
-import ourneighborschild.Organization;
+import ourneighborschild.ONCPartner;
 import ourneighborschild.WebChildWish;
 import ourneighborschild.WishStatus;
 
@@ -88,11 +88,11 @@ public class ServerChildDB extends ONCServerDB
 	{	
 		//get references to wish catalog, partner data base
 		ServerWishCatalog wishCatalog = null;
-		PartnerDB partnerDB = null;
+		ServerPartnerDB serverPartnerDB = null;
 		try 
 		{
 			wishCatalog = ServerWishCatalog.getInstance();
-			partnerDB = PartnerDB.getInstance();
+			serverPartnerDB = ServerPartnerDB.getInstance();
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -135,7 +135,7 @@ public class ServerChildDB extends ONCServerDB
 						}
 						else
 						{
-							Organization org = partnerDB.getPartner(year,cw.getChildWishAssigneeID());
+							ONCPartner org = serverPartnerDB.getPartner(year,cw.getChildWishAssigneeID());
 							partner = org.getName();
 						}
 						
@@ -263,9 +263,9 @@ public class ServerChildDB extends ONCServerDB
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		PartnerDB partnerDB = null;
+		ServerPartnerDB serverPartnerDB = null;
 		try {
-			partnerDB = PartnerDB.getInstance();
+			serverPartnerDB = ServerPartnerDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -286,11 +286,11 @@ public class ServerChildDB extends ONCServerDB
 					ONCChildWish cw = ServerChildWishDB.getWish(year, childWishID);
 
 					//if wish has been assigned, then we have to decrement the partner
-					if(partnerDB != null && cw != null && 
+					if(serverPartnerDB != null && cw != null && 
 							cw.getChildWishStatus().compareTo(WishStatus.Assigned) >= 0)
 					{
 						int wishPartnerID = cw.getChildWishAssigneeID();
-						partnerDB.decrementGiftCount(year, wishPartnerID);
+						serverPartnerDB.decrementGiftCount(year, wishPartnerID);
 					}
 				}
 			}
