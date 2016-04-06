@@ -52,7 +52,7 @@ public class DesktopClient extends Thread
     private RegionDB regionDB;
     private GlobalVariableDB globalvariableDB;
     private ServerFamilyDB serverFamilyDB;
-    private AgentDB agentDB;
+    private ServerAgentDB serverAgentDB;
     private ServerChildDB childDB;
     private ServerChildWishDB childwishDB;
     private ServerPartnerDB serverPartnerDB;
@@ -98,7 +98,7 @@ public class DesktopClient extends Thread
 			regionDB = RegionDB.getInstance(clientMgr.getAppIcon());
 	        globalvariableDB = GlobalVariableDB.getInstance();
 	        serverFamilyDB = ServerFamilyDB.getInstance();
-	        agentDB = AgentDB.getInstance();
+	        serverAgentDB = ServerAgentDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildWishDB.getInstance();
 	        serverPartnerDB = ServerPartnerDB.getInstance();
@@ -223,7 +223,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<agents>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = agentDB.getAgents(year);
+                	String response = serverAgentDB.getAgents(year);
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<family>"))
@@ -440,7 +440,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<update_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = agentDB.update(year, command.substring(18));
+                	String response = serverAgentDB.update(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
@@ -448,7 +448,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = agentDB.add(year, command.substring(15));
+                	String response = serverAgentDB.add(year, command.substring(15));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
@@ -456,7 +456,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<delete_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = agentDB.delete(year, command.substring(18));
+                	String response = serverAgentDB.delete(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.dataChanged(this, response);
                 }

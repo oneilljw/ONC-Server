@@ -16,14 +16,13 @@ import ourneighborschild.UserPermission;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class AgentDB extends ONCServerDB
+public class ServerAgentDB extends ONCServerDB
 {
 	private static final int AGENT_DB_HEADER_LENGTH = 6;
 	private static List<AgentDBYear> agentDB;
-	private static AgentDB instance = null;
-	private static ServerUserDB userDB;
+	private static ServerAgentDB instance = null;
 	
-	private AgentDB() throws FileNotFoundException, IOException
+	private ServerAgentDB() throws FileNotFoundException, IOException
 	{
 		//create the agent data base
 		agentDB = new ArrayList<AgentDBYear>();
@@ -47,10 +46,10 @@ public class AgentDB extends ONCServerDB
 		}
 	}
 	
-	public static AgentDB getInstance() throws FileNotFoundException, IOException
+	public static ServerAgentDB getInstance() throws FileNotFoundException, IOException
 	{
 		if(instance == null)
-			instance = new AgentDB();
+			instance = new ServerAgentDB();
 		
 		return instance;
 	}

@@ -70,7 +70,7 @@ public class DBManager
 			dbAutosaveList.add(ServerChildDB.getInstance());
 			dbAutosaveList.add(ServerChildWishDB.getInstance());
 			dbAutosaveList.add(ServerFamilyDB.getInstance());
-			dbAutosaveList.add(AgentDB.getInstance());
+			dbAutosaveList.add(ServerAgentDB.getInstance());
 			dbAutosaveList.add(ServerDriverDB.getInstance());
 			dbAutosaveList.add(ServerDeliveryDB.getInstance());
 			dbAutosaveList.add(ServerWishCatalog.getInstance());
