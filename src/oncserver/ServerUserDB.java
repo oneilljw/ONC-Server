@@ -39,7 +39,7 @@ public class ServerUserDB extends ONCServerDB
 		serverAgentDB = ServerAgentDB.getInstance();
 		
 		userAL = new ArrayList<ONCServerUser>();
-		importDB(0, System.getProperty("user.dir") + "/users.csv", "User DB", USER_RECORD_LENGTH);
+		importDB(0, System.getProperty("user.dir") + "/EncryptedUsers.csv", "User DB", USER_RECORD_LENGTH);
 		id = getNextID(userAL);
 	}
 	
@@ -375,6 +375,9 @@ public class ServerUserDB extends ONCServerDB
 		Calendar last_login = Calendar.getInstance();
 		if(!nextLine[14].isEmpty())
 			last_login.setTimeInMillis(Long.parseLong(nextLine[14]));
+		
+		nextLine[1] = ONCEncryptor.decrypt(nextLine[1]);
+		nextLine[2] = ONCEncryptor.decrypt(nextLine[2]);
 			
 		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime()));
 		
