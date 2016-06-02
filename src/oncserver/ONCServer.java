@@ -23,9 +23,8 @@ public class ONCServer
 	 * @throws IOException 
 	 */
 	
-	private static final String APPNAME = "Our Neighbor's Child Server";
-	private static final String ONC_SERVER_VERSION = "Our Neighbor's Child Server Version 2.01\n";
-	private static final String ONC_COPYRIGHT = "\u00A92015 John W. O'Neill";
+	private static final String APPNAME = "Our Neighbor's Child Server v3.00";
+	private static final String ONC_COPYRIGHT = "\u00A92016 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
 	private ClientManager clientMgr; //Manages all connected clients
@@ -110,7 +109,7 @@ public class ONCServer
     // "About OSXAdapter" is selected from the application menu   
     public void about()
     {
-    	JOptionPane.showMessageDialog(oncFrame, ONC_SERVER_VERSION + ONC_COPYRIGHT, "About the ONC Server",
+    	JOptionPane.showMessageDialog(oncFrame, APPNAME + "\n" + ONC_COPYRIGHT, "About the ONC Server",
     			JOptionPane.INFORMATION_MESSAGE, clientMgr.getAppIcon());
     }
     

@@ -15,6 +15,7 @@ import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserAccess;
+import ourneighborschild.UserPreferences;
 import ourneighborschild.UserStatus;
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -23,8 +24,9 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerUserDB extends ONCServerDB
 {
-	private static final int USER_RECORD_LENGTH = 20;
+	private static final int USER_RECORD_LENGTH = 23;
 	private static final String USER_PASSWORD_PREFIX = "onc";
+	private static final String USERDB_FILENAME = "/users.csv";
 	private static ServerUserDB instance  = null;
 	
 	private static ClientManager clientMgr;
@@ -39,7 +41,8 @@ public class ServerUserDB extends ONCServerDB
 		serverAgentDB = ServerAgentDB.getInstance();
 		
 		userAL = new ArrayList<ONCServerUser>();
-		importDB(0, System.getProperty("user.dir") + "/EncryptedUsers.csv", "User DB", USER_RECORD_LENGTH);
+//		System.out.println(String.format("ServerUserDB filename: %s", System.getProperty("user.dir") + USERDB_FILENAME));
+		importDB(0, System.getProperty("user.dir") + USERDB_FILENAME, "User DB", USER_RECORD_LENGTH);
 		id = getNextID(userAL);
 	}
 	
@@ -118,6 +121,13 @@ public class ServerUserDB extends ONCServerDB
 				su.setAgentID(serverAgentDB.checkForAgent(DBManager.getCurrentYear(), su));
 				su.setAccess(updatedUser.getAccess());
 			}
+			
+			//set preference updates
+			UserPreferences currPrefs = su.getPreferences();
+			UserPreferences newPrefs = updatedUser.getPreferences();
+			currPrefs.setFontSize(newPrefs.getFontSize());
+			currPrefs.setWishAssigneeFilter(newPrefs.getWishAssigneeFilter());
+			currPrefs.setFamilyDNSFilter(newPrefs.getFamilyDNSFilter());
 			
 			save(-1);	//userDB not implemented by year
 			
@@ -395,9 +405,10 @@ public class ServerUserDB extends ONCServerDB
 		String[] header = {"ID", "Username", "Password", "Status", "Access", "Permission", "First Name",
 							"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 
 							"SL Changed By", "Sessions", "Last Login", "Orginization", "Title",
-							"Email", "Phone", "Agent ID"};
+							"Email", "Phone", "Agent ID", "Font Size", "Wish Assignee Filter",
+							"Family DNS Filter"};
 		
-		String path = System.getProperty("user.dir") + "/users.csv";
+		String path = System.getProperty("user.dir") + USERDB_FILENAME;
 		File oncwritefile = new File(path);
 			
 		try 
