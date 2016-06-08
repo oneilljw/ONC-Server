@@ -33,7 +33,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 3.29f;
+	private static final float MINIMUM_CLIENT_VERSION = 3.30f;
 	
 	private int id;
 	private String version;
@@ -63,6 +63,7 @@ public class DesktopClient extends Thread
     private ClientManager clientMgr;
     private ServerMealDB mealDB;
     private ServerAdultDB adultDB;
+    private ServerInventoryDB inventoryDB;
     private ServerChatManager chatMgr;
     private ONCUser clientUser;
     private Calendar timestamp;
@@ -108,6 +109,7 @@ public class DesktopClient extends Thread
 	        prioryearDB = PriorYearDB.getInstance();
 	        mealDB = ServerMealDB.getInstance();
 	        adultDB = ServerAdultDB.getInstance();
+	        inventoryDB = ServerInventoryDB.getInstance();
 		  
 	        clientUser = null;
 	        timestamp = Calendar.getInstance();
@@ -291,6 +293,11 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	output.println(prioryearDB.getPriorYearChild(year, command.substring(12)));
+                }
+                else if(command.startsWith("GET<inventory>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	output.println(inventoryDB.getInventory());
                 }
                 else if(command.startsWith("GET<search_pychild>"))
                 {

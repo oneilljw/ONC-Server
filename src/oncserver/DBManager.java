@@ -78,6 +78,7 @@ public class DBManager
 			dbAutosaveList.add(ServerMealDB.getInstance());
 			dbAutosaveList.add(ServerAdultDB.getInstance());
 			dbAutosaveList.add(PriorYearDB.getInstance());	//never changed once created each season
+			dbAutosaveList.add(ServerInventoryDB.getInstance()); //only one, not yearly content
 		}
 		catch (FileNotFoundException fnf) 
 		{
