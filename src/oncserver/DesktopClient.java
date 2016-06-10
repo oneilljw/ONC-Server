@@ -421,6 +421,30 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
                 }
+                else if(command.startsWith("POST<add_inventory>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = inventoryDB.add(year, command.substring(19));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<update_inventory>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = inventoryDB.update(command.substring(22));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
+                else if(command.startsWith("POST<delete_inventory>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = inventoryDB.delete(command.substring(22));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
                 else if(command.startsWith("POST<update_partner>"))
                 {
                 	clientMgr.addLogMessage(command);

@@ -478,13 +478,13 @@ public class ServerChildDB extends ONCServerDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Child ID", "Family ID", "Child #", "First Name", "Last Name",
-	 			"Gender", "DOB", "School", "Wish 1 ID", "Wish 2 ID",
-	 			"Wish 3 ID", "Prior Year Child ID"};
-		
 		ChildDBYear cDBYear = childDB.get(year - BASE_YEAR);
 		if(cDBYear.isUnsaved())
 		{
+			String[] header = {"Child ID", "Family ID", "Child #", "First Name", "Last Name",
+		 			"Gender", "DOB", "School", "Wish 1 ID", "Wish 2 ID",
+		 			"Wish 3 ID", "Prior Year Child ID"};
+			
 //			System.out.println(String.format("ServerChildDB save() - Saving Server Child DB"));
 			String path = String.format("%s/%dDB/ChildDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(cDBYear.getList(),  header, path);

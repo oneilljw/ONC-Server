@@ -197,7 +197,7 @@ public class ServerChildWishDB extends ONCServerDB
 		
 		//Search for child wishes that match the child id
 		for(ONCChildWish cw: cwAL)
-			if(cw.getChildID() == whRequest.getID() && cw.getWishNumber() == whRequest.getWishNumber())
+			if(cw.getChildID() == whRequest.getID() && cw.getWishNumber() == whRequest.getNumber())
 				cwHistory.add(cw);
 			
 		//Convert list to json and return it

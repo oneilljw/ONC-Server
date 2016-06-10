@@ -3,7 +3,6 @@ package oncserver;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -21,8 +20,9 @@ import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.HistoryRequest;
 import ourneighborschild.InventoryItem;
-import ourneighborschild.ONCChild;
-import au.com.bytecode.opencsv.CSVReader;
+import ourneighborschild.InventoryRequest;
+import ourneighborschild.UPCDatabaseItem;
+import ourneighborschild.UPCFailure;
 import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerInventoryDB extends ONCServerDB
@@ -34,7 +34,8 @@ public class ServerInventoryDB extends ONCServerDB
 	
 	private static ServerInventoryDB instance = null;
 	private static List<InventoryItem> invList;
-	private int id;
+	private static int nextID;
+	private boolean bSaveRequired;
 	
 	private static List<Integer> hashIndex;
 	private static char[] streetLetter = {'?','A','B','C','D','E','F','G','H','I','J','K','L','M',
@@ -47,21 +48,14 @@ public class ServerInventoryDB extends ONCServerDB
 		clientMgr = ClientManager.getInstance();
 		
 		invList = new ArrayList<InventoryItem>();
-//		System.out.println(String.format("ServerInventoryDB filename: %s", System.getProperty("user.dir") + INVENTORYDB_FILENAME));
 		importDB(0, System.getProperty("user.dir") + INVENTORYDB_FILENAME, "User DB", INVENTORY_DB_RECORD_LENGTH);
-		id = getNextID(invList);
+		nextID = getNextID(invList);
+		bSaveRequired = false;
 		
 		if(invList.size() == 0)
 		{
 //			createHashTable();	
 		}
-/*		
-		String upcJson = getUPCData("38000311109");
-		Gson gson = new Gson();
-		UPCDatabaseItem upcDBItem= gson.fromJson(upcJson, UPCDatabaseItem.class);
-		InventoryItem ii = new InventoryItem(0, upcDBItem);
-		System.out.println(String.format("ServerInventoryDB.constructor: ItemID %d, number %s, item %s", ii.getID(), ii.getNumber(), ii.getItemName()));
-*/
 	}
 	
 	public static ServerInventoryDB getInstance() throws FileNotFoundException, IOException
@@ -115,33 +109,57 @@ public class ServerInventoryDB extends ONCServerDB
 	}	
 	
 	@Override
-	String add(int year, String barcode)
+	String add(int year, String json)
 	{
-		//go to the external UPC database and attempt to get the item.
-		
+		//extract the barcode and increment change from the add request json
 		Gson gson = new Gson();
+		InventoryRequest addReq = gson.fromJson(json,  InventoryRequest.class);
 		
-		InventoryItem response = new InventoryItem(0, null);
+		//determine if the bar code is present in the data base. If it is, 
+		//increment the count. Eliminate leading zeros from the bar code since we
+		//don't store leading zeros and the UPC Database web site doesn't use leading
+		//zeros in the submitted URL
+		String searchCode = addReq.getBarcode().replaceFirst("^0+(?!$)", "");
+		int index = 0;
+		while(index < invList.size() && !invList.get(index).getNumber().equals(searchCode))
+			index++;
 		
-		return "ADDED_INVENTORY" + gson.toJson(response, InventoryItem.class);
-	}
-	
-	String increment(int id)
-	{
-		Gson gson = new Gson();
-		
-		HistoryRequest response = new HistoryRequest(0, 0);
-		
-		return "INCREMENTED_INVENTORY" + gson.toJson(response, HistoryRequest.class);
-	}
-	
-	String decrement(int id)
-	{
-		Gson gson = new Gson();
-		
-		HistoryRequest response = new HistoryRequest(0, 0);
-		
-		return "DECREMENTED_INVENTORY" + gson.toJson(response, HistoryRequest.class);
+		if(index < invList.size())	//bar code is already in inventory, update the count
+		{
+			int updatedCount = invList.get(index).incrementCount(addReq.getCount());
+			HistoryRequest incItem = new HistoryRequest(invList.get(index).getID(), updatedCount);
+			return "INCREMENTED_INVENTORY_ITEM" + gson.toJson(incItem, HistoryRequest.class);
+		}
+		else	//bar code is not in inventory, attempt to get it from an external data base
+		{
+			String upcDBItemJson = getUPCDataJson(searchCode);
+			if(upcDBItemJson == null)
+			{
+				UPCFailure upcFailure = new UPCFailure("false", "UPC Website did not respond");
+				return "UPC_LOOKUP_FAILED" + gson.toJson(upcFailure, UPCFailure.class);
+			}
+			else if(upcDBItemJson.contains("\"valid\":\"false\""))
+			{
+				return "ADD_INVENTORY_FALIED" + upcDBItemJson;
+			}
+			else
+			{
+				//found the item, create a new InventoryItem, set it's ID, add it to the
+				//inventory data base, mark the DB as changed and return the added item
+				//and return it. Eliminate any leading zeros in the bar code number prior
+				//to storing it in the data base
+				UPCDatabaseItem upcDBItem = gson.fromJson(upcDBItemJson, UPCDatabaseItem.class);
+				upcDBItem.setNumber(upcDBItem.getNumber().replaceFirst("^0+(?!$)", ""));
+				InventoryItem addedItem = new InventoryItem(nextID, upcDBItem);
+				
+				invList.add(addedItem);
+				nextID++;
+				bSaveRequired = true;
+				
+				return "ADDED_INVENTORY_ITEM" + gson.toJson(addedItem, InventoryItem.class);
+				
+			}
+		}
 	}
 	
 	String update(String json)
@@ -165,28 +183,33 @@ public class ServerInventoryDB extends ONCServerDB
 	}
 
 	@Override
-	void save(int year)
+	void save(int year)	//only one inventory, so year is ignored
 	{
-		String[] header = {"ID", "Count", "Number", "Item", "Alias", "Description",
+		if(bSaveRequired)
+		{
+			String[] header = {"ID", "Count", "Number", "Item", "Alias", "Description",
 							"Avg. Price", "Rate Up", "Rate Down"};
 		
-		String path = System.getProperty("user.dir") + "/InventoryDB.csv";
-		File oncwritefile = new File(path);
+			String path = System.getProperty("user.dir") + "/InventoryDB.csv";
+			File oncwritefile = new File(path);
 			
-		try 
-	    {
-	    	CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
-	    	writer.writeNext(header);
+			try 
+			{
+				CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
+				writer.writeNext(header);
 	    	
-	    	for(InventoryItem i: invList)
-	    		writer.writeNext(i.getExportRow());	//Write server Apartment row
+				for(InventoryItem i: invList)
+					writer.writeNext(i.getExportRow());	//Write server Apartment row
 	    	
-	    	writer.close();
-	    } 
-	    catch (IOException x)
-	    {
-	    	System.err.format("IO Exception: %s%n", x);
-	    }
+				writer.close();
+				
+				bSaveRequired = false;
+			} 
+			catch (IOException x)
+			{
+				System.err.format("IO Exception: %s%n", x);
+			}
+		}
 	}
 	
 	/*****
@@ -194,9 +217,9 @@ public class ServerInventoryDB extends ONCServerDB
 	 * @param barcode - String representing the bar code number
 	 * @return - String that contains the JSON response from UPC Database
 	 */
-	String getUPCData(String barcode)
+	String getUPCDataJson(String barcode)
 	{
-		StringBuffer response = new StringBuffer(1024);
+		StringBuffer responseJson = new StringBuffer(1024);
 		 
 		//Turn the string into a valid URL
 	    URL modAPIUrl = null;
@@ -235,9 +258,10 @@ public class ServerInventoryDB extends ONCServerDB
 	    		BufferedReader input = new BufferedReader(new InputStreamReader(httpconn.getInputStream()), 1024);
 	    		String strLine = null;
 	    		while ((strLine = input.readLine()) != null)
-				    response.append(strLine);
+				    responseJson.append(strLine);
 	    			
 	    		input.close();
+	    		httpconn.disconnect();
 			}
 	    }
 		catch (IOException e1)
@@ -246,9 +270,8 @@ public class ServerInventoryDB extends ONCServerDB
 						"UPC Database Issue", JOptionPane.ERROR_MESSAGE);
 		}
 	    
-	    //return the response as a string
-//	    System.out.println(String.format("InventoryDB.getUPCData: response: %s", response.toString()));
-	    return response.toString();
+	    //return the UPCDatabaseItem Json
+	    return responseJson.toString();
 	}
 
 	@Override
