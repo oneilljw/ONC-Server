@@ -164,12 +164,23 @@ public class ServerInventoryDB extends ONCServerDB
 	
 	String update(String json)
 	{
+		System.out.println(String.format("ServerInvDB.update: json= %s", json));
 		//go to the external UPC database and attempt to get the item.
 		Gson gson = new Gson();
-				
-		InventoryItem response = new InventoryItem(0, null);
-				
-		return "UPDATED_INVENTORY" + gson.toJson(response, InventoryItem.class);
+		InventoryItem updateItemReq = gson.fromJson(json, InventoryItem.class);
+		
+		//find the item
+		int index = 0;
+		while(index < invList.size() && invList.get(index).getID() != updateItemReq.getID())
+			index++;
+		
+		if(index < invList.size())
+		{
+			invList.set(index, updateItemReq);
+			return "UPDATED_INVENTORY_ITEM" + gson.toJson(updateItemReq, InventoryItem.class);
+		}
+		else
+			return "UPDATE_INVENTORY_FAILED";	
 	}
 	
 	String delete(String json)
@@ -179,7 +190,7 @@ public class ServerInventoryDB extends ONCServerDB
 				
 		InventoryItem response = new InventoryItem(0, null);
 				
-		return "DELETED_INVENTORY" + gson.toJson(response, InventoryItem.class);
+		return "DELETED_INVENTORY_ITEM" + gson.toJson(response, InventoryItem.class);
 	}
 
 	@Override
