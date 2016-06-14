@@ -126,9 +126,18 @@ public class ServerInventoryDB extends ONCServerDB
 		
 		if(index < invList.size())	//bar code is already in inventory, update the count
 		{
-			int updatedCount = invList.get(index).incrementCount(addReq.getCount());
-			HistoryRequest incItem = new HistoryRequest(invList.get(index).getID(), updatedCount);
-			return "INCREMENTED_INVENTORY_ITEM" + gson.toJson(incItem, HistoryRequest.class);
+			//ensure the item isn't already at a zero count. If it is, return a failure
+			if(addReq.getCount() + invList.get(index).getCount() < 0)
+			{
+				UPCFailure upcFailure = new UPCFailure("false", "Count cannot be less then 0");
+				return "UPC_LOOKUP_FAILED" + gson.toJson(upcFailure, UPCFailure.class);
+			}
+			else
+			{
+				int updatedCount = invList.get(index).incrementCount(addReq.getCount());
+				HistoryRequest incItem = new HistoryRequest(invList.get(index).getID(), updatedCount);
+				return "INCREMENTED_INVENTORY_ITEM" + gson.toJson(incItem, HistoryRequest.class);
+			}
 		}
 		else	//bar code is not in inventory, attempt to get it from an external data base
 		{
@@ -164,7 +173,6 @@ public class ServerInventoryDB extends ONCServerDB
 	
 	String update(String json)
 	{
-		System.out.println(String.format("ServerInvDB.update: json= %s", json));
 		//go to the external UPC database and attempt to get the item.
 		Gson gson = new Gson();
 		InventoryItem updateItemReq = gson.fromJson(json, InventoryItem.class);
