@@ -27,7 +27,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerInventoryDB extends ONCServerDB
 {
-	private static final String INVENTORYDB_FILENAME = "/inventoryDB.csv";
+	private static final String INVENTORYDB_FILENAME = "/InventoryDB.csv";
 	private static final int INVENTORY_DB_RECORD_LENGTH = 9;
 	private static final String API_KEY = "c41c148aae17866d16c9e278968539b3";
 	private static final String UPC_LOOKUP_URL = "http://api.upcdatabase.org/json/%s/%s";
