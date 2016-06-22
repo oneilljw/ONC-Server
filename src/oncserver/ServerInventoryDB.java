@@ -106,12 +106,11 @@ public class ServerInventoryDB extends ONCServerDB
 	void addObject(int year, String[] nextLine) 
 	{
 		invList.add(new InventoryItem(nextLine));
-	}	
+	}
 	
-	@Override
-	String add(int year, String json)
+	String addFromBarcodeScan(String json)
 	{
-		//extract the barcode and increment change from the add request json
+		//its a bar code add request using InventoryRequest object
 		Gson gson = new Gson();
 		InventoryRequest addReq = gson.fromJson(json,  InventoryRequest.class);
 		
@@ -171,6 +170,21 @@ public class ServerInventoryDB extends ONCServerDB
 		}
 	}
 	
+	@Override
+	String add(int year, String json)
+	{
+		//it's a manual add request using InventoryItem object. Add it to the db and
+		//return it.
+		Gson gson = new Gson();
+		
+		InventoryItem addItemReq = gson.fromJson(json,  InventoryItem.class);
+		addItemReq.setID(nextID++);
+		invList.add(addItemReq);
+		bSaveRequired = true;
+			
+		return "ADDED_INVENTORY_ITEM" + gson.toJson(addItemReq, InventoryItem.class);
+	}
+	
 	String update(String json)
 	{
 		//go to the external UPC database and attempt to get the item.
@@ -193,12 +207,20 @@ public class ServerInventoryDB extends ONCServerDB
 	
 	String delete(String json)
 	{
-		//go to the external UPC database and attempt to get the item.
+		//delete the item from the database. Check to insure the current inventory count is zero
 		Gson gson = new Gson();
-				
-		InventoryItem response = new InventoryItem(0, null);
-				
-		return "DELETED_INVENTORY_ITEM" + gson.toJson(response, InventoryItem.class);
+		InventoryItem delItemReq = gson.fromJson(json, InventoryItem.class);
+		delItemReq.setNumber(delItemReq.getNumber().replaceFirst("^0+(?!$)", ""));
+		
+		//find the item and if found, ensure quantity is zero
+		int index = 0;
+		while(index < invList.size() && !invList.get(index).getNumber().equals(delItemReq.getNumber()))
+			index++;
+		
+		if(index < invList.size() && invList.get(index).getCount() == 0)
+			return "DELETED_INVENTORY_ITEM" + gson.toJson(delItemReq, InventoryItem.class);
+		else
+			return "DELETE_INVENTORY_FAILED";
 	}
 
 	@Override

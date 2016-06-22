@@ -421,6 +421,14 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
                 }
+                else if(command.startsWith("POST<add_barcode>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = inventoryDB.addFromBarcodeScan(command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.dataChanged(this, response);
+                }
                 else if(command.startsWith("POST<add_inventory>"))
                 {
                 	clientMgr.addLogMessage(command);
