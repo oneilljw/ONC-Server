@@ -18,7 +18,7 @@ import javax.swing.JOptionPane;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import ourneighborschild.HistoryRequest;
+import ourneighborschild.InventoryChange;
 import ourneighborschild.InventoryItem;
 import ourneighborschild.InventoryRequest;
 import ourneighborschild.UPCDatabaseItem;
@@ -28,7 +28,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 public class ServerInventoryDB extends ONCServerDB
 {
 	private static final String INVENTORYDB_FILENAME = "/InventoryDB.csv";
-	private static final int INVENTORY_DB_RECORD_LENGTH = 9;
+	private static final int INVENTORY_DB_RECORD_LENGTH = 11;
 	private static final String API_KEY = "c41c148aae17866d16c9e278968539b3";
 	private static final String UPC_LOOKUP_URL = "http://api.upcdatabase.org/json/%s/%s";
 	
@@ -134,8 +134,9 @@ public class ServerInventoryDB extends ONCServerDB
 			else
 			{
 				int updatedCount = invList.get(index).incrementCount(addReq.getCount());
-				HistoryRequest incItem = new HistoryRequest(invList.get(index).getID(), updatedCount);
-				return "INCREMENTED_INVENTORY_ITEM" + gson.toJson(incItem, HistoryRequest.class);
+				int updatedCommits = invList.get(index).incrementCommits(addReq.getCommits());
+				InventoryChange incItem = new InventoryChange(invList.get(index).getID(), updatedCount, updatedCommits);
+				return "INCREMENTED_INVENTORY_ITEM" + gson.toJson(incItem, InventoryChange.class);
 			}
 		}
 		else	//bar code is not in inventory, attempt to get it from an external data base
@@ -228,7 +229,7 @@ public class ServerInventoryDB extends ONCServerDB
 	{
 		if(bSaveRequired)
 		{
-			String[] header = {"ID", "Count", "Number", "Item", "Alias", "Description",
+			String[] header = {"ID", "Count", "Commits", "Number", "Item", "Wish ID", "Alias", "Description",
 							"Avg. Price", "Rate Up", "Rate Down"};
 		
 			String path = System.getProperty("user.dir") + "/InventoryDB.csv";
