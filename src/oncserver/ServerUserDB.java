@@ -22,7 +22,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerUserDB extends ONCServerDB
+public class ServerUserDB extends ServerPermanentDB
 {
 	private static final int USER_RECORD_LENGTH = 23;
 	private static final String USER_PASSWORD_PREFIX = "onc";
@@ -42,7 +42,7 @@ public class ServerUserDB extends ONCServerDB
 		
 		userAL = new ArrayList<ONCServerUser>();
 //		System.out.println(String.format("ServerUserDB filename: %s", System.getProperty("user.dir") + USERDB_FILENAME));
-		importDB(0, System.getProperty("user.dir") + USERDB_FILENAME, "User DB", USER_RECORD_LENGTH);
+		importDB(System.getProperty("user.dir") + USERDB_FILENAME, "User DB", USER_RECORD_LENGTH);
 		id = getNextID(userAL);
 	}
 	
@@ -55,7 +55,7 @@ public class ServerUserDB extends ONCServerDB
 	}
 	
 	@Override
-	String add(int year, String json)	//User DB currently not implemented by year
+	String add(String json)
 	{
 		Gson gson = new Gson();
 		ONCServerUser su = gson.fromJson(json, ONCServerUser.class);
@@ -72,7 +72,7 @@ public class ServerUserDB extends ONCServerDB
 			su.setAgentID(-1);
 		
 		userAL.add(su); //Add new user to data base
-		save(-1);	//userDB not implemented by year
+		save();	//userDB not implemented by year
 		
 		return "ADDED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class) ;
 	}
@@ -129,7 +129,7 @@ public class ServerUserDB extends ONCServerDB
 			currPrefs.setWishAssigneeFilter(newPrefs.getWishAssigneeFilter());
 			currPrefs.setFamilyDNSFilter(newPrefs.getFamilyDNSFilter());
 			
-			save(-1);	//userDB not implemented by year
+			save();	//userDB not implemented by year
 			
 			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
 			if(su.getAgentID() > -1)	//notify AgentDB of email change
@@ -180,7 +180,7 @@ public class ServerUserDB extends ONCServerDB
 			su.setEmail((String) params.get("email"));
 			su.setPhone((String) params.get("phone"));
 			
-			save(-1);	//userDB not implemented by year currently
+			save();	//userDB not implemented by year currently
 			
 			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
 			if(su.getAgentID() > -1)	//notify AgentDB of email change
@@ -316,7 +316,7 @@ public class ServerUserDB extends ONCServerDB
 				    	clientMgr.notifyAllOtherClients(requestingClient, change);	//null to notify all clients
 					}
 					
-					save(year);
+					save();
 					response = "PASSWORD_CHANGED<html>Your password has been changed!</html>";
 					
 				}
@@ -364,7 +364,7 @@ public class ServerUserDB extends ONCServerDB
 				    clientMgr.notifyAllClients(change);	//notify all desktop clients
 				}
 					
-				save(-1);	//year is irrelevant, only one user db
+				save();
 			}
 			else
 				result = -1;
@@ -376,7 +376,7 @@ public class ServerUserDB extends ONCServerDB
 	 } 
 	
 	@Override
-	void addObject(int year, String[] nextLine) 
+	void addObject(String[] nextLine) 
 	{
 		Calendar date_changed = Calendar.getInstance();
 		if(!nextLine[6].isEmpty())
@@ -394,13 +394,7 @@ public class ServerUserDB extends ONCServerDB
 	}
 
 	@Override
-	void createNewYear(int year) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	void save(int year)
+	void save()
 	{
 		String[] header = {"ID", "Username", "Password", "Status", "Access", "Permission", "First Name",
 							"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 

@@ -16,7 +16,7 @@ import ourneighborschild.UserPermission;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerAgentDB extends ONCServerDB
+public class ServerAgentDB extends ServerSeasonalDB
 {
 	private static final int AGENT_DB_HEADER_LENGTH = 6;
 	private static List<AgentDBYear> agentDB;

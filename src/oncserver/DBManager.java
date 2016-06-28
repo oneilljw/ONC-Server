@@ -32,7 +32,9 @@ public class DBManager
 	
 	private static DBManager instance = null;
 	private Timer dbSaveTimer;
-	private List<ONCServerDB> dbAutosaveList;
+//	private List<ONCServerDB> dbAutosaveList;
+	private List<ServerPermanentDB> dbPermanentAutosaveList;
+	private List<ServerSeasonalDB> dbSeasonalAutosaveList;
 	private static List<DBYear> dbYearList;
 	
 	public static DBManager getInstance(ImageIcon appicon)
@@ -59,26 +61,27 @@ public class DBManager
 	
 		//Load the thirteen component data bases from persistent store;
 		//for the nine component data bases that are periodically saved, add them to a auto save list
-		dbAutosaveList = new ArrayList<ONCServerDB>();	//list of data bases stored thru timer event
+		dbPermanentAutosaveList = new ArrayList<ServerPermanentDB>();	//list of data bases stored thru timer event
+		dbSeasonalAutosaveList = new ArrayList<ServerSeasonalDB>();	//list of data bases stored thru timer event
 		try
 		{
 			ServerUserDB.getInstance();	//saved whenever its changed
 			RegionDB.getInstance(appicon);	//never changed
 			ApartmentDB.getInstance(); //never changed
-			dbAutosaveList.add(GlobalVariableDB.getInstance());
-			dbAutosaveList.add(ServerPartnerDB.getInstance());
-			dbAutosaveList.add(ServerChildDB.getInstance());
-			dbAutosaveList.add(ServerChildWishDB.getInstance());
-			dbAutosaveList.add(ServerFamilyDB.getInstance());
-			dbAutosaveList.add(ServerAgentDB.getInstance());
-			dbAutosaveList.add(ServerDriverDB.getInstance());
-			dbAutosaveList.add(ServerDeliveryDB.getInstance());
-			dbAutosaveList.add(ServerWishCatalog.getInstance());
-			dbAutosaveList.add(ServerWishDetailDB.getInstance());
-			dbAutosaveList.add(ServerMealDB.getInstance());
-			dbAutosaveList.add(ServerAdultDB.getInstance());
-			dbAutosaveList.add(PriorYearDB.getInstance());	//never changed once created each season
-			dbAutosaveList.add(ServerInventoryDB.getInstance()); //only one, not yearly content
+			dbSeasonalAutosaveList.add(ServerGlobalVariableDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerPartnerDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerChildDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerChildWishDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerFamilyDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerAgentDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerDriverDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerDeliveryDB.getInstance());
+			dbPermanentAutosaveList.add(ServerWishCatalog.getInstance());
+			dbPermanentAutosaveList.add(ServerWishDetailDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerMealDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerAdultDB.getInstance());
+			dbSeasonalAutosaveList.add(PriorYearDB.getInstance());	//never changed once created each season
+			dbPermanentAutosaveList.add(ServerInventoryDB.getInstance()); //only one, not yearly content
 		}
 		catch (FileNotFoundException fnf) 
 		{
@@ -187,8 +190,8 @@ public class DBManager
 				//update the DBYears file and create the db component files
 				exportDBYearsList();
 				
-				//for each component database, ask it to create the new year
-				for(ONCServerDB componentDB: dbAutosaveList)
+				//for each seasonal component database, ask it to create the new year
+				for(ServerSeasonalDB componentDB: dbSeasonalAutosaveList)
 					componentDB.createNewYear(newYear);
 			
 				//return the new DBYear json
@@ -286,8 +289,13 @@ public class DBManager
 			//databases that are periodically saved to save data to persistent store
 			for(DBYear dbYear: dbYearList)	
 				if(!dbYear.isLocked())
-					for(ONCServerDB db: dbAutosaveList)
-						db.save(dbYear.getYear());		
+				{
+					for(ServerPermanentDB permDB: dbPermanentAutosaveList)
+						permDB.save();
+					
+					for(ServerSeasonalDB seasonalDB: dbSeasonalAutosaveList)
+						seasonalDB.save(dbYear.getYear());
+				}
 		}	
 	}
 }

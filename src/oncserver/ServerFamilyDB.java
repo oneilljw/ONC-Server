@@ -23,7 +23,7 @@ import ourneighborschild.WishStatus;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerFamilyDB extends ONCServerDB
+public class ServerFamilyDB extends ServerSeasonalDB
 {
 	private static final int FAMILYDB_HEADER_LENGTH = 42;
 	

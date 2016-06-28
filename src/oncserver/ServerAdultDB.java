@@ -11,7 +11,7 @@ import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.ONCAdult;
 
-public class ServerAdultDB extends ONCServerDB
+public class ServerAdultDB extends ServerSeasonalDB
 {
 	private static final int ADULT_DB_HEADER_LENGTH = 4;
 	private static final int BASE_YEAR = 2012;
@@ -211,5 +211,4 @@ public class ServerAdultDB extends ONCServerDB
     	
     	void add(ONCAdult addedAdult) { adultList.add(addedAdult); }
     }
-
 }

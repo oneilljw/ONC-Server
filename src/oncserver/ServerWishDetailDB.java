@@ -1,28 +1,37 @@
 package oncserver;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 import ourneighborschild.WishDetail;
+import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerWishDetailDB extends ONCServerDB
+public class ServerWishDetailDB extends ServerPermanentDB
 {
-	private static final int WISH_DETAIL_HEADER_LENGTH = 3;
+//	private static final int WISH_DETAIL_HEADER_LENGTH = 3;
+	private static final int DETAIL_RECORD_LENGTH = 3;
+	private static final String DETAIL_FILENAME = "/WishDetailDB.csv";
 
-	private static List<WishDetailDBYear> wdDB;
+//	private static List<WishDetailDBYear> wdDB;
+	private static List<WishDetail> wdDB;
+	int nextID;
+	boolean bSaveRequired;
 	private static ServerWishDetailDB instance = null;
 	
 	private ServerWishDetailDB() throws FileNotFoundException, IOException
 	{
 		//create the wish detail data bases for TOTAL_YEARS number of years
-		wdDB = new ArrayList<WishDetailDBYear>();
-														
+//		wdDB = new ArrayList<WishDetailDBYear>();
+		wdDB = new ArrayList<WishDetail>();
+/*														
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
 		{
 			//create the wish detail list for year
@@ -38,6 +47,10 @@ public class ServerWishDetailDB extends ONCServerDB
 			//set the next ID
 			detailDBYear.setNextID(getNextID(detailDBYear.getList()));
 		}
+*/		
+		importDB(System.getProperty("user.dir") + DETAIL_FILENAME, "Wish Detail", DETAIL_RECORD_LENGTH);
+		nextID = getNextID(wdDB);
+		bSaveRequired = false;
 	}
 	
 	public static ServerWishDetailDB getInstance() throws FileNotFoundException, IOException
@@ -55,38 +68,39 @@ public class ServerWishDetailDB extends ONCServerDB
 		WishDetail reqWishDetail = gson.fromJson(json, WishDetail.class);
 		
 		//Find the position for the current wish detail being updated
-		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		List<WishDetail> wishdetailAL = detailDBYear.getList();
+//		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+//		List<WishDetail> wishdetailAL = detailDBYear.getList();
 		int index = 0;
-		while(index < wishdetailAL.size() && wishdetailAL.get(index).getID() != reqWishDetail.getID())
+		while(index < wdDB.size() && wdDB.get(index).getID() != reqWishDetail.getID())
 			index++;
 		
 		//If wish detail is located, replace the current wish detail with the update.
-		if(index == wishdetailAL.size()) 
+		if(index == wdDB.size()) 
 		{
-			WishDetail currWishDetail = wishdetailAL.get(index);
+			WishDetail currWishDetail = wdDB.get(index);
 			return "UPDATE_FAILED" + gson.toJson(currWishDetail , WishDetail.class);
 		}
 		else
 		{
-			wishdetailAL.set(index, reqWishDetail);
-			detailDBYear.setChanged(true);
+			wdDB.set(index, reqWishDetail);
+			bSaveRequired = true;
 			return "UPDATED_WISH_DETAIL" + json;
 		}
 	}
 	
 	@Override
-	String add(int year, String json)
+	String add(String json)
 	{
 		//Create a wish detail object
 		Gson gson = new Gson();
 		WishDetail addedWishDetail = gson.fromJson(json, WishDetail.class);
 	
 		//set the new id for the detail and add to the year data base
-		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		addedWishDetail.setID(detailDBYear.getNextID());
-		detailDBYear.add(addedWishDetail);
-		detailDBYear.setChanged(true);
+//		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+		addedWishDetail.setID(nextID++);
+		wdDB.add(addedWishDetail);
+		bSaveRequired = true;
+//		detailDBYear.setChanged(true);
 		
 		return "ADDED_WISH_DETAIL" + gson.toJson(addedWishDetail, WishDetail.class);
 	}
@@ -98,18 +112,19 @@ public class ServerWishDetailDB extends ONCServerDB
 		WishDetail reqDelWishDetail = gson.fromJson(json, WishDetail.class);
 		
 		//find the partner in the db
-		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		List<WishDetail> wishdetailAL = detailDBYear.getList();
+//		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+//		List<WishDetail> wishdetailAL = detailDBYear.getList();
 	
 		int index = 0;
-		while(index < wishdetailAL.size() && wishdetailAL.get(index).getID() != reqDelWishDetail.getID())
+		while(index < wdDB.size() && wdDB.get(index).getID() != reqDelWishDetail.getID())
 			index++;
 		
 		//partner must be present and have no ornaments assigned to be deleted
-		if(index < wishdetailAL.size())
+		if(index < wdDB.size())
 		{
-			wishdetailAL.remove(index);
-			detailDBYear.setChanged(true);
+			wdDB.remove(index);
+			bSaveRequired = true;
+//			detailDBYear.setChanged(true);
 			return "DELETED_WISH_DETAIL" + json;
 		}
 		else
@@ -122,42 +137,18 @@ public class ServerWishDetailDB extends ONCServerDB
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<WishDetail>>(){}.getType();
 			
-		String response = gson.toJson(wdDB.get(year - BASE_YEAR).getList(), listtype);
+		String response = gson.toJson(wdDB, listtype);
 		return response;	
 	}
 
 	@Override
-	void addObject(int year, String[] nextLine)
+	void addObject(String[] nextLine)
 	{
-		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		detailDBYear.add(new WishDetail(nextLine));
+//		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+//		detailDBYear.add(new WishDetail(nextLine));
+		wdDB.add(new WishDetail(nextLine));
 	}
-
-	@Override
-	void createNewYear(int newYear)
-	{
-		//create a new wish detail data base year for the year provided in the newYear parameter
-		//Then copy the prior years wish detail list to the newly created wish detail db year list.
-		//Mark the newly created WishDetailDBYear for saving during the next save event
-				
-		//get a reference to the prior years wish detail
-		List<WishDetail> lyWishDetailList = wdDB.get(wdDB.size()-1).getList();
-				
-		//create the new WishCatalogDBYear
-		WishDetailDBYear wishdetailDBYear = new WishDetailDBYear(newYear);
-		wdDB.add(wishdetailDBYear);
-				
-		//add a copy of last years catalog wishes to the new years catalog
-		for(WishDetail lyWD : lyWishDetailList)
-			wishdetailDBYear.add(new WishDetail(lyWD));
-		
-		//set the nextID for the newly created WishDetailDBYear
-		wishdetailDBYear.setNextID(getNextID(wishdetailDBYear.getList()));
-		
-		//mark the newly created WishDetailDBYear for saving
-		wishdetailDBYear.setChanged(true);
-	}
-	
+/*	
 	private class WishDetailDBYear extends ServerDBYear
 	{
 		private List<WishDetail> wdList;
@@ -185,6 +176,35 @@ public class ServerWishDetailDB extends ONCServerDB
 			String path = String.format("%s/%dDB/WishDetailDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(detailDBYear.getList(), header, path);
 			detailDBYear.setChanged(false);
+		}
+	}
+*/
+	@Override
+	void save()
+	{
+		if(bSaveRequired)
+		{
+			String[] header = {"Wish Detail ID", "Name", "Choices"};
+			
+			String path = System.getProperty("user.dir") + DETAIL_FILENAME;
+			File oncwritefile = new File(path);
+			
+			try 
+			{
+				CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
+				writer.writeNext(header);
+	    	
+				for(WishDetail wd: wdDB)
+					writer.writeNext(wd.getExportRow());	//Write server Apartment row
+	    	
+				writer.close();
+				
+				bSaveRequired = false;
+			} 
+			catch (IOException x)
+			{
+				System.err.format("IO Exception: %s%n", x);
+			}
 		}
 	}
 }

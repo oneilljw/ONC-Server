@@ -13,7 +13,7 @@ import ourneighborschild.ONCPartner;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerPartnerDB extends ONCServerDB
+public class ServerPartnerDB extends ServerSeasonalDB
 {
 	private static final int ORGANIZATION_DB_HEADER_LENGTH = 33;
 	private static final int STATUS_CONFIRMED = 5;

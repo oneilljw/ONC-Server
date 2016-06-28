@@ -774,7 +774,7 @@ public class ONCHttpHandler implements HttpHandler
 	    		
 	    		serverUser.incrementSessions();	
 	    		serverUser.setLastLogin(new Date());
-	    		userDB.save(DEFAULT_YEAR);	//year will equal -1 at this point, but ignored. Only one user.csv
+	    		userDB.save();
 	    		
 	    		ONCUser webUser = serverUser.getUserFromServerUser();
 	    		ClientManager clientMgr = ClientManager.getInstance();
@@ -1623,9 +1623,9 @@ public class ONCHttpHandler implements HttpHandler
 	
 	String enableReferralButton(String day)
 	{
-		GlobalVariableDB gDB = null;
+		ServerGlobalVariableDB gDB = null;
 		try {
-			gDB = GlobalVariableDB.getInstance();
+			gDB = ServerGlobalVariableDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

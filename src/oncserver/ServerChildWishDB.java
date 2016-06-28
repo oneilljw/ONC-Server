@@ -12,13 +12,12 @@ import java.util.List;
 import ourneighborschild.HistoryRequest;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
-import ourneighborschild.ONCWish;
 import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerChildWishDB extends ONCServerDB
+public class ServerChildWishDB extends ServerSeasonalDB
 {
 	private static final int CHILD_WISH_DB_HEADER_LENGTH = 10;
 	private static final int BASE_YEAR = 2012;
@@ -68,7 +67,7 @@ public class ServerChildWishDB extends ONCServerDB
 	{
 		return childwishDB.get(year - BASE_YEAR).getList();
 	}
-	
+/*	
 	void updateWishIDs()
 	{		
 		ServerWishCatalog wishCatDB = null;
@@ -116,7 +115,7 @@ public class ServerChildWishDB extends ONCServerDB
 		}
 			
 	}
-	
+*/	
 	@Override
 	String add(int year, String wishjson)
 	{
@@ -274,9 +273,9 @@ public class ServerChildWishDB extends ONCServerDB
 		Calendar pyDateGiftsReceivedBy = Calendar.getInstance();
 		
 		//get the receive gift deadline for the prior year
-		GlobalVariableDB gvDB = null;
+		ServerGlobalVariableDB gvDB = null;
 		try {
-			gvDB = GlobalVariableDB.getInstance();
+			gvDB = ServerGlobalVariableDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

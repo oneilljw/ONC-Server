@@ -11,7 +11,7 @@ import ourneighborschild.ONCDriver;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerDriverDB extends ONCServerDB
+public class ServerDriverDB extends ServerSeasonalDB
 {
 	private static final int DRIVER_DB_HEADER_LENGTH = 19;
 	

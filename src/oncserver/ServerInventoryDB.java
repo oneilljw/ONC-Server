@@ -25,7 +25,7 @@ import ourneighborschild.UPCDatabaseItem;
 import ourneighborschild.UPCFailure;
 import au.com.bytecode.opencsv.CSVWriter;
 
-public class ServerInventoryDB extends ONCServerDB
+public class ServerInventoryDB extends ServerPermanentDB
 {
 	private static final String INVENTORYDB_FILENAME = "/InventoryDB.csv";
 	private static final int INVENTORY_DB_RECORD_LENGTH = 11;
@@ -48,7 +48,7 @@ public class ServerInventoryDB extends ONCServerDB
 		clientMgr = ClientManager.getInstance();
 		
 		invList = new ArrayList<InventoryItem>();
-		importDB(0, System.getProperty("user.dir") + INVENTORYDB_FILENAME, "User DB", INVENTORY_DB_RECORD_LENGTH);
+		importDB(System.getProperty("user.dir") + INVENTORYDB_FILENAME, "User DB", INVENTORY_DB_RECORD_LENGTH);
 		nextID = getNextID(invList);
 		bSaveRequired = false;
 		
@@ -103,7 +103,7 @@ public class ServerInventoryDB extends ONCServerDB
 	}
 	
 	@Override
-	void addObject(int year, String[] nextLine) 
+	void addObject(String[] nextLine) 
 	{
 		invList.add(new InventoryItem(nextLine));
 	}
@@ -172,13 +172,13 @@ public class ServerInventoryDB extends ONCServerDB
 	}
 	
 	@Override
-	String add(int year, String json)
+	String add(String json)
 	{
 		//it's a manual add request using InventoryItem object. Add it to the db and
 		//return it.
 		Gson gson = new Gson();
-		
 		InventoryItem addItemReq = gson.fromJson(json,  InventoryItem.class);
+		
 		addItemReq.setID(nextID++);
 		invList.add(addItemReq);
 		bSaveRequired = true;
@@ -225,7 +225,7 @@ public class ServerInventoryDB extends ONCServerDB
 	}
 
 	@Override
-	void save(int year)	//only one inventory, so year is ignored
+	void save()
 	{
 		if(bSaveRequired)
 		{
@@ -314,11 +314,5 @@ public class ServerInventoryDB extends ONCServerDB
 	    
 	    //return the UPCDatabaseItem Json
 	    return responseJson.toString();
-	}
-
-	@Override
-	void createNewYear(int year) 
-	{
-		//only one Inventory data base, does not have year based data
 	}
 }

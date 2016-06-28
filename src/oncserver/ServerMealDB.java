@@ -13,7 +13,7 @@ import ourneighborschild.ONCMeal;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerMealDB extends ONCServerDB
+public class ServerMealDB extends ServerSeasonalDB
 {
 	private static final int MEAL_DB_HEADER_LENGTH = 11;
 	private static final int BASE_YEAR = 2012;

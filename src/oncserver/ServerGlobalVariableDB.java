@@ -20,16 +20,16 @@ import com.google.gson.Gson;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
-public class GlobalVariableDB extends ONCServerDB
+public class ServerGlobalVariableDB extends ServerSeasonalDB
 {
 	private static final int GV_HEADER_LENGTH = 7;
 	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	
-	private static GlobalVariableDB instance = null;
+	private static ServerGlobalVariableDB instance = null;
 	private List<GlobalVariableDBYear> globalDB;
 	
-	private GlobalVariableDB() throws FileNotFoundException, IOException
+	private ServerGlobalVariableDB() throws FileNotFoundException, IOException
 	{
 		//create the database
 		globalDB = new ArrayList<GlobalVariableDBYear>();
@@ -46,10 +46,10 @@ public class GlobalVariableDB extends ONCServerDB
 		}
 	}
 	
-	public static GlobalVariableDB getInstance() throws FileNotFoundException, IOException
+	public static ServerGlobalVariableDB getInstance() throws FileNotFoundException, IOException
 	{
 		if(instance == null)
-			instance = new GlobalVariableDB();
+			instance = new ServerGlobalVariableDB();
 		
 		return instance;
 	}

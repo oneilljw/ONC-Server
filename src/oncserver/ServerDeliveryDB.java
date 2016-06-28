@@ -13,7 +13,7 @@ import ourneighborschild.ONCFamily;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerDeliveryDB extends ONCServerDB
+public class ServerDeliveryDB extends ServerSeasonalDB
 {
 	private static final int DELIVERY_DB_HEADER_LENGTH = 7;
 	private static final int DELIVERY_STATUS_ASSIGNED = 3;

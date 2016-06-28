@@ -49,7 +49,7 @@ public class DesktopClient extends Thread
     private DBManager dbManager;
     private ServerUserDB userDB;
     private RegionDB regionDB;
-    private GlobalVariableDB globalvariableDB;
+    private ServerGlobalVariableDB globalvariableDB;
     private ServerFamilyDB serverFamilyDB;
     private ServerAgentDB serverAgentDB;
     private ServerChildDB childDB;
@@ -96,7 +96,7 @@ public class DesktopClient extends Thread
         	dbManager = DBManager.getInstance(clientMgr.getAppIcon());
 			userDB = ServerUserDB.getInstance();
 			regionDB = RegionDB.getInstance(clientMgr.getAppIcon());
-	        globalvariableDB = GlobalVariableDB.getInstance();
+	        globalvariableDB = ServerGlobalVariableDB.getInstance();
 	        serverFamilyDB = ServerFamilyDB.getInstance();
 	        serverAgentDB = ServerAgentDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
@@ -344,7 +344,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_user>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = userDB.add(year, command.substring(14));
+                	String response = userDB.add(command.substring(14));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
@@ -432,7 +432,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_inventory>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = inventoryDB.add(year, command.substring(19));
+                	String response = inventoryDB.add(command.substring(19));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.dataChanged(this, response);
@@ -508,7 +508,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_catwish>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = wishCatalog.add(year, command.substring(17));
+                	String response = wishCatalog.add(command.substring(17));
                 	output.println(response);
                 	clientMgr.dataChanged(this, response);
                 }
@@ -529,7 +529,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_wishdetail>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = wishDetailDB.add(year, command.substring(20));
+                	String response = wishDetailDB.add(command.substring(20));
                 	output.println(response);
                 	clientMgr.dataChanged(this, response);
                 }
@@ -818,7 +818,7 @@ public class DesktopClient extends Thread
     		state = ClientState.Logged_In;	//Client logged in
     		serverUser.incrementSessions();
     		serverUser.setLastLogin(new Date());
-    		userDB.save(year);	//year will equal -1 at this point, but ignored. Only one user.csv
+    		userDB.save();
     		
     		clientUser = serverUser.getUserFromServerUser();
     		clientUser.setClientID(id);	//set the user object client ID

@@ -16,7 +16,7 @@ import ourneighborschild.WishStatus;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerChildDB extends ONCServerDB
+public class ServerChildDB extends ServerSeasonalDB
 {
 	private static final int CHILD_DB_HEADER_LENGTH = 12;
 	private static final int NUMBER_WISHES_PER_CHILD = 3;

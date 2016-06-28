@@ -1,25 +1,20 @@
 package oncserver;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JOptionPane;
-
 import ourneighborschild.ONCObject;
-import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
 public abstract class ONCServerDB
 {
-	protected static final int BASE_YEAR = 2012;
+//	protected static final int BASE_YEAR = 2012;
 	
-	abstract String add(int year, String userjson);
+//	abstract String add(int year, String userjson);
 	
-	abstract void createNewYear(int year);	//used to create a new year from the authorized client
+//	abstract void createNewYear(int year);	//used to create a new year from the authorized client
 	
 	public <T extends ONCObject> T find(ArrayList<? extends ONCObject> list, int id, Class<T> type)
 	{
@@ -32,10 +27,10 @@ public abstract class ONCServerDB
 		else 
 			return null;		
 	}
-	
+/*	
 	void importDB(int year, String path, String name, int length) throws FileNotFoundException, IOException
 	{
-    	CSVReader reader = new CSVReader(new FileReader(path));
+		CSVReader reader = new CSVReader(new FileReader(path));
     	String[] nextLine, header;  		
     		
     	if((header = reader.readNext()) != null)	//Does file have records? 
@@ -60,10 +55,10 @@ public abstract class ONCServerDB
     	
     	reader.close();
 	}
+*/	
+//	abstract void addObject(int year, String[] nextLine);
 	
-	abstract void addObject(int year, String[] nextLine);
-	
-	void exportDBToCSV(List<? extends ONCObject> list, String[] header, String path)
+	boolean exportDBToCSV(List<? extends ONCObject> list, String[] header, String path)
     {	
 	    try 
 	    {
@@ -77,15 +72,18 @@ public abstract class ONCServerDB
 	    	}
 	    	
 	    	writer.close();
+	    	
+	    	return true;
 	    	       	    
 	    } 
 	    catch (IOException x)
 	    {
 	    	System.err.format("IO Exception: %s%n", x);
+	    	return false;
 	    }
     }
 	
-	abstract void save(int year);
+//	abstract void save(int year);
 	
 	/**********************************************************************************
 	 * This method searches the list for the highest ID and returns the next highest

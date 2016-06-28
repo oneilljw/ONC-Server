@@ -12,7 +12,7 @@ import ourneighborschild.ONCPriorYearChild;
 
 import com.google.gson.Gson;
 
-public class PriorYearDB extends ONCServerDB
+public class PriorYearDB extends ServerSeasonalDB
 {
 	private static final int PY_CHILD_DB_HEADER_LENGTH = 10;
 //	private static final int ONC_MAX_CHILD_AGE = 24; //Used for sorting children into array lists
@@ -217,12 +217,12 @@ public class PriorYearDB extends ONCServerDB
 		//get references to last years family, child, child wish and wish catalog data bases
 		ServerFamilyDB serverFamilyDB = null;
 		ServerChildDB serverChildDB = null;
-		ServerChildWishDB childwishDB = null;
+//		ServerChildWishDB childwishDB = null;
 		ServerWishCatalog cat = null;
 		try {
 			serverFamilyDB = ServerFamilyDB.getInstance();
 			serverChildDB = ServerChildDB.getInstance();
-			childwishDB = ServerChildWishDB.getInstance();
+//			childwishDB = ServerChildWishDB.getInstance();
 			cat = ServerWishCatalog.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
