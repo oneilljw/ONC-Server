@@ -24,8 +24,8 @@ public abstract class ServerPermanentDB extends ONCServerDB
 	void importDB(String path, String name, int length) throws FileNotFoundException, IOException
 	{
     	CSVReader reader = new CSVReader(new FileReader(path));
-    	String[] nextLine, header;  		
-    		
+    	String[] nextLine, header;
+    	
     	if((header = reader.readNext()) != null)	//Does file have records? 
     	{
     		//Read the User File

@@ -49,7 +49,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 		clientMgr = ClientManager.getInstance();
 		
 		invList = new ArrayList<InventoryItem>();
-		importDB(System.getProperty("user.dir") + INVENTORYDB_FILENAME, "User DB", INVENTORY_DB_RECORD_LENGTH);
+		importDB(System.getProperty("user.dir") + INVENTORYDB_FILENAME, "Inventory DB", INVENTORY_DB_RECORD_LENGTH);
 		nextID = getNextID(invList);
 		bSaveRequired = false;
 		
