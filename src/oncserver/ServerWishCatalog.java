@@ -1,15 +1,13 @@
 package oncserver;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ourneighborschild.ONCObject;
 import ourneighborschild.ONCWish;
-import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -21,8 +19,8 @@ public class ServerWishCatalog extends ServerPermanentDB
 	private static final String CATALOG_FILENAME = "/WishCatalog.csv";
 //	private static List<WishCatalogDBYear> catalogDB;
 	private static List<ONCWish> catalogDB;
-	private int nextID;
-	private boolean bSaveRequired;
+//	private int nextID;
+//	private boolean bSaveRequired;
 	private static ServerWishCatalog instance = null;
 	
 	private ServerWishCatalog() throws FileNotFoundException, IOException
@@ -191,7 +189,7 @@ public class ServerWishCatalog extends ServerPermanentDB
 	{
 		catalogDB.add(new ONCWish(nextLine));
 	}
-
+/*
 	@Override
 	void save()
 	{
@@ -221,4 +219,17 @@ public class ServerWishCatalog extends ServerPermanentDB
 			}
 		}
 	}
+*/	
+	@Override
+	String[] getExportHeader()
+	{
+		return new String[] {"Wish ID", "Name", "List Index", "Wish Detail 1 ID", 
+	 						"Wish Detail 2 ID", "Wish Detail 3 ID", "Wish Detail 4 ID"};
+	}
+	
+	@Override
+	String getFileName() { return CATALOG_FILENAME; }
+	
+	@Override
+	List<? extends ONCObject> getONCObjectList() { return catalogDB; }
 }

@@ -1,15 +1,24 @@
 package oncserver;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import ourneighborschild.ONCObject;
+import ourneighborschild.ONCServerUser;
 import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 public abstract class ServerPermanentDB extends ONCServerDB
 {
+	protected int nextID;
+	protected boolean bSaveRequired;
+	
 	abstract String add(String userjson);
 	
 	void importDB(String path, String name, int length) throws FileNotFoundException, IOException
@@ -42,5 +51,28 @@ public abstract class ServerPermanentDB extends ONCServerDB
 	
 	abstract void addObject(String[] nextLine);
 	
-	abstract void save();
+	void save()
+	{
+		String path = System.getProperty("user.dir") + getFileName();
+		File oncwritefile = new File(path);
+		
+		try 
+	    {
+	    	CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
+	    	writer.writeNext(getExportHeader());
+	    	
+	    	for(ONCObject oncObj : getONCObjectList())
+	    		writer.writeNext(oncObj.getExportRow());
+	    	
+	    	writer.close();
+	    } 
+	    catch (IOException x)
+	    {
+	    	System.err.format("IO Exception: %s%n", x);
+	    }
+	}
+	
+	abstract String[] getExportHeader();
+	abstract String getFileName();
+	abstract List<? extends ONCObject> getONCObjectList();
 }

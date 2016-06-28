@@ -21,6 +21,7 @@ import com.google.gson.reflect.TypeToken;
 import ourneighborschild.InventoryChange;
 import ourneighborschild.InventoryItem;
 import ourneighborschild.InventoryRequest;
+import ourneighborschild.ONCObject;
 import ourneighborschild.UPCDatabaseItem;
 import ourneighborschild.UPCFailure;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -34,8 +35,8 @@ public class ServerInventoryDB extends ServerPermanentDB
 	
 	private static ServerInventoryDB instance = null;
 	private static List<InventoryItem> invList;
-	private static int nextID;
-	private boolean bSaveRequired;
+//	private static int nextID;
+//	private boolean bSaveRequired;
 	
 	private static List<Integer> hashIndex;
 	private static char[] streetLetter = {'?','A','B','C','D','E','F','G','H','I','J','K','L','M',
@@ -223,7 +224,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 		else
 			return "DELETE_INVENTORY_FAILED";
 	}
-
+/*
 	@Override
 	void save()
 	{
@@ -253,6 +254,19 @@ public class ServerInventoryDB extends ServerPermanentDB
 			}
 		}
 	}
+*/		
+	@Override
+	String[] getExportHeader()
+	{
+		return new String[] {"ID", "Count", "Commits", "Number", "Item", "Wish ID", "Alias", "Description",
+				"Avg. Price", "Rate Up", "Rate Down"};
+	}
+		
+	@Override
+	String getFileName() { return INVENTORYDB_FILENAME; }
+	
+	@Override
+	List<? extends ONCObject> getONCObjectList() { return invList; }
 	
 	/*****
 	 * caller

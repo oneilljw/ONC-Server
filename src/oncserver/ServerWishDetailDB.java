@@ -1,15 +1,13 @@
 package oncserver;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ourneighborschild.ONCObject;
 import ourneighborschild.WishDetail;
-import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -22,8 +20,8 @@ public class ServerWishDetailDB extends ServerPermanentDB
 
 //	private static List<WishDetailDBYear> wdDB;
 	private static List<WishDetail> wdDB;
-	int nextID;
-	boolean bSaveRequired;
+//	int nextID;
+//	boolean bSaveRequired;
 	private static ServerWishDetailDB instance = null;
 	
 	private ServerWishDetailDB() throws FileNotFoundException, IOException
@@ -178,7 +176,7 @@ public class ServerWishDetailDB extends ServerPermanentDB
 			detailDBYear.setChanged(false);
 		}
 	}
-*/
+
 	@Override
 	void save()
 	{
@@ -207,4 +205,13 @@ public class ServerWishDetailDB extends ServerPermanentDB
 			}
 		}
 	}
+*/	
+	@Override
+	String[] getExportHeader() { return new String[] {"Wish Detail ID", "Name", "Choices"}; }
+	
+	@Override
+	String getFileName() { return DETAIL_FILENAME; }
+	
+	@Override
+	List<? extends ONCObject> getONCObjectList() { return wdDB; }
 }

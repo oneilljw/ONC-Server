@@ -1,7 +1,5 @@
 package oncserver;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -12,12 +10,12 @@ import java.util.Map;
 import ourneighborschild.Agent;
 import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.ONCEncryptor;
+import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserAccess;
 import ourneighborschild.UserPreferences;
 import ourneighborschild.UserStatus;
-import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -33,7 +31,7 @@ public class ServerUserDB extends ServerPermanentDB
 	private static ServerAgentDB serverAgentDB;
 	
 	private static List<ONCServerUser> userAL;
-	private int id;
+//	private int nextID;
 	
 	private ServerUserDB() throws NumberFormatException, IOException
 	{
@@ -43,7 +41,7 @@ public class ServerUserDB extends ServerPermanentDB
 		userAL = new ArrayList<ONCServerUser>();
 //		System.out.println(String.format("ServerUserDB filename: %s", System.getProperty("user.dir") + USERDB_FILENAME));
 		importDB(System.getProperty("user.dir") + USERDB_FILENAME, "User DB", USER_RECORD_LENGTH);
-		id = getNextID(userAL);
+		nextID = getNextID(userAL);
 	}
 	
 	public static ServerUserDB getInstance() throws NumberFormatException, IOException
@@ -60,7 +58,7 @@ public class ServerUserDB extends ServerPermanentDB
 		Gson gson = new Gson();
 		ONCServerUser su = gson.fromJson(json, ONCServerUser.class);
 		
-		su.setID(id++);	//Set id for new user
+		su.setID(nextID++);	//Set id for new user
 		su.setUserPW("onc" + su.getPermission().toString());
 		su.setStatus(UserStatus.Change_PW);
 		
@@ -392,26 +390,23 @@ public class ServerUserDB extends ServerPermanentDB
 		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime()));
 		
 	}
-
+/*
 	@Override
 	void save()
 	{
-		String[] header = {"ID", "Username", "Password", "Status", "Access", "Permission", "First Name",
-							"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 
-							"SL Changed By", "Sessions", "Last Login", "Orginization", "Title",
-							"Email", "Phone", "Agent ID", "Font Size", "Wish Assignee Filter",
-							"Family DNS Filter"};
-		
-		String path = System.getProperty("user.dir") + USERDB_FILENAME;
+		String path = System.getProperty("user.dir") + getFileName();
 		File oncwritefile = new File(path);
-			
+		
 		try 
 	    {
 	    	CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
-	    	writer.writeNext(header);
+	    	writer.writeNext(getExportHeader());
 	    	
 	    	for(ONCServerUser su: userAL)
 	    		writer.writeNext(su.getExportRow());	//Write server user row
+	    	
+	    	for(ONCObject oncObj : getONCObjectList())
+	    		writer.writeNext(oncObj.getExportRow());
 	    	
 	    	writer.close();
 	    } 
@@ -420,4 +415,20 @@ public class ServerUserDB extends ServerPermanentDB
 	    	System.err.format("IO Exception: %s%n", x);
 	    }
 	}
+*/	
+	@Override
+	String[] getExportHeader()
+	{
+		return new String[] {"ID", "Username", "Password", "Status", "Access", "Permission", "First Name",
+				"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 
+				"SL Changed By", "Sessions", "Last Login", "Orginization", "Title",
+				"Email", "Phone", "Agent ID", "Font Size", "Wish Assignee Filter",
+				"Family DNS Filter"};
+	}
+	
+	@Override
+	String getFileName() { return USERDB_FILENAME; }
+	
+	@Override
+	List<? extends ONCObject> getONCObjectList() { return userAL; }
 }
