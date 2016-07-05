@@ -1,9 +1,7 @@
 package oncserver;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -24,7 +22,6 @@ import ourneighborschild.InventoryRequest;
 import ourneighborschild.ONCObject;
 import ourneighborschild.UPCDatabaseItem;
 import ourneighborschild.UPCFailure;
-import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerInventoryDB extends ServerPermanentDB
 {

@@ -32,7 +32,6 @@ public class DBManager
 	
 	private static DBManager instance = null;
 	private Timer dbSaveTimer;
-//	private List<ONCServerDB> dbAutosaveList;
 	private List<ServerPermanentDB> dbPermanentAutosaveList;
 	private List<ServerSeasonalDB> dbSeasonalAutosaveList;
 	private static List<DBYear> dbYearList;
@@ -67,7 +66,7 @@ public class DBManager
 		{
 			ServerUserDB.getInstance();	//saved whenever its changed
 			RegionDB.getInstance(appicon);	//never changed
-			ApartmentDB.getInstance(); //never changed
+			ApartmentDB.getInstance(); //saved when new season created, never changed during season
 			dbSeasonalAutosaveList.add(ServerGlobalVariableDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerPartnerDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerChildDB.getInstance());
@@ -81,7 +80,7 @@ public class DBManager
 			dbSeasonalAutosaveList.add(ServerMealDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerAdultDB.getInstance());
 			dbSeasonalAutosaveList.add(PriorYearDB.getInstance());	//never changed once created each season
-			dbPermanentAutosaveList.add(ServerInventoryDB.getInstance()); //only one, not yearly content
+			dbPermanentAutosaveList.add(ServerInventoryDB.getInstance()); //saved only once, not yearly content
 		}
 		catch (FileNotFoundException fnf) 
 		{

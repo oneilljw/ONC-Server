@@ -42,6 +42,7 @@ public class ServerUserDB extends ServerPermanentDB
 //		System.out.println(String.format("ServerUserDB filename: %s", System.getProperty("user.dir") + USERDB_FILENAME));
 		importDB(System.getProperty("user.dir") + USERDB_FILENAME, "User DB", USER_RECORD_LENGTH);
 		nextID = getNextID(userAL);
+		bSaveRequired = false;
 	}
 	
 	public static ServerUserDB getInstance() throws NumberFormatException, IOException
