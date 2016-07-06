@@ -20,25 +20,24 @@ import ourneighborschild.InventoryChange;
 import ourneighborschild.InventoryItem;
 import ourneighborschild.InventoryRequest;
 import ourneighborschild.ONCObject;
-import ourneighborschild.UPCDatabaseItem;
 import ourneighborschild.UPCFailure;
 
 public class ServerInventoryDB extends ServerPermanentDB
 {
 	private static final String INVENTORYDB_FILENAME = "/InventoryDB.csv";
-	private static final int INVENTORY_DB_RECORD_LENGTH = 11;
-	private static final String API_KEY = "c41c148aae17866d16c9e278968539b3";
-	private static final String UPC_LOOKUP_URL = "http://api.upcdatabase.org/json/%s/%s";
+//	private static final int INVENTORY_DB_RECORD_LENGTH = 6;
+//	private static final String API_KEY = "c41c148aae17866d16c9e278968539b3";
+	private static final String EANDATA_KEYCODE = "3236448D57742EAB";
+//	private static final String UPC_LOOKUP_URL = "http://api.upcdatabase.org/json/%s/%s";
+	private static final String EANDATA_URL = "http://eandata.com/feed/?v=3&keycode=%s&comp=no"
+											+"&search=%s&mode=json&find=%s&get=product";
+	private static final String EANDATA_SEARCH = "deep";
+	private static final String EANDATA_SUCCESS_CODE = "200";
 	
 	private static ServerInventoryDB instance = null;
 	private static List<InventoryItem> invList;
-//	private static int nextID;
-//	private boolean bSaveRequired;
-	
-	private static List<Integer> hashIndex;
-	private static char[] streetLetter = {'?','A','B','C','D','E','F','G','H','I','J','K','L','M',
-										 'N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
-	
+	private static List<Integer> hashTable;
+
 	ClientManager clientMgr;
 
 	public ServerInventoryDB() throws FileNotFoundException, IOException
@@ -46,7 +45,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 		clientMgr = ClientManager.getInstance();
 		
 		invList = new ArrayList<InventoryItem>();
-		importDB(System.getProperty("user.dir") + INVENTORYDB_FILENAME, "Inventory DB", INVENTORY_DB_RECORD_LENGTH);
+		importDB(System.getProperty("user.dir") + INVENTORYDB_FILENAME, "Inventory DB", getExportHeader().length);
 		nextID = getNextID(invList);
 		bSaveRequired = false;
 		
@@ -66,28 +65,47 @@ public class ServerInventoryDB extends ServerPermanentDB
 	
 	static void createHashTable()
 	{
-		//build hash index array. Used to quickly search the regions list. Hash is based on first character
-		//in street name.			
-		hashIndex = new ArrayList<Integer>();
-		int letterIndex = 1;	//used to iterate the regions array
-						
-		hashIndex.add(0);	//add the first row to the hash, it's the streets that begin with a number
-		while(letterIndex < streetLetter.length)		
+		//build hash index array. Used to quickly search the gift inventory. Hash is based on
+		//first two characters in inventory item number (bar code). The range is 10 to 99		
+		hashTable = new ArrayList<Integer>();
+		
+		//initialize the hash table, which has a size of 90 elements since the first two digits
+		//of a bar code range from 10 to 99
+		for(int i=0; i<90; i++)
+			hashTable.add(0);
+		
+		//populate the hash table
+		int hashCode = 10;	//used to iterate the inventory list, 10 is first legal hash code
+		int currIndex = 0;
+		while(hashCode < 100)		
 		{
-			//find street that starts with the current street letter
-			int index = 0;
-			while(index < invList.size() && invList.get(index).getItemName().charAt(0) != streetLetter[letterIndex])
+			//find the first code that starts with the hash code
+			int index = currIndex;
+			while(index < invList.size() && Integer.parseInt(invList.get(index).getNumber().substring(0,2)) != hashCode)
 				index++;
 			
-			if(index < invList.size())	//first street found
-			hashIndex.add(index++);
-			else	//no street found that starts with that letter, set the hashIndex = to it's size
-				hashIndex.add(invList.size());
+			if(index < invList.size())	//first item that starts with hash code found
+				hashTable.add(index++);
+			else if(hashCode > 10)	//no item found that starts with the hash code, set the hashTable entry to
+				hashTable.add(hashTable.get(hashCode-1));
+			else
+				hashTable.add(invList.size());
 			
-			letterIndex++;
+			hashCode++;
+			currIndex = 0;
 		}
+	}
+	
+	InventoryItem find(String barcode)
+	{
+		int hashIndex = Integer.parseInt(barcode.substring(0,2))-10;
+		int startIndex = hashTable.get(hashIndex);
+		int endIndex = startIndex == hashTable.size() ? hashTable.size() -1 : hashTable.get(hashIndex+1);
 		
-		hashIndex.add(invList.size());	//add the last index into the hash table
+		while(startIndex < endIndex && !invList.get(startIndex).getNumber().equals(barcode))
+			startIndex++;
+		
+		return startIndex < endIndex ? invList.get(startIndex) : null;
 	}
 	
 	//Get a json of the list of inventory in the data base 
@@ -139,32 +157,41 @@ public class ServerInventoryDB extends ServerPermanentDB
 		}
 		else	//bar code is not in inventory, attempt to get it from an external data base
 		{
-			String upcDBItemJson = getUPCDataJson(searchCode);
+			String upcDBItemJson = getUPCDataJson(addReq.getBarcode());
 			if(upcDBItemJson == null)
 			{
 				UPCFailure upcFailure = new UPCFailure("false", "UPC Website did not respond");
 				return "UPC_LOOKUP_FAILED" + gson.toJson(upcFailure, UPCFailure.class);
 			}
-			else if(upcDBItemJson.contains("\"valid\":\"false\""))
-			{
-				return "ADD_INVENTORY_FALIED" + upcDBItemJson;
-			}
 			else
 			{
-				//found the item, create a new InventoryItem, set it's ID, add it to the
-				//inventory data base, mark the DB as changed and return the added item
-				//and return it. Eliminate any leading zeros in the bar code number prior
-				//to storing it in the data base
-				UPCDatabaseItem upcDBItem = gson.fromJson(upcDBItemJson, UPCDatabaseItem.class);
-				upcDBItem.setNumber(upcDBItem.getNumber().replaceFirst("^0+(?!$)", ""));
-				InventoryItem addedItem = new InventoryItem(nextID, upcDBItem);
+				//check the return code from the external database
+				EANData upcDBItem = gson.fromJson(upcDBItemJson, EANData.class);
 				
-				invList.add(addedItem);
-				nextID++;
-				bSaveRequired = true;
-				
-				return "ADDED_INVENTORY_ITEM" + gson.toJson(addedItem, InventoryItem.class);
-				
+				if(upcDBItem.getStatus().getCode().equals(EANDATA_SUCCESS_CODE))
+				{
+					//found the item, create a new InventoryItem, set it's ID, add it to the
+					//inventory data base, mark the DB as changed and return the added item
+					//and return it. Eliminate any leading zeros in the bar code number prior
+					//to storing it in the data base
+					InventoryItem addedItem = new InventoryItem(nextID, 
+							upcDBItem.getStatus().getFind().replaceFirst("^0+(?!$)", ""),
+							upcDBItem.getProduct().getAttributes().getProduct());
+					
+					invList.add(addedItem);
+					nextID++;
+					bSaveRequired = true;
+					
+					return "ADDED_INVENTORY_ITEM" + gson.toJson(addedItem, InventoryItem.class);
+				}
+				else
+				{
+					//return the message in a UPCFailre object
+					EANStatus status = upcDBItem.getStatus();
+					String failureMssg = String.format("%s, code %s", status.getMessage(), status.getCode());
+					UPCFailure upcFailure = new UPCFailure("false", failureMssg);
+					return "UPC_LOOKUP_FAILED" + gson.toJson(upcFailure, UPCFailure.class);
+				}	
 			}
 		}
 	}
@@ -255,8 +282,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 	@Override
 	String[] getExportHeader()
 	{
-		return new String[] {"ID", "Count", "Commits", "Number", "Item", "Wish ID", "Alias", "Description",
-				"Avg. Price", "Rate Up", "Rate Down"};
+		return new String[] {"ID", "Count", "Commits", "Number", "Item", "Wish ID"};
 	}
 		
 	@Override
@@ -278,7 +304,8 @@ public class ServerInventoryDB extends ServerPermanentDB
 	    URL modAPIUrl = null;
 		try
 		{
-			String stringURL = String.format(UPC_LOOKUP_URL, API_KEY, barcode);
+//			String stringURL = String.format(UPC_LOOKUP_URL, API_KEY, barcode);
+			String stringURL = String.format(EANDATA_URL, EANDATA_KEYCODE, EANDATA_SEARCH, barcode);
 			modAPIUrl = new URL(stringURL);
 		} 
 		catch (MalformedURLException e2)
@@ -325,5 +352,63 @@ public class ServerInventoryDB extends ServerPermanentDB
 	    
 	    //return the UPCDatabaseItem Json
 	    return responseJson.toString();
+	}
+	
+	private class EANData
+	{
+		private EANStatus status;
+		private EANProduct product;
+		
+		//getters
+		EANStatus getStatus() { return status; }
+		EANProduct getProduct() { return product; }
+		
+		@Override
+		public String toString() { return status.toString() + " " + product.toString();}
+	}
+	
+	private class EANStatus
+	{
+		private String version;
+		private String code;
+		private String message;
+		private String find;
+		private String run;
+		
+		//getters
+//		String getVersion() { return version; }
+		String getCode() { return code; }
+		String getMessage() { return message; }
+		String getFind() { return find; }
+//		String getRun() { return run; }
+		
+		public String toString() {return "version:" + version + ", code:" + code
+									+ ", message:" + message + ", find:" + find
+									+", run: " + run;}
+	}
+	
+	private class EANProduct
+	{
+		EANAttributes attributes;
+		String locked;
+		String modified;
+		
+		//getters
+		EANAttributes getAttributes() { return attributes; }
+//		String getLocked() { return locked; }
+//		String getModified() { return modified; }
+		
+		public String toString() {return attributes.toString() + ", locked:" + locked + ", modified:" + modified;}
+	}
+	
+	private class EANAttributes
+	{
+		private String product;
+		
+		//getters
+		String getProduct() { return product; }
+		
+		@Override
+		public String toString() {return "product:" + product;}
 	}
 }
