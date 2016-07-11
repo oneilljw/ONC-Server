@@ -71,7 +71,8 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setAgentID(-1);
 		
 		userAL.add(su); //Add new user to data base
-		save();	//userDB not implemented by year
+		bSaveRequired = true;
+//		save();
 		
 		return "ADDED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class) ;
 	}
@@ -128,7 +129,8 @@ public class ServerUserDB extends ServerPermanentDB
 			currPrefs.setWishAssigneeFilter(newPrefs.getWishAssigneeFilter());
 			currPrefs.setFamilyDNSFilter(newPrefs.getFamilyDNSFilter());
 			
-			save();	//userDB not implemented by year
+			bSaveRequired = true;
+//			save();
 			
 			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
 			if(su.getAgentID() > -1)	//notify AgentDB of email change
@@ -179,7 +181,8 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setEmail((String) params.get("email"));
 			su.setPhone((String) params.get("phone"));
 			
-			save();	//userDB not implemented by year currently
+			bSaveRequired = true;
+//			save();
 			
 			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
 			if(su.getAgentID() > -1)	//notify AgentDB of email change
@@ -191,7 +194,7 @@ public class ServerUserDB extends ServerPermanentDB
 			return null; //no change detected
 	}
 	
-	static void processAgentUpdate(Agent updatedAgent)
+	void processAgentUpdate(Agent updatedAgent)
 	{
 		//see if the agent is a user, using agent id match
 		int index=0;
@@ -232,13 +235,15 @@ public class ServerUserDB extends ServerPermanentDB
 			if(!updatedUser.getEmail().equals(updatedAgent.getAgentEmail()))
 				updateUserEmail(updatedUser, updatedAgent.getAgentEmail());
 			
+			bSaveRequired = true;
+//			save();
+			
 			//notify all clients of the change
 			ONCUser user = new ONCUser(updatedUser); //create a ONCUSer for ONCServerUser
 			Gson gson = new Gson();
 			ClientManager clientMgr = ClientManager.getInstance();
 			clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(user, ONCUser.class));
 		}
-		
 	}
 	
 	ONCServerUser find(String uid)
@@ -315,7 +320,8 @@ public class ServerUserDB extends ServerPermanentDB
 				    	clientMgr.notifyAllOtherClients(requestingClient, change);	//null to notify all clients
 					}
 					
-					save();
+					bSaveRequired = true;
+//					save();
 					response = "PASSWORD_CHANGED<html>Your password has been changed!</html>";
 					
 				}
@@ -362,8 +368,9 @@ public class ServerUserDB extends ServerPermanentDB
 				    String change = "UPDATED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class);
 				    clientMgr.notifyAllClients(change);	//notify all desktop clients
 				}
-					
-				save();
+				
+				bSaveRequired = true;
+//				save();
 			}
 			else
 				result = -1;

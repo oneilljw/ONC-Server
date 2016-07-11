@@ -52,23 +52,28 @@ public abstract class ServerPermanentDB extends ONCServerDB
 	
 	void save()
 	{
-		String path = System.getProperty("user.dir") + getFileName();
-		File oncwritefile = new File(path);
+		if(bSaveRequired)
+		{
+			String path = System.getProperty("user.dir") + getFileName();
+			File oncwritefile = new File(path);
 		
-		try 
-	    {
-	    	CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
-	    	writer.writeNext(getExportHeader());
+			try 
+			{
+				CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
+				writer.writeNext(getExportHeader());
 	    	
-	    	for(ONCObject oncObj : getONCObjectList())
-	    		writer.writeNext(oncObj.getExportRow());
+				for(ONCObject oncObj : getONCObjectList())
+					writer.writeNext(oncObj.getExportRow());
 	    	
-	    	writer.close();
-	    } 
-	    catch (IOException x)
-	    {
-	    	System.err.format("IO Exception: %s%n", x);
-	    }
+				writer.close();
+				
+				bSaveRequired = false;
+			} 
+			catch (IOException x)
+			{
+				System.err.format("IO Exception: %s%n", x.getMessage());
+			}
+		}
 	}
 	
 	abstract String[] getExportHeader();

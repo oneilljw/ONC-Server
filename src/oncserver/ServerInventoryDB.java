@@ -152,6 +152,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 				int updatedCount = invList.get(index).incrementCount(addReq.getCount());
 				int updatedCommits = invList.get(index).incrementCommits(addReq.getCommits());
 				InventoryChange incItem = new InventoryChange(invList.get(index).getID(), updatedCount, updatedCommits);
+				bSaveRequired = true;
 				return "INCREMENTED_INVENTORY_ITEM" + gson.toJson(incItem, InventoryChange.class);
 			}
 		}
@@ -225,6 +226,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 		if(index < invList.size())
 		{
 			invList.set(index, updateItemReq);
+			bSaveRequired = true;
 			return "UPDATED_INVENTORY_ITEM" + gson.toJson(updateItemReq, InventoryItem.class);
 		}
 		else
@@ -244,7 +246,10 @@ public class ServerInventoryDB extends ServerPermanentDB
 			index++;
 		
 		if(index < invList.size() && invList.get(index).getCount() == 0)
+		{
+			bSaveRequired = true;
 			return "DELETED_INVENTORY_ITEM" + gson.toJson(delItemReq, InventoryItem.class);
+		}
 		else
 			return "DELETE_INVENTORY_FAILED";
 	}

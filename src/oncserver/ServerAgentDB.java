@@ -21,11 +21,14 @@ public class ServerAgentDB extends ServerSeasonalDB
 	private static final int AGENT_DB_HEADER_LENGTH = 6;
 	private static List<AgentDBYear> agentDB;
 	private static ServerAgentDB instance = null;
+	private static ServerUserDB serverUserDB = null;
 	
 	private ServerAgentDB() throws FileNotFoundException, IOException
 	{
 		//create the agent data base
 		agentDB = new ArrayList<AgentDBYear>();
+		
+		serverUserDB = ServerUserDB.getInstance();
 						
 		//populate the agent data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -160,7 +163,7 @@ public class ServerAgentDB extends ServerSeasonalDB
 			
 			//notify the userDB so agent profile and user profile can stay in sync
 			//get a reference to the ServerUser data base
-			ServerUserDB.processAgentUpdate(reqObj);
+			serverUserDB.processAgentUpdate(reqObj);
 			
 			return "UPDATED_AGENT" + json;
 		}
@@ -194,7 +197,7 @@ public class ServerAgentDB extends ServerSeasonalDB
 			agentDBYear.setChanged(true);
 			
 			//keep the userDB in sync from profile perspective
-			ServerUserDB.processAgentUpdate(existingAgent);
+			serverUserDB.processAgentUpdate(existingAgent);
 			
 			return "UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class);
 		}

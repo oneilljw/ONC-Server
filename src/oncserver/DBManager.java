@@ -64,7 +64,7 @@ public class DBManager
 		dbSeasonalAutosaveList = new ArrayList<ServerSeasonalDB>();	//list of data bases stored thru timer event
 		try
 		{
-			ServerUserDB.getInstance();	//saved whenever its changed
+			dbPermanentAutosaveList.add(ServerUserDB.getInstance());
 			RegionDB.getInstance(appicon);	//never changed
 			ApartmentDB.getInstance(); //saved when new season created, never changed during season
 			dbSeasonalAutosaveList.add(ServerGlobalVariableDB.getInstance());
