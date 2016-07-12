@@ -247,6 +247,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 		
 		if(index < invList.size() && invList.get(index).getCount() == 0)
 		{
+			invList.remove(index);
 			bSaveRequired = true;
 			return "DELETED_INVENTORY_ITEM" + gson.toJson(delItemReq, InventoryItem.class);
 		}

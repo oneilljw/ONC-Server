@@ -254,17 +254,9 @@ public class ServerChildDB extends ServerSeasonalDB
 		//check for and decrement partner wish assignment counts
 		//and remove wishes for the deleted child
 		ServerChildWishDB cwDB = null;
-		try {
-			cwDB = ServerChildWishDB.getInstance();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		ServerPartnerDB serverPartnerDB = null;
 		try {
+			cwDB = ServerChildWishDB.getInstance();
 			serverPartnerDB = ServerPartnerDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -273,7 +265,7 @@ public class ServerChildDB extends ServerSeasonalDB
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-			
+		
 		if(cwDB != null)
 		{
 			//decrement partner wish assignment counts
