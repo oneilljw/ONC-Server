@@ -24,7 +24,7 @@ public class ONCServer
 	 */
 	
 	private static final String APPNAME = "Our Neighbor's Child Server v3.00";
-	private static final String ONC_COPYRIGHT = "\u00A92016 John W. O'Neill";
+	private static final String ONC_COPYRIGHT = "\u00A92017 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
 	private ClientManager clientMgr; //Manages all connected clients
