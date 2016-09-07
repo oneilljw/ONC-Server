@@ -103,7 +103,7 @@ public class ServerMealDB extends ServerSeasonalDB
 		
 		//set the status of the added meal relative to a parter change.
 		//This is the rules engine that governs meal status
-		if(currMeal.getPartnerID() != addedMeal.getPartnerID())
+		if(currMeal != null && currMeal.getPartnerID() != addedMeal.getPartnerID())
 		{
 			if(addedMeal.getPartnerID() == -1)
 				addedMeal.setMealStatus(MealStatus.Requested);
