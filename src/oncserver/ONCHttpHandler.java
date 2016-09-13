@@ -774,7 +774,7 @@ public class ONCHttpHandler implements HttpHandler
 	    		
 	    		serverUser.incrementSessions();	
 	    		serverUser.setLastLogin(new Date());
-	    		userDB.save();
+	    		userDB.requestSave();
 	    		
 	    		ONCUser webUser = serverUser.getUserFromServerUser();
 	    		ClientManager clientMgr = ClientManager.getInstance();

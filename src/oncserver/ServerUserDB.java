@@ -398,6 +398,11 @@ public class ServerUserDB extends ServerPermanentDB
 		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime()));
 		
 	}
+	
+	void requestSave()
+	{
+		bSaveRequired = true;
+	}
 /*
 	@Override
 	void save()
