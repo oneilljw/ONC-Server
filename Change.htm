@@ -33,6 +33,18 @@
             mssg.innerHTML = "New and Confirm passwords don't match, please try again!";
             ok = false;
         }
+        else if(currpw == pass1)
+        {
+            //alert("Password not changed");
+            document.getElementById("currpw").style.borderColor = "#E34234";
+            document.getElementById("pass2").style.borderColor = "#E34234";
+            
+            var mssg = document.getElementById("mssg");
+            mssg.style.color = "Red";
+//          mssg.style.fontSize = "large";
+            mssg.innerHTML = "You must change to a new password, please try again!";
+            ok = false;
+        }
 
         return ok;
     }
