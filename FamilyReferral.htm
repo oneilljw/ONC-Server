@@ -140,6 +140,10 @@
  	    	content.name=fieldname[index] + cnum;
         	content.value = childinfo[index];
         	content.setAttribute("size", fieldsize[index]);
+        	
+        	if(index === 4)	//school field is required, not supported in safari
+        		content.required = true
+        		
         	cell.appendChild(content);
         	row.appendChild(cell);
         }
@@ -229,11 +233,14 @@
 	{
 		var childfnElement = document.getElementById('childfn');
 		var childlnElement = document.getElementById('childln');
+		var childschoolElement = document.getElementById('childschool');
 		
 		if(childfnElement.value === "")
 			childfnElement.style.background = errorColor;
 		else if(childlnElement.value === "")
 			childlnElement.style.background = errorColor;
+		else if(childschoolElement.value === "")
+			childschoolElement.style.background = errorColor;
 		else
 		{
        		var child = {};
@@ -256,6 +263,7 @@
 	{
 		var childfnElement = document.getElementById('childfn');
 		var childlnElement = document.getElementById('childln');
+		var childschoolElement = document.getElementById('childschool');
 		
 		childfnElement.value="";
         childlnElement.value="";
@@ -264,7 +272,8 @@
         document.getElementById('childschool').value="";
         
         childfnElement.style.background = '#FFFFFF';
-        childlnElement.style.background = '#FFFFFF'; 
+        childlnElement.style.background = '#FFFFFF';
+        childschoolElement.style.background = '#FFFFFF'; 
 	}
 	
 	function removeChild(index)
@@ -1068,7 +1077,7 @@
 		<option value="Girl">Girl</option>
 		<option value="Unknown">Unknown</option>
 	</select>
-	<input id="childschool" title="School attended, if any, for child to be added" type="text" size="20" placeholder="School">
+	<input id="childschool" title="School attended, if none, enter Pre-K" type="text" size="20" placeholder="School">
 	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
 	<button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button>
   <table id="childtable" border="1">
