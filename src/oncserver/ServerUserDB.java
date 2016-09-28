@@ -181,6 +181,10 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setEmail((String) params.get("email"));
 			su.setPhone((String) params.get("phone"));
 			
+			//determine if the user status was Update_Profile. If it was set it to Active.
+			if(su.getStatus() == UserStatus.Update_Profile)
+				su.setStatus(UserStatus.Active);
+			
 			bSaveRequired = true;
 //			save();
 			
@@ -191,7 +195,23 @@ public class ServerUserDB extends ServerPermanentDB
 			return su;
 		}
 		else
-			return null; //no change detected
+			return null; //no change detected and UserStatus != Update_Profile
+	}
+	
+	//update from web site
+	ONCServerUser reviewedProfile(ONCServerUser su)
+	{
+		//determine if the user was responding to a update profile request. If so, 
+		//change their status to UserStatus.Active
+		if(su.getStatus() == UserStatus.Update_Profile)
+		{
+			//there was a change, so update the profile fields and save ONCServerUser object
+			su.setStatus(UserStatus.Active);
+			bSaveRequired = true;
+			return su;
+		}
+		else
+			return null; //UserStatus != Update_Profile
 	}
 	
 	void processAgentUpdate(Agent updatedAgent)

@@ -28,7 +28,8 @@ public class ONCWebServer
 							"/adults", "/wishes", "/oncsplash", "/clearx", "/onclogo", "/oncstylesheet", 
 							"/oncdialogstylesheet", "/newfamily", "/reqchangepw", "/timeout",
 							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
-							"/changepw", "/startpage", "/vanilla", "/getuser", "/updateuser"};
+							"/changepw", "/startpage", "/vanilla", "/getuser", "/getstatus",
+							"/profileunchanged", "/updateuser"};
 		
 		HttpContext context;
 //		Filter paramFilter = new ParameterFilter();

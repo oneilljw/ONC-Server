@@ -273,6 +273,26 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = ServerAgentDB.getAgentJSONP(year, agtID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
+    	else if(requestURI.contains("/getstatus"))
+    	{
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
+    		
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		{
+    			wc.updateTimestamp();
+        		htmlResponse = ClientManager.getUserStatusJSONP((String) params.get("token"), 
+        													(String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
+    		
+    		sendHTMLResponse(t, htmlResponse);
+    	}
     	else if(requestURI.contains("/getuser"))
     	{
     		ClientManager clientMgr = ClientManager.getInstance();
@@ -318,10 +338,47 @@ public class ONCHttpHandler implements HttpHandler
     											ONCUser.class));
     				
     				//return response
-    				responseJson =  "{\"message\":\"User Profile Update Accepted\"}";
+    				responseJson =  "{\"message\":\"User Profile Review/Update Sucessful\"}";
     			}
     			else	//no change detected 
-    				responseJson =  "{\"message\":\"User Profile Not Updated, No Change Detected\"}";
+    				responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
+    		}
+    		else	//invalid user, return a failure message
+    			responseJson =  "{\"message\":\"Invalid User\"}";
+    		
+    		HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
+					HTTPCode.Ok);
+    		sendHTMLResponse(t, htmlresponse);
+    	}
+    	else if(requestURI.contains("/profileunchanged"))
+    	{	
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String responseJson;
+    		WebClient wc;
+    		
+    		//determine if a valid request from a logged in user. If so, process the update
+    		if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    		{
+    			wc.updateTimestamp();
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+    			
+    			ServerUserDB userDB = ServerUserDB.getInstance();
+    			ONCServerUser updatedUser = userDB.reviewedProfile(wc.getWebUser());
+    			
+    			if(updatedUser != null)	//test to see if the status update was required and successful
+    			{
+    				//if successful, notify all Clients of update and return a message to the web user
+    				Gson gson = new Gson();
+    				clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
+    											ONCUser.class));
+    				
+    				//return response
+    				responseJson =  "{\"message\":\"User Profile Reviewed\"}";
+    			}
+    			else	//no change detected 
+    				responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
     		}
     		else	//invalid user, return a failure message
     			responseJson =  "{\"message\":\"Invalid User\"}";

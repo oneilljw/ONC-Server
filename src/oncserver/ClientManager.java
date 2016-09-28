@@ -178,6 +178,36 @@ public class ClientManager implements ActionListener
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
+	/***
+	 * called to get user status from web server. If user status === UserStatus.Update_Profile
+	 * the web user will see the profile dialog pop-up. Regardless of whether they make a change, 
+	 * we should set their status to UserStatus.Active
+	 * @param sessionID
+	 * @param callbackFunction
+	 * @return
+	 */
+	static HtmlResponse getUserStatusJSONP(String sessionID, String callbackFunction)
+	{		
+		String response;
+			
+		int index = 0;
+		while(index < webClientAL.size() && !webClientAL.get(index).getSessionID().equals(sessionID))
+			index++;
+			
+		if(index < webClientAL.size())
+		{	
+			webClientAL.get(index).updateTimestamp();
+			response = "{"
+						+ "\"userstatus\":\"" + webClientAL.get(index).getWebUser().getStatus().toString() + "\"," 
+						+ "}";
+		}
+		else
+			response = "";
+			
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
 	/*************************************************************************************
 	 * Find a web client by client token. If client token is not logged into the server, 
 	 * return null,otherwise return a reference to the web client.

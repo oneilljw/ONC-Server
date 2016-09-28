@@ -72,6 +72,15 @@
     	    onClearSearch();
     	    $(this).removeClass('x onX').val('').change();   	    
     	});
+    	
+    	$.getJSON('getstatus', dbyearsparams, function(status)
+    	{
+    		if(status.userstatus === 'Update_Profile')
+    		{
+				showEditProfileDialog();
+				window.location=document.getElementById('editprofileanchor').href;
+    		}
+    	});
     });
     
     function tog(v)
@@ -144,13 +153,13 @@
 			{
 				document.getElementById('message').textContent= mssgJson.message;
 			});
+    		
+    		window.location=document.getElementById('closepopup').href;
     	}
     	else
     	{
-    		document.getElementById('message').textContent= 'No change made to User Profile';
+    		onProfileNotChanged();
     	}
-    	
-    	window.location=document.getElementById('closepopup').href;
     }
     
     function getFamilyReferencesFromServer(year)
@@ -747,6 +756,18 @@
 	    }
 	}
 	
+	function onProfileNotChanged()
+    {
+		var params = {}	
+		params["token"] = sessionStorage.getItem('token');
+		$.post('profileunchanged', params, function(response)
+		{
+			document.getElementById('message').textContent= response.message;
+		}, "jsonp");
+		
+		window.location=document.getElementById('closepopup').href;
+    }
+	
 	function onCancel()
     {
 		window.location=document.getElementById('closepopup').href;
@@ -850,6 +871,7 @@
   </style>
 </head>
 <body>
+  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id='topbar' class="topbar">
     <img src="onclogo" height="55" width="75"/>
@@ -879,7 +901,7 @@
 	  <li id='profileli'><a href="#">Profile <span class="caret"></span></a>
 		  <div>
 		    <ul>
-			  <li><a href="#openModal" onclick='showEditProfileDialog()'>Edit Profile</a></li>
+			  <li><a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a></li>
 			  <li><a href="#chgpwdlg">Change Password</a></li>
 		    </ul>
 		  </div>
@@ -1060,12 +1082,12 @@
   <br>
 </form>
 <!-- Edit Profile Dialog -->
-  <div id="openModal" class="modalDialog">
+  <div id="editProfile" class="modalDialog">
 	<div id='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<a id='closepopup' href="#close" title="Close" class="close" onclick="onProfileNotChanged()">X</a>
 		<div id='dialogtopbar'>
 		  <img src="onclogo" height="45" width="65"/>
-		  <span id='dialogmssg'>Edit Profile</span>
+		  <span id='dialogmssg'>Update ONC Profile</span>
 		</div>
     	<p><label class='lbl_ep' for="userfirstname">First Name:</label>
     	<input class='inp_ep' type="text" id="userfirstname" name="firstname" autofocus></p>
@@ -1080,7 +1102,7 @@
     	<p><label class='lbl_ep' for="userphone">Phone:</label>
     	<input class='inp_ep' type="text" id="userphone" name="phone"><br></p>
     	<div id='buttonbar'>
-      	  <button id="cancel" onclick="onCancel()">Cancel</button>
+      	  <button id="cancel" onclick="onProfileNotChanged()">Cancel</button>
       	  <button id="update" onclick="onUpdateProfile()">Update</button>
     	</div> 
 	</div>
