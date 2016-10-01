@@ -7,7 +7,7 @@
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
   <script> 
   	var childrenJson= [];
   	var adultsJson= [];
@@ -17,6 +17,8 @@
   	
   	$(function() {
   	    $( "#childdob" ).datepicker({
+  	      yearRange: '-19:+0',
+  	      dayNamesMin: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ],
   	      changeMonth: true,
   	      changeYear: true
   	    });
@@ -896,12 +898,14 @@
 	}
   </script>
   <style>
-	div.ui-datepicker
+	.ui-datepicker
 	{
 		width:480px;
-  		background-color: lightgray;
-  		font-size:15px;
-	}  
+  		background-color: lightskyblue;
+  		font-size:13px;
+	}
+	.ui-datepicker-calendar .ui-state-active  { background: #fff000; }
+	.ui-datepicker thead { background-color: #f7f7f7; }
 	#submitspan {float: right;}
 	#errormessage
 	{
@@ -1071,7 +1075,7 @@
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
   	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
     <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
-    <input id="childdob" title="Date of birth for child to be added" type="text" size="12" placeholder="DoB">
+    <input id="childdob" title="Date of birth for child to be added" type="text" size="14" placeholder="DoB">
     <select id="childgender" title="Gender of child to be added">
 		<option value="Boy">Boy</option>
 		<option value="Girl">Girl</option>

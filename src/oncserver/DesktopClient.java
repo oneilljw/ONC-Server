@@ -33,7 +33,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 4.00f;
+	private static final float MINIMUM_CLIENT_VERSION = 4.04f;
 	
 	private int id;
 	private String version;
@@ -347,7 +347,8 @@ public class DesktopClient extends Thread
                 	String response = userDB.add(command.substring(14));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+ //               	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_user>"))
                 {
@@ -355,7 +356,8 @@ public class DesktopClient extends Thread
                 	String response = userDB.update(year, command.substring(17));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+ //               	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<setyear>"))
                 {
@@ -380,7 +382,7 @@ public class DesktopClient extends Thread
                 		response = serverFamilyDB.update(year, command.substring(19), false);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_family>"))
                 {
@@ -388,7 +390,7 @@ public class DesktopClient extends Thread
                 	String response = serverFamilyDB.add(year, command.substring(16));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<check_duplicatefamily>"))
                 {
@@ -403,7 +405,7 @@ public class DesktopClient extends Thread
                 	String response = childDB.update(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_child>"))
                 {
@@ -411,7 +413,7 @@ public class DesktopClient extends Thread
                 	String response = childDB.deleteChild(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_child>"))
                 {
@@ -419,7 +421,7 @@ public class DesktopClient extends Thread
                 	String response = childDB.add(year, command.substring(15));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_barcode>"))
                 {
@@ -427,7 +429,8 @@ public class DesktopClient extends Thread
                 	String response = inventoryDB.addFromBarcodeScan(command.substring(17));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+ //               	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<add_inventory>"))
                 {
@@ -435,7 +438,8 @@ public class DesktopClient extends Thread
                 	String response = inventoryDB.add(command.substring(19));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+ //               	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_inventory>"))
                 {
@@ -443,7 +447,8 @@ public class DesktopClient extends Thread
                 	String response = inventoryDB.update(command.substring(22));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_inventory>"))
                 {
@@ -451,7 +456,8 @@ public class DesktopClient extends Thread
                 	String response = inventoryDB.delete(command.substring(22));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_partner>"))
                 {
@@ -459,21 +465,21 @@ public class DesktopClient extends Thread
                 	String response = serverPartnerDB.update(year, command.substring(20));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_partner>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = serverPartnerDB.add(year, command.substring(17));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_partner>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = serverPartnerDB.delete(year, command.substring(20));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_agent>"))
                 {
@@ -481,7 +487,7 @@ public class DesktopClient extends Thread
                 	String response = serverAgentDB.update(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_agent>"))
                 {
@@ -489,56 +495,62 @@ public class DesktopClient extends Thread
                 	String response = serverAgentDB.add(year, command.substring(15));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = serverAgentDB.delete(year, command.substring(18));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_catwish>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = wishCatalog.update(year, command.substring(20));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<add_catwish>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = wishCatalog.add(command.substring(17));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_catwish>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = wishCatalog.delete(year, command.substring(20));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_wishdetail>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = wishDetailDB.update(year, command.substring(23));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<add_wishdetail>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = wishDetailDB.add(command.substring(20));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_wishdetail>"))
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = wishDetailDB.delete(year, command.substring(23));
                 	output.println(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<childwish>"))
                 {                	
@@ -548,7 +560,7 @@ public class DesktopClient extends Thread
                 	String response = childwishDB.add(year, command.substring(15));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_delivery>"))
                 {
@@ -556,7 +568,7 @@ public class DesktopClient extends Thread
                 	String response = deliveryDB.update(year, command.substring(21));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_delivery>"))
                 {
@@ -564,7 +576,7 @@ public class DesktopClient extends Thread
                 	String response = deliveryDB.add(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delivery_group>"))
                 {
@@ -572,7 +584,7 @@ public class DesktopClient extends Thread
                 	String response = deliveryDB.addDeliveryGroup(year, command.substring(20));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_driver>"))
                 {
@@ -580,7 +592,7 @@ public class DesktopClient extends Thread
                 	String response = driverDB.update(year, command.substring(19));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_driver>"))
                 {
@@ -588,7 +600,7 @@ public class DesktopClient extends Thread
                 	String response = driverDB.delete(year, command.substring(19));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_driver>"))
                 {
@@ -596,7 +608,7 @@ public class DesktopClient extends Thread
                 	String response = driverDB.add(year, command.substring(16));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
 /*MEALS ARE NOT UPDATED BY DESKTOP CLIENTS - NEW MEALS ARE ADDED
                 else if(command.startsWith("POST<update_meal>"))
@@ -614,7 +626,7 @@ public class DesktopClient extends Thread
                 	String response = mealDB.delete(year, command.substring(17));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_adult>"))
                 {
@@ -622,7 +634,7 @@ public class DesktopClient extends Thread
                 	String response = adultDB.add(year, command.substring(15));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_adult>"))
                 {
@@ -630,7 +642,7 @@ public class DesktopClient extends Thread
                 	String response = adultDB.update(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_adult>"))
                 {
@@ -638,7 +650,7 @@ public class DesktopClient extends Thread
                 	String response = adultDB.delete(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_meal>"))
                 {
@@ -646,7 +658,7 @@ public class DesktopClient extends Thread
                 	String response = mealDB.add(year, command.substring(14));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_newseason>"))
                 {
@@ -662,7 +674,7 @@ public class DesktopClient extends Thread
                 	String response = globalvariableDB.update(year, command.substring(20));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_dbyear>"))
                 {
@@ -670,7 +682,8 @@ public class DesktopClient extends Thread
                 	String response = dbManager.updateDBYear(year, command.substring(19));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
-                	clientMgr.dataChanged(this, response);
+//                	clientMgr.dataChanged(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<change_password>"))
                 {

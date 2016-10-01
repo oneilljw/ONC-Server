@@ -91,6 +91,18 @@ public class ServerUserDB extends ServerPermanentDB
 		if(index < userAL.size())
 		{
 			ONCServerUser su = userAL.get(index);
+			
+			//check to see if user is an agent and the agent profile has changed before updating
+			//the server user
+			boolean bAgentProfileChanged = su.getAgentID() > -1 && 
+				(!su.getLastname().equals(updatedUser.getLastname()) ||
+				  !su.getFirstname().equals(updatedUser.getFirstname()) ||
+				   !su.getOrg().equals(updatedUser.getOrg()) ||
+				    !su.getTitle().equals(updatedUser.getTitle()) ||
+				     !su.getPhone().equals(updatedUser.getPhone()) ||
+				      !su.getEmail().equals(updatedUser.getEmail()));
+			
+			//update the server user
 			su.setLastname(updatedUser.getLastname());
 			su.setFirstname(updatedUser.getFirstname());
 			su.setStatus(updatedUser.getStatus());
@@ -98,6 +110,7 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setOrg(updatedUser.getOrg());
 			su.setTitle(updatedUser.getTitle());
 			su.setPhone(updatedUser.getPhone());
+			
 			if(!su.getEmail().equals(updatedUser.getEmail()))
 				updateUserEmail(su, updatedUser.getEmail());	//special processing on email change
 
@@ -106,6 +119,9 @@ public class ServerUserDB extends ServerPermanentDB
 				su.setUserPW(USER_PASSWORD_PREFIX + updatedUser.getPermission().toString());
 				su.setStatus(UserStatus.Change_PW);
 			}
+			
+			//check if access is adding or removing web access. If so, must keep user and agent
+			//data bases in sync
 			if((su.getAccess()==UserAccess.Website || su.getAccess()==UserAccess.AppAndWebsite) &&
 				updatedUser.getAccess()==UserAccess.App) 
 			{
@@ -132,10 +148,10 @@ public class ServerUserDB extends ServerPermanentDB
 			bSaveRequired = true;
 //			save();
 			
-			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
-			if(su.getAgentID() > -1)	//notify AgentDB of email change
+			//userDB and agentDB must stay in sync.
+			if(bAgentProfileChanged)
 				serverAgentDB.processUserUpdate(DBManager.getCurrentYear(), su);
-			
+				
 			ONCUser updateduser = su.getUserFromServerUser();
 			return "UPDATED_USER" + gson.toJson(updateduser, ONCUser.class);
 		}
@@ -205,7 +221,7 @@ public class ServerUserDB extends ServerPermanentDB
 		//change their status to UserStatus.Active
 		if(su.getStatus() == UserStatus.Update_Profile)
 		{
-			//there was a change, so update the profile fields and save ONCServerUser object
+			//user reviewed, so update the status field and mark for saving
 			su.setStatus(UserStatus.Active);
 			bSaveRequired = true;
 			return su;

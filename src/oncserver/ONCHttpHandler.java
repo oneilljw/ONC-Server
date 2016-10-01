@@ -1610,11 +1610,12 @@ public class ONCHttpHandler implements HttpHandler
 		{
 			//dont need unit and city in Address to check region validity
 			Address chkAddress = new Address(houseNum, streetName, "", "", zipCode);
+			
 			//diagnostic print
-			String postDir = chkAddress.getStreetPostDir().isEmpty() ? "" : "-" + chkAddress.getStreetPostDir();
-				String direction = chkAddress.getStreetDir().isEmpty() ? "" : chkAddress.getStreetDir() + ".";
-				System.out.println(String.format("%s%s %s%s %s %s %s %s",chkAddress.getStreetNum(), postDir, direction, 
-						chkAddress.getStreetName(), chkAddress.getStreetType(), chkAddress.getUnit(), chkAddress.getCity(), chkAddress.getZipCode()));
+//			String postDir = chkAddress.getStreetPostDir().isEmpty() ? "" : "-" + chkAddress.getStreetPostDir();
+//			String direction = chkAddress.getStreetDir().isEmpty() ? "" : chkAddress.getStreetDir() + ".";
+//			System.out.println(String.format("%s%s %s%s %s %s %s %s",chkAddress.getStreetNum(), postDir, direction, 
+//						chkAddress.getStreetName(), chkAddress.getStreetType(), chkAddress.getUnit(), chkAddress.getCity(), chkAddress.getZipCode()));
 			bAddressGood = RegionDB.isAddressValid(chkAddress);
 		}
 		

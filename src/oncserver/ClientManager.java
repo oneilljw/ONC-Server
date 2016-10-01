@@ -305,14 +305,14 @@ public class ClientManager implements ActionListener
 			return -1;	//client not found
 	}
 
-	void dataChanged(DesktopClient requestingClient, String change)
+	void notifyAllOtherInYearClients(DesktopClient requestingClient, String change)
 	{
 		//Need to add change to all client changes lists so they can poll for the change
 		for(DesktopClient c:dtClientAL )
 		{
 			//Add change to the change queue's of every other client that is using the same years data
-			if(c != requestingClient  && c.getYear() == requestingClient.getYear())	
-				c.addChange(change);		
+			if(c != requestingClient  && c.getYear() == requestingClient.getYear())
+				c.addChange(change);	
 		}
 	}
 	

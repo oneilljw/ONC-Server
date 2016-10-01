@@ -445,7 +445,6 @@
 			params["field2"] = document.getElementById('newpw').value;
     		$.post('reqchangepw', params, function(response)
     		{
-    			console.log(response);
     			document.getElementById('message').textContent= response;
     		});
     		
