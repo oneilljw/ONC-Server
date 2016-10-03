@@ -1182,8 +1182,8 @@ public class ONCHttpHandler implements HttpHandler
 			
 				if(!childln.isEmpty())	//only add a child if the last name is provided
 				{
-					ONCChild child = new ONCChild(-1, addedFamily.getID(), childfn, childln, childGender, 
-													createChildDOB(childDoB), childSchool, year);
+					ONCChild child = new ONCChild(-1, addedFamily.getID(), childfn.trim(), childln.trim(), childGender, 
+													createChildDOB(childDoB), childSchool.trim(), year);
 				
 					addedChildList.add(childDB.add(year,child));
 				}
