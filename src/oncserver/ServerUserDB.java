@@ -285,7 +285,7 @@ public class ServerUserDB extends ServerPermanentDB
 	ONCServerUser find(String uid)
 	{
 		int index = 0;
-		while(index < userAL.size() && !userAL.get(index).getUserID().equals(uid))
+		while(index < userAL.size() && !userAL.get(index).getUserID().equalsIgnoreCase(uid))
 			index++;
 		
 		if(index < userAL.size())

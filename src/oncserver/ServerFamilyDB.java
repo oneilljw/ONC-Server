@@ -49,8 +49,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ClientManager clientMgr;
 	
 	//THIS IS A TEMPORARY HACK FOR 2016 - NEED TO HAVE ONC NUM RANGES GENERATED AUTOMATICALLY
-	int[] oncnumRegionRanges = {1199,100,125,140,240,490,500,525,600,700,733,755,760,763,766,
-								773,900,920,1065,1066,1071,1080,1115,1145,1160,1161,1162};
+	int[] oncnumRegionRanges = {1299,100,125,140,240,490,500,525,600,700,733,755,760,763,766,
+								773,900,920,1065,1066,1071,1080,1115,1145,1160,1260,1261};
 	
 	private ServerFamilyDB() throws FileNotFoundException, IOException
 	{
