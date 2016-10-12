@@ -75,24 +75,32 @@ public class ApartmentDB
 	{
 		//determine which part of the apartment list to search based on street name. Street names that start
 		//with a digit are first in the apartment list.
+		
+//		System.out.println(String.format("AptDB.isAddAnApt: #: %s, name: %s", checkAddress.getStreetNum(), checkAddress.getStreetName()));
+		
 		int searchIndex, endIndex;
-		if(Character.isDigit(checkAddress.getStreetName().charAt(0)))
-		{	
-			searchIndex = 0;
-			endIndex = hashIndex.get(1);
-		}
-		else
-		{
-			int index = Character.toUpperCase(checkAddress.getStreetName().charAt(0)) - 'A' + 1;	//'A'
-			searchIndex = hashIndex.get(index);
-			endIndex = hashIndex.get(index+1);
-		}
-
+//		if(Character.isDigit(checkAddress.getStreetName().charAt(0)))
+//		{	
+//			searchIndex = 0;
+//			endIndex = hashIndex.get(1);
+//		}
+//		else
+//		{
+//			int index = Character.toUpperCase(checkAddress.getStreetName().charAt(0)) - 'A' + 1;	//'A'
+//			searchIndex = hashIndex.get(index);
+//			endIndex = hashIndex.get(index+1);
+//		}
+		
+		//temporary fix until hash issue figured out
+		searchIndex = 0;
+		endIndex = aptList.size();
+		
 		while(searchIndex < endIndex && !(aptList.get(searchIndex).getStreetName().equalsIgnoreCase(checkAddress.getStreetName()) &&
 										  aptList.get(searchIndex).getStreetNum().equals(checkAddress.getStreetNum())))
 			searchIndex++;
 				
 		//If match not found return false, else return true
+//		System.out.println(String.format("AptDB.isAddApt: searchIndex = %d, endIndex = %d", searchIndex, endIndex));
 		return searchIndex != endIndex;	
 	}
 	
@@ -107,7 +115,10 @@ public class ApartmentDB
     		if(header.length == APARTMENTDB_HEADER_LENGTH)
     		{
     			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of values from the line
-    				aptList.add(new Address(nextLine));
+    			{
+    				Address address = new Address(nextLine);
+    				aptList.add(address);
+    			}
     		}
     		else
     			JOptionPane.showMessageDialog(null, "ApartmentDB file corrupted, header length = " + Integer.toString(header.length), 
@@ -149,8 +160,8 @@ public class ApartmentDB
 	
 	static void save()
 	{
-		String[] header = {"House #", "Suffix", "Post Dir", "Direction", "Street Name", "Street Type", 
-							"Unit #", "City", "Zip Code"};
+		String[] header = {"House #", "Suffix", "Direction", "Street Name", "Street Type", 
+							"Post Dir","Unit #", "City", "Zip Code"};
 		
 		String path = System.getProperty("user.dir") + "/ApartmentDB.csv";
 		File oncwritefile = new File(path);
