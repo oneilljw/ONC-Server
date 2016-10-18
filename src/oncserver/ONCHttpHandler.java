@@ -1098,32 +1098,35 @@ public class ONCHttpHandler implements HttpHandler
 		} 
 		catch (FileNotFoundException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return new FamilyResponseCode(-1, "Family Referral Rejected: Server Database Error");
 		}
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return new FamilyResponseCode(-1, "Family Referral Rejected: Server Database Error");
 		}
 		
 		//create a meal request, if meal was requested
 		ONCMeal mealReq = null, addedMeal = null;
 		String[] mealKeys = {"mealtype", "dietres"};
 		
-		if(params.containsKey(mealKeys[0]))
+		if(params.containsKey("mealtype"))
 		{
 			Map<String, String> mealMap = createMap(params, mealKeys);
+			String dietRestrictions = "";
 
-			if(!mealMap.get(mealKeys[0]).equals("No Assistance Rqrd"))
+			if(!mealMap.get("mealtype").equals("No Assistance Rqrd"))
 			{
-				mealReq = new ONCMeal(-1, -1, MealStatus.Requested, MealType.valueOf(mealMap.get(mealKeys[0])),
-								mealMap.get(mealKeys[1]), -1, wc.getWebUser().getLNFI(), new Date(), 3,
+				if(mealMap.containsKey("deitres"))
+					dietRestrictions = mealMap.get("dietres");
+				
+				mealReq = new ONCMeal(-1, -1, MealStatus.Requested, MealType.valueOf(mealMap.get("mealtype")),
+								dietRestrictions, -1, wc.getWebUser().getLNFI(), new Date(), 3,
 								"Family Referred", wc.getWebUser().getLNFI());
 			
 				addedMeal = mealDB.add(year, mealReq);
 			}
 		}
+		
 		//create the family
 		String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
 				   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
@@ -1133,8 +1136,7 @@ public class ONCHttpHandler implements HttpHandler
 		
 		//check to see if this is a new family or a re-referral. Need to know this to determine 
 		//whether to perform a prior year check after the family and children objects are created
-		String targetID = familyMap.get("targetid");
-		boolean bNewFamily = targetID.contains("NNA") || targetID.equals("");
+		boolean bNewFamily = familyMap.get("targetid").contains("NNA") || familyMap.get("targetid").equals("");
 		
 		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
 					familyMap.get("targetid"), "B-DI", 
@@ -1168,17 +1170,21 @@ public class ONCHttpHandler implements HttpHandler
 			String childfn, childln, childDoB, childGender, childSchool;
 			
 			int cn = 0;
-			String key = "childfn" + Integer.toString(cn);
+			String key = "childln" + Integer.toString(cn);
 			
-			//using child first name as the iterator, create a db entry for each
-			//child in the family
+			//using child last name as the iterator, create a db entry for each
+			//child in the family. Protect against null or missing keys.
 			while(params.containsKey(key))
 			{
-				childfn = (String) params.get(key);
-				childln = (String) params.get("childln" + Integer.toString(cn));
-				childDoB = (String) params.get("childdob" + Integer.toString(cn));
-				childGender = (String) params.get("childgender" + Integer.toString(cn));
-				childSchool = (String) params.get("childschool" + Integer.toString(cn));
+				childln = params.get(key) != null ? (String) params.get(key) : "";
+				childfn = params.get("childfn" + Integer.toString(cn)) != null ? (String) params.get("childfn" + Integer.toString(cn)) : "";
+				childDoB = params.get("childdob" + Integer.toString(cn)) != null ? (String) params.get("childdob" + Integer.toString(cn)) : "";
+				childGender = params.get("childgender" + Integer.toString(cn)) != null ? (String) params.get("childgender" + Integer.toString(cn)) : "";
+				childSchool = params.get("childschool" + Integer.toString(cn)) != null ? (String) params.get("childschool" + Integer.toString(cn)) : "";
+				
+//				childDoB = (String) params.get("childdob" + Integer.toString(cn));
+//				childGender = (String) params.get("childgender" + Integer.toString(cn));
+//				childSchool = (String) params.get("childschool" + Integer.toString(cn));
 			
 				if(!childln.isEmpty())	//only add a child if the last name is provided
 				{
@@ -1187,8 +1193,9 @@ public class ONCHttpHandler implements HttpHandler
 				
 					addedChildList.add(childDB.add(year,child));
 				}
+				
 				cn++;
-				key = "childfn" + Integer.toString(cn);	//get next child key
+				key = "childln" + Integer.toString(cn);	//get next child key
 			}
 			
 			//now that we have added children, we can check for duplicate family in this year.
@@ -1296,8 +1303,9 @@ public class ONCHttpHandler implements HttpHandler
 			//adult in the family
 			while(params.containsKey(key))
 			{
-				adultName = (String) params.get(key);
-				adultGender = AdultGender.valueOf((String) params.get("adultgender" + Integer.toString(an)));
+				adultName = params.get(key) != null ? (String) params.get(key) : "";
+				adultGender = params.get("adultgender" + Integer.toString(an)) != null ?
+					AdultGender.valueOf((String) params.get("adultgender" + Integer.toString(an))) : AdultGender.Unknown;
 				
 				if(!adultName.isEmpty())
 				{
@@ -1493,11 +1501,19 @@ public class ONCHttpHandler implements HttpHandler
 		Map<String, String> map = new HashMap<String, String>();
 		for(String key:keys)
 		{
-			String value = "";
-			if(params.containsKey(key))
-				value = (String) params.get(key) != null ? (String) params.get(key) : "";
-		
-			map.put(key, value);
+			
+			//code modified 10-18-16 to prevent null value exception if input map does not contain a key
+			//if key is missing in input map, it is added with an empty string;
+//			String value = "";
+//			if(params.containsKey(key))
+//				value = (String) params.get(key) != null ? (String) params.get(key) : "";
+//		
+//			map.put(key, value);
+			
+			if(params.containsKey(key) && params.get(key) != null)
+				map.put(key, (String) params.get(key));
+			else
+				map.put(key, "");
 		}
 		
 		return map;
@@ -1511,6 +1527,10 @@ public class ONCHttpHandler implements HttpHandler
     {
 		TimeZone timezone = TimeZone.getTimeZone("GMT");
 		Calendar gmtDOB = Calendar.getInstance(timezone);
+		gmtDOB.set(Calendar.HOUR_OF_DAY, 0);
+		gmtDOB.set(Calendar.MINUTE, 0);
+		gmtDOB.set(Calendar.SECOND, 0);
+		gmtDOB.set(Calendar.MILLISECOND, 0);
 		
 		SimpleDateFormat websitesdf = new SimpleDateFormat();
 		websitesdf.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -1549,7 +1569,8 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		catch (ParseException e)
 		{
-			String errMssg = "Couldn't determine DOB from input: " + dob;
+//			String errMssg = "Couldn't determine DOB from input: " + dob;
+			return gmtDOB.getTimeInMillis();
 		}
 
     	//then convert the Calendar to a Date in Millis and return it
