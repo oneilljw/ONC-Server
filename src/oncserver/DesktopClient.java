@@ -33,7 +33,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 4.08f;
+	private static final float MINIMUM_CLIENT_VERSION = 4.10f;
 	
 	private int id;
 	private String version;
@@ -186,7 +186,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<online_users>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = clientMgr.getOnlineAppUsers();
+                	String response = clientMgr.getOnlineUsers();
                 	output.println(response);
                 	clientMgr.addLogMessage(response);               	
                 }

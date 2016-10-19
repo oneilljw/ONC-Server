@@ -247,11 +247,14 @@ public class ClientManager implements ActionListener
 		serverUI.addLogMessage(mssg);
 	}
 	
-	String getOnlineAppUsers()
+	String getOnlineUsers()
 	{
 		List<ONCUser> userList= new ArrayList<ONCUser>();
 		for(DesktopClient c:dtClientAL)
 			userList.add(c.getClientUser());
+		
+		for(WebClient wc: webClientAL)
+			userList.add(new ONCUser(wc.getWebUser()));
 			
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCUser>>(){}.getType();
