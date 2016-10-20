@@ -305,11 +305,26 @@
         var dstatus;
         if(family.dstatus === 'Delivered')
         	dstatus = 'Delivered \u2713';
-        else if(family.dstatus === 'Empty')
-        	dstatus = 'None';
+        else if(family.oncNum === '126' && family.fstatus === 'Unverified' && family.dstatus === 'Empty')
+        	dstatus = "Not Requested";
+        else if(family.oncNum === '126' && family.fstatus === 'Info Verified' && family.dstatus === 'Empty')	
+        	dstatus = "Not Requested";
+        else if(family.fstatus === 'Unverified' && family.dstatus === 'Empty')
+        	dstatus = "Requested";
+        else if(family.fstatus === 'Info Verified' && family.dstatus === 'Empty')
+        	dstatus = "Requested";
+        else if(family.fstatus === 'Gifts Selected' && family.dstatus ==='Empty')
+        	dstatus = 'Selected';
+        else if(family.fstatus === 'Gifts Received' && family.dstatus ==='Empty')	
+        	dstatus = 'Received';
+        else if(family.fstatus === 'Gifts Verified' && family.dstatus ==='Empty')	
+        	dstatus = 'Verified';
+        else if(family.fstatus === 'Packaged' && family.dstatus ==='Empty')	
+        	dstatus = 'Packaged';
         else
         	dstatus = family.dstatus;
         
+        	
         var mealstatus;
         if(family.mealStatus === 'Thanksgiving_Confirmed')
         	mealstatus = 'Thanksgiving \u2713';
@@ -317,6 +332,8 @@
         	mealstatus = 'December \u2713';
         else if(family.mealStatus === 'Both_Confirmed')
         	mealstatus = 'Both \u2713';
+        else if(family.mealStatus === 'None')
+        	mealstatus = "Not Requested";
         else
         	mealstatus = family.mealStatus;
         	

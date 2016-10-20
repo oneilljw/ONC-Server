@@ -56,6 +56,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final int HTTP_OK = 200;
 	private static final int NUM_OF_WISHES_PROVIDED = 4;
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
+	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
 	private static final String GIFTS_REQUESTED_KEY = "giftreq";
 	
 	public void handle(HttpExchange t) throws IOException 
@@ -1617,7 +1618,7 @@ public class ONCHttpHandler implements HttpHandler
 			return buff.toString();
 		}
 		else
-			return "Gift assistance not requested";
+			return NO_GIFTS_REQUESTED_TEXT;
 		
 	}
 	
