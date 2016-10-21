@@ -260,17 +260,22 @@
     	var e = document.getElementById("pyagents");
     	var agentID = e.options[e.selectedIndex].value;
     	
+    	var count = 0;
     	for(var i=0; i<pyFamJson.length; i++)
 		{
     		if(agentID == -1 || agentID == pyFamJson[i].agentID)
     		{
     			addTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
+    			count++;
     		}
 		}
     	
     	//clear the search box
     	var searchbox = document.getElementById('pysearch');
     	searchbox.value = "";
+    	
+    	//set the quanity in the table
+    	document.getElementById('pyfamilycount').innerHTML = ': ' + count.toString();
     }
     
     function updateCYTable()
@@ -279,17 +284,22 @@
     	var e = document.getElementById("curragents");
     	var agentID = e.options[e.selectedIndex].value;
     	
+    	var count = 0;
     	for(var i=0; i<cyFamJson.length; i++)
 		{
     		if(agentID == -1 || agentID == cyFamJson[i].agentID)
     		{
     			addTableRow(cyFamJson[i], cyTable, "Edit");	//add row to table
+    			count++;
     		}
 		}
     	
     	//clear the search box
     	var searchbox = document.getElementById('cysearch');
     	searchbox.value = "";
+    	
+    	//set the quanity in the table
+    	document.getElementById('cyfamilycount').innerHTML = ': ' + count.toString();
     }
 
     function addTableRow(family, table, buttontext)
@@ -656,6 +666,7 @@
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="pyagents">Families Referred By:</label>
 		<select id="pyagents"  onchange="updatePYTable()" name="pyagtID"></select>
+		<label id="pyfamilycount" for="pyagents"> : 0</label>
 		<span class='floatright'>
 		  <label for="pysearch">Search For:</label>
 		  <input type="text" id="pysearch" placeholder="Type to search..." />
@@ -686,6 +697,7 @@
   <div class='controlbar'>
 	<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
 	<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
+	<label id="cyfamilycount" for="curragents"> : 0</label>
 	<span class='floatright'>
 	  <label for="cysearch">Search For:</label>
 	  <input type="text" id="cysearch" placeholder="Type to search..." />
