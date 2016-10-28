@@ -174,6 +174,83 @@ public class ServerAgentDB extends ServerSeasonalDB
 		}
 	}
 	
+	ImportAgentResponse processImportedReferringAgent(int year, Agent reqAgt)
+	{		
+		//get the agent list for the requested year
+		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
+		List<Agent> agtAL = agentDBYear.getList();
+				
+		//check to see if the agent already exists by name. If so, don't create a new
+		//agent and add to the db, it they do exist return the existing agent
+		int index = 0;
+		while(index < agtAL.size() && !agtAL.get(index).doesAgentNameMatch(reqAgt.getAgentName()))
+			index++;
+				
+		if(index < agtAL.size())
+		{
+			//found a name match. Determine if other fields have changed. If so, update
+			boolean bAgentUpdated = false;
+			Agent existingAgent = agtAL.get(index);
+			
+			if(!reqAgt.getAgentOrg().trim().isEmpty() && !reqAgt.getAgentOrg().equals(existingAgent.getAgentOrg())) 
+			{
+				existingAgent.setAgentOrg(reqAgt.getAgentOrg().trim());
+				bAgentUpdated = true;
+			}
+			
+			if(!reqAgt.getAgentTitle().trim().isEmpty() && !reqAgt.getAgentTitle().equals(existingAgent.getAgentTitle())) 
+			{
+				existingAgent.setAgentTitle(reqAgt.getAgentTitle().trim()); 
+				bAgentUpdated = true;
+			}
+					
+			if(!reqAgt.getAgentEmail().trim().isEmpty() && !reqAgt.getAgentEmail().equals(existingAgent.getAgentEmail()))
+			{
+				existingAgent.setAgentEmail(reqAgt.getAgentEmail().trim());
+				bAgentUpdated = true;
+			}
+					
+			if(!reqAgt.getAgentPhone().trim().isEmpty() && !reqAgt.getAgentPhone().equals(existingAgent.getAgentPhone())) 
+			{
+				existingAgent.setAgentPhone(reqAgt.getAgentPhone().trim());
+				bAgentUpdated = true;
+			}
+			
+			if(bAgentUpdated)
+			{
+				agentDBYear.setChanged(true);
+				
+				//keep the userDB in sync from profile perspective
+				try {
+					ServerUserDB.getInstance().processAgentUpdate(existingAgent);
+				} catch (NumberFormatException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				Gson gson = new Gson();
+				return new ImportAgentResponse(1, existingAgent.getID(), "UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class));
+			}
+			else
+			{
+				return new ImportAgentResponse(0, existingAgent.getID(), "UNCHANGED");
+			}
+		}
+		else
+		{
+			//agent name match not found, add the id to the requested agent, save and return
+			//set the new ID for the catalog wish
+			reqAgt.setID(agentDBYear.getNextID());
+			agentDBYear.add(reqAgt);
+			agentDBYear.setChanged(true);
+			Gson gson = new Gson();
+			return new ImportAgentResponse(2, reqAgt.getID(), "ADDED_AGENT" + gson.toJson(reqAgt, Agent.class));	
+		}
+	}
+	
 	String add(int year, String json)
 	{
 		//Create an object to add to the data base

@@ -33,7 +33,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 4.10f;
+	private static final float MINIMUM_CLIENT_VERSION = 4.11f;
 	
 	private int id;
 	private String version;
@@ -391,6 +391,13 @@ public class DesktopClient extends Thread
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<family_group>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = serverFamilyDB.addFamilyGroup(year, command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<check_duplicatefamily>"))
                 {
