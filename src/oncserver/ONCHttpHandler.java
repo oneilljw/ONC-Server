@@ -45,7 +45,7 @@ public class ONCHttpHandler implements HttpHandler
 {
 	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
 	private static final String ONC_ELF_PAGE_HTML = "ONC.htm";
-	private static final String UPDATE_HTML = "EditFamily.htm";
+	private static final String UPDATE_HTML = "NewEdit.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
@@ -1408,7 +1408,7 @@ public class ONCHttpHandler implements HttpHandler
 		
 		if(wc.getWebUser().getAgentID() == -1  || ServerAgentDB.getAgent(year, wc.getWebUser()) == null)
 		{
-			return new FamilyResponseCode(-1, "Family Referral Rejected: Referring Agent Not Found");
+			return new FamilyResponseCode(-1, "Family Update Rejected: Referring Agent Not Found");
 		}
 
 		//get database references
