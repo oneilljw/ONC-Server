@@ -43,8 +43,6 @@
   		     	//get families adults
   		     	getAdultsFromServer(year, sessionStorage.getItem("targetid"));
   		     	
-  		     	//get childrens wishes from server
-  		     	
   		     	//get meal and update if family meal id > 1
   		     	if(family.mealID > -1)
   		     	{
@@ -94,12 +92,12 @@
 		{
 			childrenJson = data;
 			updateChildTable();
-			if(childrenJson.length > 0)
-			{
-				getChildWishesFromServer(year, childrenJson[0].id);
-			}
-			else
-				$("#twishbody").empty();
+//			if(childrenJson.length > 0)
+//			{
+//				getChildWishesFromServer(year, childrenJson[0].id);
+//			}
+//			else
+//				$("#twishbody").empty();
 		});
     }
   	
@@ -115,65 +113,38 @@
 		});
     }
   	
-  	function getChildWishesFromServer(year, childid)
-    {
-    	childwishparams=  "token=" + sessionStorage.getItem("token") + "&" +
-		"year=" + year + "&" +
-		"childid=" + childid + "&" +
-		"callback=?";
-
-		$.getJSON('wishes', childwishparams, function(data)
-		{
-			wishJson = data;
-			if(wishJson.hasOwnProperty('error'))
-				window.location=document.getElementById('timeoutanchor').href;
-			else
-				updateWishTable(wishJson);
-		});
-    }
-  	
   	function updateChildTable()
     {
     	$("#tchildbody").empty();
     	
-    	var childSelect = document.getElementById("childfn");
-    	clearSelect(childSelect);
+//    	var childSelect = document.getElementById("childfn");
+//    	clearSelect(childSelect);
     	
     	for(var i=0; i<childrenJson.length; i++)
 		{
     		addChildTableRow(i, childrenJson[i]);	//add row to table
     		
-    		var option = document.createElement("option"); //add child fn to select
-			option.text = childrenJson[i].firstname;
-	    	option.value = i;
-
-	    	try 
-    		{
-        		childSelect.add(option, null); //Standard 
-    		} 
-    		catch(error) 
-    		{
-        		childSelect.add(option); // IE only
-    		}
+//    		var option = document.createElement("option"); //add child fn to select
+//			option.text = childrenJson[i].firstname;
+//	    	option.value = i;
+//
+//	    	try 
+//    		{
+//        		childSelect.add(option, null); //Standard 
+//    		} 
+//    		catch(error) 
+//    		{
+//        		childSelect.add(option); // IE only
+//    		}
     		
    		}
     	
-    	if(childrenJson.length > 0)
-    	{
-    		var child = childrenJson[0];
-    		var ageInput = document.getElementById('age');
-    		ageInput.value = getAge(child.sDOB) + " " + child.gender.toLowerCase();
-    	}
-    }
-  	
-  	function updateWishTable(wishJson)
-    {
-    	$("#twishbody").empty();
-    	
-    	for(var i=0; i<wishJson.length; i++)
-		{
-    		addWishTableRow(i, wishJson[i]);	//add row to table
-		}
+//    	if(childrenJson.length > 0)
+//    	{
+//   		var child = childrenJson[0];
+//    		var ageInput = document.getElementById('age');
+//    		ageInput.value = getAge(child.sDOB) + " " + child.gender.toLowerCase();
+//    	}
     }
 	
 	function updateAdultTable()
@@ -213,31 +184,6 @@
 
         tabBody.appendChild(row);
     }
-  	
-  	function addWishTableRow(wn, childwish)
-    {
-		var wishinfo= [wn+1, childwish.name, childwish.detail, childwish.restriction, childwish.partner, childwish.status];
-		var wishcolumnsize= ['56px', '120px', '240px', '8px', '240px', '80px'];
-		var wishfieldsize= [1, 12, 32, 1, 32, 10];
-        
-	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
-        row=document.createElement("tr");
-         
-        for(index=0; index < wishinfo.length; index++)	//create the child info cells
-        {
-        	cell= document.createElement("td");
-        	cell.style.width = wishcolumnsize[index];
-    	    content= document.createElement("input");
- 	    	content.type="text";
-        	content.value = wishinfo[index];
-        	content.disabled = true;
-        	content.setAttribute("size", wishfieldsize[index]);
-        	cell.appendChild(content);
-        	row.appendChild(cell);
-        }
-        
-        tabBody.appendChild(row);
-    }
 	
 	function addAdultTableRow(anum, adult)
     {
@@ -267,65 +213,6 @@
         tabBody.appendChild(row);
     }
 	
-	function clearSelect(select)
-	{
-		var i;
-		for(i=select.options.length-1;i>=0;i--)
-		{
-	    	select.remove(i);
-	    }
-	}
-	
-	function updateForChildSelection()
-    {
-    	//get selected year
-    	var childCB = document.getElementById("childfn");
-		var child = childrenJson[childCB.selectedIndex];
-		var year = document.getElementById('year').value;
-		
-		var ageInput = document.getElementById('age');
-		ageInput.value = getAge(child.sDOB) + " " + child.gender.toLowerCase();
-    	
-		getChildWishesFromServer(year, child.id)	//get child wishes from server
-    }
-	
-	function getAge(childbirthdate)
-	{
-		var yearCB = document.getElementById("yearlist");
-		var curryear = document.getElementById('year').value;
-		var xmasday = new Date(curryear,11,25,0,0,0,0);
-		var birthdate= new Date(childbirthdate);
-		
-		var age= [];
-		
-		if(birthdate >= xmasday)
-		{
-			age.push('Newborn');
-		}
-		else
-		{
-	    	var y= [xmasday.getFullYear(), birthdate.getFullYear()],
-	    	ydiff= y[0]-y[1],
-	    	m= [xmasday.getMonth(), birthdate.getMonth()],
-	    	mdiff= m[0]-m[1],
-	    	d= [xmasday.getDate(), birthdate.getDate()],
-	    	ddiff= d[0]-d[1];
-
-	    	if(mdiff < 0 || (mdiff === 0 && ddiff < 0))--ydiff;
-	    	if(mdiff < 0) mdiff+= 12;
-	    	if(ddiff < 0)
-	    	{
-	        	birthdate.setMonth(m[1]+1, 0);
-	        	ddiff= birthdate.getDate()-d[1]+d[0];
-	        	--mdiff;
-	    	}
-	    	
-	    	if(ydiff > 0) age.push(ydiff+ ' yr. old');
-	    	else if(mdiff >= 0) age.push(mdiff+ ' mos. old');
-		}
-	    	return age.join('');
-	}
-  	
   	function updateFamilyInfo(family)
   	{		        
   		var familyElements = [family.HOHFirstName, family.HOHLastName, family.Language, family.HouseNum, family.Street, 
@@ -1074,26 +961,6 @@
     </fieldset> 
   </fieldset>
   <br>
-   <fieldset>
-   <legend class="legend-major">Gift Assistance Request Status: Review Only</legend>
-   <select id="childfn" onchange="updateForChildSelection()"> </select>
-   <label>is a</label>
-   <input id='age' type='text' size='13'>
-  	<table id="wishtable" border="1">
-  	<thead>
-    	<tr>
-        	<th>Gift #</th>
-        	<th>Name</th>
-        	<th>Detail</th>
-        	<th>Res</th>
-        	<th>Partner</th>
-        	<th>Status</th>	
-    	</tr>
-      </thead>
-      <tbody id="twishbody">
-      </tbody>
-  </table>
-  </fieldset>
   <fieldset>
   <legend class="legend-major">Meal Assistance Request Status: Review Only</legend>
  	<label for='mealstatus'>Status:</label>
