@@ -83,11 +83,10 @@ public class ServerAgentDB extends ServerSeasonalDB
 		//that referred
 		if(user.getPermission().compareTo(UserPermission.Agent) == 0)
 		{
-			String userName = user.getFirstname() + " " + user.getLastname();
  			agentYearList = agentDB.get(year - BASE_YEAR).getList();
  			
 			int index=0;
-			while(index<agentYearList.size() && !agentYearList.get(index).getAgentName().equals(userName))
+			while(index<agentYearList.size() && agentYearList.get(index).getID() != user.getAgentID())
 				index++;
 					
 			agentReferredInYearList.add(agentYearList.get(index));
@@ -99,10 +98,10 @@ public class ServerAgentDB extends ServerSeasonalDB
 			for(Agent agent : agentYearList)
 				if(ServerFamilyDB.didAgentReferInYear(agent.getID(), year))
 					agentReferredInYearList.add(agent);
+			
+			//sort the list by name
+			Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
 		}
-		
-		//sort the list by name
-		Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
 			
 		String response = gson.toJson(agentReferredInYearList, listtype);
 		

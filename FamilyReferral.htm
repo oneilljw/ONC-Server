@@ -678,7 +678,7 @@
 			dietres.value="";
 			dietres.disabled = true;
 		}
-		else if(sessionStorage.getItem('thanksgivingCutoff') === 'past')
+		else if(sessionStorage.getItem('thanksgivingCutoff') === 'disabled')
 		{
 			var choices = ["December"];
 			mealCombo.disabled = false;
@@ -707,6 +707,7 @@
 	    	}  
 		}   	
 	}
+
 	function verifyHOHAddress()
 	{
 		//called when HOH address inputs blur
