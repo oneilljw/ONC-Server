@@ -519,7 +519,7 @@ public class ONCHttpHandler implements HttpHandler
     				response = response.replace("USER_NAME", wc.getWebUser().getFirstname());
     				response = response.replace("USER_MESSAGE", "");
     				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    				response = response.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+    				response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
     				response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
     				response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
     				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
@@ -939,7 +939,7 @@ public class ONCHttpHandler implements HttpHandler
 				homePageHTML = homePageHTML.replace("USER_NAME", username);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
 				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-				homePageHTML = homePageHTML.replace("THANSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+				homePageHTML = homePageHTML.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
 				homePageHTML = homePageHTML.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
 				homePageHTML = homePageHTML.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
 				homePageHTML = homePageHTML.replace("HOME_LINK_VISIBILITY", "hidden");
