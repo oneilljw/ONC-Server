@@ -33,8 +33,23 @@
   			$.getJSON('getfamily', familyparams, function(family)
   			{
   		     	updateFamilyInfo(family);
-  		     	verifyHOHAddress();
-  		     	verifyDeliveryAddress();
+  		     	
+  		     	//now that inputs are set for family, enable the address input listeners
+  		     	document.getElementById('housenum').setAttribute('onchange','verifyHOHAddress()');
+  		     	document.getElementById('street').setAttribute('onchange','verifyHOHAddress()');
+  		     	document.getElementById('unit').setAttribute('onchange','verifyHOHAddress()');
+  		     	document.getElementById('city').setAttribute('onchange','onCityChanged("city")');
+  		     	document.getElementById('zipcode').setAttribute('onchange','onZipChanged("zipcode")');
+  		     	
+  		     	document.getElementById('delhousenum').setAttribute('onchange','verifyDeliveryAddress()');
+  		     	document.getElementById('delstreet').setAttribute('onchange','verifyDeliveryAddress()');
+  		     	document.getElementById('delunit').setAttribute('onchange','verifyDeliveryAddress()');
+  		     	document.getElementById('delcity').setAttribute('onchange','onCityChanged("delcity")');
+  		     	document.getElementById('delzipcode').setAttribute('onchange','onZipChanged("delzipcode")');
+  		     	
+  		     	//verify the addresses
+  		    	verifyHOHAddress();
+  		    	verifyDeliveryAddress();
   		     	
   		     	//get families children
   		     	var year = document.getElementById('year').value;
@@ -92,12 +107,6 @@
 		{
 			childrenJson = data;
 			updateChildTable();
-//			if(childrenJson.length > 0)
-//			{
-//				getChildWishesFromServer(year, childrenJson[0].id);
-//			}
-//			else
-//				$("#twishbody").empty();
 		});
     }
   	
@@ -117,34 +126,8 @@
     {
     	$("#tchildbody").empty();
     	
-//    	var childSelect = document.getElementById("childfn");
-//    	clearSelect(childSelect);
-    	
     	for(var i=0; i<childrenJson.length; i++)
-		{
     		addChildTableRow(i, childrenJson[i]);	//add row to table
-    		
-//    		var option = document.createElement("option"); //add child fn to select
-//			option.text = childrenJson[i].firstname;
-//	    	option.value = i;
-//
-//	    	try 
-//    		{
-//        		childSelect.add(option, null); //Standard 
-//    		} 
-//    		catch(error) 
-//    		{
-//        		childSelect.add(option); // IE only
-//    		}
-    		
-   		}
-    	
-//    	if(childrenJson.length > 0)
-//    	{
-//   		var child = childrenJson[0];
-//    		var ageInput = document.getElementById('age');
-//    		ageInput.value = getAge(child.sDOB) + " " + child.gender.toLowerCase();
-//    	}
     }
 	
 	function updateAdultTable()
@@ -152,9 +135,7 @@
     	$("#tadultbody").empty();
     	
     	for(var i=0; i<adultsJson.length; i++)
-		{
     		addAdultTableRow(i, adultsJson[i]);	//add row to table
-		}
     }
   	
   	function addChildTableRow(cnum, child)
@@ -179,7 +160,6 @@
         	content.setAttribute("size", fieldsize[index]);
         	cell.appendChild(content);
         	row.appendChild(cell);
-        	
         }
 
         tabBody.appendChild(row);
@@ -224,7 +204,7 @@
   		for(var i=0; i<familyElements.length; i++)
   			document.getElementById(formElements[i]).value = familyElements[i];
   		
-  		//set zip code -- update select options for city first
+  		//set zip code options -- update select options for city first
   		cityChanged('city');
   		document.getElementById('zipcode').value = family.ZipCode;
   	
@@ -337,12 +317,26 @@
 		changeAddressBackground(delSelectElements, '#FFFFFF');
   	}
   	
+  	function onCityChanged(elementName)
+  	{
+  		if(elementName === 'city')
+  		{
+  			cityChanged('city');
+  	  		verifyHOHAddress();
+  		}
+		else
+		{
+			cityChanged('delcity');
+	  		verifyDeliveryAddress();
+		}
+  	}
+  	
   	function cityChanged(elementName)
 	{
 		if(elementName === 'city')
-			var zipElement = document.getElementById('zipcode')
+			var zipElement = document.getElementById('zipcode');
 		else
-			var zipElement = document.getElementById('delzipcode')	
+			var zipElement = document.getElementById('delzipcode');	
 			
 		removeOptions(zipElement);
 		
@@ -559,11 +553,6 @@
 		{
 			zipElement.options[0] = new Option('22152', '22152');
 		}
-		
-		if(elementName === 'city')
-			verifyHOHAddress();
-		else
-			verifyDeliveryAddress();	
 	}
   	
   	function removeOptions(select)
@@ -818,10 +807,10 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required>
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off" required>
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off">
-    <select id="city" title="City" name="city" onchange="cityChanged('city')">
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" autocomplete="off">
+    <select id="city" title="City" name="city">
 		<option value="Centreville">Centreville</option>
 		<option value="Chantilly">Chantilly</option>
 		<option value="Clifton">Clifton</option>
@@ -864,7 +853,7 @@
 		<option value="West McLean">West McLean</option>
 		<option value="West Springfield">West Springfield</option>
 	</select>
-    <select id="zipcode" title="Zip Code" name="zipcode" onchange="onZipChanged('zipcode')">
+    <select id="zipcode" title="Zip Code" name="zipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
 		<option value="20122">20122</option>
@@ -875,10 +864,10 @@
   <fieldset>
   <legend class="legend-major">Delivery Address: Update address that ONC will use for gift delivery</legend>
 	<input id="checkbox" type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
-	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onchange="verifyDeliveryAddress()" autocomplete="off" required>
-    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onchange="verifyDeliveryAddress()" autocomplete="off" required>
-    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" onchange="verifyDeliveryAddress()" autocomplete="off">
-    <select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged('delcity')">
+	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
+    <select id="delcity" title="Delivery City" name="delcity">
 		<option value="Centreville">Centreville</option>
 		<option value="Chantilly">Chantilly</option>
 		<option value="Clifton">Clifton</option>
@@ -921,7 +910,7 @@
 		<option value="West McLean">West McLean</option>
 		<option value="West Springfield">West Springfield</option>
 	</select>	
-    <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode" onchange="onZipChanged('delzipcode')">
+    <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
 		<option value="20120">20120</option>
 		<option value="20121">20121</option>
 		<option value="20122">20122</option>
