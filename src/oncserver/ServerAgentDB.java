@@ -173,7 +173,7 @@ public class ServerAgentDB extends ServerSeasonalDB
 		}
 	}
 	
-	ImportAgentResponse processImportedReferringAgent(int year, Agent reqAgt)
+	ImportONCObjectResponse processImportedReferringAgent(int year, Agent reqAgt)
 	{		
 		//get the agent list for the requested year
 		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
@@ -231,11 +231,11 @@ public class ServerAgentDB extends ServerSeasonalDB
 				}
 				
 				Gson gson = new Gson();
-				return new ImportAgentResponse(1, existingAgent.getID(), "UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class));
+				return new ImportONCObjectResponse(existingAgent, "UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class));
 			}
 			else
 			{
-				return new ImportAgentResponse(0, existingAgent.getID(), "UNCHANGED");
+				return new ImportONCObjectResponse(null, "UNCHANGED");
 			}
 		}
 		else
@@ -246,7 +246,7 @@ public class ServerAgentDB extends ServerSeasonalDB
 			agentDBYear.add(reqAgt);
 			agentDBYear.setChanged(true);
 			Gson gson = new Gson();
-			return new ImportAgentResponse(2, reqAgt.getID(), "ADDED_AGENT" + gson.toJson(reqAgt, Agent.class));	
+			return new ImportONCObjectResponse(reqAgt, "ADDED_AGENT" + gson.toJson(reqAgt, Agent.class));	
 		}
 	}
 	

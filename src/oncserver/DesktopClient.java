@@ -323,7 +323,8 @@ public class DesktopClient extends Thread
                 }
                 else if(command.startsWith("GET<changes>"))
                 {   
-                	if(changeQ.peek() == null)
+//                	if(changeQ.peek() == null)
+                	if(changeQ.isEmpty())
                 		output.println("NO_CHANGES");
                 	else
                 	{
@@ -337,6 +338,7 @@ public class DesktopClient extends Thread
 	                		qContents.add(changeQ.remove());
                 		
                 		String response = gson.toJson(qContents, listOfChanges);
+               
                 		output.println(response);
                 		clientMgr.addLogMessage("GET<changes> Response: " + response);
                 	}

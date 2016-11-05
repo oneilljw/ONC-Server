@@ -395,7 +395,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	
 	String addFamilyGroup(int year, String familyGroupJson)
 	{
+		return null;
+		
+/*
 		ClientManager clientMgr = ClientManager.getInstance();
+		
+		//create the response list of jsons
+		List<String> jsonResponseList = new ArrayList<String>();
 		
 		//un-bundle to list of Britepath family objects
 		Gson gson = new Gson();
@@ -407,10 +413,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		for(BritepathFamily bpFam:bpFamilyList)
 		{
 			//add the referring agent to the Agent DB
-			ImportAgentResponse iar = agentDB.processImportedReferringAgent(year, bpFam.getReferringAgent());
+			ImportONCObjectResponse agentResponse = agentDB.processImportedReferringAgent(year, bpFam.getReferringAgent());
+			if(agentResponse != null)
+			{	
+				jsonResponseList.add(agentResponse.getJsonResponse());
 			
-			//add the family to the Family DB
-			ONCFamily reqAddFam = new ONCFamily(bpFam.referringAgentName, bpFam.referringAgentOrg,
+				//add the family to the Family DB
+				ONCFamily reqAddFam = new ONCFamily(bpFam.referringAgentName, bpFam.referringAgentOrg,
 					bpFam.referringAgentTitle, bpFam.clientFamily, bpFam.headOfHousehold,
 					bpFam.familyMembers, bpFam.referringAgentEmail, bpFam.clientFamilyEmail, 
 					bpFam.clientFamilyPhone, bpFam.referringAgentPhone, bpFam.dietartyRestrictions,
@@ -419,9 +428,57 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					bpFam.deliveryZip, bpFam.deliveryState, bpFam.adoptedFor, bpFam.numberOfAdults,
 					bpFam.numberOfChildren, bpFam.wishlist, bpFam.speaksEnglish, bpFam.language,
 					bpFam.hasTransportation, bpFam.batchNum, new Date(), -1, "NNA",-1, 
-					"userLN, FI", iar.getAgentID());
+					"userLN, FI", agentResponse.getONCObjectID());
 			
-			ONCFamily addedFam = add(year, reqAddFam);
+				ONCFamily addedFam = add(year, reqAddFam);
+				if(addedFam != null)
+				{
+					jsonResponseList.add(gson.toJson(addedFam, ONCFamily.class));
+		
+					String[] members = bpFam.getFamilyMembers().trim().split("\n");					
+					for(int i=0; i<members.length; i++)
+					{
+//						System.out.println(String.format("#: %d part[%d]: %s. length= %d", members.length, i, members[i], members[i].length()));
+						if(!members[i].isEmpty() && members[i].toLowerCase().contains("adult"))
+						{
+							//crate the add adult request object
+							String[] adult = members[i].split(ODB_FAMILY_MEMBER_COLUMN_SEPARATOR, 3);
+							if(adult.length == 3)
+							{
+								//determine the gender, could be anything from Britepaths!
+								AdultGender gender;
+								if(adult[1].toLowerCase().contains("female") || adult[1].toLowerCase().contains("girl"))
+									gender = AdultGender.Female;
+								else if(adult[1].toLowerCase().contains("male") || adult[1].toLowerCase().contains("boy"))
+									gender = AdultGender.Male;
+								else
+									gender = AdultGender.Unknown;
+										
+								
+								ONCAdult reqAddAdult = new ONCAdult(-1, addedFam.getID(), adult[0], gender);
+							
+								//interact with the server to add the adult
+//								adultDB.add(this, reqAddAdult);
+							}
+						}
+						else if(!members[i].isEmpty())
+						{
+							//crate the add child request object
+//							ONCChild reqAddChild = new ONCChild(-1, addedFam.getID(), members[i],
+//																GlobalVariables.getCurrentSeason());
+//							
+							//interact with the server to add the child
+//							childDB.add(this, reqAddChild);
+						}
+					}
+					
+//					//Sort the families children by age and set the child number for each child in the family
+//					childDB.assignChildNumbers(famid);	
+
+					
+					
+				}
+			
 			
 //			if(addedFam != null)
 //				addFamiliesChildrenAndAdults(addedFam.getID(), bpFam.familyMembers);
@@ -429,6 +486,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		}
 		
 		return "ADDED_BRITEPATH_FAMILIES";
+*/		
 	}
 	
 	/***
@@ -437,9 +495,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	 * child requests and send them to the server via the local adult or child data base.
 	 * Adults and children are located by family ID.
 	 */
-/*	
+	
 	void addFamiliesChildrenAndAdults(int famid, String fm)
 	{
+/*		
 		String[] members = fm.trim().split("\n");
 		
 		for(int i=0; i<members.length; i++)
@@ -451,7 +510,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				String[] adult = members[i].split(ODB_FAMILY_MEMBER_COLUMN_SEPARATOR, 3);
 				if(adult.length == 3)
 				{
-					//determine the gender, could be anything from ODB!
+					//determine the gender, could be anything from Britepaths!
 					AdultGender gender;
 					if(adult[1].toLowerCase().contains("female") || adult[1].toLowerCase().contains("girl"))
 						gender = AdultGender.Female;
@@ -480,8 +539,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		
 //		//Sort the families children by age and set the child number for each child in the family
 //		childDB.assignChildNumbers(famid);	
+ */
 	}
-*/	
+	
 	ONCFamily add(int year, ONCFamily addedFam)
 	{
 		if(addedFam != null)
