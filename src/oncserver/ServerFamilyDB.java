@@ -395,9 +395,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	
 	String addFamilyGroup(int year, String familyGroupJson)
 	{
-		return null;
-		
-/*
 		ClientManager clientMgr = ClientManager.getInstance();
 		
 		//create the response list of jsons
@@ -416,6 +413,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			ImportONCObjectResponse agentResponse = agentDB.processImportedReferringAgent(year, bpFam.getReferringAgent());
 			if(agentResponse != null)
 			{	
+				//if the agent was added successfully, try to add the family
 				jsonResponseList.add(agentResponse.getJsonResponse());
 			
 				//add the family to the Family DB
@@ -433,6 +431,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				ONCFamily addedFam = add(year, reqAddFam);
 				if(addedFam != null)
 				{
+					//if the family was added successfully, add the adults and children
 					jsonResponseList.add(gson.toJson(addedFam, ONCFamily.class));
 		
 					String[] members = bpFam.getFamilyMembers().trim().split("\n");					
@@ -458,35 +457,26 @@ public class ServerFamilyDB extends ServerSeasonalDB
 								ONCAdult reqAddAdult = new ONCAdult(-1, addedFam.getID(), adult[0], gender);
 							
 								//interact with the server to add the adult
-//								adultDB.add(this, reqAddAdult);
+								String addedAdultJson = gson.toJson(adultDB.add(year, reqAddAdult));
+								jsonResponseList.add("ADDED_ADULT" + addedAdultJson);
 							}
 						}
 						else if(!members[i].isEmpty())
 						{
-							//crate the add child request object
-//							ONCChild reqAddChild = new ONCChild(-1, addedFam.getID(), members[i],
-//																GlobalVariables.getCurrentSeason());
-//							
+							//create the add child request object
+							ONCChild reqAddChild = new ONCChild(-1, addedFam.getID(), members[i], year);
+							
 							//interact with the server to add the child
-//							childDB.add(this, reqAddChild);
+							String addedChildJson = gson.toJson(childDB.add(year, reqAddChild));
+							jsonResponseList.add("ADDED_CHILD" + addedChildJson);
 						}
 					}
-					
-//					//Sort the families children by age and set the child number for each child in the family
-//					childDB.assignChildNumbers(famid);	
-
-					
-					
 				}
-			
-			
-//			if(addedFam != null)
-//				addFamiliesChildrenAndAdults(addedFam.getID(), bpFam.familyMembers);
-			
+			}
 		}
 		
 		return "ADDED_BRITEPATH_FAMILIES";
-*/		
+		
 	}
 	
 	/***
