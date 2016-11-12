@@ -14,6 +14,7 @@
   	var hohAddressGood = false;
   	var delAddressGood = false;
   	var errorColor = '#FF9999';
+  	var bVerifyDeliveryAddressEnabled = true;
   	
   	$(function() {
   	    $( "#childdob" ).datepicker({
@@ -375,6 +376,9 @@
 		
 		if(cb.checked == true)
 		{	
+			//no need to check the delivery address, it's just a copy
+			bVerifyDeliveryAddressEnabled = false;
+			
 			//copy the address input elements to delivery address elements
 			for(var i=0; i<addrInputElements.length; i++)
 				delInputElements[i].value = addrInputElements[i].value;
@@ -389,9 +393,6 @@
 				delInputElements[i].readOnly = true;
 				addrInputElements[i].readOnly = true;
 			}
-			
-			//verify the address
-			verifyDeliveryAddress();	
 		}
 		else
 		{
@@ -413,6 +414,9 @@
 			//clear background color
 			changeAddressBackground(delInputElements, '#FFFFFF')
 			changeAddressBackground(delSelectElements, '#FFFFFF')
+			
+			//enable checking of the delivery address, no longer a copy
+			bVerifyDeliveryAddressEnabled = true;
 		}
 	}
 	
@@ -757,49 +761,52 @@
 	
 	function verifyDeliveryAddress()
 	{
-		//called when delivery address inputs blur
-		var addrElement = [document.getElementById('delhousenum'),
-		                   document.getElementById('delstreet'),
-		                   document.getElementById('delunit'),
-		                   document.getElementById('delcity'), 
-		                   document.getElementById('delzipcode')];
-		
-		var unitElement = [document.getElementById('delunit')];
-		
-		//check to see that housenum and street are provided
-		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+		//called when delivery address inputs change
+		if(bVerifyDeliveryAddressEnabled)
 		{
-			//form the address url
-	        var addressparams = createAddressParams(addrElement);
-	        var addrresponse;
-	        $.getJSON('address',  addressparams, function(data)
-	      	{
-	      		addresponse = data;
+			var addrElement = [document.getElementById('delhousenum'),
+		    	               document.getElementById('delstreet'),
+		        	           document.getElementById('delunit'),
+		            	       document.getElementById('delcity'), 
+		                	   document.getElementById('delzipcode')];
+		
+			var unitElement = [document.getElementById('delunit')];
+		
+			//check to see that housenum and street are provided
+			if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+			{
+				//form the address url
+	        	var addressparams = createAddressParams(addrElement);
+	        	var addrresponse;
+	        	$.getJSON('address',  addressparams, function(data)
+	      		{
+	      			addresponse = data;
 	      		
-	      		if(addresponse.hasOwnProperty('error'))
-	      		{
-					window.location=document.getElementById('timeoutanchor').href;
-	      		}
-	      		else if(addresponse.errorCode === 0)
-	      		{
-	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			delAddressGood = true;
-	      		}	
-	      		else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-	      		{
-	      			delAddressGood = false;
-	      			changeAddressBackground(addrElement, errorColor);
-	      		}
-	      		else if(addresponse.errorCode === 2)
-	      		{
-	      			delAddressGood = false;
-	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			changeAddressBackground(unitElement, errorColor);
-	      		}
-	      	});
+	      			if(addresponse.hasOwnProperty('error'))
+	      			{
+						window.location=document.getElementById('timeoutanchor').href;
+	      			}
+	      			else if(addresponse.errorCode === 0)
+	      			{
+	      				changeAddressBackground(addrElement, '#FFFFFF');
+	      				delAddressGood = true;
+	      			}	
+	      			else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+	      			{
+	      				delAddressGood = false;
+	      				changeAddressBackground(addrElement, errorColor);
+	      			}
+	      			else if(addresponse.errorCode === 2)
+	      			{
+	      				delAddressGood = false;
+	      				changeAddressBackground(addrElement, '#FFFFFF');
+	      				changeAddressBackground(unitElement, errorColor);
+	      			}
+	      		});
+			}
+			else
+				delAddressGood = false;
 		}
-		else
-			delAddressGood = false;
 	}
 	
 	function onZipChanged(zipelement)

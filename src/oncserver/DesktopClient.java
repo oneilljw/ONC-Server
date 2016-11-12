@@ -397,7 +397,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<family_group>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = serverFamilyDB.addFamilyGroup(year, command.substring(18));
+                	String response = serverFamilyDB.addFamilyGroup(year, command.substring(18), this);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 }

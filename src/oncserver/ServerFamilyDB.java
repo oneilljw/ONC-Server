@@ -13,7 +13,6 @@ import java.util.List;
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
-import ourneighborschild.GlobalVariables;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
@@ -23,7 +22,6 @@ import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.ONCWebsiteFamilyExtended;
-import ourneighborschild.UserDB;
 import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
@@ -54,8 +52,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerAgentDB agentDB;
 	private static ServerChildDB childDB;
 	private static ServerAdultDB adultDB;
-	private static ServerMealDB mealDB;
-//	private static ServerChildWishDB childwishDB;
 	
 	private static ClientManager clientMgr;
 	
@@ -95,9 +91,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		childDB = ServerChildDB.getInstance();
 		adultDB = ServerAdultDB.getInstance();
 		agentDB = ServerAgentDB.getInstance();
-		mealDB = ServerMealDB.getInstance();
-//		childwishDB = ServerChildWishDB.getInstance();
-		
+
 		clientMgr = ClientManager.getInstance();
 	}
 	
@@ -393,17 +387,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return "ADD_FAMILY_FAILED";
 	}
 	
-	String addFamilyGroup(int year, String familyGroupJson)
+	String addFamilyGroup(int year, String familyGroupJson, DesktopClient currClient)
 	{
-		ClientManager clientMgr = ClientManager.getInstance();
-		
 		//create the response list of jsons
 		List<String> jsonResponseList = new ArrayList<String>();
 		
 		//un-bundle to list of Britepath family objects
 		Gson gson = new Gson();
-		Type listOfBritepathFamilies = new TypeToken<ArrayList<BritepathFamily>>(){}.getType();
-		
+		Type listOfBritepathFamilies = new TypeToken<ArrayList<BritepathFamily>>(){}.getType();		
 		List<BritepathFamily> bpFamilyList = gson.fromJson(familyGroupJson, listOfBritepathFamilies);
 		
 		//for each family in the list, parse it and add it to the component databases
@@ -414,7 +405,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			if(agentResponse != null)
 			{	
 				//if the agent was added successfully, try to add the family
-				jsonResponseList.add(agentResponse.getJsonResponse());
+				if(agentResponse.getONCObjectID() > -1)
+					jsonResponseList.add(agentResponse.getJsonResponse());
 			
 				//add the family to the Family DB
 				ONCFamily reqAddFam = new ONCFamily(bpFam.referringAgentName, bpFam.referringAgentOrg,
@@ -426,13 +418,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					bpFam.deliveryZip, bpFam.deliveryState, bpFam.adoptedFor, bpFam.numberOfAdults,
 					bpFam.numberOfChildren, bpFam.wishlist, bpFam.speaksEnglish, bpFam.language,
 					bpFam.hasTransportation, bpFam.batchNum, new Date(), -1, "NNA",-1, 
-					"userLN, FI", agentResponse.getONCObjectID());
+					currClient.getClientUser().getLNFI(), agentResponse.getONCObjectID());
 			
 				ONCFamily addedFam = add(year, reqAddFam);
 				if(addedFam != null)
 				{
 					//if the family was added successfully, add the adults and children
-					jsonResponseList.add(gson.toJson(addedFam, ONCFamily.class));
+					jsonResponseList.add("ADDED_FAMILY" + gson.toJson(addedFam, ONCFamily.class));
 		
 					String[] members = bpFam.getFamilyMembers().trim().split("\n");					
 					for(int i=0; i<members.length; i++)
@@ -475,61 +467,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			}
 		}
 		
-		return "ADDED_BRITEPATH_FAMILIES";
+		//notify all other clients of the imported family objects
+		clientMgr.notifyAllOtherInYearClients(currClient, jsonResponseList);
 		
-	}
-	
-	/***
-	 * Adults associated with a family are stored in the Adult data base. Children associated
-	 * with a family are stored in the Child database. This method forms add adult and add 
-	 * child requests and send them to the server via the local adult or child data base.
-	 * Adults and children are located by family ID.
-	 */
-	
-	void addFamiliesChildrenAndAdults(int famid, String fm)
-	{
-/*		
-		String[] members = fm.trim().split("\n");
-		
-		for(int i=0; i<members.length; i++)
-		{
-//			System.out.println(String.format("#: %d part[%d]: %s. length= %d", members.length, i, members[i], members[i].length()));
-			if(!members[i].isEmpty() && members[i].toLowerCase().contains("adult"))
-			{
-				//crate the add adult request object
-				String[] adult = members[i].split(ODB_FAMILY_MEMBER_COLUMN_SEPARATOR, 3);
-				if(adult.length == 3)
-				{
-					//determine the gender, could be anything from Britepaths!
-					AdultGender gender;
-					if(adult[1].toLowerCase().contains("female") || adult[1].toLowerCase().contains("girl"))
-						gender = AdultGender.Female;
-					else if(adult[1].toLowerCase().contains("male") || adult[1].toLowerCase().contains("boy"))
-						gender = AdultGender.Male;
-					else
-						gender = AdultGender.Unknown;
-							
-					
-					ONCAdult reqAddAdult = new ONCAdult(-1, famid, adult[0], gender);
-				
-					//interact with the server to add the adult
-					adultDB.add(this, reqAddAdult);
-				}
-			}
-			else if(!members[i].isEmpty())
-			{
-				//crate the add child request object
-				ONCChild reqAddChild = new ONCChild(-1, famid, members[i],
-													GlobalVariables.getCurrentSeason());
-				
-				//interact with the server to add the child
-				childDB.add(this, reqAddChild);
-			}
-		}
-		
-//		//Sort the families children by age and set the child number for each child in the family
-//		childDB.assignChildNumbers(famid);	
- */
+		Type listOfChanges = new TypeToken<ArrayList<String>>(){}.getType();
+		return "ADDED_BRITEPATH_FAMILIES" + gson.toJson(jsonResponseList, listOfChanges);
 	}
 	
 	ONCFamily add(int year, ONCFamily addedFam)
