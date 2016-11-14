@@ -378,6 +378,7 @@
 		{	
 			//no need to check the delivery address, it's just a copy
 			bVerifyDeliveryAddressEnabled = false;
+			delAddressGood = hohAddressGood;
 			
 			//copy the address input elements to delivery address elements
 			for(var i=0; i<addrInputElements.length; i++)
@@ -397,6 +398,7 @@
 		else
 		{
 			//clear the delivery address elements
+			delAddressGood = false;
 			for(var i=0; i<delInputElements.length; i++)
 				delInputElements[i].value = "";
 			
