@@ -101,4 +101,12 @@ public abstract class ONCServerDB
 		
 		return hID+1;
 	}
+	
+	protected static boolean isNumeric(String str)
+	{
+		if(str == null || str.isEmpty())
+			return false;
+		else
+			return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
+	}
 }

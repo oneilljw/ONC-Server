@@ -13,8 +13,9 @@
   	var adultsJson= [];
   	var hohAddressGood = false;
   	var delAddressGood = false;
-  	var errorColor = '#FF9999';
   	var bVerifyDeliveryAddressEnabled = true;
+  	var errorColor = '#FF9999';
+  	
   	
   	$(function() {
   	    $( "#childdob" ).datepicker({
@@ -360,6 +361,9 @@
 	
 	function sameAddressClicked(cb)
 	{
+		//programatically changing the delievery address, disable address checking
+		bVerifyDeliveryAddressEnabled = false;
+		
 		var addrInputElements = [document.getElementById('housenum'),
 				                    document.getElementById('street'),
 				                    document.getElementById('unit')];
@@ -376,10 +380,6 @@
 		
 		if(cb.checked == true)
 		{	
-			//no need to check the delivery address, it's just a copy
-			bVerifyDeliveryAddressEnabled = false;
-			delAddressGood = hohAddressGood;
-			
 			//copy the address input elements to delivery address elements
 			for(var i=0; i<addrInputElements.length; i++)
 				delInputElements[i].value = addrInputElements[i].value;
@@ -394,11 +394,12 @@
 				delInputElements[i].readOnly = true;
 				addrInputElements[i].readOnly = true;
 			}
+			
+			delAddressGood = hohAddressGood;
 		}
 		else
 		{
 			//clear the delivery address elements
-			delAddressGood = false;
 			for(var i=0; i<delInputElements.length; i++)
 				delInputElements[i].value = "";
 			
@@ -417,9 +418,11 @@
 			changeAddressBackground(delInputElements, '#FFFFFF')
 			changeAddressBackground(delSelectElements, '#FFFFFF')
 			
-			//enable checking of the delivery address, no longer a copy
-			bVerifyDeliveryAddressEnabled = true;
+			//set the address to bad
+			delAddressGood = false;
 		}
+		
+		bVerifyDeliveryAddressEnabled = true;
 	}
 	
 	function cityChanged(elementName)
@@ -716,11 +719,11 @@
 
 	function verifyHOHAddress()
 	{
-		//called when HOH address inputs blur
+		//called when HOH address inputs change
 		var addrElement = [document.getElementById('housenum'), 
-		                   document.getElementById('street'),
-		                   document.getElementById('unit'),
-		                   document.getElementById('city'), 
+	    	               document.getElementById('street'),
+	        	           document.getElementById('unit'),
+	        	           document.getElementById('city'), 
 		                   document.getElementById('zipcode')];
 		
 		var unitElement = [document.getElementById('unit')];
@@ -729,9 +732,9 @@
 		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 		{
 			//form the address url
-	        var addressparams = createAddressParams(addrElement);
+	       	var addressparams = createAddressParams(addrElement);
 	        var addrresponse;
-	        $.getJSON('address', addressparams, function(data)
+	       	$.getJSON('address', addressparams, function(data)
 	      	{
 	      		addresponse = data;
 	      		
@@ -853,6 +856,7 @@
 		
 		return errorMssg;	
 	}
+	
 	function verifyPhoneNumber(elementNum)
 	{
 		var phoneElement= [document.getElementById('homephone'), 
@@ -888,11 +892,13 @@
 	{
 		var phoneNumbersGood= true;
 		var errorElement = document.getElementById('errormessage');
+		
  
+		//check the addresses again here
 		if(hohAddressGood===false)
 			errorElement.textContent = "Submission Error: HoH address incomplete or does not exist";
-		else if(delAddressGood===false)
-			errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
+//		else if(document.getElementById('sameaddress').checked === false && delAddressGood === false)
+//			errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
 		else
 		{	
 			//check phone numbers
@@ -904,7 +910,8 @@
 			}
 		}
 		
-	    return hohAddressGood && delAddressGood && phoneNumbersGood;
+//	    return hohAddressGood && delAddressGood && phoneNumbersGood;
+	    return hohAddressGood && phoneNumbersGood;
 	}
   </script>
   <style>

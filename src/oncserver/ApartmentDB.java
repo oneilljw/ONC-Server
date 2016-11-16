@@ -23,7 +23,7 @@ public class ApartmentDB
 	
 	private static ApartmentDB instance = null;
 	private static List<Address> aptList;
-	private static List<Integer> hashIndex;
+	private static List<Integer> hashTable;
 	private static char[] streetLetter = {'?','A','B','C','D','E','F','G','H','I','J','K','L','M',
 										 'N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
 
@@ -33,7 +33,7 @@ public class ApartmentDB
 		if(aptList.size() == 0)
 		{
 			readApartmentDBFromFile(System.getProperty("user.dir") +"/ApartmentDB.csv");
-			Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
+//			Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
 			createHashTable();
 		}
 	}
@@ -48,12 +48,12 @@ public class ApartmentDB
 	
 	static void createHashTable()
 	{
-		//build hash index array. Used to quickly search the regions list. Hash is based on first character
-		//in street name.			
-		hashIndex = new ArrayList<Integer>();
-		int letterIndex = 1;	//used to iterate the regions array
+		//build hash index array. Used to quickly search the apartment list. Hash is based on 
+		//first character in street name.			
+		hashTable = new ArrayList<Integer>();
+		int letterIndex = 1;	//used to iterate the apartment list
 						
-		hashIndex.add(0);	//add the first row to the hash, it's the streets that begin with a number
+		hashTable.add(0);	//add the first row to the hash, it's the streets that begin with a number
 		while(letterIndex < streetLetter.length)		
 		{
 			//find street that starts with the current street letter
@@ -62,13 +62,14 @@ public class ApartmentDB
 				index++;
 			
 			if(index < aptList.size())	//first street found
-			hashIndex.add(index++);
+			hashTable.add(index++);
 			else	//no street found that starts with that letter, set the hashIndex = to it's size
-				hashIndex.add(aptList.size());
+				hashTable.add(aptList.size());
 			
 			letterIndex++;
 		}
-		hashIndex.add(aptList.size());	//add the last index into the hash table
+		
+		hashTable.add(aptList.size());	//add the last index into the hash table
 	}
 	
 	static boolean isAddressAnApartment(Address checkAddress)
@@ -145,14 +146,11 @@ public class ApartmentDB
 				Address famAddress = new Address(f.getHouseNum(), f.getStreet(), f.getUnitNum(), f.getCity(), f.getZipCode());
 				
 				if(!isAddressAnApartment(famAddress))
-				{
-					//its not in the list, we need to add it
-					aptList.add(famAddress);
-			
-					Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
-					createHashTable();
-				}
+					aptList.add(famAddress); //its not in the list, we need to add it
 			}
+			
+			Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
+			createHashTable();
 		}
 		
 		save();
