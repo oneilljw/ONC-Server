@@ -218,23 +218,29 @@ public class RegionDB
 		//determine which part of the region list to search based on street name. Street names that start
 		//with a digit are first in the region list. searchAddres[2] is the street name
 		int searchIndex, endIndex;
-		if(Character.isDigit(searchAddress.getStreetName().charAt(0)))
-		{	
-			searchIndex = 0;
-			endIndex = hashIndex.get(1);
-		}
+		
+		if(searchAddress.getStreetName().isEmpty())
+			return 0;	//if no street name, can't find a region.
 		else
 		{
-			int index = Character.toUpperCase(searchAddress.getStreetName().charAt(0)) - 'A' + 1;	//'A'
-			searchIndex = hashIndex.get(index);
-			endIndex = hashIndex.get(index+1);
-		}
+			if(Character.isDigit(searchAddress.getStreetName().charAt(0)))
+			{	
+				searchIndex = 0;
+				endIndex = hashIndex.get(1);
+			}
+			else
+			{
+				int index = Character.toUpperCase(searchAddress.getStreetName().charAt(0)) - 'A' + 1;	//'A'
+				searchIndex = hashIndex.get(index);
+				endIndex = hashIndex.get(index+1);
+			}
 
-		while(searchIndex < endIndex && !regAL.get(searchIndex).isRegionMatch(searchAddress))
-			searchIndex++;
+			while(searchIndex < endIndex && !regAL.get(searchIndex).isRegionMatch(searchAddress))
+				searchIndex++;
 		
-		//If match not found return region = 0, else return region
-		return searchIndex == endIndex ? 0 : getRegionNumber(regAL.get(searchIndex).getRegion());
+			//If match not found return region = 0, else return region
+			return searchIndex == endIndex ? 0 : getRegionNumber(regAL.get(searchIndex).getRegion());
+		}
 	}
 	
 	static boolean isAddressValid(Address chkAddress)
