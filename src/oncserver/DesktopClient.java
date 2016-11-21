@@ -923,11 +923,11 @@ public class DesktopClient extends Thread
     	//Build the array list of current ONCChildWish's for each child
     	ArrayList<ONCChildWish> childwishAL = new ArrayList<ONCChildWish>();
   
-    	for(ONCChild c:childDB.getList(year))
+    	for(ONCChild c:childDB.getList(year))  
     		for(int wn=0; wn < NUMBER_OF_WISHES_PER_CHILD; wn++)		
     			if(c.getChildWishID(wn) > -1) //Wish must have a valid ID
     				childwishAL.add(ServerChildWishDB.getWish(year, c.getChildWishID(wn)));
-
+    	
     	//Convert the array list to a json and return it
     	Gson gson = new Gson();
     	Type listtype = new TypeToken<ArrayList<ONCChildWish>>(){}.getType();

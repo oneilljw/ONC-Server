@@ -47,6 +47,8 @@ public class ServerChildWishDB extends ServerSeasonalDB
 					System.getProperty("user.dir"),
 						year), "Child Wish DB", CHILD_WISH_DB_HEADER_LENGTH);
 			
+//			System.out.println(String.format("%d Wish objects imported: %d", year, cwDBYear.getList().size()));
+			
 			//set the next id
 			cwDBYear.setNextID(getNextID(cwDBYear.getList()));
 		}

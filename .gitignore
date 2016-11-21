@@ -6,10 +6,11 @@
 /regions.csv
 /users.csv
 /README.md
-/2015DB/
 /2015DB
 /2016DB
 /EncryptedUsers.csv
 /InventoryDB.csv
 /WishCatalog.csv
 /WishDetailDB.csv
+/ApartmentDB.csv
+/*.xls
