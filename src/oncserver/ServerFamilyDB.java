@@ -402,72 +402,68 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		{
 			//add the referring agent to the Agent DB
 			ImportONCObjectResponse agentResponse = agentDB.processImportedReferringAgent(year, bpFam.getReferringAgent());
-			if(agentResponse != null)
-			{	
-				//if the agent was added successfully, try to add the family
-				if(agentResponse.getONCObjectID() > -1)
-					jsonResponseList.add(agentResponse.getJsonResponse());
 			
-				//add the family to the Family DB
-				ONCFamily reqAddFam = new ONCFamily(bpFam.referringAgentName, bpFam.referringAgentOrg,
-					bpFam.referringAgentTitle, bpFam.clientFamily, bpFam.headOfHousehold,
-					bpFam.familyMembers, bpFam.referringAgentEmail, bpFam.clientFamilyEmail, 
-					bpFam.clientFamilyPhone, bpFam.referringAgentPhone, bpFam.dietartyRestrictions,
-					bpFam.schoolsAttended, bpFam.details, bpFam.assigneeContactID,
-					bpFam.deliveryStreetAddress, bpFam.deliveryAddressLine2, bpFam.deliveryCity,
-					bpFam.deliveryZip, bpFam.deliveryState, bpFam.adoptedFor, bpFam.numberOfAdults,
-					bpFam.numberOfChildren, bpFam.wishlist, bpFam.speaksEnglish, bpFam.language,
-					bpFam.hasTransportation, bpFam.batchNum, new Date(), -1, "NNA",-1, 
-					currClient.getClientUser().getLNFI(), agentResponse.getONCObjectID());
+			//if the agent was added or updated, add the change to the response list
+			if(agentResponse.getImportResult() != AGENT_UNCHANGED)
+				jsonResponseList.add(agentResponse.getJsonResponse());
 			
-				ONCFamily addedFam = add(year, reqAddFam);
-				if(addedFam != null)
-				{
-					//if the family was added successfully, add the adults and children
-					jsonResponseList.add("ADDED_FAMILY" + gson.toJson(addedFam, ONCFamily.class));
+			//add the family to the Family DB
+			ONCFamily reqAddFam = new ONCFamily(bpFam.referringAgentName, bpFam.referringAgentOrg,
+				bpFam.referringAgentTitle, bpFam.clientFamily, bpFam.headOfHousehold,
+				bpFam.familyMembers, bpFam.referringAgentEmail, bpFam.clientFamilyEmail, 
+				bpFam.clientFamilyPhone, bpFam.referringAgentPhone, bpFam.dietartyRestrictions,
+				bpFam.schoolsAttended, bpFam.details, bpFam.assigneeContactID,
+				bpFam.deliveryStreetAddress, bpFam.deliveryAddressLine2, bpFam.deliveryCity,
+				bpFam.deliveryZip, bpFam.deliveryState, bpFam.adoptedFor, bpFam.numberOfAdults,
+				bpFam.numberOfChildren, bpFam.wishlist, bpFam.speaksEnglish, bpFam.language,
+				bpFam.hasTransportation, bpFam.batchNum, new Date(), -1, "NNA", -1, 
+				currClient.getClientUser().getLNFI(), agentResponse.getONCObjectID());
+			
+			ONCFamily addedFam = add(year, reqAddFam);
+			if(addedFam != null)
+			{
+				//if the family was added successfully, add the adults and children
+				jsonResponseList.add("ADDED_FAMILY" + gson.toJson(addedFam, ONCFamily.class));
 		
-					String[] members = bpFam.getFamilyMembers().trim().split("\n");					
-					for(int i=0; i<members.length; i++)
+				String[] members = bpFam.getFamilyMembers().trim().split("\n");					
+				for(int i=0; i<members.length; i++)
+				{
+					if(!members[i].isEmpty() && members[i].toLowerCase().contains("adult"))
 					{
-//						System.out.println(String.format("#: %d part[%d]: %s. length= %d", members.length, i, members[i], members[i].length()));
-						if(!members[i].isEmpty() && members[i].toLowerCase().contains("adult"))
+						//create the add adult request object
+						String[] adult = members[i].split(ODB_FAMILY_MEMBER_COLUMN_SEPARATOR, 3);
+						if(adult.length == 3)
 						{
-							//crate the add adult request object
-							String[] adult = members[i].split(ODB_FAMILY_MEMBER_COLUMN_SEPARATOR, 3);
-							if(adult.length == 3)
-							{
-								//determine the gender, could be anything from Britepaths!
-								AdultGender gender;
-								if(adult[1].toLowerCase().contains("female") || adult[1].toLowerCase().contains("girl"))
-									gender = AdultGender.Female;
-								else if(adult[1].toLowerCase().contains("male") || adult[1].toLowerCase().contains("boy"))
-									gender = AdultGender.Male;
-								else
-									gender = AdultGender.Unknown;
-										
-								
-								ONCAdult reqAddAdult = new ONCAdult(-1, addedFam.getID(), adult[0], gender);
+							//determine the gender, could be anything from Britepaths!
+							AdultGender gender;
+							if(adult[1].toLowerCase().contains("female") || adult[1].toLowerCase().contains("girl"))
+								gender = AdultGender.Female;
+							else if(adult[1].toLowerCase().contains("male") || adult[1].toLowerCase().contains("boy"))
+								gender = AdultGender.Male;
+							else
+								gender = AdultGender.Unknown;
+												
+							ONCAdult reqAddAdult = new ONCAdult(-1, addedFam.getID(), adult[0], gender);
 							
-								//interact with the server to add the adult
-								String addedAdultJson = gson.toJson(adultDB.add(year, reqAddAdult));
-								jsonResponseList.add("ADDED_ADULT" + addedAdultJson);
-							}
+							//interact with the server to add the adult
+							String addedAdultJson = gson.toJson(adultDB.add(year, reqAddAdult));
+							jsonResponseList.add("ADDED_ADULT" + addedAdultJson);
 						}
-						else if(!members[i].isEmpty())
-						{
-							//create the add child request object
-							ONCChild reqAddChild = new ONCChild(-1, addedFam.getID(), members[i], year);
+					}
+					else if(!members[i].isEmpty())
+					{
+						//create the add child request object
+						ONCChild reqAddChild = new ONCChild(-1, addedFam.getID(), members[i], year);
 							
-							//interact with the server to add the child
-							String addedChildJson = gson.toJson(childDB.add(year, reqAddChild));
-							jsonResponseList.add("ADDED_CHILD" + addedChildJson);
-						}
+						//interact with the server to add the child
+						String addedChildJson = gson.toJson(childDB.add(year, reqAddChild));
+						jsonResponseList.add("ADDED_CHILD" + addedChildJson);
 					}
 				}
 			}
 		}
 		
-		//notify all other clients of the imported family objects
+		//notify all other clients of the imported agent, family, adult and child objects
 		clientMgr.notifyAllOtherInYearClients(currClient, jsonResponseList);
 		
 		Type listOfChanges = new TypeToken<ArrayList<String>>(){}.getType();

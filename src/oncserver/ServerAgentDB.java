@@ -220,23 +220,25 @@ public class ServerAgentDB extends ServerSeasonalDB
 				agentDBYear.setChanged(true);
 				
 				//keep the userDB in sync from profile perspective
-				try {
+				try 
+				{
 					ServerUserDB.getInstance().processAgentUpdate(existingAgent);
-				} catch (NumberFormatException e) {
-					// TODO Auto-generated catch block
+				}
+				catch (NumberFormatException e) 
+				{
 					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
+				}
+				catch (IOException e) 
+				{
 					e.printStackTrace();
 				}
 				
 				Gson gson = new Gson();
-				return new ImportONCObjectResponse(existingAgent, "UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class));
+				return new ImportONCObjectResponse(AGENT_UPDATED, existingAgent, 
+						"UPDATED_AGENT" + gson.toJson(existingAgent, Agent.class));
 			}
 			else
-			{
-				return new ImportONCObjectResponse(null, "UNCHANGED");
-			}
+				return new ImportONCObjectResponse(AGENT_UNCHANGED, existingAgent, "UNCHANGED");
 		}
 		else
 		{
@@ -246,7 +248,7 @@ public class ServerAgentDB extends ServerSeasonalDB
 			agentDBYear.add(reqAgt);
 			agentDBYear.setChanged(true);
 			Gson gson = new Gson();
-			return new ImportONCObjectResponse(reqAgt, "ADDED_AGENT" + gson.toJson(reqAgt, Agent.class));	
+			return new ImportONCObjectResponse(AGENT_ADDED, reqAgt, "ADDED_AGENT" + gson.toJson(reqAgt, Agent.class));	
 		}
 	}
 	

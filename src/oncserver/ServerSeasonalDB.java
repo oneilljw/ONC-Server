@@ -12,6 +12,10 @@ public abstract class ServerSeasonalDB extends ONCServerDB
 {
 	protected static final int BASE_YEAR = 2012;
 	
+	protected static final int AGENT_UNCHANGED = 0;
+	protected static final int AGENT_UPDATED = 1;
+	protected static final int AGENT_ADDED = 2;
+	
 	abstract String add(int year, String userjson);
 	
 	abstract void createNewYear(int year);	//used to create a new year from the authorized client
