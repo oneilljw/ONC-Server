@@ -33,7 +33,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 4.18f;
+	private static final float MINIMUM_CLIENT_VERSION = 4.20f;
 	
 	private int id;
 	private String version;
