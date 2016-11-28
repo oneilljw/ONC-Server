@@ -1,0 +1,168 @@
+ <!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>ONC Delivery Registration</title>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script> 
+  	var errorColor = '#FF9999';
+  	
+  	$( document ).ready(function()
+	{
+  		//set the hidden values
+  		document.getElementById('year').value= new Date().getFullYear().toString();
+  		
+  		//update the nav bar links with token
+//  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token');
+//  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+//		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
+  		
+  		$(function() 
+  		{
+  		    $("form input").keypress(function (e) {
+  		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+  		            $('button[type=submit] .default').click();
+  		            return false;
+  		        } else {
+  		            return true;
+  		        }
+  		    });
+  		});
+  		
+  		$('html').bind('keypress', function(e)
+  		{
+  			if(e.keyCode == 13)
+  			{
+  				return false;
+  			}
+  		});
+	});
+  	
+  	function removeOptions(select)
+	{
+	    for(var i=select.options.length-1;i>=0;i--)
+	        select.remove(i);   
+	}
+  	
+	function verifyPhoneNumbers()
+	{
+		var errorMssg= "";
+		
+		var phoneName= ["Primary", "Alternate", "2nd Alternate"];
+		
+		var index=0;
+		while(index<phoneName.length && verifyPhoneNumber(index))
+				index++;
+			
+		if(index < phoneName.length)	
+			errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
+		
+		return errorMssg;	
+	}
+	
+	function verifyPhoneNumber(elementNum)
+	{
+		var phoneElement= [document.getElementById('primaryphone'), 
+							document.getElementById('altphone')];
+		
+		var numberGood = true;
+		var number= phoneElement[elementNum].value;
+		
+		if(number == '')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.')
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else if(number.length===10 && number.indexOf("-")===-1 && number.indexOf(".")===-1)
+			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+		else
+		{
+			numberGood= false;
+			phoneElement[elementNum].style.backgroundColor = errorColor;
+		}
+		
+		return numberGood;
+	}
+	
+
+	function submitRegistration()
+	{
+		var phoneNumbersGood= true;
+		
+		//check phone numbers
+		var phoneMssg= verifyPhoneNumbers();
+		if(phoneMssg != '')
+		{
+			phoneNumbersGood=false;
+			errorElement.textContent=phoneMssg;
+		}
+		
+	    return phoneNumbersGood;
+	}
+  </script>
+  <style>
+	#submitspan {float: right;}
+	#errormessage
+	{
+		float: left;
+		font-weight: bold;
+		font-style: italic;
+		color: red;
+	}
+  </style>
+</head>
+<body>
+  <div id="topbar" class="topbar">
+    <img src="onclogo" height="55" width="75"/>
+    <p><span id="banner">ONC Delivery Volunteer Registration Form</span><br>
+	<span id="message">(please complete and click Submit To ONC)</span></p>
+  </div>
+  <nav>
+    <ul>
+	    <li id="homeli"><a id='homelink'>Home</a></li>
+	</ul>
+	<ul class='floatright'>
+	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	</ul>
+  </nav>
+  <form id="driverreg" action="registerdriver" onsubmit="return submitRegistraton()" method="post">
+  <input id="year" type="hidden" name="year">
+  <br>
+  <fieldset>
+  <legend class="legend-major">Delivery Volunteer Information</legend>
+    <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" required>
+    <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" required>
+    <input id="primaryphone" title="Primary Phone #" name="pprimaryhone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
+    <select id="primaryphoneselect" title="Phone Type" name="primaryphonetype">
+		<option value="Cell">Cell</option>
+		<option value="Home">Home</option>
+		<option value="Work">Work</option>
+	</select>
+    <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
+  	<select id="altphoneselect" title="Phone Type" name="altphonetype">
+		<option value="Home">Cell</option>
+		<option value="Cell">Home</option>
+		<option value="Work">Work</option>
+		<option value="Other">Other</option>
+	</select>
+	<br>
+	<input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+    <input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+    <input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
+    <input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
+    <input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='16', placeholder='Zip Code' autocomplete='off' >
+	<input id="delemail" title="Email address" name="delemail" type="email" size="30" placeholder="email address">
+  </fieldset>
+  <br>
+  <div>
+  	<span id="errormessage"></span>
+  	<span id="submitspan">
+  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
+  	  <input id="submit" type="submit" value="Submit Registration to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit to ONC">
+  	</span>
+  </div>
+</form>
+</body>
+</html>   
