@@ -10,13 +10,15 @@
   	
   	$( document ).ready(function()
 	{
+  		var urlmode = window.location.href;
+  		console.log(urlmode);
+	  	if(urlmode.indexOf("familyupdate") > -1)
   		//set the hidden values
   		document.getElementById('year').value= new Date().getFullYear().toString();
   		
   		//update the nav bar links with token
-//  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token');
-//  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
-//		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
+  		document.getElementById('logoutlink').href="onchomepage";
+  		document.getElementById('homelink').href="onchomepage";
   		
   		$(function() 
   		{
@@ -37,30 +39,14 @@
   				return false;
   			}
   		});
+  		
+  		//show the success dialog if driver was registered
+  		var urlmode = window.location.href;
+  		console.log(urlmode);
+	  	if(urlmode.indexOf("registerdriver") > -1)
+  			window.location=document.getElementById('registeredanchor').href;
 	});
   	
-  	function removeOptions(select)
-	{
-	    for(var i=select.options.length-1;i>=0;i--)
-	        select.remove(i);   
-	}
-  	
-	function verifyPhoneNumbers()
-	{
-		var errorMssg= "";
-		
-		var phoneName= ["Primary", "Alternate", "2nd Alternate"];
-		
-		var index=0;
-		while(index<phoneName.length && verifyPhoneNumber(index))
-				index++;
-			
-		if(index < phoneName.length)	
-			errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
-		
-		return errorMssg;	
-	}
-	
 	function verifyPhoneNumber(elementNum)
 	{
 		var phoneElement= [document.getElementById('primaryphone'), 
@@ -82,25 +68,115 @@
 			numberGood= false;
 			phoneElement[elementNum].style.backgroundColor = errorColor;
 		}
-		
+	
 		return numberGood;
 	}
 	
+	function verifyPhoneNumbers()
+	{
+		var errorMssg= "";
+		
+		var phoneName= ["Primary", "Alternate"];
+		
+		var index=0;
+		while(index<phoneName.length && verifyPhoneNumber(index))
+				index++;
+		
+		if(index < phoneName.length)	
+			errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
+		
+		return errorMssg;	
+	}
+	
+	function verifyRequiredFields(verifyElements, errorElement)
+	{	
+		var bRequiredFieldGood = true
+		var index=0;
+		while(index<verifyElements.length)
+		{
+			if(verifyElements[index].value === '')
+			{
+				bRequiredFieldGood = false;
+				errorMssg= "Error: " + verifyElements[index].title + " is missing or invalid";
+				errorElement.textContent = errorMssg;
+				errorElement.style.color ='red';
+				verifyElements[index].style.backgroundColor = errorColor;
+				break;
+			}
+			else
+			{
+				verifyElements[index++].style.backgroundColor = '#FFFFFF';
+				errorElement.textContent = '';
+			}	
+		}		
 
+		return bRequiredFieldGood;	
+	}
+	
+	function verifyZipCodes(zipElements, errorElement)
+	{	
+		var bRequiredFieldGood = true
+		var index=0;
+		while(index<zipElements.length)
+		{
+			var zipCode = zipElements[index].value;
+			console.log(zipCode);
+			console.log(zipCode.length);
+			if(zipCode.length === 5 || zipCode.length === 10)
+			{
+				zipElements[index++].style.backgroundColor = '#FFFFFF';
+				errorElement.textContent = '';
+			}
+			else
+			{
+				bRequiredFieldGood = false;
+				errorMssg= "Error: " + zipElements[index].title + " is invalid";
+				errorElement.textContent = errorMssg;
+				errorElement.style.color ='red';
+				zipElements[index].style.backgroundColor = errorColor;
+				break;
+			}
+		}		
+
+		return bRequiredFieldGood;	
+	}
+	
 	function submitRegistration()
 	{
-		var phoneNumbersGood= true;
+		var verifyElements= [document.getElementById('delfn'),
+		                     document.getElementById('delln'),
+		                     document.getElementById('delhousenum'),
+		                     document.getElementById('delstreet'),
+		                     document.getElementById('delcity')];
 		
-		//check phone numbers
-		var phoneMssg= verifyPhoneNumbers();
-		if(phoneMssg != '')
+		var zipElements =[document.getElementById('delzipcode')];
+		
+		var errorElement = document.getElementById('errormessage');
+		
+		if(verifyRequiredFields(verifyElements, errorElement) && 
+			verifyZipCodes(zipElements, errorElement))
 		{
-			phoneNumbersGood=false;
-			errorElement.textContent=phoneMssg;
+			//check phone numbers
+			var phoneMssg= verifyPhoneNumbers();
+			if(phoneMssg === '')
+			{
+				//submit the form, all fields are validated
+				document.driverregform.submit();
+			}
+			else
+			{
+				phoneNumbersGood=false;
+				errorElement.textContent=phoneMssg;
+				errorElement.style.color ='red';
+			}
 		}
-		
-	    return phoneNumbersGood;
 	}
+	
+	function onCloseDialog()
+	{
+		window.location=document.getElementById('closepopup').href;
+	}
+	
   </script>
   <style>
 	#submitspan {float: right;}
@@ -109,17 +185,18 @@
 		float: left;
 		font-weight: bold;
 		font-style: italic;
-		color: red;
+		color: black;
 	}
   </style>
 </head>
 <body>
+<a href="#registereddlg" id="registeredanchor" style="visibility: hidden">Success</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
     <p><span id="banner">ONC Delivery Volunteer Registration Form</span><br>
-	<span id="message">(please complete and click Submit To ONC)</span></p>
+	<span id="message">(Please complete and click Submit Registration To ONC)</span></p>
   </div>
-  <nav>
+   <nav>
     <ul>
 	    <li id="homeli"><a id='homelink'>Home</a></li>
 	</ul>
@@ -127,42 +204,59 @@
 	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
 	</ul>
   </nav>
-  <form id="driverreg" action="registerdriver" onsubmit="return submitRegistraton()" method="post">
+  <form id='driverregform' name='driverregform' action="registerdriver" method="post">
   <input id="year" type="hidden" name="year">
   <br>
   <fieldset>
   <legend class="legend-major">Delivery Volunteer Information</legend>
+    <label for="delfn">Name:</label>
     <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" required>
     <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" required>
-    <input id="primaryphone" title="Primary Phone #" name="pprimaryhone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
-    <select id="primaryphoneselect" title="Phone Type" name="primaryphonetype">
+    <br><br>
+    <label for="primaryphone">Phone & Email:</label>
+    <input id="primaryphone" title="Primary Phone #" name="primaryhone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
+    <select id="primaryphoneselect" title="Primary Phone Type" name="primaryphonetype">
 		<option value="Cell">Cell</option>
 		<option value="Home">Home</option>
 		<option value="Work">Work</option>
 	</select>
     <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
-  	<select id="altphoneselect" title="Phone Type" name="altphonetype">
-		<option value="Home">Cell</option>
-		<option value="Cell">Home</option>
+  	<select id="altphoneselect" title="Alternate Phone Type" name="altphonetype">
+		<option value="Home">Home</option>
+		<option value="Cell">Cell</option>
 		<option value="Work">Work</option>
 		<option value="Other">Other</option>
 	</select>
-	<br>
+	<input id="delemail" title="Email address" name="delemail" type="email" size="30" placeholder="email address">
+	<br><br>
+	<label for="delhousenum">Address:</label>
 	<input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
     <input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
     <input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
-    <input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='16', placeholder='Zip Code' autocomplete='off' >
-	<input id="delemail" title="Email address" name="delemail" type="email" size="30" placeholder="email address">
+    <input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
   </fieldset>
   <br>
   <div>
-  	<span id="errormessage"></span>
+  	<span id="errormessage">Please ensure all fields are complete before submitting</span>
   	<span id="submitspan">
-  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  	  <input id="submit" type="submit" value="Submit Registration to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit to ONC">
+  	  <input id="btnsubmit" type="button" value="Submit Registration to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit to ONC" onclick= submitRegistration()>
   	</span>
   </div>
 </form>
+ <!-- Success Dialog -->
+  <div id="registereddlg" class="modalDialog">
+	<div id='inner'>
+	<a id='closepopup' href="#close" title="Close" class="close" onclick="onCloseDialog()"></a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>You're Registered!</span>
+		</div>
+		<p id='success_mssg'>SUCCESS_MSSG</p>
+    	<div id='buttonbar'>
+      	  <button id="btnsuccess" onclick="onCloseDialog()">Close</button>
+    	</div> 
+	</div>
+  </div>    
 </body>
 </html>   

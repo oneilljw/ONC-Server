@@ -50,6 +50,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
+	private static final String DRIVER_REGISTRATION_HTML = "DriverReg.htm";
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
 	private static final int HTTP_OK = 200;
@@ -129,6 +130,15 @@ public class ONCHttpHandler implements HttpHandler
   	
     		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
     		
+    	}
+    	else if(requestURI.contains("/onchomepage"))
+    	{
+    		Headers header = t.getResponseHeaders();
+    		ArrayList<String> headerList = new ArrayList<String>();
+    		headerList.add("http://www.ourneighborschild.org");
+    		header.put("Location", headerList);
+  	
+    		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
     	}
     	else if(requestURI.contains("/startpage"))
     	{
@@ -640,6 +650,47 @@ public class ONCHttpHandler implements HttpHandler
     		}
     		else
     			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.equals("/driverregistration"))
+    	{
+    		String response = null;
+    		
+       		
+    		try 
+    		{	
+				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_REGISTRATION_HTML));
+				response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
+			} 
+    		catch (IOException e) 
+    		{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.equals("/registerdriver"))
+    	{
+    		Set<String> keyset = params.keySet();
+    		for(String key:keyset)
+    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+    		
+    		String response = null;
+    		String driverFN = (String) params.get("delFN");
+    		
+    		try 
+    		{
+    			String driverMssg = String.format("Thank you, %s for registering to deliver gifts for ONC!", driverFN);
+				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_REGISTRATION_HTML));
+				response = response.replace("SUCCESS_MSSG", driverMssg );
+			} 
+    		catch (IOException e) 
+    		{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}

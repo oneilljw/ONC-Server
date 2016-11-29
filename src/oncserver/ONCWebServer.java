@@ -29,7 +29,8 @@ public class ONCWebServer
 							"/oncdialogstylesheet", "/newfamily", "/reqchangepw", "/timeout",
 							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
 							"/changepw", "/startpage", "/vanilla", "/getuser", "/getstatus",
-							"/profileunchanged", "/updateuser"};
+							"/profileunchanged", "/updateuser", "/driverregistration", "/registerdriver",
+							"/onchomepage"};
 		
 		HttpContext context;
 //		Filter paramFilter = new ParameterFilter();
