@@ -239,6 +239,10 @@
 	{
 		padding-left: 20px;
 	}
+	.inputline
+	{
+		margin-bottom: 10px;
+	}
   </style>
 </head>
 <body>
@@ -261,40 +265,46 @@
   <br>
   <fieldset>
   <legend class="legend-major">Volunteer Information</legend>
-    <label for="delfn">Name:</label>
-    <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" required>
-    <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" required>
-    <br><br>
-    <label for="primaryphone">Primary Phone:</label>
-    <input id="primaryphone" title="Primary Phone #" name="primaryhone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
-    <select id="primaryphoneselect" title="Primary Phone Type" name="primaryphonetype">
+  	<div class= 'inputline'>
+      <label for="delfn">Name:</label>
+      <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" required>
+      <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" required>
+    </div>
+    <div class= 'inputline'>
+      <label for="primaryphone">Primary Phone:</label>
+      <input id="primaryphone" title="Primary Phone #" name="primaryhone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
+      <select id="primaryphoneselect" title="Primary Phone Type" name="primaryphonetype">
 		<option value="Cell">Cell</option>
 		<option value="Home">Home</option>
 		<option value="Work">Work</option>
-	</select>
-	<label for="altphone" id='altphonelbl'>Alternate Phone:</label>
-    <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
-  	<select id="altphoneselect" title="Alternate Phone Type" name="altphonetype">
+	  </select>
+	  <label for="altphone" id='altphonelbl'>Alternate Phone:</label>
+      <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
+  	  <select id="altphoneselect" title="Alternate Phone Type" name="altphonetype">
 		<option value="Home">Home</option>
 		<option value="Cell">Cell</option>
 		<option value="Work">Work</option>
 		<option value="Other">Other</option>
-	</select>
-	 <br><br>
-	<label for="delemail">Email:</label>
-	<input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
-	<label for="confirmemail"  id='confirmemaillbl'>Confirm Email:</label>
-	<input id="confirmemail" title="Confirm Email Address" type="email" size="30" placeholder="confirm email address" autocomplete= "off">
-	<br><br>
-	<label for="delhousenum">Address:</label>
-	<input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
-    <input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
-    <input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
-    <input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
-    <input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
-    <br><br>
+	 </select>
+	 </div>
+	<div class= 'inputline'>
+	  <label for="delemail">Email:</label>
+	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
+	  <label for="confirmemail"  id='confirmemaillbl'>Confirm Email:</label>
+	  <input id="confirmemail" title="Confirm Email Address" type="email" size="30" placeholder="confirm email address" autocomplete= "off">
+	</div>
+	<div class= 'inputline'>
+	  <label for="delhousenum">Address:</label>
+	  <input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+      <input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+      <input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
+      <input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
+      <input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
+    </div>
+    <div>
     <label for="group">Group or organization you are with (if any):</label>
 	<input id="group" title="Group or Organizaton you're with" name="group" type="text" size="50" placeholder="Group or Organization Name">
+	</div>
   </fieldset>
   <br>
   <div>
