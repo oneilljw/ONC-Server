@@ -445,6 +445,16 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
+    	else if(requestURI.contains("/contactinfo"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		String fn = (String) params.get("delFN");
+    		String ln = (String) params.get("delLN");
+    		String callback = (String) params.get("callback");
+    		
+    		HtmlResponse response = ServerDriverDB.getDriverJSONP(year, fn, ln, callback);
+    		sendHTMLResponse(t, response);
+    	}
     	else if(requestURI.contains("/oncsplash"))
     	{
     		sendFile(t, "image/gif", "oncsplash.gif");

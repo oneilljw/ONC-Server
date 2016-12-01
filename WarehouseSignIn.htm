@@ -75,6 +75,35 @@
   		}
   	}
   	
+  	function getContactInfo()
+  	{
+  		var fn = document.getElementById('delfn');
+  		var ln = document.getElementById('delln');
+  		
+  		if(fn.value.length > 0 && ln.value.length > 0)
+  		{
+  			var contactparams = "year=" + document.getElementById('year').value
+			+ "&delFN=" + document.getElementById('delfn').value
+			+ "&delLN=" + document.getElementById('delln').value
+			+ "&callback=?";
+  		
+  			$.getJSON('contactinfo', contactparams, function(driver)
+  			{
+  				//if retrun is good, set the fields
+  				if(driver.id > -1)
+  				{
+  					document.getElementById('delemail').value = driver.email;
+  					document.getElementById('primaryphone').value = driver.cellPhone;
+  			  		document.getElementById('delhousenum').value = driver.hNum;
+  			  		document.getElementById('delstreet').value = driver.street;
+  			  		document.getElementById('delunit').value = driver.unit;
+  			  		document.getElementById('delcity').value = driver.city;
+  			  		document.getElementById('delzipcode').value = driver.zipcode;
+  				}
+  			});
+  		}	
+  	}
+  	
 	function verifyPhoneNumber(elementNum)
 	{
 		var phoneElement= [document.getElementById('primaryphone')];
@@ -235,6 +264,12 @@
 		document.getElementById('groupselect').selectedIndex = 0;
 		document.getElementById("groupotherlbl").style.visibility = 'hidden';
   		document.getElementById('groupother').style.visibility = 'hidden';
+  		
+  		document.getElementById('delhousenum').value = "";
+  		document.getElementById('delstreet').value = "";
+  		document.getElementById('delunit').value = "";
+  		document.getElementById('delcity').value = "";
+  		document.getElementById('delzipcode').value = "";
 	}
 	
 	function onCloseDialog()
@@ -310,8 +345,8 @@
 	</div>
   	<div class= 'inputline' >
       <label for="delfn">Your Name:</label>
-      <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name">
-      <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name">
+      <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" onchange ='getContactInfo()'>
+      <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" onchange ='getContactInfo()'>
     </div>
     <div id= 'contactdiv'>
       <label id='phonelbl' for="primaryphone"">Phone #:</label>

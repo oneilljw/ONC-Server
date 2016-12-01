@@ -6,7 +6,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ourneighborschild.ONCChild;
 import ourneighborschild.ONCDriver;
+import ourneighborschild.ONCWebChild;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -62,6 +64,33 @@ public class ServerDriverDB extends ServerSeasonalDB
 			
 		String response = gson.toJson(driverDB.get(year - BASE_YEAR).getList(), listtype);
 		return response;	
+	}
+	
+	static HtmlResponse getDriverJSONP(int year, String fn, String ln, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		
+		List<ONCDriver> searchList = driverDB.get(year - BASE_YEAR).getList();
+		ONCDriver driver = null;
+		
+		int index=0;
+		while(index < searchList.size() && !(searchList.get(index).getfName().equals(fn) && 
+											 searchList.get(index).getlName().equals(ln)))
+		{
+			index++;
+		}
+		
+		String response;
+		if(index< searchList.size())
+		{
+			driver = searchList.get(index);
+			response = gson.toJson(driver, ONCDriver.class);
+		}
+		else
+			response = "{\"id\":-1}";	//send back id = 1, meaning not found
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 
 	@Override
