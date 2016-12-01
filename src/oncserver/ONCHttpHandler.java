@@ -51,6 +51,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	private static final String DRIVER_REGISTRATION_HTML = "DriverReg.htm";
+	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
 	private static final int HTTP_OK = 200;
@@ -468,6 +469,10 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		sendFile(t, "text/css", "ONCDialogStyleSheet.css");
     	}
+    	else if(requestURI.contains("/jquery.js"))
+    	{
+    		sendFile(t, "text/javascript", "jquery-1.11.3.js");
+    	}
     	else if(requestURI.contains("/newfamily"))
     	{
     		String sessionID = (String) params.get("token");
@@ -682,9 +687,50 @@ public class ONCHttpHandler implements HttpHandler
     		
     		try 
     		{
-    			String driverMssg = String.format("Thank you, %s for registering to deliver gifts for ONC!", driverFN);
+    			String driverMssg = String.format("Thank you, %s, for registering to deliver gifts for Our Neighbor's Child!", driverFN);
 				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_REGISTRATION_HTML));
 				response = response.replace("SUCCESS_MSSG", driverMssg );
+			} 
+    		catch (IOException e) 
+    		{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.equals("/volunteersignin"))
+    	{
+    		String response = null;
+    		
+       		
+    		try 
+    		{	
+				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_SIGN_IN_HTML));
+				response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
+			} 
+    		catch (IOException e) 
+    		{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.equals("/signinvolunteer"))
+    	{
+    		Set<String> keyset = params.keySet();
+    		for(String key:keyset)
+    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+    		
+    		String response = null;
+    		String volunteerFN = (String) params.get("delFN");
+    		
+    		try 
+    		{
+    			String volMssg = String.format("Thank you, %s, for volunteering with Our Neighbor's Child!", volunteerFN);
+				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_SIGN_IN_HTML));
+				response = response.replace("SUCCESS_MSSG", volMssg );
 			} 
     		catch (IOException e) 
     		{
