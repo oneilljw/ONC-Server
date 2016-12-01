@@ -45,19 +45,33 @@
   	
   	function onGroupChange()
   	{
-  		var groupOtherLabelELement = document.getElementById("groupotherlbl");
   		var groupSelectElement = document.getElementById('groupselect');
+  		var groupOtherLabelELement = document.getElementById("groupotherlbl");
   		var groupOtherElement = document.getElementById('groupother');
   		
   		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Other')
   		{
   			groupOtherLabelELement.style.visibility="visible";
   			groupOtherElement.style.visibility="visible";
-  		}	
+  			
+  			document.getElementById('contactdiv').style.display = "block";
+  			document.getElementById('commentdiv').style.display = "block";
+  		}
+  		else if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Self')
+  		{
+  			groupOtherLabelELement.style.visibility="hidden";
+  			groupOtherElement.style.visibility="hidden";
+  			
+  			document.getElementById('contactdiv').style.display = "block";
+  			document.getElementById('commentdiv').style.display = "none";
+  		}
   		else
   		{
   			groupOtherLabelELement.style.visibility="hidden";
   			groupOtherElement.style.visibility="hidden";
+  			
+  			document.getElementById('contactdiv').style.display = "none";
+  			document.getElementById('commentdiv').style.display = "none";
   		}
   	}
   	
@@ -183,7 +197,24 @@
 			if(phoneMssg === '')
 			{
 				//submit the form, all fields are validated
-				document.signinform.submit();
+//				document.signinform.submit();
+				
+				//change to sending a JSON request with the required information
+				var volunteerparams = "year=" + document.getElementById('year').value
+								+ "&delFN=" + document.getElementById('delfn').value
+								+ "&delLN=" + document.getElementById('delln').value
+								+ "&groupother=" + document.getElementById('groupother').value
+								+ "&delemail=" + document.getElementById('delemail').value
+								+ "&group=" + document.getElementById('groupselect').options[document.getElementById('groupselect').selectedIndex].value
+								+ "&primaryphone=" + document.getElementById('primaryphone').value
+								+ "&callback=?";
+				
+		    	$.post('signinvolunteer', volunteerparams, function(data, textStatus)
+		    	{
+					clearForm();
+					document.getElementById('success_mssg').innerHTML = data.message;
+					window.location=document.getElementById('registeredanchor').href;
+		    	}, "json");
 			}
 			else
 			{
@@ -192,6 +223,18 @@
 				errorElement.style.color ='red';
 			}
 		}
+	}
+	
+	function clearForm()
+	{
+		document.getElementById('delfn').value = "";
+		document.getElementById('delln').value = "";
+		document.getElementById('groupother').value = "";
+		document.getElementById('delemail').value = "";
+		document.getElementById('primaryphone').value = "";
+		document.getElementById('groupselect').selectedIndex = 0;
+		document.getElementById("groupotherlbl").style.visibility = 'hidden';
+  		document.getElementById('groupother').style.visibility = 'hidden';
 	}
 	
 	function onCloseDialog()
@@ -215,7 +258,21 @@
 	}
 	.inputline
 	{
+		display: block;
 		margin-bottom: 10px;
+	}
+	#contactdiv
+	{
+		display: block;
+		margin-bottom: 10px;
+	}
+	#addressdiv
+	{
+		margin-top: 10px;
+	}
+	#commentdiv
+	{
+		display: none;
 	}
   </style>
 </head>
@@ -234,23 +291,12 @@
 	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
 	</ul>
   </nav>
-  <form id='signinform' name='signinform' action="signinvolunteer" method="post">
+  <form id='signinform' name='signinform'>  
   <input id="year" type="hidden" name="year">
   <br>
   <fieldset>
   <legend class="legend-major">Volunteer Information</legend>
-  	<div class= 'inputline'>
-      <label for="delfn">Name:</label>
-      <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" required>
-      <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" required>
-    </div>
-    <div class= 'inputline'>
-      <label for="primaryphone">Phone #:</label>
-      <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #" onchange="verifyPhoneNumber(0)" required>
-	  <label id='emaillbl' for="delemail">Email:</label>
-	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
-	 </div>
-    <div>
+  <div class= 'inputline'>
     <label for="groupselect">Group or Organization You're With:</label>
      <select id="groupselect" title="Group" name="group" onchange="onGroupChange()">
 		<option value="Self">Self</option>
@@ -259,9 +305,32 @@
 		<option value="WestfiledSGA">Westfield SGA</option>
 		<option value="Other">Other</option>
 	  </select>
-	<label id='groupotherlbl' for="groupother" style="visibility: hidden">Name:</label>
-	<input id="groupother" title="Other group or organizaton name" name="groupother" type="text" size="35" placeholder="Other Group or Organization Name" style="visibility: hidden">
+ 	<label id='groupotherlbl' for="groupother" style="visibility: hidden;">Group Name:</label>
+	<input id="groupother" title="Other group or organizaton name" name="groupother" type="text" size="35" placeholder="Other Group or Organization Name" style="visibility: hidden;">
 	</div>
+  	<div class= 'inputline' >
+      <label for="delfn">Your Name:</label>
+      <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name">
+      <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name">
+    </div>
+    <div id= 'contactdiv'>
+      <label id='phonelbl' for="primaryphone"">Phone #:</label>
+      <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #">
+	  <label id='emaillbl' for="delemail">Email:</label>
+	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
+  	  <div id= 'addressdiv'>
+	    <label for="delhousenum">Address:</label>
+	    <input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+      	<input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+      	<input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
+      	<input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
+      	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
+  	  </div>
+  	</div>  
+  <div id= 'commentdiv'>
+      <label for="commnet">Comment:</label>
+ 	  <input id= 'comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment' autocomplete= 'off'>
+  </div>
   </fieldset>
   <br>
   <div>
@@ -270,7 +339,7 @@
   	  <input id="btnsubmit" type="button" value="Sign In" style="background-color: #336699; color: #ffffff;" title="Click to sign in" onclick= submitRegistration()>
   	</span>
   </div>
-</form>
+ </form>
  <!-- Success Dialog -->
   <div id="registereddlg" class="modalDialog">
 	<div id='inner'>

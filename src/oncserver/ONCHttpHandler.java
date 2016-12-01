@@ -717,12 +717,12 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	else if(requestURI.equals("/signinvolunteer"))
+    	else if(requestURI.contains("/signinvolunteer"))
     	{
-//    		Set<String> keyset = params.keySet();
-//    		for(String key:keyset)
-//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
-    		
+    		Set<String> keyset = params.keySet();
+    		for(String key:keyset)
+    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+/*    		
     		String response = null;
     		String volunteerFN = (String) params.get("delFN");
     		
@@ -739,6 +739,11 @@ public class ONCHttpHandler implements HttpHandler
 			}
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+*/    		
+    		String responseJson = "{\"message\":\"Thank You\"}";
+    		String callbackFunction = (String) params.get("callback");
+    		HtmlResponse htmlResponse = new HtmlResponse(callbackFunction +"(" + responseJson +")", HTTPCode.Ok);
+    		sendHTMLResponse(t, htmlResponse);  
     	}
     	else if(requestURI.contains("/changepw"))	//from separate page
     	{
