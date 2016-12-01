@@ -719,9 +719,9 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.equals("/signinvolunteer"))
     	{
-    		Set<String> keyset = params.keySet();
-    		for(String key:keyset)
-    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+//    		Set<String> keyset = params.keySet();
+//    		for(String key:keyset)
+//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
     		
     		String response = null;
     		String volunteerFN = (String) params.get("delFN");
