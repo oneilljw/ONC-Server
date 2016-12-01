@@ -77,9 +77,6 @@
   	
   	function getContactInfo()
   	{
-  		var fn = document.getElementById('delfn');
-  		var ln = document.getElementById('delln');
-  		
   		if(fn.value.length > 0 && ln.value.length > 0)
   		{
   			var contactparams = "year=" + document.getElementById('year').value
@@ -196,6 +193,32 @@
   			return true;
 	}
 	
+	function verifyZipCodes(zipElements, errorElement)
+	{	
+		var bRequiredFieldGood = true
+		var index=0;
+		while(index<zipElements.length)
+		{
+			var zipCode = zipElements[index].value;
+			if(zipCode.length === 5 || zipCode.length === 10)
+			{
+				zipElements[index++].style.backgroundColor = '#FFFFFF';
+				errorElement.textContent = '';
+			}
+			else
+			{
+				bRequiredFieldGood = false;
+				errorMssg= "Error: " + zipElements[index].title + " is invalid";
+				errorElement.textContent = errorMssg;
+				errorElement.style.color ='red';
+				zipElements[index].style.backgroundColor = errorColor;
+				break;
+			}
+		}		
+
+		return bRequiredFieldGood;	
+	}
+	
 	function indicateError(elements, error)
 	{
 		var errorElement = document.getElementById('errormessage');
@@ -211,14 +234,14 @@
 	
 	function submitRegistration()
 	{
-		var verifyElements= [document.getElementById('delfn'),
-		                     document.getElementById('delln')];
+		var verifyNameElements= [document.getElementById('delfn'),
+		                     	 document.getElementById('delln')];
 		
 		var emailElement = document.getElementById('delemail');
 		
 		var errorElement = document.getElementById('errormessage');
 		
-		if(verifyRequiredFields(verifyElements, errorElement) && verifyEmail(emailElement) &&
+		if(verifyRequiredFields(verifyNameElements, errorElement) && verifyEmail(emailElement) &&
 			verifyGroup())
 		{
 			//check phone numbers
@@ -228,22 +251,7 @@
 				//submit the form, all fields are validated
 //				document.signinform.submit();
 				
-				//change to sending a JSON request with the required information
-				var volunteerparams = "year=" + document.getElementById('year').value
-								+ "&delFN=" + document.getElementById('delfn').value
-								+ "&delLN=" + document.getElementById('delln').value
-								+ "&groupother=" + document.getElementById('groupother').value
-								+ "&delemail=" + document.getElementById('delemail').value
-								+ "&group=" + document.getElementById('groupselect').options[document.getElementById('groupselect').selectedIndex].value
-								+ "&primaryphone=" + document.getElementById('primaryphone').value
-								+ "&callback=?";
 				
-		    	$.post('signinvolunteer', volunteerparams, function(data, textStatus)
-		    	{
-					clearForm();
-					document.getElementById('success_mssg').innerHTML = data.message;
-					window.location=document.getElementById('registeredanchor').href;
-		    	}, "json");
 			}
 			else
 			{
@@ -252,6 +260,31 @@
 				errorElement.style.color ='red';
 			}
 		}
+	}
+	
+	function submitSignIn()
+	{
+		//Post a JSON request with the required information
+		var volunteerparams = "year=" + document.getElementById('year').value
+						+ "&delFN=" + document.getElementById('delfn').value
+						+ "&delLN=" + document.getElementById('delln').value
+						+ "&groupother=" + document.getElementById('groupother').value
+						+ "&delemail=" + document.getElementById('delemail').value
+						+ "&group=" + document.getElementById('groupselect').options[document.getElementById('groupselect').selectedIndex].value
+						+ "&primaryphone=" + document.getElementById('primaryphone').value
+						+ "&delhousenum=" + document.getElementById('delhousenum').value
+						+ "&delstreet=" + document.getElementById('delstreet').value
+						+ "&delcity=" + document.getElementById('delcity').value
+						+ "&delzipcode=" + document.getElementById('delzipcode').value
+						+ "&comment=" + document.getElementById('comment').value
+						+ "&callback=?";
+		
+    	$.post('signinvolunteer', volunteerparams, function(data, textStatus)
+    	{
+			clearForm();
+			document.getElementById('success_mssg').innerHTML = data.message;
+			window.location=document.getElementById('registeredanchor').href;
+    	}, "json");
 	}
 	
 	function clearForm()
