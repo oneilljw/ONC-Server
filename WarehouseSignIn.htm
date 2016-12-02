@@ -45,6 +45,8 @@
   	
   	function onGroupChange()
   	{
+  		clearAllButGroupSelect();
+  		
   		var groupSelectElement = document.getElementById('groupselect');
   		var groupOtherLabelELement = document.getElementById("groupotherlbl");
   		var groupOtherElement = document.getElementById('groupother');
@@ -77,7 +79,10 @@
   	
   	function getContactInfo()
   	{
-  		if(fn.value.length > 0 && ln.value.length > 0)
+  		if((document.getElementById('groupselect').value === "Self" ||
+  			document.getElementById('groupselect').value === "Other") &&
+  			 document.getElementById('delfn').value.length > 0 && 
+  			  document.getElementById('delln').value.length > 0 )
   		{
   			var contactparams = "year=" + document.getElementById('year').value
 			+ "&delFN=" + document.getElementById('delfn').value
@@ -289,20 +294,26 @@
 	
 	function clearForm()
 	{
+		
+		document.getElementById('groupselect').selectedIndex = 0;
+		document.getElementById("groupotherlbl").style.visibility = 'hidden';
+  		document.getElementById('groupother').style.visibility = 'hidden';
+  		clearAllButGroupSelect();
+	}
+	
+	function clearAllButGroupSelect()
+	{
 		document.getElementById('delfn').value = "";
 		document.getElementById('delln').value = "";
 		document.getElementById('groupother').value = "";
 		document.getElementById('delemail').value = "";
 		document.getElementById('primaryphone').value = "";
-		document.getElementById('groupselect').selectedIndex = 0;
-		document.getElementById("groupotherlbl").style.visibility = 'hidden';
-  		document.getElementById('groupother').style.visibility = 'hidden';
-  		
   		document.getElementById('delhousenum').value = "";
   		document.getElementById('delstreet').value = "";
   		document.getElementById('delunit').value = "";
   		document.getElementById('delcity').value = "";
   		document.getElementById('delzipcode').value = "";
+  		document.getElementById('comment').value = "";
 	}
 	
 	function onCloseDialog()
