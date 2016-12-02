@@ -94,6 +94,8 @@
   				//if retrun is good, set the fields
   				if(driver.id > -1)
   				{
+  					document.getElementById('delfn').value = driver.fName;
+  					document.getElementById('delln').value = driver.lName;
   					document.getElementById('delemail').value = driver.email;
   					document.getElementById('primaryphone').value = driver.cellPhone;
   			  		document.getElementById('delhousenum').value = driver.hNum;
@@ -255,8 +257,7 @@
 			{
 				//submit the form, all fields are validated
 //				document.signinform.submit();
-				
-				
+				submitSignIn();
 			}
 			else
 			{
