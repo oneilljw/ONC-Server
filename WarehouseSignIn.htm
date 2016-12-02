@@ -103,6 +103,8 @@
   			  		document.getElementById('delunit').value = driver.unit;
   			  		document.getElementById('delcity').value = driver.city;
   			  		document.getElementById('delzipcode').value = driver.zipcode;
+  			  		
+  			  		verifyPhoneNumber(0);
   				}
   			});
   		}	
@@ -134,12 +136,24 @@
 	
 	function verifyPhoneNumbers()
 	{
-		if(document.getElementById('primaryphone').value === '')
-			return "Error: Phone # is missing";	
-		else if(verifyPhoneNumber(0))	
-			return '';
+		var phoneElement = document.getElementById('primaryphone');
+		var elementsWithErrors = [phoneElement];
+		
+		if(phoneElement.value === '')
+		{
+			indicateError(elementsWithErrors, "is missing");
+			return false;
+		}
 		else
-			return "Error: Phone # is invalid";
+		{
+			if(verifyPhoneNumber(0))
+				return true;
+			else
+			{
+				indicateError(elementsWithErrors, "is invalid");
+				return false;
+			}	
+		}	
 	}
 	
 	function verifyRequiredFields(verifyElements, errorElement)
@@ -244,28 +258,38 @@
 		var verifyNameElements= [document.getElementById('delfn'),
 		                     	 document.getElementById('delln')];
 		
+		var verifyNameAndAddressElements= [document.getElementById('delfn'),
+		  		                     	   document.getElementById('delln'),
+		                                   document.getElementById('delhousenum'),
+		                                   document.getElementById('delstreet'),
+		                                   document.getElementById('delcity')];
+		
 		var emailElement = document.getElementById('delemail');
-		
+		var zipElements = [document.getElementById('delzipcode')];
 		var errorElement = document.getElementById('errormessage');
+		var groupSelectElement = document.getElementById('groupselect');
 		
-		if(verifyRequiredFields(verifyNameElements, errorElement) && verifyEmail(emailElement) &&
-			verifyGroup())
+		if(groupSelectElement.value === 'Self' && 
+			verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
+			verifyZipCodes(zipElements, errorElement) &&
+			 verifyPhoneNumbers() && verifyEmail(emailElement))
 		{
-			//check phone numbers
-			var phoneMssg= verifyPhoneNumbers();
-			if(phoneMssg === '')
-			{
-				//submit the form, all fields are validated
-//				document.signinform.submit();
-				submitSignIn();
-			}
-			else
-			{
-				phoneNumbersGood=false;
-				errorElement.textContent=phoneMssg;
-				errorElement.style.color ='red';
-			}
+			submitSignIn();
 		}
+		else if(groupSelectElement.value === 'Other' && 
+				verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
+				verifyZipCodes(zipElements, errorElement) &&
+				 verifyPhoneNumbers() && verifyEmail(emailElement) && 
+				  verifyGroup())
+		{
+			submitSignIn();
+		}
+		else if(groupSelectElement.value != 'Self' &&
+				 groupSelectElement.value != 'Other' &&
+				  verifyRequiredFields(verifyNameElements, errorElement))
+		{
+			submitSignIn();
+		}	
 	}
 	
 	function submitSignIn()
@@ -395,7 +419,7 @@
     </div>
     <div id= 'contactdiv'>
       <label id='phonelbl' for="primaryphone"">Phone #:</label>
-      <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #">
+      <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #" onchange= 'verifyPhoneNumber(0)'>
 	  <label id='emaillbl' for="delemail">Email:</label>
 	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
   	  <div id= 'addressdiv'>
