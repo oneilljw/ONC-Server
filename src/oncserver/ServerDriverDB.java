@@ -90,6 +90,9 @@ public class ServerDriverDB extends ServerSeasonalDB
 	@Override
 	String add(int year, String json) 
 	{
+		//Need to change this to add a check to see if the driver already exists, 
+		//similar to what we do for agents.
+		
 		//Create a driver object for the new driver
 		Gson gson = new Gson();
 		ONCDriver addedDriver = gson.fromJson(json, ONCDriver.class);
