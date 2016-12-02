@@ -733,9 +733,9 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/signinvolunteer"))
     	{
-    		Set<String> keyset = params.keySet();
-    		for(String key:keyset)
-    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+   // 		Set<String> keyset = params.keySet();
+   // 		for(String key:keyset)
+   // 			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
 /*    		
     		String response = null;
     		String volunteerFN = (String) params.get("delFN");
@@ -754,7 +754,9 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
 */    		
-    		String responseJson = "{\"message\":\"Thank You\"}";
+    		String responseJson = String.format("{\"message\":\"Thank you, %s, for volunteering "
+    				+ "with Our Neighbor's Child!\"}", (String) params.get("delFN"));
+    		
     		String callbackFunction = (String) params.get("callback");
     		HtmlResponse htmlResponse = new HtmlResponse(callbackFunction +"(" + responseJson +")", HTTPCode.Ok);
     		sendHTMLResponse(t, htmlResponse);  
