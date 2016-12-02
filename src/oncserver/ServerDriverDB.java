@@ -68,25 +68,20 @@ public class ServerDriverDB extends ServerSeasonalDB
 	static HtmlResponse getDriverJSONP(int year, String fn, String ln, String callbackFunction)
 	{		
 		Gson gson = new Gson();
-		
 		List<ONCDriver> searchList = driverDB.get(year - BASE_YEAR).getList();
-		ONCDriver driver = null;
 		
+		String response;
 		int index=0;
-		while(index < searchList.size() && !(searchList.get(index).getfName().equals(fn) && 
-											 searchList.get(index).getlName().equals(ln)))
+		while(index < searchList.size() && !(searchList.get(index).getfName().equalsIgnoreCase(fn) && 
+											 searchList.get(index).getlName().equalsIgnoreCase(ln)))
 		{
 			index++;
 		}
 		
-		String response;
 		if(index< searchList.size())
-		{
-			driver = searchList.get(index);
-			response = gson.toJson(driver, ONCDriver.class);
-		}
+			response = gson.toJson(searchList.get(index), ONCDriver.class);
 		else
-			response = "{\"id\":-1}";	//send back id = 1, meaning not found
+			response = "{\"id\":-1}";	//send back id = -1, meaning not found
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
