@@ -30,7 +30,8 @@ public class ONCWebServer
 							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
 							"/changepw", "/startpage", "/vanilla", "/getuser", "/getstatus",
 							"/profileunchanged", "/updateuser", "/driverregistration", "/registerdriver",
-							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/contactinfo", "/jquery.js"};
+							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/contactinfo",
+							"/jquery.js", "/favicon.ico"};
 		
 		HttpContext context;
 //		Filter paramFilter = new ParameterFilter();

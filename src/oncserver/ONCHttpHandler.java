@@ -466,6 +466,10 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/onclogo"))
     	{
     		sendFile(t, "image/gif", "oncsplash.gif");    	
+    	}
+    	else if(requestURI.contains("/favicon.ico"))
+    	{
+    		sendFile(t, "image/x-icon ", "ONC.ico");    	
     	}   	
     	else if(requestURI.contains("/vanilla.ttf"))
     	{
