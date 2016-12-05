@@ -736,29 +736,17 @@ public class ONCHttpHandler implements HttpHandler
    // 		Set<String> keyset = params.keySet();
    // 		for(String key:keyset)
    // 			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
-/*    		
-    		String response = null;
-    		String volunteerFN = (String) params.get("delFN");
-    		
-    		try 
-    		{
-    			String volMssg = String.format("Thank you, %s, for volunteering with Our Neighbor's Child!", volunteerFN);
-				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_SIGN_IN_HTML));
-				response = response.replace("SUCCESS_MSSG", volMssg );
-			} 
-    		catch (IOException e) 
-    		{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-*/    		
-    		String responseJson = String.format("{\"message\":\"Thank you, %s, for volunteering "
-    				+ "with Our Neighbor's Child!\"}", (String) params.get("delFN"));
-    		
+
+    		int year = Integer.parseInt((String)params.get("year"));
     		String callbackFunction = (String) params.get("callback");
-    		HtmlResponse htmlResponse = new HtmlResponse(callbackFunction +"(" + responseJson +")", HTTPCode.Ok);
+    		
+    		String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
+    							"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
+    							"group", "comment"};
+    		
+    		Map<String, String> volParams = createMap(params, volKeys);
+    		
+    		HtmlResponse htmlResponse = ServerDriverDB.addVolunteerJSONP(year,  volParams, callbackFunction);
     		sendHTMLResponse(t, htmlResponse);  
     	}
     	else if(requestURI.contains("/changepw"))	//from separate page
@@ -1619,15 +1607,8 @@ public class ONCHttpHandler implements HttpHandler
 		Map<String, String> map = new HashMap<String, String>();
 		for(String key:keys)
 		{
-			
 			//code modified 10-18-16 to prevent null value exception if input map does not contain a key
 			//if key is missing in input map, it is added with an empty string;
-//			String value = "";
-//			if(params.containsKey(key))
-//				value = (String) params.get(key) != null ? (String) params.get(key) : "";
-//		
-//			map.put(key, value);
-			
 			if(params.containsKey(key) && params.get(key) != null)
 				map.put(key, (String) params.get(key));
 			else

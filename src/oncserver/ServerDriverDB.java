@@ -4,17 +4,20 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
+import ourneighborschild.ActivityCode;
+import ourneighborschild.Agent;
 import ourneighborschild.ONCDriver;
-
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class ServerDriverDB extends ServerSeasonalDB
 {
-	private static final int DRIVER_DB_HEADER_LENGTH = 19;
+	private static final int DRIVER_DB_HEADER_LENGTH = 22;
 	
 	private static List<DriverDBYear> driverDB;
 	private static ServerDriverDB instance = null;
@@ -104,6 +107,59 @@ public class ServerDriverDB extends ServerSeasonalDB
 		driverDBYear.setChanged(true);
 				
 		return "ADDED_DRIVER" + gson.toJson(addedDriver, ONCDriver.class);
+	}
+	
+	static HtmlResponse addVolunteerJSONP(int year, Map<String, String> params, 
+											String callbackFunction)
+	{		
+		
+		String fn = params.get("delFN");
+		String ln = params.get("delLN");
+		
+		DriverDBYear volDBYear = driverDB.get(year - BASE_YEAR);
+		List<ONCDriver>volList = volDBYear.getList();
+		
+		int index=0;
+		while(index < volList.size() && !(volList.get(index).getfName().equalsIgnoreCase(fn) && 
+				 volList.get(index).getlName().equalsIgnoreCase(ln)))
+			index++;
+		
+		if(index<volList.size())
+		{
+			//Found the volunteer, increment their sign-ins
+			ONCDriver updatedVol = volList.get(index);
+			updatedVol.setSignIns(updatedVol.getSignIns() + 1);
+			volDBYear.setChanged(true);
+			
+			//notify in year clients
+			Gson gson = new Gson();
+			clientMgr.notifyAllInYearClients(year, "UPDATED_DRIVER" + gson.toJson(updatedVol, ONCDriver.class));
+		}
+		else
+		{
+			//Didn't find the volunteer, create and add a new one
+			String group = params.get("group").equals("Other") ? params.get("groupother") : params.get("group");
+			ONCDriver addedVol = new ONCDriver(-1, "N/A", fn, ln, params.get("delemail"), 
+					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
+					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
+					params.get("primaryphone"), ActivityCode.Warehouse.code(), group,
+					params.get("comment"), new Date(), "ONC Website");
+			
+			addedVol.setID(volDBYear.getNextID());	
+			addedVol.setSignIns(addedVol.getSignIns() + 1);	
+			volDBYear.add(addedVol);
+			volDBYear.setChanged(true);
+			
+			//notify in year clients
+			Gson gson = new Gson();
+			clientMgr.notifyAllInYearClients(year, "ADDED_DRIVER" + gson.toJson(addedVol, ONCDriver.class));
+		}
+		
+		String responseJson = String.format("{\"message\":\"Thank you, %s, for volunteering "
+				+ "with Our Neighbor's Child!\"}", (String) params.get("delFN"));
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + responseJson +")", HTTPCode.Ok);		
 	}
 	
 	String update(int year, String json)
@@ -236,8 +292,8 @@ public class ServerDriverDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		 String[] header = {"Driver ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
-		 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", 
-		 			"Driver License", "Car", "# Del. Assigned", "Time Stamp",
+		 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Activity Code",
+		 			"Group", "Comment", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
 		 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
 		 
 		 DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
