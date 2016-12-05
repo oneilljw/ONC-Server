@@ -2,11 +2,13 @@ package oncserver;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.ONCDriver;
 import ourneighborschild.ONCWarehouseVolunteer;
@@ -54,6 +56,25 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		return instance;
 	}
 	
+	//Search the database for the volunteer. Return a sign-in list if the volunteer is found. 
+	String getWarehouseSignInHistory(int year, String volunteerID)
+	{
+		List<ONCWarehouseVolunteer> volList = warehouseDB.get(year - BASE_YEAR).getList();
+		List<ONCWarehouseVolunteer> histList = new ArrayList<ONCWarehouseVolunteer>();
+		
+		int searchVolID = Integer.parseInt(volunteerID);
+
+		for(ONCWarehouseVolunteer vol : volList)
+			if(vol.getVolunteerID() == searchVolID)
+				histList.add(vol);
+		
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<ONCWarehouseVolunteer>>(){}.getType();
+			
+		String response = gson.toJson(histList, listtype);
+		return response;	
+	}
+	
 	void add(int year, ONCDriver addedVol)
 	{
 		WarehouseDBYear whDBYear = warehouseDB.get(year - BASE_YEAR);
@@ -66,7 +87,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		
 		//notify all in year clients
 		Gson gson = new Gson();
-		clientMgr.notifyAllInYearClients(year, "ADDED_VOLUNTEER" + gson.toJson(addedVol, ONCWarehouseVolunteer.class));
+		clientMgr.notifyAllInYearClients(year, "ADDED_VOLUNTEER" + gson.toJson(addedWHVol, ONCWarehouseVolunteer.class));
 	}
 
 	@Override
@@ -102,8 +123,8 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		 {
 			String[] warehouseHeader = {"Log ID", "Volunteer ID" ,"Timestamp"};
 			 
-			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);
-			exportDBToCSV(warehouseDBYear.getList(),  warehouseHeader, path);
+			String path = String.format("%s/%dDB/WarehouseDB.csv", System.getProperty("user.dir"), year);
+			exportDBToCSV(warehouseDBYear.getList(), warehouseHeader, path);
 			warehouseDBYear.setChanged(false);
 		}
 	}

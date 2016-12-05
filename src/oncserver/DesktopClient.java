@@ -56,6 +56,7 @@ public class DesktopClient extends Thread
     private ServerChildWishDB childwishDB;
     private ServerPartnerDB serverPartnerDB;
     private ServerDriverDB driverDB;
+    private ServerWarehouseDB warehouseDB;
     private ServerDeliveryDB deliveryDB;
     private ServerWishCatalog wishCatalog;
     private ServerWishDetailDB wishDetailDB;
@@ -103,6 +104,7 @@ public class DesktopClient extends Thread
 	        childwishDB = ServerChildWishDB.getInstance();
 	        serverPartnerDB = ServerPartnerDB.getInstance();
 	        driverDB = ServerDriverDB.getInstance();
+	        warehouseDB = ServerWarehouseDB.getInstance();
 	        deliveryDB = ServerDeliveryDB.getInstance();
 	        wishCatalog = ServerWishCatalog.getInstance();
 	        wishDetailDB = ServerWishDetailDB.getInstance();
@@ -310,6 +312,11 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	output.println(childwishDB.getChildWishHistory(year, command.substring(16)));
+                }
+                else if(command.startsWith("GET<warehousehistory>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	output.println(warehouseDB.getWarehouseSignInHistory(year, command.substring(21)));
                 }
                 else if(command.startsWith("GET<deliveryhistory>"))
                 {

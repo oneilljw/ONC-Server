@@ -12,6 +12,7 @@
 	{
   		//set the hidden values
   		document.getElementById('year').value= new Date().getFullYear().toString();
+  		document.getElementById('activity').value= 'Warehouse';
   		
   		//update the nav bar links with token
   		document.getElementById('logoutlink').href="onchomepage";
@@ -295,12 +296,15 @@
 	function submitSignIn()
 	{
 		//Post a JSON request with the required information
+		var groupSelectElement = document.getElementById('groupselect');
+		
 		var volunteerparams = "year=" + document.getElementById('year').value
+						+ "&activity=" + document.getElementById('activity').value
 						+ "&delFN=" + document.getElementById('delfn').value
 						+ "&delLN=" + document.getElementById('delln').value
 						+ "&groupother=" + document.getElementById('groupother').value
 						+ "&delemail=" + document.getElementById('delemail').value
-						+ "&group=" + document.getElementById('groupselect').options[document.getElementById('groupselect').selectedIndex].value
+						+ "&group=" + groupSelectElement.options[groupSelectElement.selectedIndex].text
 						+ "&primaryphone=" + document.getElementById('primaryphone').value
 						+ "&delhousenum=" + document.getElementById('delhousenum').value
 						+ "&delunit=" + document.getElementById('delunit').value
@@ -398,6 +402,7 @@
   </nav>
   <form id='signinform' name='signinform'>  
   <input id="year" type="hidden" name="year">
+  <input id="activity" type="hidden" name="activity">
   <br>
   <fieldset>
   <legend class="legend-major">Volunteer Information</legend>

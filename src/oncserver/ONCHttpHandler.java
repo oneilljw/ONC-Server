@@ -733,16 +733,16 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/signinvolunteer"))
     	{
-   // 		Set<String> keyset = params.keySet();
-   // 		for(String key:keyset)
-   // 			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+//    		Set<String> keyset = params.keySet();
+//    		for(String key:keyset)
+//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
 
     		int year = Integer.parseInt((String)params.get("year"));
     		String callbackFunction = (String) params.get("callback");
     		
     		String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
     							"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
-    							"group", "comment"};
+    							"group", "comment", "activity"};
     		
     		Map<String, String> volParams = createMap(params, volKeys);
     		

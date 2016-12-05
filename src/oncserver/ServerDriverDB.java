@@ -138,6 +138,17 @@ public class ServerDriverDB extends ServerSeasonalDB
 			//Found the volunteer, increment their sign-ins
 			ONCDriver updatedVol = volList.get(index);
 			updatedVol.setSignIns(updatedVol.getSignIns() + 1);
+			updatedVol.setDateChanged(new Date());
+			
+			if(params.get("group").equals("Other"))
+				updatedVol.setGroup(params.get("groupother"));
+			else
+				updatedVol.setGroup(params.get("group"));
+			
+			if(!params.get("comment").isEmpty())
+				updatedVol.setComment(params.get("comment"));
+			
+			
 			volDBYear.setChanged(true);
 			
 			//notify in year clients
@@ -153,7 +164,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 			ONCDriver addedVol = new ONCDriver(-1, "N/A", fn, ln, params.get("delemail"), 
 					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
 					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
-					params.get("primaryphone"), ActivityCode.Warehouse.code(), group,
+					params.get("primaryphone"), params.get("activity"), group,
 					params.get("comment"), new Date(), "ONC Website");
 			
 			addedVol.setID(volDBYear.getNextID());	
