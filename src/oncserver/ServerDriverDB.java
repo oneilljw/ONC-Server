@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import ourneighborschild.ActivityCode;
-import ourneighborschild.Agent;
 import ourneighborschild.ONCDriver;
 
 import com.google.gson.Gson;
@@ -19,10 +18,12 @@ public class ServerDriverDB extends ServerSeasonalDB
 {
 	private static final int DRIVER_DB_HEADER_LENGTH = 22;
 	
+	
 	private static List<DriverDBYear> driverDB;
 	private static ServerDriverDB instance = null;
 	
 	private static ClientManager clientMgr;
+	private static ServerWarehouseDB warehouseDB;
 
 	private ServerDriverDB() throws FileNotFoundException, IOException
 	{
@@ -30,6 +31,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 		driverDB = new ArrayList<DriverDBYear>();
 		
 		clientMgr = ClientManager.getInstance();
+		warehouseDB = ServerWarehouseDB.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -40,11 +42,11 @@ public class ServerDriverDB extends ServerSeasonalDB
 			//add the list of children for the year to the db
 			driverDB.add(driverDBYear);
 									
-			//import the children from persistent store
+			//import the volunteers from persistent store
 			importDB(year, String.format("%s/%dDB/DriverDB.csv",
 					System.getProperty("user.dir"),
 						year), "Driver DB", DRIVER_DB_HEADER_LENGTH);
-									
+		
 			//set the next id
 			driverDBYear.setNextID(getNextID(driverDBYear.getList()));
 		}
@@ -109,6 +111,13 @@ public class ServerDriverDB extends ServerSeasonalDB
 		return "ADDED_DRIVER" + gson.toJson(addedDriver, ONCDriver.class);
 	}
 	
+	/************
+	 * Registers and signs in volunteers from the web site
+	 * @param year
+	 * @param params
+	 * @param callbackFunction
+	 * @return
+	 */
 	static HtmlResponse addVolunteerJSONP(int year, Map<String, String> params, 
 											String callbackFunction)
 	{		
@@ -134,6 +143,8 @@ public class ServerDriverDB extends ServerSeasonalDB
 			//notify in year clients
 			Gson gson = new Gson();
 			clientMgr.notifyAllInYearClients(year, "UPDATED_DRIVER" + gson.toJson(updatedVol, ONCDriver.class));
+			
+			warehouseDB.add(year, updatedVol);	//add the volunteer to the warehouse data base
 		}
 		else
 		{
@@ -150,10 +161,15 @@ public class ServerDriverDB extends ServerSeasonalDB
 			volDBYear.add(addedVol);
 			volDBYear.setChanged(true);
 			
+			warehouseDB.add(year, addedVol);	//add the volunteer to the warehouse data base
+			
 			//notify in year clients
 			Gson gson = new Gson();
 			clientMgr.notifyAllInYearClients(year, "ADDED_DRIVER" + gson.toJson(addedVol, ONCDriver.class));
 		}
+		
+		
+		
 		
 		String responseJson = String.format("{\"message\":\"Thank you, %s, for volunteering "
 				+ "with Our Neighbor's Child!\"}", (String) params.get("delFN"));
@@ -291,17 +307,17 @@ public class ServerDriverDB extends ServerSeasonalDB
 	@Override
 	void save(int year)
 	{
-		 String[] header = {"Driver ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
-		 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Activity Code",
-		 			"Group", "Comment", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
-		 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
-		 
 		 DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
+		 
 		 if(driverDBYear.isUnsaved())
 		 {
-//			System.out.println(String.format("DriverDB save() - Saving Driver DB"));
+			 String[] driverHeader = {"Driver ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
+			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Activity Code",
+			 			"Group", "Comment", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
+			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
+			 
 			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);
-			exportDBToCSV(driverDBYear.getList(),  header, path);
+			exportDBToCSV(driverDBYear.getList(),  driverHeader, path);
 			driverDBYear.setChanged(false);
 		}
 	}	

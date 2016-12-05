@@ -58,8 +58,8 @@ public class DBManager
 			e.printStackTrace();
 		}
 	
-		//Load the thirteen component data bases from persistent store;
-		//for the nine component data bases that are periodically saved, add them to a auto save list
+		//Load the component data bases from persistent store;
+		//for the component data bases that are periodically saved, add them to a auto save list
 		dbPermanentAutosaveList = new ArrayList<ServerPermanentDB>();	//list of data bases stored thru timer event
 		dbSeasonalAutosaveList = new ArrayList<ServerSeasonalDB>();	//list of data bases stored thru timer event
 		try
@@ -74,6 +74,7 @@ public class DBManager
 			dbSeasonalAutosaveList.add(ServerFamilyDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerAgentDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerDriverDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerWarehouseDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerDeliveryDB.getInstance());
 			dbPermanentAutosaveList.add(ServerWishCatalog.getInstance());
 			dbPermanentAutosaveList.add(ServerWishDetailDB.getInstance());
