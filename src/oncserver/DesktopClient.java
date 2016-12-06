@@ -55,7 +55,7 @@ public class DesktopClient extends Thread
     private ServerChildDB childDB;
     private ServerChildWishDB childwishDB;
     private ServerPartnerDB serverPartnerDB;
-    private ServerDriverDB driverDB;
+    private ServerVolunteerDB driverDB;
     private ServerWarehouseDB warehouseDB;
     private ServerDeliveryDB deliveryDB;
     private ServerWishCatalog wishCatalog;
@@ -103,7 +103,7 @@ public class DesktopClient extends Thread
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildWishDB.getInstance();
 	        serverPartnerDB = ServerPartnerDB.getInstance();
-	        driverDB = ServerDriverDB.getInstance();
+	        driverDB = ServerVolunteerDB.getInstance();
 	        warehouseDB = ServerWarehouseDB.getInstance();
 	        deliveryDB = ServerDeliveryDB.getInstance();
 	        wishCatalog = ServerWishCatalog.getInstance();

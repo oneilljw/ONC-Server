@@ -316,7 +316,7 @@
 		
     	$.post('signinvolunteer', volunteerparams, function(data, textStatus)
     	{
-			clearForm();
+    		clearAllButGroupSelect();
 			document.getElementById('success_mssg').innerHTML = data.message;
 			window.location=document.getElementById('registeredanchor').href;
     	}, "json");

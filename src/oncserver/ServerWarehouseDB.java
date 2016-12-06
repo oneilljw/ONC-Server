@@ -10,7 +10,7 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import ourneighborschild.ONCDriver;
+import ourneighborschild.ONCVolunteer;
 import ourneighborschild.ONCWarehouseVolunteer;
 
 public class ServerWarehouseDB extends ServerSeasonalDB 
@@ -75,7 +75,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		return response;	
 	}
 	
-	void add(int year, ONCDriver addedVol)
+	void add(int year, ONCVolunteer addedVol)
 	{
 		WarehouseDBYear whDBYear = warehouseDB.get(year - BASE_YEAR);
 		

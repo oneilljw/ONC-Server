@@ -452,7 +452,7 @@ public class ONCHttpHandler implements HttpHandler
     		String ln = (String) params.get("delLN");
     		String callback = (String) params.get("callback");
     		
-    		HtmlResponse response = ServerDriverDB.getDriverJSONP(year, fn, ln, callback);
+    		HtmlResponse response = ServerVolunteerDB.getDriverJSONP(year, fn, ln, callback);
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/oncsplash"))
@@ -746,7 +746,7 @@ public class ONCHttpHandler implements HttpHandler
     		
     		Map<String, String> volParams = createMap(params, volKeys);
     		
-    		HtmlResponse htmlResponse = ServerDriverDB.addVolunteerJSONP(year,  volParams, callbackFunction);
+    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, callbackFunction);
     		sendHTMLResponse(t, htmlResponse);  
     	}
     	else if(requestURI.contains("/changepw"))	//from separate page

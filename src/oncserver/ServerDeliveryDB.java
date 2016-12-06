@@ -117,10 +117,10 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 		//notify the corresponding family that delivery has changed and
 		//check to see if new delivery assigned or removed a delivery from a driver
 		ServerFamilyDB serverFamilyDB = null;
-		ServerDriverDB driverDB = null;
+		ServerVolunteerDB driverDB = null;
 		try {
 			serverFamilyDB = ServerFamilyDB.getInstance();
-			driverDB = ServerDriverDB.getInstance();
+			driverDB = ServerVolunteerDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -176,10 +176,10 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 		//notify the corresponding family that delivery has changed and
 		//check to see if new delivery assigned or removed a delivery from a driver
 		ServerFamilyDB serverFamilyDB = null;
-		ServerDriverDB driverDB = null;
+		ServerVolunteerDB driverDB = null;
 		try {
 			serverFamilyDB = ServerFamilyDB.getInstance();
-			driverDB = ServerDriverDB.getInstance();
+			driverDB = ServerVolunteerDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

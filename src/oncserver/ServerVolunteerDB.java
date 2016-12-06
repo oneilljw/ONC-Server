@@ -9,23 +9,23 @@ import java.util.List;
 import java.util.Map;
 
 import ourneighborschild.ActivityCode;
-import ourneighborschild.ONCDriver;
+import ourneighborschild.ONCVolunteer;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerDriverDB extends ServerSeasonalDB
+public class ServerVolunteerDB extends ServerSeasonalDB
 {
 	private static final int DRIVER_DB_HEADER_LENGTH = 22;
 	
 	
 	private static List<DriverDBYear> driverDB;
-	private static ServerDriverDB instance = null;
+	private static ServerVolunteerDB instance = null;
 	
 	private static ClientManager clientMgr;
 	private static ServerWarehouseDB warehouseDB;
 
-	private ServerDriverDB() throws FileNotFoundException, IOException
+	private ServerVolunteerDB() throws FileNotFoundException, IOException
 	{
 		//create the driver data bases for TOTAL_YEARS number of years
 		driverDB = new ArrayList<DriverDBYear>();
@@ -52,10 +52,10 @@ public class ServerDriverDB extends ServerSeasonalDB
 		}
 	}
 	
-	public static ServerDriverDB getInstance() throws FileNotFoundException, IOException
+	public static ServerVolunteerDB getInstance() throws FileNotFoundException, IOException
 	{
 		if(instance == null)
-			instance = new ServerDriverDB();
+			instance = new ServerVolunteerDB();
 		
 		return instance;
 	}
@@ -64,7 +64,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 	String getDrivers(int year)
 	{
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<ONCDriver>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCVolunteer>>(){}.getType();
 			
 		String response = gson.toJson(driverDB.get(year - BASE_YEAR).getList(), listtype);
 		return response;	
@@ -73,7 +73,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 	static HtmlResponse getDriverJSONP(int year, String fn, String ln, String callbackFunction)
 	{		
 		Gson gson = new Gson();
-		List<ONCDriver> searchList = driverDB.get(year - BASE_YEAR).getList();
+		List<ONCVolunteer> searchList = driverDB.get(year - BASE_YEAR).getList();
 		
 		String response;
 		int index=0;
@@ -84,7 +84,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 		}
 		
 		if(index< searchList.size())
-			response = gson.toJson(searchList.get(index), ONCDriver.class);
+			response = gson.toJson(searchList.get(index), ONCVolunteer.class);
 		else
 			response = "{\"id\":-1}";	//send back id = -1, meaning not found
 		
@@ -100,7 +100,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 		
 		//Create a driver object for the new driver
 		Gson gson = new Gson();
-		ONCDriver addedDriver = gson.fromJson(json, ONCDriver.class);
+		ONCVolunteer addedDriver = gson.fromJson(json, ONCVolunteer.class);
 				
 		//set the new ID for the new driver
 		DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
@@ -108,7 +108,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 		driverDBYear.add(addedDriver);
 		driverDBYear.setChanged(true);
 				
-		return "ADDED_DRIVER" + gson.toJson(addedDriver, ONCDriver.class);
+		return "ADDED_DRIVER" + gson.toJson(addedDriver, ONCVolunteer.class);
 	}
 	
 	/************
@@ -126,7 +126,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 		String ln = params.get("delLN");
 		
 		DriverDBYear volDBYear = driverDB.get(year - BASE_YEAR);
-		List<ONCDriver>volList = volDBYear.getList();
+		List<ONCVolunteer>volList = volDBYear.getList();
 		
 		int index=0;
 		while(index < volList.size() && !(volList.get(index).getfName().equalsIgnoreCase(fn) && 
@@ -136,7 +136,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 		if(index<volList.size())
 		{
 			//Found the volunteer, increment their sign-ins
-			ONCDriver updatedVol = volList.get(index);
+			ONCVolunteer updatedVol = volList.get(index);
 			updatedVol.setSignIns(updatedVol.getSignIns() + 1);
 			updatedVol.setDateChanged(new Date());
 			
@@ -153,7 +153,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 			
 			//notify in year clients
 			Gson gson = new Gson();
-			clientMgr.notifyAllInYearClients(year, "UPDATED_DRIVER" + gson.toJson(updatedVol, ONCDriver.class));
+			clientMgr.notifyAllInYearClients(year, "UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
 			
 			warehouseDB.add(year, updatedVol);	//add the volunteer to the warehouse data base
 		}
@@ -161,7 +161,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 		{
 			//Didn't find the volunteer, create and add a new one
 			String group = params.get("group").equals("Other") ? params.get("groupother") : params.get("group");
-			ONCDriver addedVol = new ONCDriver(-1, "N/A", fn, ln, params.get("delemail"), 
+			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, params.get("delemail"), 
 					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
 					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
 					params.get("primaryphone"), params.get("activity"), group,
@@ -176,7 +176,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 			
 			//notify in year clients
 			Gson gson = new Gson();
-			clientMgr.notifyAllInYearClients(year, "ADDED_DRIVER" + gson.toJson(addedVol, ONCDriver.class));
+			clientMgr.notifyAllInYearClients(year, "ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
 		}
 		
 		
@@ -193,11 +193,11 @@ public class ServerDriverDB extends ServerSeasonalDB
 	{
 		//Create a driver object for the updated driver
 		Gson gson = new Gson();
-		ONCDriver updatedDriver = gson.fromJson(json, ONCDriver.class);
+		ONCVolunteer updatedDriver = gson.fromJson(json, ONCVolunteer.class);
 		
 		//Find the position for the current driver being updated
 		DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
-		List<ONCDriver> dAL = driverDBYear.getList();
+		List<ONCVolunteer> dAL = driverDBYear.getList();
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != updatedDriver.getID())
 			index++;
@@ -207,7 +207,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 		{
 			dAL.set(index, updatedDriver);
 			driverDBYear.setChanged(true);
-			return "UPDATED_DRIVER" + gson.toJson(updatedDriver, ONCDriver.class);
+			return "UPDATED_DRIVER" + gson.toJson(updatedDriver, ONCVolunteer.class);
 		}
 		else
 			return "UPDATE_FAILED";
@@ -217,11 +217,11 @@ public class ServerDriverDB extends ServerSeasonalDB
 	{
 		//Create an object for the delete request
 		Gson gson = new Gson();
-		ONCDriver deletedDriver = gson.fromJson(json, ONCDriver.class);
+		ONCVolunteer deletedDriver = gson.fromJson(json, ONCVolunteer.class);
 		
 		//find and remove the deleted child from the data base
 		DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
-		List<ONCDriver> dAL = driverDBYear.getList();
+		List<ONCVolunteer> dAL = driverDBYear.getList();
 		
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != deletedDriver.getID())
@@ -237,9 +237,9 @@ public class ServerDriverDB extends ServerSeasonalDB
 			return "DELETE_FAILED";	
 	}
 	
-	ONCDriver getDriverByDriverNumber(int year, String drvNum)
+	ONCVolunteer getDriverByDriverNumber(int year, String drvNum)
 	{
-		List<ONCDriver> dAL = driverDB.get(year-BASE_YEAR).getList();
+		List<ONCVolunteer> dAL = driverDB.get(year-BASE_YEAR).getList();
 		
 		//find the driver
 		int index = 0;	
@@ -254,7 +254,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 	
 	void updateDriverDeliveryCounts(int year, String drvNum1, String drvNum2)
 	{
-		ONCDriver driver;
+		ONCVolunteer driver;
 		Gson gson = new Gson();
 		String change;
 		
@@ -264,7 +264,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 			if(driver != null)
 			{
 				driver.incrementDeliveryCount(-1);
-				change = "UPDATED_DRIVER" + gson.toJson(driver, ONCDriver.class);
+				change = "UPDATED_DRIVER" + gson.toJson(driver, ONCVolunteer.class);
 				clientMgr.notifyAllInYearClients(year, change);	
 			}
 		}
@@ -275,7 +275,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 			if(driver != null)
 			{
 				driver.incrementDeliveryCount(1);
-				change = "UPDATED_DRIVER" + gson.toJson(driver, ONCDriver.class);
+				change = "UPDATED_DRIVER" + gson.toJson(driver, ONCVolunteer.class);
 				clientMgr.notifyAllInYearClients(year, change);
 			}
 		}	
@@ -285,7 +285,7 @@ public class ServerDriverDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine)
 	{
 		DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
-		driverDBYear.add(new ONCDriver(nextLine));	
+		driverDBYear.add(new ONCVolunteer(nextLine));	
 	}
 
 	@Override
@@ -301,18 +301,18 @@ public class ServerDriverDB extends ServerSeasonalDB
 	
 	private class DriverDBYear extends ServerDBYear
 	{
-		private List<ONCDriver> dList;
+		private List<ONCVolunteer> dList;
 	    	
 	    DriverDBYear(int year)
 	    {
 	    	super();
-	    	dList = new ArrayList<ONCDriver>();
+	    	dList = new ArrayList<ONCVolunteer>();
 	    }
 	    
 	    //getters
-	    List<ONCDriver> getList() { return dList; }
+	    List<ONCVolunteer> getList() { return dList; }
 	    
-	    void add(ONCDriver addedDriver) { dList.add(addedDriver); }
+	    void add(ONCVolunteer addedDriver) { dList.add(addedDriver); }
 	}
 
 	@Override
