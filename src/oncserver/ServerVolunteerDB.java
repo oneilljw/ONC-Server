@@ -16,7 +16,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerVolunteerDB extends ServerSeasonalDB
 {
-	private static final int DRIVER_DB_HEADER_LENGTH = 22;
+	private static final int DRIVER_DB_HEADER_LENGTH = 23;
 	
 	
 	private static List<DriverDBYear> driverDB;
@@ -164,7 +164,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, params.get("delemail"), 
 					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
 					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
-					params.get("primaryphone"), params.get("activity"), group,
+					params.get("primaryphone"), "1", params.get("activity"), group,
 					params.get("comment"), new Date(), "ONC Website");
 			
 			addedVol.setID(volDBYear.getNextID());	
@@ -324,7 +324,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		 {
 			 String[] driverHeader = {"Driver ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
 			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Activity Code",
-			 			"Group", "Comment", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
+			 			"Group", "Comment", "Qty", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
 			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
 			 
 			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);
