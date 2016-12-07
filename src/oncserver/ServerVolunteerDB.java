@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import ourneighborschild.ActivityCode;
 import ourneighborschild.ONCVolunteer;
 
 import com.google.gson.Gson;
@@ -19,7 +19,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	private static final int DRIVER_DB_HEADER_LENGTH = 23;
 	
 	
-	private static List<DriverDBYear> driverDB;
+	private static List<VolunteerDBYear> driverDB;
 	private static ServerVolunteerDB instance = null;
 	
 	private static ClientManager clientMgr;
@@ -28,7 +28,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
 	{
 		//create the driver data bases for TOTAL_YEARS number of years
-		driverDB = new ArrayList<DriverDBYear>();
+		driverDB = new ArrayList<VolunteerDBYear>();
 		
 		clientMgr = ClientManager.getInstance();
 		warehouseDB = ServerWarehouseDB.getInstance();
@@ -37,10 +37,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
 		{
 			//create the child list for each year
-			DriverDBYear driverDBYear = new DriverDBYear(year);
+			VolunteerDBYear volunteerDBYear = new VolunteerDBYear(year);
 									
 			//add the list of children for the year to the db
-			driverDB.add(driverDBYear);
+			driverDB.add(volunteerDBYear);
 									
 			//import the volunteers from persistent store
 			importDB(year, String.format("%s/%dDB/DriverDB.csv",
@@ -48,7 +48,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 						year), "Driver DB", DRIVER_DB_HEADER_LENGTH);
 		
 			//set the next id
-			driverDBYear.setNextID(getNextID(driverDBYear.getList()));
+			volunteerDBYear.setNextID(getNextID(volunteerDBYear.getList()));
 		}
 	}
 	
@@ -103,10 +103,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		ONCVolunteer addedDriver = gson.fromJson(json, ONCVolunteer.class);
 				
 		//set the new ID for the new driver
-		DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
-		addedDriver.setID(driverDBYear.getNextID());
-		driverDBYear.add(addedDriver);
-		driverDBYear.setChanged(true);
+		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		addedDriver.setID(volunteerDBYear.getNextID());
+		volunteerDBYear.add(addedDriver);
+		volunteerDBYear.setChanged(true);
 				
 		return "ADDED_DRIVER" + gson.toJson(addedDriver, ONCVolunteer.class);
 	}
@@ -121,11 +121,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	static HtmlResponse addVolunteerJSONP(int year, Map<String, String> params, 
 											String callbackFunction)
 	{		
-		
 		String fn = params.get("delFN");
 		String ln = params.get("delLN");
 		
-		DriverDBYear volDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volDBYear = driverDB.get(year - BASE_YEAR);
 		List<ONCVolunteer>volList = volDBYear.getList();
 		
 		int index=0;
@@ -135,7 +134,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		
 		if(index<volList.size())
 		{
-			//Found the volunteer, increment their sign-ins
+			//Found the volunteer, update their contact info and increment their sign-ins
 			ONCVolunteer updatedVol = volList.get(index);
 			updatedVol.setSignIns(updatedVol.getSignIns() + 1);
 			updatedVol.setDateChanged(new Date());
@@ -145,8 +144,31 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			else
 				updatedVol.setGroup(params.get("group"));
 			
-			if(!params.get("comment").isEmpty())
+			if(params.get("group").equals("Self") || params.get("group").equals("Other"))
+			{
+				if(!params.get("delhousenum").isEmpty())
+					updatedVol.sethNum(params.get("delhousenum"));
+				if(!params.get("delstreet").isEmpty())
+					updatedVol.setStreet(params.get("delstreet"));
+				if(!params.get("delunit").isEmpty())
+					updatedVol.setUnit(params.get("delunit"));
+				if(!params.get("delcity").isEmpty())
+					updatedVol.setCity(params.get("delcity"));
+				if(!params.get("delzipcode").isEmpty())
+					updatedVol.setZipcode(params.get("delzipcode")); 
+				if(!params.get("delemail").isEmpty())
+					updatedVol.setEmail(params.get("delemail"));
+				
 				updatedVol.setComment(params.get("comment"));
+				
+				//check if the single phone provided in the sign-in matches either of the current
+				//phones. If it doesn't assume it's a cell phone and update it.
+				String webphone = params.get("primaryphone");
+				if(!webphone.isEmpty() && !webphone.equals(updatedVol.getHomePhone()) && 
+					!webphone.equals(updatedVol.getCellPhone()))
+					updatedVol.setCellPhone(params.get("primaryphone"));
+			}
+			updatedVol.setComment(params.get("comment"));
 			
 			
 			volDBYear.setChanged(true);
@@ -155,7 +177,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			Gson gson = new Gson();
 			clientMgr.notifyAllInYearClients(year, "UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
 			
-			warehouseDB.add(year, updatedVol);	//add the volunteer to the warehouse data base
+			warehouseDB.add(year, updatedVol);	//add the volunteer to the warehouse sign-in sign-in data base
 		}
 		else
 		{
@@ -165,7 +187,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
 					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
 					params.get("primaryphone"), "1", params.get("activity"), group,
-					params.get("comment"), new Date(), "ONC Website");
+					params.get("comment"), new Date(), "Sign-In Website");
 			
 			addedVol.setID(volDBYear.getNextID());	
 			addedVol.setSignIns(addedVol.getSignIns() + 1);	
@@ -179,11 +201,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			clientMgr.notifyAllInYearClients(year, "ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
 		}
 		
-		
-		
-		
 		String responseJson = String.format("{\"message\":\"Thank you, %s, for volunteering "
-				+ "with Our Neighbor's Child!\"}", (String) params.get("delFN"));
+				+ "with Our Neighbor's Child!\"}", params.get("delFN"));
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + responseJson +")", HTTPCode.Ok);		
@@ -196,8 +215,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		ONCVolunteer updatedDriver = gson.fromJson(json, ONCVolunteer.class);
 		
 		//Find the position for the current driver being updated
-		DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
-		List<ONCVolunteer> dAL = driverDBYear.getList();
+		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		List<ONCVolunteer> dAL = volunteerDBYear.getList();
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != updatedDriver.getID())
 			index++;
@@ -206,7 +225,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		if(index < dAL.size())
 		{
 			dAL.set(index, updatedDriver);
-			driverDBYear.setChanged(true);
+			volunteerDBYear.setChanged(true);
 			return "UPDATED_DRIVER" + gson.toJson(updatedDriver, ONCVolunteer.class);
 		}
 		else
@@ -220,8 +239,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		ONCVolunteer deletedDriver = gson.fromJson(json, ONCVolunteer.class);
 		
 		//find and remove the deleted child from the data base
-		DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
-		List<ONCVolunteer> dAL = driverDBYear.getList();
+		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		List<ONCVolunteer> dAL = volunteerDBYear.getList();
 		
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != deletedDriver.getID())
@@ -230,7 +249,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		if(index < dAL.size())
 		{
 			dAL.remove(index);
-			driverDBYear.setChanged(true);
+			volunteerDBYear.setChanged(true);
 			return "DELETED_DRIVER" + json;
 		}
 		else
@@ -284,8 +303,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
-		driverDBYear.add(new ONCVolunteer(nextLine));	
+		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		volunteerDBYear.add(new ONCVolunteer(nextLine));	
 	}
 
 	@Override
@@ -294,33 +313,33 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		//create a new Driver data base year for the year provided in the newYear parameter
 		//The driver db year list is initially empty prior to the import of drivers, so all we
 		//do here is create a new DriverDBYear for the newYear and save it.
-		DriverDBYear driverDBYear = new DriverDBYear(newYear);
-		driverDB.add(driverDBYear);
-		driverDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
+		VolunteerDBYear volunteerDBYear = new VolunteerDBYear(newYear);
+		driverDB.add(volunteerDBYear);
+		volunteerDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 	
-	private class DriverDBYear extends ServerDBYear
+	private class VolunteerDBYear extends ServerDBYear
 	{
-		private List<ONCVolunteer> dList;
+		private List<ONCVolunteer> volList;
 	    	
-	    DriverDBYear(int year)
+	    VolunteerDBYear(int year)
 	    {
 	    	super();
-	    	dList = new ArrayList<ONCVolunteer>();
+	    	volList = new ArrayList<ONCVolunteer>();
 	    }
 	    
 	    //getters
-	    List<ONCVolunteer> getList() { return dList; }
+	    List<ONCVolunteer> getList() { return volList; }
 	    
-	    void add(ONCVolunteer addedDriver) { dList.add(addedDriver); }
+	    void add(ONCVolunteer addedDriver) { volList.add(addedDriver); }
 	}
 
 	@Override
 	void save(int year)
 	{
-		 DriverDBYear driverDBYear = driverDB.get(year - BASE_YEAR);
+		 VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
 		 
-		 if(driverDBYear.isUnsaved())
+		 if(volunteerDBYear.isUnsaved())
 		 {
 			 String[] driverHeader = {"Driver ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
 			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Activity Code",
@@ -328,8 +347,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
 			 
 			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);
-			exportDBToCSV(driverDBYear.getList(),  driverHeader, path);
-			driverDBYear.setChanged(false);
+			exportDBToCSV(volunteerDBYear.getList(),  driverHeader, path);
+			volunteerDBYear.setChanged(false);
 		}
 	}	
 }

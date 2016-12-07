@@ -15,7 +15,7 @@ import ourneighborschild.ONCWarehouseVolunteer;
 
 public class ServerWarehouseDB extends ServerSeasonalDB 
 {
-	private static final int WAREHOUSE_DB_HEADER_LENGTH = 3;
+	private static final int WAREHOUSE_DB_HEADER_LENGTH = 5;
 	
 	private static List<WarehouseDBYear> warehouseDB;
 	private static ServerWarehouseDB instance = null;
@@ -80,7 +80,8 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		WarehouseDBYear whDBYear = warehouseDB.get(year - BASE_YEAR);
 		
 		ONCWarehouseVolunteer addedWHVol = new ONCWarehouseVolunteer(whDBYear.getNextID(), 
-															addedVol.getID(), new Date());
+															addedVol.getID(), addedVol.getGroup(),
+															addedVol.getComment(), new Date());
 		
 		whDBYear.add(addedWHVol);
 		whDBYear.setChanged(true);
@@ -121,7 +122,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		 
 		 if(warehouseDBYear.isUnsaved())
 		 {
-			String[] warehouseHeader = {"Log ID", "Volunteer ID" ,"Timestamp"};
+			String[] warehouseHeader = {"Log ID", "Volunteer ID" , "Group", "Comment", "Timestamp"};
 			 
 			String path = String.format("%s/%dDB/WarehouseDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(warehouseDBYear.getList(), warehouseHeader, path);

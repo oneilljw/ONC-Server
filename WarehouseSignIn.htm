@@ -10,9 +10,9 @@
   	
   	$( document ).ready(function()
 	{
-  		//set the hidden values
+  		//set the hidden values. Set the activity to the hexadecimal code for Warehouse Support
   		document.getElementById('year').value= new Date().getFullYear().toString();
-  		document.getElementById('activity').value= 'Warehouse';
+  		document.getElementById('activity').value= '4';
   		
   		//update the nav bar links with token
   		document.getElementById('logoutlink').href="onchomepage";
@@ -424,7 +424,7 @@
       <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" onchange ='getContactInfo()'>
     </div>
     <div id= 'contactdiv'>
-      <label id='phonelbl' for="primaryphone"">Phone #:</label>
+      <label id='phonelbl' for="primaryphone"">Cell Phone #:</label>
       <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #" onchange= 'verifyPhoneNumber(0)'>
 	  <label id='emaillbl' for="delemail">Email:</label>
 	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
