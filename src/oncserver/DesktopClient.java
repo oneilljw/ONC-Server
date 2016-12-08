@@ -55,7 +55,7 @@ public class DesktopClient extends Thread
     private ServerChildDB childDB;
     private ServerChildWishDB childwishDB;
     private ServerPartnerDB serverPartnerDB;
-    private ServerVolunteerDB driverDB;
+    private ServerVolunteerDB volunteerDB;
     private ServerWarehouseDB warehouseDB;
     private ServerDeliveryDB deliveryDB;
     private ServerWishCatalog wishCatalog;
@@ -103,7 +103,7 @@ public class DesktopClient extends Thread
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildWishDB.getInstance();
 	        serverPartnerDB = ServerPartnerDB.getInstance();
-	        driverDB = ServerVolunteerDB.getInstance();
+	        volunteerDB = ServerVolunteerDB.getInstance();
 	        warehouseDB = ServerWarehouseDB.getInstance();
 	        deliveryDB = ServerDeliveryDB.getInstance();
 	        wishCatalog = ServerWishCatalog.getInstance();
@@ -256,7 +256,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<drivers>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = driverDB.getDrivers(year);
+                	String response = volunteerDB.getDrivers(year);
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<deliveries>"))
@@ -405,6 +405,13 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = serverFamilyDB.addFamilyGroup(year, command.substring(18), this);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                }
+                else if(command.startsWith("POST<volunteer_group>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerDB.addVolunteerGroup(year, command.substring(21), this);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 }
@@ -605,7 +612,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<update_driver>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = driverDB.update(year, command.substring(19));
+                	String response = volunteerDB.update(year, command.substring(19));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
@@ -613,7 +620,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<delete_driver>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = driverDB.delete(year, command.substring(19));
+                	String response = volunteerDB.delete(year, command.substring(19));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
@@ -621,7 +628,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_driver>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = driverDB.add(year, command.substring(16));
+                	String response = volunteerDB.add(year, command.substring(16));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);

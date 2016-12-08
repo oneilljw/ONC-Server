@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ourneighborschild.ONCVolunteer;
 
@@ -109,6 +108,54 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		volunteerDBYear.setChanged(true);
 				
 		return "ADDED_DRIVER" + gson.toJson(addedDriver, ONCVolunteer.class);
+	}
+	
+	String add(int year, ONCVolunteer addedVol) 
+	{		
+		//set the new ID for the new driver
+		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		addedVol.setID(volunteerDBYear.getNextID());
+		volunteerDBYear.add(addedVol);
+		volunteerDBYear.setChanged(true);
+		
+		Gson gson = new Gson();
+		return "ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class);
+	}
+	
+	String addVolunteerGroup(int year, String volunteerGroupJson, DesktopClient currClient)
+	{
+		//get the current year volunteer list for the proper year
+		List<ONCVolunteer> cyVolList = driverDB.get(year - BASE_YEAR).getList();
+		
+		//create the response list of jsons
+		List<String> jsonResponseList = new ArrayList<String>();
+		
+		//un-bundle the input list of ONCVolunteer objects
+		Gson gson = new Gson();
+		Type listOfVolunteers = new TypeToken<ArrayList<ONCVolunteer>>(){}.getType();		
+		List<ONCVolunteer> inputVolList = gson.fromJson(volunteerGroupJson, listOfVolunteers);
+		
+		//for each volunteer in the list, check to see if it's a duplicate of an existing 
+		//volunteer. If not add it.
+		for(ONCVolunteer inputVol : inputVolList)
+		{
+			int index = 0;
+			while(index < cyVolList.size() && !inputVol.equals(cyVolList.get(index)))
+				index++;
+							
+			if(index == cyVolList.size())
+			{
+				//no match found, add the input volunteer to the current year list
+				String response = add(year, inputVol);
+				jsonResponseList.add(response);
+			}
+		}
+		
+		//notify all other clients of the imported volunteer objects
+		clientMgr.notifyAllOtherInYearClients(currClient, jsonResponseList);
+		
+		Type listOfChanges = new TypeToken<ArrayList<String>>(){}.getType();
+		return "ADDED_VOLUNTEER_GROUP" + gson.toJson(jsonResponseList, listOfChanges);
 	}
 	
 	/************
