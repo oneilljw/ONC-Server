@@ -692,26 +692,22 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.equals("/registerdriver"))
     	{
-//    		Set<String> keyset = params.keySet();
-//    		for(String key:keyset)
-//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
-    		
-    		String response = null;
-    		String driverFN = (String) params.get("delFN");
-    		
-    		try 
-    		{
-    			String driverMssg = String.format("Thank you, %s, for registering to deliver gifts for Our Neighbor's Child!", driverFN);
-				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_REGISTRATION_HTML));
-				response = response.replace("SUCCESS_MSSG", driverMssg );
-			} 
-    		catch (IOException e) 
-    		{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+//			Set<String> keyset = params.keySet();
+//   		for(String key:keyset)
+//   			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+
+    		int year = Integer.parseInt((String)params.get("year"));
+    		String callbackFunction = (String) params.get("callback");
+    		    		
+    		String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
+    		    				"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
+    		    				"group", "comment", "activity"};
+    		    		
+    		Map<String, String> volParams = createMap(params, volKeys);
+    		    		
+    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, 
+    										"Delivery Registration Webpage", callbackFunction);
+    		sendHTMLResponse(t, htmlResponse); 
     	}
     	else if(requestURI.equals("/volunteersignin"))
     	{
@@ -746,7 +742,8 @@ public class ONCHttpHandler implements HttpHandler
     		
     		Map<String, String> volParams = createMap(params, volKeys);
     		
-    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, callbackFunction);
+    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, 
+										  "Volunteer Sign-In Webpage", callbackFunction);
     		sendHTMLResponse(t, htmlResponse);  
     	}
     	else if(requestURI.contains("/changepw"))	//from separate page

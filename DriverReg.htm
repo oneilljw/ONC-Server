@@ -4,38 +4,19 @@
   <title>ONC Delivery Registration</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="jquery.js"></script>
   <script> 
   	var errorColor = '#FF9999';
   	
   	$( document ).ready(function()
 	{
-  		//set the hidden values
+  		//set the hidden values. Set the activity to the hexadecimal code for Warehouse Support
   		document.getElementById('year').value= new Date().getFullYear().toString();
+  		document.getElementById('activity').value= '2';
   		
   		//update the nav bar links with token
   		document.getElementById('logoutlink').href="onchomepage";
   		document.getElementById('homelink').href="onchomepage";
-  		
-  		$(function() 
-  		{
-  		    $("form input").keypress(function (e) {
-  		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
-  		            $('button[type=submit] .default').click();
-  		            return false;
-  		        } else {
-  		            return true;
-  		        }
-  		    });
-  		});
-  		
-  		$('html').bind('keypress', function(e)
-  		{
-  			if(e.keyCode == 13)
-  			{
-  				return false;
-  			}
-  		});
   		
   		//show the success dialog if driver was registered
   		var urlmode = window.location.href;
@@ -43,21 +24,87 @@
   			window.location=document.getElementById('registeredanchor').href;
 	});
   	
-	function verifyPhoneNumber(elementNum)
+  	function onGroupChange()
+  	{
+  		clearAllButGroupSelect();
+  		
+  		var groupSelectElement = document.getElementById('groupselect');
+  		var groupOtherLabelELement = document.getElementById("groupotherlbl");
+  		var groupOtherElement = document.getElementById('groupother');
+  		
+  		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Other')
+  		{
+  			groupOtherLabelELement.style.visibility="visible";
+  			groupOtherElement.style.visibility="visible";
+  			
+  			document.getElementById('contactdiv').style.display = "block";
+  			document.getElementById('commentdiv').style.display = "block";
+  		}
+  		else if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Self')
+  		{
+  			groupOtherLabelELement.style.visibility="hidden";
+  			groupOtherElement.style.visibility="hidden";
+  			
+  			document.getElementById('contactdiv').style.display = "block";
+  			document.getElementById('commentdiv').style.display = "none";
+  		}
+  		else
+  		{
+  			groupOtherLabelELement.style.visibility="hidden";
+  			groupOtherElement.style.visibility="hidden";
+  			
+  			document.getElementById('contactdiv').style.display = "none";
+  			document.getElementById('commentdiv').style.display = "none";
+  		}
+  	}
+  	
+  	function getContactInfo()
+  	{
+  		if((document.getElementById('groupselect').value === "Self" ||
+  			document.getElementById('groupselect').value === "Other") &&
+  			 document.getElementById('delfn').value.length > 0 && 
+  			  document.getElementById('delln').value.length > 0 )
+  		{
+  			var contactparams = "year=" + document.getElementById('year').value
+			+ "&delFN=" + document.getElementById('delfn').value
+			+ "&delLN=" + document.getElementById('delln').value
+			+ "&callback=?";
+  		
+  			$.getJSON('contactinfo', contactparams, function(driver)
+  			{
+  				//if retrun is good, set the fields
+  				if(driver.id > -1)
+  				{
+  					document.getElementById('delfn').value = driver.fName;
+  					document.getElementById('delln').value = driver.lName;
+  					document.getElementById('delemail').value = driver.email;
+  					document.getElementById('primaryphone').value = driver.cellPhone;
+  			  		document.getElementById('delhousenum').value = driver.hNum;
+  			  		document.getElementById('delstreet').value = driver.street;
+  			  		document.getElementById('delunit').value = driver.unit;
+  			  		document.getElementById('delcity').value = driver.city;
+  			  		document.getElementById('delzipcode').value = driver.zipcode;
+  			  		
+  			  		verifyPhoneNumber(0);
+  				}
+  			});
+  		}	
+  	}
+  	
+  	function verifyPhoneNumber(elementNum)
 	{
-		var phoneElement= [document.getElementById('primaryphone'), 
-							document.getElementById('altphone')];
+		var phoneElement= [document.getElementById('primaryphone')];
 		
 		var numberGood = true;
 		var number= phoneElement[elementNum].value;
 		
 		if(number == '')
 			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-		else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-')
+		else if(number.charAt(0) != '0' && number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-')
 			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-		else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.')
+		else if(number.charAt(0) != '0' && number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.')
 			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-		else if(number.length===10 && number.indexOf("-")===-1 && number.indexOf(".")===-1)
+		else if(number.charAt(0) != '0' && number.length===10 && number.indexOf("-")===-1 && number.indexOf(".")===-1)
 			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
 		else
 		{
@@ -70,18 +117,24 @@
 	
 	function verifyPhoneNumbers()
 	{
-		var errorMssg= "";
+		var phoneElement = document.getElementById('primaryphone');
+		var elementsWithErrors = [phoneElement];
 		
-		var phoneName= ["Primary", "Alternate"];
-		
-		var index=0;
-		while(index<phoneName.length && verifyPhoneNumber(index))
-				index++;
-		
-		if(index < phoneName.length)	
-			errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
-		
-		return errorMssg;	
+		if(phoneElement.value === '')
+		{
+			indicateError(elementsWithErrors, "is missing");
+			return false;
+		}
+		else
+		{
+			if(verifyPhoneNumber(0))
+				return true;
+			else
+			{
+				indicateError(elementsWithErrors, "is invalid");
+				return false;
+			}	
+		}	
 	}
 	
 	function verifyRequiredFields(verifyElements, errorElement)
@@ -107,6 +160,39 @@
 		}		
 
 		return bRequiredFieldGood;	
+	}
+	
+	function verifyEmail(emailElement)
+	{
+		var email = emailElement.value;
+		
+		emailElement.style.backgroundColor = "#FFFFFF";
+		
+		//check to see they are formed properly
+		if(email.length > 0 && email.includes('.') && email.includes('@'))
+			return true;
+		else
+		{
+			var elementsWithErrors = [emailElement];
+			indicateError(elementsWithErrors, "is missing or not properly formatted");
+			return false;
+		}	
+	}
+	
+	function verifyGroup()
+	{
+		var groupSelectElement = document.getElementById('groupselect');
+  		var groupOtherElement = document.getElementById('groupother');
+  		
+  		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Other' &&
+  			groupOtherElement.value.length === 0)
+  		{	
+  			var elementsWithErrors = [groupOtherElement];
+  			indicateError(elementsWithErrors, "is missing");
+  			return false;
+  		}
+  		else
+  			return true;
 	}
 	
 	function verifyZipCodes(zipElements, errorElement)
@@ -135,43 +221,6 @@
 		return bRequiredFieldGood;	
 	}
 	
-	function verifyEmail(emailElement, confirmemailElement)
-	{
-		var email = emailElement.value;
-		var confirmemail = confirmemailElement.value;
-		
-		emailElement.style.backgroundColor = "#FFFFFF";
-		confirmemailElement.style.backgroundColor = "#FFFFFF";
-		
-		//check to see they are formed properly
-		if(email.length > 0 && email.includes('.') && email.includes('@'))
-		{
-			if(confirmemail.length > 0 && confirmemail.includes('.') && confirmemail.includes('@'))
-			{
-				if(email === confirmemail )
-					return true;
-				else
-				{
-					var elementsWithErrors = [emailElement, confirmemailElement];
-					indicateError(elementsWithErrors, "does not match Confirm Email Address");
-					return false;
-				}
-			}
-			else		
-			{
-				var elementsWithErrors = [confirmemailElement];
-				indicateError(elementsWithErrors, "is not properly formatted");
-				return false;
-			}
-		}
-		else
-		{
-			var elementsWithErrors = [emailElement];
-			indicateError(elementsWithErrors, "is not properly formatted");
-			return false;
-		}	
-	}
-	
 	function indicateError(elements, error)
 	{
 		var errorElement = document.getElementById('errormessage');
@@ -187,37 +236,94 @@
 	
 	function submitRegistration()
 	{
-		var verifyElements= [document.getElementById('delfn'),
-		                     document.getElementById('delln'),
-		                     document.getElementById('delhousenum'),
-		                     document.getElementById('delstreet'),
-		                     document.getElementById('delcity')];
+		var verifyNameElements= [document.getElementById('delfn'),
+		                     	 document.getElementById('delln')];
 		
-		var zipElements =[document.getElementById('delzipcode')];
+		var verifyNameAndAddressElements= [document.getElementById('delfn'),
+		  		                     	   document.getElementById('delln'),
+		                                   document.getElementById('delhousenum'),
+		                                   document.getElementById('delstreet'),
+		                                   document.getElementById('delcity')];
 		
 		var emailElement = document.getElementById('delemail');
-		var confirmemailElement = document.getElementById('confirmemail');
-		
+		var zipElements = [document.getElementById('delzipcode')];
 		var errorElement = document.getElementById('errormessage');
+		var groupSelectElement = document.getElementById('groupselect');
 		
-		if(verifyRequiredFields(verifyElements, errorElement) && 
+		if(groupSelectElement.value === 'Self' && 
+			verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
 			verifyZipCodes(zipElements, errorElement) &&
-			 verifyEmail(emailElement, confirmemailElement))
+			 verifyPhoneNumbers() && verifyEmail(emailElement))
 		{
-			//check phone numbers
-			var phoneMssg= verifyPhoneNumbers();
-			if(phoneMssg === '')
-			{
-				//submit the form, all fields are validated
-				document.driverregform.submit();
-			}
-			else
-			{
-				phoneNumbersGood=false;
-				errorElement.textContent=phoneMssg;
-				errorElement.style.color ='red';
-			}
+			submitSignIn();
 		}
+		else if(groupSelectElement.value === 'Other' && 
+				verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
+				verifyZipCodes(zipElements, errorElement) &&
+				 verifyPhoneNumbers() && verifyEmail(emailElement) && 
+				  verifyGroup())
+		{
+			submitSignIn();
+		}
+		else if(groupSelectElement.value != 'Self' &&
+				 groupSelectElement.value != 'Other' &&
+				  verifyRequiredFields(verifyNameElements, errorElement))
+		{
+			submitSignIn();
+		}	
+	}
+	
+	function submitSignIn()
+	{
+		//Post a JSON request with the required information
+		var groupSelectElement = document.getElementById('groupselect');
+		
+		var volunteerparams = "year=" + document.getElementById('year').value
+						+ "&activity=" + document.getElementById('activity').value
+						+ "&delFN=" + document.getElementById('delfn').value
+						+ "&delLN=" + document.getElementById('delln').value
+						+ "&groupother=" + document.getElementById('groupother').value
+						+ "&delemail=" + document.getElementById('delemail').value
+						+ "&group=" + groupSelectElement.options[groupSelectElement.selectedIndex].text
+						+ "&primaryphone=" + document.getElementById('primaryphone').value
+						+ "&delhousenum=" + document.getElementById('delhousenum').value
+						+ "&delunit=" + document.getElementById('delunit').value
+						+ "&delstreet=" + document.getElementById('delstreet').value
+						+ "&delcity=" + document.getElementById('delcity').value
+						+ "&delzipcode=" + document.getElementById('delzipcode').value
+						+ "&comment=" + document.getElementById('comment').value
+						+ "&callback=?";
+		
+    	$.post('registerdriver', volunteerparams, function(data, textStatus)
+    	{
+    		clearAllButGroupSelect();
+			document.getElementById('success_mssg').innerHTML = data.message;
+			window.location=document.getElementById('registeredanchor').href;
+    	}, "json");
+	}
+	
+	function clearForm()
+	{
+		
+		document.getElementById('groupselect').selectedIndex = 0;
+		document.getElementById("groupotherlbl").style.visibility = 'hidden';
+  		document.getElementById('groupother').style.visibility = 'hidden';
+  		clearAllButGroupSelect();
+	}
+	
+	function clearAllButGroupSelect()
+	{
+		document.getElementById('delfn').value = "";
+		document.getElementById('delln').value = "";
+		document.getElementById('groupother').value = "";
+		document.getElementById('delemail').value = "";
+		document.getElementById('primaryphone').value = "";
+  		document.getElementById('delhousenum').value = "";
+  		document.getElementById('delstreet').value = "";
+  		document.getElementById('delunit').value = "";
+  		document.getElementById('delcity').value = "";
+  		document.getElementById('delzipcode').value = "";
+  		document.getElementById('comment').value = "";
 	}
 	
 	function onCloseDialog()
@@ -235,13 +341,27 @@
 		font-style: italic;
 		color: black;
 	}
-	#altphonelbl, #confirmemaillbl
+	#emaillbl, #groupotherlbl
 	{
-		padding-left: 20px;
+		padding-left: 15px;
 	}
 	.inputline
 	{
+		display: block;
 		margin-bottom: 10px;
+	}
+	#contactdiv
+	{
+		display: block;
+		margin-bottom: 10px;
+	}
+	#addressdiv
+	{
+		margin-top: 10px;
+	}
+	#commentdiv
+	{
+		display: none;
 	}
   </style>
 </head>
@@ -249,8 +369,8 @@
 <a href="#registereddlg" id="registeredanchor" style="visibility: hidden">Success</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">ONC Volunteer Registration Form</span><br>
-	<span id="message">(Please complete and click Submit Registration To ONC)</span></p>
+    <p><span id="banner">Delivery Volunteer Registation</span><br>
+	<span id="message">(Please complete and click Register)</span></p>
   </div>
    <nav>
     <ul>
@@ -260,60 +380,52 @@
 	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
 	</ul>
   </nav>
-  <form id='driverregform' name='driverregform' action="registerdriver" method="post">
+  <form id='signinform' name='signinform'>  
   <input id="year" type="hidden" name="year">
+  <input id="activity" type="hidden" name="activity">
   <br>
   <fieldset>
   <legend class="legend-major">Volunteer Information</legend>
-  	<div class= 'inputline'>
-      <label for="delfn">Name:</label>
-      <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" required>
-      <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" required>
-    </div>
-    <div class= 'inputline'>
-      <label for="primaryphone">Primary Phone:</label>
-      <input id="primaryphone" title="Primary Phone #" name="primaryphone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
-      <select id="primaryphoneselect" title="Primary Phone Type" name="primaryphonetype">
-		<option value="Cell">Cell</option>
-		<option value="Home">Home</option>
-		<option value="Work">Work</option>
+  <div class= 'inputline'>
+    <label for="groupselect">Group or Organization:</label>
+     <select id="groupselect" title="Group" name="group" onchange="onGroupChange()">
+		<option value="Self">Self</option>
 	  </select>
-	  <label for="altphone" id='altphonelbl'>Alternate Phone:</label>
-      <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
-  	  <select id="altphoneselect" title="Alternate Phone Type" name="altphonetype">
-		<option value="Home">Home</option>
-		<option value="Cell">Cell</option>
-		<option value="Work">Work</option>
-		<option value="Other">Other</option>
-	 </select>
-	 </div>
-	<div class= 'inputline'>
-	  <label for="delemail">Email:</label>
-	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
-	  <label for="confirmemail"  id='confirmemaillbl'>Confirm Email:</label>
-	  <input id="confirmemail" title="Confirm Email Address" type="email" size="30" placeholder="confirm email address" autocomplete= "off">
+ 	<label id='groupotherlbl' for="groupother" style="visibility: hidden;">Group Name:</label>
+	<input id="groupother" title="Other group or organizaton name" name="groupother" type="text" size="35" placeholder="Other Group or Organization Name" style="visibility: hidden;">
 	</div>
-	<div class= 'inputline'>
-	  <label for="delhousenum">Address:</label>
-	  <input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
-      <input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
-      <input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
-      <input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
-      <input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
+  	<div class= 'inputline' >
+      <label for="delfn">Your Name:</label>
+      <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" onchange ='getContactInfo()'>
+      <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" onchange ='getContactInfo()'>
     </div>
-    <div>
-    <label for="group">Group or organization you are with (if any):</label>
-	<input id="group" title="Who are you with?" name="group" type="text" size="50" placeholder="Group or Organization Name">
-	</div>
+    <div id= 'contactdiv'>
+      <label id='phonelbl' for="primaryphone"">Cell Phone #:</label>
+      <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #" onchange= 'verifyPhoneNumber(0)'>
+	  <label id='emaillbl' for="delemail">Email:</label>
+	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
+  	  <div id= 'addressdiv'>
+	    <label for="delhousenum">Address:</label>
+	    <input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+      	<input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+      	<input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
+      	<input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
+      	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
+  	  </div>
+  	</div>  
+  <div id= 'commentdiv'>
+      <label for="commnet">Comment:</label>
+ 	  <input id= 'comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment' autocomplete= 'off'>
+  </div>
   </fieldset>
   <br>
   <div>
-  	<span id="errormessage">Please ensure all fields are complete before submitting</span>
+  	<span id="errormessage"></span>
   	<span id="submitspan">
-  	  <input id="btnsubmit" type="button" value="Submit Registration to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit to ONC" onclick= submitRegistration()>
+  	  <input id="btnsubmit" type="button" value="Register" style="background-color: #336699; color: #ffffff;" title="Click to sign in" onclick= submitRegistration()>
   	</span>
   </div>
-</form>
+ </form>
  <!-- Success Dialog -->
   <div id="registereddlg" class="modalDialog">
 	<div id='inner'>
@@ -329,4 +441,4 @@
 	</div>
   </div>    
 </body>
-</html>   
+</html>

@@ -166,7 +166,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	 * @return
 	 */
 	static HtmlResponse addVolunteerJSONP(int year, Map<String, String> params, 
-											String callbackFunction)
+											String website, String callbackFunction)
 	{		
 		String fn = params.get("delFN");
 		String ln = params.get("delLN");
@@ -234,7 +234,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
 					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
 					params.get("primaryphone"), "1", params.get("activity"), group,
-					params.get("comment"), new Date(), "Sign-In Website");
+					params.get("comment"), new Date(), website);
 			
 			addedVol.setID(volDBYear.getNextID());	
 			addedVol.setSignIns(addedVol.getSignIns() + 1);	
