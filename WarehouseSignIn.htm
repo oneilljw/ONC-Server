@@ -43,7 +43,7 @@
   			document.getElementById('commentdiv').style.display = "block";
   		}
   		else if(selectValue.includes('Centreville') || selectValue.includes('Chantilly') ||
-  				selectValue.includes('Westfield'))	
+  				selectValue.includes('Westfield') || selectValue.includes('FlintHill'))	
   		{
   			groupOtherLabelELement.style.visibility="hidden";
   			groupOtherElement.style.visibility="hidden";
@@ -67,7 +67,7 @@
   		var selectValue = groupSelectElement.options[groupSelectElement.selectedIndex].value;
   		
   		if(!(selectValue.includes('Chantilly') || selectValue.includes('Centreville') ||
-  			selectValue.includes('Westfield')) &&
+  			selectValue.includes('Westfield') || selectValue.includes('FlintHill')) &&
   			 document.getElementById('delfn').value.length > 0 && 
   			  document.getElementById('delln').value.length > 0 )
   		{
@@ -268,7 +268,8 @@
 		}
 		else if(groupSelectElement.value.includes('Chantilly') ||
 				  groupSelectElement.value.includes('Centreville') ||
-				   groupSelectElement.value.includes('Westfield'))
+				   groupSelectElement.value.includes('Westfield') ||
+				    groupSelectElement.value.includes('FlintHill'))
 		{
 			if(verifyRequiredFields(verifyNameElements, errorElement))
 			{
@@ -413,15 +414,19 @@
 		<option value="Self">Self</option>
 		<option value="CentrevilleNHS">Centreville NHS</option>
 		<option value="CentrevilleSGA">Centreville SGA</option>
+		<option value="ChantillyLAX">Chantilly LAX</option>
 		<option value="ChantillyNHS">Chantilly NHS</option>
 		<option value="ChantillySGA">Chantilly SGA</option>
+		<option value="FlintHillFB">Flint Hill Football</option>
 		<option value="INOVA">INOVA Cardiology</option>
 		<option value="OBCCrutchfield">OBC Crutchfield</option>
 		<option value="Quest">Quest Diagnostics</option>
 		<option value="Salesforce">Salesforce</option>
 		<option value="ScottLong">Scott Long Construction</option>
+		<option value="WestfieldFB">Westfield Football</option>
 		<option value="WestfieldInteract">Westfield Interact</option>
 		<option value="WestfieldKey">Westfield Key Club</option>
+		<option value="WestfieldLAX">Westfield LAX</option>
 		<option value="WestfieldNHS">Westfield NHS</option>
 		<option value="WestfieldSGA">Westfield SGA</option>
 		<option value="Other">Other</option>
