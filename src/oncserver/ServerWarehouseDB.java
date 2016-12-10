@@ -65,7 +65,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		int searchVolID = Integer.parseInt(volunteerID);
 
 		for(ONCWarehouseVolunteer vol : volList)
-			if(vol.getVolunteerID() == searchVolID)
+			if(searchVolID == -1 || vol.getVolunteerID() == searchVolID)
 				histList.add(vol);
 		
 		Gson gson = new Gson();
