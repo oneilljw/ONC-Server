@@ -28,6 +28,7 @@ public class DBManager
 {	
 	private static final boolean DATABASE_AUTOSAVE_ENABLED = true;
 	private static final int DBYEARSDB_NUM_OF_FIELDS = 2;
+	
 	private static final int DATABASE_SAVE_TIMER_RATE = 1000 * 60 * 5; //Five minutes
 	
 	private static DBManager instance = null;
@@ -46,17 +47,26 @@ public class DBManager
 	
 	private DBManager(ImageIcon appicon)
 	{
-		//Load the list of years contained in the database
+		//Load the list of years and the keys contained in the database
 		dbYearList = new ArrayList<DBYear>();
-		try {
+		
+		try 
+		{
 			importDBYears(String.format("%s/dbyears.csv", System.getProperty("user.dir")), "Data base Years");
-		} catch (FileNotFoundException e) {
+		} 
+		catch (FileNotFoundException e) 
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e) {
+		} 
+		catch (IOException e) 
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		//load the encryption keys
+		ServerEncryptionManager.getInstance();
 	
 		//Load the component data bases from persistent store;
 		//for the component data bases that are periodically saved, add them to a auto save list
@@ -248,6 +258,7 @@ public class DBManager
 		    	System.err.format("IO Exception: %s%n", x);
 		    }
 	}
+	
 	void importDBYears(String path, String name) throws FileNotFoundException, IOException
 	{
     	CSVReader reader = new CSVReader(new FileReader(path));
@@ -279,7 +290,7 @@ public class DBManager
     	
     	reader.close();
 	}
-
+	
 	private class SaveTimerListener implements ActionListener
 	{
 		@Override

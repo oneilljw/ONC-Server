@@ -20,7 +20,6 @@ import ourneighborschild.AddressValidation;
 import ourneighborschild.Login;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
-import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserAccess;
@@ -33,7 +32,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 4.24f;
+	private static final float MINIMUM_CLIENT_VERSION = 4.27f;
 	
 	private int id;
 	private String version;
@@ -123,7 +122,7 @@ public class DesktopClient extends Thread
             output = new PrintWriter(socket.getOutputStream(), true);
             
             //tell the client that they have successfully connected to the server
-            String encryptedResponse = ONCEncryptor.encrypt("LOGINConnected to the ONC Server, Please Login");
+            String encryptedResponse = ServerEncryptionManager.encrypt("LOGINConnected to the ONC Server, Please Login");
             output.println(encryptedResponse);
 //          output.println("LOGINConnected to the ONC Server, Please Login");
         }         
@@ -209,6 +208,12 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = dbManager.getDatabaseStatusList();
+                	output.println(response);
+                }
+                else if(command.startsWith("GET<keys>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = ServerEncryptionManager.getKeyMapJson();
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<regionmatch>"))
@@ -806,8 +811,8 @@ public class DesktopClient extends Thread
     	Gson gson = new Gson();
     	Login lo = gson.fromJson(loginjson, Login.class);
  
-    	String userID = ONCEncryptor.decrypt(lo.getUserID());
-    	String password = ONCEncryptor.decrypt(lo.getPassword());
+    	String userID = ServerEncryptionManager.decrypt(lo.getUserID());
+    	String password = ServerEncryptionManager.decrypt(lo.getPassword());
     	
     	float lo_version = Float.parseFloat(lo.getVersion());
   	

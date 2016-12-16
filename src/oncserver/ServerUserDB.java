@@ -9,7 +9,6 @@ import java.util.Map;
 
 import ourneighborschild.Agent;
 import ourneighborschild.ChangePasswordRequest;
-import ourneighborschild.ONCEncryptor;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
@@ -327,8 +326,8 @@ public class ServerUserDB extends ServerPermanentDB
 		Gson gson = new Gson();
 		ChangePasswordRequest cpwReq = gson.fromJson(json, ChangePasswordRequest.class);
 		
-		String currPW = ONCEncryptor.decrypt(cpwReq.getCurrPW());
-		String newPW = ONCEncryptor.decrypt(cpwReq.getNewPW());
+		String currPW = ServerEncryptionManager.decrypt(cpwReq.getCurrPW());
+		String newPW = ServerEncryptionManager.decrypt(cpwReq.getNewPW());
 		String response;
 		
 		//find user
@@ -428,8 +427,8 @@ public class ServerUserDB extends ServerPermanentDB
 		if(!nextLine[14].isEmpty())
 			last_login.setTimeInMillis(Long.parseLong(nextLine[14]));
 		
-		nextLine[1] = ONCEncryptor.decrypt(nextLine[1]);
-		nextLine[2] = ONCEncryptor.decrypt(nextLine[2]);
+		nextLine[1] = ServerEncryptionManager.decrypt(nextLine[1]);
+		nextLine[2] = ServerEncryptionManager.decrypt(nextLine[2]);
 			
 		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime()));
 		
