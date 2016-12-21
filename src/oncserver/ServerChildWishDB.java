@@ -171,6 +171,24 @@ public class ServerChildWishDB extends ServerSeasonalDB
 			serverPartnerDB.updateGiftAssignees(year, oldWish.getChildWishAssigneeID(), 
 												addedWish.getChildWishAssigneeID());
 		}
+		
+		//test to see if wish status is changing to Received from Delivered or Shopping, or from Assigned to
+		//Delivered. If, so, increment the associated gift count for the assigned partner. Once an ornament is
+		//Delivered, don't decrement the Delivered count, as we expect the partner to provide the gift.
+		//Similarly, once a gift is received from the partner, don't decrement the received gift count, even 
+		//if we misplace the gift in the warehouse. 
+		
+		//That can give rise to the unusual condition that a gift is received twice. This can only happen if 
+		//once a gift is received it goes missing, we are unable to find it, and have to shop for a replacement.
+		//If this occurs, the total partner count of gifts received will be greater than the number of gifts
+		//delivered to families. Refer to the ONC Child Wish Status Life Cycle for additional detail
+		if(oldWish != null && 
+			((oldWish.getChildWishStatus() == WishStatus.Delivered || oldWish.getChildWishStatus() == WishStatus.Shopping) && 
+				addedWish.getChildWishStatus() == WishStatus.Received) ||
+				 (oldWish.getChildWishStatus() == WishStatus.Assigned && addedWish.getChildWishStatus() == WishStatus.Delivered))
+		{
+			serverPartnerDB.incrementGiftActionCount(year, addedWish);
+		}
 	}
 	
 	void deleteChildWishes(int year, int childID)

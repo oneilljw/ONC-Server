@@ -8,14 +8,16 @@ import java.util.List;
 
 import ourneighborschild.Address;
 import ourneighborschild.DataChange;
+import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCPartner;
+import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class ServerPartnerDB extends ServerSeasonalDB
 {
-	private static final int ORGANIZATION_DB_HEADER_LENGTH = 33;
+	private static final int ORGANIZATION_DB_HEADER_LENGTH = 35;
 	private static final int STATUS_CONFIRMED = 5;
 	
 	private static List<PartnerDBYear> partnerDB;
@@ -272,43 +274,30 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		}	
 	}
 	
-	String updateGiftCounts(int year, String json)
-	{
-		//Create a change object for the updated counts
-		Gson gson = new Gson();
-		DataChange change = gson.fromJson(json, DataChange.class);
-		
+	void incrementGiftActionCount(int year, ONCChildWish addedWish)
+	{	
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
-		List<ONCPartner> oAL = partnerDBYear.getList();
+		List<ONCPartner> partnerList = partnerDBYear.getList();
 		
 		//Find the the current partner being decremented
 		int index = 0;
-		while(index < oAL.size() && oAL.get(index).getID() != change.getOldData())
+		while(index < partnerList.size() && partnerList.get(index).getID() != addedWish.getChildWishAssigneeID())
 			index++;
 		
-		//Decrement the gift assigned count for the partner being replaced
-		if(index < oAL.size())
-		{
-			oAL.get(index).decrementOrnAssigned();
+		//increment the gift received count for the partner being replaced
+		if(index < partnerList.size())
+		{  
+			//found the partner, now determine which field to increment
+			if(addedWish.getChildWishStatus() == WishStatus.Received)
+				partnerList.get(index).incrementOrnReceived();
+			else if(addedWish.getChildWishStatus() == WishStatus.Delivered)
+				partnerList.get(index).incrementOrnDelivered();
+			
 			partnerDBYear.setChanged(true);
 		}
-		
-		//Find the the current partner being incremented
-		index = 0;
-		while(index < oAL.size() && oAL.get(index).getID() != change.getNewData())
-			index++;
-				
-		//Increment the gift assigned count for the partner being replaced
-		if(index < oAL.size())
-		{
-			oAL.get(index).incrementOrnAssigned();
-			partnerDBYear.setChanged(true);
-		}
-		
-		return "WISH_PARTNER_CHANGED" + json;
 	}
 	
-	void decrementGiftCount(int year, int partnerID)
+	void decrementGiftsAssignedCount(int year, int partnerID)
 	{
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		List<ONCPartner> oAL = partnerDBYear.getList();
@@ -432,12 +421,12 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	{
 		String[] header = {"Org ID", "Status", "Type", "Gift Collection","Name", "Orn Delivered",
 				"Street #", "Street", "Unit", "City", "Zip", "Region", "Phone",
-	 			"Orn Requested", "Orn Assigned", "Gifts Received", "Other",
+	 			"Orn Requested", "Orn Assigned", "Orn Delivered", "Gifts Received", "Other",
 	 			"Deliver To", "Special Notes",
 	 			"Contact", "Contact Email", "Contact Phone",
 	 			"Contact2", "Contact2 Email", "Contact2 Phone",
 	 			"Time Stamp", "Changed By", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B",
-	 			"Prior Year Requested",	"Prior Year Assigned", "Prior Year Received"};
+	 			"Prior Year Requested",	"Prior Year Assigned", "Prior Year Delivered", "Prior Year Received"};
 		
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		if(partnerDBYear.isUnsaved())

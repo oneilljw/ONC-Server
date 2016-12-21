@@ -26,7 +26,6 @@ public class ServerChildDB extends ServerSeasonalDB
 	
 	private ServerChildDB() throws FileNotFoundException, IOException
 	{
-		
 		childDB = new ArrayList<ChildDBYear>();
 				
 		//populate the family data base for the last TOTAL_YEARS from persistent store
@@ -277,12 +276,12 @@ public class ServerChildDB extends ServerSeasonalDB
 				{
 					ONCChildWish cw = ServerChildWishDB.getWish(year, childWishID);
 
-					//if wish has been assigned, then we have to decrement the partner
+					//if wish has been assigned, then we have to decrement the partner assignee count
 					if(serverPartnerDB != null && cw != null && 
 							cw.getChildWishStatus().compareTo(WishStatus.Assigned) >= 0)
 					{
 						int wishPartnerID = cw.getChildWishAssigneeID();
-						serverPartnerDB.decrementGiftCount(year, wishPartnerID);
+						serverPartnerDB.decrementGiftsAssignedCount(year, wishPartnerID);
 					}
 				}
 			}

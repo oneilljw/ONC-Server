@@ -38,16 +38,23 @@
   		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
 //  	document.getElementById('editprofilelink').href="editprofile?token=" + sessionStorage.getItem('token');
   		
-    	currYear = new Date().getFullYear();
-		document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
+//    	currYear = new Date().getFullYear();
+//		document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
 		
-		priorYear = new Date().getFullYear()-1;
-		sessionStorage.setItem("prioryear", priorYear);
+//		priorYear = currYear - 1;
+//		sessionStorage.setItem("prioryear", priorYear);
 		
     	//get the list of years from the data base and put it in the year combo box
     	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
     	$.getJSON('dbStatus', dbyearsparams, function(data)
-    	{
+    	{	
+//    		currYear = new Date().getFullYear();
+			currYear = data[data.length-1].id;
+    		document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
+    		
+    		priorYear = currYear - 1;
+    		sessionStorage.setItem("prioryear", priorYear);
+    		
 			var combo = document.getElementById("dbYears");
 			var yearCombo = document.getElementById("yearlist");
     		for (var i = data.length-1; i >= 0; i--)
@@ -67,19 +74,31 @@
     	    		}
     	    	}
     		}
+    		
+    		console.log(sessionStorage.getItem('decemberCutoff'));
+    		
+    		//determine the color and enabling of the Refer New Family button
+    		var btnRNF = document.getElementById('new');
+    		if(sessionStorage.getItem('decemberCutoff') === 'disabled')
+    		{
+    			btnRNF.style.backgroundColor='Gray';
+    	       	btnRNF.disabled = true;
+    		}
+    		
+    		getCYAgentsAndFamiliesFromServer(currYear.toString());
     	});
     	
-    	//determine the color and enabling of the Refer New Family button
-		var btnRNF = document.getElementById('new');
-		if(sessionStorage.getItem('decemberCutoff') === 'disabled')
-		{
-			btnRNF.style.backgroundColor='Gray';
-        	btnRNF.disabled = true;
-		}
+//    	//determine the color and enabling of the Refer New Family button
+//		var btnRNF = document.getElementById('new');
+//		if(sessionStorage.getItem('decemberCutoff') === 'disabled')
+//		{
+//			btnRNF.style.backgroundColor='Gray';
+//	       	btnRNF.disabled = true;
+//		}
     	
     	//get the list of current year agents & familes from the server and display them
     	//this also gets prior year families and displays them
-    	getCYAgentsAndFamiliesFromServer(currYear.toString());
+//    	getCYAgentsAndFamiliesFromServer(currYear.toString());
     	
     	// Write on keyup event of keyword prior year seach input element
         $("#pysearch").keyup(function(){
@@ -241,6 +260,8 @@
     		
     		//get the list of prior year agents & families from the server and display them
         	getPYAgentsAndFamiliesFromServer(priorYear.toString());
+    		
+        	console.log("Got Agents & Current Year Families");
     	});
     }
     
@@ -403,7 +424,7 @@
     function newFamily()
     {
     	sessionStorage.setItem("targetid", "NNA");
-		sessionStorage.setItem("prioryear", new Date().getFullYear()-1);
+		sessionStorage.setItem("prioryear", currYear-1);
     	
     	var params = {}
 		params["token"] = sessionStorage.getItem('token');
