@@ -215,7 +215,7 @@ public class ONCServer
 				//update py performance
 				try {
 					ServerPartnerDB serverPartnerDB = ServerPartnerDB.getInstance();
-					serverPartnerDB.determinePriorYearPerformance(2015);
+					serverPartnerDB.determinePriorYearPerformance(2016);
 					clientMgr.addLogMessage("Partner PY Performance Updated");
 				} catch (FileNotFoundException e1) {
 					// TODO Auto-generated catch block

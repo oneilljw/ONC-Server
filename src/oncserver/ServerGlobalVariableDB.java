@@ -73,9 +73,14 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartDate();
 	}
 	
-	Date getDateGiftsRecivedBy(int year)
+//	Date getDateGiftsRecivedBy(int year)
+//	{
+//		return globalDB.get(year - BASE_YEAR).getServerGVs().getGiftsReceivedDate();
+//	}
+	
+	Calendar getDateGiftsRecivedDealdine(int year)
 	{
-		return globalDB.get(year - BASE_YEAR).getServerGVs().getGiftsReceivedDate();
+		return globalDB.get(year - BASE_YEAR).getServerGVs().getGiftsReceivedDeadline();
 	}
 	
 	Date getDeadline(int year, String deadline)

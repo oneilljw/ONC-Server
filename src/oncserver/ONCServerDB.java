@@ -2,7 +2,6 @@ package oncserver;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import ourneighborschild.ONCObject;
@@ -15,7 +14,7 @@ public abstract class ONCServerDB
 //	abstract String add(int year, String userjson);
 	
 //	abstract void createNewYear(int year);	//used to create a new year from the authorized client
-	
+/*	
 	public <T extends ONCObject> T find(ArrayList<? extends ONCObject> list, int id, Class<T> type)
 	{
 		int index = 0;
@@ -26,6 +25,18 @@ public abstract class ONCServerDB
 			return type.cast(list.get(index));
 		else 
 			return null;		
+	}
+*/	
+	ONCObject find(List<? extends ONCObject> list, int id)
+	{
+		int index = 0;
+		while(index < list.size() && id != list.get(index).getID())
+			index++;
+		
+		if(index == list.size())
+			return null;
+		else
+			return list.get(index);		
 	}
 /*	
 	void importDB(int year, String path, String name, int length) throws FileNotFoundException, IOException

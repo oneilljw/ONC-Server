@@ -3,8 +3,8 @@ package oncserver;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -290,36 +290,36 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		List<PriorYearPartnerPerformance> pyPerformanceList = new ArrayList<PriorYearPartnerPerformance>();
 		
 		//get a Calendar object gifts received deadline
-		Calendar pyDateGiftsReceivedBy = Calendar.getInstance();
 		
 		//get the receive gift deadline for the prior year
 		ServerGlobalVariableDB gvDB = null;
-		try {
+		try 
+		{
 			gvDB = ServerGlobalVariableDB.getInstance();
-		} catch (FileNotFoundException e) {
+		}
+		catch (FileNotFoundException e) 
+		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
+		} 
+		catch (IOException e) 
+		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		
 		//set the received gift deadline. All gifts must be received prior to this date/time
-		pyDateGiftsReceivedBy.setTime(gvDB.getDateGiftsRecivedBy(newYear-1));
 		
 		//set up variables for each of the parameters of interest
-		int pyPartnerReceivedID, pyPartnerAssignedID;
-//		Calendar pyPartnerReceivedTS, pyPartnerAssignedTS;
+		int pyPartnerReceivedBeforeID, pyPartnerReceivedAfterID, pyPartnerDeliveredID, pyPartnerAssignedID;
 		
 		//for each child wish, get the prior year wish history for the child's wish 
 		for(ONCChild pyc: childDB.getList(newYear-1))
 			for(int wn=0; wn < NUMBER_OF_WISHES_PER_CHILD; wn++)
 			{
 				//reset the assigned and received partner ID's
-				pyPartnerReceivedID = -1;
+				pyPartnerReceivedBeforeID = -1;
+				pyPartnerReceivedAfterID = -1;
+				pyPartnerDeliveredID = -1;
 				pyPartnerAssignedID = -1;
-//				pyPartnerReceivedTS = Calendar.getInstance();
-//				pyPartnerAssignedTS = Calendar.getInstance();
 				
 				//get the prior year wish history for the child and wish number
 				List<ONCChildWish> pycWH = getChildWishHistory(newYear-1, pyc.getID(), wn);
@@ -329,32 +329,42 @@ public class ServerChildWishDB extends ServerSeasonalDB
 				//the wish was last received from and last assigned to prior to the deadline. Each
 				//id is recorded, however, as a newer id is found, the older id is overwritten
 				int index = 0;
-				while(index < pycWH.size() &&
-						pycWH.get(index).getChildWishDateChanged().before(pyDateGiftsReceivedBy))
+				while(index < pycWH.size())
 				{
 					if(pycWH.get(index).getChildWishStatus() == WishStatus.Assigned)
 					{
 						pyPartnerAssignedID = pycWH.get(index).getChildWishAssigneeID();
-//						pyPartnerAssignedTS = pycWH.get(index).getChildWishDateChanged();
 					}
-					
+					else if(pycWH.get(index).getChildWishStatus() == WishStatus.Delivered)
+					{
+						pyPartnerDeliveredID = pycWH.get(index).getChildWishAssigneeID();
+					}
 					else if(pycWH.get(index).getChildWishStatus() == WishStatus.Received)
 					{
-						pyPartnerReceivedID = pycWH.get(index).getChildWishAssigneeID();
-//						pyPartnerReceivedTS = pycWH.get(index).getChildWishDateChanged();
+						if(pycWH.get(index).getChildWishDateChanged().compareTo(gvDB.getDateGiftsRecivedDealdine(newYear-1)) <= 0)
+							pyPartnerReceivedBeforeID = pycWH.get(index).getChildWishAssigneeID();
+						else
+							pyPartnerReceivedAfterID = pycWH.get(index).getChildWishAssigneeID();
 					}
 				
 					index++;
 				}
 				
-				//create a new pyPartnerPerformance object if either the AssignedID or the Received
+				//create a new pyPartnerPerformance object if either the AssignedID, DelliveredID, or the Received
 				//From ID is an actual partner ID and not -1 or 0 
-				if(pyPartnerAssignedID > 0 || pyPartnerReceivedID > 0)
-//					pyPerformanceList.add(new PriorYearPartnerPerformance(pyc.getID(), wn, pyPartnerAssignedID,
-//							pyPartnerAssignedTS.getTime(), pyPartnerReceivedID, pyPartnerReceivedTS.getTime()));
+				if(pyPartnerAssignedID > -1 || pyPartnerDeliveredID > -1 || 
+					pyPartnerReceivedBeforeID > -1 || pyPartnerReceivedAfterID > -1)
+				{
 					pyPerformanceList.add(new PriorYearPartnerPerformance(pyc.getID(), wn, pyPartnerAssignedID,
-											pyPartnerReceivedID));
+										pyPartnerDeliveredID, pyPartnerReceivedBeforeID, pyPartnerReceivedAfterID));
+				}
 			}
+		
+//		for(PriorYearPartnerPerformance pyPartPerf : pyPerformanceList)
+//			if(pyPartPerf.getPYPartnerWishReceivedAfterDeadlineID() > -1)
+//				System.out.println(String.format("Child %d, Wish %d received after deadline from %d",
+//						pyPartPerf.getPYChildID(), pyPartPerf.getPYPWishNumber(),
+//						pyPartPerf.getPYPartnerWishReceivedAfterDeadlineID()));
 		
 		return pyPerformanceList;
 	}

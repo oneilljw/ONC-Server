@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ourneighborschild.Address;
-import ourneighborschild.DataChange;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.WishStatus;
@@ -17,23 +16,18 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerPartnerDB extends ServerSeasonalDB
 {
-	private static final int ORGANIZATION_DB_HEADER_LENGTH = 35;
+	private static final int ORGANIZATION_DB_HEADER_LENGTH = 37;
 	private static final int STATUS_CONFIRMED = 5;
 	
 	private static List<PartnerDBYear> partnerDB;
 	
-//	private static List<List<Organization>> orgAL;
 	private static ServerPartnerDB instance = null;
-//	private static List<Integer> nextID;
 	
 	private ServerPartnerDB() throws FileNotFoundException, IOException
 	{
 		//create the partner data bases for TOTAL_YEARS number of years
 		partnerDB = new ArrayList<PartnerDBYear>();
-		
-//		orgAL = new ArrayList<List<Organization>>();
-//		nextID = new ArrayList<Integer>();
-						
+				
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
 		{
 			//create the partner list for year
@@ -46,21 +40,14 @@ public class ServerPartnerDB extends ServerSeasonalDB
 						System.getProperty("user.dir"),
 							year), "Partner DB", ORGANIZATION_DB_HEADER_LENGTH);
 			
-			//for partners, the leading 4 digits are the year added. So, must account
+			//for partners, the leading 4 digits are the year the partner was added. So, must account
 			//for that when determining the next ID number to assign
 			int nextID = getNextID(partnerDBYear.getList());
 			int nextIDinYear = year * 1000;
 			if(nextID < nextIDinYear)
-			{
 				partnerDBYear.setNextID(nextIDinYear);
-//				System.out.println(String.format("For year %d, next ID is %d, highest found was %d", 
-//													year, nextIDinYear, nextID));
-			}
 			else
-			{
 				partnerDBYear.setNextID(nextID);
-//				System.out.println(String.format("For year %d, next ID is %d", year, nextID));
-			}
 		}
 	}
 	
@@ -289,7 +276,24 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		{  
 			//found the partner, now determine which field to increment
 			if(addedWish.getChildWishStatus() == WishStatus.Received)
-				partnerList.get(index).incrementOrnReceived();
+			{
+				ServerGlobalVariableDB gvDB = null;
+				try 
+				{
+					gvDB = ServerGlobalVariableDB.getInstance();
+					boolean bReceviedBeforeDeadline = addedWish.getChildWishDateChanged().before(gvDB.getDateGiftsRecivedDealdine(year));
+					partnerList.get(index).incrementOrnReceived(bReceviedBeforeDeadline);
+				} 
+				catch (FileNotFoundException e) 
+				{
+					// TODO Auto-generated catch block
+				} 
+				catch (IOException e) 
+				{
+					// TODO Auto-generated catch block
+				}
+				
+			}
 			else if(addedWish.getChildWishStatus() == WishStatus.Delivered)
 				partnerList.get(index).incrementOrnDelivered();
 			
@@ -335,34 +339,45 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		PartnerDBYear partnerDBYear = new PartnerDBYear(newYear);
 		partnerDB.add(partnerDBYear);
 				
-		//add last years catalog wishes to the new years catalog
+		//add last years partners to the new season partner list
 		for(ONCPartner lyPartner : lyPartnerList)
 		{
 			ONCPartner newPartner = new ONCPartner(lyPartner);	//makes a copy of last year
+			
 			newPartner.setStatus(0);	//reset status to NO_ACTION_YET
+			
+			//set prior year performance statistics
+			newPartner.setPriorYearRequested(lyPartner.getNumberOfOrnamentsRequested());
+			newPartner.setPriorYearAssigned(lyPartner.getNumberOfOrnamentsAssigned());
+			newPartner.setPriorYearDelivered(lyPartner.getNumberOfOrnamentsDelivered());
+			newPartner.setPriorYearReceivedBeforeDeadline(lyPartner.getNumberOfOrnamentsReceivedBeforeDeadline());
+			newPartner.setPriorYearReceivedAfterDeadline(lyPartner.getNumberOfOrnamentsReceivedAfterDeadline());
+			
+			//reset the new season performance statistics
 			newPartner.setNumberOfOrnamentsRequested(0);	//reset requested to 0
 			newPartner.setNumberOfOrnamentsAssigned(0);	//reset assigned to 0
-			newPartner.setNumberOfOrnamentsReceived(0);	//reset received to 0
+			newPartner.setNumberOfOrnamentsDelivered(0);	//reset delivered to 0
+			newPartner.setNumberOfOrnamentsReceivedBeforeDeadline(0);	//reset received before to 0
+			newPartner.setNumberOfOrnamentsReceivedAfterDeadline(0);	//reset received after to 0
 			newPartner.setPriorYearRequested(lyPartner.getNumberOfOrnamentsRequested());
+			
 			partnerDBYear.add(newPartner);
 		}
 		
-		//set the nextID for the newly created WishCatalogDBYear
+		//set the nextID for the newly created PartnerDBYear
 		partnerDBYear.setNextID(newYear*1000);	//all partner id's start with current year
 		
-		//determine the prior year performance for each partner
-		determinePriorYearPerformance(newYear);
-		
-		//Mark the newly created WishCatlogDBYear for saving during the next save event
+		//Mark the newly created DBYear for saving during the next save event
 		partnerDBYear.setChanged(true);
 	}
+	
 	/********************************************************************************************
 	 * using prior year child wish data, set the prior year ornaments requested, assigned and received
 	 * class variables for each partner
 	 * @param newYear
 	 * @param partnerDBYear
 	 ******************************************************************************************/
-	void determinePriorYearPerformance(int newYear)
+	void determinePriorYearPerformance(int year)
 	{
 		//get the child wish data base reference
 		ServerChildWishDB serverChildWishDB = null;
@@ -378,26 +393,79 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	
 		//iterate thru the list of prior year performance objects updating counts for each partner 
 		//accordingly. The list contains one object for each wish from the prior year. Each object 
-		//contains an assigned ID and a receivedID indicating which partner was responsible for
-		//fulfilling the wish and who ONC actually received the fulfilled wish (gift) from
-//		SimpleDateFormat sdf = new SimpleDateFormat("M:d:yyyy H:m:s");
-		List<PriorYearPartnerPerformance> pyPartnerPerformanceList = serverChildWishDB.getPriorYearPartnerPerformanceList(newYear);
+		//contains an assigned ID, a deliveredID, and a receivedID indicating which partner was responsible
+		//for fulfilling the wish and who ONC actually received the fulfilled wish (gift) from
+		List<PriorYearPartnerPerformance> pyPartnerPerformanceList = serverChildWishDB.getPriorYearPartnerPerformanceList(year+1);
+		List<ONCPartner> pyPerfPartnerList = new ArrayList<ONCPartner>();
+		
+		//populate the current partner list
+		for(ONCPartner p: partnerDB.get(year - BASE_YEAR).getList())
+		{
+			//make a copy of the partner and set their assigned, delivered and received counts to zero
+			ONCPartner pyPerfPartner = new ONCPartner(p);
+			pyPerfPartner.setNumberOfOrnamentsAssigned(0);
+			pyPerfPartner.setNumberOfOrnamentsDelivered(0);
+			pyPerfPartner.setNumberOfOrnamentsReceivedBeforeDeadline(0);
+			pyPerfPartner.setNumberOfOrnamentsReceivedAfterDeadline(0);
+			pyPerfPartnerList.add(pyPerfPartner);
+		}
+		
 		for(PriorYearPartnerPerformance pyPerf: pyPartnerPerformanceList)
 		{
 			//find the partner the wish was assigned to and increment their prior year assigned count
-			ONCPartner wishAssigneePartner = getPartner(newYear, pyPerf.getPYPartnerWishAssigneeID());
-			if(wishAssigneePartner != null)
-				wishAssigneePartner.incrementPYAssigned();
+			if(pyPerf.getPYPartnerWishAssigneeID() > -1)
+			{
+				ONCPartner wishAssigneePartner = (ONCPartner) find(pyPerfPartnerList, pyPerf.getPYPartnerWishAssigneeID());
+				if(wishAssigneePartner != null)
+					wishAssigneePartner.incrementOrnAssigned();
+			}
+			//find the partner the wish was delivered to and increment their prior year assigned count
+			if(pyPerf.getPYPartnerWishDeliveredID() > -1)
+			{
+				ONCPartner wishDeliveredPartner = (ONCPartner) find(pyPerfPartnerList, pyPerf.getPYPartnerWishDeliveredID());
+				if(wishDeliveredPartner != null)
+					wishDeliveredPartner.incrementOrnDelivered();
+			}
 			
-			//find the partner the wish was received from and increment their prior year received count
-			ONCPartner wishReceivedPartner = getPartner(newYear, pyPerf.getPYPartnerWishReceivedID());
-			if(wishReceivedPartner != null)
-				wishReceivedPartner.incrementPYReceived();
+			//find the partner the wish was received from before deadline and increment their prior year received count
+			if(pyPerf.getPYPartnerWishReceivedBeforeDeadlineID() > -1)
+			{
+				ONCPartner wishReceivedBeforePartner = (ONCPartner) find(pyPerfPartnerList, pyPerf.getPYPartnerWishReceivedBeforeDeadlineID());;
+				if(wishReceivedBeforePartner != null)
+					wishReceivedBeforePartner.incrementOrnReceived(true);	
+			}
+			//find the partner the wish was received from after deadline and increment their prior year received count
+			if(pyPerf.getPYPartnerWishReceivedAfterDeadlineID() > -1)
+			{
+				ONCPartner wishReceivedAfterPartner = (ONCPartner) find(pyPerfPartnerList, pyPerf.getPYPartnerWishReceivedAfterDeadlineID());;
+				if(wishReceivedAfterPartner != null)
+					wishReceivedAfterPartner.incrementOrnReceived(false);	
+			}
 		}
 		
-		//Mark the newly created PartnerDBYear for saving during the next save event
-		PartnerDBYear partnerDBYear = partnerDB.get(newYear - BASE_YEAR);
-		partnerDBYear.setChanged(true);
+		savePYPartnerPerformace(pyPerfPartnerList);
+		
+//		for(ONCPartner confPart : confPartList)
+//			System.out.println(String.format("%s requested %d, assigned: %d, delivered: %d, received before: %d received after: %d",
+//					confPart.getName(), confPart.getNumberOfOrnamentsRequested(), confPart.getNumberOfOrnamentsAssigned(), 
+//					confPart.getNumberOfOrnamentsDelivered(), confPart.getNumberOfOrnamentsReceivedBeforeDeadline(),
+//					confPart.getNumberOfOrnamentsReceivedAfterDeadline()));	
+	}
+	
+	void savePYPartnerPerformace(List<ONCPartner> pyPerformancePartnerList)
+	{
+		String[] header = {"Part ID", "Status", "Type", "Gift Collection","Name", "Orn Delivered",
+				"Street #", "Street", "Unit", "City", "Zip", "Region", "Phone",
+	 			"Orn Requested", "Orn Assigned", "Orn Delivered", "Gifts Received Before",
+	 			"Gifts Received After", "Other", "Deliver To", "Special Notes",
+	 			"Contact", "Contact Email", "Contact Phone",
+	 			"Contact2", "Contact2 Email", "Contact2 Phone",
+	 			"Time Stamp", "Changed By", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B",
+	 			"Prior Year Requested",	"Prior Year Assigned", "Prior Year Delivered",
+	 			"Prior Year Received Before, Prior Year Received After"};
+		
+		String path = String.format("%s/PartnerPerformance.csv", System.getProperty("user.dir"));
+		exportDBToCSV(pyPerformancePartnerList, header, path);
 	}
 	
 	private class PartnerDBYear extends ServerDBYear
@@ -421,12 +489,13 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	{
 		String[] header = {"Org ID", "Status", "Type", "Gift Collection","Name", "Orn Delivered",
 				"Street #", "Street", "Unit", "City", "Zip", "Region", "Phone",
-	 			"Orn Requested", "Orn Assigned", "Orn Delivered", "Gifts Received", "Other",
-	 			"Deliver To", "Special Notes",
+	 			"Orn Requested", "Orn Assigned", "Orn Delivered", "Gifts Received Before",
+	 			"Gifts Received After", "Other", "Deliver To", "Special Notes",
 	 			"Contact", "Contact Email", "Contact Phone",
 	 			"Contact2", "Contact2 Email", "Contact2 Phone",
 	 			"Time Stamp", "Changed By", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B",
-	 			"Prior Year Requested",	"Prior Year Assigned", "Prior Year Delivered", "Prior Year Received"};
+	 			"Prior Year Requested",	"Prior Year Assigned", "Prior Year Delivered",
+	 			"Prior Year Received Before, Prior Year Received After"};
 		
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		if(partnerDBYear.isUnsaved())
