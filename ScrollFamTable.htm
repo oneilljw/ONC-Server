@@ -349,6 +349,8 @@
         	mealstatus = 'Both \u2713';
         else if(family.mealStatus === 'None')
         	mealstatus = "Not Requested";
+        else if(family.mealStatus === 'Referred')
+        	mealstatus = 'Referred \u2713'
         else
         	mealstatus = family.mealStatus;
         	
