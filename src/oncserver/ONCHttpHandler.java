@@ -1323,7 +1323,7 @@ public class ONCHttpHandler implements HttpHandler
 					{				
 						//added new family was in prior year, keep the prior year reference # 
 						//and reset the newly assigned target id index
-						addedFamily.setODBFamilyNum(pyFamily.getODBFamilyNum());
+						addedFamily.setReferenceNum(pyFamily.getReferenceNum());
 						serverFamilyDB.decrementReferenceNumber();
 					}
 				}
@@ -1331,8 +1331,8 @@ public class ONCHttpHandler implements HttpHandler
 			//else if family was a dup, determine which family has the best reference number to
 			//use. The family with the best reference number is retained and the family with 
 			//the worst reference number is marked as duplicate
-			else if(!dupFamily.getODBFamilyNum().startsWith("C") && 
-						addedFamily.getODBFamilyNum().startsWith("C"))
+			else if(!dupFamily.getReferenceNum().startsWith("C") && 
+						addedFamily.getReferenceNum().startsWith("C"))
 			{
 //				System.out.println(String.format("HttpHandler.processFamilyReferral, dupFamily no C: "
 //						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
@@ -1343,12 +1343,12 @@ public class ONCHttpHandler implements HttpHandler
 				addedFamily.setONCNum("DEL");
 				addedFamily.setDNSCode("DUP");
 				addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
-				addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
-				addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
+				addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
+				addedFamily.setReferenceNum(dupFamily.getReferenceNum());
 				serverFamilyDB.decrementReferenceNumber();
 			}	
-			else if(dupFamily.getODBFamilyNum().startsWith("C") && 
-					!addedFamily.getODBFamilyNum().startsWith("C"))
+			else if(dupFamily.getReferenceNum().startsWith("C") && 
+					!addedFamily.getReferenceNum().startsWith("C"))
 			{
 //				System.out.println(String.format("HttpHandler.processFamilyReferral: dupFamily with C "
 //						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
@@ -1361,16 +1361,16 @@ public class ONCHttpHandler implements HttpHandler
 				dupFamily.setONCNum("DEL");
 				dupFamily.setDNSCode("DUP");
 				dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
-				dupFamily.setStoplightMssg("DUP of " + addedFamily.getODBFamilyNum());
+				dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
 				dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
-				dupFamily.setODBFamilyNum(addedFamily.getODBFamilyNum());
+				dupFamily.setReferenceNum(addedFamily.getReferenceNum());
 			}
-			else if(dupFamily.getODBFamilyNum().startsWith("C") && 
-					addedFamily.getODBFamilyNum().startsWith("C"))
+			else if(dupFamily.getReferenceNum().startsWith("C") && 
+					addedFamily.getReferenceNum().startsWith("C"))
 			{
 				//which one was first?
-				int dupNumber = Integer.parseInt(dupFamily.getODBFamilyNum().substring(1));
-				int addedNumber = Integer.parseInt(addedFamily.getODBFamilyNum().substring(1));
+				int dupNumber = Integer.parseInt(dupFamily.getReferenceNum().substring(1));
+				int addedNumber = Integer.parseInt(addedFamily.getReferenceNum().substring(1));
 				
 				if(dupNumber < addedNumber)
 				{
@@ -1378,9 +1378,9 @@ public class ONCHttpHandler implements HttpHandler
 					addedFamily.setONCNum("DEL");
 					addedFamily.setDNSCode("DUP");
 					addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
-					addedFamily.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
+					addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
 					addedFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
-					addedFamily.setODBFamilyNum(dupFamily.getODBFamilyNum());
+					addedFamily.setReferenceNum(dupFamily.getReferenceNum());
 					serverFamilyDB.decrementReferenceNumber();
 				}
 				else
@@ -1389,9 +1389,9 @@ public class ONCHttpHandler implements HttpHandler
 					dupFamily.setONCNum("DEL");
 					dupFamily.setDNSCode("DUP");
 					dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
-					dupFamily.setStoplightMssg("DUP of " + addedFamily.getODBFamilyNum());
+					dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
 					dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
-					dupFamily.setODBFamilyNum(addedFamily.getODBFamilyNum());
+					dupFamily.setReferenceNum(addedFamily.getReferenceNum());
 				}
 			}
 			
@@ -1455,7 +1455,7 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted",
-										addedFamily.getODBFamilyNum());
+										addedFamily.getReferenceNum());
 	}
 	
 	String ensureUpperCaseStreetName(String street)

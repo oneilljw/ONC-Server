@@ -147,7 +147,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		Collections.sort(searchList, new ONCFamilyONCNumComparator());
 		
 		for(int i=0; i<searchList.size(); i++)
-			responseList.add(new FamilyReference(searchList.get(i).getODBFamilyNum()));
+			responseList.add(new FamilyReference(searchList.get(i).getReferenceNum()));
 		
 		String response = gson.toJson(responseList, listOfFamilyReferences);
 
@@ -169,25 +169,25 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		{
 			for(ONCFamily f: oncFamAL)
 	    		if(s.equals(f.getONCNum()))
-	    			resultList.add(new FamilyReference(f.getODBFamilyNum()));	
+	    			resultList.add(new FamilyReference(f.getReferenceNum()));	
 		}
 		else if((s.matches("-?\\d+(\\.\\d+)?")) && s.length() < 7)
 		{
 			for(ONCFamily f: oncFamAL)
-	    		if(s.equals(f.getODBFamilyNum()))
-	    			resultList.add(new FamilyReference(f.getODBFamilyNum())); 
+	    		if(s.equals(f.getReferenceNum()))
+	    			resultList.add(new FamilyReference(f.getReferenceNum())); 
 		}
 		else if((s.startsWith("C") && s.substring(1).matches("-?\\d+(\\.\\d+)?")) && s.length() < 7)
 		{
 			for(ONCFamily f: oncFamAL)
-	    		if(s.equals(f.getODBFamilyNum()))
-	    			resultList.add(new FamilyReference(f.getODBFamilyNum())); 
+	    		if(s.equals(f.getReferenceNum()))
+	    			resultList.add(new FamilyReference(f.getReferenceNum())); 
 		}
 		else if((s.startsWith("W") && s.substring(1).matches("-?\\d+(\\.\\d+)?")) && s.length() < 6)
 		{
 			for(ONCFamily f: oncFamAL)
-	    		if(s.equals(f.getODBFamilyNum()))
-	    			resultList.add(new FamilyReference(f.getODBFamilyNum())); 
+	    		if(s.equals(f.getReferenceNum()))
+	    			resultList.add(new FamilyReference(f.getReferenceNum())); 
 		}
 		else if(s.matches("-?\\d+(\\.\\d+)?") && s.length() < 13)
 		{
@@ -199,7 +199,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    		String target = s.replaceAll("-", "");
 	    		
 	    		if(hp.contains(target) || op.contains(target))
-	    			resultList.add(new FamilyReference(f.getODBFamilyNum()));
+	    			resultList.add(new FamilyReference(f.getReferenceNum()));
 	    	}
 		}
 		else
@@ -207,7 +207,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//search the family db
 	    	for(ONCFamily f: oncFamAL)
 	    		if(f.getClientFamily().toLowerCase().contains(s.toLowerCase()))
-	    			resultList.add(new FamilyReference(f.getODBFamilyNum()));
+	    			resultList.add(new FamilyReference(f.getReferenceNum()));
 	    	
 	    	//search the child db
 	    	childDB.searchForLastName(year, s, resultList);
@@ -240,10 +240,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			//check if the reference number has changed to a Cxxxxx number greater than
 			//the current highestReferenceNumber. If it is, reset highestRefNum
-			if(updatedFamily.getODBFamilyNum().startsWith("C") && 
-				!currFam.getODBFamilyNum().equals(updatedFamily.getODBFamilyNum()))
+			if(updatedFamily.getReferenceNum().startsWith("C") && 
+				!currFam.getReferenceNum().equals(updatedFamily.getReferenceNum()))
 			{
-				int updatedFamilyRefNum = Integer.parseInt(updatedFamily.getODBFamilyNum().substring(1));
+				int updatedFamilyRefNum = Integer.parseInt(updatedFamily.getReferenceNum().substring(1));
 				if(updatedFamilyRefNum > highestRefNum)
 					highestRefNum = updatedFamilyRefNum;
 			}
@@ -358,8 +358,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 			
 			//check to see if the reference number is provided, if not, generate one
-			if(addedFam.getODBFamilyNum().equals("NNA"))
-				addedFam.setODBFamilyNum(generateReferenceNumber());
+			if(addedFam.getReferenceNum().equals("NNA"))
+				addedFam.setReferenceNum(generateReferenceNumber());
 			
 			//check to see if family is already in the data base, if so, mark it as
 			//a duplicate family. 
@@ -489,11 +489,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			int famID = fDBYear.getNextID();
 			addedFam.setID(famID);
 			
-			String targetID = addedFam.getODBFamilyNum();
+			String targetID = addedFam.getReferenceNum();
 			if(targetID.contains("NNA") || targetID.equals(""))
 			{
 				targetID = generateReferenceNumber();
-				addedFam.setODBFamilyNum(targetID);
+				addedFam.setReferenceNum(targetID);
 			}
 			
 			//add to the family data base
@@ -530,9 +530,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				famToCheck.setONCNum("DEL");
 				famToCheck.setDNSCode("DUP");
 				famToCheck.setStoplightPos(FAMILY_STOPLIGHT_RED);
-				famToCheck.setStoplightMssg("DUP of " + dupFamily.getODBFamilyNum());
+				famToCheck.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
 				famToCheck.setStoplightChangedBy(user.getLNFI());
-				famToCheck.setODBFamilyNum(dupFamily.getODBFamilyNum());
+				famToCheck.setReferenceNum(dupFamily.getReferenceNum());
 				
 				//notify all in year clients of change to famToCheck
 				String famToCheckJson = gson.toJson(famToCheck, ONCFamily.class);
@@ -574,7 +574,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
 		
 		int index=0;
-		while(index<fAL.size() && !fAL.get(index).getODBFamilyNum().equals(targetID))
+		while(index<fAL.size() && !fAL.get(index).getReferenceNum().equals(targetID))
 			index++;
 		
 		if(index<fAL.size())
@@ -611,7 +611,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			index++;
 		
 		if(index < fAL.size())
-			return fAL.get(index).getODBFamilyNum();
+			return fAL.get(index).getReferenceNum();
 		else
 			return null;
 	}
@@ -634,7 +634,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	{
 		List<ONCFamily> fAL = familyDB.get(year-BASE_YEAR).getList();
 		int index = 0;	
-		while(index < fAL.size() && !fAL.get(index).getODBFamilyNum().equals(targetID))
+		while(index < fAL.size() && !fAL.get(index).getReferenceNum().equals(targetID))
 			index++;
 		
 		if(index < fAL.size())
@@ -785,7 +785,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		
 		//update the delivery ID and delivery status
 		fam.setDeliveryID(addedDelivery.getID());
-		fam.setDeliveryStatus(addedDelivery.getdStatus());
+		fam.setGiftStatus(addedDelivery.getdStatus());
 		famDBYear.setChanged(true);
 		
 		//notify in year clients of change
@@ -921,7 +921,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		List<ONCFamily> famList = familyDB.get(year-BASE_YEAR).getList();
 		
 		int index = 0;
-		while(index < famList.size() && !famList.get(index).getODBFamilyNum().equals(targetID))
+		while(index < famList.size() && !famList.get(index).getReferenceNum().equals(targetID))
 			index++;
 		
 		if(index < famList.size())
@@ -1193,9 +1193,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		List<ONCFamily> yearListOfFamilies = dbYear.getList();
     		for(ONCFamily f: yearListOfFamilies)
     		{
-    			if(f.getODBFamilyNum().startsWith("C"))
+    			if(f.getReferenceNum().startsWith("C"))
     			{
-    				int refNum = Integer.parseInt(f.getODBFamilyNum().substring(1));
+    				int refNum = Integer.parseInt(f.getReferenceNum().substring(1));
     				if(refNum > highestRefNum)
     					highestRefNum = refNum;
     			}
@@ -1249,7 +1249,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     	int delCount = 0;
     	for(ONCFamily f:familyDB.get(year-BASE_YEAR).getList())
     	{
-    		if(f.getDeliveryID() > -1 && f.getDeliveryStatus() >= 3)
+    		if(f.getDeliveryID() > -1 && f.getGiftStatus() >= 3)
     		{
     			//get delivery for family
     			ONCDelivery del = deliveryDB.getDelivery(year, f.getDeliveryID());
