@@ -13,6 +13,7 @@ import java.util.List;
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
+import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
@@ -1249,7 +1250,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     	int delCount = 0;
     	for(ONCFamily f:familyDB.get(year-BASE_YEAR).getList())
     	{
-    		if(f.getDeliveryID() > -1 && f.getGiftStatus() >= 3)
+    		if(f.getDeliveryID() > -1 && f.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0)
     		{
     			//get delivery for family
     			ONCDelivery del = deliveryDB.getDelivery(year, f.getDeliveryID());

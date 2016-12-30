@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.HistoryRequest;
 import ourneighborschild.ONCDelivery;
 import ourneighborschild.ONCFamily;
@@ -16,7 +17,6 @@ import com.google.gson.reflect.TypeToken;
 public class ServerDeliveryDB extends ServerSeasonalDB
 {
 	private static final int DELIVERY_DB_HEADER_LENGTH = 7;
-	private static final int DELIVERY_STATUS_ASSIGNED = 3;
 
 	private static List<DeliveryDBYear> deliveryDB;
 	
@@ -140,19 +140,19 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 			//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
 			//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
 			//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
-			if(priorDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED && 
-					addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED)
+			if(priorDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) < 0 && 
+					addedDelivery.getdStatus() == FamilyGiftStatus.Assigned)
 			{
 				driverDB.updateDriverDeliveryCounts(year, null, addedDelivery.getdDelBy());
 			}
-			else if(priorDelivery.getdStatus() >= DELIVERY_STATUS_ASSIGNED && 
-					 addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
+			else if(priorDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) >= 0 && 
+					 addedDelivery.getdStatus() == FamilyGiftStatus.Assigned && 
 					  !priorDelivery.getdDelBy().equals(addedDelivery.getdDelBy()))
 			{
 				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
 			}
-			else if(priorDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
-					 addedDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED)
+			else if(priorDelivery.getdStatus() == FamilyGiftStatus.Assigned && 
+					 addedDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) < 0)
 			{
 				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
 			}
@@ -199,19 +199,19 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 			//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
 			//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
 			//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
-			if(priorDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED && 
-					addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED)
+			if(priorDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) < 0 && 
+					addedDelivery.getdStatus() == FamilyGiftStatus.Assigned)
 			{
 				driverDB.updateDriverDeliveryCounts(year, null, addedDelivery.getdDelBy());
 			}
-			else if(priorDelivery.getdStatus() >= DELIVERY_STATUS_ASSIGNED && 
-					 addedDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
+			else if(priorDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) >= 0&& 
+					 addedDelivery.getdStatus() == FamilyGiftStatus.Assigned && 
 					  !priorDelivery.getdDelBy().equals(addedDelivery.getdDelBy()))
 			{
 				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
 			}
-			else if(priorDelivery.getdStatus() == DELIVERY_STATUS_ASSIGNED && 
-					 addedDelivery.getdStatus() < DELIVERY_STATUS_ASSIGNED)
+			else if(priorDelivery.getdStatus() ==FamilyGiftStatus.Assigned && 
+					 addedDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) < 0)
 			{
 				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
 			}
