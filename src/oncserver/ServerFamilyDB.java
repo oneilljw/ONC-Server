@@ -14,6 +14,7 @@ import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.FamilyGiftStatus;
+import ourneighborschild.FamilyStatus;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
@@ -31,12 +32,6 @@ import com.google.gson.reflect.TypeToken;
 public class ServerFamilyDB extends ServerSeasonalDB
 {
 	private static final int FAMILYDB_HEADER_LENGTH = 42;
-	
-	private static final int FAMILY_STATUS_UNVERIFIED = 0;
-	private static final int FAMILY_STATUS_INFO_VERIFIED = 1;
-	private static final int FAMILY_STATUS_GIFTS_SELECTED = 2;
-	private static final int FAMILY_STATUS_GIFTS_RECEIVED = 3;
-	private static final int FAMILY_STATUS_GIFTS_VERIFIED = 4;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	
@@ -651,7 +646,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		ONCFamily fam = getFamily(year, famID);
 		
 	    //determine the proper family status for the family after adding the wish
-	    int newStatus = getLowestFamilyStatus(year, famID);
+	    FamilyStatus newStatus = getLowestFamilyStatus(year, famID);
 	    
 	    //determine if the families gift card only status after adding the wish
 	    boolean bNewGiftCardOnlyFamily = isGiftCardOnlyFamily(year, famID);
@@ -741,23 +736,23 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	* The seven correspond to five family status choices. The method finds the lowest family
 	* status setting based on the children's wish status and returns it. 
 	**********************************************************************************************************/
-	int getLowestFamilyStatus(int year, int famid)
+	FamilyStatus getLowestFamilyStatus(int year, int famid)
 	{
 		//This matrix correlates a child wish status to the family status.
-		int[] wishstatusmatrix = {FAMILY_STATUS_UNVERIFIED,	//WishStatus Index = 0;
-								 FAMILY_STATUS_INFO_VERIFIED,	//WishStatus Index = 1;
-								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 2;
-								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 3;
-								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 4;
-								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 5;
-								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 6;
-								 FAMILY_STATUS_GIFTS_RECEIVED,	//WishStatus Index = 7;
-								 FAMILY_STATUS_GIFTS_RECEIVED,	//WishStatus Index = 8;
-								 FAMILY_STATUS_GIFTS_SELECTED,	//WishStatus Index = 9;
-								 FAMILY_STATUS_GIFTS_VERIFIED};	//WishStatus Index = 10;
+		FamilyStatus[] wishstatusmatrix = {FamilyStatus.Unverified,	//WishStatus Index = 0;
+								FamilyStatus.InfoVerified,	//WishStatus Index = 1;
+								 FamilyStatus.GiftsSelected,	//WishStatus Index = 2;
+								 FamilyStatus.GiftsSelected,	//WishStatus Index = 3;
+								 FamilyStatus.GiftsSelected,//WishStatus Index = 4;
+								 FamilyStatus.GiftsSelected,	//WishStatus Index = 5;
+								 FamilyStatus.GiftsSelected,	//WishStatus Index = 6;
+								 FamilyStatus.GiftsReceived,	//WishStatus Index = 7;
+								 FamilyStatus.GiftsReceived,	//WishStatus Index = 8;
+								 FamilyStatus.GiftsSelected,	//WishStatus Index = 9;
+								 FamilyStatus.GiftsVerified};	//WishStatus Index = 10;
 			
 		//Check for all gifts selected
-		int lowestfamstatus = FAMILY_STATUS_GIFTS_VERIFIED;
+		FamilyStatus lowestfamstatus = FamilyStatus.GiftsVerified;
 		for(ONCChild c:ServerChildDB.getChildList(year, famid))
 		{
 			for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
@@ -770,7 +765,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				if(cw != null)
 					childwishstatus = ServerChildWishDB.getWish(year, c.getChildWishID(wn)).getChildWishStatus();
 					
-				if(wishstatusmatrix[childwishstatus.statusIndex()] < lowestfamstatus)
+				if(wishstatusmatrix[childwishstatus.statusIndex()].compareTo(lowestfamstatus) < 0)
 					lowestfamstatus = wishstatusmatrix[childwishstatus.statusIndex()];
 			}
 		}
