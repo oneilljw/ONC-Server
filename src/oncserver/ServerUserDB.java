@@ -423,14 +423,10 @@ public class ServerUserDB extends ServerPermanentDB
 		if(!nextLine[6].isEmpty())
 			date_changed.setTimeInMillis(Long.parseLong(nextLine[8]));
 		
-		Calendar last_login = Calendar.getInstance();
-		if(!nextLine[14].isEmpty())
-			last_login.setTimeInMillis(Long.parseLong(nextLine[14]));
-		
 		nextLine[1] = ServerEncryptionManager.decrypt(nextLine[1]);
 		nextLine[2] = ServerEncryptionManager.decrypt(nextLine[2]);
 			
-		userAL.add(new ONCServerUser(nextLine, date_changed.getTime(), last_login.getTime()));
+		userAL.add(new ONCServerUser(nextLine, date_changed.getTime()));
 		
 	}
 	

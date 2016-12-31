@@ -10,10 +10,10 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.TimeZone;
 
 import ourneighborschild.Address;
 import ourneighborschild.AddressValidation;
@@ -858,7 +858,10 @@ public class DesktopClient extends Thread
     		//Create user json and attach to VALID response
     		state = ClientState.Logged_In;	//Client logged in
     		serverUser.incrementSessions();
-    		serverUser.setLastLogin(new Date());
+    		
+    		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    		serverUser.setLastLogin(calendar.getTimeInMillis());
+    		
     		userDB.save();
     		
     		clientUser = serverUser.getUserFromServerUser();
