@@ -1221,7 +1221,7 @@ public class ONCHttpHandler implements HttpHandler
 
 			if(!mealMap.get("mealtype").equals("No Assistance Rqrd"))
 			{
-				if(mealMap.containsKey("deitres"))
+				if(mealMap.containsKey("dietres"))
 					dietRestrictions = mealMap.get("dietres");
 				
 				mealReq = new ONCMeal(-1, -1, MealStatus.Requested, MealType.valueOf(mealMap.get("mealtype")),
@@ -1254,6 +1254,7 @@ public class ONCHttpHandler implements HttpHandler
 					familyMap.get("delunit"), familyMap.get("delcity"), familyMap.get("delzipcode"),
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
+					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
 					createWishList(params), agt.getID(), addedMeal != null ? addedMeal.getID() : -1,
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
 					Transportation.valueOf(familyMap.get("transportation")));
