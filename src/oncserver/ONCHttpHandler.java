@@ -1802,25 +1802,30 @@ public class ONCHttpHandler implements HttpHandler
 	String enableReferralButton(String day)
 	{
 		ServerGlobalVariableDB gDB = null;
-		try {
+		try 
+		{
 			gDB = ServerGlobalVariableDB.getInstance();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			//get current season
+			int currSeason = DBManager.getCurrentYear();
+			Calendar today = Calendar.getInstance();
+			Date seasonStartDate = gDB.getSeasonStartDate(currSeason);
+			Date compareDate = gDB.getDeadline(currSeason, day);
+			
+			if(seasonStartDate != null && compareDate != null && 
+				today.getTime().compareTo(seasonStartDate) >=0 && today.getTime().compareTo(compareDate) < 0 )
+				return "enabled";
+			else
+				return "disabled";
 		}
-		
-		Calendar today = Calendar.getInstance();
-		Date seasonStartDate = gDB.getSeasonStartDate(today.get(Calendar.YEAR));
-		Date compareDate = gDB.getDeadline(today.get(Calendar.YEAR), day);
-		
-		if(gDB != null && seasonStartDate != null && compareDate != null && 
-			today.getTime().compareTo(seasonStartDate) >=0 && today.getTime().compareTo(compareDate) < 0 )
-			return "enabled";
-		else
+		catch (FileNotFoundException e) 
+		{
 			return "disabled";
+		}
+		catch (IOException e) 
+		{
+			return "disabled";
+		}
 	}
 	
 	private class FamilyResponseCode
