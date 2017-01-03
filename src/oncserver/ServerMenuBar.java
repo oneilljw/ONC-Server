@@ -10,22 +10,26 @@ public class ServerMenuBar extends JMenuBar
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public JMenuItem showLogMI, countsMI;
+	public JMenuItem showLogMI, countsMI, convertStatusMI;
 
 	public ServerMenuBar()
 	{
-		JMenu menuLog;	    
+		JMenu menuTools;	    
         
 	    //Build the first menu.
-	    menuLog = new JMenu("Server Tools");
-	    this.add(menuLog);
+	    menuTools = new JMenu("Server Tools");
+	    this.add(menuTools);
 	 
 	   //a group of JMenuItems for the File Menu
 	    showLogMI = new JMenuItem("Show Log");
-	    menuLog.add(showLogMI);
+	    menuTools.add(showLogMI);
 	    
 	    countsMI = new JMenuItem("Update PY Partner Performance");
-	    countsMI.setEnabled(true);
-	    menuLog.add(countsMI);
+	    countsMI.setEnabled(false);
+	    menuTools.add(countsMI);
+	    
+	    convertStatusMI = new JMenuItem("Convert Family & Gift Status");
+	    convertStatusMI.setEnabled(true);
+	    menuTools.add(convertStatusMI);
 	}
 }
