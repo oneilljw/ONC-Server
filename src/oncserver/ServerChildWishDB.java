@@ -161,7 +161,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 			e.printStackTrace();
 		}
 	
-		serverFamilyDB.checkFamilyStatusAndGiftCardOnlyOnWishAdded(year, addedWish.getChildID());
+		serverFamilyDB.checkFamilyGiftStatusAndGiftCardOnlyOnWishAdded(year, addedWish.getChildID());
 		
 		//test to see if assignee are changing, if the old wish exists	
 		if(oldWish != null && oldWish.getChildWishAssigneeID() != addedWish.getChildWishAssigneeID())

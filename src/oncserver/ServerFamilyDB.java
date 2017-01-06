@@ -18,11 +18,10 @@ import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.FamilyGiftStatus;
-import ourneighborschild.FamilyStatus;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
-import ourneighborschild.ONCDelivery;
+import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCUser;
@@ -78,7 +77,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			familyDB.add(fDBYear);
 			
 			//import the families from persistent store
-			importDB(year, String.format("%s/%dDB/FamilyDB.csv",
+			importDB(year, String.format("%s/%dDB/NewFamilyDB.csv",
 					System.getProperty("user.dir"),
 						year), "FamilyDB", FAMILYDB_HEADER_LENGTH);
 			
@@ -645,22 +644,22 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	void checkFamilyStatusAndGiftCardOnlyOnWishAdded(int year, int childid)
+	void checkFamilyGiftStatusAndGiftCardOnlyOnWishAdded(int year, int childid)
 	{
 		int famID = childDB.getChildsFamilyID(year, childid);
 		
 		ONCFamily fam = getFamily(year, famID);
 		
-	    //determine the proper family status for the family after adding the wish
-	    FamilyStatus newStatus = getLowestFamilyStatus(year, famID);
+	    //determine the proper family gift status for the family after adding the wish
+	    FamilyGiftStatus newGiftStatus = getLowestGiftStatus(year, famID);
 	    
 	    //determine if the families gift card only status after adding the wish
 	    boolean bNewGiftCardOnlyFamily = isGiftCardOnlyFamily(year, famID);
 	   
-	    //if family status has changed, update the data base and notify clients
-	    if(newStatus != fam.getFamilyStatus() || bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
+	    //if gift status has changed, update the data base and notify clients
+	    if(newGiftStatus != fam.getGiftStatus() || bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
 	    {
-	    	fam.setFamilyStatus(newStatus);
+	    	fam.setGiftStatus(newGiftStatus);
 	    	fam.setGiftCardOnly(bNewGiftCardOnlyFamily);
 	    	familyDB.get(year - BASE_YEAR).setChanged(true);
 	    	
@@ -742,23 +741,23 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	* The seven correspond to five family status choices. The method finds the lowest family
 	* status setting based on the children's wish status and returns it. 
 	**********************************************************************************************************/
-	FamilyStatus getLowestFamilyStatus(int year, int famid)
+	FamilyGiftStatus getLowestGiftStatus(int year, int famid)
 	{
 		//This matrix correlates a child wish status to the family status.
-		FamilyStatus[] wishstatusmatrix = {FamilyStatus.Unverified,	//WishStatus Index = 0;
-								FamilyStatus.InfoVerified,	//WishStatus Index = 1;
-								 FamilyStatus.GiftsSelected,	//WishStatus Index = 2;
-								 FamilyStatus.GiftsSelected,	//WishStatus Index = 3;
-								 FamilyStatus.GiftsSelected,//WishStatus Index = 4;
-								 FamilyStatus.GiftsSelected,	//WishStatus Index = 5;
-								 FamilyStatus.GiftsSelected,	//WishStatus Index = 6;
-								 FamilyStatus.GiftsReceived,	//WishStatus Index = 7;
-								 FamilyStatus.GiftsReceived,	//WishStatus Index = 8;
-								 FamilyStatus.GiftsSelected,	//WishStatus Index = 9;
-								 FamilyStatus.GiftsVerified};	//WishStatus Index = 10;
+		FamilyGiftStatus[] wishstatusmatrix = {FamilyGiftStatus.Requested,	//WishStatus Index = 0;
+								FamilyGiftStatus.Requested,	//WishStatus Index = 1;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 2;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 3;
+								FamilyGiftStatus.Selected,//WishStatus Index = 4;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 5;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 6;
+								FamilyGiftStatus.Received,	//WishStatus Index = 7;
+								FamilyGiftStatus.Received,	//WishStatus Index = 8;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 9;
+								FamilyGiftStatus.Verified};	//WishStatus Index = 10;
 			
 		//Check for all gifts selected
-		FamilyStatus lowestfamstatus = FamilyStatus.GiftsVerified;
+		FamilyGiftStatus lowestfamstatus = FamilyGiftStatus.Verified;
 		for(ONCChild c:ServerChildDB.getChildList(year, famid))
 		{
 			for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
@@ -779,7 +778,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		return lowestfamstatus;
 	}
 	
-	void updateFamilyDelivery(int year, ONCDelivery addedDelivery)
+	void updateFamilyDelivery(int year, ONCFamilyHistory addedDelivery)
 	{
 		//find the family
 		FamilyDBYear famDBYear = familyDB.get(year - BASE_YEAR);
@@ -849,7 +848,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 		{
 //			System.out.println(String.format("FamilyDB saveDB - Saving Family DB"));
-			String path = String.format("%s/%dDB/FamilyDB.csv", System.getProperty("user.dir"), year);
+			String path = String.format("%s/%dDB/NewFamilyDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(fDBYear.getList(), header, path);
 			fDBYear.setChanged(false);
 		}
@@ -1254,7 +1253,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		if(f.getDeliveryID() > -1 && f.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0)
     		{
     			//get delivery for family
-    			ONCDelivery del = deliveryDB.getDelivery(year, f.getDeliveryID());
+    			ONCFamilyHistory del = deliveryDB.getDelivery(year, f.getDeliveryID());
     			if(del != null && del.getdDelBy().equals(drvNum))
     				delCount++;
     		}
@@ -1343,6 +1342,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		    }	
     }
     
+    /***
+     * Used to convert ServerFamilyDB from old family status & gift status to new
+     * @param ofs
+     * @param ogs
+     * @return
+     */
     NewFamStatus getNewFamStatus(String ofs, String ogs)
     {
     	int oldFamStatus = Integer.parseInt(ofs);
@@ -1459,6 +1464,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
     	else
     		return null;
     }
+    
+   
     
     private static class ONCFamilyONCNumComparator implements Comparator<ONCFamily>
 	{

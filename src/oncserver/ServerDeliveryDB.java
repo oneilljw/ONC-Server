@@ -1,15 +1,21 @@
 package oncserver;
 
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.HistoryRequest;
-import ourneighborschild.ONCDelivery;
+import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCFamily;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -72,7 +78,7 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 	String getDeliveries(int year)
 	{
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<ONCDelivery>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCFamilyHistory>>(){}.getType();
 			
 		String response = gson.toJson(deliveryDB.get(year - BASE_YEAR).getList(), listtype);
 		return response;	
@@ -105,7 +111,7 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 	{
 		//Create a delivery object for the new delivery
 		Gson gson = new Gson();
-		ONCDelivery addedDelivery = gson.fromJson(json, ONCDelivery.class);
+		ONCFamilyHistory addedDelivery = gson.fromJson(json, ONCFamilyHistory.class);
 		
 		//add the new delivery to the data base
 		DeliveryDBYear delDBYear = deliveryDB.get(year - BASE_YEAR);
@@ -131,7 +137,7 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 		
 		//get prior delivery for this family
 		ONCFamily fam = serverFamilyDB.getFamily(year, addedDelivery.getFamID());
-		ONCDelivery priorDelivery = getDelivery(year, fam.getDeliveryID());
+		ONCFamilyHistory priorDelivery = getDelivery(year, fam.getDeliveryID());
 		
 		//if there was a prior delivery, then update the status and counts
 		if(priorDelivery != null)
@@ -154,17 +160,17 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 			else if(priorDelivery.getdStatus() == FamilyGiftStatus.Assigned && 
 					 addedDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) < 0)
 			{
-				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
+				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), null);
 			}
 		}
 		//Update the family object with new delivery
 		if(serverFamilyDB != null)
 			serverFamilyDB.updateFamilyDelivery(year, addedDelivery);
 					
-		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCDelivery.class);
+		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCFamilyHistory.class);
 	}
 	
-	String add(int year, ONCDelivery addedDelivery)
+	String add(int year, ONCFamilyHistory addedDelivery)
 	{
 		//add the new delivery to the data base
 		DeliveryDBYear delDBYear = deliveryDB.get(year - BASE_YEAR);
@@ -190,7 +196,7 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 		
 		//get prior delivery for this family
 		ONCFamily fam = serverFamilyDB.getFamily(year, addedDelivery.getFamID());
-		ONCDelivery priorDelivery = getDelivery(year, fam.getDeliveryID());
+		ONCFamilyHistory priorDelivery = getDelivery(year, fam.getDeliveryID());
 		
 		//if there was a prior delivery, then update the status and counts
 		if(priorDelivery != null)
@@ -204,16 +210,16 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 			{
 				driverDB.updateDriverDeliveryCounts(year, null, addedDelivery.getdDelBy());
 			}
-			else if(priorDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) >= 0&& 
+			else if(priorDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) >= 0 && 
 					 addedDelivery.getdStatus() == FamilyGiftStatus.Assigned && 
 					  !priorDelivery.getdDelBy().equals(addedDelivery.getdDelBy()))
 			{
 				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
 			}
-			else if(priorDelivery.getdStatus() ==FamilyGiftStatus.Assigned && 
+			else if(priorDelivery.getdStatus() == FamilyGiftStatus.Assigned && 
 					 addedDelivery.getdStatus().compareTo(FamilyGiftStatus.Assigned) < 0)
 			{
-				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedDelivery.getdDelBy());
+				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), null);
 			}
 		}
 		//Update the family object with new delivery
@@ -221,7 +227,7 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 			serverFamilyDB.updateFamilyDelivery(year, addedDelivery);
 
 		Gson gson = new Gson();
-		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCDelivery.class);
+		return "ADDED_DELIVERY" + gson.toJson(addedDelivery, ONCFamilyHistory.class);
 	}
 	
 	String addDeliveryGroup(int year, String deliveryGroupJson)
@@ -230,13 +236,13 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 		
 		//un-bundle to list of ONCDelivery objects
 		Gson gson = new Gson();
-		Type listOfDeliveries = new TypeToken<ArrayList<ONCDelivery>>(){}.getType();
+		Type listOfDeliveries = new TypeToken<ArrayList<ONCFamilyHistory>>(){}.getType();
 		
-		List<ONCDelivery> deliveryList = gson.fromJson(deliveryGroupJson, listOfDeliveries);
+		List<ONCFamilyHistory> deliveryList = gson.fromJson(deliveryGroupJson, listOfDeliveries);
 		
 		//for each delivery in the list, add it to the database and notify all clients that
 		//it was added
-		for(ONCDelivery addedDelivery:deliveryList)
+		for(ONCFamilyHistory addedDelivery:deliveryList)
 		{
 			String response = add(year, addedDelivery);
 			//if add was successful, need to q the change to all in-year clients
@@ -247,9 +253,9 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 		return "ADDED_GROUP_DELIVERIES";
 	}
 	
-	ONCDelivery getDelivery(int year, int delID)
+	ONCFamilyHistory getDelivery(int year, int delID)
 	{
-		List<ONCDelivery> dAL = deliveryDB.get(year-BASE_YEAR).getList();
+		List<ONCFamilyHistory> dAL = deliveryDB.get(year-BASE_YEAR).getList();
 		int index = 0;	
 		while(index < dAL.size() && dAL.get(index).getID() != delID)
 			index++;
@@ -264,11 +270,11 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 	{
 		//Create a delivery object for the updated delivery
 		Gson gson = new Gson();
-		ONCDelivery updatedDelivery = gson.fromJson(json, ONCDelivery.class);
+		ONCFamilyHistory updatedDelivery = gson.fromJson(json, ONCFamilyHistory.class);
 		
 		//Find the position for the current delivery being replaced
 		DeliveryDBYear deliveryDBYear = deliveryDB.get(year - BASE_YEAR);
-		List<ONCDelivery> dAL = deliveryDBYear.getList();
+		List<ONCFamilyHistory> dAL = deliveryDBYear.getList();
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != updatedDelivery.getID())
 			index++;
@@ -278,7 +284,7 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 		{
 			dAL.set(index, updatedDelivery);
 			deliveryDBYear.setChanged(true);
-			return "UPDATED_DELIVERY" + gson.toJson(updatedDelivery, ONCDelivery.class);
+			return "UPDATED_DELIVERY" + gson.toJson(updatedDelivery, ONCFamilyHistory.class);
 		}
 		else
 			return "UPDATE_FAILED";
@@ -291,16 +297,16 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		HistoryRequest histReq = gson.fromJson(reqjson, HistoryRequest.class);
 			
-		List<ONCDelivery> delHistory = new ArrayList<ONCDelivery>();
-		List<ONCDelivery> delAL = deliveryDB.get(year - BASE_YEAR).getList();
+		List<ONCFamilyHistory> delHistory = new ArrayList<ONCFamilyHistory>();
+		List<ONCFamilyHistory> delAL = deliveryDB.get(year - BASE_YEAR).getList();
 			
 		//Search for deliveries that match the delivery Family ID
-		for(ONCDelivery del:delAL)
+		for(ONCFamilyHistory del:delAL)
 			if(del.getFamID() == histReq.getID())
 				delHistory.add(del);
 			
 		//Convert list to json and return it
-		Type listtype = new TypeToken<ArrayList<ONCDelivery>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCFamilyHistory>>(){}.getType();
 			
 		String response = gson.toJson(delHistory, listtype);
 		return response;
@@ -311,7 +317,7 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine)
 	{
 		DeliveryDBYear delDBYear = deliveryDB.get(year - BASE_YEAR);
-		delDBYear.add(new ONCDelivery(nextLine));	
+		delDBYear.add(new ONCFamilyHistory(nextLine));	
 	}
 	
 	
@@ -328,18 +334,18 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 	
 	 private class DeliveryDBYear extends ServerDBYear
 	 {
-		private List<ONCDelivery> delList;
+		private List<ONCFamilyHistory> delList;
 	    	
 	    DeliveryDBYear(int year)
 	    {
 	    	super();
-	    	delList = new ArrayList<ONCDelivery>();
+	    	delList = new ArrayList<ONCFamilyHistory>();
 	    }
 	    
 	    //getters
-	    List<ONCDelivery> getList() { return delList; }
+	    List<ONCFamilyHistory> getList() { return delList; }
 	    
-	    void add(ONCDelivery addedDel) { delList.add(addedDel); }
+	    void add(ONCFamilyHistory addedDel) { delList.add(addedDel); }
 	 }
 
 	@Override
@@ -357,4 +363,132 @@ public class ServerDeliveryDB extends ServerSeasonalDB
 			delDBYear.setChanged(false);
 		}
 	}
+	
+	 void convertDeliveryDBForStatusChanges(int year)
+	    {
+	    	String[] header, nextLine;
+	    	List<String[]> outputList = new ArrayList<String[]>();
+	    	
+	    	//open the current year file
+	    	String path = String.format("%s/%dDB/DeliveryDB.csv", System.getProperty("user.dir"), year);
+	    	CSVReader reader;
+			try 
+			{
+				reader = new CSVReader(new FileReader(path));
+				if((header = reader.readNext()) != null)	//Does file have records? 
+		    	{
+		    		//Read the User File
+		    		if(header.length == DELIVERY_DB_HEADER_LENGTH)	//Does the record have the right # of fields? 
+		    		{
+		    			String[] outLine = new String[8];
+		    			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
+		    			{
+		    				NewFamStatus nfs = getNewFamStatus(nextLine[2]);
+		    				outLine[0] = nextLine[0];
+		    				outLine[1] = nextLine[1];
+		    				outLine[2] = nfs.getNewFamStatus();
+		    				outLine[3] = nfs.getNewGiftStatus();
+		    				outLine[4] = nextLine[3];
+		    				outLine[5] = nextLine[4];
+		    				outLine[6] = nextLine[5];
+		    				outLine[7] = nextLine[6];
+		    				
+		    				outputList.add(outLine);
+		    			}
+		    		}
+		    		else
+		    		{
+		    			String error = String.format("%s file corrupted, header length = %d", path, header.length);
+		    	       	JOptionPane.showMessageDialog(null, error,  path + "Corrupted", JOptionPane.ERROR_MESSAGE);
+		    		}		   			
+		    	}
+		    	else
+		    	{
+		    		String error = String.format("%s file is empty", path);
+		    		JOptionPane.showMessageDialog(null, error,  path + " Empty", JOptionPane.ERROR_MESSAGE);
+		    	}
+		    	
+		    	reader.close();
+		    	
+			} 
+			catch (FileNotFoundException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			//now that we should have an output list of converted String[] for each family, write it
+			
+			String[] outHeader = {"Delivery ID", "Family ID", "Fam Status", "Gift Status", "Del By", 
+		 			"Notes", "Changed By", "Time Stamp"};
+			
+			System.out.println(String.format("FamilyHistoryDB saveDB - Saving %d New FamilyHistory DB", year));
+			String outPath = String.format("%s/%dDB/FamilyHistoryDB.csv", System.getProperty("user.dir"), year);
+			
+			 try 
+			    {
+			    	CSVWriter writer = new CSVWriter(new FileWriter(outPath));
+			    	writer.writeNext(outHeader);
+			    	 
+			    	for(int index=0; index < outputList.size(); index++)
+			    		writer.writeNext(outputList.get(index));
+			    	
+			    	writer.close();
+			    	       	    
+			    } 
+			    catch (IOException x)
+			    {
+			    	System.err.format("IO Exception: %s%n", x);
+			    }	
+	    }
+	
+	 /***
+     * Used to convert ServerDeliverDB from old delivery status to new family and family gift status
+     * @param ofs
+     * @param odels
+     * @return
+     */
+    NewFamStatus getNewFamStatus(String odels)
+    {
+    	int oldGiftStatus = Integer.parseInt(odels);
+    	
+    	if(oldGiftStatus == 0)
+    		return new NewFamStatus(1,1);
+    	else if(oldGiftStatus == 1)
+    		return new NewFamStatus(2,2);
+    	else if(oldGiftStatus == 2)
+    		return new NewFamStatus(3,2);
+    	else if(oldGiftStatus == 3)
+    		return new NewFamStatus(3,6);
+    	else if(oldGiftStatus == 4)
+    		return new NewFamStatus(3,8);
+    	else if(oldGiftStatus == 5)
+    		return new NewFamStatus(3,9);
+    	else if(oldGiftStatus == 6)
+    		return new NewFamStatus(3,7);
+    	else if(oldGiftStatus == 7)
+    		return new NewFamStatus(3,10);
+    	else
+    		return null;
+    }
+    
+    private class NewFamStatus
+    {
+    	private int famStatus;
+    	private int giftStatus;
+    	
+    	NewFamStatus(int famStatus, int giftStatus)
+    	{
+    		this.famStatus = famStatus;
+    		this.giftStatus = giftStatus;
+    	}
+    	
+    	String getNewFamStatus() { return Integer.toString(famStatus); }
+    	String getNewGiftStatus() { return Integer.toString(giftStatus); }
+    }
 }
