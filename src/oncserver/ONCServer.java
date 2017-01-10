@@ -118,6 +118,7 @@ public class ONCServer
     	serverMenuBar = new ServerMenuBar();
     	serverMenuBar.countsMI.addActionListener(new MenuBarListener());
     	serverMenuBar.convertStatusMI.addActionListener(new MenuBarListener());
+    	serverMenuBar.createHistMI.addActionListener(new MenuBarListener());
     	serverUI = ServerUI.getInstance();
     	
     	oncFrame =  new JFrame(APPNAME);
@@ -249,6 +250,31 @@ public class ONCServer
 					e1.printStackTrace();
 				}
 			}
+/*			
+			else if(e.getSource() == serverMenuBar.createHistMI)
+			{
+				//update py performance
+				try {
+					ServerFamilyHistoryDB serverFamilyHistoryDB = ServerFamilyHistoryDB.getInstance();
+					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2016);
+					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2016));
+					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2015);
+					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2015));
+					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2014);
+					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2014));
+					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2013);
+					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2013));
+					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2012);
+					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2012));
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+*/			
 		}
     }
 }

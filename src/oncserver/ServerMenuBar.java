@@ -10,7 +10,7 @@ public class ServerMenuBar extends JMenuBar
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public JMenuItem showLogMI, countsMI, convertStatusMI;
+	public JMenuItem showLogMI, countsMI, convertStatusMI, createHistMI;
 
 	public ServerMenuBar()
 	{
@@ -31,5 +31,9 @@ public class ServerMenuBar extends JMenuBar
 	    convertStatusMI = new JMenuItem("Convert Family & Gift Status");
 	    convertStatusMI.setEnabled(true);
 	    menuTools.add(convertStatusMI);
+	    
+	    createHistMI = new JMenuItem("Create Family History");
+	    createHistMI.setEnabled(true);
+	    menuTools.add(createHistMI);
 	}
 }

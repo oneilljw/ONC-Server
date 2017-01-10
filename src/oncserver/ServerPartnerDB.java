@@ -487,15 +487,15 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Org ID", "Status", "Type", "Gift Collection","Name", "Orn Delivered",
+		String[] header = {"Org ID", "Status", "Type", "Gift Collection", "Name", "Orn Delivered",
 				"Street #", "Street", "Unit", "City", "Zip", "Region", "Phone",
 	 			"Orn Requested", "Orn Assigned", "Orn Delivered", "Gifts Received Before",
 	 			"Gifts Received After", "Other", "Deliver To", "Special Notes",
 	 			"Contact", "Contact Email", "Contact Phone",
 	 			"Contact2", "Contact2 Email", "Contact2 Phone",
 	 			"Time Stamp", "Changed By", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B",
-	 			"Prior Year Requested",	"Prior Year Assigned", "Prior Year Delivered",
-	 			"Prior Year Received Before, Prior Year Received After"};
+	 			"PY Requested",	"PY Assigned", "PY Delivered",
+	 			"PY Received Before", "PY Received After"};
 		
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		if(partnerDBYear.isUnsaved())

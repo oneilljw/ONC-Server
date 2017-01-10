@@ -56,7 +56,7 @@ public class DesktopClient extends Thread
     private ServerPartnerDB serverPartnerDB;
     private ServerVolunteerDB volunteerDB;
     private ServerWarehouseDB warehouseDB;
-    private ServerDeliveryDB deliveryDB;
+    private ServerFamilyHistoryDB famHistoryDB;
     private ServerWishCatalog wishCatalog;
     private ServerWishDetailDB wishDetailDB;
     private PriorYearDB prioryearDB;
@@ -104,7 +104,7 @@ public class DesktopClient extends Thread
 	        serverPartnerDB = ServerPartnerDB.getInstance();
 	        volunteerDB = ServerVolunteerDB.getInstance();
 	        warehouseDB = ServerWarehouseDB.getInstance();
-	        deliveryDB = ServerDeliveryDB.getInstance();
+	        famHistoryDB = ServerFamilyHistoryDB.getInstance();
 	        wishCatalog = ServerWishCatalog.getInstance();
 	        wishDetailDB = ServerWishDetailDB.getInstance();
 	        prioryearDB = PriorYearDB.getInstance();
@@ -267,7 +267,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<deliveries>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = deliveryDB.getDeliveries(year);
+                	String response = famHistoryDB.getFamilyHistory(year);
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<catalog>"))
@@ -326,7 +326,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<deliveryhistory>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	output.println(deliveryDB.getDeliveryHistory(year, command.substring(20)));
+                	output.println(famHistoryDB.getFamilyHistory(year, command.substring(20)));
                 }
                 else if(command.startsWith("GET<website_status>"))
                 {
@@ -593,7 +593,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<update_delivery>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = deliveryDB.update(year, command.substring(21));
+                	String response = famHistoryDB.update(year, command.substring(21));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
@@ -601,7 +601,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_delivery>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = deliveryDB.add(year, command.substring(18));
+                	String response = famHistoryDB.add(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
@@ -609,7 +609,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<delivery_group>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = deliveryDB.addDeliveryGroup(year, command.substring(20));
+                	String response = serverFamilyDB.addFamilyHistoryList(year, command.substring(20));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
