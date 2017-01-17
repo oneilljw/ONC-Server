@@ -103,7 +103,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			//find the last object, there has to be one for the status > Assigned
 			ONCFamilyHistory latestFHObj = getLastFamilyHistory(year, addedHistoryObj.getFamID());
 			if(latestFHObj != null)
-				addedHistoryObj.setdDelBy(latestFHObj.getdDelBy());;
+				addedHistoryObj.setdDelBy(latestFHObj.getdDelBy());
 		}
 		
 		//add the item to the proper year's list and mark the list as changed
@@ -214,6 +214,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), null);
 			}
 		}
+		
 		//Update the family object with new delivery
 		if(serverFamilyDB != null)
 			serverFamilyDB.updateFamilyHistory(year, addedHisoryObj);
@@ -253,6 +254,14 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		
 		addedFamHistObj.setID(histDBYear.getNextID());
 		addedFamHistObj.setDateChanged(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+		
+		if(addedFamHistObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) > 0)
+		{
+			//find the last object, there has to be one for the status > Assigned
+			ONCFamilyHistory latestFHObj = getLastFamilyHistory(year, addedFamHistObj.getFamID());
+			if(latestFHObj != null)
+				addedFamHistObj.setdDelBy(latestFHObj.getdDelBy());
+		}
 		
 		histDBYear.add(addedFamHistObj);
 		histDBYear.setChanged(true);
