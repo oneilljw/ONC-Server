@@ -16,7 +16,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerPartnerDB extends ServerSeasonalDB
 {
-	private static final int ORGANIZATION_DB_HEADER_LENGTH = 37;
+	private static final int ORGANIZATION_DB_HEADER_LENGTH = 36;
 	private static final int STATUS_CONFIRMED = 5;
 	
 	private static List<PartnerDBYear> partnerDB;
@@ -487,7 +487,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Org ID", "Status", "Type", "Gift Collection", "Name", "Orn Delivered",
+		String[] header = {"Org ID", "Status", "Type", "Gift Collection", "Name",
 				"Street #", "Street", "Unit", "City", "Zip", "Region", "Phone",
 	 			"Orn Requested", "Orn Assigned", "Orn Delivered", "Gifts Received Before",
 	 			"Gifts Received After", "Other", "Deliver To", "Special Notes",
