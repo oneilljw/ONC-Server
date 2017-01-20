@@ -32,7 +32,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 4.29f;
+	private static final float MINIMUM_CLIENT_VERSION = 4.30f;
 	
 	private int id;
 	private String version;
@@ -51,6 +51,7 @@ public class DesktopClient extends Thread
     private ServerGlobalVariableDB globalvariableDB;
     private ServerFamilyDB serverFamilyDB;
     private ServerAgentDB serverAgentDB;
+    private ServerGroupDB serverGroupDB;
     private ServerChildDB childDB;
     private ServerChildWishDB childwishDB;
     private ServerPartnerDB serverPartnerDB;
@@ -99,6 +100,7 @@ public class DesktopClient extends Thread
 	        globalvariableDB = ServerGlobalVariableDB.getInstance();
 	        serverFamilyDB = ServerFamilyDB.getInstance();
 	        serverAgentDB = ServerAgentDB.getInstance();
+	        serverGroupDB = ServerGroupDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildWishDB.getInstance();
 	        serverPartnerDB = ServerPartnerDB.getInstance();
@@ -232,6 +234,12 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = serverAgentDB.getAgents(year);
+                	output.println(response);
+                }
+                else if(command.startsWith("GET<groups>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = serverGroupDB.getGroupList();
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<family>"))
@@ -447,6 +455,30 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = childDB.add(year, command.substring(15));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<update_group>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = serverGroupDB.update(command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<delete_group>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = serverGroupDB.delete(command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<add_group>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = serverGroupDB.add(command.substring(15));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);

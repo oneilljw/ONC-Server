@@ -58,19 +58,12 @@ public class ServerWishCatalog extends ServerPermanentDB
 		return instance;
 	}
 	
-//	List<ONCWish> getWishCatalogYear(int year)
-//	{
-//		return catalogDB.get(year - BASE_YEAR).getList();
-//		return catalogDB;
-//	}
-	
-	//Search the database for the family. Return a json if the family is found. 
+	//return the catalog list as a json
 	String getWishCatalog(int year)
 	{
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCWish>>(){}.getType();
 			
-//		String response = gson.toJson(catalogDB.get(year - BASE_YEAR).getList(), listtype);
 		String response = gson.toJson(catalogDB, listtype);
 		return response;	
 	}

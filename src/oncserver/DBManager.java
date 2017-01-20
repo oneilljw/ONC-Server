@@ -83,6 +83,7 @@ public class DBManager
 			dbSeasonalAutosaveList.add(ServerChildWishDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerFamilyDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerAgentDB.getInstance());
+			dbPermanentAutosaveList.add(ServerGroupDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerVolunteerDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerWarehouseDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerFamilyHistoryDB.getInstance());
