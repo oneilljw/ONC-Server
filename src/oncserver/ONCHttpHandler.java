@@ -281,7 +281,7 @@ public class ONCHttpHandler implements HttpHandler
     		int year = Integer.parseInt((String) params.get("year"));
     		int agtID = Integer.parseInt((String) params.get("agentid"));
     		
-    		HtmlResponse response = ServerAgentDB.getAgentJSONP(year, agtID, (String) params.get("callback"));
+    		HtmlResponse response = ServerAgentDB.getAgentJSONP(agtID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/getstatus"))
@@ -1183,7 +1183,7 @@ public class ONCHttpHandler implements HttpHandler
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
 		Agent agt = null;
-		if(wc.getWebUser().getAgentID() == -1 || (agt=ServerAgentDB.getAgent(year, wc.getWebUser())) == null)
+		if(wc.getWebUser().getAgentID() == -1 || (agt=ServerAgentDB.getAgent(wc.getWebUser())) == null)
 		{
 			return new FamilyResponseCode(-1, "Family Referral Rejected: Referring Agent Not Found");
 		}
@@ -1511,7 +1511,7 @@ public class ONCHttpHandler implements HttpHandler
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
 		
-		if(wc.getWebUser().getAgentID() == -1  || ServerAgentDB.getAgent(year, wc.getWebUser()) == null)
+		if(wc.getWebUser().getAgentID() == -1  || ServerAgentDB.getAgent(wc.getWebUser()) == null)
 		{
 			return new FamilyResponseCode(-1, "Family Update Rejected: Referring Agent Not Found");
 		}

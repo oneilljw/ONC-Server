@@ -32,7 +32,7 @@ public class ApartmentDB
 		aptList = new ArrayList<Address>();
 		if(aptList.size() == 0)
 		{
-			readApartmentDBFromFile(System.getProperty("user.dir") +"/ApartmentDB.csv");
+			readApartmentDBFromFile(System.getProperty("user.dir") +"/PermanentDB/ApartmentDB.csv");
 //			Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
 			createHashTable();
 		}

@@ -233,7 +233,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<agents>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = serverAgentDB.getAgents(year);
+                	String response = serverAgentDB.getAgents();
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<groups>"))
@@ -544,7 +544,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<update_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = serverAgentDB.update(year, command.substring(18));
+                	String response = serverAgentDB.update(command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
@@ -552,7 +552,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = serverAgentDB.add(year, command.substring(15));
+                	String response = serverAgentDB.add(command.substring(15));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
@@ -560,7 +560,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<delete_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = serverAgentDB.delete(year, command.substring(18));
+                	String response = serverAgentDB.delete(command.substring(18));
                 	output.println(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
                 }

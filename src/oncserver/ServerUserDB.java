@@ -39,7 +39,7 @@ public class ServerUserDB extends ServerPermanentDB
 		
 		userAL = new ArrayList<ONCServerUser>();
 //		System.out.println(String.format("ServerUserDB filename: %s", System.getProperty("user.dir") + USERDB_FILENAME));
-		importDB(System.getProperty("user.dir") + USERDB_FILENAME, "User DB", USER_RECORD_LENGTH);
+		importDB(String.format("%s/PermanentDB%s", System.getProperty("user.dir"), USERDB_FILENAME), "User DB", USER_RECORD_LENGTH);
 		nextID = getNextID(userAL);
 		bSaveRequired = false;
 	}
@@ -65,7 +65,7 @@ public class ServerUserDB extends ServerPermanentDB
 		//If the user has web site access, ask the Agent DB to add the agent if there not already there.
 		//Set the agentID field to the agentID. If not web site access, set the agentID to -1;
 		if(su.getAccess() == UserAccess.Website || su.getAccess() == UserAccess.AppAndWebsite)
-			su.setAgentID(serverAgentDB.checkForAgent(DBManager.getCurrentYear(), su));
+			su.setAgentID(serverAgentDB.checkForAgent(su));
 		else
 			su.setAgentID(-1);
 		
@@ -133,7 +133,7 @@ public class ServerUserDB extends ServerPermanentDB
 					  updatedUser.getAccess()==UserAccess.AppAndWebsite))
 			{
 				//UserAccess to web site is being added, need to check for adding agent
-				su.setAgentID(serverAgentDB.checkForAgent(DBManager.getCurrentYear(), su));
+				su.setAgentID(serverAgentDB.checkForAgent(su));
 				su.setAccess(updatedUser.getAccess());
 			}
 			
@@ -149,7 +149,7 @@ public class ServerUserDB extends ServerPermanentDB
 			
 			//userDB and agentDB must stay in sync.
 			if(bAgentProfileChanged)
-				serverAgentDB.processUserUpdate(DBManager.getCurrentYear(), su);
+				serverAgentDB.processUserUpdate(su);
 				
 			ONCUser updateduser = su.getUserFromServerUser();
 			return "UPDATED_USER" + gson.toJson(updateduser, ONCUser.class);
@@ -205,7 +205,7 @@ public class ServerUserDB extends ServerPermanentDB
 			
 			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
 			if(su.getAgentID() > -1)	//notify AgentDB of email change
-				serverAgentDB.processUserUpdate(DBManager.getCurrentYear(), su);
+				serverAgentDB.processUserUpdate(su);
 			
 			return su;
 		}

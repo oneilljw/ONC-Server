@@ -15,6 +15,10 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public abstract class ServerPermanentDB extends ONCServerDB
 {
+	protected static final int AGENT_UNCHANGED = 0;
+	protected static final int AGENT_UPDATED = 1;
+	protected static final int AGENT_ADDED = 2;
+	
 	protected int nextID;
 	protected boolean bSaveRequired;
 	

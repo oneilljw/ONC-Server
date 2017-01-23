@@ -429,7 +429,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		for(BritepathFamily bpFam:bpFamilyList)
 		{
 			//add the referring agent to the Agent DB
-			ImportONCObjectResponse agentResponse = agentDB.processImportedReferringAgent(year, bpFam.getReferringAgent());
+			ImportONCObjectResponse agentResponse = agentDB.processImportedReferringAgent(bpFam.getReferringAgent());
 			
 			//if the agent was added or updated, add the change to the response list
 			if(agentResponse.getImportResult() != AGENT_UNCHANGED)
@@ -960,9 +960,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		}
 	}
 	
-	static boolean didAgentReferInYear(int agentID, int year)
+	static boolean didAgentReferInYear(int year, int agentID)
 	{
 		List<ONCFamily> famList = familyDB.get(year-BASE_YEAR).getList();
+		
 		int index = 0;
 		while(index < famList.size() && famList.get(index).getAgentID() != agentID)
 			index++;

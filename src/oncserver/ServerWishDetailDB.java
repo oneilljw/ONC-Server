@@ -46,7 +46,7 @@ public class ServerWishDetailDB extends ServerPermanentDB
 			detailDBYear.setNextID(getNextID(detailDBYear.getList()));
 		}
 */		
-		importDB(System.getProperty("user.dir") + DETAIL_FILENAME, "Wish Detail", DETAIL_RECORD_LENGTH);
+		importDB(String.format("%s/PermanentDB%s", System.getProperty("user.dir"), DETAIL_FILENAME), "Wish Detail", DETAIL_RECORD_LENGTH);
 		nextID = getNextID(wdDB);
 		bSaveRequired = false;
 	}
@@ -136,6 +136,7 @@ public class ServerWishDetailDB extends ServerPermanentDB
 		Type listtype = new TypeToken<ArrayList<WishDetail>>(){}.getType();
 			
 		String response = gson.toJson(wdDB, listtype);
+		
 		return response;	
 	}
 

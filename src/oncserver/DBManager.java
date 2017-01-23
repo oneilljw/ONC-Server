@@ -52,7 +52,7 @@ public class DBManager
 		
 		try 
 		{
-			importDBYears(String.format("%s/dbyears.csv", System.getProperty("user.dir")), "Data base Years");
+			importDBYears(String.format("%s/PermanentDB/dbyears.csv", System.getProperty("user.dir")), "Data base Years");
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -82,7 +82,7 @@ public class DBManager
 			dbSeasonalAutosaveList.add(ServerChildDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerChildWishDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerFamilyDB.getInstance());
-			dbSeasonalAutosaveList.add(ServerAgentDB.getInstance());
+			dbPermanentAutosaveList.add(ServerAgentDB.getInstance());
 			dbPermanentAutosaveList.add(ServerGroupDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerVolunteerDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerWarehouseDB.getInstance());
