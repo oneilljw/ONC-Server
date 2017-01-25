@@ -22,7 +22,6 @@ import java.util.TimeZone;
 import ourneighborschild.Address;
 import ourneighborschild.AddressValidation;
 import ourneighborschild.AdultGender;
-import ourneighborschild.Agent;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
@@ -192,7 +191,8 @@ public class ONCHttpHandler implements HttpHandler
     		if((wc=clientMgr.findClient(sessionID)) != null)	
     		{
     			wc.updateTimestamp();
-    			htmlResponse = ServerAgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
+//    			htmlResponse = ServerAgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
+    			htmlResponse = ServerUserDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
     		}
     		else
     		{
@@ -281,7 +281,8 @@ public class ONCHttpHandler implements HttpHandler
     		int year = Integer.parseInt((String) params.get("year"));
     		int agtID = Integer.parseInt((String) params.get("agentid"));
     		
-    		HtmlResponse response = ServerAgentDB.getAgentJSONP(agtID, (String) params.get("callback"));
+//    		HtmlResponse response = ServerAgentDB.getAgentJSONP(agtID, (String) params.get("callback"));
+    		HtmlResponse response = ServerUserDB.getAgentJSONP(agtID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/getstatus"))
@@ -1180,14 +1181,9 @@ public class ONCHttpHandler implements HttpHandler
 	
 	FamilyResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
 	{
-		//get the agent
+		//get the agent/user
 		int year = Integer.parseInt((String) params.get("year"));
-		Agent agt = null;
-		if(wc.getWebUser().getAgentID() == -1 || (agt=ServerAgentDB.getAgent(wc.getWebUser())) == null)
-		{
-			return new FamilyResponseCode(-1, "Family Referral Rejected: Referring Agent Not Found");
-		}
-
+		
 		//get database references
 		ServerMealDB mealDB = null;
 		ServerFamilyDB serverFamilyDB= null;
@@ -1255,7 +1251,8 @@ public class ONCHttpHandler implements HttpHandler
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
 					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
-					createWishList(params), agt.getID(), addedMeal != null ? addedMeal.getID() : -1,
+					createWishList(params), wc.getWebUser().getID(),
+					addedMeal != null ? addedMeal.getID() : -1,
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
 					Transportation.valueOf(familyMap.get("transportation")));
 			
@@ -1511,11 +1508,6 @@ public class ONCHttpHandler implements HttpHandler
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
 		
-		if(wc.getWebUser().getAgentID() == -1  || ServerAgentDB.getAgent(wc.getWebUser()) == null)
-		{
-			return new FamilyResponseCode(-1, "Family Update Rejected: Referring Agent Not Found");
-		}
-
 		//get database references
 		ServerFamilyDB serverFamilyDB= null;
 		

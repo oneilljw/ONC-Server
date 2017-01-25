@@ -9,6 +9,9 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public abstract class ONCServerDB
 {
+	protected static final int USER_UNCHANGED = 0;
+	protected static final int USER_UPDATED = 1;
+	protected static final int USER_ADDED = 2;
 //	protected static final int BASE_YEAR = 2012;
 	
 //	abstract String add(int year, String userjson);

@@ -16,7 +16,7 @@ public class ServerWishCatalog extends ServerPermanentDB
 {
 //	private static final int WISH_CATALOG_HEADER_LENGTH = 7;
 	private static final int CATALOG_RECORD_LENGTH = 7;
-	private static final String CATALOG_FILENAME = "/WishCatalog.csv";
+	private static final String CATALOG_FILENAME = "WishCatalog.csv";
 //	private static List<WishCatalogDBYear> catalogDB;
 	private static List<ONCWish> catalogDB;
 //	private int nextID;
@@ -45,7 +45,7 @@ public class ServerWishCatalog extends ServerPermanentDB
 //			catalogDBYear.setNextID(getNextID(catalogDBYear.getList()));
 //		}
 		
-		importDB(String.format("%s/PermanentDB%s", System.getProperty("user.dir"), CATALOG_FILENAME), "Wish Catalog", CATALOG_RECORD_LENGTH);
+		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), CATALOG_FILENAME), "Wish Catalog", CATALOG_RECORD_LENGTH);
 		nextID = getNextID(catalogDB);
 		bSaveRequired = false;
 	}

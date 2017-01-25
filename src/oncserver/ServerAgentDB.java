@@ -1,10 +1,9 @@
 package oncserver;
 
+/*
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -12,22 +11,23 @@ import ourneighborschild.Agent;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
-import ourneighborschild.UserPermission;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+*/
 
-public class ServerAgentDB extends ServerPermanentDB
+public class ServerAgentDB
 {
+/*	
+	private static final String AGENT_DB_FILENAME = "AgentDB.csv";	
 	private static final int AGENT_DB_HEADER_LENGTH = 6;
-	private static final String AGENT_DB_FILENAME = "/AgentDB.csv";
+	
 	private static List<Agent> agentDB;
 	private static ServerAgentDB instance = null;
 	
 	private ServerAgentDB() throws FileNotFoundException, IOException
 	{
 		agentDB = new ArrayList<Agent>();
-		importDB(String.format("%s/PermanentDB%s", System.getProperty("user.dir"),AGENT_DB_FILENAME), "Agent DB", AGENT_DB_HEADER_LENGTH);
+		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), AGENT_DB_FILENAME), "Agent DB", AGENT_DB_HEADER_LENGTH);
 		nextID = getNextID(agentDB);
 		bSaveRequired = false;
 /*
@@ -51,7 +51,7 @@ public class ServerAgentDB extends ServerPermanentDB
 			//set the next id
 			agentDBYear.setNextID(getNextID(agentDBYear.getList()));
 		}
-*/		
+		
 	}
 	
 	public static ServerAgentDB getInstance() throws FileNotFoundException, IOException
@@ -61,8 +61,8 @@ public class ServerAgentDB extends ServerPermanentDB
 		
 		return instance;
 	}
-	
-	//Search the database for the family. Return a json if the family is found. 
+/*	
+	//Return a json of Agents in the data base. 
 	String getAgents()
 	{
 		Gson gson = new Gson();
@@ -71,7 +71,7 @@ public class ServerAgentDB extends ServerPermanentDB
 		String response = gson.toJson(agentDB, listtype);
 		return response;	
 	}
-	
+*/	
 	/***
 	 * Returns an <Agent> json that contains agents that referred families in the parameter
 	 * year. Uses the JSONP construct.
@@ -79,6 +79,7 @@ public class ServerAgentDB extends ServerPermanentDB
 	 * @param callbackFunction
 	 * @return
 	 */
+/*	
 	static HtmlResponse getAgentsJSONP(int year, ONCUser user, String callbackFunction)
 	{	
 		Gson gson = new Gson();
@@ -186,7 +187,7 @@ public class ServerAgentDB extends ServerPermanentDB
 		//check to see if the agent already exists by name. If so, don't create a new
 		//agent and add to the db, it they do exist return the existing agent
 		int index = 0;
-		while(index < agentDB.size() && !agentDB.get(index).doesAgentNameMatch(reqAgt.getAgentName()))
+		while(index < agentDB.size() && !agentDB.get(index).doesAgentNameMatch(reqAgt.getAgentLastName()))
 			index++;
 				
 		if(index < agentDB.size())
@@ -257,7 +258,7 @@ public class ServerAgentDB extends ServerPermanentDB
 			return new ImportONCObjectResponse(AGENT_ADDED, reqAgt, "ADDED_AGENT" + gson.toJson(reqAgt, Agent.class));	
 		}
 	}
-	
+/*	
 	String add(String json)
 	{
 		//Create an object to add to the data base
@@ -271,7 +272,7 @@ public class ServerAgentDB extends ServerPermanentDB
 		//check to see if the agent already exists by name. If so, don't create a new
 		//agent and add to the db, it they do exist return the existing agent
 		int index = 0;
-		while(index < agentDB.size() && !agentDB.get(index).doesAgentNameMatch(reqAddAgt.getAgentName()))
+		while(index < agentDB.size() && !agentDB.get(index).doesAgentNameMatch(reqAddAgt.getAgentLastName()))
 				index++;
 		
 		if(index < agentDB.size())
@@ -348,7 +349,7 @@ public class ServerAgentDB extends ServerPermanentDB
 		else
 			return null;
 	}
-	
+
 	static Agent getAgent(ONCUser user)
 	{
 //		AgentDBYear agentDBYear = agentDB.get(year - BASE_YEAR);
@@ -364,6 +365,7 @@ public class ServerAgentDB extends ServerPermanentDB
 		else
 			return null;
 	}
+*/	
 	/*******
 	 * Called to check if a new user is already an agent. If they are, simply return the agent ID.
 	 * If they aren't, the method adds them as a new agent, notifies the in-year clients and
@@ -372,6 +374,7 @@ public class ServerAgentDB extends ServerPermanentDB
 	 * @param su
 	 * @return
 	 ****************************************/
+/*	
 	int checkForAgent(ONCServerUser su)
 	{	
 		//get access to Client Manager instance
@@ -414,8 +417,8 @@ public class ServerAgentDB extends ServerPermanentDB
 		else
 		{
 			//add new user as an agent, notify in-year clients and return agent ID
-			Agent newAgent = new Agent(nextID++, su.getFirstname() + " " + su.getLastname(),
-					su.getOrg(), su.getTitle(), su.getEmail(), su.getPhone());
+			Agent newAgent = new Agent(nextID++, su.getFirstname(), su.getLastname(), su.getOrg(),
+					su.getTitle(), su.getEmail(), su.getPhone());
 			
 			bSaveRequired = true;
 			
@@ -427,12 +430,13 @@ public class ServerAgentDB extends ServerPermanentDB
 			return newAgent.getID();
 		}
 	}
-	
+*/	
 	/*********
 	 * When a user is updated, need to keep the user profile and the agent profile in sync. This
 	 * method updates the agent profile
 	 * @param agentID
 	 */
+/*	
 	void processUserUpdate(ONCServerUser updatedUser)
 	{
 		//get access to Client Manager instance
@@ -450,7 +454,7 @@ public class ServerAgentDB extends ServerPermanentDB
 		if(index < agentDB.size())	//agent found? If so, update the profile
 		{
 			Agent updatedAgent = agentDB.get(index);
-			updatedAgent.setAgentName(updatedUser.getFirstname() + " " + updatedUser.getLastname());
+			updatedAgent.setAgentLastName(updatedUser.getFirstname() + " " + updatedUser.getLastname());
 			updatedAgent.setAgentOrg(updatedUser.getOrg());
 			updatedAgent.setAgentTitle(updatedUser.getTitle());
 			updatedAgent.setAgentEmail(updatedUser.getEmail());
@@ -466,7 +470,7 @@ public class ServerAgentDB extends ServerPermanentDB
 			clientMgr.notifyAllClients(updateMssg);
 		}
 	}
-/*	
+	
 	void exportFamilyDBToCSV(ArrayList<Agent>eAL, String path)
     {	
 	    try 
@@ -528,19 +532,19 @@ public class ServerAgentDB extends ServerPermanentDB
 		//Mark the newly created WishCatlogDBYear for saving during the next save event
 		agentDBYear.setChanged(true);
 	}
-*/
+
 	@Override
 	void addObject(String[] nextLine)
 	{
 //		for(int i=0; i<nextLine.length; i++)
 //			System.out.println(String.format("ServerAgentDB.addObject: nextLine[%d] = %s", i, nextLine[i]));
 		
-		Agent addedAgent = new Agent(Integer.parseInt(nextLine[0]), nextLine[1], nextLine[2],
+		Agent addedAgent = new Agent(Integer.parseInt(nextLine[0]), "", nextLine[1], nextLine[2],
 				nextLine[3], nextLine[4], nextLine[5]);
 		
 		agentDB.add(addedAgent);	
 	}
-/*
+
 	@Override
 	void save()
 	{
@@ -556,13 +560,13 @@ public class ServerAgentDB extends ServerPermanentDB
 //			agentDBYear.setChanged(false);
 		}	
 	}
-*/	
+	
 	private static class ONCAgentNameComparator implements Comparator<Agent>
 	{
 		@Override
 		public int compare(Agent o1, Agent o2)
 		{
-			return o1.getAgentName().compareTo(o2.getAgentName());
+			return o1.getAgentLastName().compareTo(o2.getAgentLastName());
 		}
 	}
 
@@ -580,4 +584,5 @@ public class ServerAgentDB extends ServerPermanentDB
 
 	@Override
 	List<? extends ONCObject> getONCObjectList() { return agentDB; }
+*/	
 }

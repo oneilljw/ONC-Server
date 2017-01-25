@@ -82,7 +82,7 @@ public class DBManager
 			dbSeasonalAutosaveList.add(ServerChildDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerChildWishDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerFamilyDB.getInstance());
-			dbPermanentAutosaveList.add(ServerAgentDB.getInstance());
+//			dbPermanentAutosaveList.add(ServerAgentDB.getInstance());
 			dbPermanentAutosaveList.add(ServerGroupDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerVolunteerDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerWarehouseDB.getInstance());
@@ -237,7 +237,7 @@ public class DBManager
 	void exportDBYearsList()
 	{
 		String[] header = {"Year", "Locked?"};
-		String path = String.format("%s/dbyears.csv", System.getProperty("user.dir"));
+		String path = String.format("%s/PermanentDB/dbyears.csv", System.getProperty("user.dir"));
 		 try 
 		    {
 		    	CSVWriter writer = new CSVWriter(new FileWriter(path));

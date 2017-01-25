@@ -4,15 +4,20 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import ourneighborschild.Agent;
+import ourneighborschild.BritepathFamily;
 import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserAccess;
+import ourneighborschild.UserPermission;
 import ourneighborschild.UserPreferences;
 import ourneighborschild.UserStatus;
 
@@ -23,25 +28,24 @@ public class ServerUserDB extends ServerPermanentDB
 {
 	private static final int USER_RECORD_LENGTH = 23;
 	private static final String USER_PASSWORD_PREFIX = "onc";
-	private static final String USERDB_FILENAME = "/users.csv";
+	private static final String USERDB_FILENAME = "newuser.csv";
 	private static ServerUserDB instance  = null;
 	
 	private static ClientManager clientMgr;
-	private static ServerAgentDB serverAgentDB;
 	
 	private static List<ONCServerUser> userAL;
-//	private int nextID;
 	
 	private ServerUserDB() throws NumberFormatException, IOException
 	{
 		clientMgr = ClientManager.getInstance();
-		serverAgentDB = ServerAgentDB.getInstance();
 		
 		userAL = new ArrayList<ONCServerUser>();
 //		System.out.println(String.format("ServerUserDB filename: %s", System.getProperty("user.dir") + USERDB_FILENAME));
-		importDB(String.format("%s/PermanentDB%s", System.getProperty("user.dir"), USERDB_FILENAME), "User DB", USER_RECORD_LENGTH);
+		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), USERDB_FILENAME), "User DB", USER_RECORD_LENGTH);
 		nextID = getNextID(userAL);
 		bSaveRequired = false;
+		
+//		System.out.println(String.format("ServerUserDB: added %d IDs", addMissingEncryptedUserIDs()));
 	}
 	
 	public static ServerUserDB getInstance() throws NumberFormatException, IOException
@@ -61,17 +65,10 @@ public class ServerUserDB extends ServerPermanentDB
 		su.setID(nextID++);	//Set id for new user
 		su.setUserPW("onc" + su.getPermission().toString());
 		su.setStatus(UserStatus.Change_PW);
-		
-		//If the user has web site access, ask the Agent DB to add the agent if there not already there.
-		//Set the agentID field to the agentID. If not web site access, set the agentID to -1;
-		if(su.getAccess() == UserAccess.Website || su.getAccess() == UserAccess.AppAndWebsite)
-			su.setAgentID(serverAgentDB.checkForAgent(su));
-		else
-			su.setAgentID(-1);
+		su.setAgentID(-1);
 		
 		userAL.add(su); //Add new user to data base
 		bSaveRequired = true;
-//		save();
 		
 		return "ADDED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class) ;
 	}
@@ -90,16 +87,6 @@ public class ServerUserDB extends ServerPermanentDB
 		if(index < userAL.size())
 		{
 			ONCServerUser su = userAL.get(index);
-			
-			//check to see if user is an agent and the agent profile has changed before updating
-			//the server user
-			boolean bAgentProfileChanged = su.getAgentID() > -1 && 
-				(!su.getLastname().equals(updatedUser.getLastname()) ||
-				  !su.getFirstname().equals(updatedUser.getFirstname()) ||
-				   !su.getOrg().equals(updatedUser.getOrg()) ||
-				    !su.getTitle().equals(updatedUser.getTitle()) ||
-				     !su.getPhone().equals(updatedUser.getPhone()) ||
-				      !su.getEmail().equals(updatedUser.getEmail()));
 			
 			//update the server user
 			su.setLastname(updatedUser.getLastname());
@@ -133,7 +120,6 @@ public class ServerUserDB extends ServerPermanentDB
 					  updatedUser.getAccess()==UserAccess.AppAndWebsite))
 			{
 				//UserAccess to web site is being added, need to check for adding agent
-				su.setAgentID(serverAgentDB.checkForAgent(su));
 				su.setAccess(updatedUser.getAccess());
 			}
 			
@@ -145,12 +131,7 @@ public class ServerUserDB extends ServerPermanentDB
 			currPrefs.setFamilyDNSFilter(newPrefs.getFamilyDNSFilter());
 			
 			bSaveRequired = true;
-//			save();
 			
-			//userDB and agentDB must stay in sync.
-			if(bAgentProfileChanged)
-				serverAgentDB.processUserUpdate(su);
-				
 			ONCUser updateduser = su.getUserFromServerUser();
 			return "UPDATED_USER" + gson.toJson(updateduser, ONCUser.class);
 		}
@@ -201,12 +182,7 @@ public class ServerUserDB extends ServerPermanentDB
 				su.setStatus(UserStatus.Active);
 			
 			bSaveRequired = true;
-//			save();
-			
-			//userDB and agentDB must stay in sync. If user is an agent, notify agent db of update
-			if(su.getAgentID() > -1)	//notify AgentDB of email change
-				serverAgentDB.processUserUpdate(su);
-			
+
 			return su;
 		}
 		else
@@ -227,58 +203,6 @@ public class ServerUserDB extends ServerPermanentDB
 		}
 		else
 			return null; //UserStatus != Update_Profile
-	}
-	
-	void processAgentUpdate(Agent updatedAgent)
-	{
-		//see if the agent is a user, using agent id match
-		int index=0;
-		while(index < userAL.size() && userAL.get(index).getAgentID() != updatedAgent.getID())
-			index++;
-		
-		if(index < userAL.size())
-		{
-			//User found, update the profile, paying special attention to the email address
-			ONCServerUser updatedUser = userAL.get(index);
-			
-			//deal with the agent name
-			String[] name_parts = updatedAgent.getAgentName().trim().split(" ");
-			if(name_parts.length == 0)
-			{
-				updatedUser.setFirstname("");
-				updatedUser.setLastname("");
-			}
-			else if(name_parts.length == 1)
-			{
-				updatedUser.setFirstname("");
-				updatedUser.setLastname(name_parts[0]);
-			}
-			else if(name_parts.length == 2)
-			{
-				updatedUser.setFirstname(name_parts[0]);
-				updatedUser.setLastname(name_parts[1]);
-			}
-			else
-			{
-				updatedUser.setFirstname(name_parts[0] + " " + name_parts[1]);
-				updatedUser.setLastname(name_parts[2]);
-			}
-			
-			updatedUser.setOrg(updatedAgent.getAgentOrg());
-			updatedUser.setTitle(updatedAgent.getAgentTitle());
-			updatedUser.setPhone(updatedAgent.getAgentPhone());
-			if(!updatedUser.getEmail().equals(updatedAgent.getAgentEmail()))
-				updateUserEmail(updatedUser, updatedAgent.getAgentEmail());
-			
-			bSaveRequired = true;
-//			save();
-			
-			//notify all clients of the change
-			ONCUser user = new ONCUser(updatedUser); //create a ONCUSer for ONCServerUser
-			Gson gson = new Gson();
-			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(user, ONCUser.class));
-		}
 	}
 	
 	ONCServerUser find(String uid)
@@ -475,4 +399,216 @@ public class ServerUserDB extends ServerPermanentDB
 	
 	@Override
 	List<? extends ONCObject> getONCObjectList() { return userAL; }
+	
+	int addMissingEncryptedUserIDs()
+	{
+		int count = 0;
+		for(ONCServerUser su: userAL)
+		{
+			if(su.getPermission().equals(UserPermission.Agent) &&  su.getUserID().isEmpty())
+			{
+				su.setUserID("oncAgent");
+				count++;
+			}
+		}
+		
+		//save the file if changes were made
+		if(count > 0)
+			bSaveRequired = true;
+		
+		return count;	
+	}
+	
+	String getAgents()
+	{
+		List<Agent> agentList = new ArrayList<Agent>();
+		for(ONCServerUser su : userAL)
+			if(su.getPermission().compareTo(UserPermission.Agent) >= 0)
+				agentList.add(new Agent(su));
+		
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();		
+		return gson.toJson(agentList, listtype);
+	}
+	
+	/***
+	 * Returns an <Agent> json that contains agents that referred families in the parameter
+	 * year. Uses the JSONP construct.
+	 * @param year
+	 * @param callbackFunction
+	 * @return
+	 */
+	static HtmlResponse getAgentsJSONP(int year, ONCUser user, String callbackFunction)
+	{	
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();
+		
+		List<Agent> agentReferredInYearList = new ArrayList<Agent>();
+		
+		//if user permission is AGENT, only return a list of that agent, else return all agents
+		//that referred
+		if(user.getPermission().compareTo(UserPermission.Agent) == 0)
+		{
+			int index=0;
+			while(index < userAL.size() && userAL.get(index).getPermission().compareTo(UserPermission.Agent) >= 0 && 
+					userAL.get(index).getID() != user.getAgentID())
+				index++;
+					
+			agentReferredInYearList.add(new Agent(userAL.get(index)));
+		}
+		else
+		{
+			for(ONCServerUser su : userAL)
+				if(ServerFamilyDB.didAgentReferInYear(year, su.getID()))
+					agentReferredInYearList.add(new Agent(su));
+			
+			//sort the list by name
+			Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
+		}
+			
+		String response = gson.toJson(agentReferredInYearList, listtype);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	static HtmlResponse getAgentJSONP(int agentID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		String response;
+	
+		int index=0;
+		while(index < userAL.size() && userAL.get(index).getPermission().compareTo(UserPermission.Agent) > 0 &&
+				userAL.get(index).getID() != agentID)
+			index++;
+		
+		if(index < userAL.size())
+		{
+			Agent agent = new Agent(userAL.get(index));
+			response = gson.toJson(agent, Agent.class);
+		}
+		else
+			response = "";
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	private ONCServerUser createSeverUserFromBritepathsReferral(BritepathFamily bpFam, DesktopClient currClient)
+	{
+		//split britepaths agent name into first name and last name
+		String firstName = "", lastName= "";
+		String[] name_parts = bpFam.getReferringAgentName().split(" ");
+		if(name_parts.length == 0)
+		{
+			firstName = "No Name";
+			lastName = "No Name";
+		}
+		else if(name_parts.length == 1)
+		{
+			lastName = name_parts[0];
+		}
+		else if(name_parts.length == 2)
+		{
+			firstName = name_parts[0];
+			lastName = name_parts[1];
+		}
+		else if(name_parts.length == 3)
+		{
+			firstName = name_parts[0];
+			lastName = name_parts[1] + " " + name_parts[2];	
+		}
+		else
+		{
+			firstName = name_parts[0] + " " + name_parts[1];
+			lastName = name_parts[2];
+			int index = 3;
+			while(index < name_parts.length)
+				lastName.concat(" " + name_parts[index++]);
+		}
+		
+		return new ONCServerUser(-1, new Date(), currClient.getClientUser().getLNFI(), 3, 
+				"New Britepaths Referral User", currClient.getClientUser().getLNFI(),
+				firstName, lastName, UserStatus.Inactive, UserAccess.Website, UserPermission.Agent,
+				bpFam.getReferringAgentEmail(), "oncAgent", 0, System.currentTimeMillis(),
+				true, bpFam.getReferringAgentOrg(), bpFam.getReferringAgentTitle(), bpFam.getReferringAgentEmail(),
+				bpFam.getReferringAgentPhone(), -1);	
+	}
+	
+	
+	ImportONCObjectResponse processImportedReferringAgent(BritepathFamily bpFam, DesktopClient currClient)
+	{		
+		//check to see if the user already exists by name. If so, don't create a new
+		//user. If they don't exist, add them as a user
+		ONCServerUser newPotentialUser = createSeverUserFromBritepathsReferral(bpFam, currClient);
+		
+		//try to find the new potential user
+		int index = 0;
+		while(index < userAL.size() && !userAL.get(index).doesUserMatch(newPotentialUser))
+			index++;
+				
+		if(index < userAL.size())
+		{
+			//found a match. Determine if other fields user have changed. If so, update
+			boolean bUserUpdated = false;
+			ONCServerUser existingSU = userAL.get(index);
+			
+			if(!newPotentialUser.getOrg().trim().isEmpty() && !newPotentialUser.getOrg().equals(existingSU.getOrg())) 
+			{
+				existingSU.setOrg(newPotentialUser.getOrg().trim());
+				bUserUpdated = true;
+			}
+			
+			if(!newPotentialUser.getTitle().trim().isEmpty() && !newPotentialUser.getTitle().equals(existingSU.getTitle())) 
+			{
+				existingSU.setTitle(newPotentialUser.getTitle().trim()); 
+				bUserUpdated = true;
+			}
+					
+			if(!newPotentialUser.getEmail().trim().isEmpty() && !newPotentialUser.getEmail().equals(existingSU.getEmail()))
+			{
+				existingSU.setEmail(newPotentialUser.getEmail().trim());
+				bUserUpdated = true;
+			}
+					
+			if(!newPotentialUser.getPhone().trim().isEmpty() && !newPotentialUser.getPhone().equals(existingSU.getPhone())) 
+			{
+				existingSU.setPhone(newPotentialUser.getPhone().trim());
+				bUserUpdated = true;
+			}
+			
+			if(bUserUpdated)
+			{
+				bSaveRequired = true;
+				
+				Gson gson = new Gson();
+				ONCUser updatedUser = existingSU.getUserFromServerUser();
+				return new ImportONCObjectResponse(USER_UPDATED, updatedUser, 
+						"UPDATED_USER" + gson.toJson(updatedUser, ONCUser.class));
+			}
+			else
+				return new ImportONCObjectResponse(USER_UNCHANGED, null, "UNCHANGED");
+		}
+		else
+		{
+			//user match not found, add the potential user to the database, save and return
+			newPotentialUser.setID(nextID++);
+			userAL.add(newPotentialUser);
+		
+			bSaveRequired = true;
+
+			ONCUser addedUser = newPotentialUser.getUserFromServerUser();
+			Gson gson = new Gson();
+			return new ImportONCObjectResponse(USER_ADDED, addedUser, "ADDED_USER" + gson.toJson(addedUser, ONCUser.class));
+		}
+	}
+	
+	private static class ONCAgentNameComparator implements Comparator<Agent>
+	{
+		@Override
+		public int compare(Agent o1, Agent o2)
+		{
+			return o1.getAgentLastName().compareTo(o2.getAgentLastName());
+		}
+	}
 }

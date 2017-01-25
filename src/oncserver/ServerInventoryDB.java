@@ -24,7 +24,7 @@ import ourneighborschild.UPCFailure;
 
 public class ServerInventoryDB extends ServerPermanentDB
 {
-	private static final String INVENTORYDB_FILENAME = "/InventoryDB.csv";
+	private static final String INVENTORYDB_FILENAME = "InventoryDB.csv";
 //	private static final int INVENTORY_DB_RECORD_LENGTH = 6;
 //	private static final String API_KEY = "c41c148aae17866d16c9e278968539b3";
 	private static final String EANDATA_KEYCODE = "3236448D57742EAB";
@@ -45,7 +45,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 		clientMgr = ClientManager.getInstance();
 		
 		invList = new ArrayList<InventoryItem>();
-		importDB(String.format("%s/PermanentDB%s", System.getProperty("user.dir"), INVENTORYDB_FILENAME), "Inventory DB", getExportHeader().length);
+		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), INVENTORYDB_FILENAME), "Inventory DB", getExportHeader().length);
 		nextID = getNextID(invList);
 		bSaveRequired = false;
 		

@@ -53,7 +53,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //	private static List<int[]> oncNumRanges;
 	
 	private static ServerFamilyHistoryDB familyHistoryDB;
-	private static ServerAgentDB agentDB;
+	private static ServerUserDB userDB;
 	private static ServerChildDB childDB;
 	private static ServerAdultDB adultDB;
 	
@@ -95,7 +95,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		familyHistoryDB = ServerFamilyHistoryDB.getInstance();
 		childDB = ServerChildDB.getInstance();
 		adultDB = ServerAdultDB.getInstance();
-		agentDB = ServerAgentDB.getInstance();
+		userDB = ServerUserDB.getInstance();
 
 		clientMgr = ClientManager.getInstance();
 	}
@@ -420,7 +420,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//create the response list of jsons
 		List<String> jsonResponseList = new ArrayList<String>();
 		
-		//un-bundle to list of Britepath family objects
+		//create list of Britepath family objects to add
 		Gson gson = new Gson();
 		Type listOfBritepathFamilies = new TypeToken<ArrayList<BritepathFamily>>(){}.getType();		
 		List<BritepathFamily> bpFamilyList = gson.fromJson(familyGroupJson, listOfBritepathFamilies);
@@ -428,12 +428,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//for each family in the list, parse it and add it to the component databases
 		for(BritepathFamily bpFam:bpFamilyList)
 		{
-			//add the referring agent to the Agent DB
-			ImportONCObjectResponse agentResponse = agentDB.processImportedReferringAgent(bpFam.getReferringAgent());
+			//potentially add the referring agent as a user to the Server User DB
+			ImportONCObjectResponse userResponse = userDB.processImportedReferringAgent(bpFam, currClient);
 			
-			//if the agent was added or updated, add the change to the response list
-			if(agentResponse.getImportResult() != AGENT_UNCHANGED)
-				jsonResponseList.add(agentResponse.getJsonResponse());
+			//if a user was added or updated, add the change to the response list
+			if(userResponse.getImportResult() != USER_UNCHANGED)
+				jsonResponseList.add(userResponse.getJsonResponse());
 			
 			//add the family to the Family DB
 			ONCFamily reqAddFam = new ONCFamily(bpFam.referringAgentName, bpFam.referringAgentOrg,
@@ -445,7 +445,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				bpFam.deliveryZip, bpFam.deliveryState, bpFam.adoptedFor, bpFam.numberOfAdults,
 				bpFam.numberOfChildren, bpFam.wishlist, bpFam.speaksEnglish, bpFam.language,
 				bpFam.hasTransportation, bpFam.batchNum, new Date(), -1, "NNA", -1, 
-				currClient.getClientUser().getLNFI(), agentResponse.getONCObjectID());
+				currClient.getClientUser().getLNFI(), -1);
 			
 			ONCFamily addedFam = add(year, reqAddFam);
 			if(addedFam != null)

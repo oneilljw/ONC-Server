@@ -50,7 +50,6 @@ public class DesktopClient extends Thread
     private RegionDB regionDB;
     private ServerGlobalVariableDB globalvariableDB;
     private ServerFamilyDB serverFamilyDB;
-    private ServerAgentDB serverAgentDB;
     private ServerGroupDB serverGroupDB;
     private ServerChildDB childDB;
     private ServerChildWishDB childwishDB;
@@ -99,7 +98,6 @@ public class DesktopClient extends Thread
 			regionDB = RegionDB.getInstance(clientMgr.getAppIcon());
 	        globalvariableDB = ServerGlobalVariableDB.getInstance();
 	        serverFamilyDB = ServerFamilyDB.getInstance();
-	        serverAgentDB = ServerAgentDB.getInstance();
 	        serverGroupDB = ServerGroupDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildWishDB.getInstance();
@@ -233,7 +231,8 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<agents>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = serverAgentDB.getAgents();
+//                	String response = serverAgentDB.getAgents();
+                	String response = userDB.getAgents();
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<groups>"))
@@ -541,6 +540,7 @@ public class DesktopClient extends Thread
                 	output.println(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
+/*                
                 else if(command.startsWith("POST<update_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
@@ -564,6 +564,7 @@ public class DesktopClient extends Thread
                 	output.println(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
+*/                
                 else if(command.startsWith("POST<update_catwish>"))
                 {
                 	clientMgr.addLogMessage(command);

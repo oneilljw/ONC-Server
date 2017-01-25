@@ -16,7 +16,7 @@ public class ServerWishDetailDB extends ServerPermanentDB
 {
 //	private static final int WISH_DETAIL_HEADER_LENGTH = 3;
 	private static final int DETAIL_RECORD_LENGTH = 3;
-	private static final String DETAIL_FILENAME = "/WishDetailDB.csv";
+	private static final String DETAIL_FILENAME = "WishDetailDB.csv";
 
 //	private static List<WishDetailDBYear> wdDB;
 	private static List<WishDetail> wdDB;
@@ -46,7 +46,7 @@ public class ServerWishDetailDB extends ServerPermanentDB
 			detailDBYear.setNextID(getNextID(detailDBYear.getList()));
 		}
 */		
-		importDB(String.format("%s/PermanentDB%s", System.getProperty("user.dir"), DETAIL_FILENAME), "Wish Detail", DETAIL_RECORD_LENGTH);
+		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), DETAIL_FILENAME), "Wish Detail", DETAIL_RECORD_LENGTH);
 		nextID = getNextID(wdDB);
 		bSaveRequired = false;
 	}

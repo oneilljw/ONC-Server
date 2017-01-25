@@ -161,7 +161,7 @@ public class ApartmentDB
 		String[] header = {"House #", "Suffix", "Direction", "Street Name", "Street Type", 
 							"Post Dir","Unit #", "City", "Zip Code"};
 		
-		String path = System.getProperty("user.dir") + "/ApartmentDB.csv";
+		String path = System.getProperty("user.dir") + "/PermanentDB/ApartmentDB.csv";
 		File oncwritefile = new File(path);
 			
 		try 
