@@ -278,15 +278,8 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/getagent"))
     	{
-    		int year = Integer.parseInt((String) params.get("year"));
     		int agtID = Integer.parseInt((String) params.get("agentid"));
-    		
-    		System.out.println(String.format("ONCHttpHander.getagent: agtID = %d", agtID));
-    		
-//    		HtmlResponse response = ServerAgentDB.getAgentJSONP(agtID, (String) params.get("callback"));
     		HtmlResponse response = ServerUserDB.getAgentJSONP(agtID, (String) params.get("callback"));
-    		
-    		System.out.println(String.format("ONCHttpHander.getagent: response = %s", response.getResponse()));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/getstatus"))
