@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import ourneighborschild.Agent;
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.ONCObject;
@@ -421,13 +420,13 @@ public class ServerUserDB extends ServerPermanentDB
 	
 	String getAgents()
 	{
-		List<Agent> agentList = new ArrayList<Agent>();
+		List<ONCWebAgent> agentList = new ArrayList<ONCWebAgent>();
 		for(ONCServerUser su : userAL)
 			if(su.getPermission().compareTo(UserPermission.Agent) >= 0)
-				agentList.add(new Agent(su));
+				agentList.add(new ONCWebAgent(su));
 		
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();		
+		Type listtype = new TypeToken<ArrayList<ONCWebAgent>>(){}.getType();		
 		return gson.toJson(agentList, listtype);
 	}
 	
@@ -441,26 +440,25 @@ public class ServerUserDB extends ServerPermanentDB
 	static HtmlResponse getAgentsJSONP(int year, ONCUser user, String callbackFunction)
 	{	
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<Agent>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCWebAgent>>(){}.getType();
 		
-		List<Agent> agentReferredInYearList = new ArrayList<Agent>();
+		List<ONCWebAgent> agentReferredInYearList = new ArrayList<ONCWebAgent>();
 		
 		//if user permission is AGENT, only return a list of that agent, else return all agents
 		//that referred
 		if(user.getPermission().compareTo(UserPermission.Agent) == 0)
 		{
 			int index=0;
-			while(index < userAL.size() && userAL.get(index).getPermission().compareTo(UserPermission.Agent) >= 0 && 
-					userAL.get(index).getID() != user.getAgentID())
+			while(index < userAL.size() && userAL.get(index).getID() != user.getAgentID())
 				index++;
 					
-			agentReferredInYearList.add(new Agent(userAL.get(index)));
+			agentReferredInYearList.add(new ONCWebAgent(userAL.get(index)));
 		}
 		else
 		{
 			for(ONCServerUser su : userAL)
 				if(ServerFamilyDB.didAgentReferInYear(year, su.getID()))
-					agentReferredInYearList.add(new Agent(su));
+					agentReferredInYearList.add(new ONCWebAgent(su));
 			
 			//sort the list by name
 			Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
@@ -478,14 +476,13 @@ public class ServerUserDB extends ServerPermanentDB
 		String response;
 	
 		int index=0;
-		while(index < userAL.size() && userAL.get(index).getPermission().compareTo(UserPermission.Agent) > 0 &&
-				userAL.get(index).getID() != agentID)
+		while(index < userAL.size() && userAL.get(index).getID() != agentID)
 			index++;
 		
 		if(index < userAL.size())
 		{
-			Agent agent = new Agent(userAL.get(index));
-			response = gson.toJson(agent, Agent.class);
+			ONCWebAgent oncWebAgent = new ONCWebAgent(userAL.get(index));
+			response = gson.toJson(oncWebAgent, ONCWebAgent.class);
 		}
 		else
 			response = "";
@@ -603,12 +600,12 @@ public class ServerUserDB extends ServerPermanentDB
 		}
 	}
 	
-	private static class ONCAgentNameComparator implements Comparator<Agent>
+	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>
 	{
 		@Override
-		public int compare(Agent o1, Agent o2)
+		public int compare(ONCWebAgent o1, ONCWebAgent o2)
 		{
-			return o1.getAgentLastName().compareTo(o2.getAgentLastName());
+			return o1.getLastname().compareTo(o2.getLastname());
 		}
-	}
+	}	
 }
