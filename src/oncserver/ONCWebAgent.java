@@ -19,7 +19,7 @@ public class ONCWebAgent
 	//Agent from ONCServerUser
 	public ONCWebAgent(ONCServerUser su)
 	{
-		id = su.getAgentID(); 
+		id = su.getID(); 
 		firstname = su.getFirstname();
 		lastname = su.getLastname();
 		name = firstname + " " + lastname;

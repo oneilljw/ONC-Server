@@ -64,7 +64,6 @@ public class ServerUserDB extends ServerPermanentDB
 		su.setID(nextID++);	//Set id for new user
 		su.setUserPW("onc" + su.getPermission().toString());
 		su.setStatus(UserStatus.Change_PW);
-		su.setAgentID(-1);
 		
 		userAL.add(su); //Add new user to data base
 		bSaveRequired = true;
@@ -111,7 +110,6 @@ public class ServerUserDB extends ServerPermanentDB
 				updatedUser.getAccess()==UserAccess.App) 
 			{
 				//UserAccess to web site is being removed, set the Agent ID to -1
-				su.setAgentID(-1);
 				su.setAccess(updatedUser.getAccess());	
 			}
 			else if(su.getAccess()==UserAccess.App &&
@@ -389,7 +387,7 @@ public class ServerUserDB extends ServerPermanentDB
 		return new String[] {"ID", "Username", "Password", "Status", "Access", "Permission", "First Name",
 				"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 
 				"SL Changed By", "Sessions", "Last Login", "Orginization", "Title",
-				"Email", "Phone", "Agent ID", "Font Size", "Wish Assignee Filter",
+				"Email", "Phone", "Groups", "Font Size", "Wish Assignee Filter",
 				"Family DNS Filter"};
 	}
 	
@@ -449,7 +447,7 @@ public class ServerUserDB extends ServerPermanentDB
 		if(user.getPermission().compareTo(UserPermission.Agent) == 0)
 		{
 			int index=0;
-			while(index < userAL.size() && userAL.get(index).getID() != user.getAgentID())
+			while(index < userAL.size() && userAL.get(index).getID() != user.getID())
 				index++;
 					
 			agentReferredInYearList.add(new ONCWebAgent(userAL.get(index)));
@@ -529,7 +527,7 @@ public class ServerUserDB extends ServerPermanentDB
 				firstName, lastName, UserStatus.Inactive, UserAccess.Website, UserPermission.Agent,
 				bpFam.getReferringAgentEmail(), "oncAgent", 0, System.currentTimeMillis(),
 				true, bpFam.getReferringAgentOrg(), bpFam.getReferringAgentTitle(), bpFam.getReferringAgentEmail(),
-				bpFam.getReferringAgentPhone(), -1);	
+				bpFam.getReferringAgentPhone(), new ArrayList<Integer>());	
 	}
 	
 	
