@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -72,17 +73,17 @@ public class ServerGroupDB extends ServerPermanentDB
 		while(index < groupList.size() && groupList.get(index).getID() != reqGroup.getID())
 			index++;
 		
-		//If catalog wish is located, replace the wish with the update.
+		//If group is located, replace the wish with the update.
 		if(index == groupList.size()) 
 		{
-			ONCGroup currGroup = groupList.get(index);
-			return "UPDATE_FAILED" + gson.toJson(currGroup , ONCGroup.class);
+			return "UPDATE_FAILED";
 		}
 		else
 		{
+			reqGroup.setDateChanged(new Date());
 			groupList.set(index, reqGroup);
 			bSaveRequired = true;
-			return "UPDATED_GROUP" + json;
+			return "UPDATED_GROUP" + gson.toJson(reqGroup, ONCGroup.class);
 		}
 	}
 	
