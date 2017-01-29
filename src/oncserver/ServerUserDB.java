@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -90,6 +91,7 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setLastname(updatedUser.getLastname());
 			su.setFirstname(updatedUser.getFirstname());
 			su.setStatus(updatedUser.getStatus());
+			su.setAccess(updatedUser.getAccess());
 			su.setPermission(updatedUser.getPermission());
 			su.setOrg(updatedUser.getOrg());
 			su.setTitle(updatedUser.getTitle());
@@ -103,22 +105,8 @@ public class ServerUserDB extends ServerPermanentDB
 				su.setUserPW(USER_PASSWORD_PREFIX + updatedUser.getPermission().toString());
 				su.setStatus(UserStatus.Change_PW);
 			}
-			
-			//check if access is adding or removing web access. If so, must keep user and agent
-			//data bases in sync
-			if((su.getAccess()==UserAccess.Website || su.getAccess()==UserAccess.AppAndWebsite) &&
-				updatedUser.getAccess()==UserAccess.App) 
-			{
-				//UserAccess to web site is being removed, set the Agent ID to -1
-				su.setAccess(updatedUser.getAccess());	
-			}
-			else if(su.getAccess()==UserAccess.App &&
-					(updatedUser.getAccess()==UserAccess.Website || 
-					  updatedUser.getAccess()==UserAccess.AppAndWebsite))
-			{
-				//UserAccess to web site is being added, need to check for adding agent
-				su.setAccess(updatedUser.getAccess());
-			}
+			//set updated group list
+			su.setGroupList(updatedUser.getGroupList());
 			
 			//set preference updates
 			UserPreferences currPrefs = su.getPreferences();
@@ -167,11 +155,7 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setLastname((String) params.get("lastname"));
 			su.setOrg((String) params.get("org"));
 			su.setTitle((String) params.get("title"));
-			
-			if(!su.getEmail().equals((String)params.get("email")))
-				updateUserEmail(su, (String)params.get("email"));
-			
-			su.setEmail((String) params.get("email"));
+			updateUserEmail(su, (String)params.get("email"));
 			su.setPhone((String) params.get("phone"));
 			
 			//determine if the user status was Update_Profile. If it was set it to Active.
@@ -527,7 +511,7 @@ public class ServerUserDB extends ServerPermanentDB
 				firstName, lastName, UserStatus.Inactive, UserAccess.Website, UserPermission.Agent,
 				bpFam.getReferringAgentEmail(), "oncAgent", 0, System.currentTimeMillis(),
 				true, bpFam.getReferringAgentOrg(), bpFam.getReferringAgentTitle(), bpFam.getReferringAgentEmail(),
-				bpFam.getReferringAgentPhone(), new ArrayList<Integer>());	
+				bpFam.getReferringAgentPhone(), new LinkedList<Integer>());	
 	}
 	
 	
