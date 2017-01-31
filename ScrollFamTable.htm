@@ -375,6 +375,73 @@
     	//set the quanity in the table
     	document.getElementById('cyfamilycount').innerHTML = ': ' + count.toString();
     }
+    
+    function updateCYAgents()
+    {
+    	//archive the current agent
+    	var agtcb = document.getElementById('curragents');
+    	var priorselagentID = agtcb.value;
+    	
+    	//get the new group selected
+    	var groupID = document.getElementById('currgroup').value;
+    	
+    	//get an updated agent list for the group
+    	
+    	//clear the agent combobox
+    	agtcb.options.length = 0;
+		
+    	//get updated agentJson from server and place into combobox
+    	var agentsparams = "token=" + sessionStorage.getItem("token") + "&year=" + currYear.toString() +
+    					   "&groupid=" + groupID.toString() + "&callback=?";
+    	
+    	$.getJSON('agents', agentsparams, function(data)
+    	{
+			//add the "Anyone" option if there is more than one agent object
+			if(data.length > 1)
+			{
+				var agtOption = document.createElement("option");
+				agtOption.text = "Anyone";
+	    		agtOption.value = -1;
+	    		try 
+	    		{
+	        		agtcb.add(agtOption, null); //Standard 
+	    		} 
+	    		catch(error) 
+	    		{
+	        		agtcb.add(agtOption); // IE only
+	    		}
+			}
+	    	
+	    	//add the agents for the year
+    		for (var i=0; i < data.length; i++)
+    		{
+    			var agtOption = document.createElement("option");
+    			agtOption.text = data[i].name;
+    	    	agtOption.value = data[i].id;
+    	    	try 
+    	    	{
+    	        	agtcb.add(agtOption, null); //Standard 
+    	    	}
+    	    	catch(error)
+    	    	{
+    	        	agtcb.add(agtOption); // IE only
+    	    	}  
+    		}
+    	});   	
+    	
+    	//re-select the previously selected agent, now in the new group
+    	var agtoptions = agtcb.options;
+    	var index = 0;
+    	while(index < agtoptions.length)
+    	{
+    		if(agtoptions[index++].value = priorselagentID)
+    		{
+    			agtcb.selectedIndex = index;
+    		    break;
+    		}
+    	}
+    }
+    
 
     function addTableRow(family, table, buttontext)
     {
@@ -727,7 +794,7 @@
 		<label for="pyagents">Families Referred By</label>
 		<select id="pyagents"  onchange="updatePYTable()" name="pyagtID"></select>
 		<label id= pygroupslbl for="pygroups">in Group:</label>
-		<select id="pygroups" name="pyGroupID"></select>
+		<select id="pygroups" onchange="updatePYAgents()" name="pyGroupID"></select>
 		<label id="pyfamilycount" for="pygroups"> : 0</label>
 		<span class='floatright'>
 		  <label for="pysearch">Search For:</label>
@@ -760,7 +827,7 @@
 	<label id= curragtenslbl for="curragents">xxxx Families Referred By</label>
 	<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
 	<label id= currgroupslbl for="currgroups">in Group:</label>
-	<select id="currgroups"  name="currGroupID"></select>
+	<select id="currgroups" onchange="updateCYAgents()"name="currGroupID"></select>
 	<label id="cyfamilycount" for="currgroups"> : 0</label>
 	<span class='floatright'>
 	  <label for="cysearch">Search For:</label>
