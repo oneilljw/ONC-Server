@@ -85,7 +85,7 @@
     	       	btnRNF.disabled = true;
     		}
     		
-    		getCYAgentsAndFamiliesFromServer(currYear.toString());
+    		getCYGroupsAgentsAndFamiliesFromServer(currYear.toString());
     	});
     	
 //    	//determine the color and enabling of the Refer New Family button
@@ -96,9 +96,6 @@
 //	       	btnRNF.disabled = true;
 //		}
     	
-    	//get the list of current year agents & familes from the server and display them
-    	//this also gets prior year families and displays them
-//    	getCYAgentsAndFamiliesFromServer(currYear.toString());
     	
     	// Write on keyup event of keyword prior year seach input element
         $("#pysearch").keyup(function(){
@@ -134,10 +131,14 @@
     	});
     });
     
-    function getPYFamiliesFromServer(year)
+    function getPYFamiliesFromServer(year, agentID, groupID)
     {
-    	familiesparams = "token=" + sessionStorage.getItem("token") + "&" +
-    					 "year=" + sessionStorage.getItem("prioryear") + "&callback=?";
+    	familiesparams = "token=" + sessionStorage.getItem("token") +
+			 			 "&year=" + year + 
+			 			 "&agentid=" + agentID +
+			 			 "&groupid=" + groupID + 
+			 			 "&callback=?";
+    	
     	$.getJSON('families', familiesparams, function(data)
     	{
     		pyFamJson = data;
@@ -145,10 +146,14 @@
     	});
     }
     
-    function getCYFamiliesFromServer(year)
+    function getCYFamiliesFromServer(year, agentID, groupID)
     {
-    	familiesparams = "token=" + sessionStorage.getItem("token") + "&" +
-		  				 "year=" + currYear.toString() + "&callback=?";
+    	familiesparams = "token=" + sessionStorage.getItem("token") +
+		  				 "&year=" + currYear.toString() + 
+		  				 "&agentid=" + agentID +
+		  				 "&groupid=" + groupID + 
+		  				 "&callback=?";
+    	
     	$.getJSON('families', familiesparams, function(data)
     	{
     		cyFamJson = data;
@@ -156,113 +161,161 @@
     	});
     }
     
-    function getPYAgentsAndFamiliesFromServer(year)
+    function getPYGroupsAgentsAndFamiliesFromServer(year)
     {
-    	//get reference to agent combobox
-    	var agtcb = document.getElementById('pyagents');
+    	//get reference to group combobox
+    	var groupcb = document.getElementById('pygroups');
     	
-    	//clear the agent combobox
-    	agtcb.options.length = 0;
-		
     	//get updated agentJson from server and place into combobox
-    	var agentsparams = "token=" + sessionStorage.getItem("token") + "&" +
-    						"year=" + sessionStorage.getItem("prioryear") + "&callback=?";
-    	
-    	$.getJSON('agents', agentsparams, function(data)
+    	var groupparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+    	$.getJSON('groups', groupparams, function(data)
     	{
-			//add the "Anyone" option if there is more than one agent object
-			if(data.hasOwnProperty('error'))
-	      	{
-				window.location=document.getElementById('timeoutanchor').href;
-	      	}
-			else if(data.length > 1)
-			{
-				var agtOption = document.createElement("option");
-				agtOption.text = "Anyone";
-	    		agtOption.value = -1;
-	    		try 
-	    		{
-	        		agtcb.add(agtOption, null); //Standard 
-	    		} 
-	    		catch(error) 
-	    		{
-	        		agtcb.add(agtOption); // IE only
-	    		}
-			}
-	    	
-	    	//add the agents for the year
+	    	//add the groups for the agent
     		for (var i=0; i < data.length; i++)
     		{
-    			var agtOption = document.createElement("option");
-    			agtOption.text = data[i].name;
-    	    	agtOption.value = data[i].id;
+    			var groupOption = document.createElement("option");
+    			groupOption.text = data[i].name;
+    	    	groupOption.value = data[i].id;
     	    	try 
     	    	{
-    	        	agtcb.add(agtOption, null); //Standard 
+    	        	groupcb.add(groupOption, null); //Standard 
     	    	}
     	    	catch(error)
     	    	{
-    	        	agtcb.add(agtOption); // IE only
+    	        	groupcb.add(groupOption); // IE only
     	    	}  
     		}
 	    	
-	    	getPYFamiliesFromServer(year);
+    		//get reference to agent combobox
+    		var agtcb = document.getElementById('pyagents');
+    	
+    		//clear the agent combobox
+    		agtcb.options.length = 0;
+		
+    		//get updated agentJson from server and place into combobox
+        	var agentsparams = "token=" + sessionStorage.getItem("token") +
+        					   "&year=" + year +
+        					   "&groupid=" + groupcb.value.toString() +
+        					   "&callback=?";
+    	
+    		$.getJSON('agents', agentsparams, function(data)
+    		{
+				//add the "Anyone" option if there is more than one agent object
+				if(data.hasOwnProperty('error'))
+	      		{
+					window.location=document.getElementById('timeoutanchor').href;
+	      		}
+				else if(data.length > 1)
+				{
+					var agtOption = document.createElement("option");
+					agtOption.text = "Anyone";
+	    			agtOption.value = -1;
+	    			try 
+	    			{
+	        			agtcb.add(agtOption, null); //Standard 
+	    			} 
+	    			catch(error) 
+	    			{
+	        			agtcb.add(agtOption); // IE only
+	    			}
+				}
+	    	
+	    		//add the agents for the year
+    			for (var i=0; i < data.length; i++)
+    			{
+    				var agtOption = document.createElement("option");
+    				agtOption.text = data[i].name;
+    	    		agtOption.value = data[i].id;
+    	    		try 
+    	    		{
+    	        		agtcb.add(agtOption, null); //Standard 
+    	    		}
+    	    		catch(error)
+    	    		{
+    	        		agtcb.add(agtOption); // IE only
+    	    		}  
+    			}
+	    	
+	    		getPYFamiliesFromServer(year, agtcb.value.toString(), groupcb.value.toString());
+    		});
     	});
     }
     
-    function getCYAgentsAndFamiliesFromServer(year)
+    function getCYGroupsAgentsAndFamiliesFromServer(year)
     {
-    	//get reference to agent combobox
-    	var agtcb = document.getElementById('curragents');
+    	//get reference to group combobox
+    	var groupcb = document.getElementById('currgroups');
     	
-    	//clear the agent combobox
-    	agtcb.options.length = 0;
-		
     	//get updated agentJson from server and place into combobox
-    	var agentsparams = "token=" + sessionStorage.getItem("token") + "&" +
-    						"year=" + currYear.toString() + "&callback=?";
-    	
-    	$.getJSON('agents', agentsparams, function(data)
+    	var groupparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+    	$.getJSON('groups', groupparams, function(data)
     	{
-			//add the "Anyone" option if there is more than one agent object
-			if(data.length > 1)
-			{
-				var agtOption = document.createElement("option");
-				agtOption.text = "Anyone";
-	    		agtOption.value = -1;
-	    		try 
-	    		{
-	        		agtcb.add(agtOption, null); //Standard 
-	    		} 
-	    		catch(error) 
-	    		{
-	        		agtcb.add(agtOption); // IE only
-	    		}
-			}
-	    	
-	    	//add the agents for the year
+	    	//add the groups for the agent
     		for (var i=0; i < data.length; i++)
     		{
-    			var agtOption = document.createElement("option");
-    			agtOption.text = data[i].name;
-    	    	agtOption.value = data[i].id;
+    			var groupOption = document.createElement("option");
+    			groupOption.text = data[i].name;
+    	    	groupOption.value = data[i].id;
     	    	try 
     	    	{
-    	        	agtcb.add(agtOption, null); //Standard 
+    	        	groupcb.add(groupOption, null); //Standard 
     	    	}
     	    	catch(error)
     	    	{
-    	        	agtcb.add(agtOption); // IE only
+    	        	groupcb.add(groupOption); // IE only
     	    	}  
     		}
 	    	
-    		getCYFamiliesFromServer(year);
+    		//get reference to agent combobox
+        	var agtcb = document.getElementById('curragents');
+        	
+        	//clear the agent combobox
+        	agtcb.options.length = 0;
     		
-    		//get the list of prior year agents & families from the server and display them
-        	getPYAgentsAndFamiliesFromServer(priorYear.toString());
-    		
-        	console.log("Got Agents & Current Year Families");
-    	});
+        	//get updated agentJson from server and place into combobox
+        	var agentsparams = "token=" + sessionStorage.getItem("token") + "&year=" + currYear.toString() +
+        					   "&groupid=" + groupcb.value.toString() + "&callback=?";
+        	
+        	$.getJSON('agents', agentsparams, function(data)
+        	{
+    			//add the "Anyone" option if there is more than one agent object
+    			if(data.length > 1)
+    			{
+    				var agtOption = document.createElement("option");
+    				agtOption.text = "Anyone";
+    	    		agtOption.value = -1;
+    	    		try 
+    	    		{
+    	        		agtcb.add(agtOption, null); //Standard 
+    	    		} 
+    	    		catch(error) 
+    	    		{
+    	        		agtcb.add(agtOption); // IE only
+    	    		}
+    			}
+    	    	
+    	    	//add the agents for the year
+        		for (var i=0; i < data.length; i++)
+        		{
+        			var agtOption = document.createElement("option");
+        			agtOption.text = data[i].name;
+        	    	agtOption.value = data[i].id;
+        	    	try 
+        	    	{
+        	        	agtcb.add(agtOption, null); //Standard 
+        	    	}
+        	    	catch(error)
+        	    	{
+        	        	agtcb.add(agtOption); // IE only
+        	    	}  
+        		}
+    	    	
+        		getCYFamiliesFromServer(year, agtcb.value.toString(), groupcb.value.toString());
+        		
+        		//get the list of prior year agents & families from the server and display them
+            	getPYGroupsAgentsAndFamiliesFromServer(priorYear.toString());
+        	});
+    	});    	
     }
     
     function updateForYearSelection()
@@ -272,7 +325,7 @@
 		priorYear = yearCB.options[yearCB.selectedIndex].value;
 		sessionStorage.setItem("prioryear", priorYear);
     	
-    	getPYAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
+    	getPYGroupsAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
     }
     
     function updatePYTable()
@@ -671,9 +724,11 @@
   </nav>
   <div class='controlbar'>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
-		<label for="pyagents">Families Referred By:</label>
+		<label for="pyagents">Families Referred By</label>
 		<select id="pyagents"  onchange="updatePYTable()" name="pyagtID"></select>
-		<label id="pyfamilycount" for="pyagents"> : 0</label>
+		<label id= pygroupslbl for="pygroups">in Group:</label>
+		<select id="pygroups" name="pyGroupID"></select>
+		<label id="pyfamilycount" for="pygroups"> : 0</label>
 		<span class='floatright'>
 		  <label for="pysearch">Search For:</label>
 		  <input type="text" id="pysearch" placeholder="Type to search..." />
@@ -702,9 +757,11 @@
   </div>
   <br><br>
   <div class='controlbar'>
-	<label id= curragtenslbl for="curragents">xxxx Families Referred By:</label>
+	<label id= curragtenslbl for="curragents">xxxx Families Referred By</label>
 	<select id="curragents"  onchange="updateCYTable()" name="curragtID"></select>
-	<label id="cyfamilycount" for="curragents"> : 0</label>
+	<label id= currgroupslbl for="currgroups">in Group:</label>
+	<select id="currgroups"  name="currGroupID"></select>
+	<label id="cyfamilycount" for="currgroups"> : 0</label>
 	<span class='floatright'>
 	  <label for="cysearch">Search For:</label>
 	  <input type="text" id="cysearch" placeholder="Type to search..." />

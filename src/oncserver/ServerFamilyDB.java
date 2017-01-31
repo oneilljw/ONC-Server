@@ -140,6 +140,46 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
+	static HtmlResponse getFamiliesJSONP(int year, int agentID, int groupID, String callbackFunction)
+	{	
+		Gson gson = new Gson();
+		Type listOfWebsiteFamilies = new TypeToken<ArrayList<ONCWebsiteFamily>>(){}.getType();
+		
+		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
+		ArrayList<ONCWebsiteFamily> responseList = new ArrayList<ONCWebsiteFamily>();
+		
+		if(agentID > -1)
+		{
+			//add only the families referred by that agent
+			for(ONCFamily f : searchList)
+				if(f.getAgentID() == agentID)
+					responseList.add(new ONCWebsiteFamily(f));
+		}
+		else if(agentID == -1 && groupID == -1)
+		{
+			//add all families referred in that year
+			for(ONCFamily f : searchList)
+				responseList.add(new ONCWebsiteFamily(f));
+		}
+		else if(groupID > -1)
+		{
+			//add only the families referred by each agent in the group that referred that year
+			for(Integer userID : userDB.getUserIDsInGroup(groupID))
+				if(didAgentReferInYear(year, userID))
+					for(ONCFamily f : searchList)
+						if(f.getAgentID() == userID)
+							responseList.add(new ONCWebsiteFamily(f));	
+		}
+		
+		//sort the list by HoH last name
+		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
+		
+		String response = gson.toJson(responseList, listOfWebsiteFamilies);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
 	static HtmlResponse getFamilyReferencesJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();

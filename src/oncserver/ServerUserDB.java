@@ -412,6 +412,24 @@ public class ServerUserDB extends ServerPermanentDB
 		return gson.toJson(agentList, listtype);
 	}
 	
+	List<Integer> getUserIDsInGroup(int groupID)
+	{
+		List<Integer> agentIDList = new ArrayList<Integer>();
+		for(ONCServerUser su : userAL)
+		{
+			List<Integer> groupList = su.getGroupList();
+			
+			int index = 0;
+			while(index < groupList.size() && groupList.get(index) != groupID)
+				index++;
+			
+			if(index < groupList.size())
+				agentIDList.add(su.getID());	
+		}
+		
+		return agentIDList;
+	}
+	
 	/***
 	 * Returns an <Agent> json that contains agents that referred families in the parameter
 	 * year. Uses the JSONP construct.
@@ -419,22 +437,27 @@ public class ServerUserDB extends ServerPermanentDB
 	 * @param callbackFunction
 	 * @return
 	 */
-	static HtmlResponse getAgentsJSONP(int year, ONCUser user, String callbackFunction)
+	static HtmlResponse getAgentsJSONP(int year, ONCServerUser agent, int groupID, String callbackFunction)
 	{	
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCWebAgent>>(){}.getType();
 		
 		List<ONCWebAgent> agentReferredInYearList = new ArrayList<ONCWebAgent>();
 		
-		//if user permission is AGENT, only return a list of that agent, else return all agents
-		//that referred
-		if(user.getPermission().compareTo(UserPermission.Agent) == 0)
+		//if user permission is AGENT, only return a list of that agent, plus all other agents in the
+		//group that referred in the year. Otherwise,  return all agents that referred
+		if(agent.getPermission().compareTo(UserPermission.Agent) == 0)
 		{
-			int index=0;
-			while(index < userAL.size() && userAL.get(index).getID() != user.getID())
-				index++;
-					
-			agentReferredInYearList.add(new ONCWebAgent(userAL.get(index)));
+			agentReferredInYearList.add(new ONCWebAgent(agent));	//add the logged in user/agent
+			//populate the list with all other agents who are in the group and who referred in the year
+			for(ONCServerUser su: userAL)
+				if(su.getID() != agent.getID())
+					for(Integer i : su.getGroupList())
+						if(i == groupID && ServerFamilyDB.didAgentReferInYear(year, su.getID()))
+							agentReferredInYearList.add(new ONCWebAgent(su));			
+			
+//			System.out.println(String.format("ServerUserDB.getAgents: %s %s in group %d",
+//					su.getLastname(), bInGroup ? "is" : "isn't", groupID));
 		}
 		else
 		{
@@ -447,6 +470,33 @@ public class ServerUserDB extends ServerPermanentDB
 		}
 			
 		String response = gson.toJson(agentReferredInYearList, listtype);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	/***
+	 * Returns an <Agent> json that contains agents that referred families in the parameter
+	 * year. Uses the JSONP construct.
+	 * @param year
+	 * @param callbackFunction
+	 * @return
+	 */
+	static HtmlResponse getAgentsInGroupJSONP(int year, ONCUser user, int groupID, String callbackFunction)
+	{	
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<ONCWebAgent>>(){}.getType();
+		
+		List<ONCWebAgent> agentsInGroupList = new ArrayList<ONCWebAgent>();
+		
+		for(ONCServerUser su : userAL)
+				if(su.isInGroup(groupID) && ServerFamilyDB.didAgentReferInYear(year, su.getID()))
+					agentsInGroupList.add(new ONCWebAgent(su));
+			
+			//sort the list by name
+			Collections.sort(agentsInGroupList, new ONCAgentNameComparator());
+			
+		String response = gson.toJson(agentsInGroupList, listtype);
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
@@ -472,6 +522,8 @@ public class ServerUserDB extends ServerPermanentDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
+	
+	
 	
 	private ONCServerUser createSeverUserFromBritepathsReferral(BritepathFamily bpFam, DesktopClient currClient)
 	{

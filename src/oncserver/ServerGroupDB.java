@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -12,6 +14,7 @@ import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCObject;
+import ourneighborschild.ONCServerUser;
 
 public class ServerGroupDB extends ServerPermanentDB 
 {
@@ -20,7 +23,7 @@ public class ServerGroupDB extends ServerPermanentDB
 	
 	private static ServerGroupDB instance = null;
 	
-	private List<ONCGroup> groupList;
+	private static List<ONCGroup> groupList;
 	
 	private ServerGroupDB() throws FileNotFoundException, IOException
 	{
@@ -46,6 +49,33 @@ public class ServerGroupDB extends ServerPermanentDB
 			
 		String response = gson.toJson(groupList, listtype);
 		return response;	
+	}
+	
+	static HtmlResponse getGroupListJSONP(ONCServerUser su, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<ONCGroup>>(){}.getType();
+		
+		List<ONCGroup> returnList = new ArrayList<ONCGroup>();
+		
+		for(Integer groupID : su.getGroupList())
+		{
+			int index = 0;
+			while(index < groupList.size() && groupList.get(index).getID() != groupID)
+				index++;
+			
+			if(index < groupList.size())
+				returnList.add(groupList.get(index));
+		}
+			
+			
+		//sort the list by name
+		Collections.sort(returnList, new ONCGroupNameComparator());
+			
+		String response = gson.toJson(returnList, listtype);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
 	@Override
@@ -127,4 +157,13 @@ public class ServerGroupDB extends ServerPermanentDB
 
 	@Override
 	List<? extends ONCObject> getONCObjectList() { return groupList; }
+	
+	private static class ONCGroupNameComparator implements Comparator<ONCGroup>
+	{
+		@Override
+		public int compare(ONCGroup o1, ONCGroup o2)
+		{
+			return o1.getName().compareTo(o2.getName());
+		}
+	}	
 }

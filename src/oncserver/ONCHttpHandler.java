@@ -182,6 +182,7 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/agents"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
+    		int groupID = Integer.parseInt((String) params.get("groupid"));
     		
     		String sessionID = (String) params.get("token");
     		ClientManager clientMgr = ClientManager.getInstance();
@@ -192,7 +193,27 @@ public class ONCHttpHandler implements HttpHandler
     		{
     			wc.updateTimestamp();
 //    			htmlResponse = ServerAgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
-    			htmlResponse = ServerUserDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
+    			htmlResponse = ServerUserDB.getAgentsJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}	
+    		
+    		sendHTMLResponse(t, htmlResponse);	
+    	}
+    	else if(requestURI.contains("/groups"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
+    		
+    		if((wc=clientMgr.findClient(sessionID)) != null)	
+    		{
+    			wc.updateTimestamp();
+    			htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), (String) params.get("callback"));
     		}
     		else
     		{
@@ -204,9 +225,15 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/families"))
     	{
+//    		Set<String> keyset = params.keySet();
+//			for(String key:keyset)
+//				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+			
     		int year = Integer.parseInt((String) params.get("year"));
+    		int agentID = Integer.parseInt((String) params.get("agentid"));
+    		int groupID = Integer.parseInt((String) params.get("groupid"));
     		
-    		HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, (String) params.get("callback"));
+    		HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/references"))
