@@ -206,6 +206,8 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/groups"))
     	{
     		String sessionID = (String) params.get("token");
+    		int agentID = Integer.parseInt((String) params.get("agentid"));
+    		
     		ClientManager clientMgr = ClientManager.getInstance();
     		WebClient wc;
     		HtmlResponse htmlResponse;
@@ -213,7 +215,7 @@ public class ONCHttpHandler implements HttpHandler
     		if((wc=clientMgr.findClient(sessionID)) != null)	
     		{
     			wc.updateTimestamp();
-    			htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), (String) params.get("callback"));
+    			htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, (String) params.get("callback"));
     		}
     		else
     		{

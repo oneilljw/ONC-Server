@@ -13,6 +13,7 @@ import java.util.Map;
 
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.ChangePasswordRequest;
+import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
@@ -54,6 +55,20 @@ public class ServerUserDB extends ServerPermanentDB
 			instance = new ServerUserDB();
 		
 		return instance;
+	}
+	
+	public static ONCServerUser getServerUser(int userid)
+	{
+		if(userid < 0)
+			return null;
+		else
+		{
+			int index = 0;
+			while(index < userAL.size() && userAL.get(index).getID() != userid)
+				index++;
+		
+			return index < userAL.size() ? userAL.get(index) : null;
+		}
 	}
 	
 	@Override
@@ -444,9 +459,12 @@ public class ServerUserDB extends ServerPermanentDB
 		
 		List<ONCWebAgent> agentReferredInYearList = new ArrayList<ONCWebAgent>();
 		
+		//get the group permission
+		ONCGroup agentGroup = ServerGroupDB.getGroup(groupID);
+		
 		//if user permission is AGENT, only return a list of that agent, plus all other agents in the
 		//group that referred in the year. Otherwise,  return all agents that referred
-		if(agent.getPermission().compareTo(UserPermission.Agent) == 0)
+		if(agent.getPermission().compareTo(UserPermission.Agent) == 0 && agentGroup.getPermission() > 0)
 		{
 			agentReferredInYearList.add(new ONCWebAgent(agent));	//add the logged in user/agent
 			//populate the list with all other agents who are in the group and who referred in the year
@@ -459,8 +477,14 @@ public class ServerUserDB extends ServerPermanentDB
 //			System.out.println(String.format("ServerUserDB.getAgents: %s %s in group %d",
 //					su.getLastname(), bInGroup ? "is" : "isn't", groupID));
 		}
+		else if(agent.getPermission().compareTo(UserPermission.Agent) == 0 && agentGroup.getPermission() == 0)
+		{
+			//just return the agent
+			agentReferredInYearList.add(new ONCWebAgent( agent));
+		}
 		else
 		{
+			//add all agents that referred in year
 			for(ONCServerUser su : userAL)
 				if(ServerFamilyDB.didAgentReferInYear(year, su.getID()))
 					agentReferredInYearList.add(new ONCWebAgent(su));

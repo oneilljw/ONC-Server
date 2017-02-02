@@ -895,7 +895,8 @@ public class DesktopClient extends Thread
     		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     		serverUser.setLastLogin(calendar.getTimeInMillis());
     		
-    		userDB.save();
+//    		userDB.bSaveRequired = true;
+//    		userDB.save();
     		
     		clientUser = serverUser.getUserFromServerUser();
     		clientUser.setClientID(id);	//set the user object client ID
