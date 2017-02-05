@@ -145,6 +145,9 @@
     					  "&callback=?";
     	$.getJSON('groups', groupparams, function(data)
     	{
+    		//clear the group combobox
+        	groupcb.options.length = 0;
+    		
 	    	//add the groups for the agent
     		for (var i=0; i < data.length; i++)
     			addComboBoxOption(groupcb, data[i].name, data[i].id);
@@ -355,8 +358,11 @@
     	var yearCB = document.getElementById("dbYears");
 		priorYear = yearCB.options[yearCB.selectedIndex].value;
 		sessionStorage.setItem("prioryear", priorYear);
-    	
-    	getPYGroupsAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
+		//get the current year groups, agents & families
+		var groupcb = document.getElementById('pygroups');
+		var agentcb = document.getElementById('pyagents');
+		getGroupsAgentsAndFamiliesFromServer(priorYear, groupcb, agentcb);
+//    	getPYGroupsAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
     }
     
     function updatePYTable()
