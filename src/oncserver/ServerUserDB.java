@@ -482,6 +482,15 @@ public class ServerUserDB extends ServerPermanentDB
 			//just return the agent
 			agentReferredInYearList.add(new ONCWebAgent( agent));
 		}
+		else if(agent.getPermission().compareTo(UserPermission.Agent) > 0 && groupID > -1)
+		{
+			//populate the list with all other agents who are in the group and who referred in the year
+			for(ONCServerUser su: userAL)
+				if(su.getID() != agent.getID())
+					for(Integer i : su.getGroupList())
+						if(i == groupID && ServerFamilyDB.didAgentReferInYear(year, su.getID()))
+							agentReferredInYearList.add(new ONCWebAgent(su));
+		}
 		else
 		{
 			//add all agents that referred in year

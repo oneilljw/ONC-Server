@@ -67,7 +67,7 @@ public class ServerGroupDB extends ServerPermanentDB
 
 		List<ONCGroup> returnList = new LinkedList<ONCGroup>();
 		
-		if(loggedInUser.getPermission().compareTo(UserPermission.Agent)> 0 )
+		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
 		{
 			for(ONCGroup g : groupList)
 				returnList.add(g);
