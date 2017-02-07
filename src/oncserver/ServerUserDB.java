@@ -667,6 +667,24 @@ public class ServerUserDB extends ServerPermanentDB
 		}
 	}
 	
+	int updateUserNames()
+	{
+		int count = 0;
+		for(ONCServerUser su : userAL)
+		{
+			if(su.getUserID().equals("oncAgent") && su.getPermission() == UserPermission.Agent)
+			{
+				su.setUserID(su.getEmail());
+				count++;
+			}
+		}
+		
+		if(count > 0)
+			bSaveRequired = true;
+		
+		return count;
+	}
+	
 	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>
 	{
 		@Override

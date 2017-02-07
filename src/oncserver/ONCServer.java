@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -119,6 +118,7 @@ public class ONCServer
     	serverMenuBar.countsMI.addActionListener(new MenuBarListener());
     	serverMenuBar.convertStatusMI.addActionListener(new MenuBarListener());
     	serverMenuBar.createHistMI.addActionListener(new MenuBarListener());
+    	serverMenuBar.updateUserNameMI.addActionListener(new MenuBarListener());
     	serverUI = ServerUI.getInstance();
     	
     	oncFrame =  new JFrame(APPNAME);
@@ -214,67 +214,80 @@ public class ONCServer
 		{
 			if(e.getSource() == serverMenuBar.countsMI)
 			{
-				//update py performance
-				try {
-					ServerPartnerDB serverPartnerDB = ServerPartnerDB.getInstance();
-					serverPartnerDB.determinePriorYearPerformance(2016);
-					clientMgr.addLogMessage("Partner PY Performance Updated");
-				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+//				//update py performance
+//				try {
+//					ServerPartnerDB serverPartnerDB = ServerPartnerDB.getInstance();
+//					serverPartnerDB.determinePriorYearPerformance(2016);
+//					clientMgr.addLogMessage("Partner PY Performance Updated");
+//				} catch (FileNotFoundException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
 			}
 			else if(e.getSource() == serverMenuBar.convertStatusMI)
 			{
-				//update py performance
-				try {
-					ServerFamilyDB serverFamilyDB = ServerFamilyDB.getInstance();
-					serverFamilyDB.convertFamilyDBForStatusChanges(2016);
-					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2016));
-					serverFamilyDB.convertFamilyDBForStatusChanges(2015);
-					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2015));
-					serverFamilyDB.convertFamilyDBForStatusChanges(2014);
-					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2014));
-					serverFamilyDB.convertFamilyDBForStatusChanges(2013);
-					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2013));
-					serverFamilyDB.convertFamilyDBForStatusChanges(2012);
-					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2012));
-				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
-/*			
+//				//update py performance
+//				try {
+//					ServerFamilyDB serverFamilyDB = ServerFamilyDB.getInstance();
+//					serverFamilyDB.convertFamilyDBForStatusChanges(2016);
+//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2016));
+//					serverFamilyDB.convertFamilyDBForStatusChanges(2015);
+//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2015));
+//					serverFamilyDB.convertFamilyDBForStatusChanges(2014);
+//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2014));
+//					serverFamilyDB.convertFamilyDBForStatusChanges(2013);
+//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2013));
+//					serverFamilyDB.convertFamilyDBForStatusChanges(2012);
+//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2012));
+//				} catch (FileNotFoundException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
+			}			
 			else if(e.getSource() == serverMenuBar.createHistMI)
 			{
 				//update py performance
-				try {
-					ServerFamilyHistoryDB serverFamilyHistoryDB = ServerFamilyHistoryDB.getInstance();
-					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2016);
-					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2016));
-					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2015);
-					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2015));
-					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2014);
-					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2014));
-					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2013);
-					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2013));
-					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2012);
-					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2012));
-				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+//				try {
+//					ServerFamilyHistoryDB serverFamilyHistoryDB = ServerFamilyHistoryDB.getInstance();
+//					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2016);
+//					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2016));
+//					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2015);
+//					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2015));
+//					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2014);
+//					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2014));
+//					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2013);
+//					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2013));
+//					serverFamilyHistoryDB.convertDeliveryDBForStatusChanges(2012);
+//					clientMgr.addLogMessage(String.format("%d Family History DB Created", 2012));
+//				} catch (FileNotFoundException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
+			}	
+			else if(e.getSource() == serverMenuBar.updateUserNameMI)
+			{
+//				//update py performance
+//				try 
+//				{
+//					ServerUserDB userDB = ServerUserDB.getInstance();
+//					clientMgr.addLogMessage(String.format("%d User Names updated", userDB.updateUserNames()));
+//				} catch (FileNotFoundException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
 			}
-*/			
 		}
     }
 }
