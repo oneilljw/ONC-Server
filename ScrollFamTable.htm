@@ -143,6 +143,7 @@
     	var groupparams = "token=" + sessionStorage.getItem("token") + 
     					  "&agentid=-1" +
     					  "&callback=?";
+    	
     	$.getJSON('groups', groupparams, function(data)
     	{
     		//clear the group combobox
