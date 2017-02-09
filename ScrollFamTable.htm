@@ -52,8 +52,6 @@
     		for (var i = data.length-1; i >= 0; i--)
     			if(data[i].id != currYear)
     				addComboBoxOption(combo, data[i].id, data[i].id);
-
-//    		console.log(sessionStorage.getItem('decemberCutoff'));
     		
     		//determine the color and enabling of the Refer New Family button
     		var btnRNF = document.getElementById('new');
@@ -72,8 +70,6 @@
     		var groupcb = document.getElementById('pygroups');
     		var agentcb = document.getElementById('pyagents');
     		getGroupsAgentsAndFamiliesFromServer(priorYear, groupcb, agentcb);
-    		
-//    		getPYGroupsAgentsAndFamiliesFromServer(priorYear);
     	});
     	
     	
@@ -111,31 +107,6 @@
     	});
     });
     
-//  function getPYGroupsAgentsAndFamiliesFromServer(year)
-//  {
-//    	//get reference to group combobox
-//    	var groupcb = document.getElementById('pygroups');
-//    	
-//    	//get updated agentJson from server and place into combobox
-//    	var groupparams = "token=" + sessionStorage.getItem("token") + 
-//    					  "&agentid=-1" +
-//    					  "&callback=?";
-//    	$.getJSON('groups', groupparams, function(data)
-//    	{
-//    		groupcb.options.length = 0;
-//    		
-//	    	//add the groups for the agent
-//    		for (var i=0; i < data.length; i++)
-//    			addComboBoxOption(groupcb, data[i].name, data[i].id);
-//	    	
-//    		//get reference to agent combobox
-//    		var agtcb = document.getElementById('pyagents');
-//    		getAgentsAndFamiliesFromServer(agtcb, year, groupcb.value);
-//    	});
-//  }
-    
-    
-    
     function getGroupsAgentsAndFamiliesFromServer(year, groupcb, agentcb)
     {  	
     	//get updated agentJson from server and place into group combobox. agentid =-1 defaults
@@ -154,55 +125,6 @@
     			addComboBoxOption(groupcb, data[i].name, data[i].id);
 	    	
     		getAgentsAndFamiliesFromServer(agentcb, year, groupcb.value);
-//    		//get reference to agent combobox
-//        	var agtcb = document.getElementById('curragents');
-//        	
-//        	//clear the agent combobox
-//        	agtcb.options.length = 0;
-//    		
-//        	//get updated agentJson from server and place into combobox
-//        	var agentsparams = "token=" + sessionStorage.getItem("token") + "&year=" + currYear.toString() +
-//        					   "&groupid=" + groupcb.value.toString() + "&callback=?";
-//        	
-//        	$.getJSON('agents', agentsparams, function(data)
-//        	{
-//    			//add the "Anyone" option if there is more than one agent object
-//    			if(data.length > 1)
-//    			{
-//    				var agtOption = document.createElement("option");
-//    				agtOption.text = "Anyone";
-//    	    		agtOption.value = -1;
-//    	    		try 
-//    	    		{
-//    	        		agtcb.add(agtOption, null); //Standard 
-//    	    		} 
-//    	    		catch(error) 
-//    	    		{
-//    	        		agtcb.add(agtOption); // IE only
-//   	    		}
-//    			}
-//    	    	
-//    	    	//add the agents for the year
-//        		for (var i=0; i < data.length; i++)
-//        		{
-//        			var agtOption = document.createElement("option");
-//        			agtOption.text = data[i].name;
-//        	    	agtOption.value = data[i].id;
-//        	    	try 
-//        	    	{
-//        	        	agtcb.add(agtOption, null); //Standard 
-//        	    	}
-//        	    	catch(error)
-//        	    	{
-//        	        	agtcb.add(agtOption); // IE only
-//        	    	}  
-//        		}
-//    	    	
-//        		getFamiliesFromServer(year, agtcb.value.toString(), groupcb.value.toString());
-//        		
-        	//get the list of prior year agents & families from the server and display them
-//          getPYGroupsAgentsAndFamiliesFromServer(priorYear);
-//        	});
     	});    	
     }
     
@@ -367,7 +289,6 @@
 		var groupcb = document.getElementById('pygroups');
 		var agentcb = document.getElementById('pyagents');
 		getGroupsAgentsAndFamiliesFromServer(priorYear, groupcb, agentcb);
-//    	getPYGroupsAgentsAndFamiliesFromServer(priorYear);	//get agents & families from server
     }
     
     function updatePYTable()
