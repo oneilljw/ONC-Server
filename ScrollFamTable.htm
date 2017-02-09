@@ -281,14 +281,13 @@
 	
     function updateForYearSelection()
     {
-    	//get selected year
+    	//get selected year and update session store
     	var yearCB = document.getElementById("dbYears");
-		priorYear = yearCB.options[yearCB.selectedIndex].value;
+		var priorYear = yearCB.options[yearCB.selectedIndex].value;
 		sessionStorage.setItem("prioryear", priorYear);
-		//get the current year groups, agents & families
-		var groupcb = document.getElementById('pygroups');
-		var agentcb = document.getElementById('pyagents');
-		getGroupsAgentsAndFamiliesFromServer(priorYear, groupcb, agentcb);
+		
+		//get the groups, agents & families for the prior year selected
+		getGroupsAgentsAndFamiliesFromServer(priorYear, document.getElementById('pygroups'), document.getElementById('pyagents'));
     }
     
     function updatePYTable()
@@ -360,8 +359,8 @@
         if (!document.getElementsByTagName) return;
         
         var fstatus;
-        if(family.fstatus === 'Packaged')
-        	fstatus = 'Packaged \u2713';
+        if(family.fstatus === 'Confirmed')
+        	fstatus = 'Confirmed \u2713';
         else
         	fstatus = family.fstatus;
         
@@ -370,7 +369,6 @@
         	dstatus = 'Delivered \u2713';
         else
         	dstatus = family.giftStatus;
-        
         	
         var mealstatus;
         if(family.mealStatus === 'Thanksgiving_Confirmed')
