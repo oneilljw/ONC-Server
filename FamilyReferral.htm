@@ -814,6 +814,95 @@
 		}
 	}
 	
+	function verifyHoHAndDeliveryAddress()
+	{
+		//called when HOH address inputs change
+		var addrElement = [document.getElementById('housenum'), 
+	    	               document.getElementById('street'),
+	        	           document.getElementById('unit'),
+	        	           document.getElementById('city'), 
+		                   document.getElementById('zipcode')];
+		
+		var unitElement = [document.getElementById('unit')];
+		
+		//check to see that housenum and street are not blank
+		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+		{
+			//form the address url
+	       	var addressparams = createAddressParams(addrElement);
+	        var addrresponse;
+	       	$.getJSON('address', addressparams, function(data)
+	      	{
+	      		addresponse = data;
+	      		
+	      		if(addresponse.hasOwnProperty('error'))
+	      		{
+					window.location=document.getElementById('timeoutanchor').href;
+	      		}
+	      		else if(addresponse.errorCode === 0)
+	      		{
+	      			changeAddressBackground(addrElement, '#FFFFFF');
+	      			hohAddressGood = true;
+	      			
+	      			//now check the delivery address
+		      		var addrElement = [document.getElementById('delhousenum'),
+			    	               document.getElementById('delstreet'),
+			        	           document.getElementById('delunit'),
+			            	       document.getElementById('delcity'), 
+			                	   document.getElementById('delzipcode')];
+			
+					var unitElement = [document.getElementById('delunit')];
+	      			
+	      			//check to see that housenum and street are provided
+					if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+					{
+						//form the address url
+		        		var addressparams = createAddressParams(addrElement);
+		        		var addrresponse;
+		        		$.getJSON('address',  addressparams, function(data)
+		      			{
+		      				addresponse = data;
+		      		
+		      				if(addresponse.hasOwnProperty('error'))
+		      				{
+								window.location=document.getElementById('timeoutanchor').href;
+		      				}
+		      				else if(addresponse.errorCode === 0)
+		      				{
+		      					changeAddressBackground(addrElement, '#FFFFFF');
+		      					delAddressGood = true;
+		      					
+		      					//if both addresses are valid, it's ok to submit
+			      				console.log("Addreses are Good");
+		      				}	
+		      				else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+		      				{
+		      					delAddressGood = false;
+		      					changeAddressBackground(addrElement, errorColor);
+		      				}
+		      				else if(addresponse.errorCode === 2)
+		      				{
+		      					delAddressGood = false;
+		      					changeAddressBackground(addrElement, '#FFFFFF');
+		      					changeAddressBackground(unitElement, errorColor);
+		      				}
+		      			});
+					}
+	      		}	
+	      		else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+	      		{
+	      			hohAddressGood = false;
+	      			changeAddressBackground(addrElement, errorColor);
+	      		}
+	      		else if(addresponse.errorCode === 2)
+	      		{
+	      			hohAddressGood = false;
+	      			changeAddressBackground(addrElement, '#FFFFFF');
+	      			changeAddressBackground(unitElement, errorColor);
+	      		}
+	      	});
+		}
+	}
 	function onZipChanged(zipelement)
 	{
 		if(zipelement === 'zipcode')
