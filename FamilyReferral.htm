@@ -11,12 +11,10 @@
   <script> 
   	var childrenJson= [];
   	var adultsJson= [];
-  	var hohAddressGood = false;
-  	var delAddressGood = false;
   	var bVerifyDeliveryAddressEnabled = true;
   	var errorColor = '#FF9999';
   	
-  	
+  	//set the date picker to go back 19 years. Max age of a child ONC serves
   	$(function() {
   	    $( "#childdob" ).datepicker({
   	      yearRange: '-19:+0',
@@ -394,8 +392,6 @@
 				delInputElements[i].readOnly = true;
 				addrInputElements[i].readOnly = true;
 			}
-			
-			delAddressGood = hohAddressGood;
 		}
 		else
 		{
@@ -417,9 +413,6 @@
 			//clear background color
 			changeAddressBackground(delInputElements, '#FFFFFF')
 			changeAddressBackground(delSelectElements, '#FFFFFF')
-			
-			//set the address to bad
-			delAddressGood = false;
 		}
 		
 		bVerifyDeliveryAddressEnabled = true;
@@ -745,23 +738,18 @@
 	      		else if(addresponse.errorCode === 0)
 	      		{
 	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			hohAddressGood = true;
 	      		}	
 	      		else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
 	      		{
-	      			hohAddressGood = false;
 	      			changeAddressBackground(addrElement, errorColor);
 	      		}
 	      		else if(addresponse.errorCode === 2)
 	      		{
-	      			hohAddressGood = false;
 	      			changeAddressBackground(addrElement, '#FFFFFF');
 	      			changeAddressBackground(unitElement, errorColor);
 	      		}
 	      	});
 		}
-		else
-			hohAddressGood = false;
 	}
 	
 	function verifyDeliveryAddress()
@@ -794,115 +782,131 @@
 	      			else if(addresponse.errorCode === 0)
 	      			{
 	      				changeAddressBackground(addrElement, '#FFFFFF');
-	      				delAddressGood = true;
 	      			}	
 	      			else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
 	      			{
-	      				delAddressGood = false;
 	      				changeAddressBackground(addrElement, errorColor);
 	      			}
 	      			else if(addresponse.errorCode === 2)
 	      			{
-	      				delAddressGood = false;
 	      				changeAddressBackground(addrElement, '#FFFFFF');
 	      				changeAddressBackground(unitElement, errorColor);
 	      			}
 	      		});
 			}
-			else
-				delAddressGood = false;
 		}
 	}
 	
 	function verifyHoHAndDeliveryAddress()
 	{
+		var errorElement = document.getElementById('errormessage');
+		
 		//called when HOH address inputs change
-		var addrElement = [document.getElementById('housenum'), 
+		var hohAddrElement = [document.getElementById('housenum'), 
 	    	               document.getElementById('street'),
 	        	           document.getElementById('unit'),
 	        	           document.getElementById('city'), 
 		                   document.getElementById('zipcode')];
 		
-		var unitElement = [document.getElementById('unit')];
+		var hohUnitElement = [document.getElementById('unit')];
 		
-		//check to see that housenum and street are not blank
-		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
+		//now check the delivery address
+  		var delAddrElement = [document.getElementById('delhousenum'),
+    	               document.getElementById('delstreet'),
+        	           document.getElementById('delunit'),
+            	       document.getElementById('delcity'), 
+                	   document.getElementById('delzipcode')];
+
+		var delUnitElement = [document.getElementById('delunit')];
+		
+		//check phone numbers
+		var phoneMssg= verifyPhoneNumbers();
+		if(phoneMssg != '')
 		{
-			//form the address url
-	       	var addressparams = createAddressParams(addrElement);
-	        var addrresponse;
-	       	$.getJSON('address', addressparams, function(data)
-	      	{
-	      		addresponse = data;
+			errorElement.textContent=phoneMssg;
+		}
+		else	
+		{
+			//phone numbares are good, check to see that address are good
+			if(hohAddrElement[0].value !== "" && hohAddrElement[1].value !== "" )
+			{
+				//form the HoH address url
+	       		var hohAddressparams = createAddressParams(hohAddrElement);
+	        	var addrresponse;
+	       		$.getJSON('address', hohAddressparams, function(data)
+	      		{
+	      			addresponse = data;
 	      		
-	      		if(addresponse.hasOwnProperty('error'))
-	      		{
-					window.location=document.getElementById('timeoutanchor').href;
-	      		}
-	      		else if(addresponse.errorCode === 0)
-	      		{
-	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			hohAddressGood = true;
-	      			
-	      			//now check the delivery address
-		      		var addrElement = [document.getElementById('delhousenum'),
-			    	               document.getElementById('delstreet'),
-			        	           document.getElementById('delunit'),
-			            	       document.getElementById('delcity'), 
-			                	   document.getElementById('delzipcode')];
-			
-					var unitElement = [document.getElementById('delunit')];
-	      			
-	      			//check to see that housenum and street are provided
-					if(addrElement[0].value !== "" && addrElement[1].value !== "" )
-					{
-						//form the address url
-		        		var addressparams = createAddressParams(addrElement);
-		        		var addrresponse;
-		        		$.getJSON('address',  addressparams, function(data)
-		      			{
-		      				addresponse = data;
+	      			if(addresponse.hasOwnProperty('error'))
+	      			{
+						window.location=document.getElementById('timeoutanchor').href;
+	      			}
+	      			else if(addresponse.errorCode === 0)
+	      			{
+	      				changeAddressBackground(hohAddrElement, '#FFFFFF');
+
+	      				//HoH address is good, now check the delivery address
+	      				//check to see that delivery housenum and street are provided
+						if(delAddrElement[0].value !== "" && delAddrElement[1].value !== "" )
+						{
+							//form the address url
+		        			var delAddressparams = createAddressParams(delAddrElement);
+		        			var addrresponse;
+		        			$.getJSON('address',  delAddressparams, function(data)
+		      				{
+		      					addresponse = data;
 		      		
-		      				if(addresponse.hasOwnProperty('error'))
-		      				{
-								window.location=document.getElementById('timeoutanchor').href;
-		      				}
-		      				else if(addresponse.errorCode === 0)
-		      				{
-		      					changeAddressBackground(addrElement, '#FFFFFF');
-		      					delAddressGood = true;
+		      					if(addresponse.hasOwnProperty('error'))
+		      					{
+									window.location=document.getElementById('timeoutanchor').href;
+		      					}
+		      					else if(addresponse.errorCode === 0)
+		      					{
+		      						changeAddressBackground(delAddrElement, '#FFFFFF');		      					
 		      					
-		      					//if both addresses are valid, it's ok to submit
-			      				console.log("Addreses are Good");
-		      				}	
-		      				else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-		      				{
-		      					delAddressGood = false;
-		      					changeAddressBackground(addrElement, errorColor);
-		      				}
-		      				else if(addresponse.errorCode === 2)
-		      				{
-		      					delAddressGood = false;
-		      					changeAddressBackground(addrElement, '#FFFFFF');
-		      					changeAddressBackground(unitElement, errorColor);
-		      				}
-		      			});
-					}
-	      		}	
-	      		else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-	      		{
-	      			hohAddressGood = false;
-	      			changeAddressBackground(addrElement, errorColor);
-	      		}
-	      		else if(addresponse.errorCode === 2)
-	      		{
-	      			hohAddressGood = false;
-	      			changeAddressBackground(addrElement, '#FFFFFF');
-	      			changeAddressBackground(unitElement, errorColor);
-	      		}
-	      	});
+		      						//if phone #'s are ok and both addresses are valid, it's ok to submit
+		      						document.getElementById("familyreferral").submit();
+		      					}	
+		      					else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+		      					{
+		      						changeAddressBackground(delAddrElement, errorColor);
+		      						errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
+		      					}
+		      					else if(addresponse.errorCode === 2)
+		      					{
+		      						changeAddressBackground(delAddrElement, '#FFFFFF');
+		      						changeAddressBackground(delUnitElement, errorColor);
+		      						errorElement.textContent = "Submission Error: Delivery address unit error";
+		      					}
+		      				});
+						}
+						else
+						{
+							changeAddressBackground(delAddrElement, errorColor);
+      						errorElement.textContent = "Submission Error: Delivery address incomplete";
+						}	
+	      			}	
+	      			else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+	      			{
+	      				changeAddressBackground(hohAddrElement, errorColor);
+	      				errorElement.textContent = "Submission Error: HoH address incomplete or does not exist";
+	      			}
+	      			else if(addresponse.errorCode === 2)
+	      			{
+	      				changeAddressBackground(hohAddrElement, '#FFFFFF');
+	      				changeAddressBackground(hohUnitElement, errorColor);
+	      				errorElement.textContent = "Submission Error: HoH address unit error";
+	      			}
+	      		});
+			}
+			else
+			{
+				changeAddressBackground(hohAddrElement, errorColor);
+  				errorElement.textContent = "Submission Error: HoH address incomplete";
+			}
 		}
 	}
+	
 	function onZipChanged(zipelement)
 	{
 		if(zipelement === 'zipcode')
@@ -920,7 +924,6 @@
 	function createAddressParams(addrElement)
 	{	
 		var addressparams = "token=" + sessionStorage.getItem("token") + "&" +
-//							"prioryear=" + sessionStorage.getItem("prioryear") + "&" +
 							"housenum=" + encodeURIComponent(addrElement[0].value) + "&" +
 							"street=" + encodeURIComponent(addrElement[1].value) + "&" +
 							"unit=" + encodeURIComponent(addrElement[2].value) + "&" +
@@ -976,32 +979,6 @@
 	{
 		 window.location.assign('timeout');
 	}
-	
-	function submitReferral()
-	{
-		var phoneNumbersGood= true;
-		var errorElement = document.getElementById('errormessage');
-		
- 
-		//check the addresses again here
-		if(hohAddressGood===false)
-			errorElement.textContent = "Submission Error: HoH address incomplete or does not exist";
-//		else if(document.getElementById('sameaddress').checked === false && delAddressGood === false)
-//			errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
-		else
-		{	
-			//check phone numbers
-			var phoneMssg= verifyPhoneNumbers();
-			if(phoneMssg != '')
-			{
-				phoneNumbersGood=false;
-				errorElement.textContent=phoneMssg;
-			}
-		}
-		
-//	    return hohAddressGood && delAddressGood && phoneNumbersGood;
-	    return hohAddressGood && phoneNumbersGood;
-	}
   </script>
   <style>
 	.ui-datepicker
@@ -1039,7 +1016,7 @@
 	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
 	</ul>
   </nav>
-  <form id="familyreferral" action="referfamily" onsubmit="return submitReferral()" method="post">
+  <form id="familyreferral" action="referfamily" method="post">
   <input id='token' type="hidden" name="token">
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
@@ -1267,7 +1244,8 @@
   	<span id="errormessage"></span>
   	<span id="submitspan">
   	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  	  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #808080; color: #ffffff;" title="Click to sumbit family to ONC">
+  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= verifyHoHAndDeliveryAddress()>
+<!--  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #808080; color: #ffffff;" title="Click to sumbit family to ONC"> -->  
   	</span>
   </div>
 </form>
