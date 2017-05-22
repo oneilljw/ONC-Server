@@ -142,9 +142,6 @@
  	    	content.name=fieldname[index] + cnum;
         	content.value = childinfo[index];
         	content.setAttribute("size", fieldsize[index]);
-        	
-        	if(index === 4)	//school field is required, not supported in safari
-        		content.required = true
         		
         	cell.appendChild(content);
         	row.appendChild(cell);
@@ -237,11 +234,14 @@
 		var childlnElement = document.getElementById('childln');
 		var childschoolElement = document.getElementById('childschool');
 		
+		var age = calculateAge(document.getElementById('childdob').value);
+		console.log(age);
+		
 		if(childfnElement.value === "")
 			childfnElement.style.background = errorColor;
 		else if(childlnElement.value === "")
 			childlnElement.style.background = errorColor;
-		else if(childschoolElement.value === "")
+		else if(age > 5 && childschoolElement.value === "")
 			childschoolElement.style.background = errorColor;
 		else
 		{
@@ -321,11 +321,46 @@
 		updateAdultTable();
 	}
 	
-	function getAge(birthdate)
+	function calculateAge(birthday)
+	{	
+		var curryear = new Date().getFullYear();
+		var xmasday = new Date(curryear,11,25,0,0,0,0);
+		var birthdate= new Date(birthday);
+		
+		if(birthdate >= xmasday)
+		{
+			return 0;
+		}
+		else
+		{
+			var y= [xmasday.getFullYear(), birthdate.getFullYear()],
+	    	ydiff= y[0]-y[1],
+	    	m= [xmasday.getMonth(), birthdate.getMonth()],
+	    	mdiff= m[0]-m[1],
+	    	d= [xmasday.getDate(), birthdate.getDate()],
+	    	ddiff= d[0]-d[1];
+
+	    	if(mdiff < 0 || (mdiff=== 0 && ddiff<0))--ydiff;
+	    	if(mdiff<0) mdiff+= 12;
+	    	if(ddiff<0)
+	    	{
+	        	birthdate.setMonth(m[1]+1, 0);
+	        	ddiff= birthdate.getDate()-d[1]+d[0];
+	        	--mdiff;
+	    	}
+	    	
+	    	if(ydiff > 0)
+	    		return ydiff;
+	    	else 
+	    		return 0;
+		}
+	}
+	
+	function getAge(birthday)
 	{
 		var curryear = new Date().getFullYear();
 		var xmasday = new Date(curryear,11,25,0,0,0,0);
-		var birthdate= new Date(birthdate);
+		var birthdate= new Date(birthday);
 		
 		var age= [];
 		
