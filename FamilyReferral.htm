@@ -251,7 +251,6 @@
         	child["sDOB"] =	document.getElementById('childdob').value;
         	child["gender"] = document.getElementById('childgender').value;
         	child["school"] = document.getElementById('childschool').value;
-//	   	 	child["age"] = getAge(child["sDOB"]);
         	childrenJson.push(child);
         
         	updateChildTable();
@@ -832,7 +831,7 @@
 		}
 	}
 	
-	function verifyHoHAndDeliveryAddress()
+	function onSubmit()
 	{
 		var errorElement = document.getElementById('errormessage');
 		
@@ -1279,7 +1278,7 @@
   	<span id="errormessage"></span>
   	<span id="submitspan">
   	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= verifyHoHAndDeliveryAddress()>
+  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit()>
 <!--  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #808080; color: #ffffff;" title="Click to sumbit family to ONC"> -->  
   	</span>
   </div>
