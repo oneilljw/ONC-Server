@@ -1,9 +1,102 @@
+/*!
+ * ONC Common Family JavaScript library v1.0
+ * http://onc.idtus.com:8902/commonfamily.js 
+ * Common functions for family referral and family info editing web pages
+ * Date: 2017-05-23
+ */
+function updateChildTable()
+{
+    $("#tchildbody").empty();
+    	
+    for(var i=0; i<childrenJson.length; i++)
+	{
+    	addChildTableRow(i, childrenJson[i]);	//add row to table
+	}
+}
+function updateAdultTable()
+{
+	$("#tadultbody").empty();
+	
+	for(var i=0; i<adultsJson.length; i++)
+	{
+		addAdultTableRow(i, adultsJson[i]);	//add row to table
+	}
+}
+
+function addChildTableRow(cnum, child)
+{
+    var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
+    var fieldname = ["childfn", "childln", "childdob", "childgender", "childschool"];
+    var fieldsize = [15, 16, 11, 11, 20];
+    
+    var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
+    row=document.createElement("tr");
+	
+    for(index=0; index < childinfo.length; index++)	//create the child info cells
+    {
+    	cell= document.createElement("td");
+	    content= document.createElement("input");
+	    	content.type="text";
+	    	content.name=fieldname[index] + cnum;
+    	content.value = childinfo[index];
+    	content.setAttribute("size", fieldsize[index]);
+    		
+    	cell.appendChild(content);
+    	row.appendChild(cell);
+    }
+    
+    btn = document.createElement("button");
+    btn.value=cnum;
+    btn.type="button";
+    btn.innerHTML = "Remove";
+    btn.onclick=function() {removeChild(cnum);};
+    row.appendChild(btn);
+    
+    tabBody.appendChild(row);
+}
+function addAdultTableRow(anum, adult)
+{
+    var tabBody = document.getElementById("adulttable").getElementsByTagName('tbody').item(0);
+    row=document.createElement("tr");
+    
+    cell= document.createElement("td");
+    adultname= document.createElement("input");
+    adultname.type="text";
+    adultname.name="adultname" + anum;
+    adultname.value = adult.name;
+    adultname.setAttribute("size", 27);
+    cell.appendChild(adultname);
+    row.appendChild(cell);
+    
+    cell= document.createElement("td");
+    var adultgender= document.createElement("input");
+    adultgender.type="text";
+    adultgender.name="adultgender" + anum;
+    adultgender.value = adult.gender;
+    adultgender.setAttribute("size", 11);
+    cell.appendChild(adultgender);
+    row.appendChild(cell);
+    
+    var btn = document.createElement("button");
+    btn.value= anum;
+    btn.type="button";
+    btn.innerHTML = "Remove";
+    btn.onclick=function() {removeAdult(anum);};
+    row.appendChild(btn);
+    
+    tabBody.appendChild(row);
+}
 function sameAddressClicked(cb)
 {
-	//when automatically changing the delivery address, disable address checking
-	bVerifyDeliveryAddressEnabled = false;
-	
-	var addrInputElements = [document.getElementById('housenum'),
+	if(cb.checked == true)	//copy the address input elements to delivery address elements and verify	
+		copyAddressToDeliveryAddress();	
+	else	//clear the delivery address elements
+		clearDeliveryAddress();
+}
+  	
+function copyAddressToDeliveryAddress()
+{
+  	var addrInputElements = [document.getElementById('housenum'),
 			                    document.getElementById('street'),
 			                    document.getElementById('unit')];
 	
@@ -17,28 +110,40 @@ function sameAddressClicked(cb)
 	var delSelectElements = [document.getElementById('delcity'),
 	                          document.getElementById('delzipcode')];
 	
-	if(cb.checked == true)
-	{	
-		//copy the address input elements to delivery address elements
-		for(var i=0; i<addrInputElements.length; i++)
-			delInputElements[i].value = addrInputElements[i].value;
+	//copy the address input elements to delivery address elements
+	for(var i=0; i<addrInputElements.length; i++)
+		delInputElements[i].value = addrInputElements[i].value;
+	
+	delSelectElements[0].value = addrSelectElements[0].value;
+	cityChanged('delcity');
+	delSelectElements[1].value = addrSelectElements[1].value;
 		
-		delSelectElements[0].value = addrSelectElements[0].value;
-		cityChanged('delcity');
-		delSelectElements[1].value = addrSelectElements[1].value;
-			
-		//set read only
-		for(var i=0; i<addrInputElements.length; i++)
-		{
-			delInputElements[i].readOnly = true;
-			addrInputElements[i].readOnly = true;
-		}
-	}
-	else
+	//set read only
+	for(var i=0; i<addrInputElements.length; i++)
 	{
-		//clear the delivery address elements
-		for(var i=0; i<delInputElements.length; i++)
-			delInputElements[i].value = "";
+		delInputElements[i].readOnly = true;
+		addrInputElements[i].readOnly = true;
+	}
+	
+	verifyDeliveryAddress();
+}
+  	
+function clearDeliveryAddress()
+{
+  	var addrInputElements = [document.getElementById('housenum'),
+			                 document.getElementById('street'),
+				             document.getElementById('unit')];
+		                          
+	var delInputElements = [document.getElementById('delhousenum'),
+				            document.getElementById('delstreet'),
+				            document.getElementById('delunit')];
+		
+	var delSelectElements = [document.getElementById('delcity'),
+		                     document.getElementById('delzipcode')];
+		
+	//clear the delivery address elements
+	for(var i=0; i<delInputElements.length; i++)
+		delInputElements[i].value = "";
 		
 		delSelectElements[0].selectedIndex = 0;
 		cityChanged('delcity');
@@ -52,12 +157,9 @@ function sameAddressClicked(cb)
 		}
 		
 		//clear background color
-		changeAddressBackground(delInputElements, '#FFFFFF')
-		changeAddressBackground(delSelectElements, '#FFFFFF')
-	}
-		
-	bVerifyDeliveryAddressEnabled = true;
-}
+		changeAddressBackground(delInputElements, '#FFFFFF');
+		changeAddressBackground(delSelectElements, '#FFFFFF');
+  	}
 	
 function cityChanged(elementName)
 {
@@ -339,45 +441,42 @@ function verifyHOHAddress()
 function verifyDeliveryAddress()
 {
 	//called when delivery address inputs change
-	if(bVerifyDeliveryAddressEnabled)
+	var addrElement = [document.getElementById('delhousenum'),
+	    	           document.getElementById('delstreet'),
+	        	       document.getElementById('delunit'),
+	            	   document.getElementById('delcity'), 
+	            	   document.getElementById('delzipcode')];
+	
+	var unitElement = [document.getElementById('delunit')];
+	
+	//check to see that housenum and street are provided
+	if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 	{
-		var addrElement = [document.getElementById('delhousenum'),
-	    	               document.getElementById('delstreet'),
-	        	           document.getElementById('delunit'),
-	            	       document.getElementById('delcity'), 
-	                	   document.getElementById('delzipcode')];
-	
-		var unitElement = [document.getElementById('delunit')];
-	
-		//check to see that housenum and street are provided
-		if(addrElement[0].value !== "" && addrElement[1].value !== "" )
-		{
-			//form the address url
-        	var addressparams = createAddressParams(addrElement);
-        	var addrresponse;
-        	$.getJSON('address',  addressparams, function(data)
-      		{
-      			addresponse = data;
+		//form the address url
+        var addressparams = createAddressParams(addrElement);
+        var addrresponse;
+        $.getJSON('address',  addressparams, function(data)
+      	{
+      		addresponse = data;
       		
-      			if(addresponse.hasOwnProperty('error'))
-      			{
-					window.location=document.getElementById('timeoutanchor').href;
-      			}
-      			else if(addresponse.errorCode === 0)
-      			{
-      				changeAddressBackground(addrElement, '#FFFFFF');
-      			}	
-      			else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-      			{
-      				changeAddressBackground(addrElement, errorColor);
-      			}
-      			else if(addresponse.errorCode === 2)
-      			{
-      				changeAddressBackground(addrElement, '#FFFFFF');
-      				changeAddressBackground(unitElement, errorColor);
-      			}
-      		});
-		}
+      		if(addresponse.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+      		else if(addresponse.errorCode === 0)
+      		{
+      			changeAddressBackground(addrElement, '#FFFFFF');
+      		}	
+      		else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+      		{
+      			changeAddressBackground(addrElement, errorColor);
+      		}
+      		else if(addresponse.errorCode === 2)
+      		{
+      			changeAddressBackground(addrElement, '#FFFFFF');
+      			changeAddressBackground(unitElement, errorColor);
+      		}
+      	});
 	}
 }
 

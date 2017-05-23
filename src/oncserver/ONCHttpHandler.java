@@ -514,6 +514,10 @@ public class ONCHttpHandler implements HttpHandler
     	{
     		sendFile(t, "text/javascript", "jquery-1.11.3.js");
     	}
+    	else if(requestURI.contains("/commonfamily.js"))
+    	{
+    		sendFile(t, "text/javascript", "CommonFamily.js");
+    	}
     	else if(requestURI.contains("/newfamily"))
     	{
     		String sessionID = (String) params.get("token");
