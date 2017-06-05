@@ -64,6 +64,10 @@ public class ONCHttpHandler implements HttpHandler
     	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
     	
+//		Set<String> keyset = params.keySet();
+//		for(String key:keyset)
+//			System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+    	
     	String requestURI = t.getRequestURI().toASCIIString();
     	
     	String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
