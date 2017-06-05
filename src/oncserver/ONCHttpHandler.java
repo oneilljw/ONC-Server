@@ -965,7 +965,8 @@ public class ONCHttpHandler implements HttpHandler
 	    	{
 	    		//get the old data before updating
 	    		long nLogins = serverUser.getNSessions();
-//	    		Date lastLogin = serverUser.getLastLogin();
+	    		Calendar lastLogin = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+	    		lastLogin.setTimeInMillis(serverUser.getLastLogin());
 	    		
 	    		serverUser.incrementSessions();
 	    		
@@ -1022,8 +1023,7 @@ public class ONCHttpHandler implements HttpHandler
 	    			{
 	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
 	    				sdf.setTimeZone(TimeZone.getDefault());
-	    				Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-	    				userMssg = "You last visited " + sdf.format(cal.getTime());
+	    				userMssg = "You last visited " + sdf.format(lastLogin.getTime());
 	    			}
 	    			
 	    			String username = "";
