@@ -54,6 +54,7 @@ public class DesktopClient extends Thread
     private ServerChildDB childDB;
     private ServerChildWishDB childwishDB;
     private ServerPartnerDB serverPartnerDB;
+    private ServerActivityDB activityDB;
     private ServerVolunteerDB volunteerDB;
     private ServerWarehouseDB warehouseDB;
     private ServerFamilyHistoryDB famHistoryDB;
@@ -102,6 +103,7 @@ public class DesktopClient extends Thread
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildWishDB.getInstance();
 	        serverPartnerDB = ServerPartnerDB.getInstance();
+	        activityDB = ServerActivityDB.getInstance();
 	        volunteerDB = ServerVolunteerDB.getInstance();
 	        warehouseDB = ServerWarehouseDB.getInstance();
 	        famHistoryDB = ServerFamilyHistoryDB.getInstance();
@@ -263,6 +265,12 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = serverPartnerDB.getPartners(year);
+                	output.println(response);
+                }
+                else if(command.startsWith("GET<activities>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.getActivities(year);
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<drivers>"))
@@ -643,6 +651,30 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = serverFamilyDB.addFamilyHistoryList(year, command.substring(20));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<update_activity>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.update(year, command.substring(21));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<delete_activity>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.delete(year, command.substring(21));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<add_activity>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.add(year, command.substring(18));
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);

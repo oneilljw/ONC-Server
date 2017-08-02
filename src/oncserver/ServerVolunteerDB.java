@@ -16,13 +16,14 @@ import com.google.gson.reflect.TypeToken;
 public class ServerVolunteerDB extends ServerSeasonalDB
 {
 	private static final int DRIVER_DB_HEADER_LENGTH = 23;
-	
+	private static final int ACTIVITY_STRING_COL = 12;
 	
 	private static List<VolunteerDBYear> driverDB;
 	private static ServerVolunteerDB instance = null;
 	
 	private static ClientManager clientMgr;
 	private static ServerWarehouseDB warehouseDB;
+	private static ServerActivityDB activityDB;
 
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
 	{
@@ -31,6 +32,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		
 		clientMgr = ClientManager.getInstance();
 		warehouseDB = ServerWarehouseDB.getInstance();
+		activityDB = ServerActivityDB.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -233,7 +235,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, params.get("delemail"), 
 					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
 					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
-					params.get("primaryphone"), "1", params.get("activity"), group,
+					params.get("primaryphone"), "1",
+					activityDB.createActivityList(year, params.get("activity")), 
+					group,
 					params.get("comment"), new Date(), website);
 			
 			addedVol.setID(volDBYear.getNextID());	
@@ -351,7 +355,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine)
 	{
 		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
-		volunteerDBYear.add(new ONCVolunteer(nextLine));	
+		volunteerDBYear.add(new ONCVolunteer(nextLine, activityDB.createActivityList(year, nextLine[ACTIVITY_STRING_COL])));	
 	}
 
 	@Override
