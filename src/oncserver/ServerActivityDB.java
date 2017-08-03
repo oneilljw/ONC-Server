@@ -16,6 +16,8 @@ import com.google.gson.reflect.TypeToken;
 public class ServerActivityDB extends ServerSeasonalDB
 {
 	private static final int ACTIVITY_DB_HEADER_LENGTH = 12;
+	private static final long MILLIS_IN_YEAR = 31556952000L; // Milliseconds
+	private static final long MILLIS_IN_DAY = 24 * 60 * 60 * 1000; //Milliseconds in day
 	
 	
 	private static List<ActivityDBYear> activityDB;
@@ -193,8 +195,8 @@ public class ServerActivityDB extends ServerSeasonalDB
 		{
 			VolunteerActivity newYearActivity = new VolunteerActivity(activity);
 			
-			newYearActivity.setStartTime(updateDateForNewYear(activity.getStartTime()));
-			newYearActivity.setEndTime(updateDateForNewYear(activity.getEndTime()));
+			newYearActivity.setStartTime(updateDateForNewYear(newYear, activity.getStartTimeInMillis()));
+			newYearActivity.setEndTime(updateDateForNewYear(newYear, activity.getEndTimeInMillis()));
 			
 			newActivityDBYear.add(newYearActivity);
 		}
@@ -203,17 +205,12 @@ public class ServerActivityDB extends ServerSeasonalDB
 		newActivityDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 	
-	Calendar updateDateForNewYear(Calendar oldDate)
+	long updateDateForNewYear(int newYear, long oldDate)
 	{
-		Calendar newDate = Calendar.getInstance();
-		newDate.setTimeInMillis(oldDate.getTimeInMillis());
+		long newDate = oldDate + MILLIS_IN_YEAR + MILLIS_IN_DAY;
 		
-		newDate.add(Calendar.YEAR, 1);
-		
-		if(isLeapYear(oldDate.get(Calendar.YEAR)))
-			newDate.add(Calendar.DAY_OF_MONTH, 2);
-		else
-			newDate.add(Calendar.DAY_OF_MONTH, 1);
+		if(isLeapYear(newYear - 1))
+			newDate = newDate + MILLIS_IN_DAY;
 		
 		return newDate;
 	}
