@@ -3,8 +3,11 @@ package oncserver;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,10 +18,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerActivityDB extends ServerSeasonalDB
 {
-	private static final int ACTIVITY_DB_HEADER_LENGTH = 12;
-	private static final long MILLIS_IN_YEAR = 31556952000L; // Milliseconds
-	private static final long MILLIS_IN_DAY = 24 * 60 * 60 * 1000; //Milliseconds in day
-	
+	private static final int ACTIVITY_DB_HEADER_LENGTH = 15;
 	
 	private static List<ActivityDBYear> activityDB;
 	private static ServerActivityDB instance = null;
@@ -117,9 +117,12 @@ public class ServerActivityDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		VolunteerActivity addedActivity = gson.fromJson(json, VolunteerActivity.class);
 				
-		//set the new ID for the new driver
+		//set the new ID and timestamp for the new activity
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
+		
 		addedActivity.setID(activityDBYear.getNextID());
+		addedActivity.setDateChanged(new Date());
+		
 		activityDBYear.add(addedActivity);
 		activityDBYear.setChanged(true);
 				
@@ -131,6 +134,7 @@ public class ServerActivityDB extends ServerSeasonalDB
 		//Create a volunteer activity object for the updated driver
 		Gson gson = new Gson();
 		VolunteerActivity updatedActivity = gson.fromJson(json, VolunteerActivity.class);
+		updatedActivity.setDateChanged(new Date());
 		
 		//Find the position for the current activity being updated
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
@@ -195,8 +199,8 @@ public class ServerActivityDB extends ServerSeasonalDB
 		{
 			VolunteerActivity newYearActivity = new VolunteerActivity(activity);
 			
-			newYearActivity.setStartTime(updateDateForNewYear(newYear, activity.getStartTimeInMillis()));
-			newYearActivity.setEndTime(updateDateForNewYear(newYear, activity.getEndTimeInMillis()));
+			newYearActivity.setStartTime(updateDateForNewYear(newYear, activity.getStartDate()));
+			newYearActivity.setEndTime(updateDateForNewYear(newYear, activity.getEndDate()));
 			
 			newActivityDBYear.add(newYearActivity);
 		}
@@ -205,14 +209,29 @@ public class ServerActivityDB extends ServerSeasonalDB
 		newActivityDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 	
-	long updateDateForNewYear(int newYear, long oldDate)
+	String updateDateForNewYear(int newYear, String priorDate)
 	{
-		long newDate = oldDate + MILLIS_IN_YEAR + MILLIS_IN_DAY;
+		Calendar cal = Calendar.getInstance();
+		SimpleDateFormat sdf = new SimpleDateFormat("m/d/yy");
+		Date pyDate;
 		
-		if(isLeapYear(newYear - 1))
-			newDate = newDate + MILLIS_IN_DAY;
+		try 
+		{
+			pyDate = sdf.parse(priorDate);
+			cal.setTime(pyDate);
+			
+			int day = cal.get(Calendar.DAY_OF_MONTH);
+			if(isLeapYear(newYear - 1))
+				cal.set(Calendar.DAY_OF_MONTH, day + 2);
+			else
+				cal.set(Calendar.DAY_OF_MONTH, day + 1);
+		} 
+		catch (ParseException e) 
+		{
+			e.printStackTrace();
+		}
 		
-		return newDate;
+		return sdf.format(cal.getTime());
 	}
 	
 	public static boolean isLeapYear(int year)
@@ -245,8 +264,9 @@ public class ServerActivityDB extends ServerSeasonalDB
 		 
 		 if(activityDBYear.isUnsaved())
 		 {
-			 String[] header = {"ID", "Category" ,"Name", "Start Time", "End Time", 
-					 				  "Location", "Description"};
+			 String[] header = {"ID", "Category" ,"Name","Start Date","Start Time",
+					 			"End Date","End Time", "Location", "Description", "Open",
+					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
 			 
 			String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(activityDBYear.getList(), header, path);
