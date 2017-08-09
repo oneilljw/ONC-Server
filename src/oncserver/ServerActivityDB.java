@@ -18,7 +18,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerActivityDB extends ServerSeasonalDB
 {
-	private static final int ACTIVITY_DB_HEADER_LENGTH = 15;
+	private static final int ACTIVITY_DB_HEADER_LENGTH = 16;
 	
 	private static List<ActivityDBYear> activityDB;
 	private static ServerActivityDB instance = null;
@@ -265,7 +265,7 @@ public class ServerActivityDB extends ServerSeasonalDB
 		 if(activityDBYear.isUnsaved())
 		 {
 			 String[] header = {"ID", "Category" ,"Name","Start Date","Start Time",
-					 			"End Date","End Time", "Location", "Description", "Open",
+					 			"End Date","End Time", "Location", "Description", "Open", "Notify",
 					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
 			 
 			String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);
