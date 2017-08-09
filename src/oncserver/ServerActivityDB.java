@@ -202,9 +202,6 @@ public class ServerActivityDB extends ServerSeasonalDB
 			newYearActivity.setStartDate(updateDateForNewYear(newYear, activity.getStartDate()));
 			newYearActivity.setEndDate(updateDateForNewYear(newYear, activity.getEndDate()));
 			
-			System.out.println(String.format("ServerActDB.createNewYear: act %s, prior start %s, curr start %s",
-					newYearActivity.getName(), activity.getStartDate(), newYearActivity.getStartDate()));
-			
 			newActivityDBYear.add(newYearActivity);
 		}
 		
@@ -230,13 +227,6 @@ public class ServerActivityDB extends ServerSeasonalDB
 		lastyearDate.add(Calendar.DAY_OF_YEAR, 364);	
 		
 		return sdf.format(lastyearDate.getTime());
-	}
-	
-	public static boolean isLeapYear(int year)
-	{
-		Calendar cal = Calendar.getInstance();
-		cal.set(Calendar.YEAR, year);
-		return cal.getActualMaximum(Calendar.DAY_OF_YEAR) > 365;
 	}
 	
 	private class ActivityDBYear extends ServerDBYear
