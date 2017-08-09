@@ -199,8 +199,11 @@ public class ServerActivityDB extends ServerSeasonalDB
 		{
 			VolunteerActivity newYearActivity = new VolunteerActivity(activity);
 			
-			newYearActivity.setStartTime(updateDateForNewYear(newYear, activity.getStartDate()));
-			newYearActivity.setEndTime(updateDateForNewYear(newYear, activity.getEndDate()));
+			newYearActivity.setStartDate(updateDateForNewYear(newYear, activity.getStartDate()));
+			newYearActivity.setEndDate(updateDateForNewYear(newYear, activity.getEndDate()));
+			
+			System.out.println(String.format("ServerActDB.createNewYear: act %s, prior start %s, curr start %s",
+					newYearActivity.getName(), activity.getStartDate(), newYearActivity.getStartDate()));
 			
 			newActivityDBYear.add(newYearActivity);
 		}
@@ -211,27 +214,22 @@ public class ServerActivityDB extends ServerSeasonalDB
 	
 	String updateDateForNewYear(int newYear, String priorDate)
 	{
-		Calendar cal = Calendar.getInstance();
-		SimpleDateFormat sdf = new SimpleDateFormat("m/d/yy");
-		Date pyDate;
+		Calendar lastyearDate = Calendar.getInstance();
+		SimpleDateFormat sdf = new SimpleDateFormat("M/d/yy");
 		
 		try 
 		{
-			pyDate = sdf.parse(priorDate);
-			cal.setTime(pyDate);
-			
-			int day = cal.get(Calendar.DAY_OF_MONTH);
-			if(isLeapYear(newYear - 1))
-				cal.set(Calendar.DAY_OF_MONTH, day + 2);
-			else
-				cal.set(Calendar.DAY_OF_MONTH, day + 1);
-		} 
+			lastyearDate.setTime(sdf.parse(priorDate));
+		}
 		catch (ParseException e) 
 		{
 			e.printStackTrace();
 		}
 		
-		return sdf.format(cal.getTime());
+		//add 52 weeks or 364 days such that its the same week 
+		lastyearDate.add(Calendar.DAY_OF_YEAR, 364);	
+		
+		return sdf.format(lastyearDate.getTime());
 	}
 	
 	public static boolean isLeapYear(int year)
