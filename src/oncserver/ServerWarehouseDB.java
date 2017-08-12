@@ -81,7 +81,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		
 		ONCWarehouseVolunteer addedWHVol = new ONCWarehouseVolunteer(whDBYear.getNextID(), 
 															addedVol.getID(), addedVol.getGroup(),
-															addedVol.getComment(), new Date());
+															"", new Date());
 		
 		whDBYear.add(addedWHVol);
 		whDBYear.setChanged(true);

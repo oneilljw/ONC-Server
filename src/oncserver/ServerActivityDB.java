@@ -19,6 +19,7 @@ import com.google.gson.reflect.TypeToken;
 public class ServerActivityDB extends ServerSeasonalDB
 {
 	private static final int ACTIVITY_DB_HEADER_LENGTH = 16;
+	private static final int COMMENT_ACTIIVTY_IDENTIFIER_LENGTH = 4;
 	
 	private static List<ActivityDBYear> activityDB;
 	private static ServerActivityDB instance = null;
@@ -67,7 +68,7 @@ public class ServerActivityDB extends ServerSeasonalDB
 	
 	//creates a list of volunteer activities based on stored string of activity ID's 
 	//separated by the '_' character.
-	List<VolunteerActivity> createActivityList(int year, String zActivities)
+	List<VolunteerActivity> createActivityList(int year, String zActivities, String zComments)
 	{
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
 		List<VolunteerActivity> activityList = activityDBYear.getList();
@@ -75,6 +76,7 @@ public class ServerActivityDB extends ServerSeasonalDB
 		List<VolunteerActivity> volActList = new LinkedList<VolunteerActivity>();
 		
 		String[] activityParts = zActivities.split("_");
+		
 		for(String zActivity : activityParts)
 		{
 			int index = 0;
@@ -82,10 +84,52 @@ public class ServerActivityDB extends ServerSeasonalDB
 				index++;
 			
 			if(index < activityList.size())
-				volActList.add(activityList.get(index));
+			{
+				//create a deep copy of the activity
+				VolunteerActivity volActivity = new VolunteerActivity(activityList.get(index));
+				
+				//see if there are volunteer comments that need to be added to the activity
+				if(!zComments.isEmpty())
+				{
+					addVolunteerCommentsToActivity(volActivity, zComments);
+//					System.out.println(String.format("ServActDB.createActList: vaID: %d, volunteer activity comment: %s",
+//							volActivity.getID(), volActivity.getComment()));
+				}
+				
+				volActList.add(volActivity);
+			}
 		}
 		
 		return volActList;
+	}
+	
+	void addVolunteerCommentsToActivity(VolunteerActivity va, String zComments)
+	{
+		String[] commentsArray = zComments.split("_");
+		
+		int index = 0;
+		while(index < commentsArray.length && 
+			   commentsArray[index].length() >= COMMENT_ACTIIVTY_IDENTIFIER_LENGTH)
+		{
+			///each valid comment starts with a 4 character numeric activity identifier,
+			//break it out and test it's validity
+			String comment = commentsArray[index++];
+			
+			String actID = comment.substring(0, COMMENT_ACTIIVTY_IDENTIFIER_LENGTH);
+			String actComment = comment.substring(COMMENT_ACTIIVTY_IDENTIFIER_LENGTH);
+			
+//			System.out.println(String.format("ServActDB.addVolComments array: vaID: %d, commentArray size= %d, comment 0: %s, actID= %s, actCommnet= %s",
+//					va.getID(), commentsArray.length, commentsArray[0], actID, actComment));
+			
+			if(isNumeric(actID) && Integer.parseInt(actID) == va.getID())
+			{
+//				System.out.println(String.format("ServActDB.addVolComments: vaID: %d, set comment: %s",
+//						va.getID(), actComment));
+				
+				va.setComment(actComment);
+				break;
+			}
+		}
 	}
 	
 	static HtmlResponse getActivityJSONP(int year, String name, String callbackFunction)
@@ -253,7 +297,8 @@ public class ServerActivityDB extends ServerSeasonalDB
 		 if(activityDBYear.isUnsaved())
 		 {
 			 String[] header = {"ID", "Category" ,"Name","Start Date","Start Time",
-					 			"End Date","End Time", "Location", "Description", "Open", "Notify",
+					 			"End Date","End Time", "Location", "Description", 
+					 			"Open", "Notify",
 					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
 			 
 			String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);

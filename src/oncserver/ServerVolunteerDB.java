@@ -17,6 +17,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 {
 	private static final int DRIVER_DB_HEADER_LENGTH = 23;
 	private static final int ACTIVITY_STRING_COL = 12;
+	private static final int COMMENTS_STRING_COL = 14;
 	
 	private static List<VolunteerDBYear> driverDB;
 	private static ServerVolunteerDB instance = null;
@@ -208,7 +209,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 				if(!params.get("delemail").isEmpty())
 					updatedVol.setEmail(params.get("delemail"));
 				
-				updatedVol.setComment(params.get("comment"));
+//				updatedVol.setComment(params.get("comment"));
 				
 				//check if the single phone provided in the sign-in matches either of the current
 				//phones. If it doesn't assume it's a cell phone and update it.
@@ -217,7 +218,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 					!webphone.equals(updatedVol.getCellPhone()))
 					updatedVol.setCellPhone(params.get("primaryphone"));
 			}
-			updatedVol.setComment(params.get("comment"));
+//			updatedVol.setComment(params.get("comment"));
 			
 			
 			volDBYear.setChanged(true);
@@ -236,7 +237,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
 					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
 					params.get("primaryphone"), "1",
-					activityDB.createActivityList(year, params.get("activity")), 
+					activityDB.createActivityList(year, params.get("activity"), ""), 
 					group,
 					params.get("comment"), new Date(), website);
 			
@@ -355,7 +356,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine)
 	{
 		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
-		volunteerDBYear.add(new ONCVolunteer(nextLine, activityDB.createActivityList(year, nextLine[ACTIVITY_STRING_COL])));	
+		volunteerDBYear.add(new ONCVolunteer(nextLine, activityDB.createActivityList(year, nextLine[ACTIVITY_STRING_COL], nextLine[COMMENTS_STRING_COL])));	
 	}
 
 	@Override
