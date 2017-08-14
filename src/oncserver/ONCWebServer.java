@@ -29,9 +29,9 @@ public class ONCWebServer
 							"/oncdialogstylesheet", "/newfamily", "/reqchangepw", "/timeout",
 							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
 							"/changepw", "/startpage", "/vanilla", "/getuser", "/getstatus",
-							"/profileunchanged", "/updateuser", "/driverregistration", "/registerdriver",
+							"/profileunchanged", "/updateuser", "/driversignin", "/signindriver",
 							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/contactinfo",
-							"/jquery.js", "/favicon.ico", "/groups", "/commonfamily.js"};
+							"/jquery.js", "/favicon.ico", "/groups", "/volunteerregistration", "/commonfamily.js"};
 		
 		HttpContext context;
 //		Filter paramFilter = new ParameterFilter();

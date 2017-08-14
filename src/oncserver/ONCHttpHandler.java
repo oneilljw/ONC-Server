@@ -49,8 +49,9 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
-	private static final String DRIVER_REGISTRATION_HTML = "DriverReg.htm";
+	private static final String DRIVER_SIGN_IN_HTML = "DriverReg.htm";
 	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
+	private static final String VOLUNTEER_REGISTRATION_HTML = "VolRegistration.htm";
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
 	private static final int HTTP_OK = 200;
@@ -707,14 +708,13 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	else if(requestURI.equals("/driverregistration"))
+    	else if(requestURI.equals("/volunteerregistration"))
     	{
     		String response = null;
-    		
        		
     		try 
     		{	
-				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_REGISTRATION_HTML));
+				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_REGISTRATION_HTML));
 				response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
 			} 
     		catch (IOException e) 
@@ -725,7 +725,25 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	else if(requestURI.equals("/registerdriver"))
+    	else if(requestURI.equals("/driversignin"))
+    	{
+    		String response = null;
+    		
+       		
+    		try 
+    		{	
+				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_SIGN_IN_HTML));
+				response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
+			} 
+    		catch (IOException e) 
+    		{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.equals("/signindriver"))
     	{
 //			Set<String> keyset = params.keySet();
 //   		for(String key:keyset)
