@@ -477,6 +477,13 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
+    	else if(requestURI.contains("/activities"))
+    	{
+    		int year = Integer.parseInt((String) params.get("year"));
+    		
+    		HtmlResponse response = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
     	else if(requestURI.contains("/contactinfo"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));

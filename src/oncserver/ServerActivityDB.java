@@ -66,6 +66,26 @@ public class ServerActivityDB extends ServerSeasonalDB
 		return response;	
 	}
 	
+	static HtmlResponse getActivitesJSONP(int year, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfActivities = new TypeToken<ArrayList<FamilyReference>>(){}.getType();
+		
+		List<VolunteerActivity> searchList = activityDB.get(year-BASE_YEAR).getList();
+//		ArrayList<VolunteerActivity> responseList = new ArrayList<VolunteerActivity>();
+		
+//		//sort the search list by ONC Number
+//		Collections.sort(searchList, new ONCFamilyONCNumComparator());
+		
+//		for(int i=0; i<searchList.size(); i++)
+//			responseList.add());
+		
+		String response = gson.toJson(searchList, listOfActivities);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
 	//creates a list of volunteer activities based on stored string of activity ID's 
 	//separated by the '_' character.
 	List<VolunteerActivity> createActivityList(int year, String zActivities, String zComments)
@@ -131,8 +151,8 @@ public class ServerActivityDB extends ServerSeasonalDB
 			}
 		}
 	}
-	
-	static HtmlResponse getActivityJSONP(int year, String name, String callbackFunction)
+/*	
+	static HtmlResponse getActivitiesJSONP(int year, String name, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		List<VolunteerActivity> searchList = activityDB.get(year - BASE_YEAR).getList();
@@ -150,7 +170,7 @@ public class ServerActivityDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
-
+*/
 	@Override
 	String add(int year, String json) 
 	{

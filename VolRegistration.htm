@@ -22,6 +22,13 @@
   		var urlmode = window.location.href;
 	  	if(urlmode.indexOf("registerdriver") > -1)
   			window.location=document.getElementById('registeredanchor').href;
+	  	
+	  	activityparams = "year=" + new Date().getFullYear().toString() + "&" + "callback=?";
+	  	
+	  	$.getJSON('activities', activityparams, function(activities)
+		{
+			console.log(activities);
+		});
 	});
   	
   	function onGroupChange()
@@ -328,6 +335,74 @@
 		window.location=document.getElementById('closepopup').href;
 	}
 	
+	function addActivityTableRow(activity)
+    {
+		var activityinfo= [activity.name, activity.startDate, activity.endDate, activity.description];
+		var childfieldsize= [15, 14];
+		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
+        
+	    var tabBody = document.getElementById("activitytable").getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < childinfo.length; index++)	//create the child info cells
+        {
+        	cell= document.createElement("td");
+    	    content= document.createElement("input");
+ 	    	content.type="text";
+        	content.value = childinfo[index];
+        	content.readOnly = true;
+        	content.setAttribute("size", childfieldsize[index]);
+        	cell.appendChild(content);
+        	row.appendChild(cell);
+        }
+
+        for(wn=0; wn<wishplaceholder.length; wn++)
+        {
+        	var wlcell= document.createElement("td");
+        	var wish= document.createElement("input");
+        	wish.type="text";
+        	wish.name="wish" + cnum + wn;
+        	wish.id="wish" + cnum + wn;
+        	wish.disabled = true;
+        	wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
+        	wish.setAttribute("size", 22);
+        	wlcell.appendChild(wish);
+        	row.appendChild(wlcell);
+        }
+        
+        tabBody.appendChild(row);
+    }
+	
+	function tableCreate()
+	{
+	    var body = document.getElementsByTagName('body')[0];
+	    var tbl = document.createElement('table');
+	    tbl.style.width = '100%';
+	    tbl.setAttribute('border', '1');
+	    var tbdy = document.createElement('tbody');
+	    for (var i = 0; i < 3; i++) 
+	    {
+	        var tr = document.createElement('tr');
+	        for (var j = 0; j < 2; j++) 
+	        {
+	            if (i == 2 && j == 1) 
+	            {
+	                break
+	            } 
+	            else 
+	            {
+	                var td = document.createElement('td');
+	                td.appendChild(document.createTextNode('\u0020'))
+	                i == 1 && j == 1 ? td.setAttribute('rowSpan', '2') : null;
+	                tr.appendChild(td)
+	            }
+	        }
+	        tbdy.appendChild(tr);
+	    }
+	    tbl.appendChild(tbdy);
+	    body.appendChild(tbl)
+	}
+	
   </script>
   <style>
 	#submitspan {float: right;}
@@ -418,19 +493,37 @@
   <br>
    <fieldset>
   <legend class="legend-major">Activities</legend>
-  <div class= 'inputline'>
-    <input type="checkbox" id="act00ckBox" title="Uncheck to edit HoH or Delivery address">Activity 00
-    <label for="act00start">Start:</label>
-    <input id="act00start" title="start" name="start">
- 	<label for="act00end">End:</label>
-	<input id="act00desc" title="Description" name="act00desc" type="text" size="35" placeholder="Activity description">
-  </div>	  
-  <div id= 'commentdiv'>
-      <label for="commnet">Comment:</label>
- 	  <input id= 'comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment' autocomplete= 'off'>
-  </div>
-  </fieldset>
   <div>
+      <table id="activitytable">
+  	     <tr>
+  	 	   <td id = activitytablecell>
+  	 	    <table> 
+  	 	      <tr>
+  	 	        <td>
+  	         <input type="checkbox" id="act00ckBox" title="Check to volunteer for this activity">Activity 0
+  	       </td>
+           <td>
+             <label for="act00start">Start:</label>
+             <input id="act00start" title="start" name="start">
+	       </td>
+           <td>
+             <label for="act00end">End:</label>
+             <input id="act00end" title="end" name="end">
+           </td>
+         </tr>
+         <tr>
+           <td colspan="2">Description: This is a detailed description of the activity</td>
+         </tr>
+         <tr>
+           <td>
+             <label for="act00commnet">Comment:</label>
+ 	         <input id= 'act00comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment' autocomplete= 'off'>
+           </td>
+         </tr>
+       </table>
+     </table>
+  </div>
+   </fieldset>
   	<span id="errormessage"></span>
   	<span id="submitspan">
   	  <input id="btnsubmit" type="button" value="Register" style="background-color: #336699; color: #ffffff;" title="Click to sign in" onclick= submitRegistration()>
