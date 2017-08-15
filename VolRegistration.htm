@@ -27,7 +27,7 @@
 	  	
 	  	$.getJSON('activities', activityparams, function(activities)
 		{
-			console.log(activities);
+			addActivities(activities);
 		});
 	});
   	
@@ -335,72 +335,97 @@
 		window.location=document.getElementById('closepopup').href;
 	}
 	
-	function addActivityTableRow(activity)
+	function addActivities(activities)
     {
-		var activityinfo= [activity.name, activity.startDate, activity.endDate, activity.description];
-		var childfieldsize= [15, 14];
-		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
-        
-	    var tabBody = document.getElementById("activitytable").getElementsByTagName('tbody').item(0);
-        row=document.createElement("tr");
-         
-        for(index=0; index < childinfo.length; index++)	//create the child info cells
-        {
-        	cell= document.createElement("td");
-    	    content= document.createElement("input");
- 	    	content.type="text";
-        	content.value = childinfo[index];
-        	content.readOnly = true;
-        	content.setAttribute("size", childfieldsize[index]);
-        	cell.appendChild(content);
-        	row.appendChild(cell);
-        }
-
-        for(wn=0; wn<wishplaceholder.length; wn++)
-        {
-        	var wlcell= document.createElement("td");
-        	var wish= document.createElement("input");
-        	wish.type="text";
-        	wish.name="wish" + cnum + wn;
-        	wish.id="wish" + cnum + wn;
-        	wish.disabled = true;
-        	wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
-        	wish.setAttribute("size", 22);
-        	wlcell.appendChild(wish);
-        	row.appendChild(wlcell);
-        }
-        
-        tabBody.appendChild(row);
+		console.log(activities.length);
+		createActivityTable(activities[0]);
+		createActivityTable(activities[1]);
+		createActivityTable(activities[2]);
+		createActivityTable(activities[3]);
+		createActivityTable(activities[4]);
     }
 	
-	function tableCreate()
+	function createActivityTable(activity)
 	{
-	    var body = document.getElementsByTagName('body')[0];
+	    var element = document.getElementById('activitydiv');
 	    var tbl = document.createElement('table');
 	    tbl.style.width = '100%';
 	    tbl.setAttribute('border', '1');
 	    var tbdy = document.createElement('tbody');
-	    for (var i = 0; i < 3; i++) 
-	    {
-	        var tr = document.createElement('tr');
-	        for (var j = 0; j < 2; j++) 
-	        {
-	            if (i == 2 && j == 1) 
-	            {
-	                break
-	            } 
-	            else 
-	            {
-	                var td = document.createElement('td');
-	                td.appendChild(document.createTextNode('\u0020'))
-	                i == 1 && j == 1 ? td.setAttribute('rowSpan', '2') : null;
-	                tr.appendChild(td)
-	            }
-	        }
-	        tbdy.appendChild(tr);
-	    }
+	        
+	    //create the first row check box, start and end times
+	    var tr0 = document.createElement('tr');
+	    
+	    var td0 = document.createElement('td');
+        createCheckBoxElement('activityckbox00', activity.name, td0);
+        tr0.appendChild(td0);
+        
+        var td1 = document.createElement('td');
+        td1.appendChild(document.createTextNode('Start: ' + activity.startDate + ' ' + activity.startTime));
+        tr0.appendChild(td1);
+        
+        var td2 = document.createElement('td');
+        td2.appendChild(document.createTextNode('End: ' + activity.endDate + ' ' + activity.endTime));
+        tr0.appendChild(td2);
+        
+        tbdy.appendChild(tr0);
+        
+        //create the second row description text
+	    var tr1 = document.createElement('tr');
+	    
+	    var td4 = document.createElement('td');
+	    td4.appendChild(document.createTextNode('Description: ' + activity.description));
+	    td4.setAttribute('colSpan', '3');
+        tr1.appendChild(td4);
+        
+        tbdy.appendChild(tr1);
+        
+      	//create the third row comment text input
+	    var tr2 = document.createElement('tr');
+	    
+	    var td5 = document.createElement('td');
+	    createTextElement('commnet', 'Volunteer Comment: ', td5);
+	    td5.setAttribute('colSpan', '3');
+	    tr2.appendChild(td5);
+	  	    
+        tbdy.appendChild(tr2);
+	    
 	    tbl.appendChild(tbdy);
-	    body.appendChild(tbl)
+	    element.appendChild(tbl)
+	    element.append(document.createElement("br"));
+	}
+	
+	function createCheckBoxElement(name, text, element)
+	{
+		var checkbox = document.createElement('input');
+		checkbox.type = "checkbox";
+		checkbox.name = name;
+		checkbox.value = "value";
+		checkbox.id = name;
+
+		var label = document.createElement('label')
+		label.htmlFor = name;
+		label.appendChild(document.createTextNode(text));
+
+		element.appendChild(checkbox);
+		element.appendChild(label);
+	}
+	
+	function createTextElement(name, text, element)
+	{
+		var inputElement = document.createElement('input');
+		inputElement.type = "text";
+		inputElement.name = name;
+		inputElement.id = name;
+		inputElement.placeholder='Add any comments you want ONC to know here'; 
+		inputElement.size = '120';
+
+		var label = document.createElement('label')
+		label.htmlFor = name;
+		label.appendChild(document.createTextNode(text));
+
+		element.appendChild(label);
+		element.appendChild(inputElement);	
 	}
 	
   </script>
@@ -491,44 +516,15 @@
   </div>
   </fieldset>
   <br>
-   <fieldset>
-  <legend class="legend-major">Activities</legend>
-  <div>
-      <table id="activitytable">
-  	     <tr>
-  	 	   <td id = activitytablecell>
-  	 	    <table> 
-  	 	      <tr>
-  	 	        <td>
-  	         <input type="checkbox" id="act00ckBox" title="Check to volunteer for this activity">Activity 0
-  	       </td>
-           <td>
-             <label for="act00start">Start:</label>
-             <input id="act00start" title="start" name="start">
-	       </td>
-           <td>
-             <label for="act00end">End:</label>
-             <input id="act00end" title="end" name="end">
-           </td>
-         </tr>
-         <tr>
-           <td colspan="2">Description: This is a detailed description of the activity</td>
-         </tr>
-         <tr>
-           <td>
-             <label for="act00commnet">Comment:</label>
- 	         <input id= 'act00comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment' autocomplete= 'off'>
-           </td>
-         </tr>
-       </table>
-     </table>
-  </div>
-   </fieldset>
+  <fieldset>
+  <legend class="legend-major">Activities: Check each activity you or your group will participate in</legend>
+    <div id = 'activitydiv'>
+    </div>
+  </fieldset>
   	<span id="errormessage"></span>
   	<span id="submitspan">
   	  <input id="btnsubmit" type="button" value="Register" style="background-color: #336699; color: #ffffff;" title="Click to sign in" onclick= submitRegistration()>
   	</span>
-  </div>
  </form>
  <!-- Success Dialog -->
   <div id="registereddlg" class="modalDialog">
