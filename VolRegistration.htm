@@ -337,20 +337,26 @@
 	
 	function addActivities(activities)
     {
-		console.log(activities.length);
-		createActivityTable(activities[0]);
-		createActivityTable(activities[1]);
-		createActivityTable(activities[2]);
-		createActivityTable(activities[3]);
-		createActivityTable(activities[4]);
+		for (i = 0; i < activities.length; i++) 
+			createActivityTable(activities[i], i);
     }
 	
-	function createActivityTable(activity)
+	function createActivityTable(activity, num)
 	{
 	    var element = document.getElementById('activitydiv');
 	    var tbl = document.createElement('table');
+	    
+	    if(num % 2 == 0)
+	    	tbl.style.backgroundColor = '#FFCCCC';
+	    else
+	    	tbl.style.backgroundColor = '#CCFFCC';
+	    
+	    tbl.style.borderWidth = "2px";
+	    tbl.style.borderStyle = "solid";
+	    tbl.style.borderColor = "#000000";
 	    tbl.style.width = '100%';
 	    tbl.setAttribute('border', '1');
+	    
 	    var tbdy = document.createElement('tbody');
 	        
 	    //create the first row check box, start and end times
