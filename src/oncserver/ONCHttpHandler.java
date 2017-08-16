@@ -732,6 +732,25 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
+    	else if(requestURI.equals("/registervolunteer"))
+    	{
+			Set<String> keyset = params.keySet();
+			for(String key:keyset)
+				System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+
+    		int year = Integer.parseInt((String)params.get("year"));
+    		String callbackFunction = (String) params.get("callback");
+    		    		
+    		String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
+    		    				"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
+    		    				"group", "comment", "activity"};
+    		    		
+    		Map<String, String> volParams = createMap(params, volKeys);
+    		    		
+    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, 
+    										"Delivery Registration Webpage", callbackFunction);
+    		sendHTMLResponse(t, htmlResponse); 
+    	}
     	else if(requestURI.equals("/driversignin"))
     	{
     		String response = null;

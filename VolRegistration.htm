@@ -5,7 +5,8 @@
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="jquery.js"></script>
-  <script> 
+  <script>
+    var activitiesJson= [];
   	var errorColor = '#FF9999';
   	
   	$( document ).ready(function()
@@ -27,6 +28,7 @@
 	  	
 	  	$.getJSON('activities', activityparams, function(activities)
 		{
+	  		activitiesJson = activities;
 			addActivities(activities);
 		});
 	});
@@ -295,10 +297,25 @@
 						+ "&delstreet=" + document.getElementById('delstreet').value
 						+ "&delcity=" + document.getElementById('delcity').value
 						+ "&delzipcode=" + document.getElementById('delzipcode').value
-						+ "&comment=" + document.getElementById('comment').value
-						+ "&callback=?";
+						+ "&comment=" + document.getElementById('comment').value;
+						
 		
-    	$.post('registerdriver', volunteerparams, function(data, textStatus)
+		for(i=0; i< activitiesJson.length; i++)
+		{
+			//only include checkboxes that are checked, the server will sort it out
+			var actckboxname = 'actckbox' +  i;
+			if(document.getElementById(actckboxname).checked)
+			{
+				volunteerparams += '&' + actckboxname + '= 1';
+			
+				var actcommentname = 'actcomment' +  i;
+				volunteerparams += '&' + actcommentname + '=' + document.getElementById(actcommentname).value;
+			}
+		}
+		
+		volunteerparams += "&callback=?";
+		
+    	$.post('registervolunteer', volunteerparams, function(data, textStatus)
     	{
     		clearAllButGroupSelect();
 			document.getElementById('success_mssg').innerHTML = data.message;
@@ -363,7 +380,7 @@
 	    var tr0 = document.createElement('tr');
 	    
 	    var td0 = document.createElement('td');
-        createCheckBoxElement('activityckbox00', activity.name, td0);
+        createCheckBoxElement('actckbox' + num, activity.name, td0);
         tr0.appendChild(td0);
         
         var td1 = document.createElement('td');
@@ -390,7 +407,7 @@
 	    var tr2 = document.createElement('tr');
 	    
 	    var td5 = document.createElement('td');
-	    createTextElement('commnet', 'Volunteer Comment: ', td5);
+	    createTextElement('actcomment' + num, 'Volunteer Comment: ', td5);
 	    td5.setAttribute('colSpan', '3');
 	    tr2.appendChild(td5);
 	  	    
