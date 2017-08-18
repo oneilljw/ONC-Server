@@ -15,9 +15,9 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerVolunteerDB extends ServerSeasonalDB
 {
-	private static final int DRIVER_DB_HEADER_LENGTH = 23;
-	private static final int ACTIVITY_STRING_COL = 12;
-	private static final int COMMENTS_STRING_COL = 14;
+	private static final int DRIVER_DB_HEADER_LENGTH = 24;
+	private static final int ACTIVITY_STRING_COL = 13;
+	private static final int COMMENTS_STRING_COL = 15;
 	
 	private static List<VolunteerDBYear> driverDB;
 	private static ServerVolunteerDB instance = null;
@@ -72,17 +72,31 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		return response;	
 	}
 	
-	static HtmlResponse getDriverJSONP(int year, String fn, String ln, String callbackFunction)
+	static HtmlResponse getVolunteerJSONP(int year, String fn, String ln, String cell, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		List<ONCVolunteer> searchList = driverDB.get(year - BASE_YEAR).getList();
 		
 		String response;
 		int index=0;
-		while(index < searchList.size() && !(searchList.get(index).getfName().equalsIgnoreCase(fn) && 
-											 searchList.get(index).getlName().equalsIgnoreCase(ln)))
+		
+		//determine whether to find the volunteer by first and last name or by cell phone
+		if(fn.isEmpty() || ln.isEmpty())
 		{
-			index++;
+			//either first or last name is empty, search for cell phone match
+			while(index < searchList.size() && !searchList.get(index).doesCellPhoneMatch(cell))
+			{
+				index++;
+			}
+		}
+		else
+		{
+			//search for first and last name match
+			while(index < searchList.size() && !(searchList.get(index).getfName().equalsIgnoreCase(fn) && 
+					 searchList.get(index).getlName().equalsIgnoreCase(ln)))
+			{
+				index++;
+			}
 		}
 		
 		if(index< searchList.size())
@@ -164,15 +178,16 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	/************
 	 * Registers and signs in volunteers from the web site
 	 * @param year
-	 * @param params
+	 * @param volParams
 	 * @param callbackFunction
 	 * @return
 	 */
-	static HtmlResponse addVolunteerJSONP(int year, Map<String, String> params, 
+	static HtmlResponse addVolunteerJSONP(int year, Map<String, String> volParams,
+											Map<String, String> activityParams, 
 											String website, String callbackFunction)
 	{		
-		String fn = params.get("delFN");
-		String ln = params.get("delLN");
+		String fn = volParams.get("delFN");
+		String ln = volParams.get("delLN");
 		
 		VolunteerDBYear volDBYear = driverDB.get(year - BASE_YEAR);
 		List<ONCVolunteer>volList = volDBYear.getList();
@@ -189,64 +204,59 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			updatedVol.setSignIns(updatedVol.getSignIns() + 1);
 			updatedVol.setDateChanged(new Date());
 			
-			if(params.get("group").equals("Other"))
-				updatedVol.setGroup(params.get("groupother"));
+			if(volParams.get("group").equals("Other"))
+				updatedVol.setGroup(volParams.get("groupother"));
 			else
-				updatedVol.setGroup(params.get("group"));
+				updatedVol.setGroup(volParams.get("group"));
 			
-			if(params.get("group").equals("Self") || params.get("group").equals("Other"))
+			if(volParams.get("group").equals("Self") || volParams.get("group").equals("Other"))
 			{
-				if(!params.get("delhousenum").isEmpty())
-					updatedVol.sethNum(params.get("delhousenum"));
-				if(!params.get("delstreet").isEmpty())
-					updatedVol.setStreet(params.get("delstreet"));
-				if(!params.get("delunit").isEmpty())
-					updatedVol.setUnit(params.get("delunit"));
-				if(!params.get("delcity").isEmpty())
-					updatedVol.setCity(params.get("delcity"));
-				if(!params.get("delzipcode").isEmpty())
-					updatedVol.setZipcode(params.get("delzipcode")); 
-				if(!params.get("delemail").isEmpty())
-					updatedVol.setEmail(params.get("delemail"));
-				
-//				updatedVol.setComment(params.get("comment"));
+				if(!volParams.get("delhousenum").isEmpty())
+					updatedVol.sethNum(volParams.get("delhousenum"));
+				if(!volParams.get("delstreet").isEmpty())
+					updatedVol.setStreet(volParams.get("delstreet"));
+				if(!volParams.get("delunit").isEmpty())
+					updatedVol.setUnit(volParams.get("delunit"));
+				if(!volParams.get("delcity").isEmpty())
+					updatedVol.setCity(volParams.get("delcity"));
+				if(!volParams.get("delzipcode").isEmpty())
+					updatedVol.setZipcode(volParams.get("delzipcode")); 
+				if(!volParams.get("delemail").isEmpty())
+					updatedVol.setEmail(volParams.get("delemail"));
+				if(!volParams.get("comment").isEmpty())
+					updatedVol.setComment(volParams.get("comment"));
 				
 				//check if the single phone provided in the sign-in matches either of the current
-				//phones. If it doesn't assume it's a cell phone and update it.
-				String webphone = params.get("primaryphone");
+				//phones. If it doesn't, assume it's a cell phone and update it.
+				String webphone = volParams.get("primaryphone");
 				if(!webphone.isEmpty() && !webphone.equals(updatedVol.getHomePhone()) && 
 					!webphone.equals(updatedVol.getCellPhone()))
-					updatedVol.setCellPhone(params.get("primaryphone"));
+					updatedVol.setCellPhone(volParams.get("primaryphone"));
+				
+				//create a new activity list and update replace the prior list
+				updatedVol.setActivityList(activityDB.createActivityList(year, activityParams));
 			}
-//			updatedVol.setComment(params.get("comment"));
-			
 			
 			volDBYear.setChanged(true);
 			
 			//notify in year clients
 			Gson gson = new Gson();
 			clientMgr.notifyAllInYearClients(year, "UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
-			
-			warehouseDB.add(year, updatedVol);	//add the volunteer to the warehouse sign-in sign-in data base
 		}
 		else
 		{
-			//Didn't find the volunteer, create and add a new one
-			String group = params.get("group").equals("Other") ? params.get("groupother") : params.get("group");
-			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, params.get("delemail"), 
-					params.get("delhousenum"), params.get("delstreet"), params.get("delunit"),
-					params.get("delcity"), params.get("delzipcode"), params.get("primaryphone"),
-					params.get("primaryphone"), "1",
-					activityDB.createActivityList(year, params.get("activity"), ""), 
-					group,
-					params.get("comment"), new Date(), website);
+			//Didn't find the volunteer, create and add a new one, including their activity list
+			String group = volParams.get("group").equals("Other") ? volParams.get("groupother") : volParams.get("group");
+			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, volParams.get("delemail"), 
+					volParams.get("delhousenum"), volParams.get("delstreet"), volParams.get("delunit"),
+					volParams.get("delcity"), volParams.get("delzipcode"), volParams.get("primaryphone"),
+					volParams.get("primaryphone"), "1", activityDB.createActivityList(year, activityParams), 
+					group, volParams.get("comment"), new Date(), website);
 			
 			addedVol.setID(volDBYear.getNextID());	
 			addedVol.setSignIns(addedVol.getSignIns() + 1);	
 			volDBYear.add(addedVol);
 			volDBYear.setChanged(true);
-			
-			warehouseDB.add(year, addedVol);	//add the volunteer to the warehouse data base
 			
 			//notify in year clients
 			Gson gson = new Gson();
@@ -254,7 +264,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		}
 		
 		String responseJson = String.format("{\"message\":\"Thank you, %s, for volunteering "
-				+ "with Our Neighbor's Child!\"}", params.get("delFN"));
+				+ "with Our Neighbor's Child!\"}", volParams.get("delFN"));
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + responseJson +")", HTTPCode.Ok);		
@@ -394,8 +404,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		 if(volunteerDBYear.isUnsaved())
 		 {
 			 String[] driverHeader = {"Driver ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
-			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Activity Code",
-			 			"Group", "Comment", "Qty", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
+			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Comment", "Activity Code",
+			 			"Group", "Act Comments", "Qty", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
 			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
 			 
 			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);

@@ -7,9 +7,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import ourneighborschild.VolunteerActivity;
 
@@ -66,19 +69,23 @@ public class ServerActivityDB extends ServerSeasonalDB
 		return response;	
 	}
 	
+	static int size(int year)
+	{
+		return activityDB.get(year - BASE_YEAR).getList().size();
+	}
+	
 	static HtmlResponse getActivitesJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listOfActivities = new TypeToken<ArrayList<FamilyReference>>(){}.getType();
 		
-		List<VolunteerActivity> searchList = activityDB.get(year-BASE_YEAR).getList();
-//		ArrayList<VolunteerActivity> responseList = new ArrayList<VolunteerActivity>();
+		List<VolunteerActivity> searchList = new ArrayList<VolunteerActivity>();
+		for(VolunteerActivity va : activityDB.get(year-BASE_YEAR).getList())
+			if(va.isOpen())
+				searchList.add(va);
 		
-//		//sort the search list by ONC Number
-//		Collections.sort(searchList, new ONCFamilyONCNumComparator());
-		
-//		for(int i=0; i<searchList.size(); i++)
-//			responseList.add());
+		//sort the search list by Start date
+		Collections.sort(searchList, new VolunteerActivityDateComparator());
 		
 		String response = gson.toJson(searchList, listOfActivities);
 
@@ -120,6 +127,47 @@ public class ServerActivityDB extends ServerSeasonalDB
 			}
 		}
 		
+		return volActList;
+	}
+	
+	//creates a list of volunteer activities based on a parameter map from the web site.
+	//The parameter map contains the activity check boxes and activity comments
+	List<VolunteerActivity> createActivityList(int year, Map<String, String> actMap)
+	{
+//		Set<String> actkeyset = actMap.keySet();
+//		for(String key:actkeyset)
+//			System.out.println(String.format("ActivityDB actMapKey= %s, actMapvalue= %s", key, (String)actMap.get(key)));
+		
+		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
+		List<VolunteerActivity> activityList = activityDBYear.getList();
+		List<VolunteerActivity> volActList = new LinkedList<VolunteerActivity>();
+		
+		//iterate thru the activity map and add the activities the volunteer sign up for plus 
+		//their comments
+		for(String key : actMap.keySet())
+		{
+			if(key.startsWith("actckbox"))
+			{	
+				for(VolunteerActivity va : activityList)
+				{
+					//check if the activity check box value == the vol activity id
+					if(Integer.parseInt(actMap.get(key)) == va.getID())
+					{
+						//create a deep copy of the activity and add the associated comment with 
+						//the actckbox key
+						VolunteerActivity volActivity = new VolunteerActivity(va);
+						volActivity.setComment(actMap.get("actcomment" + key.substring(8)));
+						volActList.add(volActivity);
+						break;
+					}
+				}
+			}
+		}
+		
+//		for(VolunteerActivity va: volActList)
+//			System.out.println(String.format("ServerActDB.createActList act= %s, comment= %s",
+//					va.getName(), va.getComment()));
+			
 		return volActList;
 	}
 	
@@ -325,5 +373,26 @@ public class ServerActivityDB extends ServerSeasonalDB
 			exportDBToCSV(activityDBYear.getList(), header, path);
 			activityDBYear.setChanged(false);
 		}
-	}	
+	}
+	
+	private static class VolunteerActivityDateComparator implements Comparator<VolunteerActivity>
+	{
+		@Override
+		public int compare(VolunteerActivity o1, VolunteerActivity o2)
+		{
+			SimpleDateFormat sdf = new SimpleDateFormat("M/d/yy");
+			Date o1StartDate, o2StartDate;
+			try 
+			{
+				o1StartDate = sdf.parse(o1.getStartDate());
+				o2StartDate = sdf.parse(o2.getStartDate());
+			} 
+			catch (ParseException e) 
+			{
+				return 0;
+			}
+				
+			return o1StartDate.compareTo(o2StartDate);
+		}
+	}
 }

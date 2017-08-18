@@ -8,16 +8,20 @@
   <script>
     var activitiesJson= [];
   	var errorColor = '#FF9999';
+  	var bPriorRegistrationLoaded = false;
   	
   	$( document ).ready(function()
 	{
   		//set the hidden values. Set the activity to the hexadecimal code for Delivery Driver
-  		document.getElementById('year').value= new Date().getFullYear().toString();
-  		document.getElementById('activity').value= '2';
+  		var currYear = new Date().getFullYear().toString();
+  		document.getElementById('year').value= currYear;
   		
   		//update the nav bar links with token
   		document.getElementById('logoutlink').href="onchomepage";
   		document.getElementById('homelink').href="onchomepage";
+  		
+  		//update the volunteer legend with the current season message
+  		document.getElementById('volLegend').innerHTML = "Volunteer Information: If you've already registered for the " + currYear + " season, enter your cell phone or your name to reterive & update your registration";
   		
   		//show the success dialog if driver was registered
   		var urlmode = window.location.href;
@@ -35,7 +39,7 @@
   	
   	function onGroupChange()
   	{
-  		clearAllButGroupSelect();
+//  	clearAllButGroupSelect();
   		
   		var groupSelectElement = document.getElementById('groupselect');
   		var groupOtherLabelELement = document.getElementById("groupotherlbl");
@@ -48,50 +52,66 @@
   			
   			document.getElementById('contactdiv').style.display = "block";
   		}
-  		else if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Self')
+  		else
   		{
   			groupOtherLabelELement.style.visibility="hidden";
   			groupOtherElement.style.visibility="hidden";
   			
   			document.getElementById('contactdiv').style.display = "block";
   		}
-  		else
-  		{
-  			groupOtherLabelELement.style.visibility="hidden";
-  			groupOtherElement.style.visibility="hidden";
-  			
-  			document.getElementById('contactdiv').style.display = "none";
-  		}
   	}
   	
   	function getContactInfo()
   	{
-  		if((document.getElementById('groupselect').value === "Self" ||
+  		if(bPriorRegistrationLoaded == false &&
+  		   (document.getElementById('groupselect').value === "Self" ||
   			document.getElementById('groupselect').value === "Other") &&
-  			 document.getElementById('delfn').value.length > 0 && 
-  			  document.getElementById('delln').value.length > 0 )
+  			 ((document.getElementById('delfn').value.length > 0 && 
+  			    document.getElementById('delln').value.length > 0) ||
+  			     verifyPhoneNumber(0)))
   		{
   			var contactparams = "year=" + document.getElementById('year').value
 			+ "&delFN=" + document.getElementById('delfn').value
 			+ "&delLN=" + document.getElementById('delln').value
+			+ "&cell=" + document.getElementById('primaryphone').value
 			+ "&callback=?";
   		
-  			$.getJSON('contactinfo', contactparams, function(driver)
+  			$.getJSON('contactinfo', contactparams, function(vol)
   			{
-  				//if retrun is good, set the fields
-  				if(driver.id > -1)
+  				//if return is good, set the fields
+  				if(vol.id > -1)
   				{
-  					document.getElementById('delfn').value = driver.fName;
-  					document.getElementById('delln').value = driver.lName;
-  					document.getElementById('delemail').value = driver.email;
-  					document.getElementById('primaryphone').value = driver.cellPhone;
-  			  		document.getElementById('delhousenum').value = driver.hNum;
-  			  		document.getElementById('delstreet').value = driver.street;
-  			  		document.getElementById('delunit').value = driver.unit;
-  			  		document.getElementById('delcity').value = driver.city;
-  			  		document.getElementById('delzipcode').value = driver.zipcode;
+  					document.getElementById('delfn').value = vol.fName;
+  					document.getElementById('delln').value = vol.lName;
+  					document.getElementById('delemail').value = vol.email;
+  					document.getElementById('comment').value = vol.comment;
+  					document.getElementById('primaryphone').value = vol.cellPhone;
+  			  		document.getElementById('delhousenum').value = vol.hNum;
+  			  		document.getElementById('delstreet').value = vol.street;
+  			  		document.getElementById('delunit').value = vol.unit;
+  			  		document.getElementById('delcity').value = vol.city;
+  			  		document.getElementById('delzipcode').value = vol.zipcode;
   			  		
   			  		verifyPhoneNumber(0);
+  			  		
+  			  		//check each activity and set comment
+  			  		for(i=0; i < vol.activityList.length; i++)
+  			  		{
+  			  			var index = 0;
+  			  			while(index < activitiesJson.length && activitiesJson[index].id != vol.activityList[i].id)
+  			  				index++;
+  			  			
+  			  			if(index < activitiesJson.length)
+  			  			{
+  			  				document.getElementById('actckbox' + index).checked = true;
+  			  				document.getElementById('actcomment' + index).value = vol.activityList[i].volComment;
+  			  			}	
+  			  		}
+  			  		
+  			  		document.getElementById('btnsubmit').value = "Update Registration";
+  			  		document.getElementById('message').innerHTML = '(Welcome Back, ' + vol.fName + '! Please update your registration and  click Update Registion at the bottom of the page)';
+  			  		
+  			  		bPriorRegistrationLoaded = true;
   				}
   			});
   		}	
@@ -285,7 +305,6 @@
 		var groupSelectElement = document.getElementById('groupselect');
 		
 		var volunteerparams = "year=" + document.getElementById('year').value
-						+ "&activity=" + document.getElementById('activity').value
 						+ "&delFN=" + document.getElementById('delfn').value
 						+ "&delLN=" + document.getElementById('delln').value
 						+ "&groupother=" + document.getElementById('groupother').value
@@ -306,7 +325,7 @@
 			var actckboxname = 'actckbox' +  i;
 			if(document.getElementById(actckboxname).checked)
 			{
-				volunteerparams += '&' + actckboxname + '= 1';
+				volunteerparams += '&' + actckboxname + '=' + document.getElementById(actckboxname).value;
 			
 				var actcommentname = 'actcomment' +  i;
 				volunteerparams += '&' + actcommentname + '=' + document.getElementById(actcommentname).value;
@@ -345,6 +364,14 @@
   		document.getElementById('delcity').value = "";
   		document.getElementById('delzipcode').value = "";
   		document.getElementById('comment').value = "";
+  		
+  		for(i=0; i<activitiesJson.length; i++)
+  		{
+  			document.getElementById('actckbox' + i).checked = false;
+  			document.getElementById('actcomment' + i).value = "";
+  		}
+  		
+  		document.getElementById('btnsubmit').value = "Register";
 	}
 	
 	function onCloseDialog()
@@ -377,53 +404,53 @@
 	    var tbdy = document.createElement('tbody');
 	        
 	    //create the first row check box, start and end times
-	    var tr0 = document.createElement('tr');
+	    var tr = document.createElement('tr');
 	    
-	    var td0 = document.createElement('td');
-        createCheckBoxElement('actckbox' + num, activity.name, td0);
-        tr0.appendChild(td0);
+	    var td = document.createElement('td');
+        createCheckBoxElement('actckbox' + num, activity.id, activity.name, td);
+        tr.appendChild(td);
         
-        var td1 = document.createElement('td');
-        td1.appendChild(document.createTextNode('Start: ' + activity.startDate + ' ' + activity.startTime));
-        tr0.appendChild(td1);
+        td = document.createElement('td');
+        td.appendChild(document.createTextNode('Start: ' + activity.startDate + ' ' + activity.startTime));
+        tr.appendChild(td);
         
-        var td2 = document.createElement('td');
-        td2.appendChild(document.createTextNode('End: ' + activity.endDate + ' ' + activity.endTime));
-        tr0.appendChild(td2);
+        td = document.createElement('td');
+        td.appendChild(document.createTextNode('End: ' + activity.endDate + ' ' + activity.endTime));
+        tr.appendChild(td);
         
-        tbdy.appendChild(tr0);
+        tbdy.appendChild(tr);
         
         //create the second row description text
-	    var tr1 = document.createElement('tr');
+	    tr = document.createElement('tr');
 	    
-	    var td4 = document.createElement('td');
-	    td4.appendChild(document.createTextNode('Description: ' + activity.description));
-	    td4.setAttribute('colSpan', '3');
-        tr1.appendChild(td4);
+	    td = document.createElement('td');
+	    td.appendChild(document.createTextNode('Description: ' + activity.description));
+	    td.setAttribute('colSpan', '3');
+        tr.appendChild(td);
         
-        tbdy.appendChild(tr1);
+        tbdy.appendChild(tr);
         
       	//create the third row comment text input
-	    var tr2 = document.createElement('tr');
+	    tr = document.createElement('tr');
 	    
-	    var td5 = document.createElement('td');
-	    createTextElement('actcomment' + num, 'Volunteer Comment: ', td5);
-	    td5.setAttribute('colSpan', '3');
-	    tr2.appendChild(td5);
+	    td = document.createElement('td');
+	    createTextElement('actcomment' + num, 'Volunteer Comment: ', td);
+	    td.setAttribute('colSpan', '3');
+	    tr.appendChild(td);
 	  	    
-        tbdy.appendChild(tr2);
+        tbdy.appendChild(tr);
 	    
 	    tbl.appendChild(tbdy);
 	    element.appendChild(tbl)
 	    element.append(document.createElement("br"));
 	}
 	
-	function createCheckBoxElement(name, text, element)
+	function createCheckBoxElement(name, value, text, element)
 	{
 		var checkbox = document.createElement('input');
 		checkbox.type = "checkbox";
 		checkbox.name = name;
-		checkbox.value = "value";
+		checkbox.value = value;
 		checkbox.id = name;
 
 		var label = document.createElement('label')
@@ -440,7 +467,7 @@
 		inputElement.type = "text";
 		inputElement.name = name;
 		inputElement.id = name;
-		inputElement.placeholder='Add any comments you want ONC to know here'; 
+		inputElement.placeholder='Add a comment you want ONC to see about volunteering for this activity here'; 
 		inputElement.size = '120';
 
 		var label = document.createElement('label')
@@ -489,44 +516,34 @@
 <a href="#registereddlg" id="registeredanchor" style="visibility: hidden">Success</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">ONC Volunteer Registation</span><br>
-	<span id="message">(Please complete and click Register)</span></p>
+    <p><span id="banner">Our Neighbor's Child Volunteer Registation</span><br>
+	<span id="message">(Please complete and click Register at the bottom of the page)</span></p>
   </div>
    <nav>
     <ul>
-	    <li id="homeli"><a id='homelink'>Home</a></li>
+	    <li id="homeli"><a id='homelink'>Home Page</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	    <li id="logoutli"><a id='logoutlink'>Return to ONC Home Page</a></li>
 	</ul>
   </nav>
   <form id='signinform' name='signinform'>  
   <input id="year" type="hidden" name="year">
-  <input id="activity" type="hidden" name="activity">
   <br>
   <fieldset>
-  <legend class="legend-major">Volunteer Information</legend>
+  <legend class="legend-major" id='volLegend'>Volunteer Information:</legend>
   <div class= 'inputline'>
     <label for="groupselect">Group or Organization:</label>
      <select id="groupselect" title="Group" name="group" onchange="onGroupChange()">
 		<option value="Self">Self</option>
-		<option value="CentrevilleNHS">Centreville NHS</option>
-		<option value="CentrevilleSGA">Centreville SGA</option>
-		<option value="ChantillyLAX">Chantilly LAX</option>
-		<option value="ChantillyNHS">Chantilly NHS</option>
-		<option value="ChantillySGA">Chantilly SGA</option>
-		<option value="FlintHillFB">Flint Hill Football</option>
+		<option value="Cheron Orthodontics">Cheron Orthodontics</option>
+		<option value="Girl Scout Troop 3177">Girl Scout Troop 3177</option>
+		<option value="Girl Scout Troop 3486">Girl Scout Troop 3486</option>
 		<option value="INOVA">INOVA Cardiology</option>
 		<option value="OBCCrutchfield">OBC Crutchfield</option>
 		<option value="Quest">Quest Diagnostics</option>
 		<option value="Salesforce">Salesforce</option>
 		<option value="ScottLong">Scott Long Construction</option>
-		<option value="WestfieldFB">Westfield Football</option>
-		<option value="WestfieldInteract">Westfield Interact</option>
-		<option value="WestfieldKey">Westfield Key Club</option>
-		<option value="WestfieldLAX">Westfield LAX</option>
-		<option value="WestfieldNHS">Westfield NHS</option>
-		<option value="WestfieldSGA">Westfield SGA</option>
 		<option value="Other">Other</option>
 	  </select>
  	<label id='groupotherlbl' for="groupother" style="visibility: hidden;">Group Name:</label>
@@ -539,7 +556,7 @@
     </div>
     <div id= 'contactdiv'>
       <label id='phonelbl' for="primaryphone"">Cell Phone #:</label>
-      <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #" onchange= 'verifyPhoneNumber(0)'>
+      <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Cell Phone #" onchange='getContactInfo()'>
 	  <label id='emaillbl' for="delemail">Email:</label>
 	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
   	  <div id= 'addressdiv'>
@@ -553,7 +570,7 @@
   	</div>  
   <div id= 'commentdiv'>
       <label for="commnet">Comment:</label>
- 	  <input id= 'comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment' autocomplete= 'off'>
+ 	  <input id= 'comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment about you or your group' autocomplete= 'off'>
   </div>
   </fieldset>
   <br>
@@ -570,7 +587,8 @@
  <!-- Success Dialog -->
   <div id="registereddlg" class="modalDialog">
 	<div id='inner'>
-	<a id='closepopup' href="#close" title="Close" class="close" onclick="onCloseDialog()"></a>
+	  <a id='closepopup' href="http://www.ourneighborschild.org" title="Close" class="close" onclick="onCloseDialog()"></a> 
+<!--	<a id='closepopup' href="#close" title="Close" class="close" onclick="onCloseDialog()"></a>   -->
 		<div id='dialogtopbar'>
 		  <img src="onclogo" height="45" width="65"/>
 		  <span id='dialogmssg'>You're Registered!</span>

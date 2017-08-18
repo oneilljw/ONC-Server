@@ -487,11 +487,12 @@ public class ONCHttpHandler implements HttpHandler
     	else if(requestURI.contains("/contactinfo"))
     	{
     		int year = Integer.parseInt((String) params.get("year"));
-    		String fn = (String) params.get("delFN");
-    		String ln = (String) params.get("delLN");
+    		String fn = (String) params.get("delFN") != null ? (String) params.get("delFN") : "";
+    		String ln = (String) params.get("delLN") != null ? (String) params.get("delLN") : "";
+    		String cell = (String) params.get("cell") != null ? (String) params.get("cell") : "";
     		String callback = (String) params.get("callback");
     		
-    		HtmlResponse response = ServerVolunteerDB.getDriverJSONP(year, fn, ln, callback);
+    		HtmlResponse response = ServerVolunteerDB.getVolunteerJSONP(year, fn, ln, cell, callback);
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/oncsplash"))
@@ -734,21 +735,38 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.equals("/registervolunteer"))
     	{
-			Set<String> keyset = params.keySet();
-			for(String key:keyset)
-				System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
+//			Set<String> keyset = params.keySet();
+//			for(String key:keyset)
+//				System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
 
     		int year = Integer.parseInt((String)params.get("year"));
     		String callbackFunction = (String) params.get("callback");
-    		    		
+    		
+    		//create the volunteer key map
     		String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
     		    				"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
-    		    				"group", "comment", "activity"};
-    		    		
+    		    				"group", "comment"};
     		Map<String, String> volParams = createMap(params, volKeys);
-    		    		
-    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, 
-    										"Delivery Registration Webpage", callbackFunction);
+    		
+    		//create the activity key map
+    		List<String> activityKeyList = new ArrayList<String>();
+    		for(int i=0 ; i<ServerActivityDB.size(year); i++)
+    			if(params.containsKey("actckbox" + Integer.toString(i)))
+    			{
+    				activityKeyList.add("actckbox" + Integer.toString(i));
+    				activityKeyList.add("actcomment" + Integer.toString(i));
+    			}
+    		
+    		String[] activityKeys = new String[activityKeyList.size()];
+    		activityKeys= activityKeyList.toArray(activityKeys);
+    		Map<String, String> activityParams = createMap(params, activityKeys);
+    		
+//    		Set<String> actkeyset = activityParams.keySet();
+//			for(String key:actkeyset)
+//				System.out.println(String.format("Act Key=%s, act value=%s", key, (String)activityParams.get(key)));
+    			
+    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year, volParams, activityParams, 
+    										"Volunteer Registration Webpage", callbackFunction);
     		sendHTMLResponse(t, htmlResponse); 
     	}
     	else if(requestURI.equals("/driversignin"))
@@ -783,8 +801,12 @@ public class ONCHttpHandler implements HttpHandler
     		    				"group", "comment", "activity"};
     		    		
     		Map<String, String> volParams = createMap(params, volKeys);
+    		
+    		Map<String, String> activityParams = new HashMap<String, String>();
+    		activityParams.put("actckbox11","11");
+    		activityParams.put("actcommnet11","New delivery volunteer on delivery day");
     		    		
-    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, 
+    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, activityParams,
     										"Delivery Registration Webpage", callbackFunction);
     		sendHTMLResponse(t, htmlResponse); 
     	}
@@ -821,8 +843,13 @@ public class ONCHttpHandler implements HttpHandler
     		
     		Map<String, String> volParams = createMap(params, volKeys);
     		
-    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, 
-										  "Volunteer Sign-In Webpage", callbackFunction);
+    		Map<String, String> activityParams = new HashMap<String, String>();
+    		activityParams.put("actckbox1","1");
+    		activityParams.put("actcomment1","New volunteer registered in warehouse");
+    		    		
+    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, activityParams,
+    										"Delivery Registration Webpage", callbackFunction);
+    		
     		sendHTMLResponse(t, htmlResponse);  
     	}
     	else if(requestURI.contains("/changepw"))	//from separate page
