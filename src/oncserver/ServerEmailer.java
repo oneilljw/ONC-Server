@@ -94,12 +94,12 @@ public class ServerEmailer extends SwingWorker<Void, Void> implements TransportL
 			try {	//Create the message and send it
 				msg = createMimeMessage(session, email);
 			} catch (MessagingException mex) {
-				System.out.println("send failed, message exception: " + mex);
+//				System.out.println("send failed, message exception: " + mex);
 				mex.printStackTrace();
 				msg = null;
 			} catch (IOException ioex) {
 				// TODO Auto-generated catch block
-				System.out.println("send failed, io exception: " + ioex);
+//				System.out.println("send failed, io exception: " + ioex);
 				ioex.printStackTrace();
 				msg = null;
 			}
@@ -107,7 +107,7 @@ public class ServerEmailer extends SwingWorker<Void, Void> implements TransportL
 			if(msg != null)
 			{
 				t.sendMessage(msg, msg.getAllRecipients());
-				System.out.println("Response: " + t.getLastServerResponse());
+//				System.out.println("Response: " + t.getLastServerResponse());
 			}
 		}
 	}
