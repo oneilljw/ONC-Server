@@ -44,7 +44,10 @@ public class ServerActivityDB extends ServerSeasonalDB
 			//import the activities from persistent store
 			importDB(year, String.format("%s/%dDB/ActivityDB.csv",
 					System.getProperty("user.dir"),
-						year), "Activity DB",ACTIVITY_DB_HEADER_LENGTH);
+						year), "Activity DB", ACTIVITY_DB_HEADER_LENGTH);
+			
+			//sort the search list by Start date
+			Collections.sort(activityDBYear.getList(), new VolunteerActivityDateComparator());
 		
 			//set the next id
 			activityDBYear.setNextID(getNextID(activityDBYear.getList()));
@@ -83,9 +86,6 @@ public class ServerActivityDB extends ServerSeasonalDB
 		for(VolunteerActivity va : activityDB.get(year-BASE_YEAR).getList())
 			if(va.isOpen())
 				searchList.add(va);
-		
-		//sort the search list by Start date
-		Collections.sort(searchList, new VolunteerActivityDateComparator());
 		
 		String response = gson.toJson(searchList, listOfActivities);
 

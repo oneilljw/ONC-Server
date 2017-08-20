@@ -3,12 +3,21 @@ package oncserver;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import ourneighborschild.EmailAddress;
+import ourneighborschild.ONCEmail;
+import ourneighborschild.ONCEmailAttachment;
 import ourneighborschild.ONCVolunteer;
+import ourneighborschild.ServerCredentials;
+import ourneighborschild.VolunteerActivity;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -18,6 +27,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	private static final int DRIVER_DB_HEADER_LENGTH = 24;
 	private static final int ACTIVITY_STRING_COL = 13;
 	private static final int COMMENTS_STRING_COL = 15;
+	private static final String VOLUNTEER_EMAIL_ADDRESS = "schoolcontact@ourneighborschild.org";
+	private static final String VOLUNTEER_EMAIL_PASSWORD = "crazyelf";
 	
 	private static List<VolunteerDBYear> driverDB;
 	private static ServerVolunteerDB instance = null;
@@ -183,7 +194,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	 * @return
 	 */
 	static HtmlResponse addVolunteerJSONP(int year, Map<String, String> volParams,
-											Map<String, String> activityParams, 
+											Map<String, String> activityParams,
+											boolean bWarehouseSignIn,
 											String website, String callbackFunction)
 	{		
 		String fn = volParams.get("delFN");
@@ -201,8 +213,12 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		{
 			//Found the volunteer, update their contact info and increment their sign-ins
 			ONCVolunteer updatedVol = volList.get(index);
-			updatedVol.setSignIns(updatedVol.getSignIns() + 1);
-			updatedVol.setDateChanged(new Date());
+			
+			if(bWarehouseSignIn)
+			{
+				updatedVol.setSignIns(updatedVol.getSignIns() + 1);
+				updatedVol.setDateChanged(new Date());
+			}
 			
 			if(volParams.get("group").equals("Other"))
 				updatedVol.setGroup(volParams.get("groupother"));
@@ -233,8 +249,15 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 					!webphone.equals(updatedVol.getCellPhone()))
 					updatedVol.setCellPhone(volParams.get("primaryphone"));
 				
-				//create a new activity list and update replace the prior list
-				updatedVol.setActivityList(activityDB.createActivityList(year, activityParams));
+				//if its an updated registration, create a new activity list and replace the 
+				//the prior list. If its a sign-in from the warehouse, add the one activity
+				//to the volunteers current activity list. The activity won't be added if it already
+				//exists per the VolunteerActivity API
+				List<VolunteerActivity> actList = activityDB.createActivityList(year, activityParams);
+				if(!bWarehouseSignIn)
+					updatedVol.setActivityList(actList);
+				else if(bWarehouseSignIn && actList.size() == 1) //only one activity from sign-ins
+					updatedVol.addActivity(actList.get(0));
 			}
 			
 			volDBYear.setChanged(true);
@@ -242,6 +265,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			//notify in year clients
 			Gson gson = new Gson();
 			clientMgr.notifyAllInYearClients(year, "UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
+			
+			//if this registration came from a warehouse signin, update the warehouseDB
+			if(bWarehouseSignIn)
+				warehouseDB.add(year, updatedVol);
 		}
 		else
 		{
@@ -253,14 +280,26 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 					volParams.get("primaryphone"), "1", activityDB.createActivityList(year, activityParams), 
 					group, volParams.get("comment"), new Date(), website);
 			
-			addedVol.setID(volDBYear.getNextID());	
-			addedVol.setSignIns(addedVol.getSignIns() + 1);	
+			addedVol.setID(volDBYear.getNextID());
+			if(bWarehouseSignIn)	
+				addedVol.setSignIns(addedVol.getSignIns() + 1);
+			
 			volDBYear.add(addedVol);
 			volDBYear.setChanged(true);
 			
 			//notify in year clients
 			Gson gson = new Gson();
 			clientMgr.notifyAllInYearClients(year, "ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
+			
+			//if this registration came from a warehouse signin, update the warehouseDB
+			if(bWarehouseSignIn)
+				warehouseDB.add(year, addedVol);
+			else
+			{
+				List<ONCVolunteer> emailList = new ArrayList<ONCVolunteer>();
+				emailList.add(addedVol);
+				createAndSendVolunteerEmail(0, emailList);
+			}
 		}
 		
 		String responseJson = String.format("{\"message\":\"Thank you, %s, for volunteering "
@@ -361,6 +400,140 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			}
 		}	
 	}
+	
+	static void createAndSendVolunteerEmail(int emailType, List<ONCVolunteer> volList)
+	{
+		//build the email
+		ArrayList<ONCEmail> emailAL = new ArrayList<ONCEmail>();
+		ArrayList<ONCEmailAttachment> attachmentAL = new ArrayList<ONCEmailAttachment>();
+		String subject = null;
+		
+		//Create the subject and attachment array list
+		if(emailType == 0) //Confirmation Email
+		{
+			subject = "Volunteer Confirmation from Our Neighbor's Child";
+		}
+//		else if(emailType == 1) //Activity reminder email
+//		{
+//			subject = "December Gift Confirmations";
+//			cid0 = ContentIDGenerator.getContentId();
+//			cid1 = ContentIDGenerator.getContentId();
+//			attachmentAL.add(new ONCEmailAttachment("ONC Family Referral Worksheet.xlsx", cid0 , MimeBodyPart.ATTACHMENT));
+//			attachmentAL.add(new ONCEmailAttachment("Warehouse 3.jpeg", cid1, MimeBodyPart.INLINE));
+//		}
+		
+		//For each volunteer, create the email body and recipient information in an
+		//ONCEmail object and add it to the email array list
+		//Create the email body if the volunteer exists
+		for(ONCVolunteer v : volList)
+		{
+			String emailBody = create2017VolunteerConfirmationEmail(v);
+			
+			//Create recipient list for email.
+			ArrayList<EmailAddress> recipientAdressList = createRecipientList(v);
+	        
+	        //If the volunteer email isn't valid, the message will not be sent.
+	        if(emailBody != null && !recipientAdressList.isEmpty())
+	        	emailAL.add(new ONCEmail(subject, emailBody, recipientAdressList));     	
+		}
+		
+		//Create the from address string array
+		EmailAddress fromAddress = new EmailAddress(VOLUNTEER_EMAIL_ADDRESS, "Our Neighbor's Child");
+//		EmailAddress fromAddress = new EmailAddress(TEST_AGENT_EMAIL_SENDER_ADDRESS, "Our Neighbor's Child");
+		
+		//Create the blind carbon copy list 
+		ArrayList<EmailAddress> bccList = new ArrayList<EmailAddress>();
+		bccList.add(new EmailAddress(VOLUNTEER_EMAIL_ADDRESS, "Volunteer Coordinator"));
+//		bccList.add(new EmailAddress("kellylavin1@gmail.com", "Kelly Lavin"));
+//		bccList.add(new EmailAddress("mnrogers123@msn.com", "Nicole Rogers"));
+//		bccList.add(new EmailAddress("johnwoneill@cox.net", "John O'Neill"));
+		
+		//Create mail server accreditation, then the mailer background task and execute it
+		//Go Daddy Mail
+//		ServerCredentials creds = new ServerCredentials("smtpout.secureserver.net", "director@act4others.org", "crazyelf1");
+		//Google Mail
+		ServerCredentials creds = new ServerCredentials("smtp.gmail.com", VOLUNTEER_EMAIL_ADDRESS, VOLUNTEER_EMAIL_PASSWORD);
+		
+	    ServerEmailer oncEmailer = new ServerEmailer(fromAddress, bccList, emailAL, attachmentAL, creds);
+	    oncEmailer.execute();		
+	}
+	
+	/**************************************************************************************************
+	 *Creates a new list of recipients for each volunteer email. For volunteers, there is only one
+	 * recipient per email.
+	 *If the volunteer does not have a valid email or name, an empty list is returned
+	 **************************************************************************************************/
+	static ArrayList<EmailAddress> createRecipientList(ONCVolunteer v)
+	{
+		ArrayList<EmailAddress> recipientAddressList = new ArrayList<EmailAddress>();
+		
+		//verify the agent has a valid email address and name. If not, return an empty list
+		if(v != null && v.getEmail() != null && v.getEmail().length() > 2 &&
+				v.getlName() != null && v.getlName().trim().length() > 2)
+        {
+			//LIVE EMAIL ADDRESS
+			EmailAddress toAddress = new EmailAddress(v.getEmail(), v.getlName());	//live
+			recipientAddressList.add(toAddress);
+
+			//TEST EMAIL ADDRESS
+//			EmailAddress toAddress1 = new EmailAddress("johnwoneill1@gmail.com", "John O'Neill");	//test
+//        	recipientAddressList.add(toAddress1);      	
+        }
+		
+		return recipientAddressList;
+	}
+	
+	static String create2017VolunteerConfirmationEmail(ONCVolunteer v)
+	{
+        //Create the text part of the email using html
+		String msg = "<html><body><div>" +
+			"<p>Dear " + v.getfName() + ",</p>"
+			+ "<p>Thank you for volunteering to help Our Neighbor's Child's in 2017!!"
+			+ " It's a rare and wonderful thing when an ALL volunteer orgainzation comes together"
+			+ " to consistently serve our community. Of course, that's only possible because of"
+			+ " people like YOU! We are tremendously grateful for your generous donation of time"
+			+ " and talent!</p>"
+			+ "<p>We received your registration via our website."
+			+ " This table summarizes the activities for which you volunteered:</p>. "
+			+ createVolunteerActivityTableHTML(v)
+			+"<p>You will receive a reminder email the day before each activity."
+			+" In the unlikely event  the schedule of one of your selected activites changes,"
+			+" such as due to a major snow event, we will notify as soon as possible via email.</p>"
+		    +"<p>As always, thank you so much for your support and I look forward to seeing you soon!</p>"
+		    +"<p>Kelly</p>"
+		    +"<p>Kelly Murray Lavin<br>"
+		    +"Executive Director/Volunteer<br>"
+		    +"Our Neighbor's Child<br>"
+		    +"P.O. Box 276<br>"
+		    +"Centreville, VA 20120<br>"
+		    +"<a href=\"http://www.ourneighborschild.org\">www.ourneighborschild.org</a></p></div>";
+		    
+        return msg;
+	}
+	
+	static String createVolunteerActivityTableHTML(ONCVolunteer v )
+	{
+		StringBuilder actTableHTML = new StringBuilder("<table style=\"width:100%\">");
+		actTableHTML.append("<th align=\"left\"><u>Activity</u></th>");
+		actTableHTML.append("<th align=\"left\"><u>Start Date</u></th>");
+		actTableHTML.append("<th align=\"left\"><u>Start Time</u></th>");
+		actTableHTML.append("<th align=\"left\"><u>Location</u></th>");
+		
+		//sort the search list by Start date
+		Collections.sort(v.getActivityList(), new VolunteerActivityDateComparator());
+		for(VolunteerActivity va : v.getActivityList())
+			if(v != null)
+			{
+				actTableHTML.append("<tr><td>" + va.getName() + "</td>");
+				actTableHTML.append("<td>" + va.getStartDate() + "</td>");
+				actTableHTML.append("<td>" + va.getStartTime() + "</td>");
+				actTableHTML.append("<td>" + va.getLocation() + "</td></tr>");
+			}
+			
+		actTableHTML.append("</table>");
+				
+		return actTableHTML.toString();
+	}
 
 	@Override
 	void addObject(int year, String[] nextLine)
@@ -412,5 +585,26 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			exportDBToCSV(volunteerDBYear.getList(),  driverHeader, path);
 			volunteerDBYear.setChanged(false);
 		}
-	}	
+	}
+	
+	private static class VolunteerActivityDateComparator implements Comparator<VolunteerActivity>
+	{
+		@Override
+		public int compare(VolunteerActivity o1, VolunteerActivity o2)
+		{
+			SimpleDateFormat sdf = new SimpleDateFormat("M/d/yy");
+			Date o1StartDate, o2StartDate;
+			try 
+			{
+				o1StartDate = sdf.parse(o1.getStartDate());
+				o2StartDate = sdf.parse(o2.getStartDate());
+			} 
+			catch (ParseException e) 
+			{
+				return 0;
+			}
+				
+			return o1StartDate.compareTo(o2StartDate);
+		}
+	}
 }

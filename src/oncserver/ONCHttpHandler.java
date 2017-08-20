@@ -766,7 +766,7 @@ public class ONCHttpHandler implements HttpHandler
 //				System.out.println(String.format("Act Key=%s, act value=%s", key, (String)activityParams.get(key)));
     			
     		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year, volParams, activityParams, 
-    										"Volunteer Registration Webpage", callbackFunction);
+    										false, "Volunteer Registration Webpage", callbackFunction);
     		sendHTMLResponse(t, htmlResponse); 
     	}
     	else if(requestURI.equals("/driversignin"))
@@ -803,11 +803,11 @@ public class ONCHttpHandler implements HttpHandler
     		Map<String, String> volParams = createMap(params, volKeys);
     		
     		Map<String, String> activityParams = new HashMap<String, String>();
-    		activityParams.put("actckbox11","11");
-    		activityParams.put("actcommnet11","New delivery volunteer on delivery day");
+    		activityParams.put("actckbox0",volParams.get("activity"));
+    		activityParams.put("actcommnet0","New delivery volunteer on delivery day");
     		    		
-    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, activityParams,
-    										"Delivery Registration Webpage", callbackFunction);
+    		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year, volParams, activityParams,
+    										true, "Delivery Day Registration Webpage", callbackFunction);
     		sendHTMLResponse(t, htmlResponse); 
     	}
     	else if(requestURI.equals("/volunteersignin"))
@@ -844,11 +844,11 @@ public class ONCHttpHandler implements HttpHandler
     		Map<String, String> volParams = createMap(params, volKeys);
     		
     		Map<String, String> activityParams = new HashMap<String, String>();
-    		activityParams.put("actckbox1","1");
-    		activityParams.put("actcomment1","New volunteer registered in warehouse");
+    		activityParams.put("actckbox0", volParams.get("activity"));
+    		activityParams.put("actcomment0","New volunteer registered in warehouse");
     		    		
     		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, activityParams,
-    										"Delivery Registration Webpage", callbackFunction);
+    										true, "Warehouse Registration Webpage", callbackFunction);
     		
     		sendHTMLResponse(t, htmlResponse);  
     	}

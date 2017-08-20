@@ -12,7 +12,7 @@
 	{
   		//set the hidden values. Set the activity to the hexadecimal code for Warehouse Support
   		document.getElementById('year').value= new Date().getFullYear().toString();
-  		document.getElementById('activity').value= '4';
+  		document.getElementById('activity').value= '25';
   		
   		//update the nav bar links with token
   		document.getElementById('logoutlink').href="onchomepage";
@@ -36,6 +36,8 @@
   		
   		if(selectValue === 'Other')
   		{
+  			document.getElementById('activity').value= '25';
+  			
   			groupOtherLabelELement.style.visibility="visible";
   			groupOtherElement.style.visibility="visible";
   			
@@ -45,6 +47,8 @@
   		else if(selectValue.includes('Centreville') || selectValue.includes('Chantilly') ||
   				selectValue.includes('Westfield') || selectValue.includes('FlintHill'))	
   		{
+  			document.getElementById('activity').value= '24';
+  			
   			groupOtherLabelELement.style.visibility="hidden";
   			groupOtherElement.style.visibility="hidden";
   			
@@ -53,6 +57,8 @@
   		}
   		else 
   		{
+  			document.getElementById('activity').value= '25';
+  			
   			groupOtherLabelELement.style.visibility="hidden";
   			groupOtherElement.style.visibility="hidden";
   			
