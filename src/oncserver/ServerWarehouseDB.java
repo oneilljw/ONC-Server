@@ -80,7 +80,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		WarehouseDBYear whDBYear = warehouseDB.get(year - BASE_YEAR);
 		
 		ONCWarehouseVolunteer addedWHVol = new ONCWarehouseVolunteer(whDBYear.getNextID(), 
-															addedVol.getID(), addedVol.getGroup(),
+															addedVol.getID(), addedVol.getOrganization(),
 															"", new Date());
 		
 		whDBYear.add(addedWHVol);

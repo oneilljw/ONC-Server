@@ -103,8 +103,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		else
 		{
 			//search for first and last name match
-			while(index < searchList.size() && !(searchList.get(index).getfName().equalsIgnoreCase(fn) && 
-					 searchList.get(index).getlName().equalsIgnoreCase(ln)))
+			while(index < searchList.size() && !(searchList.get(index).getFirstName().equalsIgnoreCase(fn) && 
+					 searchList.get(index).getLastName().equalsIgnoreCase(ln)))
 			{
 				index++;
 			}
@@ -205,8 +205,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		List<ONCVolunteer>volList = volDBYear.getList();
 		
 		int index=0;
-		while(index < volList.size() && !(volList.get(index).getfName().equalsIgnoreCase(fn) && 
-				 volList.get(index).getlName().equalsIgnoreCase(ln)))
+		while(index < volList.size() && !(volList.get(index).getFirstName().equalsIgnoreCase(fn) && 
+				 volList.get(index).getLastName().equalsIgnoreCase(ln)))
 			index++;
 		
 		if(index<volList.size())
@@ -221,14 +221,14 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			}
 			
 			if(volParams.get("group").equals("Other"))
-				updatedVol.setGroup(volParams.get("groupother"));
+				updatedVol.setOrganization(volParams.get("groupother"));
 			else
-				updatedVol.setGroup(volParams.get("group"));
+				updatedVol.setOrganization(volParams.get("group"));
 			
 			if(volParams.get("group").equals("Self") || volParams.get("group").equals("Other"))
 			{
 				if(!volParams.get("delhousenum").isEmpty())
-					updatedVol.sethNum(volParams.get("delhousenum"));
+					updatedVol.setHouseNum(volParams.get("delhousenum"));
 				if(!volParams.get("delstreet").isEmpty())
 					updatedVol.setStreet(volParams.get("delstreet"));
 				if(!volParams.get("delunit").isEmpty())
@@ -236,7 +236,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 				if(!volParams.get("delcity").isEmpty())
 					updatedVol.setCity(volParams.get("delcity"));
 				if(!volParams.get("delzipcode").isEmpty())
-					updatedVol.setZipcode(volParams.get("delzipcode")); 
+					updatedVol.setZipCode(volParams.get("delzipcode")); 
 				if(!volParams.get("delemail").isEmpty())
 					updatedVol.setEmail(volParams.get("delemail"));
 				if(!volParams.get("comment").isEmpty())
@@ -469,10 +469,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		
 		//verify the agent has a valid email address and name. If not, return an empty list
 		if(v != null && v.getEmail() != null && v.getEmail().length() > 2 &&
-				v.getlName() != null && v.getlName().trim().length() > 2)
+				v.getLastName() != null && v.getLastName().trim().length() > 2)
         {
 			//LIVE EMAIL ADDRESS
-			EmailAddress toAddress = new EmailAddress(v.getEmail(), v.getlName());	//live
+			EmailAddress toAddress = new EmailAddress(v.getEmail(), v.getLastName());	//live
 			recipientAddressList.add(toAddress);
 
 			//TEST EMAIL ADDRESS
@@ -487,7 +487,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	{
         //Create the text part of the email using html
 		String msg = "<html><body><div>" +
-			"<p>Dear " + v.getfName() + ",</p>"
+			"<p>Dear " + v.getFirstName() + ",</p>"
 			+ "<p>Thank you for volunteering to help Our Neighbor's Child's in 2017!!"
 			+ " It's a rare and wonderful thing when an ALL volunteer orgainzation comes together"
 			+ " to consistently serve our community. Of course, that's only possible because of"
