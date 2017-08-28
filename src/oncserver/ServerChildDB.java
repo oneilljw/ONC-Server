@@ -135,7 +135,7 @@ public class ServerChildDB extends ServerSeasonalDB
 						else
 						{
 							ONCPartner org = serverPartnerDB.getPartner(year,cw.getChildWishAssigneeID());
-							partner = org.getName();
+							partner = org.getLastName();
 						}
 						
 						responseList.add(new WebChildWish(wishCatalog.findWishNameByID(year, cw.getWishID()),

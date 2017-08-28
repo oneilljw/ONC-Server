@@ -42,8 +42,8 @@ public class WebClient
     	
     	if(webUser != null)	//if server user is known, user their name
     	{
-    		row[1] = webUser.getFirstname();
-    		row[2] = webUser.getLastname();
+    		row[1] = webUser.getFirstName();
+    		row[2] = webUser.getLastName();
     		row[3] = webUser.getPermission().toString();	
     	}
     	else

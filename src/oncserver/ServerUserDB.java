@@ -103,14 +103,14 @@ public class ServerUserDB extends ServerPermanentDB
 			ONCServerUser su = userAL.get(index);
 			
 			//update the server user
-			su.setLastname(updatedUser.getLastname());
-			su.setFirstname(updatedUser.getFirstname());
+			su.setLastName(updatedUser.getLastName());
+			su.setFirstName(updatedUser.getFirstName());
 			su.setStatus(updatedUser.getStatus());
 			su.setAccess(updatedUser.getAccess());
 			su.setPermission(updatedUser.getPermission());
-			su.setOrg(updatedUser.getOrg());
+			su.setOrganization(updatedUser.getOrganization());
 			su.setTitle(updatedUser.getTitle());
-			su.setPhone(updatedUser.getPhone());
+			su.setCellPhone(updatedUser.getCellPhone());
 			
 			if(!su.getEmail().equals(updatedUser.getEmail()))
 				updateUserEmail(su, updatedUser.getEmail());	//special processing on email change
@@ -158,20 +158,20 @@ public class ServerUserDB extends ServerPermanentDB
 	ONCServerUser updateProfile(ONCServerUser su, Map<String, Object> params)
 	{
 		//determine if there is a change to the ONCServerUser object
-		if(!su.getFirstname().equals((String) params.get("firstname")) || 
-			!su.getLastname().equals((String)params.get("lastname")) ||
-			 !su.getOrg().equals((String)params.get("org")) ||
+		if(!su.getFirstName().equals((String) params.get("firstname")) || 
+			!su.getLastName().equals((String)params.get("lastname")) ||
+			 !su.getOrganization().equals((String)params.get("org")) ||
 			  !su.getTitle().equals((String)params.get("title")) ||
 			   !su.getEmail().equals((String)params.get("email")) ||
-			    !su.getPhone().equals((String)params.get("phone")))
+			    !su.getCellPhone().equals((String)params.get("phone")))
 		{
 			//there was a change, so update the profile fields and save ONCServerUser object
-			su.setFirstname((String) params.get("firstname"));
-			su.setLastname((String) params.get("lastname"));
-			su.setOrg((String) params.get("org"));
+			su.setFirstName((String) params.get("firstname"));
+			su.setLastName((String) params.get("lastname"));
+			su.setOrganization((String) params.get("org"));
 			su.setTitle((String) params.get("title"));
 			updateUserEmail(su, (String)params.get("email"));
-			su.setPhone((String) params.get("phone"));
+			su.setCellPhone((String) params.get("phone"));
 			
 			//determine if the user status was Update_Profile. If it was set it to Active.
 			if(su.getStatus() == UserStatus.Update_Profile)
@@ -262,7 +262,7 @@ public class ServerUserDB extends ServerPermanentDB
 			
 			if(currPW.equals(su.getUserPW()))
 			{
-				if(cpwReq.getFirstName().equals(su.getFirstname()) && cpwReq.getLastName().equals(su.getLastname()))
+				if(cpwReq.getFirstName().equals(su.getFirstName()) && cpwReq.getLastName().equals(su.getLastName()))
 				{
 					//user id found, current password matches and user first and last names match
 					su.setUserPW(newPW);
@@ -617,9 +617,9 @@ public class ServerUserDB extends ServerPermanentDB
 			boolean bUserUpdated = false;
 			ONCServerUser existingSU = userAL.get(index);
 			
-			if(!newPotentialUser.getOrg().trim().isEmpty() && !newPotentialUser.getOrg().equals(existingSU.getOrg())) 
+			if(!newPotentialUser.getOrganization().trim().isEmpty() && !newPotentialUser.getOrganization().equals(existingSU.getOrganization())) 
 			{
-				existingSU.setOrg(newPotentialUser.getOrg().trim());
+				existingSU.setOrganization(newPotentialUser.getOrganization().trim());
 				bUserUpdated = true;
 			}
 			
@@ -635,9 +635,9 @@ public class ServerUserDB extends ServerPermanentDB
 				bUserUpdated = true;
 			}
 					
-			if(!newPotentialUser.getPhone().trim().isEmpty() && !newPotentialUser.getPhone().equals(existingSU.getPhone())) 
+			if(!newPotentialUser.getCellPhone().trim().isEmpty() && !newPotentialUser.getCellPhone().equals(existingSU.getCellPhone())) 
 			{
-				existingSU.setPhone(newPotentialUser.getPhone().trim());
+				existingSU.setCellPhone(newPotentialUser.getCellPhone().trim());
 				bUserUpdated = true;
 			}
 			

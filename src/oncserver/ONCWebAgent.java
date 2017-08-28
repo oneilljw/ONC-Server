@@ -20,13 +20,13 @@ public class ONCWebAgent
 	public ONCWebAgent(ONCServerUser su)
 	{
 		id = su.getID(); 
-		firstname = su.getFirstname();
-		lastname = su.getLastname();
+		firstname = su.getFirstName();
+		lastname = su.getLastName();
 		name = firstname + " " + lastname;
-		org = su.getOrg();
+		org = su.getOrganization();
 		title = su.getTitle();
 		email = su.getEmail();
-		phone = su.getPhone();
+		phone = su.getCellPhone();
 	}
 	
 	//getters

@@ -130,10 +130,10 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		{
 			ONCPartner currOrg = oAL.get(index);
 			//check if partner address has changed and a region update check is required
-			if(currOrg.getStreetnum() != reqOrg.getStreetnum() ||
-				!currOrg.getStreetname().equals(reqOrg.getStreetname()) ||
+			if(currOrg.getHouseNum() != reqOrg.getHouseNum() ||
+				!currOrg.getStreet().equals(reqOrg.getStreet()) ||
 				 !currOrg.getCity().equals(reqOrg.getCity()) ||
-				  !currOrg.getZipcode().equals(reqOrg.getZipcode()))
+				  !currOrg.getZipCode().equals(reqOrg.getZipCode()))
 			{
 //				System.out.println(String.format("PartnerDB - update: region change, old region is %d", currOrg.getRegion()));
 				updateRegion(reqOrg);	
@@ -162,9 +162,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		if(regionDB != null)
 		{
-			reg = RegionDB.searchForRegionMatch(new Address(Integer.toString(updatedOrg.getStreetnum()),
-											updatedOrg.getStreetname(), "",  updatedOrg.getCity(),
-											 updatedOrg.getZipcode()));
+			reg = RegionDB.searchForRegionMatch(new Address(updatedOrg.getHouseNum(),
+											updatedOrg.getStreet(), "",  updatedOrg.getCity(),
+											 updatedOrg.getZipCode()));
 			updatedOrg.setRegion(reg);
 		}
 		
@@ -196,9 +196,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		}
 		
 		if(regionDB != null)
-			addedPartner.setRegion(RegionDB.searchForRegionMatch(new Address(Integer.toString(addedPartner.getStreetnum()), 
-															addedPartner.getStreetname(), "", addedPartner.getCity(),
-															addedPartner.getZipcode())));
+			addedPartner.setRegion(RegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
+															addedPartner.getStreet(), "", addedPartner.getCity(),
+															addedPartner.getZipCode())));
 		else
 			addedPartner.setRegion(0);
 		

@@ -240,7 +240,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    	{
 	    		//Ensure just 10 digits, no dashes in numbers
 	    		String hp = f.getHomePhone().replaceAll("-", "");
-	    		String op = f.getOtherPhon().replaceAll("-", "");
+	    		String op = f.getCellPhone().replaceAll("-", "");
 	    		String target = s.replaceAll("-", "");
 	    		
 	    		if(hp.contains(target) || op.contains(target))
@@ -399,7 +399,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		if(regionDB != null)
 		{
 			reg = RegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
-											updatedFamily.getStreet(), updatedFamily.getUnitNum(),
+											updatedFamily.getStreet(), updatedFamily.getUnit(),
 											  updatedFamily.getCity(), updatedFamily.getZipCode()));
 			
 			updatedFamily.setRegion(reg);
@@ -1041,7 +1041,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 //				ONCFamily fam = famList.get(index);
 //				System.out.println(String.format("FamilyDB.shouldAddressHaveUnit: Prior Year = %d, ONC#= %s, Unit=%s, Unit.length=%d", priorYear, fam.getONCNum(), fam.getUnitNum(), fam.getUnitNum().trim().length()));
-				bAddressHadUnit = !famList.get(index).getUnitNum().trim().isEmpty();
+				bAddressHadUnit = !famList.get(index).getUnit().trim().isEmpty();
 			}
 		}
 		
@@ -1260,8 +1260,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //				checkFamily.getHOHLastName(), checkFamily.getODBFamilyNum(), 
 //				addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
     	
-    	return checkFamily.getHOHFirstName().equalsIgnoreCase(addedFamily.getHOHFirstName()) &&
-    			checkFamily.getHOHLastName().equalsIgnoreCase(addedFamily.getHOHLastName()) &&
+    	return checkFamily.getFirstName().equalsIgnoreCase(addedFamily.getFirstName()) &&
+    			checkFamily.getLastName().equalsIgnoreCase(addedFamily.getLastName()) &&
     			areChildrenTheSame(checkChildList, addedChildList);
     }
     

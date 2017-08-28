@@ -111,7 +111,7 @@ public class ClientManager implements ActionListener
 
 		serverUI.displayWebsiteClientTable(webClientAL);
 		serverUI.addLogMessage(String.format("Web Client connected, ip=%s, user= %s, sessionID=%s", 
-				 				t.getRemoteAddress().toString(), webUser.getLastname(), wc.getSessionID()));
+				 				t.getRemoteAddress().toString(), webUser.getLastName(), wc.getSessionID()));
 		
 		return wc; 
 	}
@@ -163,12 +163,12 @@ public class ClientManager implements ActionListener
 		{	
 			webClientAL.get(index).updateTimestamp();
 			response = "{"
-						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstname() + "\"," 
-						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastname() + "\","
+						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstName() + "\"," 
+						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastName() + "\","
 						+ "\"title\":\"" + webClientAL.get(index).getWebUser().getTitle() + "\","
-						+ "\"org\":\"" + webClientAL.get(index).getWebUser().getOrg() + "\","
+						+ "\"org\":\"" + webClientAL.get(index).getWebUser().getOrganization() + "\","
 						+ "\"email\":\"" + webClientAL.get(index).getWebUser().getEmail() + "\","
-						+ "\"phone\":\"" + webClientAL.get(index).getWebUser().getPhone() + "\","
+						+ "\"phone\":\"" + webClientAL.get(index).getWebUser().getCellPhone() + "\","
 						+ "}";
 		}
 		else

@@ -396,7 +396,7 @@ public class DesktopClient extends Thread
                 	
                 	 if(response.startsWith("YEAR"))
                      {
-                     	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstname() + " " + clientUser.getLastname() + 
+                     	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstName() + " " + clientUser.getLastName() + 
                      				  " is using " +Integer.toString(year) + " season data";
                  		clientMgr.notifyAllOtherClients(this, mssg);
                      }
@@ -829,7 +829,7 @@ public class DesktopClient extends Thread
                 	if(clientUser != null)
                 		clientUser.setClientID(-1);	//note that client has gone off-line
                 	
-                	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstname() + " " + clientUser.getLastname() + 
+                	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstName() + " " + clientUser.getLastName() + 
              				  " is offline";
                 	clientMgr.notifyAllOtherClients(this, mssg);
                 	 state = ClientState.Ended;
@@ -941,7 +941,7 @@ public class DesktopClient extends Thread
     		clientMgr.notifyAllOtherClients(this, mssg);
 
     		clientMgr.clientLoginAttempt(true, String.format("Client %d, %s %s login request sucessful",
-    															id, clientUser.getFirstname(), clientUser.getLastname()));	
+    															id, clientUser.getFirstName(), clientUser.getLastName()));	
     	}
     	
     	return value;
@@ -954,8 +954,8 @@ public class DesktopClient extends Thread
     	
     	if(clientUser != null)	//if server user is known, user their name
     	{
-    		row[1] = clientUser.getFirstname();
-    		row[2] = clientUser.getLastname();
+    		row[1] = clientUser.getFirstName();
+    		row[2] = clientUser.getLastName();
     		row[3] = clientUser.getPermission().toString();	
     	}
     	else
@@ -981,10 +981,10 @@ public class DesktopClient extends Thread
     
     String getClientName()
     { 
-    	if(clientUser.getFirstname().isEmpty())
-    		return clientUser.getLastname();
+    	if(clientUser.getFirstName().isEmpty())
+    		return clientUser.getLastName();
     	else
-    		return clientUser.getFirstname() + " " + clientUser.getLastname();
+    		return clientUser.getFirstName() + " " + clientUser.getLastName();
     }
     
     String setYear(String dbYear)

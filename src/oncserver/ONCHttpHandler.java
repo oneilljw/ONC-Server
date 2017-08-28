@@ -162,7 +162,7 @@ public class ONCHttpHandler implements HttpHandler
     			//update time stamp, get the home page html and return it
     			wc.updateTimestamp();
     			
-    			String response = getHomePageHTML(wc, wc.getWebUser().getFirstname(), "",
+    			String response = getHomePageHTML(wc, wc.getWebUser().getFirstName(), "",
     					(String) params.get("year"), (String) params.get("famref"));
     			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     		}
@@ -588,7 +588,7 @@ public class ONCHttpHandler implements HttpHandler
     			try
     			{
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
-    				response = response.replace("USER_NAME", wc.getWebUser().getFirstname());
+    				response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
     				response = response.replace("USER_MESSAGE", "");
     				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
     				response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
@@ -648,10 +648,10 @@ public class ONCHttpHandler implements HttpHandler
     			
     			//submission processed, send the family table page back to the user
     			String userFN;
-    			if(wc.getWebUser().getFirstname().equals(""))
-    				userFN = wc.getWebUser().getLastname();
+    			if(wc.getWebUser().getFirstName().equals(""))
+    				userFN = wc.getWebUser().getLastName();
     			else
-    				userFN = wc.getWebUser().getFirstname();
+    				userFN = wc.getWebUser().getFirstName();
     			
     			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
     					frc.getFamRef());
@@ -703,10 +703,10 @@ public class ONCHttpHandler implements HttpHandler
     			
     			//submission processed, send the family table page back to the user
     			String userFN;
-    			if(wc.getWebUser().getFirstname().equals(""))
-    				userFN = wc.getWebUser().getLastname();
+    			if(wc.getWebUser().getFirstName().equals(""))
+    				userFN = wc.getWebUser().getLastName();
     			else
-    				userFN = wc.getWebUser().getFirstname();
+    				userFN = wc.getWebUser().getFirstName();
     			
     			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
     					(String) params.get("targetid"));
@@ -886,10 +886,10 @@ public class ONCHttpHandler implements HttpHandler
     			{
     				//submission successful, send the family table page back to the user
     				String userFN;
-        			if(wc.getWebUser().getFirstname().equals(""))
-        				userFN = wc.getWebUser().getLastname();
+        			if(wc.getWebUser().getFirstName().equals(""))
+        				userFN = wc.getWebUser().getLastName();
         			else
-        				userFN = wc.getWebUser().getFirstname();
+        				userFN = wc.getWebUser().getFirstName();
         			response = getHomePageHTML(wc, userFN, "Your password change was successful!",
         					DBManager.getMostCurrentYear(), "NNA");
     			}
@@ -929,8 +929,8 @@ public class ONCHttpHandler implements HttpHandler
     			if(retCode == 0)
     			{
     				//submission successful, send the family table page back to the user
-    				String userFN = wc.getWebUser().getFirstname().equals("") ? 
-        				 wc.getWebUser().getLastname() : wc.getWebUser().getFirstname();
+    				String userFN = wc.getWebUser().getFirstName().equals("") ? 
+        				 wc.getWebUser().getLastName() : wc.getWebUser().getFirstName();
     				response =  String.format("%s, your password was successfully changed!", userFN);
     			}
     			else if(retCode == -1)
@@ -1066,10 +1066,10 @@ public class ONCHttpHandler implements HttpHandler
 	    			clientMgr.notifyAllClients(mssg);
 	    			
 	    			//replace the HTML place holders
-	    			if(serverUser.getFirstname().equals(""))
-	    				html = html.replace("USERFN", serverUser.getLastname());
+	    			if(serverUser.getFirstName().equals(""))
+	    				html = html.replace("USERFN", serverUser.getLastName());
 	    			else
-	    				html = html.replace("USERFN", serverUser.getFirstname());
+	    				html = html.replace("USERFN", serverUser.getFirstName());
 	    			
 	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
@@ -1098,10 +1098,10 @@ public class ONCHttpHandler implements HttpHandler
 	    			}
 	    			
 	    			String username = "";
-	    			if(serverUser.getFirstname().equals(""))
-	    				username = serverUser.getLastname();
+	    			if(serverUser.getFirstName().equals(""))
+	    				username = serverUser.getLastName();
 	    			else
-	    				username =  serverUser.getFirstname();
+	    				username =  serverUser.getFirstName();
 	    		
 	    			html = getHomePageHTML(wc, username, userMssg, DBManager.getMostCurrentYear(), "NNA");
 	    			
@@ -1559,7 +1559,7 @@ public class ONCHttpHandler implements HttpHandler
 			}
 		}
 		
-		return new FamilyResponseCode(0, addedFamily.getHOHLastName() + " Family Referral Accepted",
+		return new FamilyResponseCode(0, addedFamily.getLastName() + " Family Referral Accepted",
 										addedFamily.getReferenceNum());
 	}
 	
@@ -1690,7 +1690,7 @@ public class ONCHttpHandler implements HttpHandler
 				String mssg;
 				mssg = "UPDATED_FAMILY" + gson.toJson(updateFam, ONCFamily.class);
 				clientMgr.notifyAllInYearClients(year, mssg);
-				return new FamilyResponseCode(0, updateFam.getHOHLastName() + " Family Update Accepted");
+				return new FamilyResponseCode(0, updateFam.getLastName() + " Family Update Accepted");
 			}
 			
 			return new FamilyResponseCode(-1, "Family Referral Rejected: Unable to Save Update");

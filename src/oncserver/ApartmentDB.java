@@ -139,11 +139,11 @@ public class ApartmentDB
 		{
 			//see if the family was served and address had a unit and  already in the data base
 			//if they aren't in the database add them.
-			if(f.getDNSCode().isEmpty() && f.getUnitNum().trim().length() > 0)
+			if(f.getDNSCode().isEmpty() && f.getUnit().trim().length() > 0)
 			{
 				//family was served and had a unit number in prior year, so need to check to see if it's in the
 				//apartment list already. Convert family address into an Address Object
-				Address famAddress = new Address(f.getHouseNum(), f.getStreet(), f.getUnitNum(), f.getCity(), f.getZipCode());
+				Address famAddress = new Address(f.getHouseNum(), f.getStreet(), f.getUnit(), f.getCity(), f.getZipCode());
 				
 				if(!isAddressAnApartment(famAddress))
 					aptList.add(famAddress); //its not in the list, we need to add it
