@@ -1018,13 +1018,13 @@ public class ONCHttpHandler implements HttpHandler
 	    	}
 	    	else if(serverUser != null && serverUser.getStatus() == UserStatus.Inactive)	//can't find the user in the data base
 	    	{
-	    		html += "</i></b></p><p>Inactive user account, please contact the executive director</p></body></html>";
+	    		html += "</i></b></p><p>Inactive user account, please contact ONC at volunteer@ourneighborschild.org</p></body></html>";
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && !(serverUser.getAccess().equals(UserAccess.Website) ||
 	    			serverUser.getAccess().equals(UserAccess.AppAndWebsite)))	//can't find the user in the data base
 	    	{
-	    		html += "</i></b></p><p>User account not authorized for website access, please contact the executive director</p></body></html>";
+	    		html += "</i></b></p><p>User account not authorized for website access, please contact ONC at volunteer@ourneighborschild.org</p></body></html>";
 	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
 	    	}
 	    	else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
