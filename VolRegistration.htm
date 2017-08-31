@@ -442,8 +442,8 @@
         tbdy.appendChild(tr);
 	    
 	    tbl.appendChild(tbdy);
-	    element.appendChild(tbl)
-	    element.append(document.createElement("br"));
+	    element.appendChild(tbl);
+	    element.appendChild(document.createElement("br"));
 	}
 	
 	function createCheckBoxElement(name, value, text, element)
@@ -554,17 +554,17 @@
  	<label id='groupotherlbl' for="groupother" style="visibility: hidden;">Group Name:</label>
 	<input id="groupother" title="Other group or organizaton name" name="groupother" type="text" size="35" placeholder="Other Group or Organization Name" style="visibility: hidden;">
 	</div>
-  	<div class= 'inputline' >
+  	<div class='inputline'>
       <label for="delfn">Your Name:</label>
       <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" onchange ='getContactInfo()'>
       <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" onchange ='getContactInfo()'>
     </div>
-    <div id= 'contactdiv'>
+    <div id='contactdiv'>
       <label id='phonelbl' for="primaryphone">Cell Phone #:</label>
       <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Cell Phone #" onchange='getContactInfo()'>
 	  <label id='emaillbl' for="delemail">Email:</label>
-	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
-  	  <div id= 'addressdiv'>
+	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete="off">
+  	  <div id='addressdiv'>
 	    <label for="delhousenum">Address:</label>
 	    <input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
       	<input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
@@ -573,9 +573,9 @@
       	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11' placeholder='Zip Code' autocomplete='off' >
   	  </div>
   	</div>  
-  <div id= 'commentdiv'>
+  <div id='commentdiv'>
       <label for="commnet">Comment:</label>
- 	  <input id= 'comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment about you or your group' autocomplete= 'off'>
+ 	  <input id='comment' title='Add Any Comments' name='comment' type='text' size='100' placeholder='Add a comment about you or your group' autocomplete='off'>
   </div>
   </fieldset>
   <br>
@@ -583,7 +583,7 @@
   <legend class="legend-major">Container for Activities</legend>
     <fieldset>
     <legend class="legend-major">Activities: Check each activity you or your group will participate in</legend>
-      <div id = 'activitydiv'>
+      <div id ='activitydiv'>
       </div>
     </fieldset>
   </fieldset>
