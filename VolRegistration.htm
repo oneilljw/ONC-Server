@@ -510,6 +510,10 @@
 	{
 		display: block;
 	}
+	#activitycontainer
+	{
+		background-color: #999999;
+	}
   </style>
 </head>
 <body>
@@ -555,7 +559,7 @@
       <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" onchange ='getContactInfo()'>
     </div>
     <div id= 'contactdiv'>
-      <label id='phonelbl' for="primaryphone"">Cell Phone #:</label>
+      <label id='phonelbl' for="primaryphone">Cell Phone #:</label>
       <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Cell Phone #" onchange='getContactInfo()'>
 	  <label id='emaillbl' for="delemail">Email:</label>
 	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
@@ -564,8 +568,8 @@
 	    <input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
       	<input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
       	<input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
-      	<input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
-      	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
+      	<input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City' autocomplete='off'>
+      	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11' placeholder='Zip Code' autocomplete='off' >
   	  </div>
   	</div>  
   <div id= 'commentdiv'>
@@ -574,10 +578,13 @@
   </div>
   </fieldset>
   <br>
-  <fieldset>
-  <legend class="legend-major">Activities: Check each activity you or your group will participate in</legend>
-    <div id = 'activitydiv'>
-    </div>
+  <fieldset id='activitycontainer'>
+  <legend class="legend-major">Container for Activities</legend>
+    <fieldset>
+    <legend class="legend-major">Activities: Check each activity you or your group will participate in</legend>
+      <div id = 'activitydiv'>
+      </div>
+    </fieldset>
   </fieldset>
   	<span id="errormessage"></span>
   	<span id="submitspan">

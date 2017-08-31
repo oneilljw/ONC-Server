@@ -77,10 +77,40 @@ public class ServerActivityDB extends ServerSeasonalDB
 		return activityDB.get(year - BASE_YEAR).getList().size();
 	}
 	
+	static HtmlResponse getActivityDayJSONP(int year, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfActivities = new TypeToken<ArrayList<ActivityDay>>(){}.getType();
+		
+		//put the activity database for the year in chronological order by start date
+		List<VolunteerActivity> searchList = new ArrayList<VolunteerActivity>();
+		for(VolunteerActivity va : activityDB.get(year-BASE_YEAR).getList())
+			if(va.isOpen())
+				searchList.add(va);
+		
+		Collections.sort(searchList, new VolunteerActivityDateComparator());
+		
+		//iterate thru the list and create a Activity Day object for each activity
+		String startDate = searchList.get(0).getStartDate();
+		int outerIndex = 0;
+		while(outerIndex < searchList.size())
+		{
+			List<ActivityDay> dayList = new ArrayList<ActivityDay>();
+		}
+		
+		
+		
+		
+		String response = gson.toJson(searchList, listOfActivities);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
 	static HtmlResponse getActivitesJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
-		Type listOfActivities = new TypeToken<ArrayList<FamilyReference>>(){}.getType();
+		Type listOfActivities = new TypeToken<ArrayList<VolunteerActivity>>(){}.getType();
 		
 		List<VolunteerActivity> searchList = new ArrayList<VolunteerActivity>();
 		for(VolunteerActivity va : activityDB.get(year-BASE_YEAR).getList())
