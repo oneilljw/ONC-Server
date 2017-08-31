@@ -81,16 +81,17 @@
   				//if return is good, set the fields
   				if(vol.id > -1)
   				{
-  					document.getElementById('delfn').value = vol.fName;
-  					document.getElementById('delln').value = vol.lName;
+  					console.log(vol);
+  					document.getElementById('delfn').value = vol.firstName;
+  					document.getElementById('delln').value = vol.lastName;
   					document.getElementById('delemail').value = vol.email;
   					document.getElementById('comment').value = vol.comment;
   					document.getElementById('primaryphone').value = vol.cellPhone;
-  			  		document.getElementById('delhousenum').value = vol.hNum;
+  			  		document.getElementById('delhousenum').value = vol.houseNum;
   			  		document.getElementById('delstreet').value = vol.street;
   			  		document.getElementById('delunit').value = vol.unit;
   			  		document.getElementById('delcity').value = vol.city;
-  			  		document.getElementById('delzipcode').value = vol.zipcode;
+  			  		document.getElementById('delzipcode').value = vol.zipCode;
   			  		
   			  		verifyPhoneNumber(0);
   			  		
