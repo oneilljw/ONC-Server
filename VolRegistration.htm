@@ -35,6 +35,11 @@
 	  		activitiesJson = activities;
 			addActivities(activities);
 		});
+	  	
+	  	$.getJSON('activitydays', activityparams, function(activityDays)
+	  	{
+	   		console.log(activityDays);
+	  	});
 	});
   	
   	function onGroupChange()
@@ -81,7 +86,6 @@
   				//if return is good, set the fields
   				if(vol.id > -1)
   				{
-  					console.log(vol);
   					document.getElementById('delfn').value = vol.firstName;
   					document.getElementById('delln').value = vol.lastName;
   					document.getElementById('delemail').value = vol.email;
