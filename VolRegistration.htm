@@ -7,6 +7,7 @@
   <script src="jquery.js"></script>
   <script>
     var activitiesJson= [];
+    var activitiyDayJson= [];
   	var errorColor = '#FF9999';
   	var bPriorRegistrationLoaded = false;
   	
@@ -33,12 +34,12 @@
 	  	$.getJSON('activities', activityparams, function(activities)
 		{
 	  		activitiesJson = activities;
-			addActivities(activities);
 		});
 	  	
 	  	$.getJSON('activitydays', activityparams, function(activityDays)
 	  	{
-	   		console.log(activityDays);
+	  		activityDayJson = activityDays;
+	   		addActivities(activityDays);
 	  	});
 	});
   	
@@ -86,6 +87,8 @@
   				//if return is good, set the fields
   				if(vol.id > -1)
   				{
+  					console.log(vol);
+  					
   					document.getElementById('delfn').value = vol.firstName;
   					document.getElementById('delln').value = vol.lastName;
   					document.getElementById('delemail').value = vol.email;
@@ -102,15 +105,9 @@
   			  		//check each activity and set comment
   			  		for(i=0; i < vol.activityList.length; i++)
   			  		{
-  			  			var index = 0;
-  			  			while(index < activitiesJson.length && activitiesJson[index].id != vol.activityList[i].id)
-  			  				index++;
-  			  			
-  			  			if(index < activitiesJson.length)
-  			  			{
-  			  				document.getElementById('actckbox' + index).checked = true;
-  			  				document.getElementById('actcomment' + index).value = vol.activityList[i].volComment;
-  			  			}	
+  			  			var volAct = vol.activityList[i];
+  			  			document.getElementById('actckbox' + volAct.id).checked = true;
+  			  			document.getElementById('actcomment' + volAct.id).value = volAct.volComment;
   			  		}
   			  		
   			  		document.getElementById('btnsubmit').value = "Update Registration";
@@ -384,15 +381,36 @@
 		window.location=document.getElementById('closepopup').href;
 	}
 	
-	function addActivities(activities)
-    {
-		for (i = 0; i < activities.length; i++) 
-			createActivityTable(activities[i], i);
+	function addActivities(activityDays)
+    {	
+		for (i = 0; i < activityDays.length; i++) 
+		{
+			var activityDay = activityDays[i];
+			
+			//create fieldset
+			 var fieldset = document.createElement('fieldset');
+			 var legend = document.createElement('legend');
+			 legend.innerHTML = activityDay.day;
+			 legend.setAttribute("class", "legend-major");
+			 
+			 var baseFieldset = document.getElementById('activitycontainer');
+			 baseFieldset.appendChild(fieldset);
+			 fieldset.appendChild(legend);
+			 
+			 //get activity list
+			 var activityList = activityDay.actList;
+			 
+			 //create an activity table for each activity in the activity day list
+			 for(j=0; j < activityList.length; j++)
+			 {
+				 createActivityTable(activityList[j], j, fieldset);
+			 }
+		}
+//			createActivityTable(activities[i], i);
     }
 	
-	function createActivityTable(activity, num)
+	function createActivityTable(activity, num, element)
 	{
-	    var element = document.getElementById('activitydiv');
 	    var tbl = document.createElement('table');
 	    
 	    if(num % 2 == 0)
@@ -412,7 +430,7 @@
 	    var tr = document.createElement('tr');
 	    
 	    var td = document.createElement('td');
-        createCheckBoxElement('actckbox' + num, activity.id, activity.name, td);
+        createCheckBoxElement('actckbox' + activity.id, activity.id, activity.name, td);
         tr.appendChild(td);
         
         td = document.createElement('td');
@@ -439,7 +457,7 @@
 	    tr = document.createElement('tr');
 	    
 	    td = document.createElement('td');
-	    createTextElement('actcomment' + num, 'Volunteer Comment: ', td);
+	    createTextElement('actcomment' + activity.id, 'Volunteer Comment: ', td);
 	    td.setAttribute('colSpan', '3');
 	    tr.appendChild(td);
 	  	    
@@ -452,6 +470,7 @@
 	
 	function createCheckBoxElement(name, value, text, element)
 	{
+//		console.log(name + ", " + value + "," + text);
 		var checkbox = document.createElement('input');
 		checkbox.type = "checkbox";
 		checkbox.name = name;
@@ -584,12 +603,7 @@
   </fieldset>
   <br>
   <fieldset id='activitycontainer'>
-  <legend class="legend-major">Container for Activities</legend>
-    <fieldset>
-    <legend class="legend-major">Activities: Check each activity you or your group will participate in</legend>
-      <div id ='activitydiv'>
-      </div>
-    </fieldset>
+  <legend class="legend-major">Activities: Check each activity you or your group will participate in</legend>
   </fieldset>
   	<span id="errormessage"></span>
   	<span id="submitspan">
