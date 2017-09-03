@@ -3,7 +3,6 @@ package oncserver;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 import ourneighborschild.VolunteerActivity;
@@ -19,7 +18,7 @@ public class ActivityDay
 		this.id = id;
 		
 		SimpleDateFormat inputSDF = new SimpleDateFormat("M/d/yy");
-		SimpleDateFormat outputSDF = new SimpleDateFormat("EEE MMM d, yyyy");
+		SimpleDateFormat outputSDF = new SimpleDateFormat("EEEE, MMMM d, yyyy");
 		
 		try 
 		{
@@ -27,12 +26,15 @@ public class ActivityDay
 		} 
 		catch (ParseException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			this.day = "Error: Unable to determine date";
 		}
 		
 		this.actList = new ArrayList<VolunteerActivity>();
 	}
+	
+	//getters
+	int getID() { return id; }
+	String getDay() { return day; }
 	
 	void addActivity(VolunteerActivity va)
 	{
