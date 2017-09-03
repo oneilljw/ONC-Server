@@ -6,8 +6,8 @@
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="jquery.js"></script>
   <script>
-    var activitiesJson= [];
     var activitiyDayJson= [];
+    var numActivities = 0;
   	var errorColor = '#FF9999';
   	var bPriorRegistrationLoaded = false;
   	
@@ -30,11 +30,6 @@
   			window.location=document.getElementById('registeredanchor').href;
 	  	
 	  	activityparams = "year=" + new Date().getFullYear().toString() + "&" + "callback=?";
-	  	
-	  	$.getJSON('activities', activityparams, function(activities)
-		{
-	  		activitiesJson = activities;
-		});
 	  	
 	  	$.getJSON('activitydays', activityparams, function(activityDays)
 	  	{
@@ -321,7 +316,7 @@
 						+ "&comment=" + document.getElementById('comment').value;
 						
 		
-		for(i=0; i< activitiesJson.length; i++)
+		for(i=0; i< numActivities; i++)
 		{
 			//only include checkboxes that are checked, the server will sort it out
 			var actckboxname = 'actckbox' +  i;
@@ -367,7 +362,7 @@
   		document.getElementById('delzipcode').value = "";
   		document.getElementById('comment').value = "";
   		
-  		for(i=0; i<activitiesJson.length; i++)
+  		for(i=0; i<numActivities; i++)
   		{
   			document.getElementById('actckbox' + i).checked = false;
   			document.getElementById('actcomment' + i).value = "";
@@ -404,6 +399,7 @@
 			 for(j=0; j < activityList.length; j++)
 			 {
 				 createActivityTable(activityList[j], j, fieldset);
+				 numActivities++;
 			 }
 		}
 //			createActivityTable(activities[i], i);

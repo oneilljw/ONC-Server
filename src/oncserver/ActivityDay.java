@@ -1,6 +1,9 @@
 package oncserver;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import ourneighborschild.VolunteerActivity;
@@ -14,7 +17,20 @@ public class ActivityDay
 	public ActivityDay(int id, String day)
 	{
 		this.id = id;
-		this.day = day;
+		
+		SimpleDateFormat inputSDF = new SimpleDateFormat("M/d/yy");
+		SimpleDateFormat outputSDF = new SimpleDateFormat("EEE MMM d, yyyy");
+		
+		try 
+		{
+			this.day = outputSDF.format(inputSDF.parse(day));
+		} 
+		catch (ParseException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		this.actList = new ArrayList<VolunteerActivity>();
 	}
 	
