@@ -365,6 +365,8 @@
         var dstatus;
         if(family.giftStatus === 'Delivered')
         	dstatus = 'Delivered \u2713';
+        else if(family.giftStatus === 'Referred')
+        	dstatus = 'Referred \u2713';
         else
         	dstatus = family.giftStatus;
         	
@@ -671,6 +673,71 @@
 			border: 1px solid black;
 		}
 		#newbar { text-align: right; }
+		.textDialog 
+		{
+			position: fixed;
+			font-family: Arial, Helvetica, sans-serif;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			background: rgba(5,5,5,0.4);
+			z-index: 99999;
+			opacity:0;
+			-webkit-transition: opacity 400ms ease-in;
+			-moz-transition: opacity 400ms ease-in;
+			transition: opacity 400ms ease-in;
+			pointer-events: none;
+		}
+		.textDialog:target 
+		{
+			opacity:1;
+			pointer-events: auto;
+		}
+		.textDialog > div 
+		{
+			width: 700px;
+			height: 400px;
+			position: relative;
+			margin: 10% auto;
+			padding: 5px 10px 5px 10px;
+			border-radius: 10px;
+			background: #fff;
+			background: -moz-linear-gradient(#fff, #999);
+			background: -webkit-linear-gradient(#fff, #999);
+			background: -o-linear-gradient(#fff, #999);
+		}
+		.textDialog label
+		{
+			float: left;
+    		text-align: right;
+    		margin-right: 0.5em;
+    		display: block;
+    		color: black;
+    		font-size: 85%;
+		}
+		dl
+		{	height:300px;
+			overflow-y:scroll;
+		}
+		dt
+		{
+			font-weight: bold;
+		}
+		dt:before
+		{
+			content: '\A';
+    		white-space: pre;
+		}
+		dd
+		{
+			font-style: italic;
+		}
+		dd:before
+		{
+			content: '\A';
+    		white-space: pre;
+		}
     </style>
 </head>
 <body>
@@ -693,7 +760,14 @@
 			  <li><a href="#chgpwdlg">Change Password</a></li>
 		    </ul>
 		  </div>
-	  </li>
+	    </li>
+	    <li id='hintsli'><a href="#">Helpful Hints <span class="caret"></span></a>
+		  <div>
+		    <ul>
+			  <li><a href="#faqdlg" onclick='showEditProfileDialog()'>FAQ's</a></li>
+		    </ul>
+		  </div>
+	    </li>
 	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
 	</ul>
   </nav>
@@ -784,6 +858,52 @@
       	  <button id="cancel" onclick="onProfileNotChanged()">Cancel</button>
       	  <button id="update" onclick="onUpdateProfile()">Update</button>
     	</div> 
+	</div>
+  </div>
+  <!-- FAQ sDialog -->
+  <div id="faqdlg" class="textDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Frequently Asked Questions (scroll to see all):</span>
+		</div>
+    	<dl>
+		  <dt>What is ONC's serving area?</dt>
+		  <dd>ONC serves families in six zipcodes in Western Fairfax County. The zip codes are
+		  		20120, 20121, 20124, 22033, 20179, 23066. For all other zip codes where ONC 
+		  		received referrals, ONC will attempt to forward the referral to the community
+		  		based organization that serves that area.
+		  </dd>
+	      <dt>FAQ #2:</dt>
+		  <dd>Donec pharetra luctus nisl et sollicitudin. Aliquam
+					faucibus tellus at orci pretium faucibus. Duis malesuada, enim ac
+					luctus auctor, metus libero dictum nunc, vitae imperdiet est
+					massa eget massa.
+		  </dd>
+		  <dt>FAQ #3:</dt>
+		  <dd>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+					Mauris quam nisi, egestas mattis commodo a, adipiscing eget erat.
+					Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
+		  </dd>
+	      <dt>FAQ #4:</dt>
+		  <dd>Donec pharetra luctus nisl et sollicitudin. Aliquam
+					faucibus tellus at orci pretium faucibus. Duis malesuada, enim ac
+					luctus auctor, metus libero dictum nunc, vitae imperdiet est
+					massa eget massa.
+		  </dd>
+		  <dt>FAQ #5:</dt>
+		  <dd>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+					Mauris quam nisi, egestas mattis commodo a, adipiscing eget erat.
+					Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
+		  </dd>
+	      <dt>FAQ #6:</dt>
+		  <dd>Donec pharetra luctus nisl et sollicitudin. Aliquam
+					faucibus tellus at orci pretium faucibus. Duis malesuada, enim ac
+					luctus auctor, metus libero dictum nunc, vitae imperdiet est
+					massa eget massa.
+		  </dd>
+        </dl>
 	</div>
   </div>
 <!-- Change Password Dialog -->
