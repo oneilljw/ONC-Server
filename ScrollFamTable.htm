@@ -733,11 +733,6 @@
 		{
 			font-style: italic;
 		}
-		dd:before
-		{
-			content: '\A';
-    		white-space: pre;
-		}
     </style>
 </head>
 <body>
@@ -764,7 +759,8 @@
 	    <li id='hintsli'><a href="#">Helpful Hints <span class="caret"></span></a>
 		  <div>
 		    <ul>
-			  <li><a href="#faqdlg" onclick='showEditProfileDialog()'>FAQ's</a></li>
+			  <li><a href="#faqdlg">FAQ's</a></li>
+			  <li><a href="#defdlg">Codes/Status Key</a></li>
 		    </ul>
 		  </div>
 	    </li>
@@ -869,39 +865,152 @@
 		  <span id='dialogmssg'>Frequently Asked Questions (scroll to see all):</span>
 		</div>
     	<dl>
-		  <dt>What is ONC's serving area?</dt>
-		  <dd>ONC serves families in six zipcodes in Western Fairfax County. The zip codes are
-		  		20120, 20121, 20124, 20151, 22033 and 22039. For all other zip codes where ONC 
-		  		receives referrals, ONC will attempt to forward the referral to the community
-		  		based organization that serves that area.
+		  <dt>Q: The name of the family I'm referring isn't listed. Do I select "Refer New Family"?</dt>
+		  <dd>A: Any family referred from your school last year should be on the screen. If the 
+		  			family name of your referral is not in this list, be sure to use the drop down 
+		  			menu at the top left corner of the screen to check for a prior year referral. 
+		  			If no prior referral exists, select "Refer New Family".
 		  </dd>
-	      <dt>FAQ #2:</dt>
-		  <dd>Donec pharetra luctus nisl et sollicitudin. Aliquam
-					faucibus tellus at orci pretium faucibus. Duis malesuada, enim ac
-					luctus auctor, metus libero dictum nunc, vitae imperdiet est
-					massa eget massa.
+	      <dt>Q: We're a Title 1 school with many referrals. Is there an easier way to locate the family name?</dt>
+		  <dd>A: Yes. You can enter the family name in the search bar at the top right of the screen.
 		  </dd>
-		  <dt>FAQ #3:</dt>
-		  <dd>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-					Mauris quam nisi, egestas mattis commodo a, adipiscing eget erat.
-					Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
+		  <dt>Q: Some of the families I submitted are listed as "referred". What does this mean?</dt>
+		  <dd>A: We have two organizations in our area who provide holiday assistance, (one food, 
+		  		 the other gifts) but to make life a little easier, ONC manages the intake for 
+		  		 both.
+		  </dd><dd><br>			
+				Under Meal Status, "referred" means that this referral has been sent to WFCM 
+				(Western Fairfax Christian Ministries). Once that status moves to "Referred", 
+				any questions regarding food should be directed to Jennie Bush at WFCM.  
+				jbush@wfcmva.org.
+		  </dd><dd><br>				
+				A Gift Status of "referred" would only apply to Herndon or Fairfax residents 
+				just outside our serving area. We coordinate with these other service 
+				providers and when appropriate, the referral is sent to that group for service. 
+				If you have a GIFT status question about a family marked "referred, please 
+				contact Kelly Lavin at ONC, kellylavin@ourneighborschild.org.
+		  </dd><dd><br>		
+				ONC accepts holiday assistance requests for children in the FCPS School 
+				Pyramids of  Centreville, Westfield and Chantilly. A complete listing of 
+				schools is on our website.  
 		  </dd>
-	      <dt>FAQ #4:</dt>
-		  <dd>Donec pharetra luctus nisl et sollicitudin. Aliquam
-					faucibus tellus at orci pretium faucibus. Duis malesuada, enim ac
-					luctus auctor, metus libero dictum nunc, vitae imperdiet est
-					massa eget massa.
+		</dl>
+	</div>
+  </div>
+  <!-- FAQ sDialog -->
+  <div id="defdlg" class="textDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>DNS Codes And Status Definitions (scroll to see all):</span>
+		</div>
+    	<dl>
+		  <dt>DNS Codes</dt>
+		  <dd>
+		    <dl>
+		      <dt>DUP - Duplicate Family</dt>
+		      <dd>Indicates that more than one referral for this family was received by
+		      		ONC. The referral marked DUP will not be processed,
+		      		it's duplicate counterpart will be processed.
+		      </dd>
+		      <dt>FO - Food Only</dt>
+		      <dd>Indicates this family requested holdiay meal assistance and not gift assistance.
+		      		ONC does not provide meal assistance direclty. We work with meal assistance
+		      		partners and refer holiday meal assistance requests.
+		      </dd>
+		      <dt>NISA - Not In Serving Area</dt>
+		      <dd>Indicates this family is not located in ONC's serving area and ONC will/has
+		      		attempted to refer this family to another service organization. See Family
+		      		Status - Referred.
+		      </dd>
+		      <dt>OPT-OUT</dt>
+		      <dd>Indicates the family requested holiday gift assistance, however, when ONC
+		      		contacted the family to confirm delivery, the family withdrew it's
+		      		gift assistance request.
+		      </dd>
+		       <dt>SA - Salvation Army</dt>
+		      <dd>Indicates that is family is being served by the Salvation Army and 
+		      		will not be served by ONC.
+		      </dd>
+		       <dt>SBO - Served By Other</dt>
+		      <dd>Indicates the family is not located in ONC's holdiay gift assistance serving
+		      		area. The gift assistance request has been referred to a service provider
+		      		serving the family's delivery address. See Gift Status - Referred.
+		      </dd>			
+		    </dl>
 		  </dd>
-		  <dt>FAQ #5:</dt>
-		  <dd>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-					Mauris quam nisi, egestas mattis commodo a, adipiscing eget erat.
-					Vestibulum ante ipsum primis in faucibus orci luctus et ultrices
+	      <dt>Family Status</dt>
+		  <dd>
+		    <dl>
+		      <dt>Unverified</dt>
+		      <dd>Indicates the family referral was been received by ONC, however, the 
+		      		accuracy of their contact information and address is not yet verified.
+		      </dd>
+		      <dt>Verified</dt>
+		      <dd>Indicates the family contact information and address has been verified.
+		      </dd>	
+		      <dt>Contacted</dt>
+		      <dd>Indicates ONC attempted to contact the family by telephone to confirm an
+		      		adult would be home between 1pm - 4pm on delivery day. We were unable
+		      		to sucessfully confirm.
+		      </dd>
+		      <dt>Confirmed &#x2713</dt>
+		      <dd>Indicates the family confirmed that an adult would be home from 1pm - 4pm to
+		      		accept delivery on delivery day.
+		      </dd>
+		    </dl>
 		  </dd>
-	      <dt>FAQ #6:</dt>
-		  <dd>Donec pharetra luctus nisl et sollicitudin. Aliquam
-					faucibus tellus at orci pretium faucibus. Duis malesuada, enim ac
-					luctus auctor, metus libero dictum nunc, vitae imperdiet est
-					massa eget massa.
+		  <dt>Gift Status</dt>
+		  <dd>
+		    <dl>
+		      <dt>Not Requested</dt>
+		      <dd>Indicates the family referral did not request holiday gift assistance.</dd>
+		      <dt>Requested</dt>
+		      <dd>Indicates the family referral requested holiday gift assistance.</dd>
+		      <dt>Selected</dt>
+		      <dd>Indicates gifts have been selected for each eligble member in the family.</dd>
+		      <dt>Received</dt>
+		      <dd>Indicates gifts have been received for each eligble member from one of ONC's gift assistance partners.</dd>
+		      <dt>Packaged</dt>
+		      <dd>Indicates gifts have been packaged in prepration for delivery.</dd>
+		      <dt>Verified</dt>
+		      <dd>Indicates gifts have been double-checked in prepartion for delivery.</dd>
+		      <dt>Assigned</dt>
+		      <dd>Indicates gift delivery has been assigned to an ONC delivery volunteer and is out for delivery.</dd>
+		      <dt>Delivered &#x2713</dt>
+		      <dd>Indicates gifts have been sucessfully delivered to the family's delivery address.</dd>
+		      <dt>Attempted</dt>
+		      <dd>Indicates delivery was attempted however, an adult was not home to accept. The gifts
+		      		remain with ONC's delivery volunteer for potentially another attmpt at delivery.
+		      </dd>
+		      <dt>Returned</dt>
+		      <dd>Indicates gifts have been returned to ONC after one or more failed delivery attempts.</dd>
+		      <dt>Counselor Pick-Up</dt>
+		      <dd>Indicates gifts have been given to the counselor who referred the family. The counselor will arrange
+		      		delivery directly with the family.
+		      </dd>
+		      <dt>Referred</dt>
+		      <dd>Indicates the family is not in ONC's serving area and ONC has arragned for gift 
+		      		assistance by a service provider serving the family's delivery address.
+		      </dd>
+		    </dl>
+		  </dd>
+		  <dt>Meal Status</dt>
+		  <dd>
+		    <dl>
+		      <dt>Not Requested</dt>
+		      <dd>Indicates the family referral did not request holiday meal assistance.</dd>
+		      <dt>Requested</dt>
+		      <dd>Indicates the family referral requested holiday meal assistance.</dd>
+		      <dt>Selected</dt>
+		      <dd>Indicates ONC has identifed a meal assistance service provider serving
+		      		the family's area to provide meal assistance.</dd>
+		      <dt>Referred &#x2713</dt>
+		      <dd>Indicates ONC referred the families meal assistance request to a service
+		      		provider serving the family's area.
+		      </dd>
+		    </dl>
 		  </dd>
         </dl>
 	</div>
