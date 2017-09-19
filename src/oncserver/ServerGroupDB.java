@@ -56,11 +56,11 @@ public class ServerGroupDB extends ServerPermanentDB
 	/********
 	 * returns a json list of groups based on the users permission
 	 * @param loggedInUser
-	 * @param userid
+	 * @param agentID
 	 * @param callbackFunction
 	 * @return
 	 */
-	static HtmlResponse getGroupListJSONP(ONCServerUser loggedInUser, int userid, String callbackFunction)
+	static HtmlResponse getGroupListJSONP(ONCServerUser loggedInUser, int agentID, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCGroup>>(){}.getType();
@@ -69,6 +69,7 @@ public class ServerGroupDB extends ServerPermanentDB
 		
 		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
 		{
+			//admin or sys admin users
 			for(ONCGroup g : groupList)
 				returnList.add(g);
 			
@@ -81,23 +82,38 @@ public class ServerGroupDB extends ServerPermanentDB
 		}
 		else
 		{	
-			ONCServerUser su = userid < 0 ? su = loggedInUser : ServerUserDB.getServerUser(userid);
-			for(Integer groupID : su.getGroupList())
+			if(agentID < 0 || loggedInUser.getID() == agentID)
 			{
-				int index = 0;
-				while(index < groupList.size() && groupList.get(index).getID() != groupID)
-					index++;
-			
-				if(index < groupList.size())
-					returnList.add(groupList.get(index));
+				for(Integer groupID : loggedInUser.getGroupList())
+				{
+					int index = 0;
+					while(index < groupList.size() && groupList.get(index).getID() != groupID)
+						index++;
+				
+					if(index < groupList.size())
+						returnList.add(groupList.get(index));
+				}
+				
+				if(returnList.isEmpty())
+					returnList.add(new ONCGroup(-2, new Date(), loggedInUser.getLNFI(), 3, "", 
+									loggedInUser.getLNFI(), "None", GroupType.Community, 1));
+				
+				Collections.sort(returnList, new ONCGroupNameComparator());
 			}
-			
-			Collections.sort(returnList, new ONCGroupNameComparator());
+			else
+			{
+				//return a group list that is the intersection of the logged in agents groups and the
+				//selected agents groups
+				ONCServerUser selectedAgent = ServerUserDB.getServerUser(agentID);
+				for(Integer groupID : loggedInUser.getGroupList())
+					for(Integer selAgentGroupID :selectedAgent.getGroupList())
+						if(selAgentGroupID == groupID)
+							returnList.add(groupList.get(groupID));
+							
+				Collections.sort(returnList, new ONCGroupNameComparator());
+			}
 		}
 		
-		//sort the list by name
-		
-			
 		String response = gson.toJson(returnList, listtype);
 		
 		//wrap the json in the callback function per the JSONP protocol

@@ -155,7 +155,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				if(f.getAgentID() == agentID)
 					responseList.add(new ONCWebsiteFamily(f));
 		}
-		else if(agentID == -1 && groupID == -1)
+		else if(agentID == -1 && groupID <= -1)
 		{
 			//add all families referred in that year
 			for(ONCFamily f : searchList)

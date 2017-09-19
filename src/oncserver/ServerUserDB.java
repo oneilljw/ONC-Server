@@ -460,11 +460,16 @@ public class ServerUserDB extends ServerPermanentDB
 		List<ONCWebAgent> agentReferredInYearList = new ArrayList<ONCWebAgent>();
 		
 		//get the group permission
-		ONCGroup agentGroup = ServerGroupDB.getGroup(groupID);
+		int groupPermission = 0;
+		if(groupID > -2)
+		{
+			ONCGroup agentGroup = ServerGroupDB.getGroup(groupID);
+			groupPermission = agentGroup == null ? 0 : agentGroup.getPermission();
+		}
 		
 		//if user permission is AGENT, only return a list of that agent, plus all other agents in the
 		//group that referred in the year. Otherwise,  return all agents that referred
-		if(agent.getPermission().compareTo(UserPermission.Agent) == 0 && agentGroup.getPermission() > 0)
+		if(agent.getPermission().compareTo(UserPermission.Agent) == 0 && groupPermission > 0)
 		{
 			agentReferredInYearList.add(new ONCWebAgent(agent));	//add the logged in user/agent
 			//populate the list with all other agents who are in the group and who referred in the year
@@ -477,7 +482,7 @@ public class ServerUserDB extends ServerPermanentDB
 //			System.out.println(String.format("ServerUserDB.getAgents: %s %s in group %d",
 //					su.getLastname(), bInGroup ? "is" : "isn't", groupID));
 		}
-		else if(agent.getPermission().compareTo(UserPermission.Agent) == 0 && agentGroup.getPermission() == 0)
+		else if(agent.getPermission().compareTo(UserPermission.Agent) == 0 && groupPermission == 0)
 		{
 			//just return the agent
 			agentReferredInYearList.add(new ONCWebAgent( agent));
@@ -515,6 +520,7 @@ public class ServerUserDB extends ServerPermanentDB
 	 * @param callbackFunction
 	 * @return
 	 */
+/*	
 	static HtmlResponse getAgentsInGroupJSONP(int year, ONCUser user, int groupID, String callbackFunction)
 	{	
 		Gson gson = new Gson();
@@ -534,7 +540,7 @@ public class ServerUserDB extends ServerPermanentDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
-	
+*/	
 	static HtmlResponse getAgentJSONP(int agentID, String callbackFunction)
 	{		
 		Gson gson = new Gson();
@@ -554,10 +560,8 @@ public class ServerUserDB extends ServerPermanentDB
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
-	}
-	
-	
-	
+	}	
+		
 	private ONCServerUser createSeverUserFromBritepathsReferral(BritepathFamily bpFam, DesktopClient currClient)
 	{
 		//split britepaths agent name into first name and last name
