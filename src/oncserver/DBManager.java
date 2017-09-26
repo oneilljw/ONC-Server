@@ -35,6 +35,7 @@ public class DBManager
 	private Timer dbSaveTimer;
 	private List<ServerPermanentDB> dbPermanentAutosaveList;
 	private List<ServerSeasonalDB> dbSeasonalAutosaveList;
+	private ServerUserDB userDB;
 	private static List<DBYear> dbYearList;
 	
 	public static DBManager getInstance(ImageIcon appicon)
@@ -74,7 +75,7 @@ public class DBManager
 		dbSeasonalAutosaveList = new ArrayList<ServerSeasonalDB>();	//list of data bases stored thru timer event
 		try
 		{
-			dbPermanentAutosaveList.add(ServerUserDB.getInstance());
+			userDB = ServerUserDB.getInstance();
 			RegionDB.getInstance(appicon);	//never changed
 			ApartmentDB.getInstance(); //saved when new season created, never changed during season
 			dbSeasonalAutosaveList.add(ServerGlobalVariableDB.getInstance());
@@ -298,6 +299,11 @@ public class DBManager
 		@Override
 		public void actionPerformed(ActionEvent arg0) 
 		{
+			//always command a save of the user database regardless of saved status. This means
+			//if a user logs in and changes their profile offseason, the changes are still save
+			//regardless
+			userDB.save();
+			
 			//For each year in the database that is unlocked, command each of the component 
 			//databases that are periodically saved to save data to persistent store
 			for(DBYear dbYear: dbYearList)	
