@@ -1589,6 +1589,7 @@ public class ONCHttpHandler implements HttpHandler
 	String createFamilySchoolList(Map<String, Object> params)
 	{
 		int cn = 0, nSchoolsAdded = 0;
+		String childfnkey = "childfn" + Integer.toString(cn);
 		String key = "childschool" + Integer.toString(cn);
 		StringBuffer buff = new StringBuffer();
 		
@@ -1596,17 +1597,19 @@ public class ONCHttpHandler implements HttpHandler
 		while(params.containsKey(key))
 		{
 			String school = (String) params.get(key);
+			String childfn = (String) params.get(childfnkey);
 			if(school != null && !school.equals("") && buff.indexOf(school) == -1)
 			{
 				if(nSchoolsAdded > 0)
-					buff.append("\r" + school);
+					buff.append("\r" + childfn + ": " + school);
 				else
-					buff.append(school);
+					buff.append(childfn + ": " + school);
 				
 				nSchoolsAdded++;
 			}
-			
+
 			key = "childschool" + Integer.toString(++cn);
+			childfnkey = "childfn" + Integer.toString(cn);
 		}
 		
 		if(nSchoolsAdded > 0)
