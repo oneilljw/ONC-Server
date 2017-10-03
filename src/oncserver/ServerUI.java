@@ -5,8 +5,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -19,16 +19,16 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-public class ServerUI extends JPanel implements ListSelectionListener
+import ourneighborschild.ONCUser;
+
+public class ServerUI extends JPanel implements ClientListener
 {
 	/**
 	 * 
@@ -38,33 +38,27 @@ public class ServerUI extends JPanel implements ListSelectionListener
 	private static final int NUM_ROWS_TO_DISPLAY = 8;
 	private static final int LOG_TEXT_FONT_SIZE = 13;
 	
+	private static final int CLIENT_ID_COL = 0;
+	private static final int CLIENT_FN_COL = 1;
+	private static final int CLIENT_LN_COL = 2;
+	private static final int CLIENT_PERM_COL = 3;
+	private static final int CLIENT_STATE_COL = 4;
+	private static final int CLIENT_HB_COL = 5;
+	private static final int CLIENT_YEAR_COL = 6;
+	private static final int CLIENT_VER_COL = 7;
+	private static final int CLIENT_TIMESTAMP_COL = 8;
+	
 	private static ServerUI instance = null;	//Only one UI
 	private transient ImageIcon imageIcons[];
-	public JButton btnStartServer, btnStopServer, btnKillClient;
+	public JButton btnStartServer, btnStopServer;
 	private JTextArea logTA;
-//	private StyledDocument logDoc;	//document that holds log text
-	private JLabel lblNumClients;
 	private JRadioButton rbStoplight;
-//	private ONCTable clientTable;
 	private JTable desktopClientTable, websiteClientTable;
-	private DefaultTableModel desktopClientTableModel, websiteClientTableModel;
-	private boolean bDesktopClientTableChanging, bWebsiteClientTableChanging;
+	private DesktopClientTableModel desktopClientTM;
+	private WebClientTableModel webClientTM;
 	
-	private ArrayList<DesktopClient> clientTableList;
-	private ArrayList<WebClient> websiteTableList;
-	
-//	private static String[] columnToolTips = {"ID", "First Name", "Last Name", 
-//		  										"Permission", "Client Status", "Heart Beat",
-//		  										"Database Year Client is Connected To",
-//		  										"Time Logged In" };
+	private ClientManager clientMgr;
 
-	private static String[] columns = {"ID", "First Name", "Last Name", 
-		  								"Perm", "State", "HB", "Year", "Ver", "Time Stamp" };
-
-	private static int[] colWidths = {40, 80, 80, 80, 80, 28, 40, 52, 140};
-
-	private static int [] center_cols = {0, 3, 5};
-	
 	public static ServerUI getInstance()
 	{
 		if(instance == null)
@@ -75,62 +69,43 @@ public class ServerUI extends JPanel implements ListSelectionListener
 	
 	private ServerUI()
 	{
+		clientMgr = ClientManager.getInstance();
+		if(clientMgr != null)
+			clientMgr.addClientListener(this);
+		
 		//Layout User I/F
 		initIcons();
 
 		JPanel statusPanel = new JPanel();
 		statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
 		JPanel statusPanelLeft = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JPanel statusPanelCenter = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		JPanel statusPanelRight = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		
 		JLabel lblONCicon = new JLabel(imageIcons[0]);
 		statusPanelLeft.add(lblONCicon);
-		
-		lblNumClients = new JLabel("Clients Connected: 0");
-		statusPanelCenter.add(lblNumClients);
 	    
 		rbStoplight = new JRadioButton(imageIcons[4]);
     	rbStoplight.setToolTipText("");
     	statusPanelRight.add(rbStoplight);
     	
     	statusPanel.add(statusPanelLeft);
-    	statusPanel.add(statusPanelCenter);
     	statusPanel.add(statusPanelRight);
     	
-    	//Set up the desktop client table panel and wesite client table panel
+    	//Set up the desktop client table panel and website client table panel
     	JPanel desktoptablepanel = new JPanel();
     	desktoptablepanel.setLayout(new BorderLayout());
     	
-    	bDesktopClientTableChanging = false;
-//    	clientTable = new ONCTable(columnToolTips, new Color(240,248,255));
+    	desktopClientTM = new DesktopClientTableModel();
     	desktopClientTable = new JTable();
-
-    	//Set up the table model. Cells are not editable
-    	desktopClientTableModel = new DefaultTableModel(columns, 0) {
-    		private static final long serialVersionUID = 1L;
-    				
-    		@Override
-    		//All cells are locked from being changed by user
-    		public boolean isCellEditable(int row, int column) {return false;}
-    	};
-    	
-    	clientTableList = new ArrayList<DesktopClient>();	//List holds references of clients show in table
 
     	//Set the table model, select ability to select multiple rows and add a listener to 
     	//check if the user has selected a row. 
-    	desktopClientTable.setModel(desktopClientTableModel);
+    	desktopClientTable.setModel(desktopClientTM);
     	desktopClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-//    	clientTable.getSelectionModel().addListSelectionListener(this);
-//    	clientTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-//    		@Override
-//    		public void valueChanged(ListSelectionEvent arg0) {
-//    			checkApplyChangesEnabled();	//Check to see if user postured to change delivery driver.	
-//    		}
-//    	});
 
     	//Set table column widths
     	int tablewidth = 0;
+    	int[] colWidths = {40, 80, 80, 80, 80, 28, 40, 52, 140};
     	for(int i=0; i < colWidths.length; i++)
     	{
     		desktopClientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
@@ -143,88 +118,39 @@ public class ServerUI extends JPanel implements ListSelectionListener
     	anHeader.setForeground( Color.black);
     	anHeader.setBackground( new Color(161,202,241));
 
-    	//mouse listener for table header click causes table to be sorted based on column selected
-    	//uses family data base sort method to sort. Method requires ONCFamily array list to be sorted
-    	//and column name
-    	//anHeader.addMouseListener(new MouseAdapter() {
-    	//	@Override
-    	//    public void mouseClicked(MouseEvent e) {
-    	//		//TODO: add table sorting code here
-    	//   }
-    	//});
-
     	//Center cell entries for specified cells
     	DefaultTableCellRenderer dtcr = new DefaultTableCellRenderer();    
     	dtcr.setHorizontalAlignment(SwingConstants.CENTER);
+    	int [] center_cols = {0, 3, 5};
     	for(int i=0; i<center_cols.length; i++)
     		desktopClientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
-
-//    	clientTable.setBorder(UIManager.getBorder("Table.scrollPaneBorder"));
 
     	desktopClientTable.setFillsViewportHeight(true);
     	desktoptablepanel.add(anHeader, BorderLayout.NORTH);
     	desktoptablepanel.add(desktopClientTable, BorderLayout.CENTER);
     	desktoptablepanel.setPreferredSize(new Dimension(tablewidth, desktopClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
-/*    	
-    	//Create the scroll pane and add the table to it.
-    	JScrollPane clientScrollPane = new JScrollPane(clientTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
-    												JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-    	clientScrollPane.setPreferredSize(new Dimension(tablewidth, clientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
-*/ 
     	JPanel websitetablepanel = new JPanel();
     	websitetablepanel.setLayout(new BorderLayout());
     	
-    	bWebsiteClientTableChanging = false;
-//    	clientTable = new ONCTable(columnToolTips, new Color(240,248,255));
+    	webClientTM = new WebClientTableModel();
     	websiteClientTable = new JTable();
-
-    	//Set up the table model. Cells are not editable
-    	websiteClientTableModel = new DefaultTableModel(columns, 0) {
-    		private static final long serialVersionUID = 1L;
-    				
-    		@Override
-    		//All cells are locked from being changed by user
-    		public boolean isCellEditable(int row, int column) {return false;}
-    	};
-    	
-    	websiteTableList = new ArrayList<WebClient>();	//List holds references of clients show in table
 
     	//Set the table model, select ability to select multiple rows and add a listener to 
     	//check if the user has selected a row. 
-    	websiteClientTable.setModel(websiteClientTableModel);
+    	websiteClientTable.setModel(webClientTM);
+    	
     	websiteClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-//    	clientTable.getSelectionModel().addListSelectionListener(this);
-//    	clientTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-//    		@Override
-//    		public void valueChanged(ListSelectionEvent arg0) {
-//    			checkApplyChangesEnabled();	//Check to see if user postured to change delivery driver.	
-//    		}
-//    	});
 
-//    	//Set table column widths
-//    	tablewidth = 0;
     	for(int i=0; i < colWidths.length; i++)
     	{
     		websiteClientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
-//    		tablewidth += colWidths[i];
     	}
-//   		tablewidth += 24; 	//Account for vertical scroll bar
 
     	//Set up the table header
     	anHeader = websiteClientTable.getTableHeader();
     	anHeader.setForeground( Color.black);
     	anHeader.setBackground( new Color(161,202,241));
-
-    	//mouse listener for table header click causes table to be sorted based on column selected
-    	//uses family data base sort method to sort. Method requires ONCFamily array list to be sorted
-    	//and column name
-    	//anHeader.addMouseListener(new MouseAdapter() {
-    	//	@Override
-    	//    public void mouseClicked(MouseEvent e) {
-    	//		//TODO: add table sorting code here
-    	//   }
-    	//});
 
     	//Center cell entries for specified cells
     	dtcr = new DefaultTableCellRenderer();    
@@ -232,37 +158,21 @@ public class ServerUI extends JPanel implements ListSelectionListener
     	for(int i=0; i<center_cols.length; i++)
     		websiteClientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
 
-//    	clientTable.setBorder(UIManager.getBorder("Table.scrollPaneBorder"));
-
     	websiteClientTable.setFillsViewportHeight(true);
     	websitetablepanel.add(anHeader, BorderLayout.NORTH);
     	websitetablepanel.add(websiteClientTable, BorderLayout.CENTER);
-    	websitetablepanel.setPreferredSize(new Dimension(tablewidth, websiteClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
-/*    	
-    	//Create the scroll pane and add the table to it.
-    	JScrollPane clientScrollPane = new JScrollPane(clientTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
-    												JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
-    	clientScrollPane.setPreferredSize(new Dimension(tablewidth, clientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
-*/   			
+    	websitetablepanel.setPreferredSize(new Dimension(tablewidth, websiteClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));			
     	
     	//Set up the client log pane
     	logTA = new JTextArea();
-    	logTA.setToolTipText("Server log");
   	   	logTA.setEditable(false);
-  	   	
-  	   	//create the document that holds chat text
-//      logDoc = logTP.getStyledDocument();
-        
+  	   
         //create the paragraph attributes
         SimpleAttributeSet paragraphAttribs = new SimpleAttributeSet();  
         StyleConstants.setAlignment(paragraphAttribs , StyleConstants.ALIGN_LEFT);
         StyleConstants.setFontSize(paragraphAttribs, LOG_TEXT_FONT_SIZE);
         StyleConstants.setSpaceBelow(paragraphAttribs, 3);
-        
-        //set the paragraph attributes, disable editing and set the pane size
-//      logTA.setParagraphAttributes(paragraphAttribs, true);
-  	   	
+
         DefaultCaret caret = (DefaultCaret) logTA.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
   	   	
@@ -274,17 +184,11 @@ public class ServerUI extends JPanel implements ListSelectionListener
         //Set up the control panel
         JPanel cntlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        btnKillClient = new JButton("Kill Client");
-        btnKillClient.setVisible(false);
-        btnKillClient.setEnabled(false);
-      
         btnStartServer = new JButton("Start Server");
         btnStartServer.setVisible(false);
         
         btnStopServer = new JButton("Stop Server");
-//      btnStopServer.setVisible(false);
         
-        cntlPanel.add(btnKillClient);
         cntlPanel.add(btnStopServer);
         cntlPanel.add(btnStartServer);
         
@@ -292,7 +196,6 @@ public class ServerUI extends JPanel implements ListSelectionListener
         this.add(statusPanel);
         this.add(desktoptablepanel);
         this.add(websitetablepanel);
-//      this.add(clientScrollPane);
         this.add(logScrollPane);
         this.add(cntlPanel);
         
@@ -311,69 +214,14 @@ public class ServerUI extends JPanel implements ListSelectionListener
 		imageIcons[1] = createImageIcon("traffic-lights-green-icon.gif", "Green Light Icon");
 		imageIcons[2] = createImageIcon("traffic-lights-yellow-icon.gif", "Yellow Light Icon");
 		imageIcons[3] = createImageIcon("traffic-lights-red-icon.gif", "Red Light Icon");
-		imageIcons[4] = createImageIcon("traffic-lights-off-icon.gif", "Off Light Icon");
-		
-		//Splash screen
-//		imageIcons[15] = createImageIcon("oncsplash.gif", "ONC Full Screen Logo");
-		
+		imageIcons[4] = createImageIcon("traffic-lights-off-icon.gif", "Off Light Icon");	
 	}
-	
-	void displayDesktopClientTable(ArrayList<DesktopClient> cAL)
-	{
-		bDesktopClientTableChanging = true;
-		
-		clientTableList.clear();
-		
-		while (desktopClientTableModel.getRowCount() > 0)	//Clear the current table
-			desktopClientTableModel.removeRow(0);
-		
-		for(DesktopClient ci:cAL)	//Build the new table
-		{
-			clientTableList.add(ci);
-			desktopClientTableModel.addRow(ci.getClientTableRow());
-		}
-		
-		bDesktopClientTableChanging = false;
-		
-		btnKillClient.setVisible(cAL.size() > 0);
-		btnKillClient.setEnabled(false);
-		
-		lblNumClients.setText("Clients Connected: " + Integer.toString(cAL.size()));
-	}
-	
-	void displayWebsiteClientTable(ArrayList<WebClient> cAL)
-	{
-		bWebsiteClientTableChanging = true;
-		
-		websiteTableList.clear();
-		
-		while (websiteClientTableModel.getRowCount() > 0)	//Clear the current table
-			websiteClientTableModel.removeRow(0);
-		
-		for(WebClient ci:cAL)	//Build the new table
-		{
-			websiteTableList.add(ci);
-			websiteClientTableModel.addRow(ci.getClientTableRow());
-		}
-		
-		bWebsiteClientTableChanging = false;
-	}
-	
-	//returns a reference to the client that is selected in the client table
-	DesktopClient getClientTableSelection()
-	{
-		if(desktopClientTable.getSelectedRow() != -1)	//make sure row is selected
-			return clientTableList.get(desktopClientTable.getSelectedRow());
-			
-		else
-			return null;
-	}
-	
+
 	void addLogMessage(String mssg)
 	{
 		Calendar timestamp = Calendar.getInstance();
 		
-		String line = new SimpleDateFormat("MM/dd/yy H:mm:ss").format(timestamp.getTime());
+		String line = new SimpleDateFormat("MM/dd/yy H:mm:ss.S").format(timestamp.getTime());
 		
 		logTA.append(line + ": " + mssg + "\n");
 		logTA.setCaretPosition(logTA.getDocument().getLength());
@@ -394,14 +242,156 @@ public class ServerUI extends JPanel implements ListSelectionListener
 		if (imgURL != null) { return new ImageIcon(imgURL, description); } 
 		else { System.err.println("Couldn't find file: " + path); return null; }
 	}
-
+	
 	@Override
-	public void valueChanged(ListSelectionEvent lse)
+	public void clientChanged(ClientEvent ce) 
 	{
-		if(!lse.getValueIsAdjusting() &&lse.getSource() == desktopClientTable.getSelectionModel() &&
-				!bDesktopClientTableChanging)
+		if(ce.getEventType() == ClientEventType.MESSAGE)
 		{
-			btnKillClient.setEnabled(desktopClientTable.getSelectedRowCount() > 0);
+			String mssg = (String) ce.getObject1();
+			addLogMessage(mssg);
+		}
+		else if(ce.getClientType() == ClientType.DESKTOP)
+		{
+			desktopClientTM.fireTableDataChanged();
+		}
+		else if(ce.getClientType() == ClientType.WEB)
+		{
+			webClientTM.fireTableDataChanged();
 		}
 	}
+	
+	class DesktopClientTableModel extends AbstractTableModel
+	{
+        /**
+		 * Implements the table model for the Online UserDialog
+		 */
+		private SimpleDateFormat sdf;
+		private ClientManager clientMgr;
+		
+		public DesktopClientTableModel()
+		{
+			sdf = new SimpleDateFormat("MM/dd H:mm:ss");
+			clientMgr = ClientManager.getInstance();
+		}
+		
+		private static final long serialVersionUID = 1L;
+		
+		private String[] columnNames = {"ID", "First Name", "Last Name", 
+										"Perm", "State", "HB", "Year", "Ver", "Time Stamp" };
+ 
+        public int getColumnCount() { return columnNames.length; }
+ 
+        public int getRowCount() { return clientMgr.getDesktopClientList().size(); }
+ 
+        public String getColumnName(int col) { return columnNames[col]; }
+ 
+        public Object getValueAt(int row, int col)
+        {
+        	DesktopClient dc = clientMgr.getDesktopClientList().get(row);
+        	ONCUser u = dc.getClientUser();
+        	
+        	if(col == CLIENT_ID_COL)  
+        		return dc.getClientID();
+        	else if(col == CLIENT_FN_COL)
+        		return u != null ? u.getFirstName() : "Anonymous";
+        	else if(col == CLIENT_LN_COL)
+        		return u != null ? u.getLastName() : "Anonymous";
+        	else if(col == CLIENT_PERM_COL)
+        		return u != null ? u.getPermission().toString() : "U";
+        	else if(col == CLIENT_STATE_COL)
+        		return dc.getClientState();
+        	else if (col == CLIENT_HB_COL)
+        		return dc.getClientHeartbeat().toString().substring(0,1);
+        	else if (col == CLIENT_YEAR_COL)
+        		return dc.getClientState() == ClientState.DB_Selected ? Integer.toString(dc.getYear()) : "None";
+        	else if (col == CLIENT_VER_COL)
+        		return dc.getClientVersion();
+        	else if (col == CLIENT_TIMESTAMP_COL)
+        		return sdf.format(dc.getClientTimestamp());
+        	else
+        		return "Error";
+        }
+        
+        //JTable uses this method to determine the default renderer/editor for each cell.
+        @Override
+        public Class<?> getColumnClass(int column)
+        {
+        	return String.class;
+        }
+ 
+        public boolean isCellEditable(int row, int col)
+        {
+        	return false;
+        }
+    }
+	
+	class WebClientTableModel extends AbstractTableModel
+	{
+        /**
+		 * Implements the table model for the Online UserDialog
+		 */
+		private SimpleDateFormat sdf;
+		private ClientManager clientMgr;
+		
+		public WebClientTableModel()
+		{
+			sdf = new SimpleDateFormat("MM/dd H:mm:ss");
+			clientMgr = ClientManager.getInstance();
+		}
+		
+		private static final long serialVersionUID = 1L;
+		
+		private String[] columnNames = {"ID", "First Name", "Last Name", 
+										"Perm", "State", "HB", "Year", "Ver", "Time Stamp" };
+ 
+        public int getColumnCount() { return columnNames.length; }
+ 
+        public int getRowCount() { return clientMgr.getWebClientList().size(); }
+ 
+        public String getColumnName(int col) { return columnNames[col]; }
+ 
+        public Object getValueAt(int row, int col)
+        {
+        	WebClient wc = clientMgr.getWebClientList().get(row);
+        	ONCUser u = wc.getWebUser();
+        	Calendar timestamp = Calendar.getInstance();
+        	
+        	if(col == CLIENT_ID_COL)  
+        		return "0";
+        	else if(col == CLIENT_FN_COL)
+        		return u != null ? u.getFirstName() : "Anonymous";
+        	else if(col == CLIENT_LN_COL)
+        		return u != null ? u.getLastName() : "Anonymous";
+        	else if(col == CLIENT_PERM_COL)
+        		return u != null ? u.getPermission().toString() : "U";
+        	else if(col == CLIENT_STATE_COL)
+        		return wc.getClientState();
+        	else if (col == CLIENT_HB_COL)
+        		return "O";
+        	else if (col == CLIENT_YEAR_COL)
+            	return Integer.toString(timestamp.get(Calendar.YEAR));
+        	else if (col == CLIENT_VER_COL)
+        		return "Web";
+        	else if (col == CLIENT_TIMESTAMP_COL)
+        	{
+        		timestamp.setTimeInMillis(wc.getloginTimeStamp());
+            	return sdf.format(timestamp.getTime());
+        	}
+        	else
+        		return "Error";
+        }
+        
+        //JTable uses this method to determine the default renderer/editor for each cell.
+        @Override
+        public Class<?> getColumnClass(int column)
+        {
+        	return String.class;
+        }
+ 
+        public boolean isCellEditable(int row, int col)
+        {
+        	return false;
+        }
+    }
 }

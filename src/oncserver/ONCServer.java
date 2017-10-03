@@ -22,7 +22,7 @@ public class ONCServer
 	 * @throws IOException 
 	 */
 	
-	private static final String APPNAME = "Our Neighbor's Child Server v3.00";
+	private static final String APPNAME = "Our Neighbor's Child Server v4.00";
 	private static final String ONC_COPYRIGHT = "\u00A92017 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
@@ -79,19 +79,18 @@ public class ONCServer
             }
         }
         
+        //Set up client manager
+      	clientMgr = ClientManager.getInstance();
+        
         //create mainframe window for the application and add button listeners to start/stop the sever
         createandshowGUI();
         serverUI.btnStartServer.addActionListener(new UIButtonListener());
         serverUI.btnStopServer.addActionListener(new UIButtonListener());
-        
-		//Set up client manager
-		clientMgr = ClientManager.getInstance();
-		
+
 		//set up the database manager and load the data base from persistent store
-		DBManager.getInstance(clientMgr.getAppIcon());
+		DBManager.getInstance(serverUI.getIcon(0));
 
 		//Create the client listener socket and start the loop		
-//		serverUI.setStoplight(0);	//Set server status to green - started
 		startServer();	//Start the server on app start up
     }
 	
@@ -190,10 +189,10 @@ public class ONCServer
 
     public static void main(String args[])
 	{    	
-		 SwingUtilities.invokeLater(new Runnable() {
+		 SwingUtilities.invokeLater(new Runnable()
+		 {
 			 public void run()
-			 {
-				 
+			 { 
 				try
 				{
 					new ONCServer();
@@ -203,7 +202,6 @@ public class ONCServer
 				{
 					e.printStackTrace();
 				}
-				
 		}});	 
 	}
    

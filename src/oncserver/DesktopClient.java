@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -142,6 +143,8 @@ public class DesktopClient extends Thread
     int getClientID() { return id; }
     ClientState getClientState() { return state; }
     Heartbeat getClientHeartbeat() { return heartbeat; }
+    String getClientVersion() { return version; }
+    Date getClientTimestamp() { return timestamp.getTime(); }
     long getTimeLastActiveInMillis() { return timeLastActive; }
     int getClientUserID() { return clientUser == null ? -1 : clientUser.getID(); }
     ONCUser getClientUser() { return clientUser == null ? null : clientUser; }
@@ -157,7 +160,7 @@ public class DesktopClient extends Thread
     {
     	state = ClientState.Running;	//Client has started
     	heartbeat = Heartbeat.Active;
-    	clientMgr.clientStateChanged();	//tell client 
+    	clientMgr.clientStateChanged(ClientType.DESKTOP, ClientEventType.ACTIVE, this); 
     	String command = "";
     	lastcommand = "";
     	
@@ -297,7 +300,8 @@ public class DesktopClient extends Thread
                 	String response = wishDetailDB.getWishDetail(year);
                 	output.println(response);
                 	state = ClientState.DB_Selected;
-                	clientMgr.clientStateChanged();
+//                	clientMgr.clientStateChanged();
+                	clientMgr.clientStateChanged(ClientType.DESKTOP, ClientEventType.ACTIVE, this); 
                 }
                 else if(command.startsWith("GET<adults>"))
                 {

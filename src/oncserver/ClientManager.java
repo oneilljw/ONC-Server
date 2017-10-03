@@ -19,7 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.HttpExchange;
 
-public class ClientManager implements ActionListener
+public class ClientManager
 {
 	private static final boolean CLIENT_TIMER_ENABLED = true;
 	private static final int CLIENT_HEARTBEAT_SAMPLE_RATE = 1000 * 60 * 1; //one minute
@@ -32,7 +32,6 @@ public class ClientManager implements ActionListener
 	private ArrayList<DesktopClient> dtClientAL;	//list of desktop clients connected to server
 	private static ArrayList<WebClient> webClientAL;	//list of web clients connected to server
 	private int clientID;	
-	private ServerUI serverUI;
 	
 	private Timer clientTimer;
 	
@@ -41,9 +40,6 @@ public class ClientManager implements ActionListener
 		dtClientAL = new ArrayList<DesktopClient>();
 		webClientAL = new ArrayList<WebClient>();
 		clientID = 0;
-		
-		serverUI = ServerUI.getInstance();	//reference for client manager to communicate with UI
-		serverUI.btnKillClient.addActionListener(this);
 		
 		//Create the client timer and enable it if CLIENT_TIMER_ENABLED
 		clientTimer = new Timer(CLIENT_HEARTBEAT_SAMPLE_RATE, new ClientTimerListener());
@@ -63,41 +59,52 @@ public class ClientManager implements ActionListener
 	{
 		c.closeClientSocket();
 		dtClientAL.remove(c);
-		serverUI.displayDesktopClientTable(dtClientAL);
+//		serverUI.displayDesktopClientTable(dtClientAL);
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.DIED, c);
 	}
 	
 	void clientQuit(DesktopClient c)
 	{
-		serverUI.addLogMessage(String.format("Client %d quit", c.getClientID()));
+//		serverUI.addLogMessage(String.format("Client %d quit", c.getClientID()));
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.MESSAGE, String.format("Client %d quit", c.getClientID()));
 		c.closeClientSocket();
 		dtClientAL.remove(c);
-		serverUI.displayDesktopClientTable(dtClientAL);
+//		serverUI.displayDesktopClientTable(dtClientAL);
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.LOGOUT, c);
 	}
 	
 	void killClient(DesktopClient c)
 	{
-		serverUI.addLogMessage(String.format("Client %d killed", c.getClientID()));
+//		serverUI.addLogMessage(String.format("Client %d killed", c.getClientID()));
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.MESSAGE,String.format("Client %d killed", c.getClientID()));
 		c.closeClientSocket();
 		dtClientAL.remove(c);
-		serverUI.displayDesktopClientTable(dtClientAL);
+//		serverUI.displayDesktopClientTable(dtClientAL);
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.KILLED, c);
 	}
 	
 	void clientLoggedOut(DesktopClient c)
 	{
-		serverUI.addLogMessage(String.format("Client %d, %s logged out", c.getClientID(),
-												c.getClientName()));
+//		serverUI.addLogMessage(String.format("Client %d, %s logged out", c.getClientID(),
+//												c.getClientName()));
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.MESSAGE,String.format("Client %d, %s logged out", 
+															c.getClientID(),c.getClientName()));
 		c.closeClientSocket();
 		dtClientAL.remove(c);
-		serverUI.displayDesktopClientTable(dtClientAL);
+//		serverUI.displayDesktopClientTable(dtClientAL);
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.LOGOUT, c);
 	}
 	
 	synchronized DesktopClient addDesktopClient(Socket socket)
 	{
 		DesktopClient c = new DesktopClient(socket, clientID);
 		dtClientAL.add(c);
-		serverUI.displayDesktopClientTable(dtClientAL);
+//		serverUI.displayDesktopClientTable(dtClientAL);
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.CONNECTED, c);
 		c.start();
-		serverUI.addLogMessage(String.format("Client %d connected, ip= %s", 
+//		serverUI.addLogMessage(String.format("Client %d connected, ip= %s", 
+//				clientID, socket.getRemoteSocketAddress().toString()));
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.MESSAGE,String.format("Client %d connected, ip= %s", 
 				clientID, socket.getRemoteSocketAddress().toString()));
 		clientID++;
 		
@@ -109,12 +116,18 @@ public class ClientManager implements ActionListener
 		WebClient wc = new WebClient(UUID.randomUUID(), webUser);
 		webClientAL.add(wc);
 
-		serverUI.displayWebsiteClientTable(webClientAL);
-		serverUI.addLogMessage(String.format("Web Client connected, ip=%s, user= %s, sessionID=%s", 
-				 				t.getRemoteAddress().toString(), webUser.getLastName(), wc.getSessionID()));
+//		serverUI.displayWebsiteClientTable(webClientAL);
+		fireClientChanged(this, ClientType.WEB, ClientEventType.CONNECTED, wc);
+//		serverUI.addLogMessage(String.format("Web Client connected, ip=%s, user= %s, sessionID=%s", 
+//				 				t.getRemoteAddress().toString(), webUser.getLastName(), wc.getSessionID()));
+		fireClientChanged(this, ClientType.WEB, ClientEventType.MESSAGE,String.format("Web Client connected, ip=%s, user= %s, sessionID=%s", 
+ 				t.getRemoteAddress().toString(), webUser.getLastName(), wc.getSessionID()));
 		
 		return wc; 
 	}
+	
+	List<DesktopClient> getDesktopClientList() { return dtClientAL; }
+	List<WebClient> getWebClientList() { return webClientAL; }
 	
 	/*************************************************************************************
 	 * Find a desktop client by client id. If client id is not logged into the server, 
@@ -222,7 +235,8 @@ public class ClientManager implements ActionListener
 		if(index < webClientAL.size())	//found web client
 		{	
 			webClientAL.remove(index);
-			serverUI.displayWebsiteClientTable(webClientAL);
+//			serverUI.displayWebsiteClientTable(webClientAL);
+			fireClientChanged(this, ClientType.WEB, ClientEventType.LOGOUT, null);
 			return true;
 		}
 		else
@@ -231,20 +245,24 @@ public class ClientManager implements ActionListener
 	
 	void clientLoginAttempt(boolean bValid, String mssg)
 	{
-		serverUI.addLogMessage(mssg);
+//		serverUI.addLogMessage(mssg);
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.MESSAGE, mssg);
 		
 		if(bValid)	//redraw table, we now know who the client is
-			serverUI.displayDesktopClientTable(dtClientAL);
+//			serverUI.displayDesktopClientTable(dtClientAL);
+			fireClientChanged(this, ClientType.DESKTOP, ClientEventType.ACTIVE, null);
 	}
 	
-	void clientStateChanged()
+	void clientStateChanged(ClientType type, ClientEventType eventType, Object client)
 	{
-		serverUI.displayDesktopClientTable(dtClientAL);
+//		serverUI.displayDesktopClientTable(dtClientAL);
+		fireClientChanged(this, type, eventType, client);
 	}
 	
 	void addLogMessage(String mssg)
 	{
-		serverUI.addLogMessage(mssg);
+//		serverUI.addLogMessage(mssg);
+		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.MESSAGE, mssg);
 	}
 	
 	String getOnlineUsers()
@@ -331,7 +349,10 @@ public class ClientManager implements ActionListener
 		}
 	}
 	
-	ImageIcon getAppIcon() { return serverUI.getIcon(0); }
+	ImageIcon getAppIcon() 
+	{ 
+		return ServerUI.getInstance().getIcon(0); 
+	}
 	
 	/***************************************************************************************
 	 * This method checks all active clients to assess their heart beat according to the 
@@ -346,10 +367,7 @@ public class ClientManager implements ActionListener
 		//for notification and kill. For clients that are running but haven't logged in, if they
 		//exceed the log in time, kill them
 		ArrayList<DesktopClient> killClientList = new ArrayList<DesktopClient>();
-		
-//		if(clientAL.size() > 0)	//add a hb check mssg to log if there any clients
-//			addLogMessage("Server Checking Client heart beats");
-		
+
 		for(DesktopClient c: dtClientAL)	
 		{
 			ClientState clientState = c.getClientState();
@@ -361,19 +379,19 @@ public class ClientManager implements ActionListener
 			}
 			else if(clientState == ClientState.Logged_In || clientState == ClientState.DB_Selected)
 			{
-//				System.out.println(String.format("Checking if Client %d still has a heart beat", c.getClientID()));
-				if(c.getClientHeartbeat() == Heartbeat.Terminal && timeSinceLastHeartbeat  > DESKTOP_CLIENT_TERMINAL_LIMIT)
+				if(c.getClientHeartbeat() == Heartbeat.Terminal && timeSinceLastHeartbeat > DESKTOP_CLIENT_TERMINAL_LIMIT)
 				{
 					//Heart beat is terminal  and remained lost past the terminal time limit
 					//kill the client by closing the socket which causes an IO exception which
 					//will terminate the client thread
 					killClientList.add(c);
 				}
-				else if(c.getClientHeartbeat() == Heartbeat.Lost && timeSinceLastHeartbeat  > DESKTOP_CLIENT_TERMINAL_LIMIT)
+				else if(c.getClientHeartbeat() == Heartbeat.Lost && timeSinceLastHeartbeat > DESKTOP_CLIENT_TERMINAL_LIMIT)
 				{
 					//Heart beat was lost and remained lost past the terminal time limit
 					c.setClientHeartbeat(Heartbeat.Terminal);
-					serverUI.displayDesktopClientTable(dtClientAL);
+//					serverUI.displayDesktopClientTable(dtClientAL);
+					fireClientChanged(this, ClientType.DESKTOP, ClientEventType.TERMINAL, c);
 				
 					String mssg = String.format("Client %d heart beat terminal, not detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);
@@ -384,7 +402,8 @@ public class ClientManager implements ActionListener
 				{
 					//Heart beat was not detected
 					c.setClientHeartbeat(Heartbeat.Lost);
-					serverUI.displayDesktopClientTable(dtClientAL);
+//					serverUI.displayDesktopClientTable(dtClientAL);
+					fireClientChanged(this, ClientType.DESKTOP, ClientEventType.LOST, c);
 				
 					String mssg = String.format("Client %d heart beat lost, not detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);
@@ -397,7 +416,8 @@ public class ClientManager implements ActionListener
 					//Heart beat was lost and is still lost or went terminal and re-recovered prior to
 					//killing the client
 					c.setClientHeartbeat(Heartbeat.Active);
-					serverUI.displayDesktopClientTable(dtClientAL);
+//					serverUI.displayDesktopClientTable(dtClientAL);
+					fireClientChanged(this, ClientType.DESKTOP, ClientEventType.ACTIVE, c);
 				
 					String mssg = String.format("Client %d heart beat recovered, detected in %d seconds",
 													c.getClientID(), timeSinceLastHeartbeat/1000);
@@ -418,7 +438,7 @@ public class ClientManager implements ActionListener
 			addLogMessage(mssg);
 		}
 		
-		for(int index = webClientAL.size()-1; index>=0; index--)
+		for(int index = webClientAL.size()-1; index >= 0; index--)
 		{
 			WebClient wc = webClientAL.get(index);
 			long currentTime = new Date().getTime();
@@ -428,8 +448,47 @@ public class ClientManager implements ActionListener
 			}
 		}
 		
-		serverUI.displayWebsiteClientTable(webClientAL);
-	}	
+//		serverUI.displayWebsiteClientTable(webClientAL);
+		fireClientChanged(this, ClientType.WEB, ClientEventType.KILLED, null);
+	}
+	
+	 //List of registered listeners for Client change events
+    private ArrayList<ClientListener> listeners;
+    
+    /** Register a listener for database DataChange events */
+    synchronized public void addClientListener(ClientListener l)
+    {
+    	if (listeners == null)
+    		listeners = new ArrayList<ClientListener>();
+    	listeners.add(l);
+    }  
+
+    /** Remove a listener for server DataChange */
+    synchronized public void removeClientListener(ClientListener l)
+    {
+    	if (listeners == null)
+    		listeners = new ArrayList<ClientListener>();
+    	listeners.remove(l);
+    }
+    
+    /** Fire a Data ChangedEvent to all registered listeners */
+    protected void fireClientChanged(Object source, ClientType type, ClientEventType eventType, Object eventObject)
+    {
+    	// if we have no listeners, do nothing...
+    	if (listeners != null && !listeners.isEmpty())
+    	{
+    		// create the event object to send
+    		ClientEvent event = new ClientEvent(source, type, eventType, eventObject);
+
+    		// make a copy of the listener list in case anyone adds/removes listeners
+    		ArrayList<ClientListener> targets;
+    		synchronized (this) { targets = (ArrayList<ClientListener>) listeners.clone(); }
+
+    		// walk through the cloned listener list and call the dataChanged method in each
+    		for(ClientListener l:targets)
+    			l.clientChanged(event);
+    	}
+    }
 	
 	private class ClientTimerListener implements ActionListener
 	{
@@ -438,18 +497,5 @@ public class ClientManager implements ActionListener
 		{
 			checkClientHeartbeat();
 		}
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) 
-	{
-		if(e.getSource() == serverUI.btnKillClient)
-		{
-			DesktopClient c = serverUI.getClientTableSelection();
-			if(c != null)
-			{
-				killClient(c);
-			}
-		}	
 	}
 }

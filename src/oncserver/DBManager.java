@@ -300,7 +300,7 @@ public class DBManager
 		public void actionPerformed(ActionEvent arg0) 
 		{
 			//always command a save of the user database regardless of saved status. This means
-			//if a user logs in and changes their profile offseason, the changes are still save
+			//if a user logs in and changes their profile offseason, the changes are still saved
 			//regardless
 			userDB.save();
 			
