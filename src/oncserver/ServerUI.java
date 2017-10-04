@@ -248,11 +248,46 @@ public class ServerUI extends JPanel implements ClientListener
 	{
 		if(ce.getEventType() == ClientEventType.MESSAGE)
 		{
-			String mssg = (String) ce.getObject1();
+			String mssg = (String) ce.getObject();
 			addLogMessage(mssg);
 		}
 		else if(ce.getClientType() == ClientType.DESKTOP)
 		{
+			DesktopClient c = (DesktopClient) ce.getObject();
+			
+			if(ce.getEventType() == ClientEventType.CONNECTED)
+			{
+				addLogMessage(String.format("Client %d connected, ip= %s", 
+								c.getClientID(), c.getClientRemoteSocketAddress()));
+			}
+			else if(ce.getEventType() == ClientEventType.TERMINAL)
+			{
+				long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
+				String mssg = String.format("Client %d heart beat terminal, not detected in %d seconds",
+												c.getClientID(), timeSinceLastHeartbeat/1000);
+				addLogMessage(mssg);
+			}
+			else if(ce.getEventType() == ClientEventType.LOST)
+			{
+				long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
+				String mssg = String.format("Client %d heart beat lost, not detected in %d seconds",
+												c.getClientID(), timeSinceLastHeartbeat/1000);
+				addLogMessage(mssg);
+			}
+			else if(ce.getEventType() == ClientEventType.ACTIVE)
+			{
+				long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
+				String mssg = String.format("Client %d heart beat recovered, detected in %d seconds",
+												c.getClientID(), timeSinceLastHeartbeat/1000);
+				addLogMessage(mssg);
+			}
+			else if(ce.getEventType() == ClientEventType.DIED)
+			{
+				String mssg = String.format("Client %d heart beat remained terminal, client killed", 
+											c.getClientID());					
+				addLogMessage(mssg);
+			}
+			
 			desktopClientTM.fireTableDataChanged();
 		}
 		else if(ce.getClientType() == ClientType.WEB)

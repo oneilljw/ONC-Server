@@ -141,6 +141,7 @@ public class DesktopClient extends Thread
     }
     
     int getClientID() { return id; }
+    String getClientRemoteSocketAddress() { return socket.getRemoteSocketAddress().toString(); }
     ClientState getClientState() { return state; }
     Heartbeat getClientHeartbeat() { return heartbeat; }
     String getClientVersion() { return version; }
@@ -866,10 +867,12 @@ public class DesktopClient extends Thread
     
     void closeClientSocket()
     {
-    	try {
+    	try 
+    	{
         	socket.close();
         } 
-    	catch (IOException e) {
+    	catch (IOException e) 
+    	{
     		String logMssg = String.format("Client %d: Close Socket IOException: %s", id, e.getMessage());
         	clientMgr.addLogMessage(logMssg);
         }

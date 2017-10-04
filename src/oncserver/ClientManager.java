@@ -19,7 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.HttpExchange;
 
-public class ClientManager
+public class ClientManager extends ClientEventGenerator
 {
 	private static final boolean CLIENT_TIMER_ENABLED = true;
 	private static final int CLIENT_HEARTBEAT_SAMPLE_RATE = 1000 * 60 * 1; //one minute
@@ -99,13 +99,8 @@ public class ClientManager
 	{
 		DesktopClient c = new DesktopClient(socket, clientID);
 		dtClientAL.add(c);
-//		serverUI.displayDesktopClientTable(dtClientAL);
 		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.CONNECTED, c);
 		c.start();
-//		serverUI.addLogMessage(String.format("Client %d connected, ip= %s", 
-//				clientID, socket.getRemoteSocketAddress().toString()));
-		fireClientChanged(this, ClientType.DESKTOP, ClientEventType.MESSAGE,String.format("Client %d connected, ip= %s", 
-				clientID, socket.getRemoteSocketAddress().toString()));
 		clientID++;
 		
 		return c; 
@@ -390,25 +385,13 @@ public class ClientManager
 				{
 					//Heart beat was lost and remained lost past the terminal time limit
 					c.setClientHeartbeat(Heartbeat.Terminal);
-//					serverUI.displayDesktopClientTable(dtClientAL);
 					fireClientChanged(this, ClientType.DESKTOP, ClientEventType.TERMINAL, c);
-				
-					String mssg = String.format("Client %d heart beat terminal, not detected in %d seconds",
-													c.getClientID(), timeSinceLastHeartbeat/1000);
-				
-					addLogMessage(mssg);
 				}
 				else if(c.getClientHeartbeat() == Heartbeat.Active && timeSinceLastHeartbeat > DESKTOP_CLIENT_INACTIVE_LIMIT)
 				{
 					//Heart beat was not detected
 					c.setClientHeartbeat(Heartbeat.Lost);
-//					serverUI.displayDesktopClientTable(dtClientAL);
-					fireClientChanged(this, ClientType.DESKTOP, ClientEventType.LOST, c);
-				
-					String mssg = String.format("Client %d heart beat lost, not detected in %d seconds",
-													c.getClientID(), timeSinceLastHeartbeat/1000);
-				
-					addLogMessage(mssg);		
+					fireClientChanged(this, ClientType.DESKTOP, ClientEventType.LOST, c);		
 				}
 				else if((c.getClientHeartbeat() == Heartbeat.Lost || c.getClientHeartbeat() == Heartbeat.Terminal) && 
 							timeSinceLastHeartbeat < DESKTOP_CLIENT_INACTIVE_LIMIT)
@@ -416,13 +399,7 @@ public class ClientManager
 					//Heart beat was lost and is still lost or went terminal and re-recovered prior to
 					//killing the client
 					c.setClientHeartbeat(Heartbeat.Active);
-//					serverUI.displayDesktopClientTable(dtClientAL);
-					fireClientChanged(this, ClientType.DESKTOP, ClientEventType.ACTIVE, c);
-				
-					String mssg = String.format("Client %d heart beat recovered, detected in %d seconds",
-													c.getClientID(), timeSinceLastHeartbeat/1000);
-				
-					addLogMessage(mssg);		
+					fireClientChanged(this, ClientType.DESKTOP, ClientEventType.ACTIVE, c);		
 				}
 			}
 		}
@@ -433,9 +410,6 @@ public class ClientManager
 			kc.setClientState(ClientState.Ended);
 			kc.closeClientSocket();
 			clientDied(kc);
-			
-			String mssg = String.format("Client %d heart beat remained terminal, client killed", kc.getClientID());					
-			addLogMessage(mssg);
 		}
 		
 		for(int index = webClientAL.size()-1; index >= 0; index--)
@@ -451,44 +425,6 @@ public class ClientManager
 //		serverUI.displayWebsiteClientTable(webClientAL);
 		fireClientChanged(this, ClientType.WEB, ClientEventType.KILLED, null);
 	}
-	
-	 //List of registered listeners for Client change events
-    private ArrayList<ClientListener> listeners;
-    
-    /** Register a listener for database DataChange events */
-    synchronized public void addClientListener(ClientListener l)
-    {
-    	if (listeners == null)
-    		listeners = new ArrayList<ClientListener>();
-    	listeners.add(l);
-    }  
-
-    /** Remove a listener for server DataChange */
-    synchronized public void removeClientListener(ClientListener l)
-    {
-    	if (listeners == null)
-    		listeners = new ArrayList<ClientListener>();
-    	listeners.remove(l);
-    }
-    
-    /** Fire a Data ChangedEvent to all registered listeners */
-    protected void fireClientChanged(Object source, ClientType type, ClientEventType eventType, Object eventObject)
-    {
-    	// if we have no listeners, do nothing...
-    	if (listeners != null && !listeners.isEmpty())
-    	{
-    		// create the event object to send
-    		ClientEvent event = new ClientEvent(source, type, eventType, eventObject);
-
-    		// make a copy of the listener list in case anyone adds/removes listeners
-    		ArrayList<ClientListener> targets;
-    		synchronized (this) { targets = (ArrayList<ClientListener>) listeners.clone(); }
-
-    		// walk through the cloned listener list and call the dataChanged method in each
-    		for(ClientListener l:targets)
-    			l.clientChanged(event);
-    	}
-    }
 	
 	private class ClientTimerListener implements ActionListener
 	{
