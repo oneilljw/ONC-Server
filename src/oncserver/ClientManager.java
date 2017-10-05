@@ -245,7 +245,7 @@ public class ClientManager extends ClientEventGenerator
 		
 		if(bValid)	//redraw table, we now know who the client is
 //			serverUI.displayDesktopClientTable(dtClientAL);
-			fireClientChanged(this, ClientType.DESKTOP, ClientEventType.ACTIVE, null);
+			fireClientChanged(this, ClientType.DESKTOP, ClientEventType.LOGIN, null);
 	}
 	
 	void clientStateChanged(ClientType type, ClientEventType eventType, Object client)

@@ -837,7 +837,7 @@ public class DesktopClient extends Thread
                 	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstName() + " " + clientUser.getLastName() + 
              				  " is offline";
                 	clientMgr.notifyAllOtherClients(this, mssg);
-                	 state = ClientState.Ended;
+                	state = ClientState.Ended;
                 	
                 	clientMgr.clientLoggedOut(this);  
                 }
@@ -945,9 +945,9 @@ public class DesktopClient extends Thread
     		
     		String mssg = "UPDATED_USER" + loginJson;
     		clientMgr.notifyAllOtherClients(this, mssg);
-
+    		
     		clientMgr.clientLoginAttempt(true, String.format("Client %d, %s %s login request sucessful",
-    															id, clientUser.getFirstName(), clientUser.getLastName()));	
+    															id, clientUser.getFirstName(), clientUser.getLastName()));
     	}
     	
     	return value;
