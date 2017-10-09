@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>ONC Gift Partners</title>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script>
+	var currYear;
+	var cyPartJson = [];
+	
+	sessionStorage.setItem('token', "REPLACE_TOKEN");
+	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
+	
+    $( document ).ready(function()
+    {
+    	//update the nav bar links with token and set home link presence
+    	if(sessionStorage.getItem('homelinkVisibility') === 'visible')
+    	{
+    		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+    				+'&year=' + sessionStorage.getItem('curryear')
+    				+'&famref=' + sessionStorage.getItem('famref');
+    		
+    		var profileli = document.getElementById('profileli');
+    		profileli.parentNode.removeChild(profileli);
+    	}
+    	else
+    	{
+    		var homelinkli = document.getElementById('homelinkli');
+    		homelinkli.parentNode.removeChild(homelinkli);
+    	}
+ 
+  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
+		
+    	//get the list of years from the data base so we can determine current year
+    	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+    	$.getJSON('dbStatus', dbyearsparams, function(data)
+    	{	
+			currYear = data[data.length-1].id;
+    		getPartnersFromServer(currYear);
+    		
+    	});
+    	
+     // Write on keyup event of keyword current year seach input element
+        $("#partnersearch").keyup(function(){
+            _this = this;
+            // Show only matching TR's, hide rest of them
+            $.each($("#partnertable tbody tr"), function()
+            {
+                if($(this).find('td').eq(1).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
+                   $(this).hide();
+                else
+                   $(this).show();                
+            });
+        });
+     
+        $.getJSON('getstatus', dbyearsparams, function(status)
+        {
+        	if(status.userstatus === 'Update_Profile')
+            {
+        		showEditProfileDialog();
+        		window.location=document.getElementById('editprofileanchor').href;
+            }
+    	});
+    });
+    
+    function getPartnersFromServer(year)
+    {  	
+    	//get updated agentJson from server and place into group combobox. agentid =-1 defaults
+    	//to the logged in user
+    	var partnerparams = "token=" + sessionStorage.getItem("token") +
+    					  "&year=" + year +
+    					  "&callback=?";
+    	
+    	$.getJSON('partners', partnerparams, function(data)
+    	{
+    		partnerJson = data;
+    		updatePartnerTable();
+    	});    	
+    }
+    
+    function updatePartnerTable()
+    {
+    	$("#partnertbody").empty();
+    	var partnerType = document.getElementById('type').value;
+    	var partnerStatus = document.getElementById('status').value;
+    	var partnerCollection = document.getElementById('collection').value;
+    	
+    	var count = 0;
+    	for(var i=0; i<partnerJson.length; i++)
+		{
+    		if((partnerType === 'Any' || partnerType === partnerJson[i].type) &&
+    			(partnerStatus === 'Any' || partnerStatus === partnerJson[i].status) &&
+    			(partnerCollection === 'Any' || partnerCollection === partnerJson[i].collection))
+    		{	
+    			addTableRow(partnerJson[i], document.getElementById('partnertable'), "Edit");	//add row to table
+    			count++;
+			}	
+		}
+    	
+    	//clear the search box
+    	var searchbox = document.getElementById('partnersearch');
+    	searchbox.value = "";
+    	
+    	//set the quanity in the table
+    	document.getElementById('count').innerHTML = 'Gift Partners: ' + count.toString();
+    }
+    
+    function addTableRow(partner, buttontext)
+    {
+        if (!document.getElementsByTagName) return;
+        	
+        var partnerinfo = [partner.id, partner.lastName, partner.type, partner.status, partner.collection];
+        
+        var cellwidth = ['88px', '424px', '104px', '172px', '80px', '56px'];
+        
+	    var tabBody = partnertable.getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < partnerinfo.length; index++)	//create the family info cells
+        {
+        	cell = document.createElement("td");
+        	cell.appendChild(document.createTextNode(partnerinfo[index]));
+        	cell.style.width = cellwidth[index];
+        	row.appendChild(cell);
+        }
+        
+        btn = document.createElement("button");
+        btn.innerHTML = 'Edit';
+        btn.style.width = cellwidth[index];
+        btn.onclick=function() {partnerAction(partner.id);};
+        
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+
+    function partnerAction(targetID)
+    {
+    	sessionStorage.setItem("targetid", targetID);
+		var params = {}
+		
+		params["token"] = sessionStorage.getItem('token');
+		params["targetid"] = targetID;
+		
+		post('partnerupdate', params);
+    }
+    
+    function newPartner()
+    {
+    	sessionStorage.setItem("targetid", "NNA");
+    	
+    	var params = {}
+		params["token"] = sessionStorage.getItem('token');
+		
+		post('newpartner', params);
+    }
+    
+    function filterChanged()
+    {
+    	updatePartnerTable();
+    }
+    
+    function onResetFilters()
+    {
+    	var typeElement = document.getElementById('type');
+    	var statusElement = document.getElementById('status');
+    	var collectionElement = document.getElementById('collection');
+    	
+        typeElement.value = 'Any';
+        statusElement.value = 'Any';
+        collectionElement.value = 'Any';
+		
+        updatePartnerTable();
+    }
+    
+    function showEditProfileDialog() 
+    {
+    	var params = "token=" + sessionStorage.getItem("token") + "&" + "callback=?";
+			
+    	$.getJSON('getuser', params, function(user)
+    	{
+    		userJson = user;
+    		if(userJson.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+    		else if(userJson.lastname !== '')
+    		{
+    			document.getElementById('userfirstname').value = user.firstname;
+    	    	document.getElementById('userlastname').value = user.lastname;
+    	    	document.getElementById('userorg').value = user.org;
+    	    	document.getElementById('usertitle').value = user.title;
+    	    	document.getElementById('useremail').value = user.email;
+    	    	document.getElementById('userphone').value = user.phone;
+    		}
+    	});
+    }
+    
+    function onChangePW() 
+    {
+    	if(validate())
+    	{
+			var params = {}	
+			params["token"] = sessionStorage.getItem('token');
+			params["field1"] = document.getElementById('currpw').value;
+			params["field2"] = document.getElementById('newpw').value;
+    		$.post('reqchangepw', params, function(response)
+    		{
+    			document.getElementById('message').textContent= response;
+    		});
+    		
+    		document.getElementById('currpw').value = "";
+	    	document.getElementById('newpw').value = "";
+	    	document.getElementById('verifypw').value = "";
+    		window.location=document.getElementById('closepopup').href;
+    	}
+    }
+    
+    function onUpdateProfile()
+    {
+    	if(document.getElementById('userfirstname').value !== userJson.firstname ||
+    		document.getElementById('userlastname').value !== userJson.lastname ||
+    		 document.getElementById('userorg').value !== userJson.org ||
+    		  document.getElementById('usertitle').value !== userJson.title ||
+    		   document.getElementById('useremail').value !== userJson.email ||
+    		    document.getElementById('userphone').value !== userJson.phone)
+    	{
+    		var params = "token=" + sessionStorage.getItem("token")
+			+ "&" + "firstname=" + document.getElementById('userfirstname').value
+			+ "&" + "lastname=" + document.getElementById('userlastname').value
+			+ "&" + "org=" + document.getElementById('userorg').value
+			+ "&" + "title=" + document.getElementById('usertitle').value
+			+ "&" + "email=" + document.getElementById('useremail').value
+			+ "&" + "phone=" + document.getElementById('userphone').value
+			+ "&" + "callback=?"
+		
+			$.getJSON('updateuser', params, function(mssgJson)
+			{
+				document.getElementById('message').textContent= mssgJson.message;
+			});
+		    		
+		    window.location=document.getElementById('closepopup').href;
+		}
+		else
+		{
+		    onProfileNotChanged();
+		}
+    }
+    
+    function onProfileNotChanged()
+    {
+		var params = {}	
+		params["token"] = sessionStorage.getItem('token');
+		$.post('profileunchanged', params, function(response)
+		{
+			document.getElementById('message').textContent= response.message;
+		}, "jsonp");
+		
+		window.location=document.getElementById('closepopup').href;
+    }
+    
+    function onCancel()
+    {
+		window.location=document.getElementById('closepopup').href;
+    }
+	
+	function validate()
+    {
+		var mssgEl = document.getElementById("pw_mssg");
+    	var currpwEl = document.getElementById("currpw");
+        var pass1El = document.getElementById("newpw");
+        var pass2El = document.getElementById("verifypw");
+        var ok = true;
+        
+        if(currpwEl.value == "")
+        {
+        	//alert("current password field empty");
+            currpwEl.style.borderColor = "#E34234";
+            
+            mssgEl.style.color = "Red";
+            mssgEl.textContent = "Current password not provided, please try again!";
+            ok = false;
+        }
+        else if(pass1El.value !== pass2El.value)
+        {
+            //alert("New and Verify Passwords do not match");
+            pass1El.style.borderColor = "#E34234";
+            pass2El.style.borderColor = "#E34234";
+            
+            mssgEl.style.color = "Red";
+            mssgEl.textContent = "New and Verify passwords don't match, please try again!";
+            ok = false;
+        }
+
+        return ok;
+    }
+	
+	function onSessionTimeout()
+	{
+		 window.location.assign('timeout');
+	}
+    
+	function post(path, params, method) 
+	{
+	    method = method || "post"; // Set method to post by default if not specified.
+
+	    // The rest of this code assumes you are not using a library.
+	    // It can be made less wordy if you use one.
+	    var form = document.createElement("form");
+	    form.setAttribute("method", method);
+	    form.setAttribute("action", path);
+
+	    for(var key in params) 
+	    {
+	    	if(params.hasOwnProperty(key))
+	        {
+	            var hiddenField = document.createElement("input");
+	            hiddenField.setAttribute("type", "hidden");
+	            hiddenField.setAttribute("name", key);
+	            hiddenField.setAttribute("value", params[key]);
+
+	        	form.appendChild(hiddenField);
+	        }
+	    }
+
+	    document.body.appendChild(form);
+	    form.submit();
+	}
+    </script>
+    <style type="text/css">         
+    	.constrainer 
+        {
+         	width: 90%;
+			margin-left: auto;
+			margin-right: auto;
+            background-color: #3CB371;
+            border: 1px solid black;
+        }
+        .constrainer table { overflow-y: scroll; }
+        .constrainer thead { display: table-row; }
+        .constrainer tbody
+        {
+            overflow-x: scroll;
+            display: block;
+            height: 400px;
+        }
+
+        .onccol { width: 88px; }
+        .namecol { width: 424px; }
+        .typecol { width: 104px; }
+        .statcol { width: 172px; }
+        .collcol { width: 80px; }
+        .actcol { width: 56px; }
+        
+        /* only styling below here */
+        table { border-collapse: collapse; }       
+        th, td { border: 1px solid gray; }
+        th 
+        {
+            background-color: lightgrey;
+            border-width: 1px;
+        }
+        td { border-width: 1px; }
+        tr:first-child td { border-top-width: 0; }
+        tr:nth-child(odd) { background-color: #ffffff; }
+        tr:nth-child(even) { background-color: lightgrey; } 
+        .controlbar
+		{
+			width:90%;
+			margin:0 auto;
+			background-color: #3CB371;
+			border: 1px solid black;
+		}
+		#newbar { text-align: right; }
+		.textDialog 
+		{
+			position: fixed;
+			font-family: Arial, Helvetica, sans-serif;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			background: rgba(5,5,5,0.4);
+			z-index: 99999;
+			opacity:0;
+			-webkit-transition: opacity 400ms ease-in;
+			-moz-transition: opacity 400ms ease-in;
+			transition: opacity 400ms ease-in;
+			pointer-events: none;
+		}
+		.textDialog:target 
+		{
+			opacity:1;
+			pointer-events: auto;
+		}
+		.textDialog > div 
+		{
+			width: 700px;
+			height: 400px;
+			position: relative;
+			margin: 10% auto;
+			padding: 5px 10px 5px 10px;
+			border-radius: 10px;
+			background: #fff;
+			background: -moz-linear-gradient(#fff, #999);
+			background: -webkit-linear-gradient(#fff, #999);
+			background: -o-linear-gradient(#fff, #999);
+		}
+		.textDialog label
+		{
+			float: left;
+    		text-align: right;
+    		margin-right: 0.5em;
+    		display: block;
+    		color: black;
+    		font-size: 85%;
+		}
+		dl
+		{	height:300px;
+			overflow-y:scroll;
+		}
+		dt
+		{
+			font-weight: bold;
+		}
+		dt:before
+		{
+			content: '\A';
+    		white-space: pre;
+		}
+		dd
+		{
+			font-style: italic;
+		}
+		#filterspan
+		{
+			display: inline-block;
+    		margin-left: 40px;
+		}
+    </style>
+</head>
+<body>
+  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <div id="topbar" class="topbar">
+    <img src="onclogo" height="55" width="75"/>
+	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Data Management System</span><br>
+	<span id="message">USER_MESSAGE</span></p>
+  </div>
+  <nav>
+   <ul>
+	    <li id="homelinkli"><a id='homelink'>Home</a></li>
+	</ul>
+	<ul class='floatright'>
+		<li id='profileli'><a href="#">Profile <span class="caret"></span></a>
+		  <div>
+		    <ul>
+			  <li><a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a></li>
+			  <li><a href="#chgpwdlg">Change Password</a></li>
+		    </ul>
+		  </div>
+	    </li>
+	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	</ul>
+  </nav>
+  <div class='controlbar'>
+		<label id='count'>Gift Partners: 0</label>
+		<span id='filterspan'>
+		  <label for='type'>Type:</label>
+		  <select id="type" title="Type" name="type" onchange="filterChanged()">
+		    <option value="Any">Any</option>
+    	    <option value="Business">Business</option>
+		    <option value="Church">Church</option>
+		    <option value="School">School</option>
+		    <option value="Clothing">Clothing</option>
+		    <option value="Coat">Coat</option>
+		    <option value="ONC Shopper">ONC Shopper</option>
+		  </select>
+		  <label for='status'>Status:</label>
+		  <select id="status" title="status" name="status" onchange="filterChanged()">
+		    <option value="Any">Any</option>
+    	    <option value="No Action Yet">No Action Yet</option>
+		    <option value="1st Email Sent">1st Email Sent</option>
+		    <option value="Responded">Responded</option>
+		    <option value="2nd Email Sent">2nd Email Sent</option>
+		    <option value="Called, Left Mssg">Called, Left Mssg</option>
+		    <option value="Confirmed">Confirmed</option>
+		    <option value="Not Participating">Not Participating</option>
+		  </select>
+		  <label for='collection'>Collection</label>
+		  <select id="collection" title="collection" name="collection" onchange="filterChanged()">
+		    <option value="Any">Any</option>
+		    <option value="General">General</option>
+		    <option value="Ornament">Ornament</option>
+		    <option value="Meals">Meals</option>
+		    <option value="Unknown">Unknown</option>
+		  </select>
+		  <button id="reset" onclick="onResetFilters()">Reset</button>
+		</span>
+		<span class='floatright'>
+		  <label for="partnersearch">Search For:</label>
+		  <input type="text" id="partnersearch" placeholder="Type to search..." />
+		</span>
+  </div>
+  <div class="constrainer">
+	<table id="partnertable">
+      <thead>
+        <tr>
+       		<th class='onccol'>Partner ID</th>
+       		<th class='namecol'>Name</th>
+       		<th class='typecol'>Type</th>
+       		<th class='statcol'>Status</th>
+        	<th class='collcol'>Collection</th>
+        	<th class='actcol'>Action</th>
+        </tr>
+      </thead>
+      <tbody id='partnertbody'>
+      </tbody>
+	</table>
+  </div>
+  <div id='newbar' class='controlbar'>
+    <button id="new" onclick="newPartner()">Add New Partner</button>
+  </div>
+  <!-- Edit Profile Dialog -->
+  <div id="editProfile" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Update ONC Profile</span>
+		</div>
+    	<p><label class='lbl_ep' for="userfirstname">First Name:</label>
+    	<input class='inp_ep' type="text" id="userfirstname" name="firstname" autofocus></p>
+    	<p><label class='lbl_ep' for="userlastname">Last Name:</label>
+    	<input class='inp_ep' type="text" id="userlastname" name="lastname"><br></p>
+    	<p><label class='lbl_ep' for="userorg" >Organization:</label>
+    	<input class='inp_ep' type="text" id="userorg" name="org"></p>
+    	<p><label class='lbl_ep' for="usertitle">Title:</label>
+    	<input class='inp_ep' type="text" id="usertitle" name="title"><br></p>
+    	<p><label class='lbl_ep' for="useremail">E-Mail:</label>
+    	<input class='inp_ep' type="text" id="useremail" name="email"></p>
+    	<p><label class='lbl_ep' for="userphone">Phone:</label>
+    	<input class='inp_ep' type="text" id="userphone" name="phone"><br></p>
+    	<div id='buttonbar'>
+      	  <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+      	  <button id="update" onclick="onUpdateProfile()">Update</button>
+    	</div> 
+	</div>
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div id='inner'>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="submit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>
+</body>
+</html>

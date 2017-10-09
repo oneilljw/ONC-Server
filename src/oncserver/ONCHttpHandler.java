@@ -43,7 +43,8 @@ import com.google.gson.Gson;
 public class ONCHttpHandler implements HttpHandler
 {
 	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
-	private static final String ONC_ELF_PAGE_HTML = "ONC.htm";
+	private static final String ONC_FAMILY_PAGE_HTML = "ONC.htm";
+	private static final String ONC_PARTNER_TABLE_HTML = "PartnerTable.htm";
 	private static final String UPDATE_HTML = "NewEdit.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
@@ -241,6 +242,17 @@ public class ONCHttpHandler implements HttpHandler
     		int groupID = Integer.parseInt((String) params.get("groupid"));
     		
     		HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
+    	else if(requestURI.contains("/partners"))
+    	{
+//    		Set<String> keyset = params.keySet();
+//			for(String key:keyset)
+//				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+			
+    		int year = Integer.parseInt((String) params.get("year"));
+    		
+    		HtmlResponse response = ServerPartnerDB.getPartnersJSONP(year, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/references"))
@@ -1135,7 +1147,7 @@ public class ONCHttpHandler implements HttpHandler
 			//read the onc page html
 			try
 			{
-				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_ELF_PAGE_HTML));
+				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_FAMILY_PAGE_HTML));
 				homePageHTML = homePageHTML.replace("USER_NAME", username);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
 				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
@@ -1145,10 +1157,27 @@ public class ONCHttpHandler implements HttpHandler
 			}
 			catch (IOException e) 
 			{
-				return "<p>ONC Elf Page Unavailable</p>";
+				return "<p>ONC Family Page Unavailable</p>";
 			}
 		}
-		else
+		else if(wc.getWebUser().getPermission() == UserPermission.General)
+		{
+			//read the onc page html
+			try
+			{
+				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_PARTNER_TABLE_HTML));
+				homePageHTML = homePageHTML.replace("USER_NAME", username);
+				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
+				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+				homePageHTML = homePageHTML.replace("HOME_LINK_VISIBILITY", "hidden");
+				return homePageHTML;
+			}
+			catch (IOException e) 
+			{
+				return "<p>Partner Table Unavailable</p>";
+			}
+		}
+		else	//user permission = AGENT
 		{
 			try
 			{

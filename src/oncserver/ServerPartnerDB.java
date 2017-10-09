@@ -68,6 +68,26 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		return response;	
 	}
 	
+	static HtmlResponse getPartnersJSONP(int year, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfWebPartners = new TypeToken<ArrayList<ONCWebPartner>>(){}.getType();
+		
+		List<ONCPartner> searchList = partnerDB.get(year-BASE_YEAR).getList();
+		ArrayList<ONCWebPartner> webPartnerList = new ArrayList<ONCWebPartner>();
+		
+		for(ONCPartner p :  partnerDB.get(year-BASE_YEAR).getList())
+			webPartnerList.add(new ONCWebPartner(p));
+		
+//		//sort the list by HoH last name
+//		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
+		
+		String response = gson.toJson(webPartnerList, listOfWebPartners);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
 	String getPartner(int year, String zID)
 	{
 		int id = Integer.parseInt(zID);
