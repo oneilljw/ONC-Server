@@ -8,7 +8,9 @@ import java.util.List;
 
 import ourneighborschild.Address;
 import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCPartner;
+import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
@@ -84,6 +86,29 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		String response = gson.toJson(webPartnerList, listOfWebPartners);
 
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	static HtmlResponse getFamilyJSONP(int year, String partnerID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		String response;
+	
+		List<ONCPartner> pAL = partnerDB.get(year-BASE_YEAR).getList();
+		
+		int index=0;
+		while(index<pAL.size() && pAL.get(index).getID() != (Integer.parseInt(partnerID)))
+			index++;
+		
+		if(index<pAL.size())
+		{
+			ONCPartner partner = pAL.get(index);
+			response = gson.toJson(partner, ONCPartner.class);
+		}
+		else
+			response = "";
+		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}

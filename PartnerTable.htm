@@ -11,6 +11,7 @@
 	
 	sessionStorage.setItem('token', "REPLACE_TOKEN");
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
+	sessionStorage.setItem('curryear', new Date().getFullYear().toString());
 	
     $( document ).ready(function()
     {
@@ -135,13 +136,13 @@
         tabBody.appendChild(row);
     }
 
-    function partnerAction(targetID)
+    function partnerAction(partnerID)
     {
-    	sessionStorage.setItem("targetid", targetID);
+    	sessionStorage.setItem("partnerid", partnerID);
 		var params = {}
 		
 		params["token"] = sessionStorage.getItem('token');
-		params["targetid"] = targetID;
+		params["partnerid"] = partnerID;
 		
 		post('partnerupdate', params);
     }

@@ -44,7 +44,8 @@ public class ONCHttpHandler implements HttpHandler
 {
 	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
 	private static final String ONC_FAMILY_PAGE_HTML = "ONC.htm";
-	private static final String ONC_PARTNER_TABLE_HTML = "PartnerTable.htm";
+	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
+	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
 	private static final String UPDATE_HTML = "NewEdit.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
@@ -405,6 +406,28 @@ public class ONCHttpHandler implements HttpHandler
 					HTTPCode.Ok);
     		sendHTMLResponse(t, htmlresponse);
     	}
+    	else if(requestURI.contains("/getpartner"))
+    	{
+    		//update the client time stamp
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
+    		
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		{
+    			wc.updateTimestamp();
+    			int year = Integer.parseInt((String) params.get("year"));
+        		String partnerID = (String) params.get("partnerid");
+        		
+        		htmlResponse = ServerPartnerDB.getFamilyJSONP(year, partnerID, (String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
+    		sendHTMLResponse(t, htmlResponse);
+    	}
     	else if(requestURI.contains("/profileunchanged"))
     	{	
     		ClientManager clientMgr = ClientManager.getInstance();
@@ -729,6 +752,28 @@ public class ONCHttpHandler implements HttpHandler
     			
     			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
     					(String) params.get("targetid"));
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/partnerupdate"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    		
+    		if((wc=clientMgr.findClient(sessionID)) != null)
+    		{
+    			wc.updateTimestamp();
+    			try {	
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_UPDATE_HTML));
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
     		}
     		else
     			response = invalidTokenReceived();
@@ -1165,7 +1210,7 @@ public class ONCHttpHandler implements HttpHandler
 			//read the onc page html
 			try
 			{
-				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_PARTNER_TABLE_HTML));
+				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
 				homePageHTML = homePageHTML.replace("USER_NAME", username);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
 				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());

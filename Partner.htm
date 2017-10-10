@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>ONC Partner Page</title>
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+  <script> 
+  	var errorColor = '#FF9999';
+  	
+  	$( document ).ready(function()
+	{
+  		//set the hidden values
+  		document.getElementById('year').value= new Date().getFullYear().toString();
+  		document.getElementById('token').value= sessionStorage.getItem("token");
+  		document.getElementById('partnerid').value= sessionStorage.getItem("partnerid");
+  		
+  		//update the nav bar links with token
+  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
+  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
+  		
+  		if(sessionStorage.getItem("partnerid") !== "NNA")
+  		{
+  			partnerparams = "token=" + sessionStorage.getItem("token") + "&" +
+				"year=" + sessionStorage.getItem('curryear') + "&" +
+				"partnerid=" + sessionStorage.getItem("partnerid") + "&" +
+				"callback=?";
+
+			$.getJSON('getpartner', partnerparams, function(partner)
+			{
+				//fill in partner info here
+				document.getElementById('partln').value= partner.lastName;
+				document.getElementById('type').value= partner.type;
+				document.getElementById('status').value= partner.status;
+				document.getElementById('collection').value= partner.collection;
+			});
+  		}	
+  		
+  		$(function() {
+  		    $("form input").keypress(function (e) {
+  		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+  		            $('button[type=submit] .default').click();
+  		            return false;
+  		        } else {
+  		            return true;
+  		        }
+  		    });
+  		});
+  		
+  		$('html').bind('keypress', function(e)
+  		{
+  			if(e.keyCode == 13)
+  			{
+  				return false;
+  			}
+  		});
+	});	
+	
+	function onSessionTimeout()
+	{
+		 window.location.assign('timeout');
+	}
+
+  </script>
+  <style>
+	#submitspan {float: right;}
+	#errormessage
+	{
+		float: left;
+		font-weight: bold;
+		font-style: italic;
+		color: red;
+	}
+  </style>
+</head>
+<body>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <div id="topbar" class="topbar">
+    <img src="onclogo" height="55" width="75"/>
+    <p><span id="banner">ONC Family Assistance Referral Form</span><br>
+	<span id="message">(please complete and click Submit To ONC)</span></p>
+  </div>
+  <nav>
+    <ul>
+	    <li id="homeli"><a id='homelink'>Home</a></li>
+	</ul>
+	<ul class='floatright'>
+	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	</ul>
+  </nav>
+  <form id="updatepartner" action="updatepartner" method="post">
+  <input id='token' type="hidden" name="token">
+  <input id='year' type="hidden" name="year">
+  <input id='partnerid' type="hidden" name="partnerid">
+  <br>
+  <fieldset>
+  <legend class="legend-major">Partner Information</legend>
+  	<label id='partid'>Partner ID: 0000000</label>
+    <input id='partln' title="Name" name="partLN" type="text" size="20" placeholder="Name" required>
+    <label for='type'>Type:</label>
+	<select id="type" title="Type" name="type" onchange="filterChanged()">
+	  <option value="Any">Any</option>
+      <option value="Business">Business</option>
+	  <option value="Church">Church</option>
+	  <option value="School">School</option>
+	  <option value="Clothing">Clothing</option>
+	  <option value="Coat">Coat</option>
+	  <option value="ONC Shopper">ONC Shopper</option>
+	</select>
+	<label for='status'>Status:</label>
+	<select id="status" title="status" name="status" onchange="filterChanged()">
+	  <option value="Any">Any</option>
+      <option value="No Action Yet">No Action Yet</option>
+	  <option value="1st Email Sent">1st Email Sent</option>
+	  <option value="Responded">Responded</option>
+	  <option value="2nd Email Sent">2nd Email Sent</option>
+	  <option value="Called, Left Mssg">Called, Left Mssg</option>
+	  <option value="Confirmed">Confirmed</option>
+	  <option value="Not Participating">Not Participating</option>
+	</select>
+	<label for='collection'>Collection</label>
+	<select id="collection" title="collection" name="collection" onchange="filterChanged()">
+	  <option value="Any">Any</option>
+	  <option value="General">General</option>
+	  <option value="Ornament">Ornament</option>
+	  <option value="Meals">Meals</option>
+	  <option value="Unknown">Unknown</option>
+	</select>
+	<br>
+	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required>
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off" required>
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off">
+    <input id="city" title="City" name="city">	
+    <input id="zipcode" title="Zip Code" name="zipcode" onchange="onZipChanged('zipcode')">
+    <input id="phone" title="Phone #" name="phone" type="text" size="18" placeholder="Phone #" onchange="verifyPhoneNumber(0)" required>
+  </fieldset>
+  <br>
+  <fieldset>
+  <legend class="legend-major">Contact Information</legend>
+	<input id="firstcontactname" title="1st Contact Name" name="firstcontactname" type="text" size="20" placeholder="1st Contact Name" autocomplete="off" required>
+	<input id='firstcontactemail' title="1st Contact Email address" name="firstcontactemail" type="email" size="30" placeholder="1st Contact Email Address">
+	<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontatphone" type="text" size="18" placeholder="1st Contact Phone #" onchange="verifyPhoneNumber(0)">
+	<br>
+	<input id="secondcontactname" title="2nd Contact Name" name="secondcontactname" type="text" size="20" placeholder="2nd Contact Name" autocomplete="off" required>
+	<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="30" placeholder="2nd Contact Email Address">
+	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontatphone" type="text" size="18" placeholder="2ndContact Phone #" onchange="verifyPhoneNumber(0)">
+  </fieldset>
+  <fieldset>
+    <legend class="legend-major">Partner General, Notes & Delivery Information</legend>
+    <fieldset class="gray">
+      <textarea rows="6" cols="30" id='genTA'>Enter general partner info here</textarea>
+      <textarea rows="6" cols="30" id='specialTA'>Enter spechial partner info here</textarea>
+      <textarea rows="6" cols="30" id='delTA'>Enter partner gift delivery info here</textarea>
+    </fieldset>
+  </fieldset>
+  <fieldset>
+  	<legend>Partner performance information</legend>
+  	<input id="pyReq" title="Prior Year Req." type="text" size="10"">
+  	<input id="pYAss" title="Prior Year Assigned." type="text" size="10"">
+  	<input id="pyDel" title="Prior Year Delivered" type="text" size="10"">
+  	<input id="pyRec" title="Prior Year Received" type="text" size="10"">
+  	<input id="pyLate" title="Prior Year late." type="text" size="10"">
+  	<br>
+  	<input id="cyReq" title="Prior Year Req." type="text" size="10"">
+  	<input id="cYAss" title="Prior Year Assigned." type="text" size="10"">
+  	<input id="cyDel" title="Prior Year Delivered" type="text" size="10"">
+  	<input id="cyRec" title="Prior Year Received" type="text" size="10"">
+  	<input id="cyLate" title="Prior Year late." type="text" size="10"">
+  </fieldset>
+  <br>
+  <div>
+  	<span id="errormessage"></span>
+  	<span id="submitspan">
+  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
+  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit()>
+<!--  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #808080; color: #ffffff;" title="Click to sumbit family to ONC"> -->  
+  	</span>
+  </div>
+</form>
+<!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div id='inner'>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>    
+</body>
+</html> 

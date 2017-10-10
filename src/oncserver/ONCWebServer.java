@@ -28,9 +28,9 @@ public class ONCWebServer
 							"/adults", "/wishes", "/oncsplash", "/clearx", "/onclogo", "/oncstylesheet", 
 							"/oncdialogstylesheet", "/newfamily", "/reqchangepw", "/timeout", "/activities", "/activitydays",
 							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
-							"/changepw", "/startpage", "/vanilla", "/getuser", "/getstatus",
+							"/changepw", "/startpage", "/vanilla", "/getuser", "/getstatus", "/getpartner",
 							"/profileunchanged", "/updateuser", "/driversignin", "/signindriver",
-							"/onchomepage", "/volunteersignin", "/signinvolunteer",
+							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/partnerupdate",
 							"/contactinfo", "/jquery.js", "/favicon.ico", "/groups", "/partners", 
 							"/volunteerregistration", "/registervolunteer", "/commonfamily.js"};
 		
