@@ -33,10 +33,35 @@
 			$.getJSON('getpartner', partnerparams, function(partner)
 			{
 				//fill in partner info here
+				document.getElementById('partid').value= partner.id;
 				document.getElementById('partln').value= partner.lastName;
 				document.getElementById('type').value= partner.type;
 				document.getElementById('status').value= partner.status;
 				document.getElementById('collection').value= partner.collection;
+				document.getElementById('housenum').value= partner.houseNum;
+				document.getElementById('street').value= partner.street;
+				document.getElementById('unit').value= partner.unit;
+				document.getElementById('city').value= partner.city;
+				document.getElementById('zipcode').value= partner.zipCode;
+				document.getElementById('firstcontactname').value= partner.contact;
+				document.getElementById('firstcontactemail').value= partner.contact_email;
+				document.getElementById('firstcontactphone').value= partner.contact_phone;
+				document.getElementById('secondcontactname').value= partner.contact2;
+				document.getElementById('secondcontactemail').value= partner.contact2_email;
+				document.getElementById('secondcontactphone').value= partner.contact2_phone;
+				document.getElementById('genTA').value= partner.other;
+				document.getElementById('specialTA').value= partner.specialNotes;
+				document.getElementById('delTA').value= partner.deliverTo;
+				document.getElementById('pyReq').value= partner.pyRequested;
+				document.getElementById('pyAss').value= partner.pyAssigned;
+				document.getElementById('pyDel').value= partner.pyDelivered;
+				document.getElementById('pyRec').value= partner.pyReceivedBeforeDeadline;
+				document.getElementById('pyLate').value= partner.pyReceivedAfterDeadline;
+				document.getElementById('cyReq').value= partner.orn_req;
+				document.getElementById('cyAss').value= partner.orn_assigned;
+				document.getElementById('cyDel').value= partner.orn_delivered;
+				document.getElementById('cyRec').value= partner.orn_rec_before;
+				document.getElementById('cyLate').value= partner.orn_rec_after;
 			});
   		}	
   		
@@ -67,6 +92,10 @@
 
   </script>
   <style>
+  	.right-justify
+  	{
+  		text-align:right;
+  	}
 	#submitspan {float: right;}
 	#errormessage
 	{
@@ -81,8 +110,8 @@
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">ONC Family Assistance Referral Form</span><br>
-	<span id="message">(please complete and click Submit To ONC)</span></p>
+    <p><span id="banner">ONC Partner Form</span><br>
+	<span id="message">(please complete and click Submit To add or update a partner)</span></p>
   </div>
   <nav>
     <ul>
@@ -99,8 +128,10 @@
   <br>
   <fieldset>
   <legend class="legend-major">Partner Information</legend>
-  	<label id='partid'>Partner ID: 0000000</label>
-    <input id='partln' title="Name" name="partLN" type="text" size="20" placeholder="Name" required>
+  	<label for='partid'>Partner ID:</label>
+  	<input id='partid' type='text' size='8' placeholder='ID' readonly>
+  	<label for='partln'>Name:</label>
+    <input id='partln' title="Name" name="partLN" type="text" size="28" placeholder="Name" required>
     <label for='type'>Type:</label>
 	<select id="type" title="Type" name="type" onchange="filterChanged()">
 	  <option value="Any">Any</option>
@@ -122,7 +153,7 @@
 	  <option value="Confirmed">Confirmed</option>
 	  <option value="Not Participating">Not Participating</option>
 	</select>
-	<label for='collection'>Collection</label>
+	<label for='collection'>Collection:</label>
 	<select id="collection" title="collection" name="collection" onchange="filterChanged()">
 	  <option value="Any">Any</option>
 	  <option value="General">General</option>
@@ -130,46 +161,61 @@
 	  <option value="Meals">Meals</option>
 	  <option value="Unknown">Unknown</option>
 	</select>
-	<br>
-	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required>
+	<br><br>
+	<label for='housenum'>Address:</label>
+	<input id="housenum" title="House #" name="housenum" type="text" size="6" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required>
     <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off" required>
     <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off">
     <input id="city" title="City" name="city">	
-    <input id="zipcode" title="Zip Code" name="zipcode" onchange="onZipChanged('zipcode')">
-    <input id="phone" title="Phone #" name="phone" type="text" size="18" placeholder="Phone #" onchange="verifyPhoneNumber(0)" required>
+    <input id="zipcode" title="Zip Code" name="zipcode" size='8'>
+    <input id="phone" title="Phone #" name="phone" type="text" size="12" placeholder="Phone #" onchange="verifyPhoneNumber(0)" required>
   </fieldset>
   <br>
   <fieldset>
   <legend class="legend-major">Contact Information</legend>
+  	<label for='firstcontactname'>1st Contact:</label>
 	<input id="firstcontactname" title="1st Contact Name" name="firstcontactname" type="text" size="20" placeholder="1st Contact Name" autocomplete="off" required>
+	<label for='firstcontactemail'>Email:</label>
 	<input id='firstcontactemail' title="1st Contact Email address" name="firstcontactemail" type="email" size="30" placeholder="1st Contact Email Address">
+	<label for='firstcontactphone'>Phone:</label>
 	<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontatphone" type="text" size="18" placeholder="1st Contact Phone #" onchange="verifyPhoneNumber(0)">
-	<br>
-	<input id="secondcontactname" title="2nd Contact Name" name="secondcontactname" type="text" size="20" placeholder="2nd Contact Name" autocomplete="off" required>
+	<br><br>
+	<label for='secondcontactname'>2nd Contact:</label>
+	<input id="secondcontactname" title="2nd Contact Name" name="secondcontactname" type="text" size="20" placeholder="2nd Contact Name" autocomplete="off">
+	<label for='secondcontactemail'>Email:</label>
 	<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="30" placeholder="2nd Contact Email Address">
+	<label for='secondcontactphone'>Phone:</label>
 	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontatphone" type="text" size="18" placeholder="2ndContact Phone #" onchange="verifyPhoneNumber(0)">
   </fieldset>
   <fieldset>
     <legend class="legend-major">Partner General, Notes & Delivery Information</legend>
-    <fieldset class="gray">
-      <textarea rows="6" cols="30" id='genTA'>Enter general partner info here</textarea>
-      <textarea rows="6" cols="30" id='specialTA'>Enter spechial partner info here</textarea>
-      <textarea rows="6" cols="30" id='delTA'>Enter partner gift delivery info here</textarea>
-    </fieldset>
+    <textarea rows="12" cols="44" id='genTA'>Enter general partner info here</textarea>
+    <textarea rows="12" cols="44" id='specialTA'>Enter special partner info here</textarea>
+    <textarea rows="12" cols="32" id='delTA'>Enter partner gift delivery info here</textarea>
   </fieldset>
   <fieldset>
-  	<legend>Partner performance information</legend>
-  	<input id="pyReq" title="Prior Year Req." type="text" size="10"">
-  	<input id="pYAss" title="Prior Year Assigned." type="text" size="10"">
-  	<input id="pyDel" title="Prior Year Delivered" type="text" size="10"">
-  	<input id="pyRec" title="Prior Year Received" type="text" size="10"">
-  	<input id="pyLate" title="Prior Year late." type="text" size="10"">
-  	<br>
-  	<input id="cyReq" title="Prior Year Req." type="text" size="10"">
-  	<input id="cYAss" title="Prior Year Assigned." type="text" size="10"">
-  	<input id="cyDel" title="Prior Year Delivered" type="text" size="10"">
-  	<input id="cyRec" title="Prior Year Received" type="text" size="10"">
-  	<input id="cyLate" title="Prior Year late." type="text" size="10"">
+  	<legend class='legend-major'>Partner Performance Information</legend>
+  	<label for='pyReq'>Prior Year Request:</label>
+  	<input id="pyReq" class='right-justify' title="Prior Year Req." type="text" size="4" readonly>
+  	<label for='pyAss'>Assigned:</label>
+  	<input id="pyAss" class='right-justify' title="Prior Year Assigned." type="text" size="4" readonly>
+  	<label for='pyDel'>Delivered:</label>
+  	<input id="pyDel" class='right-justify' title="Prior Year Delivered" type="text" size="4" readonly>
+  	<label for='pyRec'>On Time:</label>
+  	<input id="pyRec" class='right-justify' title="Prior Year Received" type="text" size="4" readonly>
+  	<label for='pyLate'>Late:</label>
+  	<input id="pyLate" class='right-justify' title="Prior Year late." type="text" size="4" readonly>
+  	<br><br>
+  	<label for='cyReq'>Current Year Request:</label>
+  	<input id="cyReq" class='right-justify' name='cyReq' title="Prior Year Req." type="text" size="4">
+  	<label for='cyAss'>Assigned:</label>
+  	<input id="cyAss" class='right-justify' title="Prior Year Assigned." type="text" size="4" readonly>
+  	<label for='cyDel'>Delivered:</label>
+  	<input id="cyDel" class='right-justify' title="Prior Year Delivered" type="text" size="4" readonly>
+  	<label for='cyRec'>On Time:</label>
+  	<input id="cyRec" class='right-justify' title="Prior Year Received" type="text" size="4" readonly>
+  	<label for='cyLate'>Late:</label>
+  	<input id="cyLate" class='right-justify' title="Prior Year late." type="text" size="4" readonly>
   </fieldset>
   <br>
   <div>

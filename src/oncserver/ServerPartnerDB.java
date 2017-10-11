@@ -104,7 +104,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		if(index<pAL.size())
 		{
 			ONCPartner partner = pAL.get(index);
-			response = gson.toJson(partner, ONCPartner.class);
+			response = gson.toJson(new ONCWebPartnerExtended(partner), ONCWebPartnerExtended.class);
 		}
 		else
 			response = "";
