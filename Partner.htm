@@ -35,6 +35,7 @@
 				//fill in partner info here
 				document.getElementById('partid').value= partner.id;
 				document.getElementById('partln').value= partner.lastName;
+				document.getElementById('partfn').value= partner.firstName;
 				document.getElementById('type').value= partner.type;
 				document.getElementById('status').value= partner.status;
 				document.getElementById('collection').value= partner.collection;
@@ -83,11 +84,42 @@
   				return false;
   			}
   		});
-	});	
+	});
+  	
+  	function verifyPhoneNumber(elementNum)
+  	{
+  		var phoneElement= [document.getElementById('phone'), 
+  							document.getElementById('firstcontactphone'),
+  							document.getElementById('secondcontactphone')];
+  		
+  		var numberGood = true;
+  		var number= phoneElement[elementNum].value;
+  		
+  		if(number == '')
+  			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+  		else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-')
+  			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+  		else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.')
+  			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+  		else if(number.length===10 && number.indexOf("-")===-1 && number.indexOf(".")===-1)
+  			phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+  		else
+  		{
+  			numberGood= false;
+  			phoneElement[elementNum].style.backgroundColor = errorColor;
+  		}
+  		
+  		return numberGood;
+  	}
 	
 	function onSessionTimeout()
 	{
 		 window.location.assign('timeout');
+	}
+	
+	function onSubmit()
+	{
+		document.getElementById("updatepartner").submit();
 	}
 
   </script>
@@ -96,6 +128,24 @@
   	{
   		text-align:right;
   	}
+  	.fieldsetdiv
+  	{
+  		margin-top:6px;
+  	}
+  	textarea 
+  	{
+    	height: 120px;
+    	padding: 2px 2px;
+    	box-sizing: border-box;
+    	border: 1px solid #ccc;
+    	border-radius: 4px;
+    	background-color: #f8f8f8;
+    	resize: none;
+    	display: block;
+	}
+	#genTA { width: 300px; }
+	#specialTA { width: 300px; }
+	#delTA { width: 150px; }
 	#submitspan {float: right;}
 	#errormessage
 	{
@@ -125,13 +175,17 @@
   <input id='token' type="hidden" name="token">
   <input id='year' type="hidden" name="year">
   <input id='partnerid' type="hidden" name="partnerid">
-  <br>
   <fieldset>
   <legend class="legend-major">Partner Information</legend>
+  	<div>
   	<label for='partid'>Partner ID:</label>
-  	<input id='partid' type='text' size='8' placeholder='ID' readonly>
-  	<label for='partln'>Name:</label>
-    <input id='partln' title="Name" name="partLN" type="text" size="28" placeholder="Name" required>
+  	<input id='partid' type='text' size='8' readonly>
+    <label for='partln'>Last or Organization Name:</label>
+    <input id='partln' title="Organization or Last Name" name="firstname" type="text" size="48" required>
+    <label for='partfn'>First Name:</label>
+    <input id='partfn' title="First Name" name="firstname" type="text" size="12">
+    </div>
+    <div class='fieldsetdiv'>
     <label for='type'>Type:</label>
 	<select id="type" title="Type" name="type" onchange="filterChanged()">
 	  <option value="Any">Any</option>
@@ -161,40 +215,54 @@
 	  <option value="Meals">Meals</option>
 	  <option value="Unknown">Unknown</option>
 	</select>
-	<br><br>
+	</div>
+	<div class='fieldsetdiv'>
 	<label for='housenum'>Address:</label>
-	<input id="housenum" title="House #" name="housenum" type="text" size="6" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required>
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off" required>
+	<input id="housenum" title="House #" name="housenum" type="text" size="6" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off">
+    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off">
     <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off">
     <input id="city" title="City" name="city">	
     <input id="zipcode" title="Zip Code" name="zipcode" size='8'>
-    <input id="phone" title="Phone #" name="phone" type="text" size="12" placeholder="Phone #" onchange="verifyPhoneNumber(0)" required>
+    <input id="phone" title="Phone #" name="phone" type="text" size="12" placeholder="Phone #" onchange="verifyPhoneNumber(0)">
+    </div>
   </fieldset>
-  <br>
   <fieldset>
   <legend class="legend-major">Contact Information</legend>
+  	<div>
   	<label for='firstcontactname'>1st Contact:</label>
-	<input id="firstcontactname" title="1st Contact Name" name="firstcontactname" type="text" size="20" placeholder="1st Contact Name" autocomplete="off" required>
+	<input id="firstcontactname" title="1st Contact Name" name="firstcontactname" type="text" size="20" placeholder="1st Contact Name" autocomplete="off">
 	<label for='firstcontactemail'>Email:</label>
 	<input id='firstcontactemail' title="1st Contact Email address" name="firstcontactemail" type="email" size="30" placeholder="1st Contact Email Address">
 	<label for='firstcontactphone'>Phone:</label>
-	<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontatphone" type="text" size="18" placeholder="1st Contact Phone #" onchange="verifyPhoneNumber(0)">
-	<br><br>
+	<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontatphone" type="text" size="18" placeholder="1st Contact Phone #" onchange="verifyPhoneNumber(1)">
+	</div>
+	<div class='fieldsetdiv'>
 	<label for='secondcontactname'>2nd Contact:</label>
 	<input id="secondcontactname" title="2nd Contact Name" name="secondcontactname" type="text" size="20" placeholder="2nd Contact Name" autocomplete="off">
 	<label for='secondcontactemail'>Email:</label>
 	<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="30" placeholder="2nd Contact Email Address">
 	<label for='secondcontactphone'>Phone:</label>
-	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontatphone" type="text" size="18" placeholder="2ndContact Phone #" onchange="verifyPhoneNumber(0)">
+	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontatphone" type="text" size="18" placeholder="2ndContact Phone #" onchange="verifyPhoneNumber(2)">
+	</div>
   </fieldset>
   <fieldset>
     <legend class="legend-major">Partner General, Notes & Delivery Information</legend>
-    <textarea rows="12" cols="44" id='genTA'>Enter general partner info here</textarea>
-    <textarea rows="12" cols="44" id='specialTA'>Enter special partner info here</textarea>
-    <textarea rows="12" cols="32" id='delTA'>Enter partner gift delivery info here</textarea>
+      <fieldset class='floatleft'> 
+	  	<legend>General Notes</legend>
+    	<textarea id='genTA' name='genTA' placeholder='Enter general partner info here'></textarea>
+      </fieldset>
+      <fieldset class='floatleft'>
+      	<legend>Special Notes</legend>
+    	<textarea id='specialTA' name='specialTA' placeholder='Enter special partner info here'></textarea>
+     </fieldset>
+     <fieldset class='floatleft'>
+     	<legend>Delivery Info</legend>
+    	<textarea id='delTA' name='delTA' placeholder='Enter delivery info here'></textarea>
+     </fieldset>
   </fieldset>
   <fieldset>
   	<legend class='legend-major'>Partner Performance Information</legend>
+  	<div>
   	<label for='pyReq'>Prior Year Request:</label>
   	<input id="pyReq" class='right-justify' title="Prior Year Req." type="text" size="4" readonly>
   	<label for='pyAss'>Assigned:</label>
@@ -205,7 +273,8 @@
   	<input id="pyRec" class='right-justify' title="Prior Year Received" type="text" size="4" readonly>
   	<label for='pyLate'>Late:</label>
   	<input id="pyLate" class='right-justify' title="Prior Year late." type="text" size="4" readonly>
-  	<br><br>
+  	</div>
+  	<div class='fieldsetdiv'>
   	<label for='cyReq'>Current Year Request:</label>
   	<input id="cyReq" class='right-justify' name='cyReq' title="Prior Year Req." type="text" size="4">
   	<label for='cyAss'>Assigned:</label>
@@ -216,14 +285,15 @@
   	<input id="cyRec" class='right-justify' title="Prior Year Received" type="text" size="4" readonly>
   	<label for='cyLate'>Late:</label>
   	<input id="cyLate" class='right-justify' title="Prior Year late." type="text" size="4" readonly>
+  	</div>
   </fieldset>
   <br>
   <div>
   	<span id="errormessage"></span>
   	<span id="submitspan">
   	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit()>
-<!--  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #808080; color: #ffffff;" title="Click to sumbit family to ONC"> -->  
+  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit partner to ONC" onclick= onSubmit()>
+<!--  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #808080; color: #ffffff;" title="Click to sumbit partner to ONC"> -->  
   	</span>
   </div>
 </form>

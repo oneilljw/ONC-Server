@@ -4,6 +4,8 @@ import ourneighborschild.ONCPartner;
 
 public class ONCWebPartnerExtended extends ONCWebPartner
 {
+	private String lastName;
+	private String firstName;
 	private String houseNum;
 	private String street;
 	private String unit;
@@ -34,6 +36,7 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 	public ONCWebPartnerExtended(ONCPartner p) 
 	{
 		super(p);
+		parseName(p.getLastName());
 		this.houseNum = p.getHouseNum();
 		this.street = p.getStreet();
 		this.unit = p.getUnit();
@@ -60,5 +63,25 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 		this.pyDelivered = Integer.toString(p.getPriorYearDelivered());
 		this.pyReceivedBeforeDeadline = Integer.toString(p.getPriorYearReceivedBeforeDeadline());
 		this.pyReceivedAfterDeadline = Integer.toString(p.getPriorYearReceivedAfterDeadline());
+	}
+	
+	void parseName(String name)
+	{
+		String[] parts = name.split(",", 2);
+		if(parts.length == 0)
+		{
+			this.firstName = "";
+			this.lastName = "";
+		}
+		else if(parts.length == 1)
+		{
+			this.firstName = "";
+			this.lastName = name.trim();
+		}
+		else
+		{
+			this.firstName = parts[1].trim();
+			this.lastName = parts[0].trim();
+		}
 	}
 }

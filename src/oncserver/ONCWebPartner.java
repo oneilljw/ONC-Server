@@ -9,7 +9,7 @@ public class ONCWebPartner
 	private String status;
 	private String type;
 	private GiftCollection collection;
-	private String lastName;
+	private String name;
 	
 	public ONCWebPartner(ONCPartner p)
 	{
@@ -17,7 +17,7 @@ public class ONCWebPartner
 		this.status = getStatusString(p.getStatus());
 		this.type = getTypeString(p.getType());
 		this.collection = p.getGiftCollectionType();
-		this.lastName = p.getLastName();
+		this.name = p.getLastName();
 	}
 	
 	//getters
@@ -25,7 +25,7 @@ public class ONCWebPartner
 	String getStatus() { return status; }
 	String getType() { return type; }
 	GiftCollection getCollectionType() { return collection; }
-	String getLastName() { return lastName; }
+	String getName() { return name; }
 	
 	String getStatusString(int status) 
 	{ 

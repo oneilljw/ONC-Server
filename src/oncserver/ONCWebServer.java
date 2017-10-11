@@ -30,7 +30,7 @@ public class ONCWebServer
 							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
 							"/changepw", "/startpage", "/vanilla", "/getuser", "/getstatus", "/getpartner",
 							"/profileunchanged", "/updateuser", "/driversignin", "/signindriver",
-							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/partnerupdate",
+							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/partnerupdate", "/updatepartner",
 							"/contactinfo", "/jquery.js", "/favicon.ico", "/groups", "/partners", 
 							"/volunteerregistration", "/registervolunteer", "/commonfamily.js"};
 		

@@ -22,12 +22,14 @@ import java.util.TimeZone;
 import ourneighborschild.Address;
 import ourneighborschild.AddressValidation;
 import ourneighborschild.AdultGender;
+import ourneighborschild.GiftCollection;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
+import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.Transportation;
@@ -55,7 +57,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
 	private static final String VOLUNTEER_REGISTRATION_HTML = "VolRegistration.htm";
 	private static final int FAMILY_STOPLIGHT_RED = 2;
-	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24; 
+	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	private static final int HTTP_OK = 200;
 	private static final int NUM_OF_WISHES_PROVIDED = 4;
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
@@ -774,6 +776,39 @@ public class ONCHttpHandler implements HttpHandler
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/updatepartner"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    		
+    		if(t.getRequestMethod().toLowerCase().equals("post") && 
+    			params.containsKey("token") && params.containsKey("year") &&
+    			 (wc=clientMgr.findClient(sessionID)) != null) 
+    		{
+    			wc.updateTimestamp();
+    			Set<String> keyset = params.keySet();
+    			for(String key:keyset)
+    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+    		
+    			FamilyResponseCode frc = processPartnerUpdate(wc, params);
+    			
+    			//submission processed, send the family table page back to the user
+    			String userFN;
+    			if(wc.getWebUser().getFirstName().equals(""))
+    				userFN = wc.getWebUser().getLastName();
+    			else
+    				userFN = wc.getWebUser().getFirstName();
+    			
+    			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
+    					frc.getFamRef());
     		}
     		else
     			response = invalidTokenReceived();
@@ -1781,6 +1816,57 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return new FamilyResponseCode(-1, "Family Referral Rejected: Family Not Found");
+	}
+	
+	FamilyResponseCode processPartnerUpdate(WebClient wc, Map<String, Object> params)
+	{
+		//get the year
+		int year = Integer.parseInt((String) params.get("year"));
+		String partnerID = (String) params.get("partnerid");
+				
+		//get database references
+		ServerPartnerDB serverPartnerDB= null;
+				
+		try
+		{
+			serverPartnerDB = ServerPartnerDB.getInstance();
+		} 
+		catch (FileNotFoundException e) 
+		{
+			e.printStackTrace();
+		}
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+				
+		//determine if its an add partner request or a partner update request
+		if(partnerID.equals("New"))
+		{
+			String[] partnerKeys = {"partnerid", "firstname", "lastname", "type", "status", "collection", 
+					"housenum", "street", "unit", "city", "zipcode", "phone",
+					"firstcontactname", "firstcontactemail", "firstcontactphone",
+					"secondcontactname", "secondcontactemail", "secondcontactphone",
+					"genTA", "specialTA", "delTA", "cyReq"};
+			
+			Map<String, String> partnerMap = createMap(params, partnerKeys);
+			
+//			ONCPartner(int orgid, Date date, String changedBy, int slPos, String slMssg, String slChangedBy,
+//					int status, int type, GiftCollection collection, String name, String streetnum, String streetname,
+//					String unit, String city, String zipcode, String phone, int orn_req, String other, 
+//					String deliverTo, String specialNotes, String contact, String contact_email,
+//					String contact_phone, String contact2, String contact2_email, String contact2_phone)
+					
+//			ONCPartner addPartner = new ONCPartner(-1, new Date(), wc.getWebUser().getLNFI(), 3,
+//					"New Partner", wc.getWebUser().getLNFI(),)			
+		}
+		else
+		{
+//			ONCPartner updatePartner = serverPartnerDB.getPartnerByID(year, partnerID);	
+		}
+		
+		return null;
+			
 	}
 	
 	Map<String, String> createMap(Map<String, Object> params, String[] keys)
