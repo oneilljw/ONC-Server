@@ -90,7 +90,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
-	static HtmlResponse getFamilyJSONP(int year, String partnerID, String callbackFunction)
+	static HtmlResponse getPartnerJSONP(int year, String partnerID, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		String response;

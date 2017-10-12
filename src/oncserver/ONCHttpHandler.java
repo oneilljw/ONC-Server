@@ -421,7 +421,7 @@ public class ONCHttpHandler implements HttpHandler
     			int year = Integer.parseInt((String) params.get("year"));
         		String partnerID = (String) params.get("partnerid");
         		
-        		htmlResponse = ServerPartnerDB.getFamilyJSONP(year, partnerID, (String) params.get("callback"));
+        		htmlResponse = ServerPartnerDB.getPartnerJSONP(year, partnerID, (String) params.get("callback"));
     		}
     		else
     		{
@@ -800,12 +800,26 @@ public class ONCHttpHandler implements HttpHandler
     		
     			FamilyResponseCode frc = processPartnerUpdate(wc, params);
     			
-    			//submission processed, send the family table page back to the user
+    			//submission processed, send the partner table page back to the user
     			String userFN;
     			if(wc.getWebUser().getFirstName().equals(""))
     				userFN = wc.getWebUser().getLastName();
     			else
     				userFN = wc.getWebUser().getFirstName();
+    			
+    			//read the partner table web page
+    			try
+    			{
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
+    				response = response.replace("USER_NAME", userFN);
+    				response = response.replace("USER_MESSAGE", "Partner Add or Update Successful");
+    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    				response = response.replace("HOME_LINK_VISIBILITY", "hidden");
+    			}
+    			catch (IOException e) 
+    			{
+    				response =  "<p>Partner Table Unavailable</p>";
+    			}
     			
     			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
     					frc.getFamRef());
@@ -1674,9 +1688,8 @@ public class ONCHttpHandler implements HttpHandler
 				clientMgr.notifyAllInYearClients(year, mssg);
 			}
 		}
-		
-		return new FamilyResponseCode(0, addedFamily.getLastName() + " Family Referral Accepted",
-										addedFamily.getReferenceNum());
+		return new FamilyResponseCode(0,  "Partner Update Successful", "????");
+	
 	}
 	
 	String ensureUpperCaseStreetName(String street)
@@ -1865,7 +1878,7 @@ public class ONCHttpHandler implements HttpHandler
 //			ONCPartner updatePartner = serverPartnerDB.getPartnerByID(year, partnerID);	
 		}
 		
-		return null;
+		return new FamilyResponseCode(year, partnerID);
 			
 	}
 	

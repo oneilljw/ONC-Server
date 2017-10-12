@@ -149,12 +149,12 @@
     
     function newPartner()
     {
-    	sessionStorage.setItem("targetid", "NNA");
+    	sessionStorage.setItem("partnerid", "New");
     	
     	var params = {}
 		params["token"] = sessionStorage.getItem('token');
 		
-		post('newpartner', params);
+		post('partnerupdate', params);
     }
     
     function filterChanged()

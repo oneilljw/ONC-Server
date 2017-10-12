@@ -23,7 +23,7 @@
   		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
 		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
   		
-  		if(sessionStorage.getItem("partnerid") !== "NNA")
+  		if(sessionStorage.getItem("partnerid") !== "New")
   		{
   			partnerparams = "token=" + sessionStorage.getItem("token") + "&" +
 				"year=" + sessionStorage.getItem('curryear') + "&" +
@@ -64,7 +64,11 @@
 				document.getElementById('cyRec').value= partner.orn_rec_before;
 				document.getElementById('cyLate').value= partner.orn_rec_after;
 			});
-  		}	
+  		}
+  		else
+  		{
+  			document.getElementById('partid').value= "New";
+  		}
   		
   		$(function() {
   		    $("form input").keypress(function (e) {
@@ -188,7 +192,6 @@
     <div class='fieldsetdiv'>
     <label for='type'>Type:</label>
 	<select id="type" title="Type" name="type" onchange="filterChanged()">
-	  <option value="Any">Any</option>
       <option value="Business">Business</option>
 	  <option value="Church">Church</option>
 	  <option value="School">School</option>
@@ -198,7 +201,6 @@
 	</select>
 	<label for='status'>Status:</label>
 	<select id="status" title="status" name="status" onchange="filterChanged()">
-	  <option value="Any">Any</option>
       <option value="No Action Yet">No Action Yet</option>
 	  <option value="1st Email Sent">1st Email Sent</option>
 	  <option value="Responded">Responded</option>
@@ -209,7 +211,6 @@
 	</select>
 	<label for='collection'>Collection:</label>
 	<select id="collection" title="collection" name="collection" onchange="filterChanged()">
-	  <option value="Any">Any</option>
 	  <option value="General">General</option>
 	  <option value="Ornament">Ornament</option>
 	  <option value="Meals">Meals</option>
@@ -218,11 +219,12 @@
 	</div>
 	<div class='fieldsetdiv'>
 	<label for='housenum'>Address:</label>
-	<input id="housenum" title="House #" name="housenum" type="text" size="6" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off">
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off">
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off">
-    <input id="city" title="City" name="city">	
-    <input id="zipcode" title="Zip Code" name="zipcode" size='8'>
+	<input id="housenum" title="House #" name="housenum" type="text" size="7" placeholder="House #" autocomplete="off">
+    <input id="street" title="Street Name" name="street" type="text" size="24" placeholder="Street Name"  autocomplete="off">
+    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Unit #" autocomplete="off">
+    <input id="city" title="City" name="city" size='20' placeholder="City">	
+    <input id="zipcode" title="Zip Code" name="zipcode" size='8' placeholder="Zip Code">
+    <label for='phone'>Phone #:</label>
     <input id="phone" title="Phone #" name="phone" type="text" size="12" placeholder="Phone #" onchange="verifyPhoneNumber(0)">
     </div>
   </fieldset>
@@ -242,7 +244,7 @@
 	<label for='secondcontactemail'>Email:</label>
 	<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="30" placeholder="2nd Contact Email Address">
 	<label for='secondcontactphone'>Phone:</label>
-	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontatphone" type="text" size="18" placeholder="2ndContact Phone #" onchange="verifyPhoneNumber(2)">
+	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontatphone" type="text" size="18" placeholder="2nd Contact Phone #" onchange="verifyPhoneNumber(2)">
 	</div>
   </fieldset>
   <fieldset>
