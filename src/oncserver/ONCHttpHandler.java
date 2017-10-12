@@ -1852,32 +1852,59 @@ public class ONCHttpHandler implements HttpHandler
 		{
 			e.printStackTrace();
 		}
-				
+		
+		String[] partnerKeys = {"partnerid", "firstname", "lastname", "type", "status", "collection", 
+				"housenum", "street", "unit", "city", "zipcode", "phone",
+				"firstcontactname", "firstcontactemail", "firstcontactphone",
+				"secondcontactname", "secondcontactemail", "secondcontactphone",
+				"genTA", "specialTA", "delTA", "cyReq"};
+		
+		Map<String, String> partnerMap = createMap(params, partnerKeys);
+		
+		String partName = partnerMap.get("lastname").trim();
+		if(!partnerMap.get("firstname").isEmpty())
+			partName = partName + "," + partnerMap.get("firstname").trim();
+		
+		int orn_req = 0;
+		if(!partnerMap.get("cyReq").isEmpty())
+			orn_req = Integer.parseInt(partnerMap.get("cyReq"));
+		
+		ONCPartner returnedPartner = null;
 		//determine if its an add partner request or a partner update request
 		if(partnerID.equals("New"))
-		{
-			String[] partnerKeys = {"partnerid", "firstname", "lastname", "type", "status", "collection", 
-					"housenum", "street", "unit", "city", "zipcode", "phone",
-					"firstcontactname", "firstcontactemail", "firstcontactphone",
-					"secondcontactname", "secondcontactemail", "secondcontactphone",
-					"genTA", "specialTA", "delTA", "cyReq"};
+		{			
+			ONCPartner addPartner = new ONCPartner(-1, new Date(),
+					wc.getWebUser().getLNFI(), 3,
+					"New partner", wc.getWebUser().getLNFI(), 
+					ONCWebPartner.getTypeOrStatus(1, partnerMap.get("status")),
+					ONCWebPartner.getTypeOrStatus(0, partnerMap.get("type")),
+					GiftCollection.valueOf(partnerMap.get("collection")), partName,
+					partnerMap.get("housenum"), partnerMap.get("street"), partnerMap.get("unit"),
+					partnerMap.get("city"), partnerMap.get("zipcode"), partnerMap.get("phone"),
+					orn_req, partnerMap.get("getTA"), partnerMap.get("delTA"), partnerMap.get("specialTA"), 
+					partnerMap.get("firstcontactname"), partnerMap.get("firstcontactemail"), partnerMap.get("firstcontactphone"),
+					partnerMap.get("secondcontactname"), partnerMap.get("secondcontactemail"), partnerMap.get("secondcontactphone"));
 			
-			Map<String, String> partnerMap = createMap(params, partnerKeys);
-			
-//			ONCPartner(int orgid, Date date, String changedBy, int slPos, String slMssg, String slChangedBy,
-//					int status, int type, GiftCollection collection, String name, String streetnum, String streetname,
-//					String unit, String city, String zipcode, String phone, int orn_req, String other, 
-//					String deliverTo, String specialNotes, String contact, String contact_email,
-//					String contact_phone, String contact2, String contact2_email, String contact2_phone)
-					
-//			ONCPartner addPartner = new ONCPartner(-1, new Date(), wc.getWebUser().getLNFI(), 3,
-//					"New Partner", wc.getWebUser().getLNFI(),)			
+			returnedPartner = serverPartnerDB.add(year, addPartner);
 		}
 		else
 		{
-//			ONCPartner updatePartner = serverPartnerDB.getPartnerByID(year, partnerID);	
+			ONCPartner updatePartner = new ONCPartner(Integer.parseInt(partnerID),
+					new Date(), wc.getWebUser().getLNFI(), 3,
+					"Update Partner via website", wc.getWebUser().getLNFI(), 
+					ONCWebPartner.getTypeOrStatus(1, partnerMap.get("status")),
+					ONCWebPartner.getTypeOrStatus(0, partnerMap.get("type")),
+					GiftCollection.valueOf(partnerMap.get("collection")), partName,
+					partnerMap.get("housenum"), partnerMap.get("street"), partnerMap.get("unit"),
+					partnerMap.get("city"), partnerMap.get("zipcode"), partnerMap.get("phone"),
+					orn_req, partnerMap.get("getTA"), partnerMap.get("delTA"), partnerMap.get("specialTA"), 
+					partnerMap.get("firstcontactname"), partnerMap.get("firstcontactemail"), partnerMap.get("firstcontactphone"),
+					partnerMap.get("secondcontactname"), partnerMap.get("secondcontactemail"), partnerMap.get("secondcontactphone"));
+			
+			returnedPartner = serverPartnerDB.update(year, updatePartner);
 		}
 		
+		//FIX THIS TO DEAL WITH PROPER MESSAGES BACK TO WEBSITE
 		return new FamilyResponseCode(year, partnerID);
 			
 	}

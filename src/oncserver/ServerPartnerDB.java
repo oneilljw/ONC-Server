@@ -189,6 +189,40 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		}
 	}
 	
+	ONCPartner update(int year, ONCPartner updatedPartner)
+	{	
+		//Find the position for the current family being replaced
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		List<ONCPartner> oAL = partnerDBYear.getList();
+		int index = 0;
+		while(index < oAL.size() && oAL.get(index).getID() != updatedPartner.getID())
+			index++;
+		
+		//If partner is located, replace the current partner with the update. Check to 
+		//ensure the partner status isn't confirmed with gifts assigned. If so, deny the change. 
+		if(index == oAL.size() || (updatedPartner.getStatus() != STATUS_CONFIRMED && 
+									oAL.get(index).getNumberOfOrnamentsAssigned() > 0)) 
+		{
+			
+			return null;
+		}
+		else
+		{
+			ONCPartner currOrg = oAL.get(index);
+			//check if partner address has changed and a region update check is required
+			if(currOrg.getHouseNum() != updatedPartner.getHouseNum() ||
+				!currOrg.getStreet().equals(updatedPartner.getStreet()) ||
+				 !currOrg.getCity().equals(updatedPartner.getCity()) ||
+				  !currOrg.getZipCode().equals(updatedPartner.getZipCode()))
+			{
+				updateRegion(updatedPartner);	
+			}
+			oAL.set(index, updatedPartner);
+			partnerDBYear.setChanged(true);
+			return updatedPartner;
+		}
+	}
+	
 	int updateRegion(ONCPartner updatedOrg)
 	{
 		int reg = 0; //initialize return value to no region found
@@ -252,6 +286,39 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		partnerDBYear.setChanged(true);
 		
 		return "ADDED_PARTNER" + gson.toJson(addedPartner, ONCPartner.class);
+	}
+	
+	ONCPartner add(int year, ONCPartner addedPartner)
+	{
+		//set the new ID for the catalog wish
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		addedPartner.setID(partnerDBYear.getNextID());
+		
+		//set the region for the new partner
+		ClientManager clientMgr = ClientManager.getInstance();
+		RegionDB regionDB = null;
+		try {
+			regionDB = RegionDB.getInstance(clientMgr.getAppIcon());
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if(regionDB != null)
+			addedPartner.setRegion(RegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
+															addedPartner.getStreet(), "", addedPartner.getCity(),
+															addedPartner.getZipCode())));
+		else
+			addedPartner.setRegion(0);
+		
+		//add the partner to the proper database
+		partnerDBYear.add(addedPartner);
+		partnerDBYear.setChanged(true);
+		
+		return addedPartner;
 	}
 	
 	String delete(int year, String json)
