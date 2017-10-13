@@ -51,7 +51,7 @@
 				document.getElementById('secondcontactemail').value= partner.contact2_email;
 				document.getElementById('secondcontactphone').value= partner.contact2_phone;
 				document.getElementById('genTA').value= partner.other;
-				document.getElementById('specialTA').value= partner.specialNotes;
+				document.getElementById('cyTA').value= partner.specialNotes;
 				document.getElementById('delTA').value= partner.deliverTo;
 				document.getElementById('pyReq').value= partner.pyRequested;
 				document.getElementById('pyAss').value= partner.pyAssigned;
@@ -148,7 +148,7 @@
     	display: block;
 	}
 	#genTA { width: 300px; }
-	#specialTA { width: 300px; }
+	#cyTA { width: 300px; }
 	#delTA { width: 150px; }
 	#submitspan {float: right;}
 	#errormessage
@@ -185,13 +185,13 @@
   	<label for='partid'>Partner ID:</label>
   	<input id='partid' type='text' size='8' readonly>
     <label for='partln'>Last or Organization Name:</label>
-    <input id='partln' title="Organization or Last Name" name="firstname" type="text" size="48" required>
+    <input id='partln' title="Organization or Last Name" name="lastname" type="text" size="48" required>
     <label for='partfn'>First Name:</label>
     <input id='partfn' title="First Name" name="firstname" type="text" size="12">
     </div>
     <div class='fieldsetdiv'>
     <label for='type'>Type:</label>
-	<select id="type" title="Type" name="type" onchange="filterChanged()">
+	<select id="type" title="Type" name="type">
       <option value="Business">Business</option>
 	  <option value="Church">Church</option>
 	  <option value="School">School</option>
@@ -200,7 +200,7 @@
 	  <option value="ONC Shopper">ONC Shopper</option>
 	</select>
 	<label for='status'>Status:</label>
-	<select id="status" title="status" name="status" onchange="filterChanged()">
+	<select id="status" title="status" name="status">
       <option value="No Action Yet">No Action Yet</option>
 	  <option value="1st Email Sent">1st Email Sent</option>
 	  <option value="Responded">Responded</option>
@@ -210,7 +210,7 @@
 	  <option value="Not Participating">Not Participating</option>
 	</select>
 	<label for='collection'>Collection:</label>
-	<select id="collection" title="collection" name="collection" onchange="filterChanged()">
+	<select id="collection" title="collection" name="collection">
 	  <option value="General">General</option>
 	  <option value="Ornament">Ornament</option>
 	  <option value="Meals">Meals</option>
@@ -236,7 +236,7 @@
 	<label for='firstcontactemail'>Email:</label>
 	<input id='firstcontactemail' title="1st Contact Email address" name="firstcontactemail" type="email" size="30" placeholder="1st Contact Email Address">
 	<label for='firstcontactphone'>Phone:</label>
-	<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontatphone" type="text" size="18" placeholder="1st Contact Phone #" onchange="verifyPhoneNumber(1)">
+	<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontactphone" type="text" size="18" placeholder="1st Contact Phone #" onchange="verifyPhoneNumber(1)">
 	</div>
 	<div class='fieldsetdiv'>
 	<label for='secondcontactname'>2nd Contact:</label>
@@ -244,22 +244,22 @@
 	<label for='secondcontactemail'>Email:</label>
 	<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="30" placeholder="2nd Contact Email Address">
 	<label for='secondcontactphone'>Phone:</label>
-	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontatphone" type="text" size="18" placeholder="2nd Contact Phone #" onchange="verifyPhoneNumber(2)">
+	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontactphone" type="text" size="18" placeholder="2nd Contact Phone #" onchange="verifyPhoneNumber(2)">
 	</div>
   </fieldset>
   <fieldset>
-    <legend class="legend-major">Partner General, Notes & Delivery Information</legend>
+    <legend class="legend-major">General Partner Information, Current Year Notes And Gift Delivery Information</legend>
       <fieldset class='floatleft'> 
-	  	<legend>General Notes</legend>
+	  	<legend>General Partner Information</legend>
     	<textarea id='genTA' name='genTA' placeholder='Enter general partner info here'></textarea>
       </fieldset>
       <fieldset class='floatleft'>
-      	<legend>Special Notes</legend>
-    	<textarea id='specialTA' name='specialTA' placeholder='Enter special partner info here'></textarea>
+      	<legend>Current Year Notes</legend>
+    	<textarea id='cyTA' name='cyTA' placeholder='Enter current year partner info here'></textarea>
      </fieldset>
      <fieldset class='floatleft'>
-     	<legend>Delivery Info</legend>
-    	<textarea id='delTA' name='delTA' placeholder='Enter delivery info here'></textarea>
+     	<legend>Gift Delivery Information</legend>
+    	<textarea id='delTA' name='delTA' placeholder='Enter gift delivery info here'></textarea>
      </fieldset>
   </fieldset>
   <fieldset>

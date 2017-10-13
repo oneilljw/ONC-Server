@@ -71,7 +71,7 @@ public class ONCHttpHandler implements HttpHandler
     	
 //		Set<String> keyset = params.keySet();
 //		for(String key:keyset)
-//			System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+//			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
     	
     	String requestURI = t.getRequestURI().toASCIIString();
     	
@@ -100,7 +100,7 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     	}
-    	if(requestURI.equals("/timeout"))
+    	else if(requestURI.equals("/timeout"))
     	{
     		String response = null;
     		try {
@@ -688,7 +688,7 @@ public class ONCHttpHandler implements HttpHandler
 //    			for(String key:keyset)
 //    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
-    			FamilyResponseCode frc = processFamilyReferral(wc, params);
+    			ResponseCode frc = processFamilyReferral(wc, params);
     			
     			//submission processed, send the family table page back to the user
     			String userFN;
@@ -743,7 +743,7 @@ public class ONCHttpHandler implements HttpHandler
     				(wc=clientMgr.findClient(sessionID)) != null)
     		{
     			wc.updateTimestamp();
-    			FamilyResponseCode frc = processFamilyUpdate(wc, params);
+    			ResponseCode frc = processFamilyUpdate(wc, params);
     			
     			//submission processed, send the family table page back to the user
     			String userFN;
@@ -754,6 +754,34 @@ public class ONCHttpHandler implements HttpHandler
     			
     			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
     					(String) params.get("targetid"));
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/partnertable"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    			
+    		if((wc=clientMgr.findClient(sessionID)) != null)
+    		{
+    			wc.updateTimestamp();
+    			try
+    			{
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
+    				response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
+    				response = response.replace("USER_MESSAGE", "");
+    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+    			}
+    			catch (IOException e) 
+    			{
+    				response = "<p>Partner Table Unavailable</p>";
+    			}
     		}
     		else
     			response = invalidTokenReceived();
@@ -794,11 +822,11 @@ public class ONCHttpHandler implements HttpHandler
     			 (wc=clientMgr.findClient(sessionID)) != null) 
     		{
     			wc.updateTimestamp();
-    			Set<String> keyset = params.keySet();
-    			for(String key:keyset)
-    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+    	//		Set<String> keyset = params.keySet();
+    	//		for(String key:keyset)
+    	//			System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
-    			FamilyResponseCode frc = processPartnerUpdate(wc, params);
+    			ResponseCode rc = processPartnerUpdate(wc, params);
     			
     			//submission processed, send the partner table page back to the user
     			String userFN;
@@ -812,7 +840,7 @@ public class ONCHttpHandler implements HttpHandler
     			{
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
     				response = response.replace("USER_NAME", userFN);
-    				response = response.replace("USER_MESSAGE", "Partner Add or Update Successful");
+    				response = response.replace("USER_MESSAGE", rc.getMessage());
     				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
     				response = response.replace("HOME_LINK_VISIBILITY", "hidden");
     			}
@@ -821,8 +849,8 @@ public class ONCHttpHandler implements HttpHandler
     				response =  "<p>Partner Table Unavailable</p>";
     			}
     			
-    			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
-    					frc.getFamRef());
+    	//		response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
+    	//				frc.getFamRef());
     		}
     		else
     			response = invalidTokenReceived();
@@ -1244,7 +1272,7 @@ public class ONCHttpHandler implements HttpHandler
 				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_FAMILY_PAGE_HTML));
 				homePageHTML = homePageHTML.replace("USER_NAME", username);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
-				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+				homePageHTML = homePageHTML.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
 				homePageHTML = homePageHTML.replace("REPLACE_YEAR", year);
 				homePageHTML = homePageHTML.replace("REPLACE_FAM_REF", famRef);
 				return homePageHTML;
@@ -1414,7 +1442,7 @@ public class ONCHttpHandler implements HttpHandler
 		return callback +"(" + json +")";
 	}
 	
-	FamilyResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
+	ResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
 	{
 		//get the agent/user
 		int year = Integer.parseInt((String) params.get("year"));
@@ -1434,11 +1462,11 @@ public class ONCHttpHandler implements HttpHandler
 		} 
 		catch (FileNotFoundException e) 
 		{
-			return new FamilyResponseCode(-1, "Family Referral Rejected: Server Database Error");
+			return new ResponseCode("Family Referral Rejected: Server Database Error");
 		}
 		catch (IOException e) 
 		{
-			return new FamilyResponseCode(-1, "Family Referral Rejected: Server Database Error");
+			return new ResponseCode("Family Referral Rejected: Server Database Error");
 		}
 		
 		//create a meal request, if meal was requested
@@ -1688,7 +1716,7 @@ public class ONCHttpHandler implements HttpHandler
 				clientMgr.notifyAllInYearClients(year, mssg);
 			}
 		}
-		return new FamilyResponseCode(0,  "Partner Update Successful", "????");
+		return new ResponseCode("Partner Update Successful", "????");
 	
 	}
 	
@@ -1740,7 +1768,7 @@ public class ONCHttpHandler implements HttpHandler
 			return "";
 	}
 	
-	FamilyResponseCode processFamilyUpdate(WebClient wc, Map<String, Object> params)
+	ResponseCode processFamilyUpdate(WebClient wc, Map<String, Object> params)
 	{
 		//get the agent
 		int year = Integer.parseInt((String) params.get("year"));
@@ -1822,17 +1850,17 @@ public class ONCHttpHandler implements HttpHandler
 				String mssg;
 				mssg = "UPDATED_FAMILY" + gson.toJson(updateFam, ONCFamily.class);
 				clientMgr.notifyAllInYearClients(year, mssg);
-				return new FamilyResponseCode(0, updateFam.getLastName() + " Family Update Accepted");
+				return new ResponseCode(updateFam.getLastName() + " Family Update Accepted");
 			}
 			
-			return new FamilyResponseCode(-1, "Family Referral Rejected: Unable to Save Update");
+			return new ResponseCode("Family Referral Rejected: Unable to Save Update");
 		}
 		
-		return new FamilyResponseCode(-1, "Family Referral Rejected: Family Not Found");
+		return new ResponseCode("Family Referral Rejected: Family Not Found");
 	}
 	
-	FamilyResponseCode processPartnerUpdate(WebClient wc, Map<String, Object> params)
-	{
+	ResponseCode processPartnerUpdate(WebClient wc, Map<String, Object> params)
+	{	
 		//get the year
 		int year = Integer.parseInt((String) params.get("year"));
 		String partnerID = (String) params.get("partnerid");
@@ -1857,19 +1885,27 @@ public class ONCHttpHandler implements HttpHandler
 				"housenum", "street", "unit", "city", "zipcode", "phone",
 				"firstcontactname", "firstcontactemail", "firstcontactphone",
 				"secondcontactname", "secondcontactemail", "secondcontactphone",
-				"genTA", "specialTA", "delTA", "cyReq"};
+				"genTA", "cyTA", "delTA", "cyReq"};
 		
 		Map<String, String> partnerMap = createMap(params, partnerKeys);
 		
 		String partName = partnerMap.get("lastname").trim();
 		if(!partnerMap.get("firstname").isEmpty())
-			partName = partName + "," + partnerMap.get("firstname").trim();
+			partName = partName + ", " + partnerMap.get("firstname").trim();
 		
 		int orn_req = 0;
 		if(!partnerMap.get("cyReq").isEmpty())
 			orn_req = Integer.parseInt(partnerMap.get("cyReq"));
 		
+//		Set<String> keyset = partnerMap.keySet();
+//		for(String key:keyset)
+//			System.out.println(String.format("partnerMap key=%s, value=%s", key, partnerMap.get(key)));
+		
+		ResponseCode rc = null;
 		ONCPartner returnedPartner = null;
+		ClientManager clientMgr = ClientManager.getInstance();
+		Gson gson = new Gson();
+		String mssg;
 		//determine if its an add partner request or a partner update request
 		if(partnerID.equals("New"))
 		{			
@@ -1881,11 +1917,21 @@ public class ONCHttpHandler implements HttpHandler
 					GiftCollection.valueOf(partnerMap.get("collection")), partName,
 					partnerMap.get("housenum"), partnerMap.get("street"), partnerMap.get("unit"),
 					partnerMap.get("city"), partnerMap.get("zipcode"), partnerMap.get("phone"),
-					orn_req, partnerMap.get("getTA"), partnerMap.get("delTA"), partnerMap.get("specialTA"), 
+					orn_req, partnerMap.get("genTA"), partnerMap.get("delTA"), partnerMap.get("cyTA"), 
 					partnerMap.get("firstcontactname"), partnerMap.get("firstcontactemail"), partnerMap.get("firstcontactphone"),
 					partnerMap.get("secondcontactname"), partnerMap.get("secondcontactemail"), partnerMap.get("secondcontactphone"));
 			
 			returnedPartner = serverPartnerDB.add(year, addPartner);
+			
+			if(returnedPartner != null)
+			{
+				rc = new ResponseCode(String.format("Partner %d, %s successfully added to the database", 
+									returnedPartner.getID(), returnedPartner.getLastName()));
+				mssg = "ADDED_PARTNER" + gson.toJson(returnedPartner, ONCPartner.class);
+				clientMgr.notifyAllInYearClients(year, mssg);
+			}
+			else
+				rc = new ResponseCode("Partner was unable to be added to the database");
 		}
 		else
 		{
@@ -1897,16 +1943,25 @@ public class ONCHttpHandler implements HttpHandler
 					GiftCollection.valueOf(partnerMap.get("collection")), partName,
 					partnerMap.get("housenum"), partnerMap.get("street"), partnerMap.get("unit"),
 					partnerMap.get("city"), partnerMap.get("zipcode"), partnerMap.get("phone"),
-					orn_req, partnerMap.get("getTA"), partnerMap.get("delTA"), partnerMap.get("specialTA"), 
+					orn_req, partnerMap.get("genTA"), partnerMap.get("delTA"), partnerMap.get("cyTA"), 
 					partnerMap.get("firstcontactname"), partnerMap.get("firstcontactemail"), partnerMap.get("firstcontactphone"),
 					partnerMap.get("secondcontactname"), partnerMap.get("secondcontactemail"), partnerMap.get("secondcontactphone"));
 			
 			returnedPartner = serverPartnerDB.update(year, updatePartner);
-		}
-		
-		//FIX THIS TO DEAL WITH PROPER MESSAGES BACK TO WEBSITE
-		return new FamilyResponseCode(year, partnerID);
 			
+			if(returnedPartner != null)
+			{
+				rc = new ResponseCode(String.format("Partner %d, %s successfully updaated", 
+									returnedPartner.getID(), returnedPartner.getLastName()));
+				
+				mssg = "UPDATED_PARTNER" + gson.toJson(returnedPartner, ONCPartner.class);
+				clientMgr.notifyAllInYearClients(year, mssg);
+			}
+			else
+				rc = new ResponseCode("Partner was unable to be updated in the database");
+		}
+
+		return rc;	
 	}
 	
 	Map<String, String> createMap(Map<String, Object> params, String[] keys)
@@ -2135,18 +2190,18 @@ public class ONCHttpHandler implements HttpHandler
 		}
 	}
 	
-	private class FamilyResponseCode
+	private class ResponseCode
 	{
 		private String message;
 		private String famRef;
 		
-		FamilyResponseCode(int rc, String mssg, String famRef)
+		ResponseCode(String mssg, String famRef)
 		{
 			this.message = mssg;
 			this.famRef = famRef;
 		}
 		
-		FamilyResponseCode(int rc, String mssg)
+		ResponseCode(String mssg)
 		{
 			this.message = mssg;
 			this.famRef = "NNA";

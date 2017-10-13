@@ -104,7 +104,7 @@
     	searchbox.value = "";
     	
     	//set the quanity in the table
-    	document.getElementById('count').innerHTML = 'Gift Partners: ' + count.toString();
+    	document.getElementById('count').innerHTML = 'Partners: ' + count.toString();
     }
     
     function addTableRow(partner, buttontext)
@@ -446,7 +446,7 @@
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Data Management System</span><br>
+	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Partner Management System</span><br>
 	<span id="message">USER_MESSAGE</span></p>
   </div>
   <nav>
@@ -466,7 +466,7 @@
 	</ul>
   </nav>
   <div class='controlbar'>
-		<label id='count'>Gift Partners: 0</label>
+		<label id='count'>Partners: 0</label>
 		<span id='filterspan'>
 		  <label for='type'>Type:</label>
 		  <select id="type" title="Type" name="type" onchange="filterChanged()">
