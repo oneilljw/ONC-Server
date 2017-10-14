@@ -8,9 +8,7 @@ import java.util.List;
 
 import ourneighborschild.Address;
 import ourneighborschild.ONCChildWish;
-import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCPartner;
-import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
@@ -75,15 +73,11 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listOfWebPartners = new TypeToken<ArrayList<ONCWebPartner>>(){}.getType();
 		
-		List<ONCPartner> searchList = partnerDB.get(year-BASE_YEAR).getList();
 		ArrayList<ONCWebPartner> webPartnerList = new ArrayList<ONCWebPartner>();
 		
 		for(ONCPartner p :  partnerDB.get(year-BASE_YEAR).getList())
 			webPartnerList.add(new ONCWebPartner(p));
-		
-//		//sort the list by HoH last name
-//		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
-		
+
 		String response = gson.toJson(webPartnerList, listOfWebPartners);
 
 		//wrap the json in the callback function per the JSONP protocol
@@ -168,7 +162,6 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		if(index == oAL.size() || (reqOrg.getStatus() != STATUS_CONFIRMED && 
 									oAL.get(index).getNumberOfOrnamentsAssigned() > 0)) 
 		{
-			
 			return "UPDATE_FAILED";
 		}
 		else
@@ -192,28 +185,31 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	ONCPartner update(int year, ONCPartner updatedPartner)
 	{	
 		//Find the position for the current family being replaced
+		ONCPartner currPartner = null;
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		List<ONCPartner> oAL = partnerDBYear.getList();
 		int index = 0;
 		while(index < oAL.size() && oAL.get(index).getID() != updatedPartner.getID())
 			index++;
 		
-		//If partner is located, replace the current partner with the update. Check to 
-		//ensure the partner status isn't confirmed with gifts assigned. If so, deny the change. 
-		if(index == oAL.size() || (updatedPartner.getStatus() != STATUS_CONFIRMED && 
-									oAL.get(index).getNumberOfOrnamentsAssigned() > 0)) 
+		//If partner is located and the updated partner has been changed, replace the current 
+		//partner with the update. Do not update the ornament request field if the current
+		//partners status is CONFIRMED
+		if(index < oAL.size() && !doPartnersMatch((currPartner = oAL.get(index)), updatedPartner))
 		{
+			//check if a change to the number of requested ornaments is allowed
+			if(currPartner.getStatus() == STATUS_CONFIRMED && 
+				currPartner.getNumberOfOrnamentsRequested() > 0)
+			{
+				updatedPartner.setStatus(currPartner.getStatus());
+				updatedPartner.setNumberOfOrnamentsRequested(currPartner.getNumberOfOrnamentsRequested());	
+			}
 			
-			return null;
-		}
-		else
-		{
-			ONCPartner currOrg = oAL.get(index);
 			//check if partner address has changed and a region update check is required
-			if(currOrg.getHouseNum() != updatedPartner.getHouseNum() ||
-				!currOrg.getStreet().equals(updatedPartner.getStreet()) ||
-				 !currOrg.getCity().equals(updatedPartner.getCity()) ||
-				  !currOrg.getZipCode().equals(updatedPartner.getZipCode()))
+			if(currPartner.getHouseNum() != updatedPartner.getHouseNum() ||
+				!currPartner.getStreet().equals(updatedPartner.getStreet()) ||
+				 !currPartner.getCity().equals(updatedPartner.getCity()) ||
+				  !currPartner.getZipCode().equals(updatedPartner.getZipCode()))
 			{
 				updateRegion(updatedPartner);	
 			}
@@ -221,6 +217,37 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			partnerDBYear.setChanged(true);
 			return updatedPartner;
 		}
+		else
+			return null;
+	}
+	
+	boolean doPartnersMatch(ONCPartner currPartner, ONCPartner updatedPartner)
+	{
+		int c = 0;
+		
+		if(!currPartner.getLastName().equals(updatedPartner.getLastName())) { c = 1; }
+		if(currPartner.getStatus() != updatedPartner.getStatus()) { c = 2; }
+		if(currPartner.getType() != updatedPartner.getType()) { c = 3; }
+		if(currPartner.getGiftCollectionType() != updatedPartner.getGiftCollectionType()) { c = 4; }
+		if(!currPartner.getHouseNum().equals(updatedPartner.getHouseNum())) { c = 5; }
+		if(!currPartner.getStreet().equals(updatedPartner.getStreet())) { c = 6; }
+		if(!currPartner.getUnit().equals(updatedPartner.getUnit())) { c = 7; }
+		if(!currPartner.getCity().equals(updatedPartner.getCity())) { c = 8; }
+		if(!currPartner.getZipCode().equals(updatedPartner.getZipCode())) { c = 9; }
+		if(!currPartner.getHomePhone().equals(updatedPartner.getHomePhone())) { c = 10; }
+		if(!currPartner.getOther().equals(updatedPartner.getOther())) { c = 11; }
+		if(!currPartner.getSpecialNotes().equals(updatedPartner.getSpecialNotes())) { c = 12; }
+		if(!currPartner.getDeliverTo().equals(updatedPartner.getDeliverTo())) { c = 13; }
+		if(!currPartner.getContact().equals(updatedPartner.getContact())) { c = 14; }
+		if(! currPartner.getContact_email().equals(updatedPartner.getContact_email())) { c = 15; }
+		if(!currPartner.getContact_phone().equals(updatedPartner.getContact_phone())) { c = 16; }
+		if(!currPartner.getContact2().equals(updatedPartner.getContact2())) { c = 17; }
+		if(!currPartner.getContact2_email().equals(updatedPartner.getContact2_email())) { c = 18; }
+		if(!currPartner.getContact2_phone().equals(updatedPartner.getContact2_phone())) { c = 19; }
+		if(currPartner.getNumberOfOrnamentsRequested() != updatedPartner.getNumberOfOrnamentsRequested()) { c = 20; }
+		
+//		System.out.println(String.format("ServPartDB.doPartnersMatch: Change Code= %d", c));
+		return c == 0;
 	}
 	
 	int updateRegion(ONCPartner updatedOrg)

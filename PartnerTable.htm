@@ -446,7 +446,7 @@
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Partner Management System</span><br>
+	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child's Partner Management System</span><br>
 	<span id="message">USER_MESSAGE</span></p>
   </div>
   <nav>
@@ -546,6 +546,27 @@
     	<div id='buttonbar'>
       	  <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
       	  <button id="update" onclick="onUpdateProfile()">Update</button>
+    	</div> 
+	</div>
+  </div>
+  <!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Change Password</span>
+		</div>
+		<p id='pw_mssg'>Enter current and new password:</p>
+    	<p><label class='lbl_pw' for="currpw">Current Password:</label>
+    	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
+    	<p><label class='lbl_pw'for="newpw">New Password:</label>
+    	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
+    	<p><label class='lbl_pw'for="verifypw" >Verify Password:</label>
+    	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
+    	<div id='buttonbar'>
+      	  <button id="cancel" onclick="onCancel()">Cancel</button>
+      	  <button id="submit" onclick="onChangePW()">Change Password</button>
     	</div> 
 	</div>
   </div>

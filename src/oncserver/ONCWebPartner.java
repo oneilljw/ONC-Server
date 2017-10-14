@@ -41,34 +41,31 @@ public class ONCWebPartner
 		return types[type];
 	}
 	
-	static int getTypeOrStatus(int op, String zData)
+	static int getStatus(String zStatus)
 	{
 		String[] stati = {"No Action Yet", "1st Email Sent", "Responded", "2nd Email Sent", 
 				"Called, Left Mssg", "Confirmed", "Not Participating"};
 		
+		int index = 0;
+		while(index < stati.length && !stati[index].equals(zStatus))
+			index++;
+			
+		if(index < stati.length)
+			return index;
+		else
+			return 0;	
+	}
+	
+	static int getType(String zType)
+	{
 		String[] types = {"Any","Business","Church","School", "Clothing", "Coat", "ONC Shopper"};
 		
 		int index = 0;
-		if(op == 0) //get type
-		{
-			while(index < types.length && !types[index].equals(zData))
-				index++;
+		while(index < types.length && !types[index].equals(zType))
+			index++;
 			
-			if(index < types.length)
-				return index;
-			else
-				return 0;
-		}
-		else if(op == 1) //get status
-		{
-			while(index < stati.length && !stati[index].equals(zData))
-				index++;
-			
-			if(index < stati.length)
-				return index;
-			else
-				return 0;
-		}
+		if(index < types.length)
+			return index;
 		else
 			return 0;
 	}

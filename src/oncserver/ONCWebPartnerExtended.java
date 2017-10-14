@@ -18,7 +18,6 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 	private String orn_rec_before;
 	private String orn_rec_after;
 	private String other;
-	private String confirmed;
 	private String deliverTo;
 	private String specialNotes;
 	private String contact;
@@ -49,7 +48,6 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 		this.orn_rec_before = Integer.toString(p.getNumberOfOrnamentsReceivedBeforeDeadline());;
 		this.orn_rec_after = Integer.toString(p.getNumberOfOrnamentsReceivedAfterDeadline());;
 		this.other = p.getOther();
-		this.confirmed = p.getConfirmed();
 		this.deliverTo= p.getDeliverTo();
 		this.specialNotes = p.getSpecialNotes();
 		this.contact = p.getContact();
@@ -64,6 +62,35 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 		this.pyReceivedBeforeDeadline = Integer.toString(p.getPriorYearReceivedBeforeDeadline());
 		this.pyReceivedAfterDeadline = Integer.toString(p.getPriorYearReceivedAfterDeadline());
 	}
+	
+	//getters
+	String getLastName()	{ return lastName; }
+	String getFirstName()	{ return firstName; }
+	String getHouseNum()	{ return houseNum; }
+	String getStreet()	{return street; }
+	String getUnit() { return unit; }
+	String getCity()	{return city; }
+	String getZipCode()	{ return zipCode; }
+	String getHomePhone()	{ return homePhone; }
+	String getNumberOfOrnamentsRequested()	{ return orn_req; }
+	String getNumberOfOrnamentsAssigned() { return orn_assigned; }
+	String getNumberOfOrnamentsDelivered() { return orn_delivered; }
+	String getNumberOfOrnamentsReceivedBeforeDeadline() { return orn_rec_before; }
+	String getNumberOfOrnamentsReceivedAfterDeadline() { return orn_rec_after; }
+	String getOther()	{ return other; }
+	String getDeliverTo() { return deliverTo; }
+	String getSpecialNotes()	{ return specialNotes; }
+	String getContact()	{ return contact; }
+	String getContact_email()	{ return contact_email; }
+	String getContact_phone()	{ return contact_phone; }
+	String getContact2()	{ return contact2; }
+	String getContact2_email()	{ return contact2_email; }
+	String getContact2_phone()	{ return contact2_phone; }
+	String getPriorYearRequested() { return pyRequested; }
+	String getPriorYearAssigned() { return pyAssigned; }
+	String getPriorYearDelivered() { return pyDelivered; }
+	String getPriorYearReceivedBeforeDeadline() { return pyReceivedBeforeDeadline; }
+	String getPriorYearReceivedAfterDeadline() { return pyReceivedAfterDeadline; }
 	
 	void parseName(String name)
 	{

@@ -63,6 +63,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
 	private static final String GIFTS_REQUESTED_KEY = "giftreq";
+	private static final int STATUS_CONFIRMED = 5;
 	
 	public void handle(HttpExchange t) throws IOException 
     {
@@ -166,7 +167,7 @@ public class ONCHttpHandler implements HttpHandler
     			//update time stamp, get the home page html and return it
     			wc.updateTimestamp();
     			
-    			String response = getHomePageHTML(wc, wc.getWebUser().getFirstName(), "",
+    			String response = getHomePageHTML(wc, "",
     					(String) params.get("year"), (String) params.get("famref"));
     			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     		}
@@ -691,13 +692,7 @@ public class ONCHttpHandler implements HttpHandler
     			ResponseCode frc = processFamilyReferral(wc, params);
     			
     			//submission processed, send the family table page back to the user
-    			String userFN;
-    			if(wc.getWebUser().getFirstName().equals(""))
-    				userFN = wc.getWebUser().getLastName();
-    			else
-    				userFN = wc.getWebUser().getFirstName();
-    			
-    			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
+    			response = getHomePageHTML(wc, frc.getMessage(), (String) params.get("year"),
     					frc.getFamRef());
     		}
     		else
@@ -746,13 +741,7 @@ public class ONCHttpHandler implements HttpHandler
     			ResponseCode frc = processFamilyUpdate(wc, params);
     			
     			//submission processed, send the family table page back to the user
-    			String userFN;
-    			if(wc.getWebUser().getFirstName().equals(""))
-    				userFN = wc.getWebUser().getLastName();
-    			else
-    				userFN = wc.getWebUser().getFirstName();
-    			
-    			response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
+    			response = getHomePageHTML(wc, frc.getMessage(), (String) params.get("year"),
     					(String) params.get("targetid"));
     		}
     		else
@@ -773,7 +762,14 @@ public class ONCHttpHandler implements HttpHandler
     			try
     			{
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
-    				response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
+    				
+    				String userFN;
+        			if(wc.getWebUser().getFirstName().equals(""))
+        				userFN = wc.getWebUser().getLastName();
+        			else
+        				userFN = wc.getWebUser().getFirstName();
+        			
+    				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", "");
     				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
     				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
@@ -1026,12 +1022,7 @@ public class ONCHttpHandler implements HttpHandler
     			if(retCode == 0)
     			{
     				//submission successful, send the family table page back to the user
-    				String userFN;
-        			if(wc.getWebUser().getFirstName().equals(""))
-        				userFN = wc.getWebUser().getLastName();
-        			else
-        				userFN = wc.getWebUser().getFirstName();
-        			response = getHomePageHTML(wc, userFN, "Your password change was successful!",
+    				response = getHomePageHTML(wc, "Your password change was successful!",
         					DBManager.getMostCurrentYear(), "NNA");
     			}
     			else if(retCode == -1)
@@ -1238,13 +1229,7 @@ public class ONCHttpHandler implements HttpHandler
 	    				userMssg = "You last visited " + sdf.format(lastLogin.getTime());
 	    			}
 	    			
-	    			String username = "";
-	    			if(serverUser.getFirstName().equals(""))
-	    				username = serverUser.getLastName();
-	    			else
-	    				username =  serverUser.getFirstName();
-	    		
-	    			html = getHomePageHTML(wc, username, userMssg, DBManager.getMostCurrentYear(), "NNA");
+	    			html = getHomePageHTML(wc, userMssg, DBManager.getMostCurrentYear(), "NNA");
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -1259,9 +1244,16 @@ public class ONCHttpHandler implements HttpHandler
 		return response;
 	}
 	
-	String getHomePageHTML(WebClient wc, String username, String message, String year, String famRef)
+	String getHomePageHTML(WebClient wc, String message, String year, String famRef)
 	{
 		String homePageHTML;
+		
+		String userFN;
+		if(wc.getWebUser().getFirstName().equals(""))
+			userFN = wc.getWebUser().getLastName();
+		else
+			userFN = wc.getWebUser().getFirstName();
+		
 		//determine which home page, elf or agent
 		if(wc.getWebUser().getPermission() == UserPermission.Admin ||
 				wc.getWebUser().getPermission() == UserPermission.Sys_Admin)
@@ -1270,7 +1262,7 @@ public class ONCHttpHandler implements HttpHandler
 			try
 			{
 				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_FAMILY_PAGE_HTML));
-				homePageHTML = homePageHTML.replace("USER_NAME", username);
+				homePageHTML = homePageHTML.replace("USER_NAME", userFN);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
 				homePageHTML = homePageHTML.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
 				homePageHTML = homePageHTML.replace("REPLACE_YEAR", year);
@@ -1288,7 +1280,7 @@ public class ONCHttpHandler implements HttpHandler
 			try
 			{
 				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
-				homePageHTML = homePageHTML.replace("USER_NAME", username);
+				homePageHTML = homePageHTML.replace("USER_NAME", userFN);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
 				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 				homePageHTML = homePageHTML.replace("HOME_LINK_VISIBILITY", "hidden");
@@ -1304,7 +1296,7 @@ public class ONCHttpHandler implements HttpHandler
 			try
 			{
 				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
-				homePageHTML = homePageHTML.replace("USER_NAME", username);
+				homePageHTML = homePageHTML.replace("USER_NAME", userFN);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
 				homePageHTML = homePageHTML.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 				homePageHTML = homePageHTML.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
@@ -1912,8 +1904,8 @@ public class ONCHttpHandler implements HttpHandler
 			ONCPartner addPartner = new ONCPartner(-1, new Date(),
 					wc.getWebUser().getLNFI(), 3,
 					"New partner", wc.getWebUser().getLNFI(), 
-					ONCWebPartner.getTypeOrStatus(1, partnerMap.get("status")),
-					ONCWebPartner.getTypeOrStatus(0, partnerMap.get("type")),
+					ONCWebPartner.getStatus(partnerMap.get("status")),
+					ONCWebPartner.getType(partnerMap.get("type")),
 					GiftCollection.valueOf(partnerMap.get("collection")), partName,
 					partnerMap.get("housenum"), partnerMap.get("street"), partnerMap.get("unit"),
 					partnerMap.get("city"), partnerMap.get("zipcode"), partnerMap.get("phone"),
@@ -1935,30 +1927,59 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		else
 		{
-			ONCPartner updatePartner = new ONCPartner(Integer.parseInt(partnerID),
-					new Date(), wc.getWebUser().getLNFI(), 3,
-					"Update Partner via website", wc.getWebUser().getLNFI(), 
-					ONCWebPartner.getTypeOrStatus(1, partnerMap.get("status")),
-					ONCWebPartner.getTypeOrStatus(0, partnerMap.get("type")),
-					GiftCollection.valueOf(partnerMap.get("collection")), partName,
-					partnerMap.get("housenum"), partnerMap.get("street"), partnerMap.get("unit"),
-					partnerMap.get("city"), partnerMap.get("zipcode"), partnerMap.get("phone"),
-					orn_req, partnerMap.get("genTA"), partnerMap.get("delTA"), partnerMap.get("cyTA"), 
-					partnerMap.get("firstcontactname"), partnerMap.get("firstcontactemail"), partnerMap.get("firstcontactphone"),
-					partnerMap.get("secondcontactname"), partnerMap.get("secondcontactemail"), partnerMap.get("secondcontactphone"));
-			
-			returnedPartner = serverPartnerDB.update(year, updatePartner);
-			
-			if(returnedPartner != null)
+			//get current partner from the DB and update the fields from the web page submit
+			//only allow status or ornament request changes if not CONFIMED and > 0
+			ONCPartner currPartner = serverPartnerDB.getPartner(year, Integer.parseInt(partnerID));
+			if(currPartner != null)
 			{
-				rc = new ResponseCode(String.format("Partner %d, %s successfully updaated", 
+				ONCPartner updatePartner = new ONCPartner(currPartner);
+				updatePartner.setDateChanged(new Date());
+				updatePartner.setChangedBy(wc.getWebUser().getLNFI());
+				updatePartner.setStoplightPos(3);
+				updatePartner.setStoplightMssg("Update Partner via website");
+				updatePartner.setStoplightMssg(wc.getWebUser().getLNFI());
+				updatePartner.setType(ONCWebPartner.getType(partnerMap.get("type")));
+				updatePartner.setGiftCollectionType(GiftCollection.valueOf(partnerMap.get("collection")));
+				updatePartner.setLastName(partName);
+				updatePartner.setHouseNum(partnerMap.get("housenum"));
+				updatePartner.setStreet(partnerMap.get("street"));
+				updatePartner.setUnit(partnerMap.get("unit"));
+				updatePartner.setCity(partnerMap.get("city"));
+				updatePartner.setZipCode(partnerMap.get("zipcode"));	
+				updatePartner.setHomePhone(partnerMap.get("phone"));
+				
+				if(!(currPartner.getStatus() == STATUS_CONFIRMED && 
+					currPartner.getNumberOfOrnamentsRequested() > 0))
+				{
+					updatePartner.setStatus(ONCWebPartner.getStatus(partnerMap.get("status")));
+					updatePartner.setNumberOfOrnamentsRequested(orn_req);
+				}
+				
+				updatePartner.setOther(partnerMap.get("genTA"));
+				updatePartner.setDeliverTo(partnerMap.get("delTA"));
+				updatePartner.setSpecialNotes(partnerMap.get("cyTA"));
+				updatePartner.setContact(partnerMap.get("firstcontactname"));
+				updatePartner.setContact_email(partnerMap.get("firstcontactemail"));
+				updatePartner.setContact_phone(partnerMap.get("firstcontactphone"));
+				updatePartner.setContact2(partnerMap.get("secondcontactname"));
+				updatePartner.setContact2_email(partnerMap.get("secondcontactemail"));
+				updatePartner.setContact2_phone(partnerMap.get("secondcontactphone"));
+			
+				returnedPartner = serverPartnerDB.update(year, updatePartner);
+			
+				if(returnedPartner != null)
+				{
+					rc = new ResponseCode(String.format("Partner %d, %s successfully updated", 
 									returnedPartner.getID(), returnedPartner.getLastName()));
 				
-				mssg = "UPDATED_PARTNER" + gson.toJson(returnedPartner, ONCPartner.class);
-				clientMgr.notifyAllInYearClients(year, mssg);
+					mssg = "UPDATED_PARTNER" + gson.toJson(returnedPartner, ONCPartner.class);
+					clientMgr.notifyAllInYearClients(year, mssg);
+				}
+				else
+					rc = new ResponseCode(String.format("No changes detected for %s", currPartner.getLastName()));
 			}
 			else
-				rc = new ResponseCode("Partner was unable to be updated in the database");
+				rc = new ResponseCode("Partner was not found in the database");
 		}
 
 		return rc;	
