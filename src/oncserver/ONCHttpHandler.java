@@ -837,7 +837,7 @@ public class ONCHttpHandler implements HttpHandler
     				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", rc.getMessage());
     				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    				response = response.replace("HOME_LINK_VISIBILITY", "hidden");
+    				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
     			}
     			catch (IOException e) 
     			{
