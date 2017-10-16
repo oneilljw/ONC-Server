@@ -25,6 +25,7 @@
     {
     	display: block;
     	margin: 0px auto;
+    	margin-top: 12px;
     	background-color: #336699;
     	color: #ffffff;
     	border: 4px outset white;
@@ -82,20 +83,25 @@
   		font-size:80%;
   		text-align:left;
 	 }
+	 .linetwo
+	 {
+	 	margin-top: 12px;
+	 }
     </style>
 </head>
 <body>
-<div>
-<!-- <p id='header'>Our Neighbor's Child<p></div>  --> 
- <div id="inner">
+<!-- <div><p id='header'>Our Neighbor's Child<p></div>  --> 
+  <div id="inner">
 	<form action="login" method="post">
       <fieldset>
     	<legend class='legend-major'>Our Neighbor's Child Login</legend>
     	<p align="center"><b><i>WELCOME_MESSAGE</i></b></p>
-    	<p><label for="username">User Name:</label> <input type="text" id="username" name="field1" autofocus/></p>
-    	<p><label for="password">Password:</label> <input type="password" id="password" name="field2"/><br /></p>
-    	<p><input id="submit" type="submit" value="Login" /></p>
-    	</fieldset>
+    	<label for="username">User Name:</label>
+    	<input type="text" id="username" name="field1" autofocus/>
+    	<label for="password" class='linetwo' >Password:</label>
+    	<input class='linetwo' type="password" id="password" name="field2"><br>
+    	<input id="submit" type="submit" value="Login">
+      </fieldset>
     </form>
   </div>  
 </body>

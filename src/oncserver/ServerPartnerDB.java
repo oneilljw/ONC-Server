@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import ourneighborschild.Address;
@@ -77,6 +79,8 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		for(ONCPartner p :  partnerDB.get(year-BASE_YEAR).getList())
 			webPartnerList.add(new ONCWebPartner(p));
+		
+		Collections.sort(webPartnerList, new PartnerNameComparator());
 
 		String response = gson.toJson(webPartnerList, listOfWebPartners);
 
@@ -643,6 +647,15 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			String path = String.format("%s/%dDB/OrgDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(partnerDBYear.getList(),  header, path);
 			partnerDBYear.setChanged(false);
+		}
+	}
+	
+	private static class PartnerNameComparator implements Comparator<ONCWebPartner>
+	{
+		@Override
+		public int compare(ONCWebPartner o1, ONCWebPartner o2)
+		{			
+			return o1.getName().compareTo(o2.getName());
 		}
 	}
 }
