@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>ONC Regions</title>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script>
+	var regionJson = [];
+	
+	sessionStorage.setItem('token', "REPLACE_TOKEN");
+	
+    $( document ).ready(function()
+    {	
+  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
+		
+    	//get the list of years from the data base so we can determine current year
+    	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+    	$.getJSON('dbStatus', dbyearsparams, function(data)
+    	{	
+			currYear = data[data.length-1].id;
+			
+			//update the nav bar links with token and set home link presence
+	    	document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+	    				+'&year=' + currYear
+	    				+'&famref=' + sessionStorage.getItem('famref');
+    		getRegionsFromServer();
+    		
+    	});
+    	
+     // Write on keyup event of keyword current year seach input element
+        $("#streetsearch").keyup(function()
+        {
+            _this = this;
+            // Show only matching TR's, hide rest of them
+            $.each($("#streettable tbody tr"), function()
+            {
+                if($(this).find('td').eq(1).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
+                   $(this).hide();
+                else
+                   $(this).show();                
+            });
+        });
+    });
+    
+    function getRegionsFromServer()
+    {
+    	//get updated agentJson from server and place into group combobox. agentid =-1 defaults
+    	//to the logged in user
+    	var params = "token=" + sessionStorage.getItem("token") 
+    				+"&zipcode=" + document.getElementById('zipcode').value
+    				+"&callback=?";
+    	
+    	$.getJSON('regions', params, function(data)
+    	{
+    		regionJson = data;
+    		updateRegionTable();
+    	});
+    }
+    function updateRegionTable()
+    {
+    	$("#regiontbody").empty();
+    	var region = document.getElementById('region').value;
+    	
+    	var count = 0;
+    	for(var i=0; i<regionJson.length; i++)
+		{
+	   		if(region === 'Any' || region === regionJson[i].region)
+	   		{
+    			addTableRow(regionJson[i], 'Edit');	//add row to table
+    			count++;
+	   		}
+		}
+    	
+    	//clear the search box
+    	var searchbox = document.getElementById('regionsearch');
+    	searchbox.value = "";
+    	
+    	//set the quanity in the table
+    	document.getElementById('count').innerHTML = 'Streets: ' + count.toString();
+    }
+    
+    function addTableRow(region, buttontext)
+    {
+        if (!document.getElementsByTagName) return;
+        	
+        var regioninfo = [region.streetDir, region.streetName, region.streetType, region.postDir, region.zipCode, region.region, region.addressNumLow, region.addressNumHi];
+        
+        var cellwidth = ['40px', '320px', '80px', '80px', '96px', '64px', '80px', '80px', '80px'];
+        
+	    var tabBody = regiontable.getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+         
+        for(index=0; index < regioninfo.length; index++)	//create the family info cells
+        {
+        	cell = document.createElement("td");
+        	cell.appendChild(document.createTextNode(regioninfo[index]));
+        	cell.style.width = cellwidth[index];
+        	if(index === 5)	//regions cell
+        		cell.style.textAlign = 'center';
+        	row.appendChild(cell);
+        }
+        
+        btn = document.createElement("button");
+        btn.innerHTML = buttontext;
+        btn.style.width = cellwidth[index];
+        btn.onclick=function() {regionAction(region.id);};
+        
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+
+    function regionAction(regionID)
+    {
+    	sessionStorage.setItem("regionid", regionID);
+		var params = {}
+		
+		params["token"] = sessionStorage.getItem('token');
+		params["regionid"] = regionID;
+		
+		post('regionupdate', params);
+    }
+    
+    function newRegion()
+    {
+    	sessionStorage.setItem("regionid", "New");
+    	
+    	var params = {}
+		params["token"] = sessionStorage.getItem('token');
+		
+		post('regonupdate', params);
+    }
+      
+    function filterChanged()
+    {
+    	updateRegionTable();
+    }
+    
+    function onResetFilters()
+    {
+    	var regionElement = document.getElementById('region');
+    	
+        regionElement.value = 'Any';
+        updateRegionTable();
+    }
+    
+    function onCancel()
+    {
+		window.location=document.getElementById('closepopup').href;
+    }
+	
+	function onSessionTimeout()
+	{
+		 window.location.assign('timeout');
+	}
+    
+	function post(path, params, method) 
+	{
+	    method = method || "post"; // Set method to post by default if not specified.
+
+	    // The rest of this code assumes you are not using a library.
+	    // It can be made less wordy if you use one.
+	    var form = document.createElement("form");
+	    form.setAttribute("method", method);
+	    form.setAttribute("action", path);
+
+	    for(var key in params) 
+	    {
+	    	if(params.hasOwnProperty(key))
+	        {
+	            var hiddenField = document.createElement("input");
+	            hiddenField.setAttribute("type", "hidden");
+	            hiddenField.setAttribute("name", key);
+	            hiddenField.setAttribute("value", params[key]);
+
+	        	form.appendChild(hiddenField);
+	        }
+	    }
+
+	    document.body.appendChild(form);
+	    form.submit();
+	}
+    </script>
+    <style type="text/css">         
+    	.constrainer 
+        {
+         	width: 90%;
+			margin-left: auto;
+			margin-right: auto;
+            background-color: #3CB371;
+            border: 1px solid black;
+        }
+        .constrainer table { overflow-y: scroll; }
+        .constrainer thead { display: table-row; }
+        .constrainer tbody
+        {
+            overflow-x: scroll;
+            display: block;
+            height: 400px;
+        }
+
+        .dircol { width: 40px; }
+        .namecol { width: 320px; }
+        .zipcodecol { width: 96px}
+        .regioncol { width: 64px; }
+        .add { width: 80px; }
+        
+        /* only styling below here */
+        table { border-collapse: collapse; }       
+        th, td { border: 1px solid gray; }
+        th 
+        {
+            background-color: lightgrey;
+            border-width: 1px;
+        }
+        td { border-width: 1px; }
+        tr:first-child td { border-top-width: 0; }
+        tr:nth-child(odd) { background-color: #ffffff; }
+        tr:nth-child(even) { background-color: lightgrey; } 
+        .controlbar
+		{
+			width:90%;
+			margin:0 auto;
+			background-color: #3CB371;
+			border: 1px solid black;
+		}
+		#newbar { text-align: right; }
+		.textDialog 
+		{
+			position: fixed;
+			font-family: Arial, Helvetica, sans-serif;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			background: rgba(5,5,5,0.4);
+			z-index: 99999;
+			opacity:0;
+			-webkit-transition: opacity 400ms ease-in;
+			-moz-transition: opacity 400ms ease-in;
+			transition: opacity 400ms ease-in;
+			pointer-events: none;
+		}
+		.textDialog:target 
+		{
+			opacity:1;
+			pointer-events: auto;
+		}
+		.textDialog > div 
+		{
+			width: 700px;
+			height: 400px;
+			position: relative;
+			margin: 10% auto;
+			padding: 5px 10px 5px 10px;
+			border-radius: 10px;
+			background: #fff;
+			background: -moz-linear-gradient(#fff, #999);
+			background: -webkit-linear-gradient(#fff, #999);
+			background: -o-linear-gradient(#fff, #999);
+		}
+		.textDialog label
+		{
+			float: left;
+    		text-align: right;
+    		margin-right: 0.5em;
+    		display: block;
+    		color: black;
+    		font-size: 85%;
+		}
+		dl
+		{	height:300px;
+			overflow-y:scroll;
+		}
+		dt
+		{
+			font-weight: bold;
+		}
+		dt:before
+		{
+			content: '\A';
+    		white-space: pre;
+		}
+		dd
+		{
+			font-style: italic;
+		}
+		#filterspan
+		{
+			display: inline-block;
+    		margin-left: 40px;
+		}
+    </style>
+</head>
+<body>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <div id="topbar" class="topbar">
+    <img src="onclogo" height="55" width="75"/>
+	<p><span id="banner">Our Neighbor's Child's Regionalization Management System</span><br>
+	<span id="message">USER_MESSAGE</span></p>
+  </div>
+  <nav>
+   <ul>
+	    <li id="homelinkli"><a id='homelink'>Home</a></li>
+	</ul>
+	<ul class='floatright'>
+	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	</ul>
+  </nav>
+  <div class='controlbar'>
+		<label id='count'>Streets: 0</label>
+		<span id='filterspan'>
+		  <label for='zipcode'>Zip Code:</label>
+		  <select id="zipcode" title="Zip Code"  onchange="getRegionsFromServer()">
+		    <option value="20120">20120</option>
+		    <option value="20121">20121</option>
+		    <option value="20124">20124</option>
+		    <option value="20151">20151</option>
+		    <option value="20170">20170</option>
+		    <option value="20171">20171</option>
+		    <option value="20190">20190</option>
+		    <option value="20191">20191</option>
+		    <option value="20194">20194</option>
+		    <option value="22003">22003</option>
+		    <option value="22015">22015</option>
+		    <option value="22027">22027</option>
+		    <option value="22030">22030</option>
+		    <option value="22031">22031</option>
+		    <option value="22032">22032</option>
+		    <option value="22033">22033</option>
+		    <option value="22037">22037</option>
+		    <option value="22039">22039</option>
+		    <option value="22041">22041</option>
+		    <option value="22042">22042</option>
+		    <option value="22043">22043</option>
+		    <option value="22044">22044</option>
+		    <option value="22046">22046</option>
+		    <option value="22060">22060</option>
+		    <option value="22066">22066</option>
+		    <option value="22079">22079</option>
+		    <option value="22101">22101</option>
+		    <option value="22102">22102</option>
+		    <option value="22121">22121</option>
+		    <option value="22122">22122</option>
+		    <option value="22124">22124</option>
+		    <option value="22150">22150</option>
+		    <option value="22151">22151</option>
+		    <option value="22152">22152</option>
+		    <option value="22153">22153</option>
+		    <option value="22180">22180</option>
+		    <option value="22181">22181</option>
+		    <option value="22182">22182</option>
+		    <option value="22183">22183</option>
+		    <option value="22203">22203</option>
+		    <option value="22204">22204</option>
+		    <option value="22206">22206</option>
+		    <option value="22207">22207</option>
+		    <option value="22213">22213</option>
+		    <option value="22302">22302</option>
+		    <option value="22303">22303</option>
+		    <option value="22304">22304</option>
+		    <option value="22306">22306</option>
+		    <option value="22307">22307</option>
+		    <option value="22308">22308</option>
+		    <option value="22309">22309</option>
+		    <option value="22310">22310</option>
+		    <option value="22311">22311</option>
+		    <option value="22312">22312</option>
+		    <option value="22315">22315</option>
+		  </select>
+		  <label for='region'>Region:</label>
+		  <select id="region" title="Region" onchange="filterChanged()">
+		    <option value="Any">Any</option>
+		    <option value="A">A</option>
+		    <option value="B">B</option>
+		    <option value="C">C</option>
+		    <option value="D">D</option>
+		    <option value="E">E</option>
+		    <option value="F">F</option>
+		    <option value="G">G</option>
+		    <option value="H">H</option>
+		    <option value="I">I</option>
+		    <option value="J">J</option>
+		    <option value="K">K</option>
+		    <option value="L">L</option>
+		    <option value="M">M</option>
+		    <option value="N">N</option>
+		    <option value="O">O</option>
+		    <option value="P">P</option>
+		    <option value="Q">Q</option>
+		    <option value="R">R</option>
+		    <option value="S">S</option>
+		    <option value="T">T</option>
+		    <option value="U">U</option>
+		    <option value="V">V</option>
+		    <option value="W">W</option>
+		    <option value="X">X</option>
+		    <option value="Y">Y</option>
+		    <option value="X">Z</option>
+		  </select>
+		  <button id="reset" onclick="onResetFilters()">Reset</button>
+		</span>
+		<span class='floatright'>
+		  <label for="streetsearch">Search For Street Name:</label>
+		  <input type="text" id="streetsearch" placeholder="Type to search..." />
+		</span>
+  </div>
+  <div class="constrainer">
+	<table id="regiontable">
+      <thead>
+        <tr>
+       		<th class='dircol'>Dir</th>
+       		<th class='namecol'>Street Name</th>
+       		<th class='add'>Type</th>
+        	<th class='add'>Post Dir</th>
+        	<th class='zipcodecol'>Zip Code</th>
+        	<th class='regioncol'>Region</th>
+        	<th class='add'>Low #</th>
+        	<th class='add'>High #</th>
+        	<th class='add'>Action</th>
+        </tr>
+      </thead>
+      <tbody id='regiontbody'>
+      </tbody>
+	</table>
+  </div>
+  <div id='newbar' class='controlbar'>
+    <button id="new" onclick="newRegion()">Add New Region</button>
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div id='inner'>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="submit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>
+</body>
+</html>

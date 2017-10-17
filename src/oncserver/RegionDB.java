@@ -3,6 +3,7 @@ package oncserver;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,6 +16,7 @@ import ourneighborschild.Address;
 import ourneighborschild.Region;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -23,7 +25,7 @@ public class RegionDB
 	/**
 	 * 
 	 */
-	private static final int ONC_REGION_HEADER_LENGTH = 14;
+	private static final int ONC_REGION_HEADER_LENGTH = 10;
 	
 	private static RegionDB instance = null;
 	private static ArrayList<Region> regAL = new ArrayList<Region>();
@@ -37,7 +39,7 @@ public class RegionDB
 	{
 		oncIcon = appicon;
 		if(regAL.size() == 0)
-			getONCRegions(System.getProperty("user.dir") +"/regions_2015.csv");
+			getONCRegions(System.getProperty("user.dir") +"/regions_2017.csv");
 		
 		//build hash index array. Used to quickly search the regions list. Hash is based on first character
 		//in street name. Prior to building, sort the region list alphabetically by street name , with street
@@ -98,6 +100,22 @@ public class RegionDB
 			return "NO_MATCH" + Integer.toString(0);
 		else	
 			return "MATCH" + Integer.toString(searchForRegionMatch(searchAddress));		
+	}
+	
+	static HtmlResponse getAddressesJSONP(String zipCode, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfRegions = new TypeToken<ArrayList<Region>>(){}.getType();
+		
+		List<Region> addressList = new ArrayList<Region>();
+		for(Region r : regAL)
+			if(r.getZipCode().equals(zipCode))
+				addressList.add(r);
+
+		String response = gson.toJson(addressList, listOfRegions);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 /*	
 	int getRegionMatch(Address matchAddress)

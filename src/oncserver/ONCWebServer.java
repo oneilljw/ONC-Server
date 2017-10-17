@@ -32,6 +32,7 @@ public class ONCWebServer
 							"/profileunchanged", "/updateuser", "/driversignin", "/signindriver",
 							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/partnerupdate", "/updatepartner",
 							"/contactinfo", "/jquery.js", "/favicon.ico", "/groups", "/partners", "/partnertable",
+							"/regiontable", "/regions",
 							"/volunteerregistration", "/registervolunteer", "/commonfamily.js"};
 		
 		HttpContext context;

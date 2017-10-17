@@ -47,6 +47,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String ONC_FAMILY_PAGE_HTML = "ONC.htm";
 	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
 	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
+	private static final String REGION_TABLE_HTML = "RegionTable.htm";
 	private static final String UPDATE_HTML = "NewEdit.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
@@ -256,6 +257,17 @@ public class ONCHttpHandler implements HttpHandler
     		int year = Integer.parseInt((String) params.get("year"));
     		
     		HtmlResponse response = ServerPartnerDB.getPartnersJSONP(year, (String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
+    	else if(requestURI.contains("/regions"))
+    	{
+//    		Set<String> keyset = params.keySet();
+//			for(String key:keyset)
+//				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+    		
+    		String zipCode = (String) params.get("zipcode");
+    		
+    		HtmlResponse response = RegionDB.getAddressesJSONP(zipCode, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
     	else if(requestURI.contains("/references"))
@@ -846,6 +858,33 @@ public class ONCHttpHandler implements HttpHandler
     			
     	//		response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
     	//				frc.getFamRef());
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/regiontable"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    			
+    		if((wc=clientMgr.findClient(sessionID)) != null)
+    		{
+    			wc.updateTimestamp();
+    			try
+    			{
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REGION_TABLE_HTML));
+        			
+    				response = response.replace("USER_MESSAGE", "");
+    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    			}
+    			catch (IOException e) 
+    			{
+    				response = "<p>Region Table Unavailable</p>";
+    			}
     		}
     		else
     			response = invalidTokenReceived();
