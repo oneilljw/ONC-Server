@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>ONC Region Page</title>
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+  <script> 
+  	var errorColor = '#FF9999';
+  	
+  	$( document ).ready(function()
+	{
+  		//set the hidden values
+  		var currYear = new Date().getFullYear();
+  		document.getElementById('year').value= currYear.toString();
+  		document.getElementById('token').value= sessionStorage.getItem("token");
+  		document.getElementById('regionid').value= sessionStorage.getItem("regionid");
+  		
+  		//update the nav bar links with token
+  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
+  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
+  		
+  		if(sessionStorage.getItem("regionid") !== "New")
+  		{
+  			document.getElementById('banner').innerHTML='Update Existing ONC Region Form';
+  			document.getElementById('regionlegend').innerHTML='Update Street & Region Information';
+  			
+  			regionparams = "token=" + sessionStorage.getItem("token") + "&" +
+				"regionid=" + sessionStorage.getItem("regionid") + "&" +
+				"callback=?";
+
+			$.getJSON('getregion', regionparams, function(region)
+			{
+				//fill in region info here
+				document.getElementById('dir').value= region.streetDir;
+				document.getElementById('street').value= region.streetName;
+				document.getElementById('type').value= region.streetType;
+				document.getElementById('postdir').value= region.postDir;
+				document.getElementById('zipcode').value= region.zipCode;
+				document.getElementById('region').value= region.region;
+				document.getElementById('addlo').value= region.addressNumLow;
+				document.getElementById('addhi').value= region.addressNumHi;
+			});
+  		}
+  		else
+  		{
+  			document.getElementById('banner').innerHTML='Add New ONC Region Form';
+  			document.getElementById('regionlegend').innerHTML='Enter New Street & Region Information';
+  		}
+	});
+	
+	function onSessionTimeout()
+	{
+		 window.location.assign('timeout');
+	}
+	
+	function onSubmit()
+	{
+		document.getElementById("updateregion").submit();
+	}
+
+  </script>
+  <style>
+  	.right-justify
+  	{
+  		width: 25px;
+  		text-align:right;
+  	}
+  	.fieldsetdiv
+  	{
+  		margin-top:6px;
+  	}
+  	.inertperfinput
+  	{
+  		width: 25px;
+  		text-align:right;
+  		background-color: #e1e1e1;
+  	}
+  	textarea 
+  	{
+    	height: 120px;
+    	padding: 2px 2px;
+    	box-sizing: border-box;
+    	border: 1px solid #ccc;
+    	border-radius: 4px;
+    	background-color: #f8f8f8;
+    	resize: none;
+    	display: block;
+	}
+	#partid
+	{
+		width: 64px;
+		text-align: center;
+	}
+	#genTA { width: 300px; }
+	#cyTA { width: 300px; }
+	#delTA { width: 150px; }
+	#submitspan {float: right;}
+	#errormessage
+	{
+		float: left;
+		font-weight: bold;
+		font-style: italic;
+		color: red;
+	}
+  </style>
+</head>
+<body>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <div id="topbar" class="topbar">
+    <img src="onclogo" height="55" width="75"/>
+    <p><span id="banner">ONC Region Form</span><br>
+	<span id="message">(please complete and click Submit to add or update a street)</span></p>
+  </div>
+  <nav>
+    <ul>
+	    <li id="homeli"><a id='homelink'>Home</a></li>
+	</ul>
+	<ul class='floatright'>
+	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	</ul>
+  </nav>
+  <form id="updateregion" action="updatepregion" method="post">
+  <input id='token' type="hidden" name="token">
+  <input id='year' type="hidden" name="year">
+  <input id='regionid' type="hidden" name="regionid">
+  <fieldset>
+  <legend class="legend-major" id='regionlegend'>Region/Street Information</legend>
+  	<div>
+    <label for='dir'>Direction:</label>
+    <select id="dir" title="Street Direction" name="dir">
+      <option value=""></option>
+      <option value="N">N</option>
+	  <option value="S">S</option>
+	  <option value="E">E</option>
+	  <option value="W">W</option>
+	</select>
+    <label for='street'>Street Name:</label>
+    <input id='street' title="Street Name" name="street" type="text" placeholder='NEW STREET NAME' size="24" style="text-transform:uppercase">
+    <label for='type'>Street Type:</label>
+    <select id="type" title="Street Type" name="type">
+      <option value="ALY">ALLEY</option>
+	  <option value="AVE">AVENUE</option>
+	  <option value="BLVD">BOULEVARD</option>
+	  <option value="CIR">CIRCLE</option>
+	  <option value="CL">CLUSTER</option>
+	  <option value="CMN">COMMON</option>
+	  <option value="COR">CORNER</option>
+	  <option value="CT">COURT</option>
+	  <option value="CTR">CENTER</option>
+	  <option value="CV">COVE</option>
+	  <option value="DR">DRIVE</option>
+	  <option value="GRN">GREEN</option>
+	  <option value="GRV">GROVE</option>
+	  <option value="HTS">HEIGHTS</option>
+	  <option value="HWY">HIGHWAY</option>
+	  <option value="KNLS">KNOLLS</option>
+	  <option value="LDG">LDG</option>
+	  <option value="LN">LANE</option>
+	  <option value="LNDG">LANDING</option>
+	  <option value="LOOP">LOOP</option>
+	  <option value="NOOK">NOOK</option>
+	  <option value="PARK">PARK</option>
+	  <option value="PASS">PASS</option>
+	  <option value="PATH">PATH</option>
+	  <option value="PIKE">PIKE</option>
+	  <option value="PKWY">PARKWAY</option>
+	  <option value="PL">PLACE</option>
+	  <option value="PLZ">PLAZA</option>
+	  <option value="RD">ROAD</option>
+	  <option value="RDG">RIDGE</option>
+	  <option value="ROW">ROW</option>
+	  <option value="RUN">RUN</option>
+	  <option value="SQ">SQUARE</option>
+	  <option value="ST">STREET</option>
+	  <option value="TER">TERRACE</option>
+	  <option value="TPKE">TURNPIKE</option>
+	  <option value="TRCE">TRACE</option>
+	  <option value="TRL">TRAIL</option>
+	  <option value="VW">VIEW</option>
+	  <option value="WALK">WALK</option>
+	  <option value="WAY">WAY</option>
+	  <option value="WAYE">WAYE</option>
+	  <option value=""></option>
+	</select>
+    <label for='postdir'>Post Direction:</label>
+     <select id="postdir" title="Street Post Direction" name="postdir">
+      <option value=""></option>
+      <option value="NE">NE</option>
+	  <option value="NW">NW</option>
+	  <option value="SE">SE</option>
+	  <option value="SW">SW</option>
+	</select>
+ 	<label for='zipcode'>Zip Code:</label>
+	<input id='zipcode' title='Zip Code' name='zipcode' type='text' size='8'>
+    </div>
+	<div class='fieldsetdiv'>
+	<label for='addlo'>Lowest Street Number on Street:</label>
+	<input id="addlo" title="Lowest Street #" name="addlo" type="text" size="7" autocomplete="off">
+	<label for='addhi'>Highest Street Number on Street:</label>
+	<input id="addhi" title="Highest Street #" name="addhi" type="text" size="7" autocomplete="off">
+	<label for='region'>Region:</label>
+	<select id="region" title="Region" name="region">
+	  <option value="A">A</option>
+	  <option value="B">B</option>
+	  <option value="C">C</option>
+	  <option value="D">D</option>
+	  <option value="E">E</option>
+	  <option value="F">F</option>
+	  <option value="G">G</option>
+	  <option value="H">H</option>
+	  <option value="I">I</option>
+	  <option value="J">J</option>
+	  <option value="K">K</option>
+	  <option value="L">L</option>
+	  <option value="M">M</option>
+	  <option value="N">N</option>
+	  <option value="O">O</option>
+	  <option value="P">P</option>
+	  <option value="Q">Q</option>
+	  <option value="R">R</option>
+	  <option value="S">S</option>
+	  <option value="T">T</option>
+	  <option value="U">U</option>
+	  <option value="V">V</option>
+	  <option value="W">W</option>
+	  <option value="X">X</option>
+	  <option value="Y">Y</option>
+	  <option value="X">Z</option>
+	</select>
+    </div>
+  </fieldset>
+  <br>
+  <div>
+  	<span id="errormessage"></span>
+  	<span id="submitspan">
+  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
+  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit partner to ONC" onclick= onSubmit()>
+  	</span>
+  </div>
+</form>
+<!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div id='inner'>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>    
+</body>
+</html> 

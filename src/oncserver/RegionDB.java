@@ -29,6 +29,7 @@ public class RegionDB
 	
 	private static RegionDB instance = null;
 	private static ArrayList<Region> regAL = new ArrayList<Region>();
+	private static List<String> zipcodeList;	//list of unique zip codes in region db
 	private static String[] regions = {"?", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
 										"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
 	private ImageIcon oncIcon;
@@ -40,6 +41,10 @@ public class RegionDB
 		oncIcon = appicon;
 		if(regAL.size() == 0)
 			getONCRegions(System.getProperty("user.dir") +"/regions_2017.csv");
+		
+		//build zip code list
+		zipcodeList = new ArrayList<String>();
+		buildZipCodeList();
 		
 		//build hash index array. Used to quickly search the regions list. Hash is based on first character
 		//in street name. Prior to building, sort the region list alphabetically by street name , with street
@@ -116,6 +121,55 @@ public class RegionDB
 
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	static HtmlResponse getZipCodeJSONP(String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfZipCodes = new TypeToken<ArrayList<String>>(){}.getType();
+
+		String response = gson.toJson(zipcodeList, listOfZipCodes);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	static HtmlResponse getRegionJSONP(String regionID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		String response;
+		
+		int index=0;
+		while(index < regAL.size() && regAL.get(index).getID() != (Integer.parseInt(regionID)))
+			index++;
+		
+		if(index<regAL.size())
+			response = gson.toJson(regAL.get(index), Region.class);
+		else
+			response = "";
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	
+	void buildZipCodeList()
+	{
+		zipcodeList.clear();
+		
+		for(Region r : regAL)
+			if(!isZipCodeInList(r.getZipCode()))
+				zipcodeList.add(r.getZipCode());
+		
+		Collections.sort(zipcodeList, new ZipCodeComparator());
+	}
+	
+	boolean isZipCodeInList(String zipcode)
+	{
+		int index = 0;
+		while(index < zipcodeList.size() && !zipcodeList.get(index).equals(zipcode))
+			index++;
+		
+		return index < zipcodeList.size();
 	}
 /*	
 	int getRegionMatch(Address matchAddress)
@@ -333,6 +387,15 @@ public class RegionDB
 				return 1;
 			else
 				return streetname1.compareTo(streetname2);
+		}
+	}
+	
+	private class ZipCodeComparator implements Comparator<String>
+	{
+		@Override
+		public int compare(String z1, String z2)
+		{
+			return z1.compareTo(z2);
 		}
 	}
 }

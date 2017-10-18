@@ -24,8 +24,12 @@
 	    	document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
 	    				+'&year=' + currYear
 	    				+'&famref=' + sessionStorage.getItem('famref');
-    		getRegionsFromServer();
-    		
+			
+			$.getJSON('zipcodes', dbyearsparams, function(codes)
+			{
+				 buildZipCodeSelect(codes)
+				getRegionsFromServer();
+			});
     	});
     	
      // Write on keyup event of keyword current year seach input element
@@ -33,7 +37,7 @@
         {
             _this = this;
             // Show only matching TR's, hide rest of them
-            $.each($("#streettable tbody tr"), function()
+            $.each($("#regiontable tbody tr"), function()
             {
                 if($(this).find('td').eq(1).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
                    $(this).hide();
@@ -67,20 +71,20 @@
 		{
 	   		if(region === 'Any' || region === regionJson[i].region)
 	   		{
-    			addTableRow(regionJson[i], 'Edit');	//add row to table
+    			addTableRow(regionJson[i], document.getElementById('regiontable'),'Edit');	//add row to table
     			count++;
 	   		}
 		}
     	
     	//clear the search box
-    	var searchbox = document.getElementById('regionsearch');
+    	var searchbox = document.getElementById('streetsearch');
     	searchbox.value = "";
     	
     	//set the quanity in the table
     	document.getElementById('count').innerHTML = 'Streets: ' + count.toString();
     }
     
-    function addTableRow(region, buttontext)
+    function addTableRow(region, regiontable, buttontext)
     {
         if (!document.getElementsByTagName) return;
         	
@@ -129,7 +133,7 @@
     	var params = {}
 		params["token"] = sessionStorage.getItem('token');
 		
-		post('regonupdate', params);
+		post('regionupdate', params);
     }
       
     function filterChanged()
@@ -143,6 +147,16 @@
     	
         regionElement.value = 'Any';
         updateRegionTable();
+    }
+    
+    function buildZipCodeSelect(codes)
+    {
+    	var select = document.getElementById('zipcode');
+        for(var i=select.options.length-1; i>=0; i--)
+            select.remove(i); 
+        
+        for(i=0; i<codes.length; i++)
+        	select.options[i] = new Option(codes[i], codes[i]);
     }
     
     function onCancel()
@@ -297,7 +311,7 @@
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-	<p><span id="banner">Our Neighbor's Child's Regionalization Management System</span><br>
+	<p><span id="banner">Our Neighbor's Child's Region Management System</span><br>
 	<span id="message">USER_MESSAGE</span></p>
   </div>
   <nav>
@@ -314,60 +328,6 @@
 		  <label for='zipcode'>Zip Code:</label>
 		  <select id="zipcode" title="Zip Code"  onchange="getRegionsFromServer()">
 		    <option value="20120">20120</option>
-		    <option value="20121">20121</option>
-		    <option value="20124">20124</option>
-		    <option value="20151">20151</option>
-		    <option value="20170">20170</option>
-		    <option value="20171">20171</option>
-		    <option value="20190">20190</option>
-		    <option value="20191">20191</option>
-		    <option value="20194">20194</option>
-		    <option value="22003">22003</option>
-		    <option value="22015">22015</option>
-		    <option value="22027">22027</option>
-		    <option value="22030">22030</option>
-		    <option value="22031">22031</option>
-		    <option value="22032">22032</option>
-		    <option value="22033">22033</option>
-		    <option value="22037">22037</option>
-		    <option value="22039">22039</option>
-		    <option value="22041">22041</option>
-		    <option value="22042">22042</option>
-		    <option value="22043">22043</option>
-		    <option value="22044">22044</option>
-		    <option value="22046">22046</option>
-		    <option value="22060">22060</option>
-		    <option value="22066">22066</option>
-		    <option value="22079">22079</option>
-		    <option value="22101">22101</option>
-		    <option value="22102">22102</option>
-		    <option value="22121">22121</option>
-		    <option value="22122">22122</option>
-		    <option value="22124">22124</option>
-		    <option value="22150">22150</option>
-		    <option value="22151">22151</option>
-		    <option value="22152">22152</option>
-		    <option value="22153">22153</option>
-		    <option value="22180">22180</option>
-		    <option value="22181">22181</option>
-		    <option value="22182">22182</option>
-		    <option value="22183">22183</option>
-		    <option value="22203">22203</option>
-		    <option value="22204">22204</option>
-		    <option value="22206">22206</option>
-		    <option value="22207">22207</option>
-		    <option value="22213">22213</option>
-		    <option value="22302">22302</option>
-		    <option value="22303">22303</option>
-		    <option value="22304">22304</option>
-		    <option value="22306">22306</option>
-		    <option value="22307">22307</option>
-		    <option value="22308">22308</option>
-		    <option value="22309">22309</option>
-		    <option value="22310">22310</option>
-		    <option value="22311">22311</option>
-		    <option value="22312">22312</option>
-		    <option value="22315">22315</option>
 		  </select>
 		  <label for='region'>Region:</label>
 		  <select id="region" title="Region" onchange="filterChanged()">

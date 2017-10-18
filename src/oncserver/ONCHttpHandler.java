@@ -48,6 +48,7 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
 	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
 	private static final String REGION_TABLE_HTML = "RegionTable.htm";
+	private static final String REGION_UPDATE_HTML = "Region.htm";
 	private static final String UPDATE_HTML = "NewEdit.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
@@ -270,6 +271,15 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse response = RegionDB.getAddressesJSONP(zipCode, (String) params.get("callback"));
     		sendHTMLResponse(t, response);
     	}
+    	else if(requestURI.contains("/zipcodes"))
+    	{
+//    		Set<String> keyset = params.keySet();
+//			for(String key:keyset)
+//				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+
+    		HtmlResponse response = RegionDB.getZipCodeJSONP((String) params.get("callback"));
+    		sendHTMLResponse(t, response);
+    	}
     	else if(requestURI.contains("/references"))
     	{
     		//update the client time stamp
@@ -440,6 +450,28 @@ public class ONCHttpHandler implements HttpHandler
     			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
     			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
     		}
+    		sendHTMLResponse(t, htmlResponse);
+    	}
+    	else if(requestURI.contains("/getregion"))
+    	{
+    		//update the client time stamp
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
+    		
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		{
+    			wc.updateTimestamp();
+        		String regionID = (String) params.get("regionid");
+        		
+        		htmlResponse = RegionDB.getRegionJSONP(regionID, (String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
+    		
     		sendHTMLResponse(t, htmlResponse);
     	}
     	else if(requestURI.contains("/profileunchanged"))
@@ -884,6 +916,28 @@ public class ONCHttpHandler implements HttpHandler
     			catch (IOException e) 
     			{
     				response = "<p>Region Table Unavailable</p>";
+    			}
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/regionupdate"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    		
+    		if((wc=clientMgr.findClient(sessionID)) != null)
+    		{
+    			wc.updateTimestamp();
+    			try {	
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REGION_UPDATE_HTML));
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
     			}
     		}
     		else
