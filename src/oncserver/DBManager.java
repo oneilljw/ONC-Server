@@ -76,7 +76,7 @@ public class DBManager
 		try
 		{
 			userDB = ServerUserDB.getInstance();
-			RegionDB.getInstance(appicon);	//never changed
+			dbPermanentAutosaveList.add(RegionDB.getInstance(appicon));
 			ApartmentDB.getInstance(); //saved when new season created, never changed during season
 			dbSeasonalAutosaveList.add(ServerGlobalVariableDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerPartnerDB.getInstance());
@@ -300,13 +300,14 @@ public class DBManager
 		public void actionPerformed(ActionEvent arg0) 
 		{
 			//always command a save of the user database regardless of saved status. This means
-			//if a user logs in and changes their profile offseason, the changes are still saved
+			//if a user logs in and changes their profile off-season, the changes are still saved
 			//regardless
 			userDB.save();
 			
 			//For each year in the database that is unlocked, command each of the component 
 			//databases that are periodically saved to save data to persistent store
-			for(DBYear dbYear: dbYearList)	
+			for(DBYear dbYear: dbYearList)
+			{
 				if(!dbYear.isLocked())
 				{
 					for(ServerPermanentDB permDB: dbPermanentAutosaveList)
@@ -315,6 +316,7 @@ public class DBManager
 					for(ServerSeasonalDB seasonalDB: dbSeasonalAutosaveList)
 						seasonalDB.save(dbYear.getYear());
 				}
+			}
 		}	
 	}
 }

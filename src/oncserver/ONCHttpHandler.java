@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import ourneighborschild.Address;
@@ -31,6 +32,7 @@ import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.Region;
 import ourneighborschild.Transportation;
 import ourneighborschild.UserAccess;
 import ourneighborschild.UserPermission;
@@ -938,6 +940,42 @@ public class ONCHttpHandler implements HttpHandler
     			} catch (IOException e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
+    			}
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/updateregion"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    		
+    		if(t.getRequestMethod().toLowerCase().equals("post") && 
+    			params.containsKey("token") && params.containsKey("year") &&
+    			 (wc=clientMgr.findClient(sessionID)) != null) 
+    		{
+    			wc.updateTimestamp();
+    	//		Set<String> keyset = params.keySet();
+    	//		for(String key:keyset)
+    	//			System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+    		
+    			//process the region request
+    			ResponseCode rc = processRegionUpdate(wc, params);
+    			
+    			//submission processed, send the region table page back to the user
+    			try
+    			{	
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REGION_TABLE_HTML));
+    				response = response.replace("USER_MESSAGE", rc.getMessage());
+    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    			}
+    			catch (IOException e) 
+    			{
+    				response =  "<p>Region Table Unavailable</p>";
     			}
     		}
     		else
@@ -2074,6 +2112,83 @@ public class ONCHttpHandler implements HttpHandler
 				rc = new ResponseCode("Partner was not found in the database");
 		}
 
+		return rc;	
+	}
+	
+	ResponseCode processRegionUpdate(WebClient wc, Map<String, Object> params)
+	{				
+		//get database references
+		RegionDB regionDB= null;
+				
+		try
+		{
+			regionDB = RegionDB.getInstance(null);
+		} 
+		catch (FileNotFoundException e) 
+		{
+			e.printStackTrace();
+		}
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+		
+		String[] regionKeys = {"regionid", "dir", "street", "type", "postdir", "zipcode", 
+								"region", "addlo", "addhi"};
+		Map<String, String> regionMap = createMap(params, regionKeys);
+		
+//		Set<String> keyset = regionMap.keySet();
+//		for(String key:keyset)
+//			System.out.println(String.format("regionMap key=%s, value=%s", key, regionMap.get(key)));
+		
+		
+		String[] regionLine = new String[10];
+		regionLine[0] = regionMap.get("regionid").equals("New") ? "-1" : regionMap.get("regionid");
+		regionLine[1] = regionMap.get("street").trim().toUpperCase();
+		regionLine[2] = regionMap.get("type");
+		regionLine[3] = regionMap.get("region");
+		regionLine[4] = regionMap.get("dir");
+		regionLine[5] = regionMap.get("postdir");
+		regionLine[6] = regionMap.get("addlo").trim();
+		regionLine[7] = regionMap.get("addhi").trim();
+		regionLine[8] = "";
+		regionLine[9] = regionMap.get("zipcode");
+		
+		Region returnedRegion = new Region(regionLine);
+		
+		ResponseCode rc = null;
+		Gson gson = new Gson();
+		String mssg;
+		//determine if its an add partner request or a partner update request
+		if(regionMap.get("regionid").equals("New"))
+		{
+			Region addedRegion = regionDB.add(returnedRegion);
+			
+			if(addedRegion != null)
+			{
+				rc = new ResponseCode(String.format("Region %d, %s successfully added to the database", 
+									addedRegion.getID(), addedRegion.getStreetName()));
+				mssg = "ADDED_REGION" + gson.toJson(addedRegion, Region.class);
+//				clientMgr.notifyAllInYearClients(year, mssg);
+			}
+			else
+				rc = new ResponseCode("Region was unable to be added to the database");
+		}
+		else
+		{
+			Region updatedRegion = regionDB.update(returnedRegion);
+			if(updatedRegion != null)
+			{
+				rc = new ResponseCode(String.format("Region %d, %s successfully updated", 
+										updatedRegion.getID(), updatedRegion.getStreetName()));
+				
+				mssg = "UPDATED_REGION" + gson.toJson(updatedRegion, Region.class);
+//				clientMgr.notifyAllInYearClients(year, mssg);
+			}
+			else
+				rc = new ResponseCode("Region was not found in the database or was unchanged");
+		}
+		
 		return rc;	
 	}
 	

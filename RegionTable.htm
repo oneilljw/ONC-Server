@@ -91,6 +91,7 @@
         var regioninfo = [region.streetDir, region.streetName, region.streetType, region.postDir, region.zipCode, region.region, region.addressNumLow, region.addressNumHi];
         
         var cellwidth = ['40px', '320px', '80px', '80px', '96px', '64px', '80px', '80px', '80px'];
+        var cellAlign = ['center', 'left', 'center', 'center', 'left', 'center', 'left', 'left'];
         
 	    var tabBody = regiontable.getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -100,8 +101,7 @@
         	cell = document.createElement("td");
         	cell.appendChild(document.createTextNode(regioninfo[index]));
         	cell.style.width = cellwidth[index];
-        	if(index === 5)	//regions cell
-        		cell.style.textAlign = 'center';
+        	cell.style.textAlign = cellAlign[index];
         	row.appendChild(cell);
         }
         

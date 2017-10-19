@@ -20,15 +20,16 @@ import com.google.gson.reflect.TypeToken;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-public class RegionDB 
+public class RegionDB extends ServerPermanentDB
 {
 	/**
 	 * 
 	 */
 	private static final int ONC_REGION_HEADER_LENGTH = 10;
+	private static final String FILENAME = "Regions_2017.csv";
 	
 	private static RegionDB instance = null;
-	private static ArrayList<Region> regAL = new ArrayList<Region>();
+	private static List<Region> regionAL;
 	private static List<String> zipcodeList;	//list of unique zip codes in region db
 	private static String[] regions = {"?", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
 										"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
@@ -39,8 +40,15 @@ public class RegionDB
 	protected RegionDB(ImageIcon appicon) throws FileNotFoundException, IOException
 	{
 		oncIcon = appicon;
-		if(regAL.size() == 0)
-			getONCRegions(System.getProperty("user.dir") +"/regions_2017.csv");
+		
+		regionAL = new ArrayList<Region>();
+
+		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), FILENAME), "Region DB", ONC_REGION_HEADER_LENGTH);
+		nextID = getNextID(regionAL);
+		bSaveRequired = false;
+		
+//		if(regAL.size() == 0)
+//			getONCRegions(System.getProperty("user.dir") +"/regions_2017.csv");
 		
 		//build zip code list
 		zipcodeList = new ArrayList<String>();
@@ -49,16 +57,19 @@ public class RegionDB
 		//build hash index array. Used to quickly search the regions list. Hash is based on first character
 		//in street name. Prior to building, sort the region list alphabetically by street name , with street
 		//names that start with a digit at the top of the list
-		Collections.sort(regAL, new RegionStreetNameComparator());	//sort region list by street name
+		hashIndex = new ArrayList<Integer>();
+		buildHashIndex();
+/*		
+		Collections.sort(regionAL, new RegionStreetNameComparator());	//sort region list by street name
 		
 		hashIndex = new ArrayList<Integer>();
 		int index = 0;	//used to iterate the region list
 		int regionIndex = 1;	//used to iterate the regions array
 		
 		hashIndex.add(0);	//add the first row to the hash: it's the streets that start with a digit
-		while(index < regAL.size() && regionIndex < regions.length)		
+		while(index < regionAL.size() && regionIndex < regions.length)		
 		{
-			if(regAL.get(index).getStreetName().charAt(0) == regions[regionIndex].charAt(0))
+			if(regionAL.get(index).getStreetName().charAt(0) == regions[regionIndex].charAt(0))
 			{
 				hashIndex.add(index++);
 				regionIndex++;
@@ -66,7 +77,40 @@ public class RegionDB
 			else
 				index++;
 		}
-		hashIndex.add(regAL.size());	//add the last index into the hash table
+		
+		hashIndex.add(regionAL.size());	//add the last index into the hash table
+*/		
+	}
+	
+	void buildHashIndex()
+	{
+		//build hash index array. Used to quickly search the regions list. Hash is based on first character
+		//in street name. Prior to building, sort the region list alphabetically by street name , with street
+		//names that start with a digit at the top of the list
+		Collections.sort(regionAL, new RegionStreetNameComparator());	//sort region list by street name
+		
+//		for(Region r : regionAL)
+//			if(Character.isDigit(r.getStreetName().charAt(0)) || r.getStreetName().charAt(0) == 'A')
+//				System.out.println(String.format("Steetname %s, region %s, zip= %s", 
+//						r.getStreetName(), r.getRegion(), r.getZipCode()));
+		
+		hashIndex.clear();
+		int index = 0;	//used to iterate the region list
+		int regionIndex = 1;	//used to iterate the regions array
+		
+		hashIndex.add(0);	//add the first row to the hash: it's the streets that start with a digit
+		while(index < regionAL.size() && regionIndex < regions.length)		
+		{
+			if(regionAL.get(index).getStreetName().charAt(0) == regions[regionIndex].charAt(0))
+			{
+				hashIndex.add(index++);
+				regionIndex++;
+			}
+			else
+				index++;
+		}
+		
+		hashIndex.add(regionAL.size());	//add the last index into the hash table
 	}
 	
 	public static RegionDB getInstance(ImageIcon appicon) throws FileNotFoundException, IOException
@@ -113,7 +157,7 @@ public class RegionDB
 		Type listOfRegions = new TypeToken<ArrayList<Region>>(){}.getType();
 		
 		List<Region> addressList = new ArrayList<Region>();
-		for(Region r : regAL)
+		for(Region r : regionAL)
 			if(r.getZipCode().equals(zipCode))
 				addressList.add(r);
 
@@ -140,11 +184,11 @@ public class RegionDB
 		String response;
 		
 		int index=0;
-		while(index < regAL.size() && regAL.get(index).getID() != (Integer.parseInt(regionID)))
+		while(index < regionAL.size() && regionAL.get(index).getID() != (Integer.parseInt(regionID)))
 			index++;
 		
-		if(index<regAL.size())
-			response = gson.toJson(regAL.get(index), Region.class);
+		if(index<regionAL.size())
+			response = gson.toJson(regionAL.get(index), Region.class);
 		else
 			response = "";
 		
@@ -156,7 +200,7 @@ public class RegionDB
 	{
 		zipcodeList.clear();
 		
-		for(Region r : regAL)
+		for(Region r : regionAL)
 			if(!isZipCodeInList(r.getZipCode()))
 				zipcodeList.add(r.getZipCode());
 		
@@ -171,6 +215,43 @@ public class RegionDB
 		
 		return index < zipcodeList.size();
 	}
+	
+	Region add(Region addedRegion)
+	{
+		//set the new ID for the region
+		addedRegion.setID(nextID++);	//Set id for new region
+		
+		//add the region to the  database and rebuild the zip code list. Mark for save
+		regionAL.add(addedRegion);
+		buildHashIndex();
+		buildZipCodeList();
+		bSaveRequired = true;
+		
+		return addedRegion;
+	}
+	
+	Region update(Region updateRegion)
+	{	
+		//Find the position for the current family being replaced
+		int index = 0;
+		while(index < regionAL.size() && regionAL.get(index).getID() != updateRegion.getID())
+			index++;
+		
+		//If region is located and the updated region has been changed, replace the current 
+		//region with the update
+		if(index < regionAL.size() && !updateRegion.isRegionMatch(regionAL.get(index)))
+		{
+			regionAL.set(index, updateRegion);
+			bSaveRequired = true;
+			return updateRegion;
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	
 /*	
 	int getRegionMatch(Address matchAddress)
 	{
@@ -307,11 +388,11 @@ public class RegionDB
 				endIndex = hashIndex.get(index+1);
 			}
 
-			while(searchIndex < endIndex && !regAL.get(searchIndex).isRegionMatch(searchAddress))
+			while(searchIndex < endIndex && !regionAL.get(searchIndex).isRegionMatch(searchAddress))
 				searchIndex++;
 		
 			//If match not found return region = 0, else return region
-			return searchIndex == endIndex ? 0 : getRegionNumber(regAL.get(searchIndex).getRegion());
+			return searchIndex == endIndex ? 0 : getRegionNumber(regionAL.get(searchIndex).getRegion());
 		}
 	}
 	
@@ -351,7 +432,7 @@ public class RegionDB
     		if(header.length == ONC_REGION_HEADER_LENGTH)
     		{
     			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of values from the line
-    				regAL.add(new Region(nextLine));
+    				regionAL.add(new Region(nextLine));
     		}
     		else
     			JOptionPane.showMessageDialog(null, "Regions file corrupted, header length = " + Integer.toString(header.length), 
@@ -367,35 +448,85 @@ public class RegionDB
 	int getNumberOfRegions() { return regions.length; }
 	boolean isRegionValid(int region) { return region >=0 && region < regions.length; }
 	
-	private class RegionStreetNameComparator implements Comparator<Region>
+	@Override
+	void addObject(String[] nextLine) 
+	{
+		regionAL.add(new Region(nextLine));
+	}
+	
+	@Override
+	String[] getExportHeader()
+	{
+		return new String[] {"ID","Street Name","Street Type","Region","Street Dir","Street Post Dir",
+							"Address Low","Address High","Odd Even","Zip Code"};
+	}
+	
+	@Override
+	String getFileName() { return FILENAME; }
+	
+	@Override
+	List<Region> getONCObjectList() { return regionAL; }
+	
+	private static class RegionStreetNameComparator implements Comparator<Region>
 	{
 		@Override
 		public int compare(Region region1, Region region2)
 		{
-			String streetname1 = region1.getStreetName();
-			String streetname2 = region2.getStreetName();
+			String sn1 = region1.getStreetName();
+			String sn2 = region2.getStreetName();
 			
-			Integer si1 = Character.getNumericValue(streetname1.charAt(0));	//non digit returns -1
-			Integer si2 = Character.getNumericValue(streetname2.charAt(0));
+//			Integer si1 = Character.getNumericValue(streetname1.charAt(0));	//non digit returns -1
+//			Integer si2 = Character.getNumericValue(streetname2.charAt(0));
 			
-			if(si1 != -1  && si2 != -1)
-				return si1.compareTo(si2);
-			
-			else if(si1 != -1 && si2 == -1)
+			if(Character.isLetter(sn1.charAt(0)) && Character.isLetter(sn2.charAt(0)))
+				return sn1.compareTo(sn2);
+			else if(Character.isDigit(sn1.charAt(0)) && Character.isLetter(sn2.charAt(0)))
 				return -1;
-			else if(si1 == -1 && si2 != -1)
+			else if(Character.isLetter(sn1.charAt(0)) && Character.isDigit(sn2.charAt(0)))
 				return 1;
+			else if(Character.isDigit(sn1.charAt(0)) && Character.isDigit(sn2.charAt(0)))
+				return getValue(sn1).compareTo(getValue(sn2));	
 			else
-				return streetname1.compareTo(streetname2);
+				return 0;
+				
+//			Integer si1 = Character.getNumericValue(sn1.charAt(0));	//non digit returns -1
+//			Integer si2 = Character.getNumericValue(sn2.charAt(0));
+//			
+//			if(si1 != -1  && si2 != -1)
+//				return si1.compareTo(si2);
+//			else if(si1 != -1 && si2 == -1)
+//				return -1;
+//			else if(si1 == -1 && si2 != -1)
+//				return 1;
+//			else
+//				return sn1.compareTo(sn2);
+		}
+		
+		Integer getValue(String s)
+		{
+			int index = 0;
+			while(index < s.length() && Character.isDigit(s.charAt(index)))
+				index++;
+			
+			if(index < s.length())
+				return Integer.parseInt(s.substring(0, index));
+			else
+				return 0;
 		}
 	}
 	
-	private class ZipCodeComparator implements Comparator<String>
+	private static class ZipCodeComparator implements Comparator<String>
 	{
 		@Override
 		public int compare(String z1, String z2)
 		{
 			return z1.compareTo(z2);
 		}
+	}
+
+	@Override
+	String add(String userjson) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
