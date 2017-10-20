@@ -33,7 +33,7 @@ public class ONCWebServer
 							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/partnerupdate", "/updatepartner",
 							"/contactinfo", "/jquery.js", "/favicon.ico", "/groups", "/partners", "/partnertable",
 							"/regiontable", "/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
-							"/volunteerregistration", "/registervolunteer", "/commonfamily.js"};
+							"/volunteerregistration", "/registervolunteer", "/commonfamily.js", "/dashboard"};
 		
 		HttpContext context;
 //		Filter paramFilter = new ParameterFilter();

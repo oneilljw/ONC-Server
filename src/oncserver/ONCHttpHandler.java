@@ -47,6 +47,7 @@ public class ONCHttpHandler implements HttpHandler
 {
 	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
 	private static final String ONC_FAMILY_PAGE_HTML = "ONC.htm";
+	private static final String DASHBOARD_HTML = "Dashboard.htm";
 	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
 	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
 	private static final String REGION_TABLE_HTML = "RegionTable.htm";
@@ -1210,8 +1211,45 @@ public class ONCHttpHandler implements HttpHandler
     		HtmlResponse htmlresponse = new HtmlResponse(response, HTTPCode.Ok);
     		sendHTMLResponse(t, htmlresponse);
     	}
+    	else if(requestURI.contains("/dashboard"))
+    	{
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = "Invalid Session ID";;
+    		WebClient wc;
+    		
+    		if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    		{
+    			wc.updateTimestamp();
+    			String userFN;
+        		if(wc.getWebUser().getFirstName().equals(""))
+        			userFN = wc.getWebUser().getLastName();
+        		else
+        			userFN = wc.getWebUser().getFirstName();
+        		
+        		//determine which home page, elf or agent
+        		if(wc.getWebUser().getPermission() == UserPermission.Admin ||
+        				wc.getWebUser().getPermission() == UserPermission.Sys_Admin)
+        		{
+        			//read the onc page html
+        			try
+        			{
+        				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), DASHBOARD_HTML));
+        				response = response.replace("USER_NAME", userFN);
+        				response = response.replace("USER_MESSAGE", "This is a test");
+        				response = response.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
+        				response = response.replace("REPLACE_YEAR", "2017");
+        			}
+        			catch (IOException e) 
+        			{
+        				response = "<p>ONC Family Page Unavailable</p>";
+        			}
+        		}
+    		}
+    		
+    		HtmlResponse htmlresponse = new HtmlResponse(response, HTTPCode.Ok);
+    		sendHTMLResponse(t, htmlresponse);
+    	}			
     }
-	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
 	{
 		t.sendResponseHeaders(html.getCode(), html.getResponse().length());
