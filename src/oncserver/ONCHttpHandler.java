@@ -758,7 +758,29 @@ public class ONCHttpHandler implements HttpHandler
     			ResponseCode frc = processFamilyReferral(wc, params);
     			
     			//submission processed, send the family table page back to the user
-    			response = getHomePageHTML(wc, frc.getMessage(), frc.getFamRef());
+//    			response = getHomePageHTML(wc, frc.getMessage(), frc.getFamRef());
+    			
+    			try
+    			{
+    				String userFN;
+    				if(wc.getWebUser().getFirstName().equals(""))
+    					userFN = wc.getWebUser().getLastName();
+    				else
+    					userFN = wc.getWebUser().getFirstName();
+    				
+    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
+    				response = response.replace("USER_NAME", userFN);
+    				response = response.replace("USER_MESSAGE", frc.getMessage());
+    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    				response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+    				response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+    				response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+    				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+    			}
+    			catch (IOException e) 
+    			{
+    				response = "<p>Family Table Unavailable</p>";
+    			}
     		}
     		else
     			response = invalidTokenReceived();
@@ -1288,7 +1310,7 @@ public class ONCHttpHandler implements HttpHandler
         			{
         				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), DASHBOARD_HTML));
         				response = response.replace("USER_NAME", userFN);
-        				response = response.replace("USER_MESSAGE", "This is a test");
+        				response = response.replace("USER_MESSAGE", "");
         				response = response.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
         				response = response.replace("REPLACE_YEAR", "2017");
         			}
@@ -1942,9 +1964,12 @@ public class ONCHttpHandler implements HttpHandler
 				mssg = "ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class);
 				clientMgr.notifyAllInYearClients(year, mssg);
 			}
+			
+			return new ResponseCode(String.format("%s Family Referral Accepted, ONC# %s",
+									addedFamily.getLastName(), addedFamily.getONCNum()));
 		}
-		return new ResponseCode("Partner Update Successful", "????");
-	
+		
+		return new ResponseCode("Family Referral Failure: Unable to Process Referral");
 	}
 	
 	String ensureUpperCaseStreetName(String street)

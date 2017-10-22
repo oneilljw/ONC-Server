@@ -84,6 +84,11 @@
     			width: 480,
     			height: 240,
     			title: sessionStorage.getItem('curryear') + ' Family Status',
+    			titleTextStyle: 
+    			{
+    		        fontSize: 16, // 12, 18 whatever you want (don't specify px)
+    		        bold: true,    // true or false
+    			},
     	    	chartArea: {width: '70%'},
     	    	hAxis: { minValue: 0 },
     	    	legend: {position: 'none'},
@@ -109,6 +114,11 @@
     		    	width: 480,
     		    	height: 240,
     		    	title: sessionStorage.getItem('curryear') + ' Gift Status',
+    		    	titleTextStyle: 
+        			{
+        		        fontSize: 16, // 12, 18 whatever you want (don't specify px)
+        		        bold: true,    // true or false
+        			},
     		    	chartArea: {width: '65%'},
     		    	hAxis: { minValue: 0 },
     		    	legend: {position: 'none'},
@@ -135,6 +145,11 @@
     		    		width: 480,
     		    		height: 240,
     		    		title: sessionStorage.getItem('curryear') + ' Meal Status',
+    		    		titleTextStyle: 
+    	    			{
+    	    		        fontSize: 16, // 12, 18 whatever you want (don't specify px)
+    	    		        bold: true,    // true or false
+    	    			},
     		    		chartArea: {width: '65%'},
     		    		hAxis: { minValue: 0 },
     		    		legend: {position: 'none'},
@@ -161,6 +176,11 @@
     		    			width: 480,
     		    			height: 240,
     		    			title: sessionStorage.getItem('curryear') + ' Gift Delivery Status',
+    		    			titleTextStyle: 
+    		    			{
+    		    		        fontSize: 16, // 12, 18 whatever you want (don't specify px)
+    		    		        bold: true,    // true or false
+    		    			},
     		    			chartArea: {width: '65%'},
     		    			hAxis: { minValue: 0 },
     		    			legend: {position: 'none'},
@@ -396,14 +416,14 @@
 	    <li><a href="#">Partners <span class="caret"></span></a>
 		  <div>
 		    <ul>
-			  <li><a href="partnertable?token=REPLACE_TOKEN">Edit Partners</a></li>
+			  <li><a href="partnertable?token=REPLACE_TOKEN">View Partners</a></li>
 		    </ul>
 		  </div>
 	    </li>
 	     <li><a href="#">Regions <span class="caret"></span></a>
 		  <div>
 		    <ul>
-			  <li><a href="regiontable?token=REPLACE_TOKEN">Edit Regions</a></li>
+			  <li><a href="regiontable?token=REPLACE_TOKEN">View Regions</a></li>
 		    </ul>
 		  </div>
 	    </li>

@@ -318,11 +318,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				}
 			}
 			
-			metricList.add(new Metric("Referred", ref));
 			metricList.add(new Metric("Not Requested", notreq));
 			metricList.add(new Metric("Requested", req));
 			metricList.add(new Metric("Selected", sel));
 			metricList.add(new Metric("Received", rec));
+			metricList.add(new Metric("Referred", ref));
 		
 		}
 		else if(maptype.equals("meal"))
