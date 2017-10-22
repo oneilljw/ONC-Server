@@ -171,8 +171,7 @@ public class ONCHttpHandler implements HttpHandler
     			//update time stamp, get the home page html and return it
     			wc.updateTimestamp();
     			
-    			String response = getHomePageHTML(wc, "",
-    					(String) params.get("year"), (String) params.get("famref"));
+    			String response = getHomePageHTML(wc, "", (String) params.get("famref"));
     			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     		}
     		else
@@ -367,6 +366,27 @@ public class ONCHttpHandler implements HttpHandler
     			wc.updateTimestamp();
         		htmlResponse = ClientManager.getUserStatusJSONP((String) params.get("token"), 
         													(String) params.get("callback"));
+    		}
+    		else
+    		{
+    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    		}
+    		
+    		sendHTMLResponse(t, htmlResponse);
+    	}
+    	else if(requestURI.contains("/metrics"))
+    	{
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		WebClient wc;
+    		HtmlResponse htmlResponse;
+    		
+    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		{
+    			wc.updateTimestamp();
+    			int year = Integer.parseInt((String) params.get("year"));
+    			String maptype = (String) params.get("maptype");
+    			htmlResponse = ServerFamilyDB.getFamilyMetricsJSONP(year, maptype, (String)params.get("callback"));
     		}
     		else
     		{
@@ -738,8 +758,43 @@ public class ONCHttpHandler implements HttpHandler
     			ResponseCode frc = processFamilyReferral(wc, params);
     			
     			//submission processed, send the family table page back to the user
-    			response = getHomePageHTML(wc, frc.getMessage(), (String) params.get("year"),
-    					frc.getFamRef());
+    			response = getHomePageHTML(wc, frc.getMessage(), frc.getFamRef());
+    		}
+    		else
+    			response = invalidTokenReceived();
+    		
+    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    	}
+    	else if(requestURI.contains("/familyview"))
+    	{
+    		String sessionID = (String) params.get("token");
+    		ClientManager clientMgr = ClientManager.getInstance();
+    		String response = null;
+    		WebClient wc;
+    		
+    		if((wc=clientMgr.findClient(sessionID)) != null)
+    		{
+    			wc.updateTimestamp();
+    			//read the onc page html
+    			try
+    			{
+    				String userFN;
+        			if(wc.getWebUser().getFirstName().equals(""))
+        				userFN = wc.getWebUser().getLastName();
+        			else
+        				userFN = wc.getWebUser().getFirstName();
+        			
+        			response = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_FAMILY_PAGE_HTML));
+    				response = response.replace("USER_NAME", userFN);
+    				response = response.replace("USER_MESSAGE", "");
+    				response = response.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
+    				response = response.replace("REPLACE_FAM_REF", "NNA");
+    		
+    			}
+    			catch (IOException e) 
+    			{
+    				response = "<p>ONC Family Page Unavailable</p>";
+    			}
     		}
     		else
     			response = invalidTokenReceived();
@@ -787,8 +842,7 @@ public class ONCHttpHandler implements HttpHandler
     			ResponseCode frc = processFamilyUpdate(wc, params);
     			
     			//submission processed, send the family table page back to the user
-    			response = getHomePageHTML(wc, frc.getMessage(), (String) params.get("year"),
-    					(String) params.get("targetid"));
+    			response = getHomePageHTML(wc, frc.getMessage(), (String) params.get("targetid"));
     		}
     		else
     			response = invalidTokenReceived();
@@ -1153,8 +1207,7 @@ public class ONCHttpHandler implements HttpHandler
     			if(retCode == 0)
     			{
     				//submission successful, send the family table page back to the user
-    				response = getHomePageHTML(wc, "Your password change was successful!",
-        					DBManager.getMostCurrentYear(), "NNA");
+    				response = getHomePageHTML(wc, "Your password change was successful!", "NNA");
     			}
     			else if(retCode == -1)
     			{
@@ -1397,7 +1450,7 @@ public class ONCHttpHandler implements HttpHandler
 	    				userMssg = "You last visited " + sdf.format(lastLogin.getTime());
 	    			}
 	    			
-	    			html = getHomePageHTML(wc, userMssg, DBManager.getMostCurrentYear(), "NNA");
+	    			html = getHomePageHTML(wc, userMssg, "NNA");
 	    			
 	    			response = new HtmlResponse(html, HTTPCode.Ok);
 	    		}
@@ -1412,7 +1465,7 @@ public class ONCHttpHandler implements HttpHandler
 		return response;
 	}
 	
-	String getHomePageHTML(WebClient wc, String message, String year, String famRef)
+	String getHomePageHTML(WebClient wc, String message, String famRef)
 	{
 		String homePageHTML;
 		
@@ -1426,6 +1479,20 @@ public class ONCHttpHandler implements HttpHandler
 		if(wc.getWebUser().getPermission() == UserPermission.Admin ||
 				wc.getWebUser().getPermission() == UserPermission.Sys_Admin)
 		{
+			//read the dashboard page html
+			try
+			{
+				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), DASHBOARD_HTML));
+				homePageHTML = homePageHTML.replace("USER_NAME", userFN);
+				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
+				homePageHTML = homePageHTML.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
+				return homePageHTML;
+			}
+			catch (IOException e) 
+			{
+				return "<p>ONC Family Page Unavailable</p>";
+			}
+/*			
 			//read the onc page html
 			try
 			{
@@ -1433,7 +1500,6 @@ public class ONCHttpHandler implements HttpHandler
 				homePageHTML = homePageHTML.replace("USER_NAME", userFN);
 				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
 				homePageHTML = homePageHTML.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
-				homePageHTML = homePageHTML.replace("REPLACE_YEAR", year);
 				homePageHTML = homePageHTML.replace("REPLACE_FAM_REF", famRef);
 				return homePageHTML;
 			}
@@ -1441,6 +1507,7 @@ public class ONCHttpHandler implements HttpHandler
 			{
 				return "<p>ONC Family Page Unavailable</p>";
 			}
+*/			
 		}
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
 		{

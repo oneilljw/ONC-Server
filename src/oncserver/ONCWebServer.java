@@ -23,7 +23,7 @@ public class ONCWebServer
 		HttpServer server = HttpServer.create(new InetSocketAddress(WEB_SERVER_PORT), 0);
 		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
 		
-		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents", "/families", "/familystatus",
+		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents", "/families", "/familystatus", "/familyview",
 							"/getfamily", "/references", "/getagent", "/getmeal", "/children", "/familysearch", 
 							"/adults", "/wishes", "/oncsplash", "/clearx", "/onclogo", "/oncstylesheet", 
 							"/oncdialogstylesheet", "/newfamily", "/reqchangepw", "/timeout", "/activities", "/activitydays",
@@ -33,7 +33,8 @@ public class ONCWebServer
 							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/partnerupdate", "/updatepartner",
 							"/contactinfo", "/jquery.js", "/favicon.ico", "/groups", "/partners", "/partnertable",
 							"/regiontable", "/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
-							"/volunteerregistration", "/registervolunteer", "/commonfamily.js", "/dashboard"};
+							"/volunteerregistration", "/registervolunteer", "/commonfamily.js", "/dashboard",
+							"/metrics"};
 		
 		HttpContext context;
 //		Filter paramFilter = new ParameterFilter();

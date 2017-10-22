@@ -10,7 +10,9 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.swing.JOptionPane;
@@ -20,6 +22,7 @@ import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.FamilyStatus;
+import ourneighborschild.MealStatus;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
@@ -263,6 +266,120 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
+	
+	/***
+	 * Returns a list of Metrics that include DNS, Served, etc.
+	 * @param year
+	 * @param callbackFunction
+	 * @return
+	 */
+	static HtmlResponse getFamilyMetricsJSONP(int year, String maptype, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		
+		int served = 0;
+		List<Metric> metricList = new ArrayList<Metric>();
+		Type listOfMetrics = new TypeToken<ArrayList<Metric>>(){}.getType();
+
+		if(maptype.equals("family"))
+		{
+			int dns = 0, unverified = 0, verified = 0, contacted = 0, confirmed = 0;
+			
+			for(ONCFamily f : familyDB.get(year-BASE_YEAR).getList())
+			{
+				if(!f.getDNSCode().isEmpty() || !isNumeric(f.getONCNum())) { dns++; }
+				else if(f.getFamilyStatus() == FamilyStatus.Unverified) { served++; unverified++; }
+				else if(f.getFamilyStatus() == FamilyStatus.Verified) { served++; verified++; }
+				else if(f.getFamilyStatus() == FamilyStatus.Contacted) {  served++; contacted++; }
+				else if(f.getFamilyStatus() == FamilyStatus.Confirmed) {served++; confirmed++; }
+			}
+			
+			metricList.add(new Metric("DNS", dns));
+			metricList.add(new Metric("Served", served));
+			metricList.add(new Metric("Unverified", unverified));
+			metricList.add(new Metric("Verfied", verified));
+			metricList.add(new Metric("Contacted", contacted));
+			metricList.add(new Metric("Confirmed", confirmed));
+		}
+		else if(maptype.equals("gift"))
+		{
+			int notreq = 0, req = 0, sel = 0, rec = 0, ref = 0; 
+			
+			for(ONCFamily f : familyDB.get(year-BASE_YEAR).getList())
+			{
+				if(f.getDNSCode().isEmpty() && isNumeric(f.getONCNum()))
+				{
+					//served families only
+					if(f.getGiftStatus() == FamilyGiftStatus.NotRequested) { notreq++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.Requested) { req++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.Selected) { sel++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.Received) { rec++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.Referred) { ref++; }
+				}
+			}
+			
+			metricList.add(new Metric("Referred", ref));
+			metricList.add(new Metric("Not Requested", notreq));
+			metricList.add(new Metric("Requested", req));
+			metricList.add(new Metric("Selected", sel));
+			metricList.add(new Metric("Received", rec));
+		
+		}
+		else if(maptype.equals("meal"))
+		{
+			int notreq = 0, req = 0, assg = 0, ref = 0; 
+			
+			for(ONCFamily f : familyDB.get(year-BASE_YEAR).getList())
+			{
+				if(f.getDNSCode().isEmpty() && isNumeric(f.getONCNum()))
+				{
+					//served families only
+					if(f.getMealStatus() == MealStatus.None) { notreq++; }
+					else if(f.getMealStatus() == MealStatus.Requested) { req++; }
+					else if(f.getMealStatus() == MealStatus.Assigned) { assg++; }
+					else if(f.getMealStatus() == MealStatus.Referred) {ref++; }
+				}	
+			}
+			
+			metricList.add(new Metric("Not Requested", notreq));
+			metricList.add(new Metric("Requested", req));
+			metricList.add(new Metric("Assigned", assg));
+			metricList.add(new Metric("Referred", ref));		
+		}
+		else if(maptype.equals("delivery"))
+		{
+			int pckg = 0, assg = 0, del = 0, att = 0, ret = 0, cpu = 0;
+			
+			for(ONCFamily f : familyDB.get(year-BASE_YEAR).getList())
+			{
+				if(f.getDNSCode().isEmpty() && isNumeric(f.getONCNum()))
+				{
+					//served families only
+					served++;
+					if(f.getGiftStatus() == FamilyGiftStatus.Packaged) { pckg++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.Assigned) { assg++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.Delivered) { del++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.Attempted) {att++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.Returned) { ret++; }
+					else if(f.getGiftStatus() == FamilyGiftStatus.CounselorPickUp) { cpu++; }
+				}	
+			}
+			
+			metricList.add(new Metric("Served", served));
+			metricList.add(new Metric("Packaged", pckg));
+			metricList.add(new Metric("Assigned", assg));
+			metricList.add(new Metric("Delivered", del));
+			metricList.add(new Metric("Attempted", att));
+			metricList.add(new Metric("Returned", ret));
+			metricList.add(new Metric("Counselor PU",cpu));
+		}
+		
+		String response = gson.toJson( new DataTable(metricList), DataTable.class);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+
 	
 	String update(int year, String familyjson, boolean bAutoAssign)
 	{

@@ -7,8 +7,6 @@
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script>
-	var currYear;
-	
 	sessionStorage.setItem('token', "REPLACE_TOKEN");
 	
     $( document ).ready(function()
@@ -32,10 +30,13 @@
 	    		{
 	        		yearCombo.add(option); // IE only
 	    		}
+	    		
+	    		sessionStorage.setItem('curryear', yearCombo.value);
     		}
     		
     		google.charts.load('current', {packages: ['corechart', 'bar']});
-        	google.charts.setOnLoadCallback(drawFamStatusChart);
+            google.charts.setOnLoadCallback(drawFamStatusChart);		
+    		
     	});
     	
     	$.getJSON('getstatus', dbyearsparams, function(status)
@@ -50,45 +51,127 @@
     
     function drawFamStatusChart() 
     {
-    	 var data = google.visualization.arrayToDataTable([
-    	                       ['Families','Status'],
-    	                       ['DNS', 5],
-    	                       ['Served', 332],
-    	                       ['Unverified', 5],
-    	                       ['Verified', 328],
-    	                       ['Contacted', 0],
-    	                       ['Confimed', 0]
-    	                       ]);
-    	 
-    	 var view = new google.visualization.DataView(data);
-         view.setColumns([0, 1,
-                          { calc: "stringify",
-                            sourceColumn: 1,
-                            type: "string",
-                            role: "annotation" },
-                          ]);
+    	var familyparams = "token=" + sessionStorage.getItem("token")
+		   +"&year=" + sessionStorage.getItem('curryear')
+		   +"&maptype=family" + "&callback=?";
+    	
+    	var giftparams = "token=" + sessionStorage.getItem("token")
+			+"&year=" + sessionStorage.getItem('curryear')
+			+"&maptype=gift" + "&callback=?";
+    	
+    	var mealparams = "token=" + sessionStorage.getItem("token")
+			+"&year=" + sessionStorage.getItem('curryear')
+			+"&maptype=meal" + "&callback=?";
+    	
+    	var delparams = "token=" + sessionStorage.getItem("token")
+			+"&year=" + sessionStorage.getItem('curryear')
+			+"&maptype=delivery" + "&callback=?";
 
-    	var options = 
-    	{
-    		width: 480,
-    		height: 240,
-    		title: '2017 ONC Families',
-    	    chartArea: {width: '70%'},
-    	    hAxis: { minValue: 0 },
-    	    legend: {position: 'none'},
-    	};
+    	$.getJSON('metrics', familyparams, function(familyData)
+        {
+    		// Create our data table out of JSON data loaded from server.
+    	    var famtable = new google.visualization.DataTable(familyData);
+    	 	var famview = new google.visualization.DataView(famtable);
+        	famview.setColumns([0, 1,
+                          	{ calc: "stringify",
+                              sourceColumn: 1,
+                           	  type: "string",
+                              role: "annotation" },
+                            ]);
+
+    		var famoptions = 
+    		{
+    			width: 480,
+    			height: 240,
+    			title: sessionStorage.getItem('curryear') + ' Family Status',
+    	    	chartArea: {width: '70%'},
+    	    	hAxis: { minValue: 0 },
+    	    	legend: {position: 'none'},
+    		};
     	
-    	var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
-    	famstatuschart.draw(view, options);
-    	
-    	var giftstatuschart = new google.visualization.BarChart(document.getElementById('giftstatus_div'));
-    	giftstatuschart.draw(data, options);
-    	
-    	var wishstatuschart = new google.visualization.BarChart(document.getElementById('wishstatus_div'));
-    	wishstatuschart.draw(data, options);
-    	
-    	var mealstatuschart = new google.visualization.BarChart(document.getElementById('mealstatus_div'));
-    	mealstatuschart.draw(data, options);
+    		var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
+    		famstatuschart.draw(famview, famoptions);
+    		
+    		$.getJSON('metrics', giftparams, function(giftData)
+    		{
+    		    // Create our data table out of JSON data loaded from server.
+    		    var gifttable = new google.visualization.DataTable(giftData);
+    		    var giftview = new google.visualization.DataView(gifttable);
+    		    giftview.setColumns([0, 1,
+    		    		             { calc: "stringify",
+    		    		              	sourceColumn: 1,
+    		    		                type: "string",
+    		    		                role: "annotation"
+    		    		             }]);
+
+    		    var giftoptions = 
+    		    {
+    		    	width: 480,
+    		    	height: 240,
+    		    	title: sessionStorage.getItem('curryear') + ' Gift Status',
+    		    	chartArea: {width: '65%'},
+    		    	hAxis: { minValue: 0 },
+    		    	legend: {position: 'none'},
+    		    	};
+    		    		    	
+    		    var giftstatuschart = new google.visualization.BarChart(document.getElementById('giftstatus_div'));
+    		    giftstatuschart.draw(giftview, giftoptions);
+    		    
+    		    $.getJSON('metrics', mealparams, function(mealData)
+    		    {
+    		    	// Create our data table out of JSON data loaded from server.
+    		    	var mealtable = new google.visualization.DataTable(mealData);
+    		    	var mealview = new google.visualization.DataView(mealtable);
+    		    	mealview.setColumns([0, 1,
+    		                 		{ 
+    		    					calc: "stringify",
+    		                   		sourceColumn: 1,
+    		    					type: "string",
+    		                   		role: "annotation"
+    		                 		}]);
+
+    		    	var mealoptions = 
+    		    	{
+    		    		width: 480,
+    		    		height: 240,
+    		    		title: sessionStorage.getItem('curryear') + ' Meal Status',
+    		    		chartArea: {width: '65%'},
+    		    		hAxis: { minValue: 0 },
+    		    		legend: {position: 'none'},
+    		    	};
+    		    	
+    		    	var mealstatuschart = new google.visualization.BarChart(document.getElementById('mealstatus_div'));
+    		    	mealstatuschart.draw(mealview, mealoptions);
+    		    	
+    		    	$.getJSON('metrics', delparams, function(delData)
+    		    	{
+    		    		// Create our data table out of JSON data loaded from server.
+    		    		var deltable = new google.visualization.DataTable(delData);
+    		    		var delview = new google.visualization.DataView(deltable);
+    		    		delview.setColumns([0, 1,
+    		    	         				{ 
+    		    							calc: "stringify",
+    		    	           				sourceColumn: 1,
+    		    							type: "string",
+    		    	           				role: "annotation"
+    		    	         				}]);
+
+    		    		var deloptions = 
+    		    		{
+    		    			width: 480,
+    		    			height: 240,
+    		    			title: sessionStorage.getItem('curryear') + ' Gift Delivery Status',
+    		    			chartArea: {width: '65%'},
+    		    			hAxis: { minValue: 0 },
+    		    			legend: {position: 'none'},
+    		    		};
+
+    		    		var delstatuschart = new google.visualization.BarChart(document.getElementById('delstatus_div'));
+    		    		delstatuschart.draw(delview, deloptions);
+    		    	});
+    		    });
+    		});
+        });   			
     }
     
     function showEditProfileDialog() 
@@ -171,8 +254,8 @@
     	//get selected year
     	var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
-		
 		sessionStorage.setItem('curryear', year);
+		google.charts.setOnLoadCallback(drawFamStatusChart);
     }
 	
 	function clearSelect(select)
@@ -302,10 +385,10 @@
   </div>
   <nav>
 	<ul>
-	    <li><select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select></li>
 	    <li><a href="#">Families <span class="caret"></span></a>
 		  <div>
 		    <ul>
+		   	  <li><a href="familyview?token=REPLACE_TOKEN">View Family</a></li>
 			  <li><a href="familystatus?token=REPLACE_TOKEN">Refer Family</a></li>
 		    </ul>
 		  </div>
@@ -337,6 +420,9 @@
 	  <li id="logoutli"><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
 	</ul>
   </nav>
+  <div class='controlbar'>
+    <select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select>
+  </div>
   <!--Table and divs that hold the pie charts-->
   <div class="constrainer">
     <table>
@@ -345,8 +431,8 @@
         <td><div id="giftstatus_div" style="border: 1px solid #ccc"></div></td>
       </tr>
       <tr>
-        <td><div id="wishstatus_div" style="border: 1px solid #ccc"></div></td>
         <td><div id="mealstatus_div" style="border: 1px solid #ccc"></div></td>
+        <td><div id="delstatus_div" style="border: 1px solid #ccc"></div></td>
       </tr>
     </table>
   </div>

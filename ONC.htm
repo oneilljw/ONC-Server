@@ -20,7 +20,6 @@
 	var userJson= {};
 	
 	sessionStorage.setItem('token', "REPLACE_TOKEN");
-	sessionStorage.setItem('curryear', "REPLACE_YEAR");
 	sessionStorage.setItem('famref', "REPLACE_FAM_REF");
 	
     $( document ).ready(function()
@@ -882,7 +881,6 @@
   </div>
   <nav>
 	<ul>
-	    <li><select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select></li>
 <!--	  <li><a href="">Agents <span class="caret"></span></a>
 		  <div>
 		    <ul>
@@ -890,6 +888,7 @@
 		    </ul>
 		  </div>
 	    </li> `-->
+	    <li><a href="dashboard?token=REPLACE_TOKEN">Dashboard</a></li>
 	    <li><a href="#">Families <span class="caret"></span></a>
 		  <div>
 		    <ul>
@@ -911,7 +910,6 @@
 		    <ul>
 <!-- 		  <li><a href="">Manage Regionss</a></li>  -->	
 			  <li><a href="regiontable?token=REPLACE_TOKEN">Edit Regions</a></li>
-			  <li><a href="dashboard?token=REPLACE_TOKEN">Dashboard</a></li>
 		    </ul>
 		  </div>
 	    </li>
@@ -929,6 +927,7 @@
 	</ul>
   </nav>
   <div id='controlbar'>
+    <select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select>
     <span id="navigatebar">
   	  <button id="prior" onclick="onPriorFamily()">Prior Family</button>
   	  <button id="next" onclick="onNextFamily()">Next Family</button>
