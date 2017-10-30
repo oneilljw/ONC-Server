@@ -494,7 +494,7 @@ function onSubmit()
 	var hohUnitElement = [document.getElementById('unit')];
 	
 	//now check the delivery address
-		var delAddrElement = [document.getElementById('delhousenum'),
+	var delAddrElement = [document.getElementById('delhousenum'),
 	               document.getElementById('delstreet'),
     	           document.getElementById('delunit'),
         	       document.getElementById('delcity'), 
@@ -510,7 +510,7 @@ function onSubmit()
 	}
 	else	
 	{
-		//phone numbares are good, check to see that address are good
+		//phone numbares are good, check to see that HoH and Delivery addresses are good
 		if(hohAddrElement[0].value !== "" && hohAddrElement[1].value !== "" )
 		{
 			//form the HoH address url

@@ -47,6 +47,8 @@
 				window.location=document.getElementById('editprofileanchor').href;
     		}
     	});
+    	
+    	window.setInterval(drawFamStatusChart, 60000);
     });
     
     function drawFamStatusChart() 
@@ -92,6 +94,7 @@
     	    	chartArea: {width: '70%'},
     	    	hAxis: { minValue: 0 },
     	    	legend: {position: 'none'},
+    	    	bars: 'horizontal' // Required for Material Bar Charts.
     		};
     	
     		var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
@@ -275,7 +278,7 @@
     	var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
 		sessionStorage.setItem('curryear', year);
-		google.charts.setOnLoadCallback(drawFamStatusChart);
+		drawFamStatusChart();
     }
 	
 	function clearSelect(select)

@@ -376,6 +376,19 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		else
 			return "DELETE_PARTNER_FAILED" + json;
 	}
+	
+	static int getOrnamentsRequested(int year)
+	{
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		List<ONCPartner> pAL = partnerDBYear.getList();
+		
+		int ornReq = 0;
+		for(ONCPartner p : pAL)
+			if(p.getStatus() == STATUS_CONFIRMED)
+				ornReq += p.getNumberOfOrnamentsRequested();
+		
+		return ornReq;
+	}
 
 	void updateGiftAssignees(int year, int oldPartnerID, int newPartnerID)
 	{

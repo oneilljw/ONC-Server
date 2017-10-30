@@ -69,6 +69,8 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String GIFTS_REQUESTED_KEY = "giftreq";
 	private static final int STATUS_CONFIRMED = 5;
 	
+	private ONCFamily lastFamilyAdded = null;
+	
 	public void handle(HttpExchange t) throws IOException 
     {
     	@SuppressWarnings("unchecked")
@@ -1711,12 +1713,26 @@ public class ONCHttpHandler implements HttpHandler
 		} 
 		catch (FileNotFoundException e) 
 		{
-			return new ResponseCode("Family Referral Rejected: Server Database Error");
+			return new ResponseCode("Family Referral Failed: Component Database Not Accessible");
 		}
 		catch (IOException e) 
 		{
-			return new ResponseCode("Family Referral Rejected: Server Database Error");
+			return new ResponseCode("Family Referral Failed: Server Database I/O Error");
 		}
+		
+		//create the family map
+		String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
+						   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
+						   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation"};
+				
+		Map<String, String> familyMap = createMap(params, familyKeys);
+		
+		//check to see if this family was added within the last second. If so, don't do a thing.
+//		if(wasThisFamilyAlreadyAddedWithinASecond(wc, familyMap))
+//		{
+//			new ResponseCode(String.format("%s Family Referral Accepted, ONC# %s",
+//					lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum()));
+//		}
 		
 		//create a meal request, if meal was requested
 		ONCMeal mealReq = null, addedMeal = null;
@@ -1739,13 +1755,6 @@ public class ONCHttpHandler implements HttpHandler
 				addedMeal = mealDB.add(year, mealReq);
 			}
 		}
-		
-		//create the family
-		String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
-				   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
-				   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation"};
-		
-		Map<String, String> familyMap = createMap(params, familyKeys);
 		
 		//check to see if this is a new family or a re-referral. Need to know this to determine 
 		//whether to perform a prior year check after the family and children objects are created
@@ -1970,6 +1979,25 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return new ResponseCode("Family Referral Failure: Unable to Process Referral");
+	}
+	
+	boolean wasThisFamilyAlreadyAddedWithinASecond(WebClient wc, Map<String,String> familyMap)
+	{
+		return lastFamilyAdded != null &&
+				familyMap.get("hohFN").equals(lastFamilyAdded.getFirstName()) &&
+				familyMap.get("hohLN").equals(lastFamilyAdded.getLastName()) &&
+				wc.getWebUser().getID() == lastFamilyAdded.getAgentID() &&
+				familyMap.get("housenum").equals(lastFamilyAdded.getHouseNum()) &&
+				ensureUpperCaseStreetName(familyMap.get("street")).equals(lastFamilyAdded.getStreet()) &&
+				familyMap.get("zipcode").equals(lastFamilyAdded.getZipCode()) &&
+				familyMap.get("detail").equals(lastFamilyAdded.getDetails()) &&
+				areReferralsWithinASecond(System.currentTimeMillis(), lastFamilyAdded.getTimeInMillis());
+	}
+	
+	boolean areReferralsWithinASecond(long millis1, long millis2)
+	{
+		return ((millis1 - millis2 >= 0 && millis1 - millis2 < 1000) ||
+				(millis2 - millis1 >= 0 && millis2 - millis1 < 1000));
 	}
 	
 	String ensureUpperCaseStreetName(String street)

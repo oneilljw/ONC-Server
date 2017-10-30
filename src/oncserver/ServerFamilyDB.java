@@ -323,6 +323,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			metricList.add(new Metric("Selected", sel));
 			metricList.add(new Metric("Received", rec));
 			metricList.add(new Metric("Referred", ref));
+			metricList.add(new Metric("Orn. Req", ServerPartnerDB.getOrnamentsRequested(year)));
 		
 		}
 		else if(maptype.equals("meal"))

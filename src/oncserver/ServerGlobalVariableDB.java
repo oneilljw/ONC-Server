@@ -13,6 +13,7 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import ourneighborschild.ONCObject;
+import ourneighborschild.ONCPartner;
 import ourneighborschild.ServerGVs;
 
 import com.google.gson.Gson;
@@ -27,7 +28,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	
 	private static ServerGlobalVariableDB instance = null;
-	private List<GlobalVariableDBYear> globalDB;
+	private static List<GlobalVariableDBYear> globalDB;
 	
 	private ServerGlobalVariableDB() throws FileNotFoundException, IOException
 	{
@@ -66,6 +67,16 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 			return "GLOBALS" + gvjson;
 		else
 			return "NO_GLOBALS";
+	}
+	
+	static HtmlResponse getServerGVsJSONP(int year, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+	
+		ServerGVs serverGVs = globalDB.get(year-BASE_YEAR).getServerGVs();
+		String response = gson.toJson(serverGVs, ServerGVs.class);
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
 	Date getSeasonStartDate(int year)

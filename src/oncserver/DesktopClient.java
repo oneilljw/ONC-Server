@@ -188,7 +188,7 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(command);
                 	String response = userDB.getUsers();
                 	output.println(response);
-                	clientMgr.addLogMessage(response);               	
+//                	clientMgr.addLogMessage(response);               	
                 }
                 else if(command.startsWith("GET<online_users>"))
                 {
