@@ -77,6 +77,17 @@ public class ServerAdultDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
+	
+	List<ONCAdult>getAdultsInFamily(int year, int famID)
+	{
+		ArrayList<ONCAdult> responseList = new ArrayList<ONCAdult>();
+		
+		for(ONCAdult a: adultDB.get(year-BASE_YEAR).getList())
+			if(a.getFamID() == famID)
+				responseList.add(a);
+		
+		return responseList;		
+	}
 
 	@Override
 	String add(int year, String adultjson)

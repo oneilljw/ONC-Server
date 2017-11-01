@@ -761,7 +761,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		if(famToCheck != null)
 		{
 			//get the children to check from the family to check
-			List<ONCChild> famChildrenToCheck = ServerChildDB.getChildList(year, famToCheck.getID());
+			List<ONCChild> famChildrenToCheck = childDB.getChildList(year, famToCheck.getID());
 			
 			ONCFamily dupFamily = getDuplicateFamily(year, famToCheck, famChildrenToCheck);
 			if(dupFamily != null)
@@ -821,7 +821,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		if(index<fAL.size())
 		{
 			ONCFamily fam = fAL.get(index);
-			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,RegionDB.getRegion(fam.getRegion()));
+			
+			//get a list of the children
+			List<ONCChild> childList = childDB.getChildList(year, fam.getID());
+			List<ONCAdult> adultList = adultDB.getAdultsInFamily(year, fam.getID());
+			
+			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,RegionDB.getRegion(fam.getRegion()), childList, adultList);
 			response = gson.toJson(webFam, ONCWebsiteFamilyExtended.class);
 		}
 		else
@@ -968,7 +973,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			bGiftCardOnlyFamily = false;
 		else
 		{	
-			List<ONCChild> childList = ServerChildDB.getChildList(year, famid);	//get the children in the family
+			List<ONCChild> childList = childDB.getChildList(year, famid);	//get the children in the family
 		
 			//examine each child to see if their assigned gifts are gift cards. If gift is not
 			//assigned or not a gift card, then it's not a gift card only family
@@ -1023,7 +1028,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 		//Check for all gifts selected
 		FamilyGiftStatus lowestfamstatus = FamilyGiftStatus.Verified;
-		for(ONCChild c:ServerChildDB.getChildList(year, famid))
+		for(ONCChild c : childDB.getChildList(year, famid))
 		{
 			for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
 			{
@@ -1309,7 +1314,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //					dupFamily.getID(), dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
 //					addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
     		
-    		List<ONCChild> dupChildList = ServerChildDB.getChildList(year, dupFamily.getID());
+    		List<ONCChild> dupChildList = childDB.getChildList(year, dupFamily.getID());
     		
 //    		if(dupChildList == null)
 //   			System.out.println("FamilyDB.getDuplicateFamily: dupChildList is null");
@@ -1357,7 +1362,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		while(pyFamilyIndex < pyFamilyList.size() && !bFamilyIsInPriorYear)
     		{
     			pyFamily = pyFamilyList.get(pyFamilyIndex++);
-    			List<ONCChild> pyChildList = ServerChildDB.getChildList(yearIndex, pyFamily.getID());
+    			List<ONCChild> pyChildList = childDB.getChildList(yearIndex, pyFamily.getID());
     			
     			bFamilyIsInPriorYear = areFamiliesTheSame(pyFamily, pyChildList, addedFamily, addedChildList);	
     		}

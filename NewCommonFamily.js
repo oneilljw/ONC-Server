@@ -1,8 +1,7 @@
 /*!
- * ONC Common Family JavaScript library v1.0
- * http://onc.idtus.com:8902/commonfamily.js 
+ * ONC Common Family JavaScript library v1.1
  * Common functions for family referral and family info editing web pages
- * Date: 2017-05-23
+ * Date: 2017-11-01
  */
 function updateChildTable()
 {
@@ -125,7 +124,7 @@ function copyAddressToDeliveryAddress()
 		addrInputElements[i].readOnly = true;
 	}
 	
-	verifyDeliveryAddress();
+//	verifyDeliveryAddress();
 }
   	
 function clearDeliveryAddress()
@@ -384,10 +383,10 @@ function cityChanged(elementName)
 		zipElement.options[0] = new Option('22152', '22152');
 	}
 		
-	if(elementName === 'city')
-		verifyHOHAddress();
-	else
-		verifyDeliveryAddress();	
+//	if(elementName === 'city')
+//		verifyHOHAddress();
+//	else
+//		verifyDeliveryAddress();	
 }
 	
 function removeOptions(select)
@@ -494,7 +493,7 @@ function onSubmit()
 	var hohUnitElement = [document.getElementById('unit')];
 	
 	//now check the delivery address
-		var delAddrElement = [document.getElementById('delhousenum'),
+	var delAddrElement = [document.getElementById('delhousenum'),
 	               document.getElementById('delstreet'),
     	           document.getElementById('delunit'),
         	       document.getElementById('delcity'), 
@@ -510,7 +509,7 @@ function onSubmit()
 	}
 	else	
 	{
-		//phone numbares are good, check to see that address are good
+		//phone numbares are good, check to see that HoH and Delivery addresses are good
 		if(hohAddrElement[0].value !== "" && hohAddrElement[1].value !== "" )
 		{
 			//form the HoH address url
@@ -528,46 +527,57 @@ function onSubmit()
       			{
       				changeAddressBackground(hohAddrElement, '#FFFFFF');
 
-      				//HoH address is good, now check the delivery address
-      				//check to see that delivery housenum and street are provided
-					if(delAddrElement[0].value !== "" && delAddrElement[1].value !== "" )
-					{
-						//form the address url
-	        			var delAddressparams = createAddressParams(delAddrElement);
-	        			var addrresponse;
-	        			$.getJSON('address',  delAddressparams, function(data)
-	      				{
-	      					addresponse = data;
+      				//HoH address is good, now check the delivery address. If same as 
+      				//HoH address no need to check, else, check to see that delivery
+      				//housenum and street are provided
+      				if(document.getElementById('sameaddress').checked === true)
+      				{
+      					changeAddressBackground(delAddrElement, '#FFFFFF');		      					
+      					
+						//if phone #'s are ok, HoH ddresses is valid, and del address is identical
+						document.getElementById("familyreferral").submit();
+      				}
+      				else
+      				{
+      					if(delAddrElement[0].value !== "" && delAddrElement[1].value !== "" )
+      					{
+      						//form the address url
+      						var delAddressparams = createAddressParams(delAddrElement);
+      						var addrresponse;
+      						$.getJSON('address',  delAddressparams, function(data)
+      						{
+      							addresponse = data;
 	      		
-	      					if(addresponse.hasOwnProperty('error'))
-	      					{
-								window.location=document.getElementById('timeoutanchor').href;
-	      					}
-	      					else if(addresponse.errorCode === 0)
-	      					{
-	      						changeAddressBackground(delAddrElement, '#FFFFFF');		      					
+      							if(addresponse.hasOwnProperty('error'))
+      							{
+      								window.location=document.getElementById('timeoutanchor').href;
+      							}
+      							else if(addresponse.errorCode === 0)
+      							{
+      								changeAddressBackground(delAddrElement, '#FFFFFF');		      					
 	      					
-	      						//if phone #'s are ok and both addresses are valid, it's ok to submit
-	      						document.getElementById("familyreferral").submit();
-	      					}	
-	      					else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-	      					{
-	      						changeAddressBackground(delAddrElement, errorColor);
-	      						errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
-	      					}
-	      					else if(addresponse.errorCode === 2)
-	      					{
-	      						changeAddressBackground(delAddrElement, '#FFFFFF');
-	      						changeAddressBackground(delUnitElement, errorColor);
-	      						errorElement.textContent = "Submission Error: Delivery address unit error";
-	      					}
-	      				});
-					}
-					else
-					{
-						changeAddressBackground(delAddrElement, errorColor);
-  						errorElement.textContent = "Submission Error: Delivery address incomplete";
-					}	
+      								//if phone #'s are ok and both addresses are valid, it's ok to submit
+      								document.getElementById("familyreferral").submit();
+      							}	
+      							else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+      							{
+      								changeAddressBackground(delAddrElement, errorColor);
+      								errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
+      							}
+      							else if(addresponse.errorCode === 2)
+      							{
+      								changeAddressBackground(delAddrElement, '#FFFFFF');
+      								changeAddressBackground(delUnitElement, errorColor);
+      								errorElement.textContent = "Submission Error: Delivery address unit error";
+      							}
+      						});
+      					}
+      					else
+      					{
+      						changeAddressBackground(delAddrElement, errorColor);
+      						errorElement.textContent = "Submission Error: Delivery address incomplete";
+      					}
+      				}	
       			}	
       			else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
       			{
