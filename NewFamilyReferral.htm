@@ -47,16 +47,16 @@
 
 			$.getJSON('getfamily', familyparams, function(family)
 			{
-				console.log(family.childList[0]);
 				document.getElementById('hohfn').value= family.HOHFirstName;
 				document.getElementById('hohln').value= family.HOHLastName;
 				
+				
 				childrenJson = family.childList;
-  		     	updateChildTable();
+  		     	updateChildTable(true);
   		     	updateWishTable();
   		     	
   		     	adultsJson = family.adultList;
-  		     	updateAdultTable();
+  		     	updateAdultTable(true);
 			});
 			
 //  			childrenparams=  "token=" + sessionStorage.getItem("token") + "&" +
@@ -67,7 +67,7 @@
 //  			$.getJSON('children', childrenparams, function(data)
 //  			{
 //  		     	childrenJson = data;
-//  		     	updateChildTable();
+//  		     	updateChildTable(true);
 //  		     	updateWishTable();
 //  			});
 //  		
@@ -79,7 +79,7 @@
 //  			$.getJSON('adults', adultsparams, function(data)
 //  			{
 //  		     	adultsJson = data;
-//  		     	updateAdultTable();
+//  		     	updateAdultTable(true);
 //  			});
   		}	
   		
@@ -175,7 +175,7 @@
         	child["school"] = document.getElementById('childschool').value;
         	childrenJson.push(child);
         
-        	updateChildTable();
+        	updateChildTable(true);
         	updateWishTable();
         
         	clearAddChild();
@@ -203,7 +203,7 @@
 	{
 		childrenJson.splice(index, 1);
 		
-		updateChildTable();
+		updateChildTable(true);
         updateWishTable();	
 	}
 	
@@ -220,7 +220,7 @@
         	adult["gender"] = document.getElementById('adultgender').value;
         	adultsJson.push(adult);
         
-        	updateAdultTable();
+        	updateAdultTable(true);
         
         	clearAddAdult();
 		}
@@ -239,7 +239,7 @@
 	function removeAdult(index)
 	{
 		adultsJson.splice(index, 1);
-		updateAdultTable();
+		updateAdultTable(true);
 	}
 	
 	function calculateAge(birthday)

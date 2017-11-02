@@ -30,6 +30,7 @@ import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCUser;
+import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.WishStatus;
@@ -823,7 +824,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			ONCFamily fam = fAL.get(index);
 			
 			//get a list of the children
-			List<ONCChild> childList = childDB.getChildList(year, fam.getID());
+			List<ONCWebChild> childList = childDB.getWebChildList(year, fam.getID());
 			List<ONCAdult> adultList = adultDB.getAdultsInFamily(year, fam.getID());
 			
 			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,RegionDB.getRegion(fam.getRegion()), childList, adultList);

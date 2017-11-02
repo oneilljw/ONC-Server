@@ -387,6 +387,17 @@ public class ServerChildDB extends ServerSeasonalDB
 		return fChildrenAL;
 	}
 	
+	List<ONCWebChild> getWebChildList(int year, int famid)
+	{
+		ArrayList<ONCWebChild> fChildrenAL = new ArrayList<ONCWebChild>();
+		
+		for(ONCChild c:childDB.get(year-BASE_YEAR).getList())
+			if(c.getFamID() == famid)
+				fChildrenAL.add(new ONCWebChild(c));
+		
+		return fChildrenAL;
+	}
+	
 	int getChildsFamilyID(int year, int childid)
 	{
 		List<ONCChild> cAL = childDB.get(year-BASE_YEAR).getList();

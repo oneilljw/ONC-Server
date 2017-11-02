@@ -55,7 +55,8 @@ public class ONCHttpHandler implements HttpHandler
 	private static final String UPDATE_HTML = "NewEdit.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
-	private static final String REFERRAL_HTML = "FamilyReferral.htm";
+	private static final String REFERRAL_HTML = "NewFamilyReferral.htm";
+	private static final String COMMON_FAMILY_JS_FILE = "NewCommonFamily.js";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	private static final String DRIVER_SIGN_IN_HTML = "DriverReg.htm";
 	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
@@ -642,7 +643,7 @@ public class ONCHttpHandler implements HttpHandler
     	}
     	else if(requestURI.contains("/commonfamily.js"))
     	{
-    		sendFile(t, "text/javascript", "CommonFamily.js");
+    		sendFile(t, "text/javascript", COMMON_FAMILY_JS_FILE);
     	}
     	else if(requestURI.contains("/newfamily"))
     	{
