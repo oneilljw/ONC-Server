@@ -107,7 +107,7 @@
 		$.getJSON('children', childrenparams, function(data)
 		{
 			childrenJson = data;
-			updateChildTable();
+			updateChildTable(false);
 		});
     }
   	
@@ -119,7 +119,7 @@
 		$.getJSON('adults', adultsparams, function(data)
 		{
 	    	adultsJson = data;
-	     	updateAdultTable();
+	     	updateAdultTable(false);
 		});
     }
   	

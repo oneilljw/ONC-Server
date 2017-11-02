@@ -4,26 +4,26 @@
  * Common functions for family referral and family info editing web pages
  * Date: 2017-05-23
  */
-function updateChildTable()
+function updateChildTable(bAction)
 {
     $("#tchildbody").empty();
     	
     for(var i=0; i<childrenJson.length; i++)
 	{
-    	addChildTableRow(i, childrenJson[i]);	//add row to table
+    	addChildTableRow(i, childrenJson[i], bAction);	//add row to table
 	}
 }
-function updateAdultTable()
+function updateAdultTable(bAction)
 {
 	$("#tadultbody").empty();
 	
 	for(var i=0; i<adultsJson.length; i++)
 	{
-		addAdultTableRow(i, adultsJson[i]);	//add row to table
+		addAdultTableRow(i, adultsJson[i], bAction);	//add row to table
 	}
 }
 
-function addChildTableRow(cnum, child)
+function addChildTableRow(cnum, child, bAction)
 {
     var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
     var fieldname = ["childfn", "childln", "childdob", "childgender", "childschool"];
@@ -45,16 +45,19 @@ function addChildTableRow(cnum, child)
     	row.appendChild(cell);
     }
     
-    btn = document.createElement("button");
-    btn.value=cnum;
-    btn.type="button";
-    btn.innerHTML = "Remove";
-    btn.onclick=function() {removeChild(cnum);};
-    row.appendChild(btn);
+    if(bAction === true)
+    {
+    	btn = document.createElement("button");
+    	btn.value=cnum;
+    	btn.type="button";
+    	btn.innerHTML = "Remove";
+    	btn.onclick=function() {removeChild(cnum);};
+    	row.appendChild(btn);
+    }
     
     tabBody.appendChild(row);
 }
-function addAdultTableRow(anum, adult)
+function addAdultTableRow(anum, adult, bAction)
 {
     var tabBody = document.getElementById("adulttable").getElementsByTagName('tbody').item(0);
     row=document.createElement("tr");
@@ -77,12 +80,15 @@ function addAdultTableRow(anum, adult)
     cell.appendChild(adultgender);
     row.appendChild(cell);
     
-    var btn = document.createElement("button");
-    btn.value= anum;
-    btn.type="button";
-    btn.innerHTML = "Remove";
-    btn.onclick=function() {removeAdult(anum);};
-    row.appendChild(btn);
+    if(bAction === true)
+    {
+    	var btn = document.createElement("button");
+    	btn.value= anum;
+    	btn.type="button";
+    	btn.innerHTML = "Remove";
+    	btn.onclick=function() {removeAdult(anum);};
+    	row.appendChild(btn);
+    }
     
     tabBody.appendChild(row);
 }
