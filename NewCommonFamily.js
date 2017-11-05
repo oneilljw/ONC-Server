@@ -24,7 +24,6 @@ function updateAdultTable(bAction)
 
 function addChildTableRow(cnum, child, bAction)
 {
-	console.log(child);
     var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
     var fieldname = ["childfn", "childln", "childdob", "childgender", "childschool"];
     var fieldsize = [15, 16, 11, 11, 20];
@@ -542,7 +541,7 @@ function onSubmit()
       					changeAddressBackground(delAddrElement, '#FFFFFF');		      					
       					
 						//if phone #'s are ok, HoH ddresses is valid, and del address is identical
-						document.getElementById("familyreferral").submit();
+						document.getElementById("familyform").submit();
       				}
       				else
       				{
@@ -564,7 +563,7 @@ function onSubmit()
       								changeAddressBackground(delAddrElement, '#FFFFFF');		      					
 	      					
       								//if phone #'s are ok and both addresses are valid, it's ok to submit
-      								document.getElementById("familyreferral").submit();
+      								document.getElementById("familyform").submit();
       							}	
       							else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
       							{

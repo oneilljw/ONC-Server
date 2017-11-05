@@ -2,6 +2,9 @@
 /2012DB
 /2013DB
 /2014DB
+/2015DB
+/2016DB
+/2017DB
 /dbyears.csv
 /regions.csv
 /users.csv
@@ -15,3 +18,5 @@
 /ApartmentDB.csv
 *.xls
 *.csv
+/Server Logs
+/PermanentDB

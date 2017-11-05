@@ -4,8 +4,16 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -19,6 +27,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
@@ -48,14 +57,19 @@ public class ServerUI extends JPanel implements ClientListener
 	private static final int CLIENT_VER_COL = 7;
 	private static final int CLIENT_TIMESTAMP_COL = 8;
 	
+	private static final int SERVER_LOG_TIME_INTERVAL = 1000 * 60 * 240;	//time interval between writing server logs
+	
 	private static ServerUI instance = null;	//Only one UI
 	private transient ImageIcon imageIcons[];
 	public JButton btnStartServer, btnStopServer;
 	private JTextArea logTA;
+	private List<String> logList;
 	private JRadioButton rbStoplight;
 	private JTable desktopClientTable, websiteClientTable;
 	private DesktopClientTableModel desktopClientTM;
 	private WebClientTableModel webClientTM;
+	
+	private Timer timer;
 	
 	private ClientManager clientMgr;
 
@@ -166,6 +180,11 @@ public class ServerUI extends JPanel implements ClientListener
     	//Set up the client log pane
     	logTA = new JTextArea();
   	   	logTA.setEditable(false);
+  	   	
+  	   	logList = new ArrayList<String>();
+  	   		
+  	   	//Create the polling timer
+        timer = new Timer(SERVER_LOG_TIME_INTERVAL, new TimerListener());
   	   
         //create the paragraph attributes
         SimpleAttributeSet paragraphAttribs = new SimpleAttributeSet();  
@@ -200,6 +219,8 @@ public class ServerUI extends JPanel implements ClientListener
         this.add(cntlPanel);
         
         this.setMinimumSize(new Dimension(tablewidth, 600));
+        
+        timer.start();
 	}
 	
 	/** Initialize icons */
@@ -225,6 +246,8 @@ public class ServerUI extends JPanel implements ClientListener
 		
 		logTA.append(line + ": " + mssg + "\n");
 		logTA.setCaretPosition(logTA.getDocument().getLength());
+		
+		logList.add(line + ": " + mssg);
 	}
 	
 	void setStoplight(int pos)	//0-green, 1-yellow, 2-red, 3-off
@@ -295,6 +318,38 @@ public class ServerUI extends JPanel implements ClientListener
 			webClientTM.fireTableDataChanged();
 		}
 	}
+	
+	void writeServerLogFile()
+    {
+    	PrintWriter outputStream = null;
+        FileWriter fileWriter = null;
+        
+        Date now = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy Hmmss");
+        String filename = String.format("%s_log.txt", sdf.format(now));
+        
+		try
+		{
+			fileWriter = new FileWriter(System.getProperty("user.dir") + "/Server Logs/" + filename);
+			outputStream = new PrintWriter(fileWriter);
+			 for(String s: logList) 
+		        outputStream.println(s);
+			 
+			 logList.clear();
+			 logTA.setText(String.format("Wrote log %s\n", filename));
+			 
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		finally 
+		{
+			if(outputStream != null)
+				outputStream.close();	
+		}
+    }
 	
 	class DesktopClientTableModel extends AbstractTableModel
 	{
@@ -427,6 +482,25 @@ public class ServerUI extends JPanel implements ClientListener
         public boolean isCellEditable(int row, int col)
         {
         	return false;
+        }
+    }
+	
+	private class TimerListener implements ActionListener
+    {
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			
+			if(e.getSource() == timer)
+			{
+				//pause the timer so this EDT thread can complete. It should happen quickly, 
+				//but not necessarily. Don't stack up timer events
+				timer.stop();     	
+        
+				writeServerLogFile();
+				
+				timer.start();
+			}
         }
     }
 }

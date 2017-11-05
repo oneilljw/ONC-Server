@@ -7,8 +7,6 @@
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   <script src="commonfamily.js"></script>
   <script> 
-	var hohAddressGood = false;
-  	var delAddressGood = false;
   	var errorColor = '#FF9999';
   	
   	$( document ).ready(function()
@@ -33,37 +31,24 @@
   			
   			$.getJSON('getfamily', familyparams, function(family)
   			{
+  				console.log(family);
   		     	updateFamilyInfo(family);
   		     	
+  		     	childrenJson = family.childList;
+  		     	updateChildTable(true);
+  		     	
+  		     	adultsJson = family.adultList;
+  		     	updateAdultTable(true);
+  		     	
   		     	//now that inputs are set for family, enable the address input listeners
-  		     	document.getElementById('housenum').setAttribute('onchange','verifyHOHAddress()');
-  		     	document.getElementById('street').setAttribute('onchange','verifyHOHAddress()');
-  		     	document.getElementById('unit').setAttribute('onchange','verifyHOHAddress()');
   		     	document.getElementById('city').setAttribute('onchange','onCityChanged("city")');
-  		     	document.getElementById('zipcode').setAttribute('onchange','onZipChanged("zipcode")');
-  		     	
-  		     	document.getElementById('delhousenum').setAttribute('onchange','verifyDeliveryAddress()');
-  		     	document.getElementById('delstreet').setAttribute('onchange','verifyDeliveryAddress()');
-  		     	document.getElementById('delunit').setAttribute('onchange','verifyDeliveryAddress()');
   		     	document.getElementById('delcity').setAttribute('onchange','onCityChanged("delcity")');
-  		     	document.getElementById('delzipcode').setAttribute('onchange','onZipChanged("delzipcode")');
-  		     	
-  		     	//verify the addresses
-  		    	verifyHOHAddress();
-  		    	verifyDeliveryAddress();
-  		     	
-  		     	//get families children
-  		     	var year = document.getElementById('year').value;
-  		     	getFamiliesChildrenFromServer(year, sessionStorage.getItem("targetid"));
-  		     	
-  		     	//get families adults
-  		     	getAdultsFromServer(year, sessionStorage.getItem("targetid"));
-  		     	
+ 
   		     	//get meal and update if family meal id > 1
   		     	if(family.mealID > -1)
   		     	{
   		     		var mealparams = "token=" + sessionStorage.getItem("token") + "&" +
-  		     						"year=" + new Date().getFullYear().toString() + "&" +
+  		     						"year=" + sessionStorage.getItem('curryear') + "&" +
   		     						"mealid=" + family.mealID.toString() + "&" +
   		     						"callback=?";	
   		     					
@@ -76,25 +61,6 @@
   		     		document.getElementById('mealstatus').value = "None Requested";
   			});
   		}	
-  		
-  		$(function() {
-  		    $("form input").keypress(function (e) {
-  		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
-  		            $('button[type=submit] .default').click();
-  		            return false;
-  		        } else {
-  		            return true;
-  		        }
-  		    });
-  		});
-  		
-  		$('html').bind('keypress', function(e)
-  		{
-  			if(e.keyCode == 13)
-  			{
-  				return false;
-  			}
-  		});
 	});
   	
   	function getFamiliesChildrenFromServer(year, targetid)
@@ -125,7 +91,6 @@
   	
   	function updateFamilyInfo(family)
   	{	
-  		console.log("Updating Family Info");
   		var familyElements = [family.HOHFirstName, family.HOHLastName, family.Language, family.HouseNum, family.Street, 
   			                    family.UnitNum, family.City, family.FamilyEmail, family.details];
   			
@@ -165,7 +130,7 @@
   		}
   		else	//delivery address is the same. Copy and set same as checkbox
   		{
-  			document.getElementById('checkbox').checked = true;
+  			document.getElementById('sameaddress').checked = true;
 	  		copyAddressToDeliveryAddress();
   		}
   	}
@@ -204,7 +169,7 @@
 	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
 	</ul>
   </nav>
-  <form id="updatefamily" action="updatefamily" onsubmit="return onSubmit()" method="post">
+  <form id="familyform" action="updatefamily" onsubmit="return onSubmit()" method="post">
   <input id='token' type="hidden" name="token">
   <input id="year" type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
@@ -282,7 +247,8 @@
   <br>
   <fieldset>
   <legend class="legend-major">Delivery Address: Update address that ONC will use for gift delivery</legend>
-	<input id="checkbox" type="checkbox" name="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
+    <input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
+<!--<input id="checkbox" type="checkbox" name="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:-->
 	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
@@ -392,7 +358,8 @@
   	<span id="errormessage"></span>
   	<span id="submitspan">
   	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  	  <input id="submit" type="submit" value="Submit Update to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC">
+<!--  <input id="submit" type="submit" value="Submit Update to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC"> -->  	 
+  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit()>
   	</span>
   </div>
 </form>
