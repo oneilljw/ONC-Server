@@ -1,13 +1,8 @@
 package oncserver;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
+
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,36 +29,29 @@ import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.Region;
 import ourneighborschild.Transportation;
-import ourneighborschild.UserAccess;
 import ourneighborschild.UserPermission;
-import ourneighborschild.UserStatus;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.google.gson.Gson;
 
-public class ONCHttpHandler implements HttpHandler
+public class ONCHttpHandler extends ONCHandlerServices implements HttpHandler
 {
-	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
 	private static final String ONC_FAMILY_PAGE_HTML = "ONC.htm";
-	private static final String DASHBOARD_HTML = "Dashboard.htm";
-	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
 	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
 	private static final String REGION_TABLE_HTML = "RegionTable.htm";
 	private static final String REGION_UPDATE_HTML = "Region.htm";
 	private static final String UPDATE_HTML = "NewEdit.htm";
-	private static final String LOGOUT_HTML = "logout.htm";
-	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String REFERRAL_HTML = "NewFamilyReferral.htm";
 	private static final String COMMON_FAMILY_JS_FILE = "NewCommonFamily.js";
-	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	private static final String DRIVER_SIGN_IN_HTML = "DriverReg.htm";
 	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
 	private static final String VOLUNTEER_REGISTRATION_HTML = "VolRegistration.htm";
+	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
-	private static final int HTTP_OK = 200;
+	
 	private static final int NUM_OF_WISHES_PROVIDED = 4;
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
@@ -86,78 +74,8 @@ public class ONCHttpHandler implements HttpHandler
     	String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI serverUI = ServerUI.getInstance();
 		serverUI.addLogMessage(mssg);
-    	
-    	if(requestURI.equals("/welcome"))
-    	{
-    		String response = null;
-    		try {
-    			if(ONCWebServer.isWebsiteOnline())
-    			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
-    				response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
-    			}
-    			else
-    			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
-    				response = response.replace("TIME_BACK_UP", ONCWebServer.getWebsiteTimeBackOnline());
-    			}
-    		} catch (IOException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.equals("/timeout"))
-    	{
-    		String response = null;
-    		try {
-    			if(ONCWebServer.isWebsiteOnline())
-    			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
-    				response = response.replace("WELCOME_MESSAGE", "Your last session expired, please login again:");
-    			}
-    			else
-    			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
-    				response = response.replace("TIME_BACK_UP", ONCWebServer.getWebsiteTimeBackOnline());
-    			}
-    		} catch (IOException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/logout"))
-    	{
-    		if(params.containsKey("token"))
-    		{	
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
-    		
-    			if(!clientMgr.logoutWebClient(sessionID))
-    				clientMgr.addLogMessage(String.format("ONCHttpHandler.handle/logut: logout failure, client %s not found", sessionID));
-    		} 
-    		
-    		Headers header = t.getResponseHeaders();
-    		ArrayList<String> headerList = new ArrayList<String>();
-    		headerList.add("http://www.ourneighborschild.org");
-    		header.put("Location", headerList);
-  	
-    		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
-    		
-    	}
-    	else if(requestURI.contains("/onchomepage"))
-    	{
-    		Headers header = t.getResponseHeaders();
-    		ArrayList<String> headerList = new ArrayList<String>();
-    		headerList.add("http://www.ourneighborschild.org");
-    		header.put("Location", headerList);
-  	
-    		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
-    	}
-    	else if(requestURI.contains("/startpage"))
+
+    	if(requestURI.contains("/startpage"))
     	{
     		//authenticate the web client by token and activity
     		WebClient wc = null;
@@ -186,10 +104,6 @@ public class ONCHttpHandler implements HttpHandler
     			header.put("Location", headerList);
     			sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
     		}	
-    	}
-    	else if(requestURI.contains("/login"))
-    	{
-    		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
     	}
     	else if(t.getRequestURI().toString().contains("/dbStatus"))
     	{
@@ -378,27 +292,7 @@ public class ONCHttpHandler implements HttpHandler
     		
     		sendHTMLResponse(t, htmlResponse);
     	}
-    	else if(requestURI.contains("/metrics"))
-    	{
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    		{
-    			wc.updateTimestamp();
-    			int year = Integer.parseInt((String) params.get("year"));
-    			String maptype = (String) params.get("maptype");
-    			htmlResponse = ServerFamilyDB.getFamilyMetricsJSONP(year, maptype, (String)params.get("callback"));
-    		}
-    		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}
-    		
-    		sendHTMLResponse(t, htmlResponse);
-    	}
+    	
     	else if(requestURI.contains("/getuser"))
     	{
     		ClientManager clientMgr = ClientManager.getInstance();
@@ -1328,40 +1222,9 @@ public class ONCHttpHandler implements HttpHandler
     		sendHTMLResponse(t, htmlresponse);
     	}			
     }
-	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
-	{
-		t.sendResponseHeaders(html.getCode(), html.getResponse().length());
-		OutputStream os = t.getResponseBody();
-		os.write(html.getResponse().getBytes());
-		os.close();
-		t.close();
-	}
-	
-	void sendFile(HttpExchange t, String mimetype, String sheetname) throws IOException
-	{
-		// add the required response header
-	    Headers h = t.getResponseHeaders();
-	    h.add("Content-Type", mimetype);
 
-	    //get file
-	    String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
-	    File file = new File (path);
-	    byte [] bytearray  = new byte [(int)file.length()];
-	      
-	    FileInputStream fis = new FileInputStream(file);
-	      
-	    BufferedInputStream bis = new BufferedInputStream(fis);
-	    bis.read(bytearray, 0, bytearray.length);
-	    bis.close();
-	      	
-	    //send the response.
-	    t.sendResponseHeaders(HTTP_OK, file.length());
-	    OutputStream os = t.getResponseBody();
-	    os.write(bytearray,0,bytearray.length);
-	    os.close();
-	    t.close();
-	}
 	
+/*	
 	HtmlResponse loginRequest(String method, Map<String, Object> params, HttpExchange t)
 	{
 		HtmlResponse response = null;
@@ -1517,7 +1380,7 @@ public class ONCHttpHandler implements HttpHandler
 			{
 				return "<p>ONC Family Page Unavailable</p>";
 			}
-/*			
+			
 			//read the onc page html
 			try
 			{
@@ -1532,7 +1395,7 @@ public class ONCHttpHandler implements HttpHandler
 			{
 				return "<p>ONC Family Page Unavailable</p>";
 			}
-*/			
+			
 		}
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
 		{
@@ -1571,7 +1434,7 @@ public class ONCHttpHandler implements HttpHandler
 			}
 		}
 	}
-	
+*/	
 	String getHomeLinkVisibility(WebClient wc)
 	{
 		if(wc.getWebUser().getPermission() == UserPermission.Admin ||
@@ -1613,52 +1476,7 @@ public class ONCHttpHandler implements HttpHandler
 		}
 	}
 */	
-	String invalidTokenReceived()
-	{
-		String response = null;
-		try {
-			if(ONCWebServer.isWebsiteOnline())
-			{
-				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
-				response = response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
-			}
-			else
-			{
-				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
-				response = response.replace("TIME_BACK_UP", "after 4pm EDT");
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return response;
-	}
 	
-	String invalidTokenReceivedToJsonRequest(String mssg, String callback)
-	{
-		//send an error message json that will trigger a dialog box in the client
-		String json = "{\"error\":\"Your seesion expired due to inactivity\"}";
-		
-		return callback +"(" + json +")";
-	}
-
-	private String readFile( String file ) throws IOException
-	{
-	    BufferedReader reader = new BufferedReader(new FileReader(file));
-	    String         line = null;
-	    StringBuilder  stringBuilder = new StringBuilder();
-
-	    while((line = reader.readLine()) != null)
-	    {
-	        stringBuilder.append(line);
-	        stringBuilder.append(System.getProperty("line.separator"));
-	    }
-	    
-	    reader.close();
-	    
-	    return stringBuilder.toString();
-	}
 	
 	String verifyAddress(Map<String, Object> params)
 	{
@@ -2351,22 +2169,6 @@ public class ONCHttpHandler implements HttpHandler
 		return rc;	
 	}
 	
-	Map<String, String> createMap(Map<String, Object> params, String[] keys)
-	{
-		Map<String, String> map = new HashMap<String, String>();
-		for(String key:keys)
-		{
-			//code modified 10-18-16 to prevent null value exception if input map does not contain a key
-			//if key is missing in input map, it is added with an empty string;
-			if(params.containsKey(key) && params.get(key) != null)
-				map.put(key, (String) params.get(key));
-			else
-				map.put(key, "");
-		}
-		
-		return map;
-	}
-	
 	/**************************************************************************************************
 	 * This method takes a string date in one of two formats (yyyy-MM-dd or M/D/yy) and returns a Date
 	 * object from the string. If the input string is not of either format, the current date is returned.
@@ -2546,35 +2348,6 @@ public class ONCHttpHandler implements HttpHandler
 		}
 		
 		return errorMap;
-	}
-	
-	String enableReferralButton(String day)
-	{
-		ServerGlobalVariableDB gDB = null;
-		try 
-		{
-			gDB = ServerGlobalVariableDB.getInstance();
-			
-			//get current season
-			int currSeason = DBManager.getCurrentYear();
-			Calendar today = Calendar.getInstance();
-			Date seasonStartDate = gDB.getSeasonStartDate(currSeason);
-			Date compareDate = gDB.getDeadline(currSeason, day);
-			
-			if(seasonStartDate != null && compareDate != null && 
-				today.getTime().compareTo(seasonStartDate) >=0 && today.getTime().compareTo(compareDate) < 0 )
-				return "enabled";
-			else
-				return "disabled";
-		}
-		catch (FileNotFoundException e) 
-		{
-			return "disabled";
-		}
-		catch (IOException e) 
-		{
-			return "disabled";
-		}
 	}
 	
 	private class ResponseCode

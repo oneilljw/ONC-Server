@@ -22,22 +22,43 @@ public class ONCWebServer
 		
 		HttpServer server = HttpServer.create(new InetSocketAddress(WEB_SERVER_PORT), 0);
 		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
+		LoginHandler loginHandler = new LoginHandler();
+		CommonHandler commonHandler = new CommonHandler();
 		
-		String[] contexts = {"/welcome", "/logout", "/login", "/dbStatus", "/agents", "/families", "/familystatus", "/familyview",
+		String[] contexts = {"/dbStatus", "/agents", "/families", "/familystatus", "/familyview",
 							"/getfamily", "/references", "/getagent", "/getmeal", "/children", "/familysearch", 
-							"/adults", "/wishes", "/oncsplash", "/clearx", "/onclogo", "/oncstylesheet", 
-							"/oncdialogstylesheet", "/newfamily", "/reqchangepw", "/timeout", "/activities", "/activitydays",
+							"/adults", "/wishes", "/newfamily", "/reqchangepw","/activities", "/activitydays",
 							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
-							"/changepw", "/startpage", "/vanilla", "/getuser", "/getstatus", "/getpartner",
+							"/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",
 							"/profileunchanged", "/updateuser", "/driversignin", "/signindriver",
-							"/onchomepage", "/volunteersignin", "/signinvolunteer", "/partnerupdate", "/updatepartner",
-							"/contactinfo", "/jquery.js", "/favicon.ico", "/groups", "/partners", "/partnertable",
+							"/volunteersignin", "/signinvolunteer", "/partnerupdate", "/updatepartner",
+							"/contactinfo", "/groups", "/partners", "/partnertable",
 							"/regiontable", "/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
 							"/volunteerregistration", "/registervolunteer", "/commonfamily.js", "/dashboard",
-							"/metrics"};
+							};
 		
 		HttpContext context;
+		
+		String[] loginContexts = {"/welcome", "/logout", "/login", "/onchomepage", "/metrics",
+								  "/timeout"};
+		for(String contextname: loginContexts)
+		{
+			context = server.createContext(contextname, loginHandler);
+			context.getFilters().add(new ParameterFilter());
+//			context.getFilters().add(paramFilter);
+		}
+		
+		String[] commonContexts = {"/jquery.js", "/favicon.ico", "/oncsplash", "/clearx", "/onclogo", 
+								   "/oncstylesheet", "/oncdialogstylesheet", "/vanilla",};
+		for(String contextname: commonContexts)
+		{
+			context = server.createContext(contextname, commonHandler);
+			context.getFilters().add(new ParameterFilter());
+//			context.getFilters().add(paramFilter);
+		}
+		
 //		Filter paramFilter = new ParameterFilter();
+		
 		
 		for(String contextname:contexts)
 		{
