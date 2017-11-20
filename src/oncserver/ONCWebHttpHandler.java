@@ -33,6 +33,11 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 	
 	private static final int STATUS_CONFIRMED = 5;
 	
+	public ONCWebHttpHandler()
+	{
+		loadWebpages();
+	}
+	
 	public void handle(HttpExchange t) throws IOException 
     {
     	@SuppressWarnings("unchecked")
