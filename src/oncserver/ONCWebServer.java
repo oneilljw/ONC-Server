@@ -2,6 +2,8 @@ package oncserver;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 import ourneighborschild.WebsiteStatus;
 
@@ -16,49 +18,30 @@ public class ONCWebServer
 	private static ONCWebServer instance = null;
 	private static WebsiteStatus websiteStatus;
 	
+	private static List<ONCHttpHandler> oncHandlerList;
+	
 	private ONCWebServer() throws IOException
 	{
 		ServerUI serverUI = ServerUI.getInstance();
+		oncHandlerList = new ArrayList<ONCHttpHandler>();
 		
+		//create the web server
 		HttpServer server = HttpServer.create(new InetSocketAddress(WEB_SERVER_PORT), 0);
-		ONCHttpHandler oncHttpHandler = new ONCHttpHandler();
-		LoginHandler loginHandler = new LoginHandler();
-		CommonHandler commonHandler = new CommonHandler();
+		HttpContext context;
 		
-		String[] contexts = {"/dbStatus", "/agents", "/families", "/familystatus", "/familyview",
-							"/getfamily", "/references", "/getagent", "/getmeal", "/children", "/familysearch", 
-							"/adults", "/wishes", "/newfamily", "/reqchangepw","/activities", "/activitydays",
-							"/address", "/referral", "/referfamily", "/familyupdate", "/updatefamily",
-							"/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",
+		//set up the oncHttpHandler
+		String[] contexts = {"/dbStatus", "/agents", "/getagent", "/getmeal", "/children",
+							"/adults", "/wishes", "/reqchangepw","/activities", "/activitydays",
+							"/address", "/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",
 							"/profileunchanged", "/updateuser", "/driversignin", "/signindriver",
 							"/volunteersignin", "/signinvolunteer", "/partnerupdate", "/updatepartner",
 							"/contactinfo", "/groups", "/partners", "/partnertable",
 							"/regiontable", "/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
-							"/volunteerregistration", "/registervolunteer", "/commonfamily.js", "/dashboard",
+							"/volunteerregistration", "/registervolunteer", "/dashboard",
 							};
 		
-		HttpContext context;
-		
-		String[] loginContexts = {"/welcome", "/logout", "/login", "/onchomepage", "/metrics",
-								  "/timeout"};
-		for(String contextname: loginContexts)
-		{
-			context = server.createContext(contextname, loginHandler);
-			context.getFilters().add(new ParameterFilter());
-//			context.getFilters().add(paramFilter);
-		}
-		
-		String[] commonContexts = {"/jquery.js", "/favicon.ico", "/oncsplash", "/clearx", "/onclogo", 
-								   "/oncstylesheet", "/oncdialogstylesheet", "/vanilla",};
-		for(String contextname: commonContexts)
-		{
-			context = server.createContext(contextname, commonHandler);
-			context.getFilters().add(new ParameterFilter());
-//			context.getFilters().add(paramFilter);
-		}
-		
-//		Filter paramFilter = new ParameterFilter();
-		
+		ONCWebHttpHandler oncHttpHandler = new ONCWebHttpHandler();
+		oncHandlerList.add(oncHttpHandler);
 		
 		for(String contextname:contexts)
 		{
@@ -67,6 +50,51 @@ public class ONCWebServer
 //			context.getFilters().add(paramFilter);
 		}
 
+		//set up the login handler
+		String[] loginContexts = {"/welcome", "/logout", "/login", "/onchomepage", "/metrics",
+								  "/timeout"};
+		
+		LoginHandler loginHandler = new LoginHandler();
+		oncHandlerList.add(loginHandler);
+		
+		for(String contextname: loginContexts)
+		{
+			context = server.createContext(contextname, loginHandler);
+			context.getFilters().add(new ParameterFilter());
+//			context.getFilters().add(paramFilter);
+		}
+		
+		//set up the common handler
+		String[] commonContexts = {"/jquery.js", "/favicon.ico", "/oncsplash", "/clearx", "/onclogo", 
+								   "/oncstylesheet", "/oncdialogstylesheet", "/vanilla"};
+		
+		CommonHandler commonHandler = new CommonHandler();
+		
+		for(String contextname: commonContexts)
+		{
+			context = server.createContext(contextname, commonHandler);
+			context.getFilters().add(new ParameterFilter());
+//			context.getFilters().add(paramFilter);
+		}
+		
+		//set up the family handler
+		String[] familyContexts = {"/referral","/referfamily","/familyupdate","/updatefamily","/familyview",
+				 					"/families","/familystatus","/commonfamily.js","/familysearch",
+				 					"/getfamily","/references","/newfamily"};
+		
+		FamilyHandler familyHandler = new FamilyHandler();
+		oncHandlerList.add(familyHandler);
+		
+		for(String contextname: familyContexts)
+		{
+			context = server.createContext(contextname, familyHandler);
+			context.getFilters().add(new ParameterFilter());
+			//context.getFilters().add(paramFilter);
+		}
+		
+//		Filter paramFilter = new ParameterFilter();
+		
+		//start the web server
 		server.setExecutor(null); // creates a default executor
 		server.start();
 		
@@ -101,4 +129,12 @@ public class ONCWebServer
 	
 	static boolean isWebsiteOnline() { return websiteStatus.getWebsiteStatus(); }
 	static String getWebsiteTimeBackOnline() { return websiteStatus.getTimeBackUp(); }
+	
+	static String reloadWebpages()
+	{ 
+		for(ONCHttpHandler handler : oncHandlerList)
+			handler.loadWebpages();
+		
+		return "UPDATED_WEBPAGES";
+	}
 }

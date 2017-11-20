@@ -18,9 +18,10 @@ import ourneighborschild.UserPermission;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
-public class ONCHandlerServices 
+public abstract class ONCHandlerServices 
 {
 	protected static final int HTTP_OK = 200;
+	
 	protected static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
 	protected static final String DASHBOARD_HTML = "Dashboard.htm";
 	protected static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
@@ -96,22 +97,6 @@ public class ONCHandlerServices
 			{
 				return "<p>ONC Family Page Unavailable</p>";
 			}
-/*			
-			//read the onc page html
-			try
-			{
-				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_FAMILY_PAGE_HTML));
-				homePageHTML = homePageHTML.replace("USER_NAME", userFN);
-				homePageHTML = homePageHTML.replace("USER_MESSAGE", message);
-				homePageHTML = homePageHTML.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
-				homePageHTML = homePageHTML.replace("REPLACE_FAM_REF", famRef);
-				return homePageHTML;
-			}
-			catch (IOException e) 
-			{
-				return "<p>ONC Family Page Unavailable</p>";
-			}
-*/			
 		}
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
 		{
@@ -188,7 +173,7 @@ public class ONCHandlerServices
 
 	    //get file
 	    String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
-	    File file = new File (path);
+	    File file = new File(path);
 	    byte [] bytearray  = new byte [(int)file.length()];
 	      
 	    FileInputStream fis = new FileInputStream(file);
@@ -233,5 +218,16 @@ public class ONCHandlerServices
 		String json = "{\"error\":\"Your seesion expired due to inactivity\"}";
 		
 		return callback +"(" + json +")";
+	}
+	
+	String getHomeLinkVisibility(WebClient wc)
+	{
+		if(wc.getWebUser().getPermission() == UserPermission.Admin ||
+				wc.getWebUser().getPermission() == UserPermission.Sys_Admin)
+		{
+			return "visible";
+		}
+		else
+			return "hidden";
 	}
 }

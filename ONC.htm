@@ -249,6 +249,7 @@
     	$.getJSON('getfamily', familyparams, function(data)
     	{
     		famJson = data;
+    		console.log(data);
     		if(famJson.hasOwnProperty('error'))
       		{
 				window.location=document.getElementById('timeoutanchor').href;

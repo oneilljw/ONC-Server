@@ -16,33 +16,19 @@ import ourneighborschild.UserStatus;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 /****
  * Handles welcome, login, logout and metrics contexts
  * @author johnoneil
  *
  */
-public class LoginHandler extends ONCHandlerServices implements HttpHandler 
+public class LoginHandler extends ONCWebpageHandlerServices
 {	
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	
-	private Map<String,String> webpageMap;
-	
 	public LoginHandler()
 	{
-		webpageMap = new HashMap<String, String>();
-		try 
-		{
-			webpageMap.put("online", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML)));
-			webpageMap.put("welcome", readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML)));
-			webpageMap.put("changepw", readFile(String.format("%s/%s",System.getProperty("user.dir"), CHANGE_PASSWORD_HTML)));
-		} 
-		catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		loadWebpages();
 	}
 
 	@Override
@@ -272,5 +258,22 @@ public class LoginHandler extends ONCHandlerServices implements HttpHandler
 		}
 		
 		return response;
-	}	
+	}
+	
+	@Override
+	public void loadWebpages()
+	{
+		webpageMap = new HashMap<String, String>();
+		try 
+		{
+			webpageMap.put("online", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML)));
+			webpageMap.put("welcome", readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML)));
+			webpageMap.put("changepw", readFile(String.format("%s/%s",System.getProperty("user.dir"), CHANGE_PASSWORD_HTML)));
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

@@ -826,6 +826,13 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherClients(this, response);
                 }
+                else if(command.startsWith("POST<update_webpages>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = ONCWebServer.reloadWebpages();
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                }
                 else if (command.startsWith("LOGOUT")) 
                 {
                 	String response = "GOODBYE";

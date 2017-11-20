@@ -1,7 +1,6 @@
 package oncserver;
 
 import java.io.IOException;
-import java.util.Map;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -12,9 +11,6 @@ public class CommonHandler extends ONCHandlerServices implements HttpHandler
 	@Override
 	public void handle(HttpExchange t) throws IOException 
 	{
-		@SuppressWarnings("unchecked")
-		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
-    	
 //		Set<String> keyset = params.keySet();
 //		for(String key:keyset)
 //			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
@@ -57,5 +53,4 @@ public class CommonHandler extends ONCHandlerServices implements HttpHandler
     		sendFile(t, "text/javascript", "jquery-1.11.3.js");
     	}
 	}
-
 }

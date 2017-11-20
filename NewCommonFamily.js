@@ -637,19 +637,34 @@ function verifyPhoneNumbers()
 {
 	var errorMssg= "";
 	var phoneName= ["Primary", "Alternate", "2nd Alternate"];
-
-	var index=0;
-	while(index<phoneName.length && verifyPhoneNumber(index))
-		index++;
+	
+	//check that at least one phone nubmer element isn't empty
+	if(document.getElementById('homephone').value.length === 0 && 
+		document.getElementById('cellphone').value.length === 0 &&
+		 document.getElementById('altphone').value.length === 0)
+	{
+		errorMssg= "Error: At least one valid phone number is required for referral";
+		document.getElementById('homephone').style.backgroundColor = errorColor;
+		document.getElementById('cellphone').style.backgroundColor = errorColor;
+		document.getElementById('altphone').style.backgroundColor = errorColor;
+	}
+	else
+	{
+		//check that phone numbers that have been entered are properly formatted
+		var index=0;
+		while(index<phoneName.length && verifyPhoneNumber(index))
+			index++;
 		
-	if(index < phoneName.length)	
-		errorMssg= "Submission Error: " + phoneName[index] + " Phone # is invalid";	
+		if(index < phoneName.length)	
+			errorMssg= "Error: " + phoneName[index] + " Phone # is invalid";
+	}
 	
 	return errorMssg;	
 }
 
 function verifyPhoneNumber(elementNum)
 {
+	
 	var phoneElement= [document.getElementById('homephone'), 
 						document.getElementById('cellphone'),
 						document.getElementById('altphone')];
@@ -657,13 +672,15 @@ function verifyPhoneNumber(elementNum)
 	var numberGood = true;
 	var number= phoneElement[elementNum].value;
 	
-	if(number == '')
+	if(number == '')	
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-	else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-')
+	else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-' &&
+			isNumericPhoneNumber(number, '-'))
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-	else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.')
+	else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.' && 
+			isNumericPhoneNumber(number, '.'))
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-	else if(number.length===10 && number.indexOf("-")===-1 && number.indexOf(".")===-1)
+	else if(number.length===10 && !isNaN(number))
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
 	else
 	{
@@ -672,6 +689,17 @@ function verifyPhoneNumber(elementNum)
 	}
 	
 	return numberGood;
+}
+
+function isNumericPhoneNumber(phonenumber, separator)
+{
+	var testNumber = phonenumber;
+	if(separator === '-')
+		testNumber = phonenumber.replace(/-/g, '');
+	else if(separator === '.')
+		testNumber = phonenumber.replace(/./g, '');
+
+	return !isNaN(testNumber);	
 }
 
 function onSessionTimeout()
