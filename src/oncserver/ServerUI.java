@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -220,6 +221,11 @@ public class ServerUI extends JPanel implements ClientListener
         
         this.setMinimumSize(new Dimension(tablewidth, 600));
         
+        //make sure the Server Logs folder exists
+        File directory = new File(System.getProperty("user.dir") + "/Server Logs");
+        if(!directory.exists())
+            directory.mkdir();
+        
         timer.start();
 	}
 	
@@ -336,7 +342,7 @@ public class ServerUI extends JPanel implements ClientListener
 		        outputStream.println(s);
 			 
 			 logList.clear();
-			 logTA.setText(String.format("Wrote log %s\n", filename));
+			 logTA.setText(String.format("Wrote server log %s\n", filename));
 			 
 		} 
 		catch (IOException e) 
@@ -491,7 +497,7 @@ public class ServerUI extends JPanel implements ClientListener
 		public void actionPerformed(ActionEvent e) 
 		{
 			
-			if(e.getSource() == timer)
+			if(e.getSource() == timer && !logList.isEmpty())
 			{
 				//pause the timer so this EDT thread can complete. It should happen quickly, 
 				//but not necessarily. Don't stack up timer events
