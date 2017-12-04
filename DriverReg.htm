@@ -12,7 +12,7 @@
 	{
   		//set the hidden values. Set the activity to the hexadecimal code for Delivery Driver
   		document.getElementById('year').value= new Date().getFullYear().toString();
-  		document.getElementById('activity').value= '11';
+  		document.getElementById('activity').value= '20';
   		
   		//update the nav bar links with token
   		document.getElementById('logoutlink').href="onchomepage";
@@ -75,15 +75,15 @@
   				//if retrun is good, set the fields
   				if(driver.id > -1)
   				{
-  					document.getElementById('delfn').value = driver.fName;
-  					document.getElementById('delln').value = driver.lName;
+  					document.getElementById('delfn').value = driver.firstName;
+  					document.getElementById('delln').value = driver.lastName;
   					document.getElementById('delemail').value = driver.email;
   					document.getElementById('primaryphone').value = driver.cellPhone;
-  			  		document.getElementById('delhousenum').value = driver.hNum;
+  			  		document.getElementById('delhousenum').value = driver.houseNum;
   			  		document.getElementById('delstreet').value = driver.street;
   			  		document.getElementById('delunit').value = driver.unit;
   			  		document.getElementById('delcity').value = driver.city;
-  			  		document.getElementById('delzipcode').value = driver.zipcode;
+  			  		document.getElementById('delzipcode').value = driver.zipCode;
   			  		
   			  		verifyPhoneNumber(0);
   				}

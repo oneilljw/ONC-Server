@@ -33,7 +33,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 5.18f;
+	private static final float MINIMUM_CLIENT_VERSION = 5.19f;
 	
 	private int id;
 	private String version;
@@ -433,10 +433,17 @@ public class DesktopClient extends Thread
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 }
-                else if(command.startsWith("POST<volunteer_group>"))
+                else if(command.startsWith("POST<new_volunteer_group>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = volunteerDB.addVolunteerGroup(year, command.substring(21), this);
+                	String response = volunteerDB.addVolunteerGroup(year, command.substring(25), this);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                }
+                else if(command.startsWith("POST<update_volunteer_group>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerDB.updateVolunteerGroup(year, command.substring(28), this);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 }

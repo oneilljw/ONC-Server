@@ -186,6 +186,31 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		return "ADDED_VOLUNTEER_GROUP" + gson.toJson(jsonResponseList, listOfChanges);
 	}
 	
+	String updateVolunteerGroup(int year, String volunteerGroupJson, DesktopClient currClient)
+	{
+		//create the response list of jsons
+		List<String> jsonResponseList = new ArrayList<String>();
+		
+		//un-bundle the input list of updated ONCVolunteer objects
+		Gson gson = new Gson();
+		Type listOfVolunteers = new TypeToken<ArrayList<ONCVolunteer>>(){}.getType();		
+		List<ONCVolunteer> inputVolList = gson.fromJson(volunteerGroupJson, listOfVolunteers);
+		
+		//for each volunteer in the list, find them in the current year and replace them
+		for(ONCVolunteer inputVol : inputVolList)
+		{
+			//volunteer found, add the input volunteer to the current year list
+			String response = update(year, inputVol);
+			jsonResponseList.add(response);
+		}
+		
+		//notify all other clients of the imported volunteer objects
+		clientMgr.notifyAllOtherInYearClients(currClient, jsonResponseList);
+		
+		Type listOfChanges = new TypeToken<ArrayList<String>>(){}.getType();
+		return "UPDATED_VOLUNTEER_GROUP" + gson.toJson(jsonResponseList, listOfChanges);
+	}
+	
 	/************
 	 * Registers and signs in volunteers from the web site
 	 * @param year
@@ -328,6 +353,28 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			dAL.set(index, updatedDriver);
 			volunteerDBYear.setChanged(true);
 			return "UPDATED_DRIVER" + gson.toJson(updatedDriver, ONCVolunteer.class);
+		}
+		else
+			return "UPDATE_FAILED";
+	}
+	
+	String update(int year, ONCVolunteer updatedVolunteer)
+	{
+		Gson gson = new Gson();
+		
+		//Find the position for the current volunteer being updated
+		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		List<ONCVolunteer> dAL = volunteerDBYear.getList();
+		int index = 0;
+		while(index < dAL.size() && dAL.get(index).getID() != updatedVolunteer.getID())
+			index++;
+		
+		//Replace the current object with the update
+		if(index < dAL.size())
+		{
+			dAL.set(index, updatedVolunteer);
+			volunteerDBYear.setChanged(true);
+			return "UPDATED_DRIVER" + gson.toJson(updatedVolunteer, ONCVolunteer.class);
 		}
 		else
 			return "UPDATE_FAILED";

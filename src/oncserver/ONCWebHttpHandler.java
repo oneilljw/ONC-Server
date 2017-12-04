@@ -676,7 +676,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		
     		Map<String, String> activityParams = new HashMap<String, String>();
     		activityParams.put("actckbox0",volParams.get("activity"));
-    		activityParams.put("actcommnet0","New delivery volunteer on delivery day");
+    		activityParams.put("actcomment0","New delivery volunteer on delivery day");
     		    		
     		HtmlResponse htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year, volParams, activityParams,
     										true, "Delivery Day Registration Webpage", callbackFunction);
