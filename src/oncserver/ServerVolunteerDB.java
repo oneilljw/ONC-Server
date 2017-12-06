@@ -321,13 +321,15 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 				warehouseDB.add(year, addedVol);
 			else
 			{
+/*				//DISABLE AUTO EMAIL FOR NOW
 				List<ONCVolunteer> emailList = new ArrayList<ONCVolunteer>();
 				emailList.add(addedVol);
 				createAndSendVolunteerEmail(0, emailList);
+*/
 			}
 		}
 		
-		String responseJson = String.format("{\"message\":\"Thank you, %s, for volunteering "
+		String responseJson = String.format("{\"message\":\"%s, thank you for volunteering "
 				+ "with Our Neighbor's Child!\"}", volParams.get("delFN"));
 		
 		//wrap the json in the callback function per the JSONP protocol
@@ -460,14 +462,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		{
 			subject = "Volunteer Confirmation from Our Neighbor's Child";
 		}
-//		else if(emailType == 1) //Activity reminder email
-//		{
-//			subject = "December Gift Confirmations";
-//			cid0 = ContentIDGenerator.getContentId();
-//			cid1 = ContentIDGenerator.getContentId();
-//			attachmentAL.add(new ONCEmailAttachment("ONC Family Referral Worksheet.xlsx", cid0 , MimeBodyPart.ATTACHMENT));
-//			attachmentAL.add(new ONCEmailAttachment("Warehouse 3.jpeg", cid1, MimeBodyPart.INLINE));
-//		}
 		
 		//For each volunteer, create the email body and recipient information in an
 		//ONCEmail object and add it to the email array list
