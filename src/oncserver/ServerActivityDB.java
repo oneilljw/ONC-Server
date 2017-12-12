@@ -138,29 +138,31 @@ public class ServerActivityDB extends ServerSeasonalDB
 		List<VolunteerActivity> activityList = activityDBYear.getList();
 		
 		List<VolunteerActivity> volActList = new LinkedList<VolunteerActivity>();
-		
-		String[] activityParts = zActivities.split("_");
-		
-		for(String zActivity : activityParts)
+
+		if(!zActivities.isEmpty())
 		{
-			int index = 0;
-			while(index < activityList.size() && activityList.get(index).getID() != Integer.parseInt(zActivity))
-				index++;
-			
-			if(index < activityList.size())
+			String[] activityParts = zActivities.split("_");
+		
+			for(String zActivity : activityParts)
 			{
-				//create a deep copy of the activity
-				VolunteerActivity volActivity = new VolunteerActivity(activityList.get(index));
-				
-				//see if there are volunteer comments that need to be added to the activity
-				if(!zComments.isEmpty())
+				int index = 0;
+				while(index < activityList.size() && activityList.get(index).getID() != Integer.parseInt(zActivity))
+					index++;
+			
+				if(index < activityList.size())
 				{
-					addVolunteerCommentsToActivity(volActivity, zComments);
-//					System.out.println(String.format("ServActDB.createActList: vaID: %d, volunteer activity comment: %s",
-//							volActivity.getID(), volActivity.getComment()));
-				}
+					//create a deep copy of the activity
+					VolunteerActivity volActivity = new VolunteerActivity(activityList.get(index));
 				
-				volActList.add(volActivity);
+					//see if there are volunteer comments that need to be added to the activity
+					if(!zComments.isEmpty())
+					{
+						addVolunteerCommentsToActivity(volActivity, zComments);
+
+					}
+				
+					volActList.add(volActivity);
+				}
 			}
 		}
 		
