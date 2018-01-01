@@ -304,7 +304,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		}
 		else if(maptype.equals("gift"))
 		{
-			int notreq = 0, req = 0, sel = 0, rec = 0, ref = 0; 
+			int notreq = 0, req = 0, sel = 0, rec = 0, pck = 0, ref = 0; 
 			
 			for(ONCFamily f : familyDB.get(year-BASE_YEAR).getList())
 			{
@@ -315,6 +315,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					else if(f.getGiftStatus() == FamilyGiftStatus.Requested) { req++; }
 					else if(f.getGiftStatus() == FamilyGiftStatus.Selected) { sel++; }
 					else if(f.getGiftStatus() == FamilyGiftStatus.Received) { rec++; }
+					
+					//if gift status is PACKAGED or higher, but not REFERRED, count it as PACKAGED
+					else if(f.getGiftStatus().compareTo(FamilyGiftStatus.Packaged) >= 0 &&
+							f.getGiftStatus().compareTo(FamilyGiftStatus.Referred) < 0)
+					{
+						pck++;
+					}
 					else if(f.getGiftStatus() == FamilyGiftStatus.Referred) { ref++; }
 				}
 			}
@@ -323,6 +330,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			metricList.add(new Metric("Requested", req));
 			metricList.add(new Metric("Selected", sel));
 			metricList.add(new Metric("Received", rec));
+			metricList.add(new Metric("Packaged", pck));
 			metricList.add(new Metric("Referred", ref));
 			metricList.add(new Metric("Orn. Req", ServerPartnerDB.getOrnamentsRequested(year)));
 		
@@ -350,7 +358,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		}
 		else if(maptype.equals("delivery"))
 		{
-			int pckg = 0, assg = 0, del = 0, att = 0, ret = 0, cpu = 0;
+			int assg = 0, del = 0, att = 0, ret = 0, cpu = 0;
 			
 			for(ONCFamily f : familyDB.get(year-BASE_YEAR).getList())
 			{
@@ -358,8 +366,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				{
 					//served families only
 					served++;
-					if(f.getGiftStatus() == FamilyGiftStatus.Packaged) { pckg++; }
-					else if(f.getGiftStatus() == FamilyGiftStatus.Assigned) { assg++; }
+					if(f.getGiftStatus() == FamilyGiftStatus.Assigned) { assg++; }
 					else if(f.getGiftStatus() == FamilyGiftStatus.Delivered) { del++; }
 					else if(f.getGiftStatus() == FamilyGiftStatus.Attempted) {att++; }
 					else if(f.getGiftStatus() == FamilyGiftStatus.Returned) { ret++; }
@@ -368,7 +375,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			}
 			
 			metricList.add(new Metric("Served", served));
-			metricList.add(new Metric("Packaged", pckg));
 			metricList.add(new Metric("Assigned", assg));
 			metricList.add(new Metric("Delivered", del));
 			metricList.add(new Metric("Attempted", att));
