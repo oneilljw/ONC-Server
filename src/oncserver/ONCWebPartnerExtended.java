@@ -12,11 +12,6 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 	private String city;
 	private String zipCode;
 	private String homePhone;
-	private String orn_req;
-	private String orn_assigned;
-	private String orn_delivered;
-	private String orn_rec_before;
-	private String orn_rec_after;
 	private String other;
 	private String deliverTo;
 	private String specialNotes;
@@ -42,11 +37,6 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 		this.city = p.getCity();
 		this.zipCode = p.getZipCode();
 		this.homePhone = p.getHomePhone();
-		this.orn_req = Integer.toString(p.getNumberOfOrnamentsRequested());
-		this.orn_assigned = Integer.toString(p.getNumberOfOrnamentsAssigned());
-		this.orn_delivered = Integer.toString(p.getNumberOfOrnamentsDelivered());;
-		this.orn_rec_before = Integer.toString(p.getNumberOfOrnamentsReceivedBeforeDeadline());;
-		this.orn_rec_after = Integer.toString(p.getNumberOfOrnamentsReceivedAfterDeadline());;
 		this.other = p.getOther();
 		this.deliverTo= p.getDeliverTo();
 		this.specialNotes = p.getSpecialNotes();
@@ -72,11 +62,6 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 	String getCity()	{return city; }
 	String getZipCode()	{ return zipCode; }
 	String getHomePhone()	{ return homePhone; }
-	String getNumberOfOrnamentsRequested()	{ return orn_req; }
-	String getNumberOfOrnamentsAssigned() { return orn_assigned; }
-	String getNumberOfOrnamentsDelivered() { return orn_delivered; }
-	String getNumberOfOrnamentsReceivedBeforeDeadline() { return orn_rec_before; }
-	String getNumberOfOrnamentsReceivedAfterDeadline() { return orn_rec_after; }
 	String getOther()	{ return other; }
 	String getDeliverTo() { return deliverTo; }
 	String getSpecialNotes()	{ return specialNotes; }

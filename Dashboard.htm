@@ -11,45 +11,45 @@
 	
     $( document ).ready(function()
     {
-    	//get the list of years from the data base and put it in the year combo box
-    	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
-    	$.getJSON('dbStatus', dbyearsparams, function(data)
-    	{
-			var yearCombo = document.getElementById('yearlist');
-    		for (var i = data.length-1; i >= 0; i--)
+    		//get the list of years from the data base and put it in the year combo box
+   	 	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+   	 	$.getJSON('dbStatus', dbyearsparams, function(data)
     		{
-    			var option = document.createElement('option');
-    			option.text = data[i].id;
-    	    	option.value = data[i].id;
+			var yearCombo = document.getElementById('yearlist');
+    			for (var i = data.length-1; i >= 0; i--)
+    			{
+    				var option = document.createElement('option');
+    				option.text = data[i].id;
+    	   		 	option.value = data[i].id;
 
-    	    	try 
-	    		{
-	        		yearCombo.add(option, null); //Standard 
-	    		} 
-	    		catch(error) 
-	    		{
-	        		yearCombo.add(option); // IE only
-	    		}
+    	    			try 
+	    			{
+	        			yearCombo.add(option, null); //Standard 
+	    			} 
+	    			catch(error) 
+	    			{
+	        			yearCombo.add(option); // IE only
+	    			}
 	    		
-	    		sessionStorage.setItem('curryear', yearCombo.value);
-    		}
+	    			sessionStorage.setItem('curryear', yearCombo.value);
+    			}
     		
-    		google.charts.load('current', {packages: ['corechart', 'bar']});
+    			google.charts.load('current', {packages: ['corechart', 'bar']});
             google.charts.setOnLoadCallback(drawFamStatusChart);		
     		
-    	});
+    		});
     	
-    	$.getJSON('getstatus', dbyearsparams, function(status)
-    	{
-    		if(status.userstatus === 'Update_Profile')
+    		$.getJSON('getstatus', dbyearsparams, function(status)
     		{
+    			if(status.userstatus === 'Update_Profile')
+    			{
 				showEditProfileDialog();
 				window.location=document.getElementById('editprofileanchor').href;
-    		}
-    	});
+    			}
+    		});
     	
-    	window.setInterval(drawFamStatusChart, 300000);	//five minutes
-    });
+    		window.setInterval(drawFamStatusChart, 300000);	//five minutes
+    	});
     
     function drawFamStatusChart() 
     {

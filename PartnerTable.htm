@@ -15,34 +15,39 @@
 	
     $( document ).ready(function()
     {
-    	//update the nav bar links with token and set home link presence
-    	if(sessionStorage.getItem('homelinkVisibility') === 'visible')
-    	{
-    		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+    		//update the nav bar links with token and set home link presence
+    		if(sessionStorage.getItem('homelinkVisibility') === 'visible')
+    		{
+    			document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
     				+'&year=' + sessionStorage.getItem('curryear')
     				+'&famref=' + sessionStorage.getItem('famref');
     		
-    		var profileli = document.getElementById('profileli');
-    		profileli.parentNode.removeChild(profileli);
-    	}
-    	else
-    	{
-    		var homelinkli = document.getElementById('homelinkli');
-    		homelinkli.parentNode.removeChild(homelinkli);
-    	}
+    			var profileli = document.getElementById('profileli');
+    			profileli.parentNode.removeChild(profileli);
+    		}
+    		else
+    		{
+    			var homelinkli = document.getElementById('homelinkli');
+    			homelinkli.parentNode.removeChild(homelinkli);
+    		}
  
   		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
 		
-    	//get the list of years from the data base so we can determine current year
-    	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
-    	$.getJSON('dbStatus', dbyearsparams, function(data)
-    	{	
+    		//get the list of years from the data base so we can determine current year
+    		var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+    		$.getJSON('dbStatus', dbyearsparams, function(data)
+    		{	
+    			var combo = document.getElementById('dbYears');
+        			for (var i = data.length-1; i >= 0; i--)
+        				addComboBoxOption(combo, data[i].id, data[i].id);
+        			
 			currYear = data[data.length-1].id;
-    		getPartnersFromServer(currYear);
+			sessionStorage.setItem('curryear', currYear);
+    			getPartnersFromServer(currYear);
     		
-    	});
+    		});
     	
-     // Write on keyup event of keyword current year seach input element
+		// Write on keyup event of keyword current year seach input element
         $("#partnersearch").keyup(function(){
             _this = this;
             // Show only matching TR's, hide rest of them
@@ -57,73 +62,104 @@
      
         $.getJSON('getstatus', dbyearsparams, function(status)
         {
-        	if(status.userstatus === 'Update_Profile')
+        		if(status.userstatus === 'Update_Profile')
             {
-        		showEditProfileDialog();
-        		window.location=document.getElementById('editprofileanchor').href;
+        			showEditProfileDialog();
+        			window.location=document.getElementById('editprofileanchor').href;
             }
-    	});
+    		});
     });
     
     function getPartnersFromServer(year)
     {  	
-    	//get updated agentJson from server and place into group combobox. agentid =-1 defaults
-    	//to the logged in user
-    	var partnerparams = "token=" + sessionStorage.getItem("token") +
+    		//get updated agentJson from server and place into group combobox. agentid =-1 defaults
+    		//to the logged in user
+    		var partnerparams = "token=" + sessionStorage.getItem("token") +
     					  "&year=" + year +
     					  "&callback=?";
     	
-    	$.getJSON('partners', partnerparams, function(data)
-    	{
-    		partnerJson = data;
-    		updatePartnerTable();
-    	});    	
+    		$.getJSON('partners', partnerparams, function(data)
+    		{
+    			partnerJson = data;
+    			updatePartnerTable();
+    		});    	
     }
+    
+    function addComboBoxOption(combobox, text, value)
+	{
+		var option = document.createElement("option");
+		option.text = text;
+    		option.value = value;
+    		try 
+    		{
+        		combobox.add(option, null); //Standard 
+    		}
+    		catch(error)
+    		{
+        		combobox.add(option); // IE only
+    		}
+	}
+	
+    function updateForYearSelection()
+    {
+    		//get selected year and update session store
+    		var yearCB = document.getElementById('dbYears');
+		var selYear = yearCB.options[yearCB.selectedIndex].value;
+		
+		sessionStorage.setItem("curryear", selYear);
+		
+		getPartnersFromServer(selYear);	
+    }
+
     
     function updatePartnerTable()
     {
-    	$("#partnertbody").empty();
-    	var partnerType = document.getElementById('type').value;
-    	var partnerStatus = document.getElementById('status').value;
-    	var partnerCollection = document.getElementById('collection').value;
+   	 	$("#partnertbody").empty();
+    		var partnerType = document.getElementById('type').value;
+    		var partnerStatus = document.getElementById('status').value;
+    		var partnerCollection = document.getElementById('collection').value;
     	
-    	var count = 0;
-    	for(var i=0; i<partnerJson.length; i++)
+    		var count = 0;
+    		for(var i=0; i<partnerJson.length; i++)
 		{
-    		if((partnerType === 'Any' || partnerType === partnerJson[i].type) &&
-    			(partnerStatus === 'Any' || partnerStatus === partnerJson[i].status) &&
-    			(partnerCollection === 'Any' || partnerCollection === partnerJson[i].collection))
-    		{	
-    			addTableRow(partnerJson[i], document.getElementById('partnertable'), "Edit");	//add row to table
-    			count++;
+    			if((partnerType === 'Any' || partnerType === partnerJson[i].type) &&
+    				(partnerStatus === 'Any' || partnerStatus === partnerJson[i].status) &&
+    				(partnerCollection === 'Any' || partnerCollection === partnerJson[i].collection))
+    			{	
+    				addTableRow(partnerJson[i], document.getElementById('partnertable'), "Edit");	//add row to table
+    				count++;
 			}	
 		}
     	
-    	//clear the search box
-    	var searchbox = document.getElementById('partnersearch');
-    	searchbox.value = "";
+    		//clear the search box
+    		var searchbox = document.getElementById('partnersearch');
+    		searchbox.value = "";
     	
-    	//set the quanity in the table
-    	document.getElementById('count').innerHTML = 'Partners: ' + count.toString();
+    		//set the quanity in the table
+    		document.getElementById('count').innerHTML = 'Partners: ' + count.toString();
     }
     
     function addTableRow(partner, partnertable, buttontext)
     {
         if (!document.getElementsByTagName) return;
         	
-        var partnerinfo = [partner.id, partner.name, partner.type, partner.status, partner.collection];
+        var partnerinfo = [partner.id, partner.name, partner.type, partner.status, partner.collection, partner.orn_req, 
+        						partner.orn_delivered, partner.orn_received];
+    
         
-        var cellwidth = ['88px', '424px', '104px', '172px', '80px', '56px'];
+        var cellwidth = ['80px', '424px', '104px', '128px', '80px', '32px', '32px', '32px', '56px'];
+        var cellAlign = ['left', 'left', 'left', 'left', 'left', 'center', 'center', 'center', 'left'];
         
 	    var tabBody = partnertable.getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
         for(index=0; index < partnerinfo.length; index++)	//create the family info cells
         {
-        	cell = document.createElement("td");
-        	cell.appendChild(document.createTextNode(partnerinfo[index]));
-        	cell.style.width = cellwidth[index];
-        	row.appendChild(cell);
+        		cell = document.createElement("td");
+        		cell.appendChild(document.createTextNode(partnerinfo[index]));
+        		cell.style.width = cellwidth[index];
+        	 	cell.style.textAlign = cellAlign[index];
+        		row.appendChild(cell);
         }
         
         btn = document.createElement("button");
@@ -269,7 +305,7 @@
 	function validate()
     {
 		var mssgEl = document.getElementById("pw_mssg");
-    	var currpwEl = document.getElementById("currpw");
+    		var currpwEl = document.getElementById("currpw");
         var pass1El = document.getElementById("newpw");
         var pass2El = document.getElementById("verifypw");
         var ok = true;
@@ -347,11 +383,12 @@
             height: 400px;
         }
 
-        .onccol { width: 88px; }
+        .onccol { width: 80px; }
         .namecol { width: 424px; }
         .typecol { width: 104px; }
-        .statcol { width: 172px; }
+        .statcol { width: 128px; }
         .collcol { width: 80px; }
+        .countcol { width: 32px; }
         .actcol { width: 56px; }
         
         /* only styling below here */
@@ -466,12 +503,13 @@
 	</ul>
   </nav>
   <div class='controlbar'>
+  		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label id='count'>Partners: 0</label>
 		<span id='filterspan'>
 		  <label for='type'>Type:</label>
 		  <select id="type" title="Type" name="type" onchange="filterChanged()">
 		    <option value="Any">Any</option>
-    	    <option value="Business">Business</option>
+    	    		<option value="Business">Business</option>
 		    <option value="Church">Church</option>
 		    <option value="School">School</option>
 		    <option value="Clothing">Clothing</option>
@@ -512,8 +550,11 @@
        		<th class='namecol'>Name</th>
        		<th class='typecol'>Type</th>
        		<th class='statcol'>Status</th>
-        	<th class='collcol'>Collection</th>
-        	<th class='actcol'>Action</th>
+        		<th class='collcol'>Collection</th>
+        		<th class='countcol'>Req</th>
+        		<th class='countcol'>Del</th>
+        		<th class='countcol'>Rec</th>
+        		<th class='actcol'>Action</th>
         </tr>
       </thead>
       <tbody id='partnertbody'>

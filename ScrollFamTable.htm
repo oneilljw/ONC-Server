@@ -19,61 +19,61 @@
 	
     $( document ).ready(function()
     {
-    	//update the nav bar links with token and set home link presence
-    	if(sessionStorage.getItem('homelinkVisibility') === 'visible')
-    	{
-    		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
+    		//update the nav bar links with token and set home link presence
+    		if(sessionStorage.getItem('homelinkVisibility') === 'visible')
+    		{
+    			document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
     				+'&year=' + sessionStorage.getItem('curryear')
     				+'&famref=' + sessionStorage.getItem('famref');
     		
-    		var profileli = document.getElementById('profileli');
-    		profileli.parentNode.removeChild(profileli);
-    	}
-    	else
-    	{
-    		var homelinkli = document.getElementById('homelinkli');
-    		homelinkli.parentNode.removeChild(homelinkli);
-    	}
+    			var profileli = document.getElementById('profileli');
+    			profileli.parentNode.removeChild(profileli);
+    		}
+    		else
+    		{
+    			var homelinkli = document.getElementById('homelinkli');
+    			homelinkli.parentNode.removeChild(homelinkli);
+    		}
  
   		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
 		
-    	//get the list of years from the data base and put it in the year combo box
-    	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
-    	$.getJSON('dbStatus', dbyearsparams, function(data)
-    	{	
+   	 	//get the list of years from the data base and put it in the year combo box
+    		var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+    		$.getJSON('dbStatus', dbyearsparams, function(data)
+    		{	
 			currYear = data[data.length-1].id;
-    		document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
+    			document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
     		
-    		priorYear = currYear - 1;
-    		sessionStorage.setItem("prioryear", priorYear);
+    			priorYear = currYear - 1;
+    			sessionStorage.setItem("prioryear", priorYear);
     		
 			var combo = document.getElementById("dbYears");
 			var yearCombo = document.getElementById("yearlist");
-    		for (var i = data.length-1; i >= 0; i--)
-    			if(data[i].id != currYear)
-    				addComboBoxOption(combo, data[i].id, data[i].id);
+    			for (var i = data.length-1; i >= 0; i--)
+    				if(data[i].id != currYear)
+    					addComboBoxOption(combo, data[i].id, data[i].id);
     		
-    		//determine the color and enabling of the Refer New Family button
-    		var btnRNF = document.getElementById('new');
-    		if(sessionStorage.getItem('decemberCutoff') === 'disabled')
-    		{
-    			btnRNF.style.backgroundColor='Gray';
-    	       	btnRNF.disabled = true;
-    		}
+    			//determine the color and enabling of the Refer New Family button
+    			var btnRNF = document.getElementById('new');
+    			if(sessionStorage.getItem('decemberCutoff') === 'disabled')
+    			{
+    				btnRNF.style.backgroundColor='Gray';
+    	       		btnRNF.disabled = true;
+    			}
     		
-    		//get the current year groups, agents & families
-    		var groupcb = document.getElementById('currgroups');
-    		var agentcb = document.getElementById('curragents');
-    		getGroupsAgentsAndFamiliesFromServer(currYear, groupcb, agentcb);
+    			//get the current year groups, agents & families
+    			var groupcb = document.getElementById('currgroups');
+    			var agentcb = document.getElementById('curragents');
+    			getGroupsAgentsAndFamiliesFromServer(currYear, groupcb, agentcb);
     		
-    		//get the prior year groups, agents & families
-    		var groupcb = document.getElementById('pygroups');
-    		var agentcb = document.getElementById('pyagents');
-    		getGroupsAgentsAndFamiliesFromServer(priorYear, groupcb, agentcb);
-    	});
+    			//get the prior year groups, agents & families
+    			var groupcb = document.getElementById('pygroups');
+    			var agentcb = document.getElementById('pyagents');
+    			getGroupsAgentsAndFamiliesFromServer(priorYear, groupcb, agentcb);
+    		});
     	
     	
-    	// Write on keyup event of keyword prior year seach input element
+    		// Write on keyup event of keyword prior year seach input element
         $("#pysearch").keyup(function(){
             _this = this;
             // Show only matching TR, hide rest of them
@@ -104,7 +104,7 @@
         		showEditProfileDialog();
         		window.location=document.getElementById('editprofileanchor').href;
             }
-    	});
+    		});
     });
     
     function getGroupsAgentsAndFamiliesFromServer(year, groupcb, agentcb)
@@ -266,15 +266,15 @@
 	{
 		var option = document.createElement("option");
 		option.text = text;
-    	option.value = value;
-    	try 
-    	{
-        	combobox.add(option, null); //Standard 
-    	}
-    	catch(error)
-    	{
-        	combobox.add(option); // IE only
-    	}
+    		option.value = value;
+    		try 
+    		{
+        		combobox.add(option, null); //Standard 
+    		}
+    		catch(error)
+    		{
+        		combobox.add(option); // IE only
+    		}
 	}
 	
     function updateForYearSelection()

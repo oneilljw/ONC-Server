@@ -100,7 +100,7 @@ public abstract class ONCHandlerServices
 		}
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
 		{
-			//read the onc page html
+			//read the partner table html
 			try
 			{
 				homePageHTML = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));

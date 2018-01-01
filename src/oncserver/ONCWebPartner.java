@@ -10,6 +10,12 @@ public class ONCWebPartner
 	private String type;
 	private GiftCollection collection;
 	private String name;
+	private String orn_req;
+	private String orn_assigned;
+	private String orn_delivered;
+	private String orn_received;
+	private String orn_rec_before;
+	private String orn_rec_after;
 	
 	public ONCWebPartner(ONCPartner p)
 	{
@@ -18,6 +24,12 @@ public class ONCWebPartner
 		this.type = getTypeString(p.getType());
 		this.collection = p.getGiftCollectionType();
 		this.name = p.getLastName();
+		this.orn_req = Integer.toString(p.getNumberOfOrnamentsRequested());
+		this.orn_assigned = Integer.toString(p.getNumberOfOrnamentsAssigned());
+		this.orn_delivered = Integer.toString(p.getNumberOfOrnamentsDelivered());
+		this.orn_received = Integer.toString(p.getNumberOfOrnamentsReceivedBeforeDeadline() + p.getNumberOfOrnamentsReceivedAfterDeadline());
+		this.orn_rec_before = Integer.toString(p.getNumberOfOrnamentsReceivedBeforeDeadline());
+		this.orn_rec_after = Integer.toString(p.getNumberOfOrnamentsReceivedAfterDeadline());
 	}
 	
 	//getters
@@ -26,6 +38,12 @@ public class ONCWebPartner
 	String getType() { return type; }
 	GiftCollection getCollectionType() { return collection; }
 	String getName() { return name; }
+	String getNumberOfOrnamentsRequested()	{ return orn_req; }
+	String getNumberOfOrnamentsAssigned() { return orn_assigned; }
+	String getNumberOfOrnamentsDelivered() { return orn_delivered; }
+	String getNumberOfOrnamentsReceived() { return orn_received; }
+	String getNumberOfOrnamentsReceivedBeforeDeadline() { return orn_rec_before; }
+	String getNumberOfOrnamentsReceivedAfterDeadline() { return orn_rec_after; }
 	
 	String getStatusString(int status) 
 	{ 

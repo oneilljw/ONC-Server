@@ -14,7 +14,7 @@
   	$( document ).ready(function()
 	{
   		//set the hidden values
-  		var currYear = new Date().getFullYear();
+  		var currYear = sessionStorage.getItem('curryear');
   		document.getElementById('year').value= currYear.toString();
   		document.getElementById('token').value= sessionStorage.getItem("token");
   		document.getElementById('partnerid').value= sessionStorage.getItem("partnerid");

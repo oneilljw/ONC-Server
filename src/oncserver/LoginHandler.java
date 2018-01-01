@@ -134,7 +134,7 @@ public class LoginHandler extends ONCWebpageHandlerServices
     		}
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
+    		}
 	}
 	
 	HtmlResponse loginRequest(String method, Map<String, Object> params, HttpExchange t)
