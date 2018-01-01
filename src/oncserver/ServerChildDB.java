@@ -62,6 +62,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		Type listtype = new TypeToken<ArrayList<ONCChild>>(){}.getType();
 			
 		String response = gson.toJson(childDB.get(year - BASE_YEAR).getList(), listtype);
+		
 		return response;	
 	}
 	
