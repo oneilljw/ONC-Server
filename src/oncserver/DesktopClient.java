@@ -234,13 +234,13 @@ public class DesktopClient extends Thread
                 	String response = serverFamilyDB.getFamilies(year);
                 	output.println(response);
                 }
-                else if(command.startsWith("GET<agents>"))
-                {
-                	clientMgr.addLogMessage(command);
+//                else if(command.startsWith("GET<agents>"))
+//                {
+//                	clientMgr.addLogMessage(command);
 //                	String response = serverAgentDB.getAgents();
-                	String response = userDB.getAgents();
-                	output.println(response);
-                }
+//                	String response = userDB.getAgents();
+//                	output.println(response);
+//                }
                 else if(command.startsWith("GET<groups>"))
                 {
                 	clientMgr.addLogMessage(command);
