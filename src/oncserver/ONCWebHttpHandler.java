@@ -1078,7 +1078,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 				rc = new ResponseCode(String.format("Region %d, %s successfully updated", 
 										updatedRegion.getID(), updatedRegion.getStreetName()));
 				
-				mssg = "UPDATED_REGION" + gson.toJson(updatedRegion, Region.class);
+//				mssg = "UPDATED_REGION" + gson.toJson(updatedRegion, Region.class);
 //				clientMgr.notifyAllInYearClients(year, mssg);
 			}
 			else
