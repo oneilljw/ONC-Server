@@ -1054,7 +1054,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 		
 		ResponseCode rc = null;
 		Gson gson = new Gson();
-		String mssg;
+//		String mssg;
 		//determine if its an add partner request or a partner update request
 		if(regionMap.get("regionid").equals("New"))
 		{
@@ -1064,7 +1064,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 			{
 				rc = new ResponseCode(String.format("Region %d, %s successfully added to the database", 
 									addedRegion.getID(), addedRegion.getStreetName()));
-				mssg = "ADDED_REGION" + gson.toJson(addedRegion, Region.class);
+//				mssg = "ADDED_REGION" + gson.toJson(addedRegion, Region.class);
 //				clientMgr.notifyAllInYearClients(year, mssg);
 			}
 			else

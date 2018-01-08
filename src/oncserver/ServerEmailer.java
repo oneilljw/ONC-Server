@@ -31,7 +31,7 @@ import com.sun.mail.smtp.SMTPTransport;
 public class ServerEmailer extends SwingWorker<Void, Void> implements TransportListener
 {
 	private static final int MIN_EMAIL_ADDRESS_LENGTH = 2;
-	private static final int EMAIL_SUCCESSFUL_RETURN_CODE = 250;
+//	private static final int EMAIL_SUCCESSFUL_RETURN_CODE = 250;
    
 	private EmailAddress fromAddress;	//from address line for the email
 	private ServerCredentials credentials; //host URL, account id, password
@@ -78,12 +78,12 @@ public class ServerEmailer extends SwingWorker<Void, Void> implements TransportL
 
         try 
         {
-        	t.connect(credentials.getServerName(), credentials.getUserID(), credentials.getPassword());
+        		t.connect(credentials.getServerName(), credentials.getUserID(), credentials.getPassword());
         }
         catch (AuthenticationFailedException aex) 
         {
-        	String errMsg = String.format("Mail Server Login Failed: server = %s, usderID = %s, pw = %s", 
-        					credentials.getServerName(), credentials.getUserID(), credentials.getPassword());
+//        	String errMsg = String.format("Mail Server Login Failed: server = %s, usderID = %s, pw = %s", 
+//        			credentials.getServerName(), credentials.getUserID(), credentials.getPassword());
         }
 		
         //for each email in the email list, create a MimeMessage and send the email

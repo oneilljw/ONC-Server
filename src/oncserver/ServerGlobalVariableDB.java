@@ -13,7 +13,6 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import ourneighborschild.ONCObject;
-import ourneighborschild.ONCPartner;
 import ourneighborschild.ServerGVs;
 
 import com.google.gson.Gson;

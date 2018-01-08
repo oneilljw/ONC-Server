@@ -30,5 +30,12 @@ public class ONCWebAgent
 	}
 	
 	//getters
-	public String getLastname() { return lastname; }
+	int getID() { return id; }
+	String getLastname() { return lastname; }
+	String getFirstname() { return firstname; }
+	String getName() { return name; }
+	String getOrg() { return org; }
+	String getTitle() { return title; }
+	String getEmail() { return email; }
+	String getPhone() { return phone; }
 }
