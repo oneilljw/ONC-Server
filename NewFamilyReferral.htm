@@ -27,7 +27,7 @@
   	$( document ).ready(function()
 	{
   		//set the hidden values
-  		document.getElementById('year').value= new Date().getFullYear().toString();
+  		document.getElementById('year').value= sessionStorage.getItem("curryear");
   		document.getElementById('token').value= sessionStorage.getItem("token");
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   		
@@ -49,7 +49,6 @@
 			{
 				document.getElementById('hohfn').value= family.HOHFirstName;
 				document.getElementById('hohln').value= family.HOHLastName;
-				
 				
 				childrenJson = family.childList;
   		     	updateChildTable(true);

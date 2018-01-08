@@ -451,7 +451,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return "UPDATE_FAILED";
 	}
 	
-	ONCFamily update(int year, ONCFamily updatedFamily, boolean bAutoAssign)
+	ONCFamily update(int year, ONCFamily updatedFamily, WebClient wc, boolean bAutoAssign, String updateNote)
 	{
 		//Find the position for the current family being replaced
 		FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
@@ -485,12 +485,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getRegion()));
 			}
 			
-			//check to see if either status is changing, if so, add a history item
-			if(currFam != null && 
-				(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || currFam.getGiftStatus() != updatedFamily.getGiftStatus()))
+			//add a history item so change can be tracked. Changed by is the web user who made the change
+			if(currFam != null) 
 			{
 				int histID = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-						updatedFamily.getGiftStatus(), "", "Status Changed", updatedFamily.getChangedBy());
+						updatedFamily.getGiftStatus(), "", updateNote, wc.getWebUser().getLNFI());
 				updatedFamily.setDeliveryID(histID);
 			}
 			

@@ -64,275 +64,274 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 		ServerUI.getInstance().addLogMessage(mssg);
 		
 		if(requestURI.contains("/families"))
-    	{
+		{
 //    		Set<String> keyset = params.keySet();
 //			for(String key:keyset)
 //				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
 			
-    		int year = Integer.parseInt((String) params.get("year"));
-    		int agentID = Integer.parseInt((String) params.get("agentid"));
-    		int groupID = Integer.parseInt((String) params.get("groupid"));
-    		
-    		HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-		else if(requestURI.contains("/references"))
-    	{
-    		//update the client time stamp
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    		{
-    			wc.updateTimestamp();
-    			//get the JSON of family reference list
     			int year = Integer.parseInt((String) params.get("year"));
+    			int agentID = Integer.parseInt((String) params.get("agentid"));
+    			int groupID = Integer.parseInt((String) params.get("groupid"));
     		
-    			htmlResponse = ServerFamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
-    		}
-    		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	else if(requestURI.contains("/familysearch"))
-    	{
-    		//update the client time stamp
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
+    			HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+		}
+		else if(requestURI.contains("/references"))
+		{
+    			//update the client time stamp
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
     		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    		{
-    			wc.updateTimestamp();
-    			//get the JSON of family reference list
-    			htmlResponse = ServerFamilyDB.searchForFamilyReferencesJSONP(
+    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			{
+    				wc.updateTimestamp();
+    				//get the JSON of family reference list
+    				int year = Integer.parseInt((String) params.get("year"));
+    		
+    				htmlResponse = ServerFamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
+    			}
+    			else
+    			{
+    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			}
+    			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/familysearch"))
+		{
+    			//update the client time stamp
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
+    		
+    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			{
+    				wc.updateTimestamp();
+    				//get the JSON of family reference list
+    				htmlResponse = ServerFamilyDB.searchForFamilyReferencesJSONP(
 						Integer.parseInt((String) params.get("year")),
 						 (String) params.get("searchstring"),
 						  (String) params.get("callback"));
-    		}
-    		else
+    			}
+    			else
+    			{
+    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			}
+    			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/getfamily"))
     		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	else if(requestURI.contains("/getfamily"))
-    	{
-    		//update the client time stamp
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
+			//update the client time stamp
+			ClientManager clientMgr = ClientManager.getInstance();
+			WebClient wc;
+			HtmlResponse htmlResponse;
     		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    		{
-    			wc.updateTimestamp();
-    			int year = Integer.parseInt((String) params.get("year"));
-        		String targetID = (String) params.get("targetid");
+			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+			{
+				wc.updateTimestamp();
+				int year = Integer.parseInt((String) params.get("year"));
+				String targetID = (String) params.get("targetid");
         		
-        		htmlResponse = ServerFamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
+				htmlResponse = ServerFamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
+			}
+			else
+			{
+				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+			}
+			sendHTMLResponse(t, htmlResponse);
     		}
-    		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	else if(requestURI.contains("/commonfamily.js"))
-    	{
-    		sendFile(t, "text/javascript", COMMON_FAMILY_JS_FILE);
-    	}
-    	else if(requestURI.contains("/newfamily"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		String response = null;
+		else if(requestURI.contains("/commonfamily.js"))
+		{
+			sendFile(t, "text/javascript", COMMON_FAMILY_JS_FILE);
+		}
+		else if(requestURI.contains("/newfamily"))
+		{
+			String sessionID = (String) params.get("token");
+			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			String response = null;
     		
-    		if((wc=clientMgr.findClient(sessionID)) != null)	
-    		{
-    			wc.updateTimestamp();
-    			response = webpageMap.get("referral");
-    		}
-    		else
-    			response = invalidTokenReceived();
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/familystatus"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
-    			
-    		if((wc=clientMgr.findClient(sessionID)) != null)
-    		{
-    			wc.updateTimestamp();
-    			try
+    			if((wc=clientMgr.findClient(sessionID)) != null)	
     			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
-    				response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
-    				response = response.replace("USER_MESSAGE", "");
-    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    				response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-    				response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-    				response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
-    				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+    				wc.updateTimestamp();
+    				response = webpageMap.get("referral");
     			}
-    			catch (IOException e) 
-    			{
-    				response = "<p>Family Table Unavailable</p>";
-    			}
-    		}
-    		else
-    			response = invalidTokenReceived();
+    			else
+    				response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/referral"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
+		else if(requestURI.contains("/familystatus"))
+    		{
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
     			
-    		if((wc=clientMgr.findClient(sessionID)) != null)
-    		{
-    			wc.updateTimestamp();
-    			response = webpageMap.get("referral");	
+    			if((wc=clientMgr.findClient(sessionID)) != null)
+    			{
+    				wc.updateTimestamp();
+    				try
+    				{
+    					response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
+    					response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
+    					response = response.replace("USER_MESSAGE", "");
+    					response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    					response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+    					response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+    					response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+    					response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+    				}
+    				catch (IOException e) 
+    				{
+    					response = "<p>Family Table Unavailable</p>";
+    				}
+    			}
+    			else
+    				response = invalidTokenReceived();
+    		
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
     		}
-    		else
-    			response = invalidTokenReceived();
+		else if(requestURI.contains("/referral"))
+		{
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
+    			
+    			if((wc=clientMgr.findClient(sessionID)) != null)
+    			{
+    				wc.updateTimestamp();
+    				response = webpageMap.get("referral");	
+    			}
+    			else
+    				response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/referfamily"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
-    		
-    		if(t.getRequestMethod().toLowerCase().equals("post") && 
-    			params.containsKey("token") && params.containsKey("year") &&
-    			 (wc=clientMgr.findClient(sessionID)) != null) 
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+		}
+		else if(requestURI.contains("/referfamily"))
     		{
-    			wc.updateTimestamp();
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
+    		
+    			if(t.getRequestMethod().toLowerCase().equals("post") && 
+    					params.containsKey("token") && params.containsKey("year") &&
+    					(wc=clientMgr.findClient(sessionID)) != null) 
+    			{
+    				wc.updateTimestamp();
 //    			Set<String> keyset = params.keySet();
 //    			for(String key:keyset)
 //    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
     		
-    			ResponseCode frc = processFamilyReferral(wc, params);
+    				ResponseCode frc = processFamilyReferral(wc, params);
     			
-    			//submission processed, send the family table page back to the user
-//    			response = getHomePageHTML(wc, frc.getMessage(), frc.getFamRef());
-    			
-    			try
+    				//submission processed, send the family table page back to the user
+    				try
+    				{
+    					String userFN;
+    					if(wc.getWebUser().getFirstName().equals(""))
+    						userFN = wc.getWebUser().getLastName();
+    					else
+    						userFN = wc.getWebUser().getFirstName();
+    				
+    					response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
+    					response = response.replace("USER_NAME", userFN);
+    					response = response.replace("USER_MESSAGE", frc.getMessage());
+    					response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    					response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+    					response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+    					response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+    					response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+    				}
+    				catch (IOException e) 
+    				{
+    					response = "<p>Family Table Unavailable</p>";
+    				}
+    			}
+    			else
+    				response = invalidTokenReceived();
+    		
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
+		else if(requestURI.contains("/familyview"))
+		{
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
+    		
+    			if((wc=clientMgr.findClient(sessionID)) != null)
     			{
+    				wc.updateTimestamp();
+    			
+    				//send the onc web page
     				String userFN;
     				if(wc.getWebUser().getFirstName().equals(""))
     					userFN = wc.getWebUser().getLastName();
     				else
     					userFN = wc.getWebUser().getFirstName();
-    				
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
-    				response = response.replace("USER_NAME", userFN);
-    				response = response.replace("USER_MESSAGE", frc.getMessage());
-    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    				response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-    				response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-    				response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
-    				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
-    			}
-    			catch (IOException e) 
-    			{
-    				response = "<p>Family Table Unavailable</p>";
-    			}
-    		}
-    		else
-    			response = invalidTokenReceived();
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/familyview"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
-    		
-    		if((wc=clientMgr.findClient(sessionID)) != null)
-    		{
-    			wc.updateTimestamp();
-    			
-    			//send the onc web page
-    			String userFN;
-        		if(wc.getWebUser().getFirstName().equals(""))
-        			userFN = wc.getWebUser().getLastName();
-        		else
-        			userFN = wc.getWebUser().getFirstName();
         			
-        		response = webpageMap.get("family");
-    			response = response.replace("USER_NAME", userFN);
-    			response = response.replace("USER_MESSAGE", "");
-    			response = response.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
-    			response = response.replace("REPLACE_FAM_REF", "NNA");
-    		}
-    		else
-    			response = invalidTokenReceived();
+    				response = webpageMap.get("family");
+    				response = response.replace("USER_NAME", userFN);
+    				response = response.replace("USER_MESSAGE", "");
+    				response = response.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
+    				response = response.replace("REPLACE_FAM_REF", "NNA");
+    			}
+    			else
+    				response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/familyupdate"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+		}
+		else if(requestURI.contains("/familyupdate"))
+		{
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
     		
-    		if((wc=clientMgr.findClient(sessionID)) != null)
-    		{
-    			wc.updateTimestamp();
-    			response = webpageMap.get("update");
-    		}
-    		else
-    			response = invalidTokenReceived();
+    			if((wc=clientMgr.findClient(sessionID)) != null)
+    			{
+    				wc.updateTimestamp();
+    				response = webpageMap.get("update");
+    			}
+    			else
+    				response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/updatefamily"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc; 		
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+		}
+		else if(requestURI.contains("/updatefamily"))
+		{
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc; 		
        		
 //    		Set<String> keyset = params.keySet();
 //    		for(String key:keyset)
 //    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
     		
-    		if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("token") &&
+    			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("token") &&
     				params.containsKey("year") && params.containsKey("targetid") &&
     				(wc=clientMgr.findClient(sessionID)) != null)
-    		{
-    			wc.updateTimestamp();
-    			ResponseCode frc = processFamilyUpdate(wc, params);
+    			{
+    				wc.updateTimestamp();
+    				ResponseCode frc = processFamilyUpdate(wc, params);
     			
-    			//submission processed, send the family table page back to the user
-    			response = getHomePageHTML(wc, frc.getMessage(), (String) params.get("targetid"));
-    		}
-    		else
-    			response = invalidTokenReceived();
+    				//submission processed, send the family table page back to the user
+    				response = getHomePageHTML(wc, frc.getMessage(), (String) params.get("targetid"));
+    			}
+    			else
+    				response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
 	}
+	
 	ResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
 	{
 		//get the agent/user
@@ -690,7 +689,7 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 	
 	ResponseCode processFamilyUpdate(WebClient wc, Map<String, Object> params)
 	{
-		//get the agent
+		//get the year
 		int year = Integer.parseInt((String) params.get("year"));
 		
 		//get database references
@@ -711,72 +710,95 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 			e.printStackTrace();
 		}
 		
-		//get the family object from the database
+		//get the family object from the database. If not found, return an error message. If found, try
+		//to process the update
 		String targetID = (String) params.get("targetid");
-		ONCFamily updateFam = serverFamilyDB.getFamilyByTargetID(year, targetID);
+		ONCFamily editedFam = serverFamilyDB.getFamilyByTargetID(year, targetID);
 		
-		//if found, make the changes to the family object
-		if(updateFam != null)
-		{
+		if(editedFam != null)
+		{	
+			//make a copy for update
+			ONCFamily updateFam  = new ONCFamily(editedFam);
+		
+			//family was found, continue processing to see if any data was changed
 			String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
-					   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
-					   "delstreet","detail", "delunit", "delcity", "delzipcode"};
+								"zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
+								"delstreet","detail", "delunit", "delcity", "delzipcode"};
 			
 			Map<String, String> familyMap = createMap(params, familyKeys);
 			
-			updateFam.setLanguage(familyMap.get("language"));
-			updateFam.setHOHFirstName(familyMap.get("hohFN"));
-			updateFam.setHOHLastName(familyMap.get("hohLN"));
-			updateFam.setHouseNum(familyMap.get("housenum"));
-			updateFam.setStreet(ensureUpperCaseStreetName(familyMap.get("street")));
-			updateFam.setUnitNum(familyMap.get("unit"));
-			updateFam.setCity(familyMap.get("city"));
-			updateFam.setZipCode(familyMap.get("zipcode"));
+			String streetname = ensureUpperCaseStreetName(familyMap.get("street"));
+			int cc = 0;
 			
+			if(!updateFam.getLanguage().equals(familyMap.get("language"))) { updateFam.setLanguage(familyMap.get("language")); cc = cc | 1;}
+			if(!updateFam.getFirstName().equals(familyMap.get("hohFN"))) {updateFam.setHOHFirstName(familyMap.get("hohFN")); cc = cc | 2;}
+			if(!updateFam.getLastName().equals(familyMap.get("hohLN"))) {updateFam.setHOHFirstName(familyMap.get("hohLN")); cc = cc | 4;} 
+			if(!updateFam.getHouseNum().equals(familyMap.get("housenum"))) {updateFam.setHouseNum(familyMap.get("housenum")); cc = cc | 8;}
+			if(!updateFam.getStreet().equals(streetname)) {updateFam.setStreet(streetname); cc = cc | 16;}
+			if(!updateFam.getUnit().equals(familyMap.get("unit"))) {updateFam.setUnitNum(familyMap.get("unit")); cc = cc | 32;}
+			if(!updateFam.getCity().equals(familyMap.get("city"))) {updateFam.setCity(familyMap.get("city")); cc = cc | 64;}
+			if(!updateFam.getZipCode().equals(familyMap.get("zipcode"))) {updateFam.setZipCode(familyMap.get("zipcode")); cc = cc | 128;}
+			
+			//set the alternate delivery address for the update, then compare to the original address to 
+			//detect a change
 			if(familyMap.get("housenum").equals(familyMap.get("delhousenum")) &&
-				familyMap.get("street").equals(familyMap.get("delstreet")) &&
-				 familyMap.get("unit").equals(familyMap.get("delunit")) &&
-				  familyMap.get("city").equals(familyMap.get("delcity")) &&
-				   familyMap.get("zipcode").equals(familyMap.get("delzipcode")))
+			    familyMap.get("street").equals(familyMap.get("delstreet")) &&
+			    familyMap.get("unit").equals(familyMap.get("delunit")) &&
+			    familyMap.get("city").equals(familyMap.get("delcity")) &&
+			    familyMap.get("zipcode").equals(familyMap.get("delzipcode")))
 			{
 				updateFam.setSubstituteDeliveryAddress("");
 			}
 			else
 			{
 				String altAddress = familyMap.get("delhousenum") + "_" +
-									ensureUpperCaseStreetName(familyMap.get("delstreet")) + "_" +
-									familyMap.get("delunit") + "_" +
-									familyMap.get("delcity") + "_" +
-									familyMap.get("delzipcode");
-				
+								ensureUpperCaseStreetName(familyMap.get("delstreet")) + "_" +
+								familyMap.get("delunit") + "_" +
+								familyMap.get("delcity") + "_" +
+								familyMap.get("delzipcode");
+			
 				updateFam.setSubstituteDeliveryAddress(altAddress);
 			}
-			
+		
+			if(!updateFam.getSubstituteDeliveryAddress().equals(editedFam.getSubstituteDeliveryAddress())) {cc = cc | 256; }
+		
+			//create the home and cell phones, then check the home and alt phones to see if they have changed.
+			//check the email and detail fields as well
 			updateFam.setHomePhone(familyMap.get("homephone"));
 			
 			if(familyMap.get("altphone").equals(""))
 				updateFam.setOtherPhon(familyMap.get("cellphone"));
 			else
 				updateFam.setOtherPhon(familyMap.get("cellphone") +"\n" + familyMap.get("altphone"));
-			updateFam.setFamilyEmail(familyMap.get("email"));
-			updateFam.setDetails(familyMap.get("detail"));	
-			
-			//if changes detected, update the family in the db
-			if(serverFamilyDB.update(year, updateFam, true) != null)
-			{
-				//successfully updated family. Notify the desktop clients so they refresh
-				ClientManager clientMgr = ClientManager.getInstance();
-				Gson gson = new Gson();
-				String mssg;
-				mssg = "UPDATED_FAMILY" + gson.toJson(updateFam, ONCFamily.class);
-				clientMgr.notifyAllInYearClients(year, mssg);
-				return new ResponseCode(updateFam.getLastName() + " Family Update Accepted");
-			}
-			
-			return new ResponseCode("Family Referral Rejected: Unable to Save Update");
-		}
 		
-		return new ResponseCode("Family Referral Rejected: Family Not Found");
+			if(!updateFam.getHomePhone().equals(editedFam.getHomePhone())) {cc = cc | 512; }
+			if(!updateFam.getCellPhone().equals(editedFam.getCellPhone())) {cc = cc | 1024; }
+			if(!updateFam.getEmail().equals(familyMap.get("email"))) {updateFam.setFamilyEmail(familyMap.get("email")); cc = cc | 2048;}
+			if(!updateFam.getDetails().equals(familyMap.get("detail"))) {updateFam.setDetails(familyMap.get("detail")); cc = cc | 4096;}	
+			
+			//test to see if a change was detected, if so, process it
+			if(cc > 0)
+			{	
+				//changes were detected, update the family in the db
+				ONCFamily updatedFamily = serverFamilyDB.update(year, updateFam, wc, true, "Agent updated family info");
+				if(updatedFamily != null)
+				{
+					//successfully updated family. Notify the desktop clients so they refresh
+					ClientManager clientMgr = ClientManager.getInstance();
+					Gson gson = new Gson();
+					String mssg;
+					mssg = "UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class);
+					clientMgr.notifyAllInYearClients(year, mssg);
+					return new ResponseCode(updateFam.getLastName() + " Family Update Accepted");
+				}
+				else
+					return new ResponseCode("Family Referral Rejected: Unable to Save Update");
+			}
+			else
+				return new ResponseCode("Family Referral Unchanged: No change was detected");	
+		}
+		else
+			return new ResponseCode("Family Referral Rejected: Family Not Found in Database");	
 	}
 	
 	/**************************************************************************************************

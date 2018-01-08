@@ -12,7 +12,7 @@
   	$( document ).ready(function()
 	{
   		//set the hidden values
-  		document.getElementById('year').value= new Date().getFullYear().toString();
+  		document.getElementById('year').value= sessionStorage.getItem("curryear");
   		document.getElementById('token').value= sessionStorage.getItem("token");
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   		
@@ -25,13 +25,12 @@
   		if(urlmode.indexOf("familyupdate") > -1)
   		{
   			familyparams = "token=" + sessionStorage.getItem("token") + "&" +
-  							"year=" + new Date().getFullYear().toString() + "&" +
+  							"year=" + sessionStorage.getItem("curryear") + "&" +
   							"targetid=" + sessionStorage.getItem("targetid") + "&" +
   							"callback=?";
   			
   			$.getJSON('getfamily', familyparams, function(family)
   			{
-  				console.log(family);
   		     	updateFamilyInfo(family);
   		     	
   		     	childrenJson = family.childList;
@@ -62,32 +61,6 @@
   			});
   		}	
 	});
-  	
-  	function getFamiliesChildrenFromServer(year, targetid)
-    {
-    	childrenparams=  "token=" + sessionStorage.getItem("token") + "&" +
-		"year=" + year + "&" +
-		"targetid=" + targetid + "&" +
-		"callback=?";
-
-		$.getJSON('children', childrenparams, function(data)
-		{
-			childrenJson = data;
-			updateChildTable(false);
-		});
-    }
-  	
-  	function getAdultsFromServer(year, targetid)
-    {
-    	adultsparams=  "token=" + sessionStorage.getItem("token") + "&" +
-			"year=" + year + "&" + "targetid=" + targetid + "&" + "callback=?";
-			
-		$.getJSON('adults', adultsparams, function(data)
-		{
-	    	adultsJson = data;
-	     	updateAdultTable(false);
-		});
-    }
   	
   	function updateFamilyInfo(family)
   	{	
@@ -177,7 +150,7 @@
   <fieldset>
   <legend class="legend-major">Head of Household (HOH) Information</legend>
     <input id="hohfn" title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" value="HOHFN" required>
-    <input id="hohln" title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name", value="HOHLN" required>
+    <input id="hohln" title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name" value="HOHLN" required>
     <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
     <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
     <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onchange="verifyPhoneNumber(2)">
@@ -357,8 +330,7 @@
   <div>
   	<span id="errormessage"></span>
   	<span id="submitspan">
-  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-<!--  <input id="submit" type="submit" value="Submit Update to ONC" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC"> -->  	 
+  	  <label for="submit">Please check that all fields are complete prior to submission: </label> 	 
   	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit()>
   	</span>
   </div>
