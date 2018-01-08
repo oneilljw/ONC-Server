@@ -29,9 +29,9 @@ import com.sun.net.httpserver.HttpExchange;
 public class FamilyHandler extends ONCWebpageHandlerServices
 {
 	private static final String ONC_FAMILY_PAGE_HTML = "ONC.htm";
-	private static final String UPDATE_HTML = "NewEdit.htm";
-	private static final String REFERRAL_HTML = "NewFamilyReferral.htm";
-	private static final String COMMON_FAMILY_JS_FILE = "NewCommonFamily.js";
+	private static final String UPDATE_HTML = "Edit.htm";
+	private static final String REFERRAL_HTML = "FamilyReferral.htm";
+	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final int NUM_OF_WISHES_PROVIDED = 4;
