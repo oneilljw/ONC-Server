@@ -98,7 +98,7 @@ public class ONCWebServer
 		server.setExecutor(null); // creates a default executor
 		server.start();
 		
-		websiteStatus = new WebsiteStatus(true, "Online");
+		websiteStatus = new WebsiteStatus(true, true, "Online");
 		
 		serverUI.addLogMessage(String.format("Web Server started: %d contexts", contexts.length));
 	}
@@ -127,7 +127,8 @@ public class ONCWebServer
 		return "UPDATED_WEBSITE_STATUS" + websiteStatusJson;
 	}
 	
-	static boolean isWebsiteOnline() { return websiteStatus.getWebsiteStatus(); }
+	static boolean isWebsiteOnline() { return websiteStatus.isWebsiteOnline(); }
+	static boolean isWebsiteLoggingEnabled() { return websiteStatus.isWebsiteLoggingEnabled(); }
 	static String getWebsiteTimeBackOnline() { return websiteStatus.getTimeBackUp(); }
 	
 	static String reloadWebpages()
