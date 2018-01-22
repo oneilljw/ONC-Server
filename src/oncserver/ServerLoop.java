@@ -35,45 +35,45 @@ public class ServerLoop extends Thread
      */
     public void run()
     {
-    	bRunServer = true;
+    		bRunServer = true;
     	
-    	while (bRunServer)
-    	{
-    		try 
-        	{
-    			//Server loops listening for clients to connect
-    			Socket clientSocket = listener.accept();
-    			clientMgr.addDesktopClient(clientSocket);
-        	}
-    		catch(java.io.InterruptedIOException e)
+    		while (bRunServer)
     		{
-    			// Expect to get this whenever the server socket times out
-    			//System.out.println("Server Loop Interrupted IO Exception");
+    			try 
+    			{
+    				//Server loops listening for clients to connect
+    				Socket clientSocket = listener.accept();
+    				clientMgr.addDesktopClient(clientSocket);
+    			}
+    			catch(java.io.InterruptedIOException e)
+    			{
+    				// Expect to get this whenever the server socket times out
+    				//System.out.println("Server Loop Interrupted IO Exception");
+    			}
+    			catch (IOException e)
+    			{
+    				e.printStackTrace();
+    				//System.out.println("Server Loop IO Exception");
+    			}
     		}
-    		catch (IOException e)
-    		{
-    			e.printStackTrace();
-    			//System.out.println("Server Loop IO Exception");
-    		}
-    	}
     }
     
     void stopServer() { bRunServer = false;}
     
     boolean terminateServer()
     {
-    	boolean bServerSocketClosed = false;
-    	try 
-    	{
+    		boolean bServerSocketClosed = false;
+    		try 
+    		{
 			listener.close();
 			bServerSocketClosed = true;
 		} 
-    	catch (IOException e) 
-    	{
+    		catch (IOException e) 
+    		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	
-    	return bServerSocketClosed;
+    		return bServerSocketClosed;
     }
 }

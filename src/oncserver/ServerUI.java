@@ -65,7 +65,8 @@ public class ServerUI extends JPanel implements ClientListener
 	public JButton btnStartServer, btnStopServer;
 	private JTextArea logTA;
 	private List<String> logList;
-	private JRadioButton rbStoplight;
+	private ServerStoplight stoplight;
+//	private JRadioButton rbStoplight;
 	private JTable desktopClientTable, websiteClientTable;
 	private DesktopClientTableModel desktopClientTM;
 	private WebClientTableModel webClientTM;
@@ -98,88 +99,90 @@ public class ServerUI extends JPanel implements ClientListener
 		
 		JLabel lblONCicon = new JLabel(imageIcons[0]);
 		statusPanelLeft.add(lblONCicon);
-	    
-		rbStoplight = new JRadioButton(imageIcons[4]);
-    	rbStoplight.setToolTipText("");
-    	statusPanelRight.add(rbStoplight);
+		
+		stoplight = new ServerStoplight();
+		statusPanelRight.add(stoplight);
+//		rbStoplight = new JRadioButton(imageIcons[4]);
+//    	rbStoplight.setToolTipText("");
+//    	statusPanelRight.add(rbStoplight);
     	
-    	statusPanel.add(statusPanelLeft);
-    	statusPanel.add(statusPanelRight);
+    		statusPanel.add(statusPanelLeft);
+    		statusPanel.add(statusPanelRight);
     	
-    	//Set up the desktop client table panel and website client table panel
-    	JPanel desktoptablepanel = new JPanel();
-    	desktoptablepanel.setLayout(new BorderLayout());
+    		//Set up the desktop client table panel and website client table panel
+    		JPanel desktoptablepanel = new JPanel();
+    		desktoptablepanel.setLayout(new BorderLayout());
     	
-    	desktopClientTM = new DesktopClientTableModel();
-    	desktopClientTable = new JTable();
+    		desktopClientTM = new DesktopClientTableModel();
+    		desktopClientTable = new JTable();
 
-    	//Set the table model, select ability to select multiple rows and add a listener to 
-    	//check if the user has selected a row. 
-    	desktopClientTable.setModel(desktopClientTM);
-    	desktopClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    		//Set the table model, select ability to select multiple rows and add a listener to 
+    		//check if the user has selected a row. 
+    		desktopClientTable.setModel(desktopClientTM);
+    		desktopClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-    	//Set table column widths
-    	int tablewidth = 0;
-    	int[] colWidths = {40, 80, 80, 80, 80, 28, 40, 52, 140};
-    	for(int i=0; i < colWidths.length; i++)
-    	{
-    		desktopClientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
-    		tablewidth += colWidths[i];
-    	}
+    		//Set table column widths
+    		int tablewidth = 0;
+    		int[] colWidths = {40, 80, 80, 80, 80, 28, 40, 52, 140};
+    		for(int i=0; i < colWidths.length; i++)
+    		{
+    			desktopClientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
+    			tablewidth += colWidths[i];
+    		}
    		tablewidth += 24; 	//Account for vertical scroll bar
 
-    	//Set up the table header
-    	JTableHeader anHeader = desktopClientTable.getTableHeader();
-    	anHeader.setForeground( Color.black);
-    	anHeader.setBackground( new Color(161,202,241));
+   		//Set up the table header
+   		JTableHeader anHeader = desktopClientTable.getTableHeader();
+   		anHeader.setForeground( Color.black);
+   		anHeader.setBackground( new Color(161,202,241));
 
-    	//Center cell entries for specified cells
-    	DefaultTableCellRenderer dtcr = new DefaultTableCellRenderer();    
-    	dtcr.setHorizontalAlignment(SwingConstants.CENTER);
-    	int [] center_cols = {0, 3, 5};
-    	for(int i=0; i<center_cols.length; i++)
-    		desktopClientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
+   		//Center cell entries for specified cells
+   		DefaultTableCellRenderer dtcr = new DefaultTableCellRenderer();    
+   		dtcr.setHorizontalAlignment(SwingConstants.CENTER);
+   		int [] center_cols = {0, 3, 5};
+   		for(int i=0; i<center_cols.length; i++)
+   			desktopClientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
 
-    	desktopClientTable.setFillsViewportHeight(true);
-    	desktoptablepanel.add(anHeader, BorderLayout.NORTH);
-    	desktoptablepanel.add(desktopClientTable, BorderLayout.CENTER);
-    	desktoptablepanel.setPreferredSize(new Dimension(tablewidth, desktopClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
+   		desktopClientTable.setFillsViewportHeight(true);
+   		desktoptablepanel.add(anHeader, BorderLayout.NORTH);
+   		desktoptablepanel.add(desktopClientTable, BorderLayout.CENTER);
+   		desktoptablepanel.setPreferredSize(new Dimension(tablewidth, desktopClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));
 
-    	JPanel websitetablepanel = new JPanel();
-    	websitetablepanel.setLayout(new BorderLayout());
+   		JPanel websitetablepanel = new JPanel();
+   		websitetablepanel.setLayout(new BorderLayout());
     	
-    	webClientTM = new WebClientTableModel();
-    	websiteClientTable = new JTable();
+   		webClientTM = new WebClientTableModel();
+   		websiteClientTable = new JTable();
 
-    	//Set the table model, select ability to select multiple rows and add a listener to 
-    	//check if the user has selected a row. 
-    	websiteClientTable.setModel(webClientTM);
+   		//Set the table model, select ability to select multiple rows and add a listener to 
+   		//check if the user has selected a row. 
+   		websiteClientTable.setModel(webClientTM);
     	
-    	websiteClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+   		websiteClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-    	for(int i=0; i < colWidths.length; i++)
-    	{
-    		websiteClientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
-    	}
+   		for(int i=0; i < colWidths.length; i++)
+   		{
+   			websiteClientTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
+   		}
 
-    	//Set up the table header
-    	anHeader = websiteClientTable.getTableHeader();
-    	anHeader.setForeground( Color.black);
-    	anHeader.setBackground( new Color(161,202,241));
+   		//Set up the table header
+   		anHeader = websiteClientTable.getTableHeader();
+   		anHeader.setForeground( Color.black);
+   		anHeader.setBackground( new Color(161,202,241));
 
-    	//Center cell entries for specified cells
-    	dtcr = new DefaultTableCellRenderer();    
-    	dtcr.setHorizontalAlignment(SwingConstants.CENTER);
-    	for(int i=0; i<center_cols.length; i++)
-    		websiteClientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
+   		//Center cell entries for specified cells
+   		dtcr = new DefaultTableCellRenderer();    
+   		dtcr.setHorizontalAlignment(SwingConstants.CENTER);
+   		for(int i=0; i<center_cols.length; i++)
+   			websiteClientTable.getColumnModel().getColumn(center_cols[i]).setCellRenderer(dtcr);
 
-    	websiteClientTable.setFillsViewportHeight(true);
-    	websitetablepanel.add(anHeader, BorderLayout.NORTH);
-    	websitetablepanel.add(websiteClientTable, BorderLayout.CENTER);
-    	websitetablepanel.setPreferredSize(new Dimension(tablewidth, websiteClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));			
+   		websiteClientTable.setFillsViewportHeight(true);
+   		websitetablepanel.add(anHeader, BorderLayout.NORTH);
+   		websitetablepanel.add(websiteClientTable, BorderLayout.CENTER);
+   		websitetablepanel.setPreferredSize(new Dimension(tablewidth, websiteClientTable.getRowHeight()*NUM_ROWS_TO_DISPLAY));			
     	
-    	//Set up the client log pane
-    	logTA = new JTextArea();
+   		//Set up the client log pane
+   		logTA = new JTextArea();
   	   	logTA.setEditable(false);
   	   	
   	   	logList = new ArrayList<String>();
@@ -256,10 +259,14 @@ public class ServerUI extends JPanel implements ClientListener
 		logList.add(line + ": " + mssg);
 	}
 	
-	void setStoplight(int pos)	//0-green, 1-yellow, 2-red, 3-off
+	int getStoplight() { return stoplight.getStoplightPos(); }
+	
+	void setStoplight(int pos, String mssg)	//0-green, 1-yellow, 2-red, 3-off
 	{
-		if(pos >= 0 && pos < 4)
-			rbStoplight.setIcon(imageIcons[pos+1]);
+//		if(pos >= 0 && pos < 4)
+//			rbStoplight.setIcon(imageIcons[pos+1]);
+		
+		stoplight.setStoplight(pos, mssg);
 	}
 	
 	ImageIcon getIcon(int index) { return imageIcons[index]; }
@@ -327,35 +334,59 @@ public class ServerUI extends JPanel implements ClientListener
 	
 	void writeServerLogFile()
     {
-    	PrintWriter outputStream = null;
-        FileWriter fileWriter = null;
+		PrintWriter outputStream = null;
+    		FileWriter fileWriter = null;
         
-        Date now = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy Hmmss");
-        String filename = String.format("%s_log.txt", sdf.format(now));
+    		Date now = new Date();
+    		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy Hmmss");
+    		String filename = String.format("%s_log.txt", sdf.format(now));
         
-		try
-		{
-			fileWriter = new FileWriter(System.getProperty("user.dir") + "/Server Logs/" + filename);
-			outputStream = new PrintWriter(fileWriter);
-			 for(String s: logList) 
-		        outputStream.println(s);
+    		try
+    		{
+    			fileWriter = new FileWriter(System.getProperty("user.dir") + "/Server Logs/" + filename);
+    			outputStream = new PrintWriter(fileWriter);
+    			for(String s: logList) 
+    				outputStream.println(s);
 			 
-			 logList.clear();
-			 logTA.setText(String.format("Wrote server log %s\n", filename));
+    			logList.clear();
+    			logTA.setText(String.format("Wrote server log %s\n", filename));
 			 
-		} 
-		catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		finally 
-		{
-			if(outputStream != null)
-				outputStream.close();	
-		}
+    		} 
+    		catch (IOException e) 
+    		{
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		} 
+    		finally 
+    		{
+    			if(outputStream != null)
+    				outputStream.close();	
+    		}
     }
+	
+	private class ServerStoplight extends JRadioButton
+	{
+		private int stoplightPos;
+		
+		ServerStoplight()
+		{
+			stoplightPos = 3;	//off
+			this.setIcon(imageIcons[stoplightPos+1]);
+    			this.setToolTipText("");
+		}
+		
+		int getStoplightPos() { return stoplightPos; }
+		
+		void setStoplight(int pos, String mssg)	//0-green, 1-yellow, 2-red, 3-off
+		{
+			if(pos >= 0 && pos < 4)
+			{
+				this.stoplightPos = pos;	//off
+				this.setIcon(imageIcons[stoplightPos+1]);
+	    			this.setToolTipText(mssg);
+			}
+		}
+	}
 	
 	class DesktopClientTableModel extends AbstractTableModel
 	{
@@ -496,8 +527,9 @@ public class ServerUI extends JPanel implements ClientListener
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
-			
-			if(e.getSource() == timer && !logList.isEmpty())
+			//check that source is log time, logging is enabled and there's something in the log to 
+			//archive. If all are true, write the log to a file
+			if(e.getSource() == timer && ONCWebServer.isServerLoggingEnabled() && !logList.isEmpty())
 			{
 				//pause the timer so this EDT thread can complete. It should happen quickly, 
 				//but not necessarily. Don't stack up timer events

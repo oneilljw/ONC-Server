@@ -84,8 +84,9 @@ public class ONCServer
         
         //create mainframe window for the application and add button listeners to start/stop the sever
         createandshowGUI();
-        serverUI.btnStartServer.addActionListener(new UIButtonListener());
-        serverUI.btnStopServer.addActionListener(new UIButtonListener());
+        UIButtonListener btnListener = new UIButtonListener();
+        serverUI.btnStartServer.addActionListener(btnListener);
+        serverUI.btnStopServer.addActionListener(btnListener);
 
 		//set up the database manager and load the data base from persistent store
 		DBManager.getInstance(serverUI.getIcon(0));
@@ -98,30 +99,30 @@ public class ONCServer
     // A quit event is triggered by Cmd-Q, selecting Quit from the application or Dock menu, or logging out
     public boolean quit()
     {
-    	if(bServerRunning)	//Did user forget to stop the server prior to quitting? 
-    		serverIF.terminateServer();
-    	return true;
+    		if(bServerRunning)	//Did user forget to stop the server prior to quitting? 
+    			serverIF.terminateServer();
+    		return true;
     }
     
     // General info dialog; fed to the OSXAdapter as the method to call when 
     // "About OSXAdapter" is selected from the application menu   
     public void about()
     {
-    	JOptionPane.showMessageDialog(oncFrame, APPNAME + "\n" + ONC_COPYRIGHT, "About the ONC Server",
+    		JOptionPane.showMessageDialog(oncFrame, APPNAME + "\n" + ONC_COPYRIGHT, "About the ONC Server",
     			JOptionPane.INFORMATION_MESSAGE, clientMgr.getAppIcon());
     }
     
     private void createandshowGUI()
 	{
-    	serverMenuBar = new ServerMenuBar();
-    	serverMenuBar.countsMI.addActionListener(new MenuBarListener());
-    	serverMenuBar.convertStatusMI.addActionListener(new MenuBarListener());
-    	serverMenuBar.createHistMI.addActionListener(new MenuBarListener());
-    	serverMenuBar.updateUserNameMI.addActionListener(new MenuBarListener());
-    	serverUI = ServerUI.getInstance();
+    		serverMenuBar = new ServerMenuBar();
+    		serverMenuBar.countsMI.addActionListener(new MenuBarListener());
+    		serverMenuBar.convertStatusMI.addActionListener(new MenuBarListener());
+    		serverMenuBar.createHistMI.addActionListener(new MenuBarListener());
+    		serverMenuBar.updateUserNameMI.addActionListener(new MenuBarListener());
+    		serverUI = ServerUI.getInstance();
     	
-    	oncFrame =  new JFrame(APPNAME);
-    	oncFrame.addWindowListener(new WindowAdapter() {
+    		oncFrame =  new JFrame(APPNAME);
+    		oncFrame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we)
 			 {
 				if(bServerRunning)	//Did user forget to stop the server prior to quitting? 
@@ -141,11 +142,11 @@ public class ONCServer
     
     void startServer()
     {
-    	//Create and start the server loop
-    	serverIF = new ServerLoop(clientMgr);
+    		//Create and start the server loop
+    		serverIF = new ServerLoop(clientMgr);
     	
-    	serverIF.start();
-		serverUI.setStoplight(0);	//Set server status to green - running
+    		serverIF.start();
+		serverUI.setStoplight(0, "Server started");	//Set server status to green - running
 		
 		serverUI.addLogMessage("App Server Interface Loop started");
 		
@@ -168,7 +169,7 @@ public class ONCServer
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		serverUI.setStoplight(2);	//Set server status to green - running
+		serverUI.setStoplight(2, "Server Stopped");	//Set server status to red - stopped
 		
 		serverUI.addLogMessage("Server Interface Loop stopped");
 		
@@ -178,13 +179,13 @@ public class ONCServer
     
     private class UIButtonListener implements ActionListener
     {
-    	public void actionPerformed(ActionEvent e)
-    	{
-    		if(e.getSource() == serverUI.btnStartServer)
-    			startServer();
-    		else if(e.getSource() == serverUI.btnStopServer)
-    			stopServer();
-    	}	
+    		public void actionPerformed(ActionEvent e)
+    		{
+    			if(e.getSource() == serverUI.btnStartServer)
+    				startServer();
+    			else if(e.getSource() == serverUI.btnStopServer)
+    				stopServer();
+    		}	
     }
 
     public static void main(String args[])

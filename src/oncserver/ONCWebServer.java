@@ -3,6 +3,7 @@ package oncserver;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import ourneighborschild.WebsiteStatus;
@@ -42,12 +43,14 @@ public class ONCWebServer
 		
 		ONCWebHttpHandler oncHttpHandler = new ONCWebHttpHandler();
 		oncHandlerList.add(oncHttpHandler);
+		int contextCount = 0;
 		
 		for(String contextname:contexts)
 		{
 			context = server.createContext(contextname, oncHttpHandler);
 			context.getFilters().add(new ParameterFilter());
 //			context.getFilters().add(paramFilter);
+			contextCount++;
 		}
 
 		//set up the login handler
@@ -62,6 +65,7 @@ public class ONCWebServer
 			context = server.createContext(contextname, loginHandler);
 			context.getFilters().add(new ParameterFilter());
 //			context.getFilters().add(paramFilter);
+			contextCount++;
 		}
 		
 		//set up the common handler
@@ -75,6 +79,7 @@ public class ONCWebServer
 			context = server.createContext(contextname, commonHandler);
 			context.getFilters().add(new ParameterFilter());
 //			context.getFilters().add(paramFilter);
+			contextCount++;
 		}
 		
 		//set up the family handler
@@ -90,6 +95,7 @@ public class ONCWebServer
 			context = server.createContext(contextname, familyHandler);
 			context.getFilters().add(new ParameterFilter());
 			//context.getFilters().add(paramFilter);
+			contextCount++;
 		}
 		
 //		Filter paramFilter = new ParameterFilter();
@@ -98,9 +104,27 @@ public class ONCWebServer
 		server.setExecutor(null); // creates a default executor
 		server.start();
 		
-		websiteStatus = new WebsiteStatus(true, true, "Online");
+		ServerGlobalVariableDB gvDB = ServerGlobalVariableDB.getInstance();
+		Calendar now = Calendar.getInstance();
+		Calendar yearEndCal = Calendar.getInstance();
+		yearEndCal.set(Calendar.YEAR, DBManager.getCurrentYear());
+		yearEndCal.set(Calendar.MONTH, Calendar.DECEMBER);
+		yearEndCal.set(Calendar.DAY_OF_MONTH, 31);
+		yearEndCal.set(Calendar.HOUR, 11);
+		yearEndCal.set(Calendar.MINUTE, 59);
+		yearEndCal.set(Calendar.SECOND, 59);
+		yearEndCal.set(Calendar.MILLISECOND, 999);
 		
-		serverUI.addLogMessage(String.format("Web Server started: %d contexts", contexts.length));
+		if(now.after(gvDB.getSeasonStartCal(DBManager.getCurrentYear())) && now.before(yearEndCal))
+			websiteStatus = new WebsiteStatus(true, true, "Online");
+		else
+		{
+			websiteStatus = new WebsiteStatus(true, false, "Online");
+			serverUI.setStoplight(1, "Logging disabled");
+		}
+		
+		serverUI.addLogMessage(String.format("Web Server started: %d contexts, logging %s", 
+				contextCount, websiteStatus.isWebsiteLoggingEnabled() ? "enabled" : "disabled"));
 	}
 	
 	public static ONCWebServer getInstance() throws IOException
@@ -124,11 +148,18 @@ public class ONCWebServer
 		Gson gson = new Gson();
 		ONCWebServer.websiteStatus = gson.fromJson(websiteStatusJson, WebsiteStatus.class);
 		
+		//if a change to logging, change the UI stoplight color and add a message
+		ServerUI serverUI = ServerUI.getInstance();
+		if(serverUI.getStoplight() == 0 && !websiteStatus.isWebsiteLoggingEnabled())
+			serverUI.setStoplight(1, "Logging Disabled");
+		else if(serverUI.getStoplight() == 1 && websiteStatus.isWebsiteLoggingEnabled())
+			serverUI.setStoplight(0, "Logging Enabled");
+			 	
 		return "UPDATED_WEBSITE_STATUS" + websiteStatusJson;
 	}
 	
 	static boolean isWebsiteOnline() { return websiteStatus.isWebsiteOnline(); }
-	static boolean isWebsiteLoggingEnabled() { return websiteStatus.isWebsiteLoggingEnabled(); }
+	static boolean isServerLoggingEnabled() { return websiteStatus.isWebsiteLoggingEnabled(); }
 	static String getWebsiteTimeBackOnline() { return websiteStatus.getTimeBackUp(); }
 	
 	static String reloadWebpages()

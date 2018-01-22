@@ -78,10 +78,8 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
 	
-	Date getSeasonStartDate(int year)
-	{
-		return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartDate();
-	}
+	Date getSeasonStartDate(int year) { return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartDate(); }
+	Calendar getSeasonStartCal(int year) { return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartCal(); }
 	
 //	Date getDateGiftsRecivedBy(int year)
 //	{
@@ -268,7 +266,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Deadline",
-							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline"};
+							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Logging Enabled"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_YEAR);
 		if(gvDBYear.isUnsaved())
