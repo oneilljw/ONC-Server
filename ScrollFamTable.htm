@@ -114,6 +114,7 @@
     		//to the logged in user
     		var groupparams = "token=" + sessionStorage.getItem("token") + 
     					  "&agentid=-1" +
+    					  "&default=on" +
     					  "&callback=?";
     	
     		$.getJSON('groups', groupparams, function(data)
@@ -195,6 +196,7 @@
     			//get updated groups and families for the agent and year
         		var groupparams = "token=" + sessionStorage.getItem("token") + 
         					  "&agentid=" + agtcb.value +
+        					  "&default=on" +
         					  "&callback=?";
         		$.getJSON('groups', groupparams, function(data)
         		{

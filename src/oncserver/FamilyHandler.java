@@ -20,6 +20,7 @@ import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCMeal;
 import ourneighborschild.Transportation;
 
@@ -342,6 +343,7 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 		ServerFamilyDB serverFamilyDB= null;
 		ServerChildDB childDB = null;
 		ServerAdultDB adultDB = null;
+		ServerFamilyHistoryDB famHistDB = null;
 		
 		try
 		{
@@ -349,6 +351,7 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 			serverFamilyDB = ServerFamilyDB.getInstance();
 			childDB = ServerChildDB.getInstance();
 			adultDB = ServerAdultDB.getInstance();
+			famHistDB = ServerFamilyHistoryDB.getInstance();
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -411,17 +414,31 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
 					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
-					createWishList(params), wc.getWebUser().getID(),
+					createWishList(params), wc.getWebUser().getID(), 
+					Integer.parseInt((String) params.get("group")),
 					addedMeal != null ? addedMeal.getID() : -1,
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
 					Transportation.valueOf(familyMap.get("transportation")));
 			
 		ONCFamily addedFamily = serverFamilyDB.add(year, fam);
 		
-		List<ONCChild> addedChildList = new ArrayList<ONCChild>();
-		List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
 		if(addedFamily != null)
 		{
+			//add the family history object and update the family history object id
+			ONCFamilyHistory famHistory = new ONCFamilyHistory(-1, addedFamily.getID(), 
+															addedFamily.getFamilyStatus(),
+															addedFamily.getGiftStatus(),
+															"", "Family Referred", 
+															addedFamily.getChangedBy(), 
+															Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+		
+			ONCFamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, false);
+			if(addedFamHistory != null)
+				addedFamily.setDeliveryID(addedFamHistory.getID());
+		
+			List<ONCChild> addedChildList = new ArrayList<ONCChild>();
+			List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
+		
 			//update the family id for the meal, if a meal was requested
 			if(addedMeal != null)
 			{
@@ -431,9 +448,8 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 			
 			//create the children for the family
 			String childfn, childln, childDoB, childGender, childSchool;
-			
 			int cn = 0;
-			String key = "childln" + Integer.toString(cn);
+			String key = "childln0";
 			
 			//using child last name as the iterator, create a db entry for each
 			//child in the family. Protect against null or missing keys.
@@ -444,11 +460,7 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 				childDoB = params.get("childdob" + Integer.toString(cn)) != null ? (String) params.get("childdob" + Integer.toString(cn)) : "";
 				childGender = params.get("childgender" + Integer.toString(cn)) != null ? (String) params.get("childgender" + Integer.toString(cn)) : "";
 				childSchool = params.get("childschool" + Integer.toString(cn)) != null ? (String) params.get("childschool" + Integer.toString(cn)) : "";
-				
-//				childDoB = (String) params.get("childdob" + Integer.toString(cn));
-//				childGender = (String) params.get("childgender" + Integer.toString(cn));
-//				childSchool = (String) params.get("childschool" + Integer.toString(cn));
-			
+
 				if(!childln.isEmpty())	//only add a child if the last name is provided
 				{
 					ONCChild child = new ONCChild(-1, addedFamily.getID(), childfn.trim(), childln.trim(), childGender, 
@@ -456,9 +468,7 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 				
 					addedChildList.add(childDB.add(year,child));
 				}
-				
-				cn++;
-				key = "childln" + Integer.toString(cn);	//get next child key
+				key = "childln" + Integer.toString(++cn);	//get next child key
 			}
 			
 			//now that we have added children, we can check for duplicate family in this year.
@@ -558,9 +568,8 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 			//create the other adults in the family
 			String adultName;
 			AdultGender adultGender;
-			
 			int an = 0;
-			key = "adultname" + Integer.toString(an);
+			key = "adultname0";
 			
 			//using adult name as the iterator, create a db entry for each
 			//adult in the family
@@ -576,48 +585,35 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 				
 					addedAdultList.add(adultDB.add(year, adult));
 				}
-				an++;
-				key = "adultname" + Integer.toString(an);	//get next adult key
+				key = "adultname" + Integer.toString(++an);	//get next adult key
 			}
-		}
 		
-		//successfully process meals, family, children and adults. Notify the desktop
-		//clients so they refresh
-		ClientManager clientMgr = ClientManager.getInstance();
-		Gson gson = new Gson();
-		String mssg;
-		
-		if(addedFamily != null)
-		{
+			//successfully process meals, family, history, children and adults. Notify the desktop
+			//clients so they refresh
+			ClientManager clientMgr = ClientManager.getInstance();
+			Gson gson = new Gson();
+
+			List<String> mssgList = new ArrayList<String>();
+			mssgList.add("ADDED_FAMILY" + gson.toJson(addedFamily, ONCFamily.class));
 			for(ONCChild addedChild:addedChildList)
-			{
-				mssg = "ADDED_CHILD" + gson.toJson(addedChild, ONCChild.class);
-				clientMgr.notifyAllInYearClients(year, mssg);
-			}
-			
+				mssgList.add("ADDED_CHILD" + gson.toJson(addedChild, ONCChild.class));
+				
 			for(ONCAdult addedAdult:addedAdultList)
-			{
-				mssg = "ADDED_ADULT" + gson.toJson(addedAdult, ONCAdult.class);
-				clientMgr.notifyAllInYearClients(year, mssg);
-			}
-			
-			mssg = "ADDED_FAMILY" + gson.toJson(addedFamily, ONCFamily.class);
-			clientMgr.notifyAllInYearClients(year, mssg);
-			
-			//must add family before meal, since desktop client meal ui updates 
-			//based on families in database, then gets meal id from family. So
-			//family must be mirrored in client local db before meal is added
+				mssgList.add("ADDED_ADULT" + gson.toJson(addedAdult, ONCAdult.class));
+		
+			if(addedFamHistory != null)
+				mssgList.add("ADDED_DELIVERY" + gson.toJson(addedFamHistory, ONCFamilyHistory.class));
+				
 			if(addedMeal != null)
-			{
-				mssg = "ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class);
-				clientMgr.notifyAllInYearClients(year, mssg);
-			}
+				mssgList.add("ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class));
+				
+			clientMgr.notifyAllInYearClients(year, mssgList);
 			
 			return new ResponseCode(String.format("%s Family Referral Accepted, ONC# %s",
 									addedFamily.getLastName(), addedFamily.getONCNum()));
 		}
-		
-		return new ResponseCode("Family Referral Failure: Unable to Process Referral");
+		else
+			return new ResponseCode("Family Referral Failure: Unable to Process Referral");
 	}
 	
 	boolean wasThisFamilyAlreadyAddedWithinASecond(WebClient wc, Map<String,String> familyMap)

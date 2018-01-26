@@ -116,6 +116,14 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		String sessionID = (String) params.get("token");
     		int agentID = Integer.parseInt((String) params.get("agentid"));
     		
+    		//test to see if a default value should be added to the top of the group list
+    		boolean bDefault = false;
+    		if(params.containsKey("default"))
+    		{
+    			String includeDefault = (String) params.get("default");
+    			bDefault = includeDefault.equalsIgnoreCase("on") ? true : false;
+    		}
+    		
     		ClientManager clientMgr = ClientManager.getInstance();
     		WebClient wc;
     		HtmlResponse htmlResponse;
@@ -123,7 +131,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		if((wc=clientMgr.findClient(sessionID)) != null)	
     		{
     			wc.updateTimestamp();
-    			htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, (String) params.get("callback"));
+    			htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, bDefault, (String) params.get("callback"));
     		}
     		else
     		{

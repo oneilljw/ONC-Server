@@ -60,7 +60,7 @@ public class ServerGroupDB extends ServerPermanentDB
 	 * @param callbackFunction
 	 * @return
 	 */
-	static HtmlResponse getGroupListJSONP(ONCServerUser loggedInUser, int agentID, String callbackFunction)
+	static HtmlResponse getGroupListJSONP(ONCServerUser loggedInUser, int agentID, boolean bDefault, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCGroup>>(){}.getType();
@@ -69,16 +69,19 @@ public class ServerGroupDB extends ServerPermanentDB
 		
 		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
 		{
-			//admin or sys admin users
+			//admin or sys admin users return all groups
 			for(ONCGroup g : groupList)
 				returnList.add(g);
 			
 			Collections.sort(returnList, new ONCGroupNameComparator());
 			
-			//add an all group to the top of the list with id = -1
-			ONCGroup allGroup = new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
+			//add an all group to the top of the list with id = -1 if bAddAll is true.
+			if(bDefault)
+			{
+				ONCGroup allGroup = new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
 									loggedInUser.getLNFI(), "All", GroupType.Community, 1);
-			returnList.add(0, allGroup);
+				returnList.add(0, allGroup);
+			}
 		}
 		else
 		{	

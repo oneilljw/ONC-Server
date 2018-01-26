@@ -491,19 +491,19 @@ function onSubmit()
 	
 	//called when HOH address inputs change
 	var hohAddrElement = [document.getElementById('housenum'), 
-    	               document.getElementById('street'),
-        	           document.getElementById('unit'),
-        	           document.getElementById('city'), 
-	                   document.getElementById('zipcode')];
+    	               		document.getElementById('street'),
+    	               		document.getElementById('unit'),
+    	               		document.getElementById('city'), 
+    	               		document.getElementById('zipcode')];
 	
 	var hohUnitElement = [document.getElementById('unit')];
 	
 	//now check the delivery address
 	var delAddrElement = [document.getElementById('delhousenum'),
-	               document.getElementById('delstreet'),
-    	           document.getElementById('delunit'),
-        	       document.getElementById('delcity'), 
-            	   document.getElementById('delzipcode')];
+						document.getElementById('delstreet'),
+						document.getElementById('delunit'),
+						document.getElementById('delcity'), 
+						document.getElementById('delzipcode')];
 
 	var delUnitElement = [document.getElementById('delunit')];
 	
@@ -520,7 +520,7 @@ function onSubmit()
 		{
 			//form the HoH address url
        		var hohAddressparams = createAddressParams(hohAddrElement);
-        	var addrresponse;
+       		var addrresponse;
        		$.getJSON('address', hohAddressparams, function(data)
       		{
       			addresponse = data;

@@ -36,10 +36,13 @@
   		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
 		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
   		
+  		//clear the group combobox
+		groupcb.options.length = 0;
+  		
   		var urlmode = window.location.href;
   		if(urlmode.indexOf("referral") > -1)
   		{
-  			
+  			//is a re-referral. Get info for the family
   			familyparams = "token=" + sessionStorage.getItem("token") + "&" +
 				"year=" + sessionStorage.getItem("prioryear") + "&" +
 				"targetid=" + sessionStorage.getItem("targetid") + "&" +
@@ -47,6 +50,7 @@
 
 			$.getJSON('getfamily', familyparams, function(family)
 			{
+				console.log(family);
 				document.getElementById('hohfn').value= family.HOHFirstName;
 				document.getElementById('hohln').value= family.HOHLastName;
 				
@@ -56,31 +60,26 @@
   		     	
   		     	adultsJson = family.adultList;
   		     	updateAdultTable(true);
+  		     	
+  		     	//update the family group select
+  		     	addComboBoxOption(groupcb, family.groupName, family.groupID);
 			});
-			
-//  			childrenparams=  "token=" + sessionStorage.getItem("token") + "&" +
-//							"year=" + sessionStorage.getItem("prioryear") + "&" +
-//							"targetid=" + sessionStorage.getItem("targetid") + "&" +
-//							"callback=?";
-// 			
-//  			$.getJSON('children', childrenparams, function(data)
-//  			{
-//  		     	childrenJson = data;
-//  		     	updateChildTable(true);
-//  		     	updateWishTable();
-//  			});
-//  		
-//  			adultsparams=  "token=" + sessionStorage.getItem("token") + "&" +
-//  			"year=" + sessionStorage.getItem("prioryear") + "&" +
-//			"targetid=" + sessionStorage.getItem("targetid") + "&" +
-//			"callback=?";
-// 			
-//  			$.getJSON('adults', adultsparams, function(data)
-//  			{
-//  		     	adultsJson = data;
-//  		     	updateAdultTable(true);
-//  			});
-  		}	
+  		}
+  		else
+  		{
+  			//is a new referral, get updated groups for the logged in user from server and place into group
+  			//combobox. agentid =-1 defaults to the logged in user
+    			var groupparams = "token=" + sessionStorage.getItem("token") + 
+    					  "&agentid=-1" +
+    					  "&callback=?";
+ 
+    			$.getJSON('groups', groupparams, function(data)
+    			{
+	    			//add the groups for the agent
+    				for (var i=0; i < data.length; i++)
+    					addComboBoxOption(groupcb, data[i].name, data[i].id);
+    			});    	
+  		}
   		
   		$(function() {
   		    $("form input").keypress(function (e) {
@@ -330,7 +329,7 @@
 		var mealCombo = document.getElementById('mealtype');
 		var dietres = document.getElementById('dietres');
 		//clear the meal type combobox
-    	mealCombo.options.length = 0;
+    		mealCombo.options.length = 0;
 		
 		if(cb.checked == false)
 		{
@@ -357,19 +356,32 @@
 		{
 			var mealOption = document.createElement("option");
 			mealOption.text = choices[i];
-	    	mealOption.value = choices[i];
-	    	try 
-	    	{
-	        	mealCombo.add(mealOption, null); //Standard 
-	    	}
-	    	catch(error)
-	    	{
-	        	mealCombo.add(mealOption); // IE only
-	    	}  
+	    		mealOption.value = choices[i];
+	    		try 
+	    		{
+	        		mealCombo.add(mealOption, null); //Standard 
+	    		}
+	    		catch(error)
+	    		{
+	        		mealCombo.add(mealOption); // IE only
+	    		}  
 		}   	
 	}
+	function addComboBoxOption(combobox, text, value)
+	{
+		var option = document.createElement("option");
+		option.text = text;
+    		option.value = value;
+    		try 
+    		{
+        		combobox.add(option, null); //Standard 
+    		}
+    		catch(error)
+    		{
+        		combobox.add(option); // IE only
+    		}
+	}
 
-	
   </script>
   <style>
 	.ui-datepicker
@@ -429,9 +441,6 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-<!--<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" onchange="verifyHOHAddress()" autocomplete="off" required> -->
-<!--<input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" onchange="verifyHOHAddress()" autocomplete="off" required> -->
-<!--<input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" onchange="verifyHOHAddress()" autocomplete="off"> -->
     <input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
     <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" autocomplete="off">
@@ -488,7 +497,7 @@
   </fieldset>
   <br>
   <fieldset>
-  <legend class="legend-major">Delivery Address & Transportation: Provide address that ONC will use for gift delivery & family's access to transportation</legend>
+  <legend class="legend-major">Delivery Address and Transportation: Provide address that ONC will use for gift delivery and family's access to transportation</legend>
 	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
 <!--<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onchange="verifyDeliveryAddress()" autocomplete="off" required> -->	
 <!--<input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onchange="verifyDeliveryAddress()" autocomplete="off" required> -->	
@@ -638,13 +647,16 @@
    <legend class="legend-major">Family Details: Provide any additional details that may assist in serving this family</legend>
 	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
+  <fieldset>
+   <legend class="legend-major">Family Group: Select the group this family is being referred from</legend>
+    <select id="groupcb" name='group' title="Family Group"></select>
+  </fieldset>
   <br>
   <div>
   	<span id="errormessage"></span>
   	<span id="submitspan">
   	  <label for="submit">Please check that all fields are complete prior to submission: </label>
   	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit()>
-<!--  <input id="submit" type="submit" value="Submit to ONC" style="background-color: #808080; color: #ffffff;" title="Click to sumbit family to ONC"> -->  
   	</span>
   </div>
 </form>

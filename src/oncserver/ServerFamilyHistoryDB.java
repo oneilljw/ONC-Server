@@ -170,7 +170,6 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		histDBYear.add(addedHisoryObj);
 		histDBYear.setChanged(true);
 		
-		
 		//notify the corresponding family that history object has changed and
 		//check to see if the object was a new delivery assigned or removed a delivery from a driver
 		ServerFamilyDB serverFamilyDB = null;
@@ -246,7 +245,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		return "ADDED_GROUP_DELIVERIES";
 	}
 */	
-	ONCFamilyHistory addFamilyHistoryObject(int year, ONCFamilyHistory addedFamHistObj)
+	ONCFamilyHistory addFamilyHistoryObject(int year, ONCFamilyHistory addedFamHistObj, boolean bNotify)
 	{
 		ClientManager clientMgr = ClientManager.getInstance();
 		//add the new object to the data base
@@ -266,8 +265,11 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		histDBYear.add(addedFamHistObj);
 		histDBYear.setChanged(true);
 		
-		Gson gson = new Gson();
-		clientMgr.notifyAllInYearClients(year, "ADDED_DELIVERY"+ gson.toJson(addedFamHistObj, ONCFamilyHistory.class));
+		if(bNotify)
+		{	
+			Gson gson = new Gson();
+			clientMgr.notifyAllInYearClients(year, "ADDED_DELIVERY"+ gson.toJson(addedFamHistObj, ONCFamilyHistory.class));
+		}
 		
 		return addedFamHistObj;
 	}

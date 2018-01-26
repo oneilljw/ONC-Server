@@ -281,9 +281,21 @@ public class ClientManager extends ClientEventGenerator
 		//send message to all clients connected in a particular year. 
 		for(DesktopClient c:dtClientAL )
 		{
-			//Add change to the change queue's of every other client				//that is using the same years data
+			//Add change to the change queue's of every in year client
 			if(c.getYear() == year)	
 				c.addChange(mssg);
+		}
+	}
+	
+	void notifyAllInYearClients(int year, List<String> mssgList)
+	{
+		//send message to all clients connected in a particular year. 
+		for(DesktopClient c:dtClientAL )
+		{
+			//Add change list to the change queue's of every in year client
+			if(c.getYear() == year)
+				for(String mssg : mssgList)
+					c.addChange(mssg);
 		}
 	}
 	

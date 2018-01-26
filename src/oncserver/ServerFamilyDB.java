@@ -40,7 +40,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 42;
+	private static final int FAMILYDB_HEADER_LENGTH = 43;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	
@@ -48,6 +48,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static final String GIFT_CARD_WISH_NAME = "Gift Card";
 	
 	private static final String ODB_FAMILY_MEMBER_COLUMN_SEPARATOR = " - ";
+	
+	private static final int DEFAULT_GROUP_ID = 62;
 	
 	private static List<FamilyDBYear> familyDB;
 	private static ServerFamilyDB instance = null;
@@ -438,9 +440,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			if(currFam != null && 
 				(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || currFam.getGiftStatus() != updatedFamily.getGiftStatus()))
 			{
-				int histID = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-						updatedFamily.getGiftStatus(), "", "Status Changed", updatedFamily.getChangedBy());
-				updatedFamily.setDeliveryID(histID);
+				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+						updatedFamily.getGiftStatus(), "", "Status Changed", updatedFamily.getChangedBy(), true);
+				updatedFamily.setDeliveryID(histItem.getID());
 			}
 			
 			fAL.set(index, updatedFamily);
@@ -488,9 +490,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//add a history item so change can be tracked. Changed by is the web user who made the change
 			if(currFam != null) 
 			{
-				int histID = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-						updatedFamily.getGiftStatus(), "", updateNote, wc.getWebUser().getLNFI());
-				updatedFamily.setDeliveryID(histID);
+				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+								updatedFamily.getGiftStatus(), "", updateNote, wc.getWebUser().getLNFI(), true);
+				updatedFamily.setDeliveryID(histItem.getID());
 			}
 			
 			fAL.set(index, updatedFamily);
@@ -560,11 +562,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//set the new ID for the added family
 			addedFam.setID(fDBYear.getNextID());
 			
-			//add to the family history 
-			int histID = addHistoryItem(year, addedFam.getID(), addedFam.getFamilyStatus(), addedFam.getGiftStatus(),
-										"", "Family Referred", addedFam.getChangedBy());
-			addedFam.setDeliveryID(histID);
-			
 			//add to the family data base
 			fDBYear.add(addedFam);
 			fDBYear.setChanged(true);
@@ -606,13 +603,29 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				bpFam.deliveryZip, bpFam.deliveryState, bpFam.adoptedFor, bpFam.numberOfAdults,
 				bpFam.numberOfChildren, bpFam.wishlist, bpFam.speaksEnglish, bpFam.language,
 				bpFam.hasTransportation, bpFam.batchNum, new Date(), -1, "NNA", -1, 
-				currClient.getClientUser().getLNFI(), -1);
+				currClient.getClientUser().getLNFI(), -1, DEFAULT_GROUP_ID);
 			
 			ONCFamily addedFam = add(year, reqAddFam);
 			if(addedFam != null)
 			{
-				//if the family was added successfully, add the adults and children
+				//if family was added successfully, add the family history object 
+				//and update the family history object id
+				ONCFamilyHistory famHistory = new ONCFamilyHistory(-1, addedFam.getID(), 
+																addedFam.getFamilyStatus(),
+																addedFam.getGiftStatus(),
+																"", "Family Referred thru Britepaths", 
+																addedFam.getChangedBy(), 
+																Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+			
+				ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, famHistory, false);
+				if(addedFamHistory != null)
+					addedFam.setDeliveryID(addedFamHistory.getID());
+				
+				//if the family was added successfully, add the history item, adults and children
 				jsonResponseList.add("ADDED_FAMILY" + gson.toJson(addedFam, ONCFamily.class));
+				
+				if(addedFamHistory != null)
+					jsonResponseList.add("ADDED_DELIVERY" + gson.toJson(addedFamHistory, ONCFamilyHistory.class));
 		
 				String[] members = bpFam.getFamilyMembers().trim().split("\n");					
 				for(int i=0; i<members.length; i++)
@@ -685,10 +698,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				addedFam.setReferenceNum(targetID);
 			}
 			
-			//add to the family history 
-			int histID = addHistoryItem(year, addedFam.getID(), addedFam.getFamilyStatus(), addedFam.getGiftStatus(),
-										"", "Family Referred", addedFam.getChangedBy());
-			addedFam.setDeliveryID(histID);
+			//add the family history 
+			ONCFamilyHistory histItem = addHistoryItem(year, addedFam.getID(), addedFam.getFamilyStatus(), addedFam.getGiftStatus(),
+										"", "Family Referred", addedFam.getChangedBy(), false);
+			addedFam.setDeliveryID(histItem.getID());
 			
 			//add to the family data base
 			fDBYear.add(addedFam);
@@ -716,11 +729,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		{
 			famHistDB = ServerFamilyHistoryDB.getInstance();
 			
-			//for each history object in the list, add it to the database and notify all clients that
-			//it was added
+			//for each history object in the list, add it to the history database 
 			for(ONCFamilyHistory reqFamHistoryObj:famHistoryList)
 			{
-				ONCFamilyHistory addedFamHistObj = famHistDB.addFamilyHistoryObject(year, reqFamHistoryObj);
+				ONCFamilyHistory addedFamHistObj = famHistDB.addFamilyHistoryObject(year, reqFamHistoryObj, false);
 				
 				//find the family
 				FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
@@ -732,9 +744,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					updatedFam.setFamilyStatus(addedFamHistObj.getFamilyStatus());
 					fDBYear.setChanged(true);
 					
-					//if add was successful, need to q the change to all in-year clients
+					//if update was successful, need to q the change to all in-year clients
 					//notify in year clients of change
 					String response = "UPDATED_FAMILY" + gson.toJson(updatedFam, ONCFamily.class);
+					clientMgr.notifyAllInYearClients(year, response);
+					response = "ADDED_DELIVERY"+ gson.toJson(addedFamHistObj, ONCFamilyHistory.class);
 					clientMgr.notifyAllInYearClients(year, response);
 				}
 			}
@@ -829,7 +843,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			List<ONCWebChild> childList = childDB.getWebChildList(year, fam.getID());
 			List<ONCAdult> adultList = adultDB.getAdultsInFamily(year, fam.getID());
 			
-			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,RegionDB.getRegion(fam.getRegion()), childList, adultList);
+			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,
+													RegionDB.getRegion(fam.getRegion()),
+													ServerGroupDB.getGroup(fam.getGroupID()).getName(),
+													childList, adultList);
+			
 			response = gson.toJson(webFam, ONCWebsiteFamilyExtended.class);
 		}
 		else
@@ -916,8 +934,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    	{
 	    		//create a family history change
 	    		fam.setGiftStatus(newGiftStatus);
-	    		fam.setDeliveryID(addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
-						"", "Gift Status Change", fam.getChangedBy()));
+	    		ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
+						"", "Gift Status Change", fam.getChangedBy(), true);
+	    		fam.setDeliveryID(addedHistItem.getID());
 	    	}
 	    	
 	    	if(bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
@@ -931,15 +950,15 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    }
 	}
 	
-	int addHistoryItem(int year, int famID, FamilyStatus fs, FamilyGiftStatus fgs, String driverID,
-						String reason, String changedBy)
+	ONCFamilyHistory addHistoryItem(int year, int famID, FamilyStatus fs, FamilyGiftStatus fgs, String driverID,
+						String reason, String changedBy, boolean bNotify)
 	{
 		ONCFamilyHistory reqFamHistObj = new ONCFamilyHistory(-1, famID, fs, fgs, driverID, reason,
 				 changedBy, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 		
-		ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, reqFamHistObj);
+		ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, reqFamHistObj, bNotify);
 		
-		return addedFamHistory.getID();
+		return addedFamHistory;
 	}
 	
 	/********
@@ -1112,8 +1131,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				"Speak English?","Language if No", "Caller", "Notes", "Delivery Instructions",
 				"Client Family", "First Name", "Last Name", "House #", "Street", "Unit #", "City", "Zip Code",
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
-				"ODB Details", "Children Names", "Schools", "ODB WishList",
-				"Adopted For", "Agent ID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
+				"ODB Details", "Children Names", "Schools", "ODB WishList", "Adopted For",
+				"Agent ID", "GroupID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
 				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only"};
 		
 		FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
