@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,7 +11,6 @@ import java.util.Map;
 
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.ChangePasswordRequest;
-import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
@@ -78,7 +75,7 @@ public class ServerUserDB extends ServerPermanentDB
 		ONCServerUser su = gson.fromJson(json, ONCServerUser.class);
 		
 		su.setID(nextID++);	//Set id for new user
-		su.setUserPW("onc" + su.getPermission().toString());
+		su.setUserPW(USER_PASSWORD_PREFIX + su.getPermission().toString());
 		su.setStatus(UserStatus.Change_PW);
 		
 		userAL.add(su); //Add new user to data base
@@ -115,11 +112,12 @@ public class ServerUserDB extends ServerPermanentDB
 			if(!su.getEmail().equals(updatedUser.getEmail()))
 				updateUserEmail(su, updatedUser.getEmail());	//special processing on email change
 
-			if(updatedUser.changePasswordRqrd())	//check for password reset
+			if(updatedUser.getStatus() == UserStatus.Reset_PW)	//check if reset password
 			{
 				su.setUserPW(USER_PASSWORD_PREFIX + updatedUser.getPermission().toString());
 				su.setStatus(UserStatus.Change_PW);
 			}
+			
 			//set updated group list
 			su.setGroupList(updatedUser.getGroupList());
 			
@@ -271,8 +269,8 @@ public class ServerUserDB extends ServerPermanentDB
 						//need to notify other clients of update to user
 						su.setStatus(UserStatus.Update_Profile);
 
-				    	String change = "UPDATED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class);
-				    	clientMgr.notifyAllOtherClients(requestingClient, change);	//null to notify all clients
+						String change = "UPDATED_USER" + gson.toJson(su.getUserFromServerUser(), ONCUser.class);
+				    		clientMgr.notifyAllOtherClients(requestingClient, change);	//null to notify all clients
 					}
 					
 					bSaveRequired = true;
@@ -396,25 +394,6 @@ public class ServerUserDB extends ServerPermanentDB
 	@Override
 	List<? extends ONCObject> getONCObjectList() { return userAL; }
 	
-	int addMissingEncryptedUserIDs()
-	{
-		int count = 0;
-		for(ONCServerUser su: userAL)
-		{
-			if(su.getPermission().equals(UserPermission.Agent) &&  su.getUserID().isEmpty())
-			{
-				su.setUserID("oncAgent");
-				count++;
-			}
-		}
-		
-		//save the file if changes were made
-		if(count > 0)
-			bSaveRequired = true;
-		
-		return count;	
-	}
-	
 	String getAgents()
 	{
 		List<ONCWebAgent> agentList = new ArrayList<ONCWebAgent>();
@@ -452,6 +431,7 @@ public class ServerUserDB extends ServerPermanentDB
 	 * @param callbackFunction
 	 * @return
 	 */
+/*	
 	static HtmlResponse getAgentsJSONP(int year, ONCServerUser agent, int groupID, String callbackFunction)
 	{	
 		Gson gson = new Gson();
@@ -512,7 +492,7 @@ public class ServerUserDB extends ServerPermanentDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
 	}
-	
+*/	
 	/***
 	 * Returns an <Agent> json that contains agents that referred families in the parameter
 	 * year. Uses the JSONP construct.
@@ -598,8 +578,9 @@ public class ServerUserDB extends ServerPermanentDB
 		return new ONCServerUser(-1, new Date(), currClient.getClientUser().getLNFI(), 3, 
 				"New Britepaths Referral User", currClient.getClientUser().getLNFI(),
 				firstName, lastName, UserStatus.Inactive, UserAccess.Website, UserPermission.Agent,
-				bpFam.getReferringAgentEmail(), "oncAgent", 0, System.currentTimeMillis(),
-				true, bpFam.getReferringAgentOrg(), bpFam.getReferringAgentTitle(), bpFam.getReferringAgentEmail(),
+				bpFam.getReferringAgentEmail(), USER_PASSWORD_PREFIX + UserPermission.Agent.toString(),
+				0, System.currentTimeMillis(), true, bpFam.getReferringAgentOrg(), 
+				bpFam.getReferringAgentTitle(), bpFam.getReferringAgentEmail(),
 				bpFam.getReferringAgentPhone(), new LinkedList<Integer>());	
 	}
 	
@@ -688,7 +669,7 @@ public class ServerUserDB extends ServerPermanentDB
 		
 		return count;
 	}
-	
+/*	
 	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>
 	{
 		@Override
@@ -696,5 +677,6 @@ public class ServerUserDB extends ServerPermanentDB
 		{
 			return o1.getLastname().compareTo(o2.getLastname());
 		}
-	}	
+	}
+*/		
 }

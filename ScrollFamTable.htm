@@ -6,8 +6,6 @@
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script>
-	var currYear;
-	var priorYear;
 	var pyFamJson = [];
 	var cyFamJson = [];
 	
@@ -41,17 +39,15 @@
     		var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
     		$.getJSON('dbStatus', dbyearsparams, function(data)
     		{	
-			currYear = data[data.length-1].id;
-			sessionStorage.setItem("curryear", currYear);
-    			document.getElementById('curragtenslbl').innerHTML = currYear.toString() + ' Families Referred By:';
+			sessionStorage.setItem("curryear", data[data.length-1].id);
+			sessionStorage.setItem('prioryear', data[data.length-1].id - 1);
     		
-    			priorYear = currYear - 1;
-    			sessionStorage.setItem("prioryear", priorYear);
+    			document.getElementById('curragtenslbl').innerHTML = data[data.length-1].id.toString() + ' Families Referred By:';
     		
 			var combo = document.getElementById("dbYears");
 			var yearCombo = document.getElementById("yearlist");
     			for (var i = data.length-1; i >= 0; i--)
-    				if(data[i].id != currYear)
+    				if(data[i].id != data[data.length-1].id)
     					addComboBoxOption(combo, data[i].id, data[i].id);
     		
     			//determine the color and enabling of the Refer New Family button
@@ -65,12 +61,12 @@
     			//get the current year groups, agents & families
     			var groupcb = document.getElementById('currgroups');
     			var agentcb = document.getElementById('curragents');
-    			getGroupsAgentsAndFamiliesFromServer(currYear, groupcb, agentcb);
+    			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('curryear'), groupcb, agentcb);
     		
     			//get the prior year groups, agents & families
     			var groupcb = document.getElementById('pygroups');
     			var agentcb = document.getElementById('pyagents');
-    			getGroupsAgentsAndFamiliesFromServer(priorYear, groupcb, agentcb);
+    			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('prioryear'), groupcb, agentcb);
     		});
     	
     	
@@ -106,6 +102,8 @@
         			window.location=document.getElementById('editprofileanchor').href;
             }
     		});
+        
+        console.log(sessionStorage.getItem('userid'));
     });
     
     function getGroupsAgentsAndFamiliesFromServer(year, groupcb, agentcb)
@@ -160,69 +158,34 @@
     
     function getFamiliesFromServer(year, agentid, groupid)
     {
-    	familiesparams = "token=" + sessionStorage.getItem("token") +
+    		familiesparams = "token=" + sessionStorage.getItem("token") +
 			 			 "&year=" + year + 
 			 			 "&agentid=" + agentid +
 			 			 "&groupid=" + groupid + 
 			 			 "&callback=?";
     	
-    	$.getJSON('families', familiesparams, function(data)
-    	{
-    		if(year === currYear)
+    		$.getJSON('families', familiesparams, function(data)
     		{
-    			cyFamJson = data;
-        		updateCYTable();
-    		}
-    		else
-    		{
-    			pyFamJson = data;
-    			updatePYTable();
-    		}
-    	});
+    			if(year === sessionStorage.getItem('curryear'))
+    			{
+    				cyFamJson = data;
+        			updateCYTable();
+    			}
+    			else
+    			{
+    				pyFamJson = data;
+    				updatePYTable();
+    			}
+    		});
     }
     
-    function updateGroupsAndFamiliesOnAgentChange(agtcb)
+    function updateFamiliesOnAgentChange(agtcb)
     {
+    		//agent changed to "anyone" so just get the families, don't change the groups
     		if(agtcb === document.getElementById("pyagents"))
-    			var groupcb = document.getElementById('pygroups');
+        		getFamiliesFromServer(sessionStorage.getItem('prioryear'), agtcb.value, document.getElementById('pygroups').value);
     		else
-    			var groupcb = document.getElementById('currgroups');
-    	
-    		if(agtcb.value > -1)
-    		{
-    			//archive the current group
-    			var priorselgroupid = groupcb.value;
-    		
-    			//get updated groups and families for the agent and year
-        		var groupparams = "token=" + sessionStorage.getItem("token") + 
-        					  "&agentid=" + agtcb.value +
-        					  "&default=on" +
-        					  "&callback=?";
-        		$.getJSON('groups', groupparams, function(data)
-        		{
-        			groupcb.options.length = 0;
-        		
-    	    			//add the groups for the agent
-        			for (var i=0; i < data.length; i++)
-					addComboBoxOption(groupcb, data[i].name, data[i].id);
-    	    	
-        			if(agtcb === document.getElementById("pyagents"))
-            			getFamiliesFromServer(priorYear, agtcb.value, groupcb.value);
-        			else
-            			getFamiliesFromServer(currYear, agtcb.value, groupcb.value);
-        		
-        			//re-select the previously selected group, now in the new group
-            		selectCBOptionByValue(groupcb, priorselgroupid);
-        		});
-    		}
-    		else
-    		{
-    			//agent changed to "anyone" so just get the families, don't change the groups
-    			if(agtcb === document.getElementById("pyagents"))
-        			getFamiliesFromServer(priorYear, agtcb.value, groupcb.value);
-    			else
-        			getFamiliesFromServer(currYear, agtcb.value, groupcb.value);
-    		}	
+        		getFamiliesFromServer(sessionStorage.getItem('curryear'), agtcb.value, document.getElementById('currgroups').value);	
     }
     
     function updateAgentsOnGroupChange(groupElement)
@@ -230,7 +193,7 @@
     		if(groupElement === document.getElementById('currgroups'))
     		{	
     			var agtcb = document.getElementById('curragents');
-    			var agtYear = currYear;
+    			var agtYear = sessionStorage.getItem('curryear');
     		}
     		else
     		{
@@ -283,12 +246,10 @@
     function updateForYearSelection()
     {
     		//get selected year and update session store
-    		var yearCB = document.getElementById("dbYears");
-		var priorYear = yearCB.options[yearCB.selectedIndex].value;
-		sessionStorage.setItem("prioryear", priorYear);
+		sessionStorage.setItem("prioryear", document.getElementById("dbYears").value);
 		
 		//get the groups, agents & families for the prior year selected
-		getGroupsAgentsAndFamiliesFromServer(priorYear, document.getElementById('pygroups'), document.getElementById('pyagents'));
+		getAgentsAndFamiliesFromServer(document.getElementById('pyagents'), sessionStorage.getItem('prioryear'), document.getElementById('pygroups').value);
     }
     
     function updatePYTable()
@@ -445,21 +406,15 @@
 		params["targetid"] = targetID;
 		
 		if(table=== document.getElementById('pyTable'))
-		{
-//			params["year"] = priorYear.toString();
 			post('referral', params);
-		}
 		else
-		{
-//			params["year"] = currYear.toString();
 			post('familyupdate', params);
-		}
     }
     
     function newFamily()
     {
     		sessionStorage.setItem("targetid", "NNA");
-		sessionStorage.setItem("prioryear", currYear-1);
+		sessionStorage.setItem("prioryear", sessionStorage.getItem('curryear')-1);
     	
     		var params = {}
 		params["token"] = sessionStorage.getItem('token');
@@ -766,7 +721,7 @@
   <div class='controlbar'>
 		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
 		<label for="pyagents">Families Referred By</label>
-		<select id="pyagents"  onchange="updateGroupsAndFamiliesOnAgentChange(this)" name="pyagtID"></select>
+		<select id="pyagents"  onchange="updateFamiliesOnAgentChange(this)" name="pyagtID"></select>
 		<label id= pygroupslbl for="pygroups">in Group:</label>
 		<select id="pygroups" onchange="updateAgentsOnGroupChange(this)" name="pyGroupID"></select>
 		<label id="pyfamilycount" for="pygroups"> : 0</label>
@@ -799,7 +754,7 @@
   <br><br>
   <div class='controlbar'>
 	<label id= curragtenslbl for="curragents">xxxx Families Referred By</label>
-	<select id="curragents"  onchange="updateGroupsAndFamiliesOnAgentChange(this)" name="curragtID"></select>
+	<select id="curragents"  onchange="updateFamiliesOnAgentChange(this)" name="curragtID"></select>
 	<label id= currgroupslbl for="currgroups">in Group:</label>
 	<select id="currgroups" onchange="updateAgentsOnGroupChange(this)"name="currGroupID"></select>
 	<label id="cyfamilycount" for="currgroups"> : 0</label>
@@ -942,7 +897,7 @@
 		      </dd>
 		      <dt>Verified</dt>
 		      <dd>Indicates ONC's initial verification process is complete; the referral has been checked
-		      		for duplicaiton and address verifications are complete.
+		      		for duplication and address verifications are complete.
 		      </dd>	
 		      <dt>Contacted</dt>
 		      <dd>Applies to ONC Gift Delivery only: Indicates ONC attempted to contact the family by telephone or email to confirm an

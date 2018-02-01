@@ -100,8 +100,9 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		if((wc=clientMgr.findClient(sessionID)) != null)	
     		{
     			wc.updateTimestamp();
-//    			htmlResponse = ServerAgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
-    			htmlResponse = ServerUserDB.getAgentsJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
+//    		htmlResponse = ServerAgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
+//    		htmlResponse = ServerUserDB.getAgentsJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
+    			htmlResponse = ServerFamilyDB.getAgentsWhoReferredJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
     		}
     		else
     		{
@@ -1061,7 +1062,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 		Region returnedRegion = new Region(regionLine);
 		
 		ResponseCode rc = null;
-		Gson gson = new Gson();
+//		Gson gson = new Gson();
 //		String mssg;
 		//determine if its an add partner request or a partner update request
 		if(regionMap.get("regionid").equals("New"))

@@ -53,6 +53,7 @@ public class ServerGroupDB extends ServerPermanentDB
 		String response = gson.toJson(groupList, listtype);
 		return response;	
 	}
+	
 	/********
 	 * returns a json list of groups based on the users permission
 	 * @param loggedInUser

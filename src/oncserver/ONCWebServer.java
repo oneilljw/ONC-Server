@@ -30,7 +30,7 @@ public class ONCWebServer
 		HttpServer server = HttpServer.create(new InetSocketAddress(WEB_SERVER_PORT), 0);
 		HttpContext context;
 		
-		//set up the oncHttpHandler
+		//set up the oncWebHttpHandler
 		String[] contexts = {"/dbStatus", "/agents", "/getagent", "/getmeal", "/children",
 							"/adults", "/wishes", "/reqchangepw","/activities", "/activitydays",
 							"/address", "/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",

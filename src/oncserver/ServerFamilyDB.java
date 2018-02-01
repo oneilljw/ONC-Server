@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -25,12 +26,15 @@ import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCFamilyHistory;
+import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
+import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.ONCWebsiteFamilyExtended;
+import ourneighborschild.UserPermission;
 import ourneighborschild.WishStatus;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -168,11 +172,27 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		else if(groupID > -1)
 		{
 			//add only the families referred by each agent in the group that referred that year
-			for(Integer userID : userDB.getUserIDsInGroup(groupID))
-				if(didAgentReferInYear(year, userID))
-					for(ONCFamily f : searchList)
-						if(f.getAgentID() == userID)
-							responseList.add(new ONCWebsiteFamily(f));	
+//			for(Integer userID : userDB.getUserIDsInGroup(groupID))
+//				if(didAgentReferInYear(year, userID))
+//					for(ONCFamily f : searchList)
+//						if(f.getAgentID() == userID)
+//							responseList.add(new ONCWebsiteFamily(f));
+			
+			//check to see if group is sharing. If it is, add all families in the group. If 
+			//it's not sharing, add the families referred by the agent.
+			ONCGroup group = ServerGroupDB.getGroup(groupID);
+			if(group.getPermission() == ONCGroup.SHARING )
+			{
+				for(ONCFamily f : searchList)
+					if(f.getGroupID() == groupID)
+						responseList.add(new ONCWebsiteFamily(f));	
+			}
+			else
+			{
+				for(ONCFamily f : searchList)
+				if(f.getAgentID() == agentID)
+					responseList.add(new ONCWebsiteFamily(f));
+			}	
 		}
 		
 		//sort the list by HoH last name
@@ -202,6 +222,69 @@ public class ServerFamilyDB extends ServerSeasonalDB
 
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+	}
+	static HtmlResponse getAgentsWhoReferredJSONP(int year, ONCServerUser agent, int groupID, String callbackFunction)
+	{
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<ONCWebAgent>>(){}.getType();
+		List<ONCWebAgent> agentReferredInYearList = new LinkedList<ONCWebAgent>();
+		
+		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
+		
+		if(agent.getPermission().compareTo(UserPermission.Admin) >= 0 && groupID == -1)
+		{
+			//Admin or higher user, group selection was "All"
+			for(ONCFamily f : searchList)
+				if(!isInList(f.getAgentID(), agentReferredInYearList))
+					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
+		}
+		else if(agent.getPermission().compareTo(UserPermission.Admin) >= 0 && groupID > -1)
+		{
+			//Admin or higher user, specific group selected
+			for(ONCFamily f : searchList)
+				if(f.getGroupID() == groupID && !isInList(f.getAgentID(), agentReferredInYearList))
+					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
+		}
+		else if(agent.getPermission() == UserPermission.Agent && groupID > -1 &&
+				ServerGroupDB.getGroup(groupID).getPermission() == ONCGroup.SHARING)
+		{
+			//Agent user, specific group selected and group is sharing
+			for(ONCFamily f : searchList)
+				if(f.getGroupID() == groupID && !isInList(f.getAgentID(), agentReferredInYearList))
+					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
+		}
+		else
+		{
+			//just return a list with only the user, regardless of who referred, group, etc.
+			agentReferredInYearList.add(new ONCWebAgent(agent));
+		}
+		
+		//sort the list by name and add an "anyone" to the top of the list
+		if(agentReferredInYearList.size() > 1)
+			Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
+
+		String response = gson.toJson(agentReferredInYearList, listtype);
+	
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);
+	}
+	
+	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>
+	{
+		@Override
+		public int compare(ONCWebAgent o1, ONCWebAgent o2)
+		{
+			return o1.getLastname().compareTo(o2.getLastname());
+		}
+	}	
+	
+	static boolean isInList(int agtID, List<ONCWebAgent> agtList)
+	{
+		int index = 0;
+		while(index < agtList.size() && agtList.get(index).getID() != agtID)
+			index++;
+		
+		return index < agtList.size();
 	}
 	
 	static HtmlResponse searchForFamilyReferencesJSONP(int year, String s, String callbackFunction)

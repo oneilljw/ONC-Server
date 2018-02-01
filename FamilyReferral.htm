@@ -63,6 +63,7 @@
   		     	
   		     	//update the family group select
   		     	addComboBoxOption(groupcb, family.groupName, family.groupID);
+  		     	document.getElementById('groupfs').style.visibility='hidden';
 			});
   		}
   		else
@@ -78,6 +79,12 @@
 	    			//add the groups for the agent
     				for (var i=0; i < data.length; i++)
     					addComboBoxOption(groupcb, data[i].name, data[i].id);
+	    			
+    				var groupfselem = document.getElementById('groupfs');
+	    			if(data.length > 1)
+	    				groupfselem.style.visibility='visible';
+	    			else	
+	  				groupfselem.style.visibility='hidden';
     			});    	
   		}
   		
@@ -647,7 +654,7 @@
    <legend class="legend-major">Family Details: Provide any additional details that may assist in serving this family</legend>
 	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
-  <fieldset>
+  <fieldset id='groupfs'>
    <legend class="legend-major">Family Group: Select the group this family is being referred from</legend>
     <select id="groupcb" name='group' title="Family Group"></select>
   </fieldset>
