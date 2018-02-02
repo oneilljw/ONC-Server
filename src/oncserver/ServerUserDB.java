@@ -118,6 +118,8 @@ public class ServerUserDB extends ServerPermanentDB
 				su.setStatus(UserStatus.Change_PW);
 			}
 			
+			su.setDateChanged(new Date());
+			
 			//set updated group list
 			su.setGroupList(updatedUser.getGroupList());
 			
