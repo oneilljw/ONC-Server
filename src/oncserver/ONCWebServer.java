@@ -5,6 +5,8 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import ourneighborschild.WebsiteStatus;
 
@@ -15,6 +17,7 @@ import com.sun.net.httpserver.HttpServer;
 public class ONCWebServer
 {
 	private static final int WEB_SERVER_PORT = 8902;
+	private static final int CONCURRENT_THREADS = 5;
 	
 	private static ONCWebServer instance = null;
 	private static WebsiteStatus websiteStatus;
@@ -94,14 +97,15 @@ public class ONCWebServer
 		{
 			context = server.createContext(contextname, familyHandler);
 			context.getFilters().add(new ParameterFilter());
-			//context.getFilters().add(paramFilter);
+//			context.getFilters().add(paramFilter);
 			contextCount++;
 		}
 		
 //		Filter paramFilter = new ParameterFilter();
 		
 		//start the web server
-		server.setExecutor(null); // creates a default executor
+		ExecutorService pool = Executors.newFixedThreadPool(CONCURRENT_THREADS);
+		server.setExecutor(pool); // creates a default executor
 		server.start();
 		
 		ServerGlobalVariableDB gvDB = ServerGlobalVariableDB.getInstance();
