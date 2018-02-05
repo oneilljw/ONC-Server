@@ -59,9 +59,9 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 //		for(String key:keyset)
 //			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
     	
-    	String requestURI = t.getRequestURI().toASCIIString();
+		String requestURI = t.getRequestURI().toASCIIString();
     	
-    	String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
+		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI.getInstance().addLogMessage(mssg);
 		
 		if(requestURI.contains("/families"))

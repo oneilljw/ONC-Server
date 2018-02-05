@@ -142,12 +142,17 @@ public class LoginHandler extends ONCWebpageHandlerServices
 		HtmlResponse response = null;
 		
 		ServerUserDB userDB = null;
-		try {
+		try 
+		{
 			userDB = ServerUserDB.getInstance();
-		} catch (NumberFormatException e) {
+		} 
+		catch (NumberFormatException e) 
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e) {
+		} 
+		catch (IOException e) 
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -159,97 +164,97 @@ public class LoginHandler extends ONCWebpageHandlerServices
 		if(method.toLowerCase().equals("post"))
 		{
 			String userID = (String) params.get("field1");
-	    	String password = (String) params.get("field2");
+			String password = (String) params.get("field2");
 	    	
-	    	//don't want a reference here, want a new object. A user can be logged in more than once.
-	    	//However, never can use this object to update a user's info
-	    	ONCServerUser serverUser = (ONCServerUser) userDB.find(userID);
-	    	if(serverUser == null)	//can't find the user in the data base
-	    	{
-	    		html += "</i></b></p><p>User name not found</p></body></html>";
-	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
-	    	}
-	    	else if(serverUser != null && serverUser.getStatus() == UserStatus.Inactive)	//can't find the user in the data base
-	    	{
-	    		html += "</i></b></p><p>Inactive user account, please contact ONC at volunteer@ourneighborschild.org</p></body></html>";
-	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
-	    	}
-	    	else if(serverUser != null && !(serverUser.getAccess().equals(UserAccess.Website) ||
+	    		//don't want a reference here, want a new object. A user can be logged in more than once.
+	    		//However, never can use this object to update a user's info
+			ONCServerUser serverUser = (ONCServerUser) userDB.find(userID);
+			if(serverUser == null)	//can't find the user in the data base
+	    		{
+	    			html += "</i></b></p><p>User name not found</p></body></html>";
+	    			response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    		}
+	    		else if(serverUser != null && serverUser.getStatus() == UserStatus.Inactive)	//can't find the user in the data base
+	    		{
+	    			html += "</i></b></p><p>Inactive user account, please contact ONC at volunteer@ourneighborschild.org</p></body></html>";
+	    			response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    		}
+	    		else if(serverUser != null && !(serverUser.getAccess().equals(UserAccess.Website) ||
 	    			serverUser.getAccess().equals(UserAccess.AppAndWebsite)))	//can't find the user in the data base
-	    	{
-	    		html += "</i></b></p><p>User account not authorized for website access, please contact ONC at volunteer@ourneighborschild.org</p></body></html>";
-	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
-	    	}
-	    	else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
-	    	{
-	    		html += "</i></b></p><p>Incorrect password, access denied</p></body></html>";
-	    		response = new HtmlResponse(html, HTTPCode.Forbidden);
-	    	}
-	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
-	    	{
-	    		//get the old data before updating
-	    		long nLogins = serverUser.getNSessions();
-	    		Calendar lastLogin = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-	    		lastLogin.setTimeInMillis(serverUser.getLastLogin());
+	    		{
+	    			html += "</i></b></p><p>User account not authorized for website access, please contact ONC at volunteer@ourneighborschild.org</p></body></html>";
+	    			response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    		}
+	    		else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
+	    		{
+	    			html += "</i></b></p><p>Incorrect password, access denied</p></body></html>";
+	    			response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    		}
+	    		else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
+	    		{
+	    			//get the old data before updating
+	    			long nLogins = serverUser.getNSessions();
+	    			Calendar lastLogin = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+	    			lastLogin.setTimeInMillis(serverUser.getLastLogin());
 	    		
-	    		serverUser.incrementSessions();
+	    			serverUser.incrementSessions();
 	    		
-	    		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-	    		serverUser.setLastLogin(calendar.getTimeInMillis());
-	    		userDB.requestSave();
+	    			Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+	    			serverUser.setLastLogin(calendar.getTimeInMillis());
+	    			userDB.requestSave();
 	    		
-	    		ONCUser webUser = serverUser.getUserFromServerUser();
-	    		ClientManager clientMgr = ClientManager.getInstance();
-    			WebClient wc = clientMgr.addWebClient(t, serverUser);
+	    			ONCUser webUser = serverUser.getUserFromServerUser();
+	    			ClientManager clientMgr = ClientManager.getInstance();
+	    			WebClient wc = clientMgr.addWebClient(t, serverUser);
     			
-	    		//has the current password expired? If so, send change password page
-	    		if(serverUser.changePasswordRqrd())
-	    		{
-	    			html = webpageMap.get("changepw");
-	    			
-	    			Gson gson = new Gson();
-	    			String loginJson = gson.toJson(webUser, ONCUser.class);
-	    		
-	    			String mssg = "UPDATED_USER" + loginJson;
-	    			clientMgr.notifyAllClients(mssg);
-	    			
-	    			//replace the HTML place holders
-	    			if(serverUser.getFirstName().equals(""))
-	    				html = html.replace("USERFN", serverUser.getLastName());
-	    			else
-	    				html = html.replace("USERFN", serverUser.getFirstName());
-	    			
-	    			html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-	    			html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-	    			html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-	    			html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
-	    			
-	    			response = new HtmlResponse(html, HTTPCode.Ok);
-	    		}
-	    		else //send the home page
-	    		{
-	    			Gson gson = new Gson();
-	    			String loginJson = gson.toJson(webUser, ONCUser.class);
-	    		
-	    			String mssg = "UPDATED_USER" + loginJson;
-	    			clientMgr.notifyAllClients(mssg);
-	    			
-	    			//determine if user never visited or last login date
-	    			String userMssg;
-	    			if(nLogins == 0)
-	    				userMssg = "This is your first visit!";
-	    			else
+	    			//has the current password expired? If so, send change password page
+	    			if(serverUser.changePasswordRqrd())
 	    			{
-	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
-	    				sdf.setTimeZone(TimeZone.getDefault());
-	    				userMssg = "You last visited " + sdf.format(lastLogin.getTime());
+	    				html = webpageMap.get("changepw");
+	    			
+	    				Gson gson = new Gson();
+	    				String loginJson = gson.toJson(webUser, ONCUser.class);
+	    		
+	    				String mssg = "UPDATED_USER" + loginJson;
+	    				clientMgr.notifyAllClients(mssg);
+	    			
+	    				//replace the HTML place holders
+	    				if(serverUser.getFirstName().equals(""))
+	    					html = html.replace("USERFN", serverUser.getLastName());
+	    				else
+	    					html = html.replace("USERFN", serverUser.getFirstName());
+	    			
+	    				html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+	    				html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
+	    				html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+	    				html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+	    			
+	    				response = new HtmlResponse(html, HTTPCode.Ok);
 	    			}
+	    			else //send the home page
+	    			{
+	    				Gson gson = new Gson();
+	    				String loginJson = gson.toJson(webUser, ONCUser.class);
+	    		
+	    				String mssg = "UPDATED_USER" + loginJson;
+	    				clientMgr.notifyAllClients(mssg);
 	    			
-	    			html = getHomePageHTML(wc, userMssg, "NNA");
+	    				//determine if user never visited or last login date
+	    				String userMssg;
+	    				if(nLogins == 0)
+	    					userMssg = "This is your first visit!";
+	    				else
+	    				{
+	    					SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
+	    					sdf.setTimeZone(TimeZone.getDefault());
+	    					userMssg = "You last visited " + sdf.format(lastLogin.getTime());
+	    				}
 	    			
-	    			response = new HtmlResponse(html, HTTPCode.Ok);
-	    		}
-	    	}   	
+	    				html = getHomePageHTML(wc, userMssg, "NNA");
+	    			
+	    				response = new HtmlResponse(html, HTTPCode.Ok);
+	    			}
+	    		}   	
 		}
 		else
 		{

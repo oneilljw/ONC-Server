@@ -40,7 +40,6 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 	
 	public void handle(HttpExchange t) throws IOException 
     {
-    	@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
     	
 //		Set<String> keyset = params.keySet();
