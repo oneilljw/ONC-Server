@@ -30,6 +30,7 @@ import ourneighborschild.WebsiteStatus;
 
 public class ONCWebServer
 {
+//	private static final int WEB_SERVER_PORT = 443;
 	private static final int WEB_SERVER_PORT = 8902;
 	private static final int CONCURRENT_THREADS = 5;
 	
@@ -44,9 +45,9 @@ public class ONCWebServer
 		oncHandlerList = new ArrayList<ONCHttpHandler>();
 		
 //		String keystoreFilename = System.getProperty("user.dir") + "/A4O/a4o.keystore";
-		String keystoreFilename = System.getProperty("user.dir") + "/a4o.jks";
-		char[] storepass = "mypassword".toCharArray();
-		char[] keypass = "mypassword".toCharArray();		
+		String keystoreFilename = System.getProperty("user.dir") + "/oncdms.jks";
+		char[] storepass = "oncpassword".toCharArray();
+		char[] keypass = "oncpassword".toCharArray();		
 		
 		HttpsServer server = null;
 		try 
@@ -57,7 +58,7 @@ public class ONCWebServer
 			keystore.load(fIn, storepass);
 			
 			// display certificate
-//			String alias = "alias";
+//			String alias = "mykey";
 //			Certificate certificate = keystore.getCertificate(alias);
 //			System.out.println(certificate);
 			
@@ -103,29 +104,30 @@ public class ONCWebServer
 				}
 			});
 		} 
-		catch (KeyStoreException e) 
+		catch (KeyStoreException kse) 
 		{
-			System.out.println("KeyStoreException" );
+			System.out.println(String.format("KeyStoreException : %s", kse.getMessage()));
 		} 
-		catch (NoSuchAlgorithmException e)
+		catch (NoSuchAlgorithmException nsae)
 		{
-			System.out.println("NoSuchAlgorithmException" );
+			System.out.println(String.format("NoSuchAlgorithmException : %s", nsae.getMessage()));
 		} 
-		catch (CertificateException e)
+		catch (CertificateException ce)
 		{
-			System.out.println("CertificateException" );
+			System.out.println(String.format("CertificateException : %s", ce.getMessage()));
 		} 
-		catch (IOException e)
+		catch (IOException ioe)
 		{
-			System.out.println("IOException" );
+			System.out.println(String.format("IOException : %s", ioe.getMessage()));
+			System.out.println(ioe.getLocalizedMessage());
 		}
-		catch (UnrecoverableKeyException e)
+		catch (UnrecoverableKeyException uke)
 		{
-			System.out.println("UnrecoverableKeyException" );	
+			System.out.println(String.format("UnrevocerableKeyException : %s", uke.getMessage()));
 		} 
-		catch (KeyManagementException e)
+		catch (KeyManagementException kme)
 		{
-			System.out.println("KeyManagementException" );
+			System.out.println(String.format("KeyManagementException : %s", kme.getMessage()));
 		}
 		
 		//create the handler and the contexts
