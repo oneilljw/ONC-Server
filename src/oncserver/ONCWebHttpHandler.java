@@ -20,6 +20,7 @@ import ourneighborschild.UserPermission;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpsExchange;
 import com.google.gson.Gson;
 
 public class ONCWebHttpHandler extends ONCWebpageHandlerServices
@@ -38,532 +39,532 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 		loadWebpages();
 	}
 	
-	public void handle(HttpExchange t) throws IOException 
+	public void handle(HttpExchange te) throws IOException 
     {
+		HttpsExchange t = (HttpsExchange) te;
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
     	
 //		Set<String> keyset = params.keySet();
 //		for(String key:keyset)
 //			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
     	
-    	String requestURI = t.getRequestURI().toASCIIString();
+		String requestURI = t.getRequestURI().toASCIIString();
     	
-    	String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
+		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI serverUI = ServerUI.getInstance();
 		serverUI.addLogMessage(mssg);
 
-    	if(requestURI.contains("/startpage"))
-    	{
-    		//authenticate the web client by token and activity
-    		WebClient wc = null;
-    		if(params.containsKey("token") && params.containsKey("year") && params.containsKey("famref"))
-    		{	
+		if(requestURI.contains("/startpage"))
+    		{
+    			//authenticate the web client by token and activity
+    			WebClient wc = null;
+    			if(params.containsKey("token") && params.containsKey("year") && params.containsKey("famref"))
+    			{	
+    				String sessionID = (String) params.get("token");
+    				ClientManager clientMgr = ClientManager.getInstance();
+    			
+    				wc = clientMgr.findClient(sessionID);
+    			}
+    			
+    			if(wc != null)	//if the web client is authenticated, send the home page
+    			{
+    				//update time stamp, get the home page html and return it
+    				wc.updateTimestamp();
+    			
+    				String response = getHomePageHTML(wc, "", (String) params.get("famref"));
+    				sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			}
+    			else
+    			{	
+    				//send the user back to the ONC general web site
+    				Headers header = t.getResponseHeaders();
+    				ArrayList<String> headerList = new ArrayList<String>();
+    				headerList.add("http://www.ourneighborschild.org");
+    				header.put("Location", headerList);
+    				sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
+    			}	
+    		}
+    		else if(t.getRequestURI().toString().contains("/dbStatus"))
+    		{
+    			sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
+    		}
+    		else if(requestURI.contains("/agents"))
+    		{
+    			int year = Integer.parseInt((String) params.get("year"));
+    			int groupID = Integer.parseInt((String) params.get("groupid"));
+    		
     			String sessionID = (String) params.get("token");
     			ClientManager clientMgr = ClientManager.getInstance();
-    			
-    			wc = clientMgr.findClient(sessionID);
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
+    		
+    			if((wc=clientMgr.findClient(sessionID)) != null)	
+    			{
+    				wc.updateTimestamp();
+//    			htmlResponse = ServerAgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
+//    			htmlResponse = ServerUserDB.getAgentsJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
+    				htmlResponse = ServerFamilyDB.getAgentsWhoReferredJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
+    			}
+    			else
+    			{
+    				String response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			}	
+    		
+    			sendHTMLResponse(t, htmlResponse);	
     		}
-    			
-    		if(wc != null)	//if the web client is authenticated, send the home page
+    		else if(requestURI.contains("/groups"))
     		{
-    			//update time stamp, get the home page html and return it
-    			wc.updateTimestamp();
-    			
-    			String response = getHomePageHTML(wc, "", (String) params.get("famref"));
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			String sessionID = (String) params.get("token");
+    			int agentID = Integer.parseInt((String) params.get("agentid"));
+    		
+    			//test to see if a default value should be added to the top of the group list
+    			boolean bDefault = false;
+    			if(params.containsKey("default"))
+    			{
+    				String includeDefault = (String) params.get("default");
+    				bDefault = includeDefault.equalsIgnoreCase("on") ? true : false;
+    			}
+    		
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
+    		
+    			if((wc=clientMgr.findClient(sessionID)) != null)	
+    			{
+    				wc.updateTimestamp();
+    				htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, bDefault, (String) params.get("callback"));
+    			}
+    			else
+    			{
+    				String response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			}	
+    		
+    			sendHTMLResponse(t, htmlResponse);	
     		}
-    		else
-    		{	
-    			//send the user back to the ONC general web site
-    			Headers header = t.getResponseHeaders();
-    			ArrayList<String> headerList = new ArrayList<String>();
-    			headerList.add("http://www.ourneighborschild.org");
-    			header.put("Location", headerList);
-    			sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
-    		}	
-    	}
-    	else if(t.getRequestURI().toString().contains("/dbStatus"))
-    	{
-    		sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
-    	}
-    	else if(requestURI.contains("/agents"))
-    	{
-    		int year = Integer.parseInt((String) params.get("year"));
-    		int groupID = Integer.parseInt((String) params.get("groupid"));
-    		
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient(sessionID)) != null)	
-    		{
-    			wc.updateTimestamp();
-//    		htmlResponse = ServerAgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
-//    		htmlResponse = ServerUserDB.getAgentsJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
-    			htmlResponse = ServerFamilyDB.getAgentsWhoReferredJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
-    		}
-    		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}	
-    		
-    		sendHTMLResponse(t, htmlResponse);	
-    	}
-    	else if(requestURI.contains("/groups"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		int agentID = Integer.parseInt((String) params.get("agentid"));
-    		
-    		//test to see if a default value should be added to the top of the group list
-    		boolean bDefault = false;
-    		if(params.containsKey("default"))
-    		{
-    			String includeDefault = (String) params.get("default");
-    			bDefault = includeDefault.equalsIgnoreCase("on") ? true : false;
-    		}
-    		
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient(sessionID)) != null)	
-    		{
-    			wc.updateTimestamp();
-    			htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, bDefault, (String) params.get("callback"));
-    		}
-    		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}	
-    		
-    		sendHTMLResponse(t, htmlResponse);	
-    	}
 /*    	
-    	else if(requestURI.contains("/families"))
-    	{
+    		else if(requestURI.contains("/families"))
+    		{
 //    		Set<String> keyset = params.keySet();
 //			for(String key:keyset)
 //				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
 			
-    		int year = Integer.parseInt((String) params.get("year"));
-    		int agentID = Integer.parseInt((String) params.get("agentid"));
-    		int groupID = Integer.parseInt((String) params.get("groupid"));
+    			int year = Integer.parseInt((String) params.get("year"));
+    			int agentID = Integer.parseInt((String) params.get("agentid"));
+    			int groupID = Integer.parseInt((String) params.get("groupid"));
     		
-    		HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
+    			HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+    		}
 */    	
-    	else if(requestURI.contains("/partners"))
-    	{
+    		else if(requestURI.contains("/partners"))
+    		{
 //    		Set<String> keyset = params.keySet();
 //			for(String key:keyset)
 //				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
 			
-    		int year = Integer.parseInt((String) params.get("year"));
+    			int year = Integer.parseInt((String) params.get("year"));
     		
-    		HtmlResponse response = ServerPartnerDB.getPartnersJSONP(year, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/regions"))
-    	{
+    			HtmlResponse response = ServerPartnerDB.getPartnersJSONP(year, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+    		}
+    		else if(requestURI.contains("/regions"))
+    		{
 //    		Set<String> keyset = params.keySet();
 //			for(String key:keyset)
 //				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
     		
-    		String zipCode = (String) params.get("zipcode");
+    			String zipCode = (String) params.get("zipcode");
     		
-    		HtmlResponse response = RegionDB.getAddressesJSONP(zipCode, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/zipcodes"))
-    	{
+    			HtmlResponse response = RegionDB.getAddressesJSONP(zipCode, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+    		}
+    		else if(requestURI.contains("/zipcodes"))
+    		{
 //    		Set<String> keyset = params.keySet();
 //			for(String key:keyset)
 //				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
 
-    		HtmlResponse response = RegionDB.getZipCodeJSONP((String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/getagent"))
-    	{
-    		int agtID = Integer.parseInt((String) params.get("agentid"));
-    		HtmlResponse response = ServerUserDB.getAgentJSONP(agtID, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/getstatus"))
-    	{
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    		{
-    			wc.updateTimestamp();
-        		htmlResponse = ClientManager.getUserStatusJSONP((String) params.get("token"), 
-        													(String) params.get("callback"));
+    			HtmlResponse response = RegionDB.getZipCodeJSONP((String) params.get("callback"));
+    			sendHTMLResponse(t, response);
     		}
-    		else
+    		else if(requestURI.contains("/getagent"))
     		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			int agtID = Integer.parseInt((String) params.get("agentid"));
+    			HtmlResponse response = ServerUserDB.getAgentJSONP(agtID, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
     		}
-    		
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	
-    	else if(requestURI.contains("/getuser"))
-    	{
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		else if(requestURI.contains("/getstatus"))
     		{
-    			wc.updateTimestamp();
-        		htmlResponse = ClientManager.getClientJSONP((String) params.get("token"), 
-        													(String) params.get("callback"));
-    		}
-    		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
     		
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	else if(requestURI.contains("/updateuser"))
-    	{	
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String responseJson;
-    		WebClient wc;
-    		
-    		//determine if a valid request from a logged in user. If so, process the update
-    		if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
-    		{
-    			wc.updateTimestamp();
-//    			Set<String> keyset = params.keySet();
-//    			for(String key:keyset)
-//    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
-    			
-    			ServerUserDB userDB = ServerUserDB.getInstance();
-    			ONCServerUser updatedUser = userDB.updateProfile(wc.getWebUser(), params);
-    			
-    			if(updatedUser != null)	//test to see if the update was required and successful
+    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
     			{
-    				//if successful, notify all Clients of update and return a message to the web user
-    				Gson gson = new Gson();
-    				clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
-    											ONCUser.class));
-    				
-    				//return response
-    				responseJson =  "{\"message\":\"User Profile Review/Update Sucessful\"}";
+    				wc.updateTimestamp();
+    				htmlResponse = ClientManager.getUserStatusJSONP((String) params.get("token"), 
+        													(String) params.get("callback"));
     			}
-    			else	//no change detected 
-    				responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
-    		}
-    		else	//invalid user, return a failure message
-    			responseJson =  "{\"message\":\"Invalid User\"}";
-    		
-    		HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
-					HTTPCode.Ok);
-    		sendHTMLResponse(t, htmlresponse);
-    	}
-    	else if(requestURI.contains("/getpartner"))
-    	{
-    		//update the client time stamp
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    		{
-    			wc.updateTimestamp();
-    			int year = Integer.parseInt((String) params.get("year"));
-        		String partnerID = (String) params.get("partnerid");
-        		
-        		htmlResponse = ServerPartnerDB.getPartnerJSONP(year, partnerID, (String) params.get("callback"));
-    		}
-    		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	else if(requestURI.contains("/getregion"))
-    	{
-    		//update the client time stamp
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    		{
-    			wc.updateTimestamp();
-        		String regionID = (String) params.get("regionid");
-        		
-        		htmlResponse = RegionDB.getRegionJSONP(regionID, (String) params.get("callback"));
-    		}
-    		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}
-    		
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	else if(requestURI.contains("/profileunchanged"))
-    	{	
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String responseJson;
-    		WebClient wc;
-    		
-    		//determine if a valid request from a logged in user. If so, process the update
-    		if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
-    		{
-    			wc.updateTimestamp();
-//    			Set<String> keyset = params.keySet();
-//    			for(String key:keyset)
-//    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
-    			
-    			ServerUserDB userDB = ServerUserDB.getInstance();
-    			ONCServerUser updatedUser = userDB.reviewedProfile(wc.getWebUser());
-    			
-    			if(updatedUser != null)	//test to see if the status update was required and successful
+    			else
     			{
-    				//if successful, notify all Clients of update and return a message to the web user
-    				Gson gson = new Gson();
-    				clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
-    											ONCUser.class));
-    				
-    				//return response
-    				responseJson =  "{\"message\":\"User Profile Reviewed\"}";
+    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
     			}
-    			else	//no change detected 
-    				responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
+    		
+    			sendHTMLResponse(t, htmlResponse);
     		}
-    		else	//invalid user, return a failure message
-    			responseJson =  "{\"message\":\"Invalid User\"}";
+    		else if(requestURI.contains("/getuser"))
+    		{
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
     		
-    		HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
-					HTTPCode.Ok);
-    		sendHTMLResponse(t, htmlresponse);
-    	}
-    	else if(requestURI.contains("/getmeal"))
-    	{
-    		int year = Integer.parseInt((String) params.get("year"));
-    		String targetID = (String) params.get("mealid");
+    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			{
+    				wc.updateTimestamp();
+    				htmlResponse = ClientManager.getClientJSONP((String) params.get("token"), 
+        													(String) params.get("callback"));
+    			}
+    			else
+    			{
+    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			}
     		
-    		HtmlResponse response = ServerMealDB.getMealJSONP(year, targetID, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/children"))
-    	{
-    		int year = Integer.parseInt((String) params.get("year"));
-    		int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
-    		
-    		HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/wishes"))
-    	{
-    		//update the client time stamp
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)
+    			sendHTMLResponse(t, htmlResponse);
+    		}
+    		else if(requestURI.contains("/updateuser"))
     		{	
-    			wc.updateTimestamp();
-    			int year = Integer.parseInt((String) params.get("year"));
-    			int childID = Integer.parseInt((String) params.get("childid"));
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String responseJson;
+    			WebClient wc;
     		
-    			htmlResponse = ServerChildDB.getChildWishesJSONP(year, childID, (String) params.get("callback"));
+    			//determine if a valid request from a logged in user. If so, process the update
+    			if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    			{
+    				wc.updateTimestamp();
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+    			
+    				ServerUserDB userDB = ServerUserDB.getInstance();
+    				ONCServerUser updatedUser = userDB.updateProfile(wc.getWebUser(), params);
+    			
+    				if(updatedUser != null)	//test to see if the update was required and successful
+    				{
+    					//if successful, notify all Clients of update and return a message to the web user
+    					Gson gson = new Gson();
+    					clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
+    											ONCUser.class));
+    				
+    					//return response
+    					responseJson =  "{\"message\":\"User Profile Review/Update Sucessful\"}";
+    				}
+    				else	//no change detected 
+    					responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
+    			}
+    			else	//invalid user, return a failure message
+    				responseJson =  "{\"message\":\"Invalid User\"}";
+    		
+    			HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
+    					HTTPCode.Ok);
+    			sendHTMLResponse(t, htmlresponse);
     		}
-    		else
+    		else if(requestURI.contains("/getpartner"))
     		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			//update the client time stamp
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
+    		
+    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			{
+    				wc.updateTimestamp();
+    				int year = Integer.parseInt((String) params.get("year"));
+    				String partnerID = (String) params.get("partnerid");
+        		
+    				htmlResponse = ServerPartnerDB.getPartnerJSONP(year, partnerID, (String) params.get("callback"));
+    			}
+    			else
+    			{
+    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			}
+    			sendHTMLResponse(t, htmlResponse);
     		}
+    		else if(requestURI.contains("/getregion"))
+    		{
+    			//update the client time stamp
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
     		
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	else if(requestURI.contains("/adults"))
-    	{
-    		int year = Integer.parseInt((String) params.get("year"));
-    		int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			{
+    				wc.updateTimestamp();
+    				String regionID = (String) params.get("regionid");
+        		
+    				htmlResponse = RegionDB.getRegionJSONP(regionID, (String) params.get("callback"));
+    			}
+    			else
+    			{
+    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			}
     		
-    		HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
+    			sendHTMLResponse(t, htmlResponse);
+    		}
+    		else if(requestURI.contains("/profileunchanged"))
+    		{	
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String responseJson;
+    			WebClient wc;
+    		
+    			//determine if a valid request from a logged in user. If so, process the update
+    			if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    			{
+    				wc.updateTimestamp();
+//    			Set<String> keyset = params.keySet();
+//    			for(String key:keyset)
+//    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+    			
+    				ServerUserDB userDB = ServerUserDB.getInstance();
+    				ONCServerUser updatedUser = userDB.reviewedProfile(wc.getWebUser());
+    			
+    				if(updatedUser != null)	//test to see if the status update was required and successful
+    				{
+    					//if successful, notify all Clients of update and return a message to the web user
+    					Gson gson = new Gson();
+    					clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
+    											ONCUser.class));
+    				
+    					//return response
+    					responseJson =  "{\"message\":\"User Profile Reviewed\"}";
+    				}
+    				else	//no change detected 
+    					responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
+    			}
+    			else	//invalid user, return a failure message
+    				responseJson =  "{\"message\":\"Invalid User\"}";
+    		
+    			HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
+					HTTPCode.Ok);
+    			sendHTMLResponse(t, htmlresponse);
+    		}
+    		else if(requestURI.contains("/getmeal"))
+    		{
+    			int year = Integer.parseInt((String) params.get("year"));
+    			String targetID = (String) params.get("mealid");
+    		
+    			HtmlResponse response = ServerMealDB.getMealJSONP(year, targetID, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+    		}
+    		else if(requestURI.contains("/children"))
+    		{
+    			int year = Integer.parseInt((String) params.get("year"));
+    			int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    		
+    			HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+    		}
+    		else if(requestURI.contains("/wishes"))
+    		{
+    			//update the client time stamp
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			HtmlResponse htmlResponse;
+    		
+    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)
+    			{	
+    				wc.updateTimestamp();
+    				int year = Integer.parseInt((String) params.get("year"));
+    				int childID = Integer.parseInt((String) params.get("childid"));
+    		
+    				htmlResponse = ServerChildDB.getChildWishesJSONP(year, childID, (String) params.get("callback"));
+    			}
+    			else
+    			{
+    				String response = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
+    			}
+    		
+    			sendHTMLResponse(t, htmlResponse);
+    		}
+    		else if(requestURI.contains("/adults"))
+    		{
+    			int year = Integer.parseInt((String) params.get("year"));
+    			int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    		
+    			HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+    		}
+    		else if(requestURI.contains("/activities"))
+    		{
+    			int year = Integer.parseInt((String) params.get("year"));
+    		
+    			HtmlResponse response = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+    		}
+    		else if(requestURI.contains("/activitydays"))
+    		{
+    			int year = Integer.parseInt((String) params.get("year"));
+    		
+    			HtmlResponse response = ServerActivityDB.getActivityDayJSONP(year, (String) params.get("callback"));
+    			sendHTMLResponse(t, response);
+    		}
+    		else if(requestURI.contains("/contactinfo"))
+    		{
+    			int year = Integer.parseInt((String) params.get("year"));
+    			String fn = (String) params.get("delFN") != null ? (String) params.get("delFN") : "";
+    			String ln = (String) params.get("delLN") != null ? (String) params.get("delLN") : "";
+    			String cell = (String) params.get("cell") != null ? (String) params.get("cell") : "";
+    			String callback = (String) params.get("callback");
+    		
+    				HtmlResponse response = ServerVolunteerDB.getVolunteerJSONP(year, fn, ln, cell, callback);
     		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/activities"))
-    	{
-    		int year = Integer.parseInt((String) params.get("year"));
-    		
-    		HtmlResponse response = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/activitydays"))
-    	{
-    		int year = Integer.parseInt((String) params.get("year"));
-    		
-    		HtmlResponse response = ServerActivityDB.getActivityDayJSONP(year, (String) params.get("callback"));
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/contactinfo"))
-    	{
-    		int year = Integer.parseInt((String) params.get("year"));
-    		String fn = (String) params.get("delFN") != null ? (String) params.get("delFN") : "";
-    		String ln = (String) params.get("delLN") != null ? (String) params.get("delLN") : "";
-    		String cell = (String) params.get("cell") != null ? (String) params.get("cell") : "";
-    		String callback = (String) params.get("callback");
-    		
-    		HtmlResponse response = ServerVolunteerDB.getVolunteerJSONP(year, fn, ln, cell, callback);
-    		sendHTMLResponse(t, response);
-    	}
-    	else if(requestURI.contains("/address"))
-    	{
-    		String sessionID = (String) params.get("token");
+    		}
+    		else if(requestURI.contains("/address"))
+    		{
+    			String sessionID = (String) params.get("token");
     		
 //			Set<String> keyset = params.keySet();
 //			for(String key:keyset)
 //				System.out.println(String.format("/address key=%s, value=%s", key, params.get(key)));
     		
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		WebClient wc;
-    		String response = null;
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			WebClient wc;
+    			String response = null;
     		
-    		if((wc=clientMgr.findClient(sessionID)) != null)	
-    		{
-    			wc.updateTimestamp();
-    			response = verifyAddress(params);	//verify the address and send response
-    		}
-    		else
-    			response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/partnertable"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
-    			
-    		if((wc=clientMgr.findClient(sessionID)) != null)
-    		{
-    			wc.updateTimestamp();
-    			try
+    			if((wc=clientMgr.findClient(sessionID)) != null)	
     			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
-    				
-    				String userFN;
-        			if(wc.getWebUser().getFirstName().equals(""))
-        				userFN = wc.getWebUser().getLastName();
-        			else
-        				userFN = wc.getWebUser().getFirstName();
-        			
-    				response = response.replace("USER_NAME", userFN);
-    				response = response.replace("USER_MESSAGE", "");
-    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+    				wc.updateTimestamp();
+    				response = verifyAddress(params);	//verify the address and send response
     			}
-    			catch (IOException e) 
-    			{
-    				response = "<p>Partner Table Unavailable</p>";
-    			}
-    		}
-    		else
-    			response = invalidTokenReceived();
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/partnerupdate"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
-    		
-    		if((wc=clientMgr.findClient(sessionID)) != null)
-    		{
-    			wc.updateTimestamp();
-    			response = webpageMap.get("updatepartner");
-    		}
-    		else
-    			response = invalidTokenReceived();
-    		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/updatepartner"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
-    		
-    		if(t.getRequestMethod().toLowerCase().equals("post") && 
-    			params.containsKey("token") && params.containsKey("year") &&
-    			 (wc=clientMgr.findClient(sessionID)) != null) 
-    		{
-    			wc.updateTimestamp();
-    	//		Set<String> keyset = params.keySet();
-    	//		for(String key:keyset)
-    	//			System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
-    		
-    			ResponseCode rc = processPartnerUpdate(wc, params);
-    			
-    			//submission processed, send the partner table page back to the user
-    			String userFN;
-    			if(wc.getWebUser().getFirstName().equals(""))
-    				userFN = wc.getWebUser().getLastName();
     			else
-    				userFN = wc.getWebUser().getFirstName();
-    			
-    			//read the partner table web page
-    			try
-    			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
-    				response = response.replace("USER_NAME", userFN);
-    				response = response.replace("USER_MESSAGE", rc.getMessage());
-    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    				response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
-    			}
-    			catch (IOException e) 
-    			{
-    				response =  "<p>Partner Table Unavailable</p>";
-    			}
-    			
-    	//		response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
-    	//				frc.getFamRef());
-    		}
-    		else
-    			response = invalidTokenReceived();
+    				response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/regiontable"))
-    	{
-    		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
-    		String response = null;
-    		WebClient wc;
-    			
-    		if((wc=clientMgr.findClient(sessionID)) != null)
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
+    		else if(requestURI.contains("/partnertable"))
     		{
-    			wc.updateTimestamp();
-    			response = webpageMap.get("regiontable");
-    			response = response.replace("USER_MESSAGE", "");
-				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    		}
-    		else
-    			response = invalidTokenReceived();
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
+    			
+    			if((wc=clientMgr.findClient(sessionID)) != null)
+    			{
+    				wc.updateTimestamp();
+    				try
+    				{
+    					response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
+    				
+    					String userFN;
+    					if(wc.getWebUser().getFirstName().equals(""))
+    						userFN = wc.getWebUser().getLastName();
+    					else
+    						userFN = wc.getWebUser().getFirstName();
+        			
+    					response = response.replace("USER_NAME", userFN);
+    					response = response.replace("USER_MESSAGE", "");
+    					response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    					response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+    				}
+    				catch (IOException e) 
+    				{
+    					response = "<p>Partner Table Unavailable</p>";
+    				}
+    			}
+    			else
+    				response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
+    		else if(requestURI.contains("/partnerupdate"))
+    		{
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
+    		
+    			if((wc=clientMgr.findClient(sessionID)) != null)
+    			{
+    				wc.updateTimestamp();
+    				response = webpageMap.get("updatepartner");
+    			}
+    			else
+    				response = invalidTokenReceived();
+    		
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
+    		else if(requestURI.contains("/updatepartner"))
+    		{
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
+    		
+    			if(t.getRequestMethod().toLowerCase().equals("post") && 
+    					params.containsKey("token") && params.containsKey("year") &&
+    						(wc=clientMgr.findClient(sessionID)) != null) 
+    			{
+    				wc.updateTimestamp();
+//				Set<String> keyset = params.keySet();
+//				for(String key:keyset)
+//				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
+    		
+    				ResponseCode rc = processPartnerUpdate(wc, params);
+    			
+    				//submission processed, send the partner table page back to the user
+    				String userFN;
+    				if(wc.getWebUser().getFirstName().equals(""))
+    					userFN = wc.getWebUser().getLastName();
+    				else
+    					userFN = wc.getWebUser().getFirstName();
+    			
+    				//read the partner table web page
+    				try
+    				{
+    					response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
+    					response = response.replace("USER_NAME", userFN);
+    					response = response.replace("USER_MESSAGE", rc.getMessage());
+    					response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    					response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+    				}
+    				catch (IOException e) 
+    				{
+    					response =  "<p>Partner Table Unavailable</p>";
+    				}
+    			
+//				response = getHomePageHTML(wc, userFN, frc.getMessage(), (String) params.get("year"),
+//				frc.getFamRef());
+    			}
+    			else
+    				response = invalidTokenReceived();
+    		
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
+    		else if(requestURI.contains("/regiontable"))
+    		{
+    			String sessionID = (String) params.get("token");
+    			ClientManager clientMgr = ClientManager.getInstance();
+    			String response = null;
+    			WebClient wc;
+    			
+    			if((wc=clientMgr.findClient(sessionID)) != null)
+    			{
+    				wc.updateTimestamp();
+    				response = webpageMap.get("regiontable");
+    				response = response.replace("USER_MESSAGE", "");
+				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
+    			}
+    			else
+    				response = invalidTokenReceived();
+    		
+    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		}
     	else if(requestURI.contains("/regionupdate"))
     	{
     		String sessionID = (String) params.get("token");

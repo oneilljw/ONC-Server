@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManagerFactory;
 
 import com.google.gson.Gson;
@@ -77,6 +78,7 @@ public class ONCWebServer
 			SSLContext sslContext = SSLContext.getInstance("TLSv1");
 			sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 			
+			// setup the HTTPS context and parameters
 			server.setHttpsConfigurator(new HttpsConfigurator(sslContext) 
 			{
 				public void configure(HttpsParameters params) 
@@ -86,15 +88,15 @@ public class ONCWebServer
 						//Initialize the SSL context
 						SSLContext c = SSLContext.getDefault();
 						SSLEngine engine = c.createSSLEngine();
-						params.setNeedClientAuth(false);
-			             
-						params.setCipherSuites(engine.getEnabledCipherSuites());
-			             
-						params.setProtocols(engine.getEnabledProtocols());
-			             
+						
 						// get the default parameters
-//						SSLParameters defaultSSLParameters = c.getDefaultSSLParameters();
-//						params.setSSLParameters(defaultSSLParameters);
+//						SSLParameters sslParameters = c.getDefaultSSLParameters();
+//						sslParameters.setNeedClientAuth(true);
+//						params.setSSLParameters(sslParameters);
+						
+						params.setNeedClientAuth(true);             
+						params.setCipherSuites(engine.getEnabledCipherSuites());           
+						params.setProtocols(engine.getEnabledProtocols());
 					} 
 					catch (Exception ex) 
 					{
@@ -232,6 +234,7 @@ public class ONCWebServer
 		
 		return instance;
 	}
+
 /*	
 	private ONCWebServer() throws IOException
 	{

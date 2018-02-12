@@ -26,6 +26,7 @@ import ourneighborschild.Transportation;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpsExchange;
 
 public class FamilyHandler extends ONCWebpageHandlerServices
 {
@@ -50,8 +51,9 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 	}
 
 	@Override
-	public void handle(HttpExchange t) throws IOException
+	public void handle(HttpExchange te) throws IOException
 	{
+		HttpsExchange t = (HttpsExchange) te;
 		@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
     	

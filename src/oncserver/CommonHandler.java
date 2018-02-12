@@ -4,12 +4,14 @@ import java.io.IOException;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpsExchange;
 
 public class CommonHandler extends ONCHandlerServices implements HttpHandler 
 {
 	@Override
-	public void handle(HttpExchange t) throws IOException 
+	public void handle(HttpExchange te) throws IOException 
 	{
+		HttpsExchange t = (HttpsExchange) te;
 		String requestURI = t.getRequestURI().toASCIIString();
     	
 		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
