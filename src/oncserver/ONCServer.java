@@ -27,7 +27,7 @@ public class ONCServer
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
 	private ClientManager clientMgr; //Manages all connected clients
-	
+
 	private boolean bServerRunning;
 //	private Timer dbSaveTimer;
 //	private List<ONCServerDB> dbList;
@@ -78,6 +78,8 @@ public class ONCServer
                 e.printStackTrace();
             }
         }
+        
+     
         
         //Set up client manager
       	clientMgr = ClientManager.getInstance();
@@ -189,7 +191,19 @@ public class ONCServer
     }
 
     public static void main(String args[])
-	{    	
+	{   
+    		int port = -1;
+			int secureport = -1;
+    		for(int i=0; i<args.length; i++)
+    		{
+    			if(args[i].equals("-port") && i+1 < args.length)
+    				port = Integer.parseInt(args[i+1]);
+    			else if(args[i].equals("-secureport") && i+1 < args.length)
+    				secureport = Integer.parseInt(args[i+1]);	
+    		}
+    		
+    		System.out.println(String.format("Port: %d, Secure Port: %d", port, secureport));
+    		
 		 SwingUtilities.invokeLater(new Runnable()
 		 {
 			 public void run()
