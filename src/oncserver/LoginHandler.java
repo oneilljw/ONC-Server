@@ -51,7 +51,7 @@ public class LoginHandler extends ONCWebpageHandlerServices
     	if(requestURI.equals("/welcome"))
     	{
     		String response = null;
-    		if(ONCWebServer.isWebsiteOnline())
+    		if(ONCSecureWebServer.isWebsiteOnline())
     		{
     			response = webpageMap.get("online");
     			response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
@@ -59,7 +59,7 @@ public class LoginHandler extends ONCWebpageHandlerServices
     		else
     		{
     			response = webpageMap.get("offline");
-    			response = response.replace("TIME_BACK_UP", ONCWebServer.getWebsiteTimeBackOnline());
+    			response = response.replace("TIME_BACK_UP", ONCSecureWebServer.getWebsiteTimeBackOnline());
     		}
     		
     		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
@@ -120,7 +120,7 @@ public class LoginHandler extends ONCWebpageHandlerServices
     	{
     		String response = null;
     		try {
-    			if(ONCWebServer.isWebsiteOnline())
+    			if(ONCSecureWebServer.isWebsiteOnline())
     			{
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
     				response = response.replace("WELCOME_MESSAGE", "Your last session expired, please login again:");
@@ -128,7 +128,7 @@ public class LoginHandler extends ONCWebpageHandlerServices
     			else
     			{
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
-    				response = response.replace("TIME_BACK_UP", ONCWebServer.getWebsiteTimeBackOnline());
+    				response = response.replace("TIME_BACK_UP", ONCSecureWebServer.getWebsiteTimeBackOnline());
     			}
     		} catch (IOException e) {
     			// TODO Auto-generated catch block

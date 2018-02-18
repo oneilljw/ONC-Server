@@ -529,7 +529,7 @@ public class ServerUI extends JPanel implements ClientListener
 		{
 			//check that source is log time, logging is enabled and there's something in the log to 
 			//archive. If all are true, write the log to a file
-			if(e.getSource() == timer && ONCWebServer.isServerLoggingEnabled() && !logList.isEmpty())
+			if(e.getSource() == timer && ONCSecureWebServer.isServerLoggingEnabled() && !logList.isEmpty())
 			{
 				//pause the timer so this EDT thread can complete. It should happen quickly, 
 				//but not necessarily. Don't stack up timer events

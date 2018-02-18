@@ -194,7 +194,7 @@ public abstract class ONCHandlerServices
 	{
 		String response = null;
 		try {
-			if(ONCWebServer.isWebsiteOnline())
+			if(ONCSecureWebServer.isWebsiteOnline())
 			{
 				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
 				response = response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");

@@ -62,31 +62,30 @@ public class ServerEncryptionManager
 	
 	void importKeyMap(String path, String name) throws FileNotFoundException, IOException
 	{
-    	CSVReader reader = new CSVReader(new FileReader(path));
-    	String[] nextLine, header;  		
+		CSVReader reader = new CSVReader(new FileReader(path));
+    		String[] nextLine, header;  		
     		
-    	if((header = reader.readNext()) != null)	//Does file have records? 
-    	{
-    		//Read the data base years file
-    		if(header.length == KEY_LIST_NUM_OF_FIELDS)	//Does the header have the right # of fields? 
+    		if((header = reader.readNext()) != null)	//Does file have records? 
     		{
-    			int index = 0;
-    			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
-    				keyMap.put(String.format("key%d", index++), nextLine[0]);
+    			//Read the data base years file
+    			if(header.length == KEY_LIST_NUM_OF_FIELDS)	//Does the header have the right # of fields? 
+    			{
+    				int index = 0;
+    				while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
+    					keyMap.put(String.format("key%d", index++), nextLine[0]);
+    			}
+    			else
+    			{
+    				String error = String.format("%s file corrupted, header lentgth = %d", name, header.length);
+    				JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
+    			}		   			
     		}
     		else
     		{
-    			String error = String.format("%s file corrupted, header lentgth = %d", name, header.length);
-    	       	JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
-    		}		   			
-    	}
-    	else
-    	{
-    		String error = String.format("%s file is empty", name);
-    		JOptionPane.showMessageDialog(null, error,  name + " Empty", JOptionPane.ERROR_MESSAGE);
-    	}
-    	
-    	reader.close();
+    			String error = String.format("%s file is empty", name);
+    			JOptionPane.showMessageDialog(null, error,  name + " Empty", JOptionPane.ERROR_MESSAGE);
+    		}   	
+    		reader.close();
 	}
 	
 	//create a json of the key map
