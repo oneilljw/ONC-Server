@@ -3,7 +3,9 @@ package oncserver;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -11,7 +13,7 @@ import com.sun.net.httpserver.HttpServer;
 
 public class ONCWebServer
 {
-	private static final int CONCURRENT_THREADS = 2;
+//	private static final int CONCURRENT_THREADS = 2;
 	
 	private static ONCWebServer instance = null;
 	
@@ -27,14 +29,13 @@ public class ONCWebServer
 		//set up the oncWebHttpHandler
 		String[] contexts = {"/"};
 		
-		PublicHandler handler = new PublicHandler();
+		PublicWebsiteHandler handler = new PublicWebsiteHandler();
 		for(String contextname:contexts)
 		{
 			context = server.createContext(contextname, handler);
 			context.getFilters().add(new ParameterFilter());
 		}
 
-		
 		//start the web server
 //		ExecutorService pool = Executors.newFixedThreadPool(CONCURRENT_THREADS);
 		server.setExecutor(null); // creates a default executor
@@ -52,16 +53,27 @@ public class ONCWebServer
 		return instance;
 	}
 	
-	class PublicHandler implements HttpHandler
+	class PublicWebsiteHandler implements HttpHandler
 	{
         @Override
         public void handle(HttpExchange t) throws IOException 
         {
-            String response = "This is the response";
-            t.sendResponseHeaders(200, response.length());
-            OutputStream os = t.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
+        		String requestURI = t.getRequestURI().toASCIIString();
+
+         	if(requestURI.equals("/"))
+         	{
+         		Headers header = t.getResponseHeaders();
+         		ArrayList<String> headerList = new ArrayList<String>();
+         		headerList.add("https://oncdms.org:8902/welcome");
+         		header.put("Location", headerList);
+
+         		String response = "Redirecting to secure website";
+         		t.sendResponseHeaders(HTTPCode.Redirect.code(), response.length());
+         		OutputStream os = t.getResponseBody();
+         		os.write(response.getBytes());
+         		os.close();
+         		t.close();
+         	}
         }
     }	
 }
