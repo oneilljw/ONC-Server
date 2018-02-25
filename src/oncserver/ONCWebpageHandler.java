@@ -36,11 +36,11 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String DRIVER_SIGN_IN_HTML = "DriverReg.htm";
 	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
 	private static final String VOLUNTEER_REGISTRATION_HTML = "VolRegistration.htm";
-	protected static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
-	protected static final String DASHBOARD_HTML = "Dashboard.htm";
-	protected static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
-	protected static final String LOGOUT_HTML = "logout.htm";
-	protected static final String MAINTENANCE_HTML = "maintenance.htm";
+	private static final String REFERRAL_STATUS_HTML = "ScrollFamTable.htm";
+	private static final String DASHBOARD_HTML = "Dashboard.htm";
+	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
+	private static final String LOGOUT_HTML = "logout.htm";
+	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	
 	protected static final String SESSION_ID_NAME = "SID=";
