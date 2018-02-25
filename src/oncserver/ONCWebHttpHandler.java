@@ -23,21 +23,9 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 import com.google.gson.Gson;
 
-public class ONCWebHttpHandler extends ONCWebpageHandlerServices
+public class ONCWebHttpHandler extends ONCWebpageHandler
 {
-	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
-	private static final String REGION_TABLE_HTML = "RegionTable.htm";
-	private static final String REGION_UPDATE_HTML = "Region.htm";
-	private static final String DRIVER_SIGN_IN_HTML = "DriverReg.htm";
-	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
-	private static final String VOLUNTEER_REGISTRATION_HTML = "VolRegistration.htm";
-	
 	private static final int STATUS_CONFIRMED = 5;
-	
-	public ONCWebHttpHandler()
-	{
-		loadWebpages();
-	}
 	
 	public void handle(HttpExchange te) throws IOException 
     {
@@ -56,23 +44,11 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 
 		if(requestURI.contains("/startpage"))
     		{
-    			//authenticate the web client by token and activity
-    			WebClient wc = null;
-    			if(params.containsKey("token") && params.containsKey("year") && params.containsKey("famref"))
-    			{	
-    				String sessionID = (String) params.get("token");
-    				ClientManager clientMgr = ClientManager.getInstance();
-    			
-    				wc = clientMgr.findClient(sessionID);
-    			}
-    			
-    			if(wc != null)	//if the web client is authenticated, send the home page
+    			WebClient wc;
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
-    				//update time stamp, get the home page html and return it
-    				wc.updateTimestamp();
-    			
-    				String response = getHomePageHTML(wc, "", (String) params.get("famref"));
-    				sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    				String response = getHomePageHTML(wc, "");
+    				sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     			}
     			else
     			{	
@@ -81,66 +57,55 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     				ArrayList<String> headerList = new ArrayList<String>();
     				headerList.add("http://www.ourneighborschild.org");
     				header.put("Location", headerList);
-    				sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
+    				sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
     			}	
     		}
     		else if(t.getRequestURI().toString().contains("/dbStatus"))
     		{
-    			sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
+    			//check to see that it's an active, authenticated session. If so, send db status
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    				sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
+    			else
+    			{
+    				//handle an imposter or a timed-out client
+    			}
     		}
     		else if(requestURI.contains("/agents"))
     		{
     			int year = Integer.parseInt((String) params.get("year"));
     			int groupID = Integer.parseInt((String) params.get("groupid"));
     		
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
     			WebClient wc;
     			HtmlResponse htmlResponse;
     		
-    			if((wc=clientMgr.findClient(sessionID)) != null)	
-    			{
-    				wc.updateTimestamp();
-//    			htmlResponse = ServerAgentDB.getAgentsJSONP(year, wc.getWebUser(), (String) params.get("callback"));
-//    			htmlResponse = ServerUserDB.getAgentsJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     				htmlResponse = ServerFamilyDB.getAgentsWhoReferredJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
-    			}
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}	
-    		
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+   
     			sendHTMLResponse(t, htmlResponse);	
     		}
     		else if(requestURI.contains("/groups"))
     		{
-    			String sessionID = (String) params.get("token");
-    			int agentID = Integer.parseInt((String) params.get("agentid"));
-    		
-    			//test to see if a default value should be added to the top of the group list
-    			boolean bDefault = false;
-    			if(params.containsKey("default"))
-    			{
-    				String includeDefault = (String) params.get("default");
-    				bDefault = includeDefault.equalsIgnoreCase("on") ? true : false;
-    			}
-    		
-    			ClientManager clientMgr = ClientManager.getInstance();
     			WebClient wc;
     			HtmlResponse htmlResponse;
     		
-    			if((wc=clientMgr.findClient(sessionID)) != null)	
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
-    				wc.updateTimestamp();
+    				int agentID = Integer.parseInt((String) params.get("agentid"));
+    	    		
+        			//test to see if a default value should be added to the top of the group list
+        			boolean bDefault = false;
+        			if(params.containsKey("default"))
+        			{
+        				String includeDefault = (String) params.get("default");
+        				bDefault = includeDefault.equalsIgnoreCase("on") ? true : false;
+        			}
     				htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, bDefault, (String) params.get("callback"));
     			}
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}	
-    		
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+    				
     			sendHTMLResponse(t, htmlResponse);	
     		}
 /*    	
@@ -197,54 +162,36 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		}
     		else if(requestURI.contains("/getstatus"))
     		{
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			WebClient wc;
     			HtmlResponse htmlResponse;
-    		
-    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    			{
-    				wc.updateTimestamp();
-    				htmlResponse = ClientManager.getUserStatusJSONP((String) params.get("token"), 
-        													(String) params.get("callback"));
-    			}
+    			
+    			WebClient wc = clientMgr.findAndValidateClient(t.getRequestHeaders());
+    			if(wc != null)
+    				htmlResponse = ClientManager.getUserStatusJSONP(wc, (String) params.get("callback"));
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}
-    		
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				
     			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/getuser"))
     		{
-    			ClientManager clientMgr = ClientManager.getInstance();
     			WebClient wc;
     			HtmlResponse htmlResponse;
     		
-    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
-    			{
-    				wc.updateTimestamp();
-    				htmlResponse = ClientManager.getClientJSONP((String) params.get("token"), 
-        													(String) params.get("callback"));
-    			}
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+    				htmlResponse = ClientManager.getClientJSONP(wc, (String) params.get("callback"));
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}
-    		
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			
     			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/updateuser"))
     		{	
-    			ClientManager clientMgr = ClientManager.getInstance();
     			String responseJson;
     			WebClient wc;
     		
     			//determine if a valid request from a logged in user. If so, process the update
-    			if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
-    				wc.updateTimestamp();
 //    			Set<String> keyset = params.keySet();
 //    			for(String key:keyset)
 //    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
@@ -269,13 +216,12 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     				responseJson =  "{\"message\":\"Invalid User\"}";
     		
     			HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
-    					HTTPCode.Ok);
+    					HttpCode.Ok);
     			sendHTMLResponse(t, htmlresponse);
     		}
     		else if(requestURI.contains("/getpartner"))
     		{
     			//update the client time stamp
-    			ClientManager clientMgr = ClientManager.getInstance();
     			WebClient wc;
     			HtmlResponse htmlResponse;
     		
@@ -288,16 +234,13 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     				htmlResponse = ServerPartnerDB.getPartnerJSONP(year, partnerID, (String) params.get("callback"));
     			}
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				
     			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/getregion"))
     		{
     			//update the client time stamp
-    			ClientManager clientMgr = ClientManager.getInstance();
     			WebClient wc;
     			HtmlResponse htmlResponse;
     		
@@ -309,23 +252,18 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     				htmlResponse = RegionDB.getRegionJSONP(regionID, (String) params.get("callback"));
     			}
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}
-    		
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				
     			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/profileunchanged"))
     		{	
-    			ClientManager clientMgr = ClientManager.getInstance();
     			String responseJson;
     			WebClient wc;
     		
     			//determine if a valid request from a logged in user. If so, process the update
-    			if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null) 
     			{
-    				wc.updateTimestamp();
 //    			Set<String> keyset = params.keySet();
 //    			for(String key:keyset)
 //    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
@@ -350,69 +288,96 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     				responseJson =  "{\"message\":\"Invalid User\"}";
     		
     			HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
-					HTTPCode.Ok);
+					HttpCode.Ok);
     			sendHTMLResponse(t, htmlresponse);
     		}
     		else if(requestURI.contains("/getmeal"))
     		{
-    			int year = Integer.parseInt((String) params.get("year"));
-    			String targetID = (String) params.get("mealid");
+    			HtmlResponse htmlResponse;
     		
-    			HtmlResponse response = ServerMealDB.getMealJSONP(year, targetID, (String) params.get("callback"));
-    			sendHTMLResponse(t, response);
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{
+    				int year = Integer.parseInt((String) params.get("year"));
+        			String targetID = (String) params.get("mealid");
+    				htmlResponse = ServerMealDB.getMealJSONP(year, targetID, (String) params.get("callback"));
+    			}
+    			else
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				
+    			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/children"))
     		{
-    			int year = Integer.parseInt((String) params.get("year"));
-    			int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
-    		
-    			HtmlResponse response = ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
-    			sendHTMLResponse(t, response);
+    			HtmlResponse htmlResponse;
+    			
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{
+    				int year = Integer.parseInt((String) params.get("year"));
+        			int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    				htmlResponse =  ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
+    			}
+    			else
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				
+    			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/wishes"))
     		{
     			//update the client time stamp
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			WebClient wc;
     			HtmlResponse htmlResponse;
     		
-    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
     			{	
-    				wc.updateTimestamp();
     				int year = Integer.parseInt((String) params.get("year"));
     				int childID = Integer.parseInt((String) params.get("childid"));
     		
     				htmlResponse = ServerChildDB.getChildWishesJSONP(year, childID, (String) params.get("callback"));
     			}
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}
-    		
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+    				
     			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/adults"))
     		{
-    			int year = Integer.parseInt((String) params.get("year"));
-    			int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    			HtmlResponse htmlResponse;
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
+    			{
+    				int year = Integer.parseInt((String) params.get("year"));
+    				int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
     		
-    			HtmlResponse response = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
-    			sendHTMLResponse(t, response);
+    				htmlResponse = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
+    			}
+    			else
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+        			
+    			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/activities"))
     		{
-    			int year = Integer.parseInt((String) params.get("year"));
-    		
-    			HtmlResponse response = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
-    			sendHTMLResponse(t, response);
+    			HtmlResponse htmlResponse;
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{
+    				int year = Integer.parseInt((String) params.get("year"));
+    				htmlResponse = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
+    			}
+    			else
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+    			
+    			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/activitydays"))
     		{
-    			int year = Integer.parseInt((String) params.get("year"));
-    		
-    			HtmlResponse response = ServerActivityDB.getActivityDayJSONP(year, (String) params.get("callback"));
-    			sendHTMLResponse(t, response);
+    			HtmlResponse htmlResponse;
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{
+    				int year = Integer.parseInt((String) params.get("year"));
+    				htmlResponse = ServerActivityDB.getActivityDayJSONP(year, (String) params.get("callback"));
+    			}
+    			else
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+        			
+    			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/contactinfo"))
     		{
@@ -422,87 +387,46 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     			String cell = (String) params.get("cell") != null ? (String) params.get("cell") : "";
     			String callback = (String) params.get("callback");
     		
-    				HtmlResponse response = ServerVolunteerDB.getVolunteerJSONP(year, fn, ln, cell, callback);
-    		sendHTMLResponse(t, response);
+    			HtmlResponse response = ServerVolunteerDB.getVolunteerJSONP(year, fn, ln, cell, callback);
+    			sendHTMLResponse(t, response);
     		}
     		else if(requestURI.contains("/address"))
     		{
-    			String sessionID = (String) params.get("token");
+    			HtmlResponse htmlResponse;
     		
-//			Set<String> keyset = params.keySet();
-//			for(String key:keyset)
-//				System.out.println(String.format("/address key=%s, value=%s", key, params.get(key)));
-    		
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			WebClient wc;
-    			String response = null;
-    		
-    			if((wc=clientMgr.findClient(sessionID)) != null)	
-    			{
-    				wc.updateTimestamp();
-    				response = verifyAddress(params);	//verify the address and send response
-    			}
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
+    				htmlResponse = verifyAddress(params);	//verify the address and send response
     			else
-    				response = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, htmlResponse);
     		}
     		else if(requestURI.contains("/partnertable"))
     		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
     			String response = null;
     			WebClient wc;
     			
-    			if((wc=clientMgr.findClient(sessionID)) != null)
-    			{
-    				wc.updateTimestamp();
-    				try
-    				{
-    					response = readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML));
-    				
-    					String userFN;
-    					if(wc.getWebUser().getFirstName().equals(""))
-    						userFN = wc.getWebUser().getLastName();
-    					else
-    						userFN = wc.getWebUser().getFirstName();
-        			
-    					response = response.replace("USER_NAME", userFN);
-    					response = response.replace("USER_MESSAGE", "");
-    					response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    					response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
-    				}
-    				catch (IOException e) 
-    				{
-    					response = "<p>Partner Table Unavailable</p>";
-    				}
-    			}
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+    				response = getPartnerTableWebpage(wc, "");	
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
     		else if(requestURI.contains("/partnerupdate"))
     		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			String response = null;
-    			WebClient wc;
+    			String response;
     		
-    			if((wc=clientMgr.findClient(sessionID)) != null)
-    			{
-    				wc.updateTimestamp();
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
     				response = webpageMap.get("updatepartner");
-    			}
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
     		else if(requestURI.contains("/updatepartner"))
     		{
     			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
     			String response = null;
     			WebClient wc;
     		
@@ -544,16 +468,14 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
     		else if(requestURI.contains("/regiontable"))
     		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
     			String response = null;
     			WebClient wc;
     			
-    			if((wc=clientMgr.findClient(sessionID)) != null)
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
     				wc.updateTimestamp();
     				response = webpageMap.get("regiontable");
@@ -563,12 +485,11 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
     	else if(requestURI.contains("/regionupdate"))
     	{
     		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
     		String response = null;
     		WebClient wc;
     		
@@ -580,12 +501,11 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		else
     			response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     	}
     	else if(requestURI.contains("/updateregion"))
     	{
     		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
     		String response = null;
     		WebClient wc;
     		
@@ -602,28 +522,21 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     			ResponseCode rc = processRegionUpdate(wc, params);
     			
     			//submission processed, send the region table page back to the user
-    			try
-    			{	
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REGION_TABLE_HTML));
-    				response = response.replace("USER_MESSAGE", rc.getMessage());
-    				response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    			}
-    			catch (IOException e) 
-    			{
-    				response =  "<p>Region Table Unavailable</p>";
-    			}
+    			response = webpageMap.get("regiontable");
+    			response = response.replace("USER_MESSAGE", rc.getMessage());
+    			response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
     		}
     		else
     			response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     	}
     	else if(requestURI.equals("/volunteerregistration"))
     	{
     		String response = webpageMap.get("volunteerregistration");
        		response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
 
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     	}
     	else if(requestURI.equals("/registervolunteer"))
     	{
@@ -666,7 +579,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		String response = webpageMap.get("driversignin");
     		response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
 
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     	}
     	else if(requestURI.equals("/signindriver"))
     	{
@@ -696,7 +609,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		String response = webpageMap.get("volunteersignin");
     		response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     	}
     	else if(requestURI.contains("/signinvolunteer"))
     	{
@@ -725,7 +638,6 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     	else if(requestURI.contains("/changepw"))	//from separate page
     	{
     		String sessionID = (String) params.get("token");
-    		ClientManager clientMgr = ClientManager.getInstance();
     		String response = null;
     		WebClient wc;
     		
@@ -755,7 +667,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     			if(retCode == 0)
     			{
     				//submission successful, send the family table page back to the user
-    				response = getHomePageHTML(wc, "Your password change was successful!", "NNA");
+    				response = getHomePageHTML(wc, "Your password change was successful!");
     			}
     			else if(retCode == -1)
     			{
@@ -771,21 +683,19 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		else
     			response = invalidTokenReceived();
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     	}
     	else if(requestURI.contains("/reqchangepw"))	//from web dialog box
     	{
-    		ClientManager clientMgr = ClientManager.getInstance();
     		String response;
     		WebClient wc;
     		
     		//determine if a valid request from a logged in user. If so, process the pw change
-    		if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    		if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     		{
-    			wc.updateTimestamp();
-//    			Set<String> keyset = params.keySet();
-//    			for(String key:keyset)
-//    				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
+//    		Set<String> keyset = params.keySet();
+//    		for(String key:keyset)
+//    			System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
     			
     			ServerUserDB userDB = ServerUserDB.getInstance();
     			int retCode = userDB.changePassword((String) params.get("field1"), (String) params.get("field2"), wc);
@@ -809,18 +719,16 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
     		else	//invalid user, return a failure message
     			response =  "Invalid Session ID";
     		
-    		HtmlResponse htmlresponse = new HtmlResponse(response, HTTPCode.Ok);
+    		HtmlResponse htmlresponse = new HtmlResponse(response, HttpCode.Ok);
     		sendHTMLResponse(t, htmlresponse);
     	}
     	else if(requestURI.contains("/dashboard"))
     	{
-    		ClientManager clientMgr = ClientManager.getInstance();
     		String response = "Invalid Session ID";;
     		WebClient wc;
     		
-    		if(params.containsKey("token") && (wc=clientMgr.findClient((String) params.get("token"))) != null) 
+    		if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     		{
-    			wc.updateTimestamp();
     			String userFN;
         		if(wc.getWebUser().getFirstName().equals(""))
         			userFN = wc.getWebUser().getLastName();
@@ -847,12 +755,12 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
         		}
     		}
     		
-    		HtmlResponse htmlresponse = new HtmlResponse(response, HTTPCode.Ok);
+    		HtmlResponse htmlresponse = new HtmlResponse(response, HttpCode.Ok);
     		sendHTMLResponse(t, htmlresponse);
     	}			
     }
 
-	String verifyAddress(Map<String, Object> params)
+	HtmlResponse verifyAddress(Map<String, Object> params)
 	{
 		String callback = (String) params.get("callback");
 		
@@ -883,7 +791,8 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 		Gson gson = new Gson();
 		String json = gson.toJson(new AddressValidation(bAddressGood, errorCode), AddressValidation.class);
 		
-		return callback +"(" + json +")";
+//		return callback +"(" + json +")";
+		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
 	}
 	
 	ResponseCode processPartnerUpdate(WebClient wc, Map<String, Object> params)
@@ -930,7 +839,6 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 		
 		ResponseCode rc = null;
 		ONCPartner returnedPartner = null;
-		ClientManager clientMgr = ClientManager.getInstance();
 		Gson gson = new Gson();
 		String mssg;
 		//determine if its an add partner request or a partner update request
@@ -1096,24 +1004,4 @@ public class ONCWebHttpHandler extends ONCWebpageHandlerServices
 		
 		return rc;	
 	}
-	
-	@Override
-	public void loadWebpages()
-	{
-		webpageMap = new HashMap<String, String>();
-		try 
-		{
-			webpageMap.put("updatepartner", readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_UPDATE_HTML)));
-			webpageMap.put("regiontable", readFile(String.format("%s/%s",System.getProperty("user.dir"), REGION_TABLE_HTML)));
-			webpageMap.put("updateregion", readFile(String.format("%s/%s",System.getProperty("user.dir"), REGION_UPDATE_HTML)));
-			webpageMap.put("driversignin", readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_SIGN_IN_HTML)));
-			webpageMap.put("volunteersignin", readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_SIGN_IN_HTML)));
-			webpageMap.put("volunteerregistration", readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_REGISTRATION_HTML)));
-		} 
-		catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}	
 }

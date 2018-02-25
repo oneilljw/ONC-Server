@@ -145,7 +145,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson(responseList, listOfWebsiteFamilies);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	static HtmlResponse getFamiliesJSONP(int year, int agentID, int groupID, String callbackFunction)
@@ -201,7 +201,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson(responseList, listOfWebsiteFamilies);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	static HtmlResponse getFamilyReferencesJSONP(int year, String callbackFunction)
@@ -221,7 +221,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson(responseList, listOfFamilyReferences);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	static HtmlResponse getAgentsWhoReferredJSONP(int year, ONCServerUser agent, int groupID, String callbackFunction)
 	{
@@ -266,7 +266,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson(agentReferredInYearList, listtype);
 	
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
 	
 	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>
@@ -348,7 +348,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson(resultList, listOfFamilyReferences);
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	/***
@@ -467,7 +467,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson( new DataTable(metricList), DataTable.class);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 
 	
@@ -937,7 +937,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			response = "";
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	ONCFamily getFamily(int year, int id)	//id number set each year

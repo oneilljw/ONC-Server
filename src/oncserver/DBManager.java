@@ -132,7 +132,7 @@ public class DBManager
 		Type listOfDBs = new TypeToken<ArrayList<DBYear>>(){}.getType();
 	
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + gson.toJson(dbYearList, listOfDBs) +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + gson.toJson(dbYearList, listOfDBs) +")", HttpCode.Ok);		
 	}
 /*	
 	static String getDatabaseStatusJSON()

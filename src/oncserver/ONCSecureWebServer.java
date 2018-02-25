@@ -9,9 +9,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,36 +28,33 @@ import ourneighborschild.WebsiteStatus;
 
 public class ONCSecureWebServer
 {
-//	private static final int WEB_SERVER_PORT = 443;
 	private static final int WEB_SERVER_PORT = 8902;
 	private static final int CONCURRENT_THREADS = 5;
+	private static final String ONC_SERVER_KEYSTORE = "oncdms.jks";
+	private static final String ONC_STORE_PASSWORD = "oncpassword";
+//	private static final String ONC_KEYSTORE_ALIAS = "mykey";
 	
 	private static ONCSecureWebServer instance = null;
 	private static WebsiteStatus websiteStatus;
 	
-	private static List<ONCHttpHandler> oncHandlerList;
-	
 	private ONCSecureWebServer() throws IOException
 	{
 		ServerUI serverUI = ServerUI.getInstance();
-		oncHandlerList = new ArrayList<ONCHttpHandler>();
 		
-//		String keystoreFilename = System.getProperty("user.dir") + "/A4O/a4o.keystore";
-		String keystoreFilename = System.getProperty("user.dir") + "/oncdms.jks";
-		char[] storepass = "oncpassword".toCharArray();
-		char[] keypass = "oncpassword".toCharArray();		
+		String keystoreFN = String.format("%s/%s", System.getProperty("user.dir"), ONC_SERVER_KEYSTORE);
+		char[] storepass = ONC_STORE_PASSWORD.toCharArray();
+		char[] keypass = ONC_STORE_PASSWORD.toCharArray();		
 		
 		HttpsServer server = null;
 		try 
 		{	
 			// load certificate
-			FileInputStream fIn = new FileInputStream(keystoreFilename);
+			FileInputStream fIn = new FileInputStream(keystoreFN);
 			KeyStore keystore = KeyStore.getInstance("JKS");
 			keystore.load(fIn, storepass);
 			
 			// display certificate
-//			String alias = "mykey";
-//			Certificate certificate = keystore.getCertificate(alias);
+//			Certificate certificate = keystore.getCertificate(ONC_KEYSTORE_ALIAS);
 //			System.out.println(certificate);
 			
 			// setup the key manager factory
@@ -133,6 +128,7 @@ public class ONCSecureWebServer
 		
 		//create the handler and the contexts
 		HttpContext context;
+		int contextCount = 0;
 		
 		//set up the oncWebHttpHandler
 		String[] contexts = {"/dbStatus", "/agents", "/getagent", "/getmeal", "/children",
@@ -146,9 +142,6 @@ public class ONCSecureWebServer
 							};
 		
 		ONCWebHttpHandler oncHttpHandler = new ONCWebHttpHandler();
-		oncHandlerList.add(oncHttpHandler);
-		int contextCount = 0;
-		
 		for(String contextname:contexts)
 		{
 			context = server.createContext(contextname, oncHttpHandler);
@@ -161,8 +154,6 @@ public class ONCSecureWebServer
 								  "/timeout"};
 		
 		LoginHandler loginHandler = new LoginHandler();
-		oncHandlerList.add(loginHandler);
-		
 		for(String contextname: loginContexts)
 		{
 			context = server.createContext(contextname, loginHandler);
@@ -175,7 +166,6 @@ public class ONCSecureWebServer
 								   "/oncstylesheet", "/oncdialogstylesheet", "/vanilla"};
 		
 		CommonHandler commonHandler = new CommonHandler();
-		
 		for(String contextname: commonContexts)
 		{
 			context = server.createContext(contextname, commonHandler);
@@ -189,8 +179,6 @@ public class ONCSecureWebServer
 				 					"/getfamily","/references","/newfamily"};
 		
 		FamilyHandler familyHandler = new FamilyHandler();
-		oncHandlerList.add(familyHandler);
-		
 		for(String contextname: familyContexts)
 		{
 			context = server.createContext(contextname, familyHandler);
@@ -202,7 +190,10 @@ public class ONCSecureWebServer
 		ExecutorService pool = Executors.newFixedThreadPool(CONCURRENT_THREADS);
 		server.setExecutor(pool); // creates a default executor
 		server.start();
-				
+			
+		
+		//determine if logging should be enabled. Logging is enabled if the server is started
+		//after the season start date and before the end of the data base current year
 		ServerGlobalVariableDB gvDB = ServerGlobalVariableDB.getInstance();
 		Calendar now = Calendar.getInstance();
 		Calendar yearEndCal = Calendar.getInstance();
@@ -376,12 +367,4 @@ public class ONCSecureWebServer
 	static boolean isWebsiteOnline() { return websiteStatus.isWebsiteOnline(); }
 	static boolean isServerLoggingEnabled() { return websiteStatus.isWebsiteLoggingEnabled(); }
 	static String getWebsiteTimeBackOnline() { return websiteStatus.getTimeBackUp(); }
-	
-	static String reloadWebpages()
-	{ 
-		for(ONCHttpHandler handler : oncHandlerList)
-			handler.loadWebpages();
-		
-		return "UPDATED_WEBPAGES";
-	}
 }

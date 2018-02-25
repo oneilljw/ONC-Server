@@ -80,7 +80,7 @@ public class ServerMealDB extends ServerSeasonalDB
 			response = "";
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	//add used by desktop client to add a meal

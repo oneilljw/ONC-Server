@@ -75,7 +75,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		ServerGVs serverGVs = globalDB.get(year-BASE_YEAR).getServerGVs();
 		String response = gson.toJson(serverGVs, ServerGVs.class);
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	Date getSeasonStartDate(int year) { return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartDate(); }

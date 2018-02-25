@@ -85,7 +85,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		String response = gson.toJson(webPartnerList, listOfWebPartners);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	static HtmlResponse getPartnerJSONP(int year, String partnerID, String callbackFunction)
@@ -108,7 +108,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			response = "";
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	String getPartner(int year, String zID)

@@ -17,6 +17,7 @@ import ourneighborschild.ONCUser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
 public class ClientManager extends ClientEventGenerator
@@ -26,6 +27,7 @@ public class ClientManager extends ClientEventGenerator
 	private static final int DESKTOP_CLIENT_INACTIVE_LIMIT = 1000 * 60 * 3; //three minutes
 	private static final int DESKTOP_CLIENT_TERMINAL_LIMIT = 1000 * 60 * 10; //ten minutes
 	private static final int WEB_CLIENT_TERMINAL_LIMIT = 1000 * 60 * 20; //twenty minutes
+	private static final String SESSION_ID_NAME = "SID=";
 	
 	private static ClientManager instance = null;
 	
@@ -158,32 +160,54 @@ public class ClientManager extends ClientEventGenerator
 			return null;	//client not found
 	}
 	
-	static HtmlResponse getClientJSONP(String sessionID, String callbackFunction)
-	{		
-//		Gson gson = new Gson();
-		String response;
+	/********************************************************************************
+	 * Find a web client by Cookie SID. If the Cookie isn't presented in the Headers
+	 * parameter of the client is not logged into the server return null, otherwise 
+	 * return a reference to the web client.
+	 * *******************************************************************************/
+	WebClient findAndValidateClient(Headers reqHeaders)
+	{
+		WebClient wc = null;
+		
+		if(reqHeaders.containsKey("Cookie"))
+		{
+			String sessionID = null;
+			List<String> reqHeaderList = reqHeaders.get("Cookie");
+			for(String s: reqHeaderList)
+				if(s.startsWith(SESSION_ID_NAME))
+					sessionID = s.substring(SESSION_ID_NAME.length()+1, s.length()-1);
 			
-		int index = 0;
-		while(index < webClientAL.size() && !webClientAL.get(index).getSessionID().equals(sessionID))
-			index++;
-			
-		if(index < webClientAL.size())
-		{	
-			webClientAL.get(index).updateTimestamp();
-			response = "{"
-						+ "\"firstname\":\"" + webClientAL.get(index).getWebUser().getFirstName() + "\"," 
-						+ "\"lastname\":\"" + webClientAL.get(index).getWebUser().getLastName() + "\","
-						+ "\"title\":\"" + webClientAL.get(index).getWebUser().getTitle() + "\","
-						+ "\"org\":\"" + webClientAL.get(index).getWebUser().getOrganization() + "\","
-						+ "\"email\":\"" + webClientAL.get(index).getWebUser().getEmail() + "\","
-						+ "\"phone\":\"" + webClientAL.get(index).getWebUser().getCellPhone() + "\","
-						+ "}";
+			if(sessionID != null)
+			{
+				//Search for client
+				int index = 0;
+				while(index < webClientAL.size() && !webClientAL.get(index).getSessionID().equals(sessionID))
+					index++;
+				
+				if(index < webClientAL.size())
+				{
+					wc = webClientAL.get(index);
+					wc.updateTimestamp();
+				}
+			}
 		}
-		else
-			response = "";
+		
+		return wc;
+	}
+	
+	static HtmlResponse getClientJSONP(WebClient wc, String callbackFunction)
+	{		
+		String response = "{"
+						+ "\"firstname\":\"" + wc.getWebUser().getFirstName() + "\"," 
+						+ "\"lastname\":\"" + wc.getWebUser().getLastName() + "\","
+						+ "\"title\":\"" + wc.getWebUser().getTitle() + "\","
+						+ "\"org\":\"" + wc.getWebUser().getOrganization() + "\","
+						+ "\"email\":\"" + wc.getWebUser().getEmail() + "\","
+						+ "\"phone\":\"" + wc.getWebUser().getCellPhone() + "\","
+						+ "}";
 			
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	/***
@@ -213,16 +237,41 @@ public class ClientManager extends ClientEventGenerator
 			response = "";
 			
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+	
+	/***
+	 * called to get user status from web server. If user status === UserStatus.Update_Profile
+	 * the web user will see the profile dialog pop-up. Regardless of whether they make a change, 
+	 * we should set their status to UserStatus.Active
+	 * @param sessionID
+	 * @param callbackFunction
+	 * @return
+	 */
+	static HtmlResponse getUserStatusJSONP(WebClient wc, String callbackFunction)
+	{		
+		String response;
+			
+		if(wc != null)
+		{	
+			response = "{"
+						+ "\"userstatus\":\"" + wc.getWebUser().getStatus().toString() + "\"," 
+						+ "}";
+		}
+		else
+			response = "";
+			
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	/*************************************************************************************
-	 * Find a web client by client token. If client token is not logged into the server, 
+	 * Find a web client by sessionID. If client sessionID is not logged into the server, 
 	 * return null,otherwise return a reference to the web client.
 	 * **********************************************************************************/
 	boolean logoutWebClient(String sessionID)
 	{
-		//Search for client
+		//search for client
 		int index = 0;
 		while(index < webClientAL.size() && !webClientAL.get(index).getSessionID().equals(sessionID))
 			index++;
@@ -230,7 +279,6 @@ public class ClientManager extends ClientEventGenerator
 		if(index < webClientAL.size())	//found web client
 		{	
 			webClientAL.remove(index);
-//			serverUI.displayWebsiteClientTable(webClientAL);
 			fireClientChanged(this, ClientType.WEB, ClientEventType.LOGOUT, null);
 			return true;
 		}

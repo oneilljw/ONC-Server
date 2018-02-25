@@ -12,7 +12,7 @@
     $( document ).ready(function()
     {
     		//get the list of years from the data base and put it in the year combo box
-   	 	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+   	 	var dbyearsparams = "callback=?";
    	 	$.getJSON('dbStatus', dbyearsparams, function(data)
     		{
 			var yearCombo = document.getElementById('yearlist');
@@ -53,120 +53,121 @@
     
     function drawFamStatusChart() 
     {
-    	var familyparams = "token=" + sessionStorage.getItem("token")
-		   +"&year=" + sessionStorage.getItem('curryear')
-		   +"&maptype=family" + "&callback=?";
+    		var familyparams = "year=" + sessionStorage.getItem('curryear')
+		   				+"&maptype=family" + "&callback=?";
     	
-    	var giftparams = "token=" + sessionStorage.getItem("token")
-			+"&year=" + sessionStorage.getItem('curryear')
-			+"&maptype=gift" + "&callback=?";
+   	 	var giftparams = "year=" + sessionStorage.getItem('curryear')
+						+"&maptype=gift" + "&callback=?";
     	
-    	var mealparams = "token=" + sessionStorage.getItem("token")
-			+"&year=" + sessionStorage.getItem('curryear')
-			+"&maptype=meal" + "&callback=?";
+    		var mealparams = "year=" + sessionStorage.getItem('curryear')
+						+"&maptype=meal" + "&callback=?";
     	
-    	var delparams = "token=" + sessionStorage.getItem("token")
-			+"&year=" + sessionStorage.getItem('curryear')
-			+"&maptype=delivery" + "&callback=?";
+    		var delparams = "year=" + sessionStorage.getItem('curryear')
+						+"&maptype=delivery" + "&callback=?";
 
-    	$.getJSON('metrics', familyparams, function(familyData)
+    		$.getJSON('metrics', familyparams, function(familyData)
         {
-    		// Create our data table out of JSON data loaded from server.
-    	    var famtable = new google.visualization.DataTable(familyData);
-    	 	var famview = new google.visualization.DataView(famtable);
-        	famview.setColumns([0, 1,
+    			if(familyData.hasOwnProperty('error'))
+				window.location=document.getElementById('timeoutanchor').href;
+    			else
+    			{	
+    			// Create our data table out of JSON data loaded from server.
+    	    		var famtable = new google.visualization.DataTable(familyData);
+    	 		var famview = new google.visualization.DataView(famtable);
+        		famview.setColumns([0, 1,
                           	{ calc: "stringify",
                               sourceColumn: 1,
                            	  type: "string",
                               role: "annotation" },
                             ]);
 
-    		var famoptions = 
-    		{
-    			width: 480,
-    			height: 240,
-    			title: sessionStorage.getItem('curryear') + ' Family Status',
-    			titleTextStyle: 
+    			var famoptions = 
     			{
-    		        fontSize: 16, // 12, 18 whatever you want (don't specify px)
-    		        bold: true,    // true or false
-    			},
-    	    	chartArea: {width: '70%'},
-    	    	hAxis: { minValue: 0 },
-    	    	legend: {position: 'none'},
-    	    	bars: 'horizontal' // Required for Material Bar Charts.
-    		};
+    				width: 480,
+    				height: 240,
+    				title: sessionStorage.getItem('curryear') + ' Family Status',
+    				titleTextStyle: 
+    				{
+    		        		fontSize: 16, // 12, 18 whatever you want (don't specify px)
+    		        		bold: true,    // true or false
+    				},
+    	    			chartArea: {width: '70%'},
+    	    			hAxis: { minValue: 0 },
+    	    			legend: {position: 'none'},
+    	    			bars: 'horizontal' // Required for Material Bar Charts.
+    			};
     	
-    		var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
-    		famstatuschart.draw(famview, famoptions);
+    			var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
+    			famstatuschart.draw(famview, famoptions);
+    			}
     		
-    		$.getJSON('metrics', giftparams, function(giftData)
-    		{
-    		    // Create our data table out of JSON data loaded from server.
-    		    var gifttable = new google.visualization.DataTable(giftData);
-    		    var giftview = new google.visualization.DataView(gifttable);
-    		    giftview.setColumns([0, 1,
+    			$.getJSON('metrics', giftparams, function(giftData)
+    			{
+    		    		// Create our data table out of JSON data loaded from server.
+    		    		var gifttable = new google.visualization.DataTable(giftData);
+    		    		var giftview = new google.visualization.DataView(gifttable);
+    		    		giftview.setColumns([0, 1,
     		    		             { calc: "stringify",
     		    		              	sourceColumn: 1,
     		    		                type: "string",
     		    		                role: "annotation"
     		    		             }]);
 
-    		    var giftoptions = 
-    		    {
-    		    	width: 480,
-    		    	height: 240,
-    		    	title: sessionStorage.getItem('curryear') + ' Gift Status',
-    		    	titleTextStyle: 
-        			{
-        		        fontSize: 16, // 12, 18 whatever you want (don't specify px)
-        		        bold: true,    // true or false
-        			},
-    		    	chartArea: {width: '65%'},
-    		    	hAxis: { minValue: 0 },
-    		    	legend: {position: 'none'},
-    		    	};
+    		    		var giftoptions = 
+    		    		{
+    		    			width: 480,
+    		    			height: 240,
+    		    			title: sessionStorage.getItem('curryear') + ' Gift Status',
+    		    			titleTextStyle: 
+        				{
+        		        		fontSize: 16, // 12, 18 whatever you want (don't specify px)
+        		        		bold: true,    // true or false
+        				},
+    		    			chartArea: {width: '65%'},
+    		    			hAxis: { minValue: 0 },
+    		    			legend: {position: 'none'},
+    		    		};
     		    		    	
-    		    var giftstatuschart = new google.visualization.BarChart(document.getElementById('giftstatus_div'));
-    		    giftstatuschart.draw(giftview, giftoptions);
+    		    		var giftstatuschart = new google.visualization.BarChart(document.getElementById('giftstatus_div'));
+    		    		giftstatuschart.draw(giftview, giftoptions);
     		    
-    		    $.getJSON('metrics', mealparams, function(mealData)
-    		    {
-    		    	// Create our data table out of JSON data loaded from server.
-    		    	var mealtable = new google.visualization.DataTable(mealData);
-    		    	var mealview = new google.visualization.DataView(mealtable);
-    		    	mealview.setColumns([0, 1,
+    		    		$.getJSON('metrics', mealparams, function(mealData)
+    		    		{
+    		    			// Create our data table out of JSON data loaded from server.
+    		    			var mealtable = new google.visualization.DataTable(mealData);
+    		    			var mealview = new google.visualization.DataView(mealtable);
+    		    			mealview.setColumns([0, 1,
     		                 		{ 
-    		    					calc: "stringify",
-    		                   		sourceColumn: 1,
-    		    					type: "string",
-    		                   		role: "annotation"
+    		    							calc: "stringify",
+    		                   			sourceColumn: 1,
+    		    							type: "string",
+    		                   			role: "annotation"
     		                 		}]);
 
-    		    	var mealoptions = 
-    		    	{
-    		    		width: 480,
-    		    		height: 240,
-    		    		title: sessionStorage.getItem('curryear') + ' Meal Status',
-    		    		titleTextStyle: 
-    	    			{
-    	    		        fontSize: 16, // 12, 18 whatever you want (don't specify px)
-    	    		        bold: true,    // true or false
-    	    			},
-    		    		chartArea: {width: '65%'},
-    		    		hAxis: { minValue: 0 },
-    		    		legend: {position: 'none'},
-    		    	};
+    		    			var mealoptions = 
+    		    			{
+    		    				width: 480,
+    		    				height: 240,
+    		    				title: sessionStorage.getItem('curryear') + ' Meal Status',
+    		    				titleTextStyle: 
+    	    					{
+    	    		        			fontSize: 16, // 12, 18 whatever you want (don't specify px)
+    	    		        			bold: true,    // true or false
+    	    					},
+    		    				chartArea: {width: '65%'},
+    		    				hAxis: { minValue: 0 },
+    		    				legend: {position: 'none'},
+    		    			};
     		    	
-    		    	var mealstatuschart = new google.visualization.BarChart(document.getElementById('mealstatus_div'));
-    		    	mealstatuschart.draw(mealview, mealoptions);
+    		    			var mealstatuschart = new google.visualization.BarChart(document.getElementById('mealstatus_div'));
+    		    			mealstatuschart.draw(mealview, mealoptions);
     		    	
-    		    	$.getJSON('metrics', delparams, function(delData)
-    		    	{
-    		    		// Create our data table out of JSON data loaded from server.
-    		    		var deltable = new google.visualization.DataTable(delData);
-    		    		var delview = new google.visualization.DataView(deltable);
-    		    		delview.setColumns([0, 1,
+    		    			$.getJSON('metrics', delparams, function(delData)
+    		    			{
+    		    				// Create our data table out of JSON data loaded from server.
+    		    				var deltable = new google.visualization.DataTable(delData);
+    		    				var delview = new google.visualization.DataView(deltable);
+    		    				delview.setColumns([0, 1,
     		    	         				{ 
     		    							calc: "stringify",
     		    	           				sourceColumn: 1,
@@ -174,50 +175,50 @@
     		    	           				role: "annotation"
     		    	         				}]);
 
-    		    		var deloptions = 
-    		    		{
-    		    			width: 480,
-    		    			height: 240,
-    		    			title: sessionStorage.getItem('curryear') + ' Gift Delivery Status',
-    		    			titleTextStyle: 
-    		    			{
-    		    		        fontSize: 16, // 12, 18 whatever you want (don't specify px)
-    		    		        bold: true,    // true or false
-    		    			},
-    		    			chartArea: {width: '65%'},
-    		    			hAxis: { minValue: 0 },
-    		    			legend: {position: 'none'},
-    		    		};
+    		    				var deloptions = 
+    		    				{
+    		    					width: 480,
+    		    					height: 240,
+    		    					title: sessionStorage.getItem('curryear') + ' Gift Delivery Status',
+    		    					titleTextStyle: 
+    		    					{
+    		    		        			fontSize: 16, // 12, 18 whatever you want (don't specify px)
+    		    		        			bold: true,    // true or false
+    		    					},
+    		    					chartArea: {width: '65%'},
+    		    					hAxis: { minValue: 0 },
+    		    					legend: {position: 'none'},
+    		    				};
 
-    		    		var delstatuschart = new google.visualization.BarChart(document.getElementById('delstatus_div'));
-    		    		delstatuschart.draw(delview, deloptions);
-    		    	});
-    		    });
-    		});
+    		    				var delstatuschart = new google.visualization.BarChart(document.getElementById('delstatus_div'));
+    		    				delstatuschart.draw(delview, deloptions);
+    		    			});
+    		    		});
+    			});
         });   			
     }
     
     function showEditProfileDialog() 
     {
-    	var params = "token=" + sessionStorage.getItem("token") + "&" + "callback=?";
+    		var params = "callback=?";
 			
-    	$.getJSON('getuser', params, function(user)
-    	{
-    		userJson = user;
-    		if(userJson.hasOwnProperty('error'))
+    		$.getJSON('getuser', params, function(user)
+    		{
+    			userJson = user;
+    			if(userJson.hasOwnProperty('error'))
       		{
 				window.location=document.getElementById('timeoutanchor').href;
       		}
-    		else if(userJson.lastname !== '')
-    		{
-    			document.getElementById('userfirstname').value = user.firstname;
-    	    	document.getElementById('userlastname').value = user.lastname;
-    	    	document.getElementById('userorg').value = user.org;
-    	    	document.getElementById('usertitle').value = user.title;
-    	    	document.getElementById('useremail').value = user.email;
-    	    	document.getElementById('userphone').value = user.phone;
-    		}
-    	});
+    			else if(userJson.lastname !== '')
+    			{
+    				document.getElementById('userfirstname').value = user.firstname;
+    	    			document.getElementById('userlastname').value = user.lastname;
+    	    			document.getElementById('userorg').value = user.org;
+    	    			document.getElementById('usertitle').value = user.title;
+    	    			document.getElementById('useremail').value = user.email;
+    	    			document.getElementById('userphone').value = user.phone;
+    			}
+    		});
     }
     
     function onChangePW() 
@@ -274,8 +275,8 @@
 	
 	function updateForYearSelection()
     {
-    	//get selected year
-    	var yearCB = document.getElementById("yearlist");
+    		//get selected year
+    		var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
 		sessionStorage.setItem('curryear', year);
 		drawFamStatusChart();
@@ -411,22 +412,22 @@
 	    <li><a href="#">Families <span class="caret"></span></a>
 		  <div>
 		    <ul>
-		   	  <li><a href="familyview?token=REPLACE_TOKEN">View Family</a></li>
-			  <li><a href="familystatus?token=REPLACE_TOKEN">Refer Family</a></li>
+		   	  <li><a href="familyview">View Family</a></li>
+			  <li><a href="familystatus">Refer Family</a></li>
 		    </ul>
 		  </div>
 	    </li>
 	    <li><a href="#">Partners <span class="caret"></span></a>
 		  <div>
 		    <ul>
-			  <li><a href="partnertable?token=REPLACE_TOKEN">View Partners</a></li>
+			  <li><a href="partnertable">View Partners</a></li>
 		    </ul>
 		  </div>
 	    </li>
 	     <li><a href="#">Regions <span class="caret"></span></a>
 		  <div>
 		    <ul>
-			  <li><a href="regiontable?token=REPLACE_TOKEN">View Regions</a></li>
+			  <li><a href="regiontable">View Regions</a></li>
 		    </ul>
 		  </div>
 	    </li>

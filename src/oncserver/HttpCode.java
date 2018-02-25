@@ -1,6 +1,6 @@
 package oncserver;
 
-public enum HTTPCode 
+public enum HttpCode 
 {
 	Ok (200),
 	Redirect (301),
@@ -8,7 +8,7 @@ public enum HTTPCode
 	
 	private final int code;
 	
-	HTTPCode(int code)
+	HttpCode(int code)
 	{
 		this.code = code;
 	}

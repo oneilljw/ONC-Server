@@ -1,10 +1,10 @@
 package oncserver;
 
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -23,15 +23,8 @@ import com.sun.net.httpserver.HttpsExchange;
  * @author johnoneil
  *
  */
-public class LoginHandler extends ONCWebpageHandlerServices
+public class LoginHandler extends ONCWebpageHandler
 {	
-	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
-	
-	public LoginHandler()
-	{
-		loadWebpages();
-	}
-
 	@Override
 	public void handle(HttpExchange te) throws IOException 
 	{
@@ -43,45 +36,59 @@ public class LoginHandler extends ONCWebpageHandlerServices
 //		for(String key:keyset)
 //			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
     	
-    	String requestURI = t.getRequestURI().toASCIIString();
+		String requestURI = t.getRequestURI().toASCIIString();
     	
-    	String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
+		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI.getInstance().addLogMessage(mssg);
-    	
-    	if(requestURI.equals("/welcome"))
-    	{
-    		String response = null;
-    		if(ONCSecureWebServer.isWebsiteOnline())
-    		{
-    			response = webpageMap.get("online");
-    			response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
-    		}
-    		else
-    		{
-    			response = webpageMap.get("offline");
-    			response = response.replace("TIME_BACK_UP", ONCSecureWebServer.getWebsiteTimeBackOnline());
-    		}
+		
+		//DEBUG CODE FOR EXPIRIMENTING WITH COOKIE SECUIRTY MANAGMENT	
+//		Headers reqHeaders = t.getRequestHeaders();
+//		Set<String> keyset = reqHeaders.keySet();
+//		for(String key:keyset)
+//			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, reqHeaders.get(key)));
+		
+		if(requestURI.equals("/welcome"))
+		{
+    			String response = null;
+    			if(ONCSecureWebServer.isWebsiteOnline())
+    			{
+    				response = webpageMap.get("online");
+    				response = response.replace("WELCOME_MESSAGE", "Welcome to Our Neighbor's Child, Please Login:");
+    			}
+    			else
+    			{
+    				response = webpageMap.get("offline");
+    				response = response.replace("TIME_BACK_UP", ONCSecureWebServer.getWebsiteTimeBackOnline());
+    			}
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
-    	}
-    	else if(requestURI.contains("/logout"))
-    	{
-    		if(params.containsKey("token"))
-    		{	
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/logout"))
+		{
+    			Headers respHeader = t.getResponseHeaders();
     		
-    			if(!clientMgr.logoutWebClient(sessionID))
-    				clientMgr.addLogMessage(String.format("ONCHttpHandler.handle/logut: logout failure, client %s not found", sessionID));
-    		} 
+    			String sessionID = getSessionID(t.getRequestHeaders());
+    			if(sessionID != null)
+    			{
+    				//advise the browser to delete the session cookie per RFC6265
+    				ArrayList<String> headerCookieList = new ArrayList<String>();
+    				String delCookie = String.format("%sdeleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT", SESSION_ID_NAME);
+    				headerCookieList.add(delCookie);
+    				respHeader.put("Set-Cookie",  headerCookieList);
+    			
+    				//logout the client. Handle if client has timed out 
+    				if(!clientMgr.logoutWebClient(sessionID))
+    					clientMgr.addLogMessage(String.format("ONCHttpHandler.handle/logut: logout failure, "
+    														+ "client %s not found", sessionID));
+    			}
     		
-    		Headers header = t.getResponseHeaders();
-    		ArrayList<String> headerList = new ArrayList<String>();
-    		headerList.add("http://www.ourneighborschild.org");
-    		header.put("Location", headerList);
+    			//send a redirect header to redirect to the public ONC webpage
+    			ArrayList<String> headerLocationList = new ArrayList<String>();
+    			headerLocationList.add("http://www.ourneighborschild.org");
+    			respHeader.put("Location", headerLocationList);
   	
-    		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
-    	}
+    			sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
+		}
     	else if(requestURI.contains("/login"))
     	{
     		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
@@ -93,15 +100,15 @@ public class LoginHandler extends ONCWebpageHandlerServices
     		headerList.add("http://www.ourneighborschild.org");
     		header.put("Location", headerList);
   	
-    		sendHTMLResponse(t, new HtmlResponse("", HTTPCode.Redirect));
+    		sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
     	}
     	else if(requestURI.contains("/metrics"))
     	{
-    		ClientManager clientMgr = ClientManager.getInstance();
     		WebClient wc;
     		HtmlResponse htmlResponse;
     		
-    		if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    		String sessionID = getSessionID(t.getRequestHeaders());
+    		if(sessionID != null && (wc=clientMgr.findClient(sessionID)) != null)
     		{
     			wc.updateTimestamp();
     			int year = Integer.parseInt((String) params.get("year"));
@@ -109,17 +116,15 @@ public class LoginHandler extends ONCWebpageHandlerServices
     			htmlResponse = ServerFamilyDB.getFamilyMetricsJSONP(year, maptype, (String)params.get("callback"));
     		}
     		else
-    		{
-    			String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    		}
-    		
+    			htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			
     		sendHTMLResponse(t, htmlResponse);
     	}
     	else if(requestURI.equals("/timeout"))
     	{
     		String response = null;
-    		try {
+    		try
+    		{
     			if(ONCSecureWebServer.isWebsiteOnline())
     			{
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
@@ -130,12 +135,14 @@ public class LoginHandler extends ONCWebpageHandlerServices
     				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
     				response = response.replace("TIME_BACK_UP", ONCSecureWebServer.getWebsiteTimeBackOnline());
     			}
-    		} catch (IOException e) {
+    		} 
+    		catch (IOException e) 
+    		{
     			// TODO Auto-generated catch block
     			e.printStackTrace();
     		}
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
 	}
 	
@@ -174,23 +181,23 @@ public class LoginHandler extends ONCWebpageHandlerServices
 			if(serverUser == null)	//can't find the user in the data base
 	    		{
 	    			html += "</i></b></p><p>User name not found</p></body></html>";
-	    			response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    			response = new HtmlResponse(html, HttpCode.Forbidden);
 	    		}
 	    		else if(serverUser != null && serverUser.getStatus() == UserStatus.Inactive)	//can't find the user in the data base
 	    		{
 	    			html += "</i></b></p><p>Inactive user account, please contact ONC at volunteer@ourneighborschild.org</p></body></html>";
-	    			response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    			response = new HtmlResponse(html, HttpCode.Forbidden);
 	    		}
 	    		else if(serverUser != null && !(serverUser.getAccess().equals(UserAccess.Website) ||
 	    			serverUser.getAccess().equals(UserAccess.AppAndWebsite)))	//can't find the user in the data base
 	    		{
 	    			html += "</i></b></p><p>User account not authorized for website access, please contact ONC at volunteer@ourneighborschild.org</p></body></html>";
-	    			response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    			response = new HtmlResponse(html, HttpCode.Forbidden);
 	    		}
 	    		else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
 	    		{
 	    			html += "</i></b></p><p>Incorrect password, access denied</p></body></html>";
-	    			response = new HtmlResponse(html, HTTPCode.Forbidden);
+	    			response = new HtmlResponse(html, HttpCode.Forbidden);
 	    		}
 	    		else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    		{
@@ -206,7 +213,6 @@ public class LoginHandler extends ONCWebpageHandlerServices
 	    			userDB.requestSave();
 	    		
 	    			ONCUser webUser = serverUser.getUserFromServerUser();
-	    			ClientManager clientMgr = ClientManager.getInstance();
 	    			WebClient wc = clientMgr.addWebClient(t, serverUser);
     			
 	    			//has the current password expired? If so, send change password page
@@ -230,8 +236,12 @@ public class LoginHandler extends ONCWebpageHandlerServices
 	    				html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
 	    				html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
 	    				html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+	    				
+	    				HttpCookie cookie = new HttpCookie("SID", wc.getSessionID());
+	    				cookie.setPath("/");
+	    				cookie.setDomain(".oncdms.org");
 	    			
-	    				response = new HtmlResponse(html, HTTPCode.Ok);
+	    				response = new HtmlResponse(html, HttpCode.Ok, cookie);
 	    			}
 	    			else //send the home page
 	    			{
@@ -252,35 +262,24 @@ public class LoginHandler extends ONCWebpageHandlerServices
 	    					userMssg = "You last visited " + sdf.format(lastLogin.getTime());
 	    				}
 	    			
-	    				html = getHomePageHTML(wc, userMssg, "NNA");
+	    				html = getHomePageHTML(wc, userMssg);
+	    				
+	    				HttpCookie cookie = new HttpCookie("SID", wc.getSessionID());
+	    				cookie.setPath("/");
+	    				cookie.setDomain(".oncdms.org");
+	    				cookie.setSecure(true);
+	    				cookie.setHttpOnly(true);
 	    			
-	    				response = new HtmlResponse(html, HTTPCode.Ok);
+	    				response = new HtmlResponse(html, HttpCode.Ok, cookie);
 	    			}
 	    		}   	
 		}
 		else
 		{
 			html += "<p>Invalid Request Method</p></body></html>";
-			response = new HtmlResponse(html, HTTPCode.Forbidden);
+			response = new HtmlResponse(html, HttpCode.Forbidden);
 		}
 		
 		return response;
-	}
-	
-	@Override
-	public void loadWebpages()
-	{
-		webpageMap = new HashMap<String, String>();
-		try 
-		{
-			webpageMap.put("online", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML)));
-			webpageMap.put("welcome", readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML)));
-			webpageMap.put("changepw", readFile(String.format("%s/%s",System.getProperty("user.dir"), CHANGE_PASSWORD_HTML)));
-		} 
-		catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 }

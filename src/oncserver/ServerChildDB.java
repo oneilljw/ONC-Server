@@ -81,7 +81,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		String response = gson.toJson(responseList, listOfChildren);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	static HtmlResponse getChildWishesJSONP(int year, int childID, String callbackFunction)
@@ -151,7 +151,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		String response = gson.toJson(responseList, listOfWishes);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	String add(int year, String childjson)

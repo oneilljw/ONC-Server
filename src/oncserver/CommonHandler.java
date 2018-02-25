@@ -3,10 +3,9 @@ package oncserver;
 import java.io.IOException;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsExchange;
 
-public class CommonHandler extends ONCHandlerServices implements HttpHandler 
+public class CommonHandler extends ONCWebpageHandler
 {
 	@Override
 	public void handle(HttpExchange te) throws IOException 

@@ -68,7 +68,7 @@ public class ONCWebServer
          		header.put("Location", headerList);
 
          		String response = "Redirecting to secure website";
-         		t.sendResponseHeaders(HTTPCode.Redirect.code(), response.length());
+         		t.sendResponseHeaders(HttpCode.Redirect.code(), response.length());
          		OutputStream os = t.getResponseBody();
          		os.write(response.getBytes());
          		os.close();

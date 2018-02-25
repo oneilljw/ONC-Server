@@ -75,7 +75,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 		String response = gson.toJson(responseList, listOfAdults);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	List<ONCAdult>getAdultsInFamily(int year, int famID)

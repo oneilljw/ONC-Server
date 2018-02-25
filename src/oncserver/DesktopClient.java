@@ -836,7 +836,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<update_webpages>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = ONCSecureWebServer.reloadWebpages();
+                		String response = ONCWebpageHandler.loadWebpages();
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 }

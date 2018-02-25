@@ -116,7 +116,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			response = "{\"id\":-1}";	//send back id = -1, meaning not found
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 
 	@Override
@@ -333,7 +333,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 				+ "with Our Neighbor's Child!\"}", volParams.get("delFN"));
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + responseJson +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + responseJson +")", HttpCode.Ok);		
 	}
 	
 	String update(int year, String json)

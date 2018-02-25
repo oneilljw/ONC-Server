@@ -28,11 +28,8 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 
-public class FamilyHandler extends ONCWebpageHandlerServices
+public class FamilyHandler extends ONCWebpageHandler
 {
-	private static final String ONC_FAMILY_PAGE_HTML = "ONC.htm";
-	private static final String UPDATE_HTML = "Edit.htm";
-	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
@@ -44,11 +41,6 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	
 	private ONCFamily lastFamilyAdded = null;
-	
-	FamilyHandler()
-	{
-		loadWebpages();
-	}
 
 	@Override
 	public void handle(HttpExchange te) throws IOException
@@ -56,22 +48,14 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 		HttpsExchange t = (HttpsExchange) te;
 		@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
-    	
-//		Set<String> keyset = params.keySet();
-//		for(String key:keyset)
-//			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
-    	
+	
 		String requestURI = t.getRequestURI().toASCIIString();
     	
 		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI.getInstance().addLogMessage(mssg);
 		
 		if(requestURI.contains("/families"))
-		{
-//    		Set<String> keyset = params.keySet();
-//			for(String key:keyset)
-//				System.out.println(String.format("/updateuser key=%s, value=%s", key, params.get(key)));
-			
+		{		
     			int year = Integer.parseInt((String) params.get("year"));
     			int agentID = Integer.parseInt((String) params.get("agentid"));
     			int groupID = Integer.parseInt((String) params.get("groupid"));
@@ -81,36 +65,25 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 		}
 		else if(requestURI.contains("/references"))
 		{
-    			//update the client time stamp
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			WebClient wc;
     			HtmlResponse htmlResponse;
     		
-    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
     			{
-    				wc.updateTimestamp();
     				//get the JSON of family reference list
     				int year = Integer.parseInt((String) params.get("year"));
-    		
     				htmlResponse = ServerFamilyDB.getFamilyReferencesJSONP(year, (String) params.get("callback"));
     			}
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			
     			sendHTMLResponse(t, htmlResponse);
 		}
 		else if(requestURI.contains("/familysearch"))
 		{
-    			//update the client time stamp
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			WebClient wc;
     			HtmlResponse htmlResponse;
     		
-    			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
     			{
-    				wc.updateTimestamp();
     				//get the JSON of family reference list
     				htmlResponse = ServerFamilyDB.searchForFamilyReferencesJSONP(
 						Integer.parseInt((String) params.get("year")),
@@ -118,32 +91,24 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 						  (String) params.get("callback"));
     			}
     			else
-    			{
-    				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-    			}
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    				
     			sendHTMLResponse(t, htmlResponse);
 		}
 		else if(requestURI.contains("/getfamily"))
     		{
-			//update the client time stamp
-			ClientManager clientMgr = ClientManager.getInstance();
-			WebClient wc;
 			HtmlResponse htmlResponse;
     		
-			if((wc=clientMgr.findClient((String) params.get("token"))) != null)	
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
 			{
-				wc.updateTimestamp();
 				int year = Integer.parseInt((String) params.get("year"));
 				String targetID = (String) params.get("targetid");
         		
 				htmlResponse = ServerFamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
 			}
 			else
-			{
-				String response = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-				htmlResponse = new HtmlResponse(response, HTTPCode.Ok);
-			}
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+				
 			sendHTMLResponse(t, htmlResponse);
     		}
 		else if(requestURI.contains("/commonfamily.js"))
@@ -152,126 +117,65 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 		}
 		else if(requestURI.contains("/newfamily"))
 		{
-			String sessionID = (String) params.get("token");
-			ClientManager clientMgr = ClientManager.getInstance();
-    			WebClient wc;
-    			String response = null;
+    			String response;
     		
-    			if((wc=clientMgr.findClient(sessionID)) != null)	
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
     			{
-    				wc.updateTimestamp();
     				response = webpageMap.get("referral");
     			}
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
 		else if(requestURI.contains("/familystatus"))
     		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			String response = null;
+    			String response;
     			WebClient wc;
     			
-    			if((wc=clientMgr.findClient(sessionID)) != null)
-    			{
-    				wc.updateTimestamp();
-    				try
-    				{
-    					response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
-    					response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
-    					response = response.replace("USER_MESSAGE", "");
-    					response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    					response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-    					response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-    					response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
-    					response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
-    				}
-    				catch (IOException e) 
-    				{
-    					response = "<p>Family Table Unavailable</p>";
-    				}
-    			}
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+    				response = getFamilyStatusWebpage(wc, "");
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
 		else if(requestURI.contains("/referral"))
 		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			String response = null;
-    			WebClient wc;
+    			String response;
     			
-    			if((wc=clientMgr.findClient(sessionID)) != null)
-    			{
-    				wc.updateTimestamp();
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
     				response = webpageMap.get("referral");	
-    			}
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
 		else if(requestURI.contains("/referfamily"))
     		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			String response = null;
+    			String response;
     			WebClient wc;
     		
     			if(t.getRequestMethod().toLowerCase().equals("post") && 
     					params.containsKey("token") && params.containsKey("year") &&
-    					(wc=clientMgr.findClient(sessionID)) != null) 
+    					((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)) 
     			{
-    				wc.updateTimestamp();
-//    			Set<String> keyset = params.keySet();
-//    			for(String key:keyset)
-//    				System.out.println(String.format("/referfamily key=%s, value=%s", key, params.get(key)));
-    		
+    				//process referral and send family status web page back to client
     				ResponseCode frc = processFamilyReferral(wc, params);
-    			
-    				//submission processed, send the family table page back to the user
-    				try
-    				{
-    					String userFN;
-    					if(wc.getWebUser().getFirstName().equals(""))
-    						userFN = wc.getWebUser().getLastName();
-    					else
-    						userFN = wc.getWebUser().getFirstName();
-    				
-    					response = readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML));
-    					response = response.replace("USER_NAME", userFN);
-    					response = response.replace("USER_MESSAGE", frc.getMessage());
-    					response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-    					response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-    					response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-    					response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
-    					response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
-    				}
-    				catch (IOException e) 
-    				{
-    					response = "<p>Family Table Unavailable</p>";
-    				}
+    				response = getFamilyStatusWebpage(wc, frc.getMessage());
     			}
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
 		else if(requestURI.contains("/familyview"))
 		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
     			String response = null;
     			WebClient wc;
     		
-    			if((wc=clientMgr.findClient(sessionID)) != null)
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
-    				wc.updateTimestamp();
-    			
     				//send the onc web page
     				String userFN;
     				if(wc.getWebUser().getFirstName().equals(""))
@@ -282,56 +186,41 @@ public class FamilyHandler extends ONCWebpageHandlerServices
     				response = webpageMap.get("family");
     				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", "");
-    				response = response.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
     				response = response.replace("REPLACE_FAM_REF", "NNA");
     			}
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
 		else if(requestURI.contains("/familyupdate"))
 		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
-    			String response = null;
-    			WebClient wc;
-    		
-    			if((wc=clientMgr.findClient(sessionID)) != null)
-    			{
-    				wc.updateTimestamp();
+    			String response;
+    			
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
     				response = webpageMap.get("update");
-    			}
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
 		else if(requestURI.contains("/updatefamily"))
 		{
-    			String sessionID = (String) params.get("token");
-    			ClientManager clientMgr = ClientManager.getInstance();
     			String response = null;
     			WebClient wc; 		
-       		
-//    		Set<String> keyset = params.keySet();
-//    		for(String key:keyset)
-//    			System.out.println(String.format("Key=%s, value=%s", key, (String)params.get(key)));
-    		
+
     			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("token") &&
-    				params.containsKey("year") && params.containsKey("targetid") &&
-    				(wc=clientMgr.findClient(sessionID)) != null)
+    				params.containsKey("year") &&
+    				((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null))
     			{
-    				wc.updateTimestamp();
+    				//submission processed, send the home page back to the user
     				ResponseCode frc = processFamilyUpdate(wc, params);
-    			
-    				//submission processed, send the family table page back to the user
-    				response = getHomePageHTML(wc, frc.getMessage(), (String) params.get("targetid"));
+    				response = getHomePageHTML(wc, frc.getMessage());
     			}
     			else
     				response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HTTPCode.Ok));
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
 	}
 	
@@ -592,7 +481,6 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 		
 			//successfully process meals, family, history, children and adults. Notify the desktop
 			//clients so they refresh
-			ClientManager clientMgr = ClientManager.getInstance();
 			Gson gson = new Gson();
 
 			List<String> mssgList = new ArrayList<String>();
@@ -782,7 +670,6 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 				if(updatedFamily != null)
 				{
 					//successfully updated family. Notify the desktop clients so they refresh
-					ClientManager clientMgr = ClientManager.getInstance();
 					Gson gson = new Gson();
 					String mssg;
 					mssg = "UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class);
@@ -1011,22 +898,5 @@ public class FamilyHandler extends ONCWebpageHandlerServices
 		}
 		
 		return errorMap;
-	}
-
-	@Override
-	public void loadWebpages()
-	{
-		webpageMap = new HashMap<String, String>();
-		try 
-		{
-			webpageMap.put("family", readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_FAMILY_PAGE_HTML)));
-			webpageMap.put("referral", readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_HTML)));
-			webpageMap.put("update", readFile(String.format("%s/%s",System.getProperty("user.dir"), UPDATE_HTML)));
-		} 
-		catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 }

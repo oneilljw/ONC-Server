@@ -541,7 +541,7 @@ public class ServerUserDB extends ServerPermanentDB
 			response = "";
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}	
 		
 	private ONCServerUser createSeverUserFromBritepathsReferral(BritepathFamily bpFam, DesktopClient currClient)

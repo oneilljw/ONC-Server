@@ -111,7 +111,7 @@ public class ServerActivityDB extends ServerSeasonalDB
 		
 		//create and wrap the json in the callback function per the JSONP protocol
 		String response = gson.toJson(dayList, listOfActivities);
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	static HtmlResponse getActivitesJSONP(int year, String callbackFunction)
@@ -127,7 +127,7 @@ public class ServerActivityDB extends ServerSeasonalDB
 		String response = gson.toJson(searchList, listOfActivities);
 
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	//creates a list of volunteer activities based on stored string of activity ID's 
