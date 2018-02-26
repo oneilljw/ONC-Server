@@ -18,11 +18,6 @@
   		document.getElementById('year').value= currYear.toString();
   		document.getElementById('partnerid').value= sessionStorage.getItem("partnerid");
   		
-  		//update the nav bar links
-  		document.getElementById('logoutlink').href="logout"; 
-  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear')
-  				+'&famref=' + sessionStorage.getItem('famref');
-  		
   		//update the prior and current performance year labels
   		document.getElementById('pyPerf').innerHTML = (currYear-1).toString() + ' Partner Performance';
 		document.getElementById('cyPerf').innerHTML = currYear.toString() + ' Partner Performance';
@@ -167,10 +162,10 @@
   </div>
   <nav>
     <ul>
-	    <li id="homeli"><a id='homelink'>Home</a></li>
+	    <li id="homeli"><a id='homelink' href='startpage'>Home</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	    <li id="logoutli"><a id='logoutlink' href='logout'>Logout</a></li>
 	</ul>
   </nav>
   <form id="updatepartner" action="updatepartner" method="post">

@@ -61,13 +61,25 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	ONCWebpageHandler()
 	{
 		clientMgr = ClientManager.getInstance();
-		loadWebpages();
-		loadWebFileMap();
+		
+		if(webpageMap == null)
+			webpageMap = new HashMap<String, String>();
+		
+		if(webfileMap == null)
+			webfileMap = new HashMap<String, byte[]>();
+		
+		if(webpageMap.isEmpty() || webfileMap.isEmpty())
+		{
+			//clear them both and load them. It should be impossible for one 
+			//to be empty and one  to have content. As a protection, we clear both.
+			webpageMap.clear();
+			webfileMap.clear();
+			loadWebpages();
+		}
 	}
 	
 	static String loadWebpages()
 	{
-		webpageMap = new HashMap<String, String>();
 		try 
 		{
 			webpageMap.put("dashboard", readFile(String.format("%s/%s",System.getProperty("user.dir"), DASHBOARD_HTML)));
@@ -86,19 +98,6 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("welcome", readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML)));
 			webpageMap.put("changepw", readFile(String.format("%s/%s",System.getProperty("user.dir"), CHANGE_PASSWORD_HTML)));
 			
-			return "UPDATED_WEBPAGES";
-		} 
-		catch (IOException e) 
-		{
-			return "UPDATE_FAILED";
-		}
-	};
-	
-	static void loadWebFileMap()
-	{
-		webfileMap = new HashMap<String, byte[]>();
-		try
-		{
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
 			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
 			webfileMap.put("clearx", readFileToByteArray(CLEAR_X_FILE));
@@ -108,12 +107,26 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("oncstylesheet", readFileToByteArray(ONC_STYLE_SHEET_CSS));
 			webfileMap.put("oncdialogstylesheet", readFileToByteArray(ONC_DIALOG__STYLE_SHEET_CSS));
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
-		}
-		catch (IOException e)
+			
+			return "UPDATED_WEBPAGES";
+		} 
+		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return "UPDATE_FAILED";
 		}
+	}
+	
+	static String reloadWebpagesAndWebfiles()
+	{
+		String response = "UPDATE_FAILED";
+		if(webpageMap != null && webfileMap != null)
+		{
+			webpageMap.clear();
+			webfileMap.clear();
+			response = loadWebpages();
+		}
+		
+		return response;
 	}
 	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException

@@ -19,10 +19,6 @@
     		//update the nav bar links, set home link presence
     		if(sessionStorage.getItem('homelinkVisibility') === 'visible')
     		{
-    			document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
-    				+'&year=' + sessionStorage.getItem('curryear')
-    				+'&famref=' + sessionStorage.getItem('famref');
-    		
     			var profileli = document.getElementById('profileli');
     			profileli.parentNode.removeChild(profileli);
     		}
@@ -680,7 +676,7 @@
   </div>
   <nav>
    <ul>
-	    <li id="homelinkli"><a id='homelink'>Dashboard</a></li>
+	    <li id="homelinkli"><a id='homelink' href='dashboard'>Dashboard</a></li>
 	</ul>
 	<ul class='floatright'>
 		<li id='profileli'><a href="#">Profile <span class="caret"></span></a>

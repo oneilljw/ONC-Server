@@ -18,10 +18,6 @@
   		document.getElementById('year').value= currYear.toString();
   		document.getElementById('regionid').value= sessionStorage.getItem("regionid");
   		
-  		//update the nav bar links
-  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear') 
-  				+'&famref=' + sessionStorage.getItem('famref');
-  		
   		if(sessionStorage.getItem("regionid") !== "New")
   		{
   			document.getElementById('banner').innerHTML='Update Existing ONC Region Form';
@@ -114,7 +110,7 @@
   </div>
   <nav>
     <ul>
-	    <li id="homeli"><a id='homelink'>Home</a></li>
+	    <li id="homeli"><a id='homelink' href='startpage'>Home</a></li>
 	</ul>
 	<ul class='floatright'>
 	    <li id="logoutli"><a id='logoutlink' href="logout">Logout</a></li>
