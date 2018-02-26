@@ -16,22 +16,18 @@
   		//set the hidden values
   		var currYear = new Date().getFullYear();
   		document.getElementById('year').value= currYear.toString();
-  		document.getElementById('token').value= sessionStorage.getItem("token");
   		document.getElementById('regionid').value= sessionStorage.getItem("regionid");
   		
-  		//update the nav bar links with token
-  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
-  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
-		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
+  		//update the nav bar links
+  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear') 
+  				+'&famref=' + sessionStorage.getItem('famref');
   		
   		if(sessionStorage.getItem("regionid") !== "New")
   		{
   			document.getElementById('banner').innerHTML='Update Existing ONC Region Form';
   			document.getElementById('regionlegend').innerHTML='Update Street & Region Information';
   			
-  			regionparams = "token=" + sessionStorage.getItem("token") + "&" +
-				"regionid=" + sessionStorage.getItem("regionid") + "&" +
-				"callback=?";
+  			regionparams = "regionid=" + sessionStorage.getItem("regionid") + "&callback=?";
 
 			$.getJSON('getregion', regionparams, function(region)
 			{
@@ -82,14 +78,14 @@
   	}
   	textarea 
   	{
-    	height: 120px;
-    	padding: 2px 2px;
-    	box-sizing: border-box;
-    	border: 1px solid #ccc;
-    	border-radius: 4px;
-    	background-color: #f8f8f8;
-    	resize: none;
-    	display: block;
+    		height: 120px;
+    		padding: 2px 2px;
+    		box-sizing: border-box;
+    		border: 1px solid #ccc;
+    		border-radius: 4px;
+    		background-color: #f8f8f8;
+    		resize: none;
+    		display: block;
 	}
 	#partid
 	{
@@ -121,11 +117,10 @@
 	    <li id="homeli"><a id='homelink'>Home</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	    <li id="logoutli"><a id='logoutlink' href="logout">Logout</a></li>
 	</ul>
   </nav>
   <form id="updateregion" action="updateregion" method="post">
-  <input id='token' type="hidden" name="token">
   <input id='year' type="hidden" name="year">
   <input id='regionid' type="hidden" name="regionid">
   <fieldset>

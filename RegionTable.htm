@@ -8,31 +8,22 @@
   <script>
 	var regionJson = [];
 	
-	sessionStorage.setItem('token', "REPLACE_TOKEN");
-	
     $( document ).ready(function()
-    {	
-  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
-		
-    	//get the list of years from the data base so we can determine current year
-    	var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
-    	$.getJSON('dbStatus', dbyearsparams, function(data)
-    	{	
+    {
+   		//get the list of years from the data base so we can determine current year
+    		var dbyearsparams = "callback=?";
+    		$.getJSON('dbStatus', dbyearsparams, function(data)
+    		{	
 			currYear = data[data.length-1].id;
-			
-			//update the nav bar links with token and set home link presence
-	    	document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
-	    				+'&year=' + currYear
-	    				+'&famref=' + sessionStorage.getItem('famref');
 			
 			$.getJSON('zipcodes', dbyearsparams, function(codes)
 			{
 				 buildZipCodeSelect(codes)
 				getRegionsFromServer();
 			});
-    	});
+    		});
     	
-     // Write on keyup event of keyword current year seach input element
+     	// Write on keyup event of keyword current year seach input element
         $("#streetsearch").keyup(function()
         {
             _this = this;
@@ -49,25 +40,23 @@
     
     function getRegionsFromServer()
     {
-    	//get updated agentJson from server and place into group combobox. agentid =-1 defaults
-    	//to the logged in user
-    	var params = "token=" + sessionStorage.getItem("token") 
-    				+"&zipcode=" + document.getElementById('zipcode').value
-    				+"&callback=?";
+    		//get updated agentJson from server and place into group combobox. agentid =-1 defaults
+    		//to the logged in user
+    		var params = "zipcode=" + document.getElementById('zipcode').value + "&callback=?";
     	
-    	$.getJSON('regions', params, function(data)
-    	{
-    		regionJson = data;
-    		updateRegionTable();
-    	});
+    		$.getJSON('regions', params, function(data)
+    		{
+    			regionJson = data;
+    			updateRegionTable();
+    		});
     }
     function updateRegionTable()
     {
-    	$("#regiontbody").empty();
-    	var region = document.getElementById('region').value;
+    		$("#regiontbody").empty();
+    		var region = document.getElementById('region').value;
     	
-    	var count = 0;
-    	for(var i=0; i<regionJson.length; i++)
+    		var count = 0;
+    		for(var i=0; i<regionJson.length; i++)
 		{
 	   		if(region === 'Any' || region === regionJson[i].region)
 	   		{
@@ -76,12 +65,12 @@
 	   		}
 		}
     	
-    	//clear the search box
-    	var searchbox = document.getElementById('streetsearch');
-    	searchbox.value = "";
+    		//clear the search box
+    		var searchbox = document.getElementById('streetsearch');
+    		searchbox.value = "";
     	
-    	//set the quanity in the table
-    	document.getElementById('count').innerHTML = 'Streets: ' + count.toString();
+    		//set the quanity in the table
+    		document.getElementById('count').innerHTML = 'Streets: ' + count.toString();
     }
     
     function addTableRow(region, regiontable, buttontext)
@@ -117,10 +106,8 @@
 
     function regionAction(regionID)
     {
-    	sessionStorage.setItem("regionid", regionID);
+    		sessionStorage.setItem("regionid", regionID);
 		var params = {}
-		
-		params["token"] = sessionStorage.getItem('token');
 		params["regionid"] = regionID;
 		
 		post('regionupdate', params);
@@ -128,22 +115,20 @@
     
     function newRegion()
     {
-    	sessionStorage.setItem("regionid", "New");
+    		sessionStorage.setItem("regionid", "New");
     	
-    	var params = {}
-		params["token"] = sessionStorage.getItem('token');
-		
+    		var params = {}
 		post('regionupdate', params);
     }
       
     function filterChanged()
     {
-    	updateRegionTable();
+    		updateRegionTable();
     }
     
     function onResetFilters()
     {
-    	var regionElement = document.getElementById('region');
+    		var regionElement = document.getElementById('region');
     	
         regionElement.value = 'Any';
         updateRegionTable();
@@ -151,7 +136,7 @@
     
     function buildZipCodeSelect(codes)
     {
-    	var select = document.getElementById('zipcode');
+    		var select = document.getElementById('zipcode');
         for(var i=select.options.length-1; i>=0; i--)
             select.remove(i); 
         
@@ -316,10 +301,10 @@
   </div>
   <nav>
    <ul>
-	    <li id="homelinkli"><a id='homelink'>Dashboard</a></li>
+	    <li id="homelinkli"><a id='homelink' href='dashboard'>Dashboard</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	    <li id="logoutli"><a id='logoutlink' href='logout'>Logout</a></li>
 	</ul>
   </nav>
   <div class='controlbar'>

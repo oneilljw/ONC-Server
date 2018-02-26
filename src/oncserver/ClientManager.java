@@ -269,21 +269,10 @@ public class ClientManager extends ClientEventGenerator
 	 * Find a web client by sessionID. If client sessionID is not logged into the server, 
 	 * return null,otherwise return a reference to the web client.
 	 * **********************************************************************************/
-	boolean logoutWebClient(String sessionID)
+	void logoutWebClient(WebClient wc)
 	{
-		//search for client
-		int index = 0;
-		while(index < webClientAL.size() && !webClientAL.get(index).getSessionID().equals(sessionID))
-			index++;
-			
-		if(index < webClientAL.size())	//found web client
-		{	
-			webClientAL.remove(index);
-			fireClientChanged(this, ClientType.WEB, ClientEventType.LOGOUT, null);
-			return true;
-		}
-		else
-			return false;	//client not found
+		webClientAL.remove(wc);
+		fireClientChanged(this, ClientType.WEB, ClientEventType.LOGOUT, null);
 	}
 	
 	void clientLoginAttempt(boolean bValid, String mssg)

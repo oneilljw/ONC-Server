@@ -16,13 +16,12 @@
   		//set the hidden values
   		var currYear = sessionStorage.getItem('curryear');
   		document.getElementById('year').value= currYear.toString();
-  		document.getElementById('token').value= sessionStorage.getItem("token");
   		document.getElementById('partnerid').value= sessionStorage.getItem("partnerid");
   		
-  		//update the nav bar links with token
-  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
-  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
-		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
+  		//update the nav bar links
+  		document.getElementById('logoutlink').href="logout"; 
+  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear')
+  				+'&famref=' + sessionStorage.getItem('famref');
   		
   		//update the prior and current performance year labels
   		document.getElementById('pyPerf').innerHTML = (currYear-1).toString() + ' Partner Performance';
@@ -30,8 +29,7 @@
   		
   		if(sessionStorage.getItem("partnerid") !== "New")
   		{
-  			partnerparams = "token=" + sessionStorage.getItem("token") + "&" +
-				"year=" + sessionStorage.getItem('curryear') + "&" +
+  			partnerparams = "year=" + sessionStorage.getItem('curryear') + "&" +
 				"partnerid=" + sessionStorage.getItem("partnerid") + "&" +
 				"callback=?";
 
@@ -176,7 +174,6 @@
 	</ul>
   </nav>
   <form id="updatepartner" action="updatepartner" method="post">
-  <input id='token' type="hidden" name="token">
   <input id='year' type="hidden" name="year">
   <input id='partnerid' type="hidden" name="partnerid">
   <fieldset>

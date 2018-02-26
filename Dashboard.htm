@@ -7,8 +7,6 @@
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script>
-	sessionStorage.setItem('token', "REPLACE_TOKEN");
-	
     $( document ).ready(function()
     {
     		//get the list of years from the data base and put it in the year combo box
@@ -226,7 +224,6 @@
     	if(validate())
     	{
 			var params = {}	
-			params["token"] = sessionStorage.getItem('token');
 			params["field1"] = document.getElementById('currpw').value;
 			params["field2"] = document.getElementById('newpw').value;
     		$.post('reqchangepw', params, function(response)
@@ -250,8 +247,7 @@
     		   document.getElementById('useremail').value !== userJson.email ||
     		    document.getElementById('userphone').value !== userJson.phone)
     	{
-    		var params = "token=" + sessionStorage.getItem("token")
-			+ "&" + "firstname=" + document.getElementById('userfirstname').value
+    		var params = "firstname=" + document.getElementById('userfirstname').value
 			+ "&" + "lastname=" + document.getElementById('userlastname').value
 			+ "&" + "org=" + document.getElementById('userorg').value
 			+ "&" + "title=" + document.getElementById('usertitle').value
@@ -303,7 +299,6 @@
 	function onProfileNotChanged()
     {
 		var params = {}	
-		params["token"] = sessionStorage.getItem('token');
 		$.post('profileunchanged', params, function(response)
 		{
 			document.getElementById('message').textContent= response.message;
@@ -441,7 +436,7 @@
 		    </ul>
 		  </div>
 	  </li>	    
-	  <li id="logoutli"><a href="logout?token=REPLACE_TOKEN">Logout</a></li>
+	  <li id="logoutli"><a href="logout">Logout</a></li>
 	</ul>
   </nav>
   <div class='controlbar'>

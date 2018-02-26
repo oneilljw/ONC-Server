@@ -31,11 +31,7 @@ public class LoginHandler extends ONCWebpageHandler
 		HttpsExchange t = (HttpsExchange) te;
 		@SuppressWarnings("unchecked")
 		Map<String, Object> params = (Map<String, Object>)t.getAttribute("parameters");
-    	
-//		Set<String> keyset = params.keySet();
-//		for(String key:keyset)
-//			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
-    	
+
 		String requestURI = t.getRequestURI().toASCIIString();
     	
 		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
@@ -66,9 +62,9 @@ public class LoginHandler extends ONCWebpageHandler
 		else if(requestURI.contains("/logout"))
 		{
     			Headers respHeader = t.getResponseHeaders();
+    			WebClient wc;
     		
-    			String sessionID = getSessionID(t.getRequestHeaders());
-    			if(sessionID != null)
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
     				//advise the browser to delete the session cookie per RFC6265
     				ArrayList<String> headerCookieList = new ArrayList<String>();
@@ -76,11 +72,12 @@ public class LoginHandler extends ONCWebpageHandler
     				headerCookieList.add(delCookie);
     				respHeader.put("Set-Cookie",  headerCookieList);
     			
-    				//logout the client. Handle if client has timed out 
-    				if(!clientMgr.logoutWebClient(sessionID))
-    					clientMgr.addLogMessage(String.format("ONCHttpHandler.handle/logut: logout failure, "
-    														+ "client %s not found", sessionID));
+    				//logout the client
+    				clientMgr.logoutWebClient(wc);
+    					
     			}
+    			else		//Handle if client has timed out or is an impostor
+    				clientMgr.addLogMessage("ONCHttpHandler.handle/logut: logout failure, client %s not found");
     		
     			//send a redirect header to redirect to the public ONC webpage
     			ArrayList<String> headerLocationList = new ArrayList<String>();
@@ -89,61 +86,50 @@ public class LoginHandler extends ONCWebpageHandler
   	
     			sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
 		}
-    	else if(requestURI.contains("/login"))
-    	{
-    		sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
-    	}
-    	else if(requestURI.contains("/onchomepage"))
-    	{
-    		Headers header = t.getResponseHeaders();
-    		ArrayList<String> headerList = new ArrayList<String>();
-    		headerList.add("http://www.ourneighborschild.org");
-    		header.put("Location", headerList);
-  	
-    		sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
-    	}
-    	else if(requestURI.contains("/metrics"))
-    	{
-    		WebClient wc;
-    		HtmlResponse htmlResponse;
-    		
-    		String sessionID = getSessionID(t.getRequestHeaders());
-    		if(sessionID != null && (wc=clientMgr.findClient(sessionID)) != null)
+		else if(requestURI.contains("/login"))
     		{
-    			wc.updateTimestamp();
-    			int year = Integer.parseInt((String) params.get("year"));
-    			String maptype = (String) params.get("maptype");
-    			htmlResponse = ServerFamilyDB.getFamilyMetricsJSONP(year, maptype, (String)params.get("callback"));
+    			sendHTMLResponse(t, loginRequest(t.getRequestMethod(), params, t));
     		}
-    		else
-    			htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+		else if(requestURI.contains("/onchomepage"))
+		{
+    			Headers header = t.getResponseHeaders();
+    			ArrayList<String> headerList = new ArrayList<String>();
+    			headerList.add("http://www.ourneighborschild.org");
+    			header.put("Location", headerList);
+  	
+    			sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
+    		}
+		else if(requestURI.contains("/metrics"))
+		{
+    			HtmlResponse htmlResponse;
+    		
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{
+    				int year = Integer.parseInt((String) params.get("year"));
+    				String maptype = (String) params.get("maptype");
+    				htmlResponse = ServerFamilyDB.getFamilyMetricsJSONP(year, maptype, (String)params.get("callback"));
+    			}
+    			else
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
     			
-    		sendHTMLResponse(t, htmlResponse);
-    	}
-    	else if(requestURI.equals("/timeout"))
-    	{
-    		String response = null;
-    		try
-    		{
+    			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.equals("/timeout"))
+		{
+    			String response;
     			if(ONCSecureWebServer.isWebsiteOnline())
     			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
+    				response = webpageMap.get("online");
     				response = response.replace("WELCOME_MESSAGE", "Your last session expired, please login again:");
     			}
     			else
     			{
-    				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
+    				response = webpageMap.get("maintenance");
     				response = response.replace("TIME_BACK_UP", ONCSecureWebServer.getWebsiteTimeBackOnline());
     			}
-    		} 
-    		catch (IOException e) 
-    		{
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
     		
-    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
 	}
 	
 	HtmlResponse loginRequest(String method, Map<String, Object> params, HttpExchange t)
@@ -218,30 +204,16 @@ public class LoginHandler extends ONCWebpageHandler
 	    			//has the current password expired? If so, send change password page
 	    			if(serverUser.changePasswordRqrd())
 	    			{
-	    				html = webpageMap.get("changepw");
-	    			
 	    				Gson gson = new Gson();
 	    				String loginJson = gson.toJson(webUser, ONCUser.class);
 	    		
 	    				String mssg = "UPDATED_USER" + loginJson;
 	    				clientMgr.notifyAllClients(mssg);
 	    			
-	    				//replace the HTML place holders
-	    				if(serverUser.getFirstName().equals(""))
-	    					html = html.replace("USERFN", serverUser.getLastName());
-	    				else
-	    					html = html.replace("USERFN", serverUser.getFirstName());
-	    			
-	    				html = html.replace("REPLACE_TOKEN", wc.getSessionID().toString());
-	    				html = html.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-	    				html = html.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
-	    				html = html.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+	    				html = webpageMap.get("changepw");
+	    				html = html.replaceAll("USERFN", getUserFirstName(wc));
 	    				
-	    				HttpCookie cookie = new HttpCookie("SID", wc.getSessionID());
-	    				cookie.setPath("/");
-	    				cookie.setDomain(".oncdms.org");
-	    			
-	    				response = new HtmlResponse(html, HttpCode.Ok, cookie);
+	    				response = new HtmlResponse(html, HttpCode.Ok, getSIDCookie(wc));
 	    			}
 	    			else //send the home page
 	    			{
@@ -261,16 +233,8 @@ public class LoginHandler extends ONCWebpageHandler
 	    					sdf.setTimeZone(TimeZone.getDefault());
 	    					userMssg = "You last visited " + sdf.format(lastLogin.getTime());
 	    				}
-	    			
-	    				html = getHomePageHTML(wc, userMssg);
-	    				
-	    				HttpCookie cookie = new HttpCookie("SID", wc.getSessionID());
-	    				cookie.setPath("/");
-	    				cookie.setDomain(".oncdms.org");
-	    				cookie.setSecure(true);
-	    				cookie.setHttpOnly(true);
-	    			
-	    				response = new HtmlResponse(html, HttpCode.Ok, cookie);
+
+	    				response = new HtmlResponse(getHomePageHTML(wc, userMssg), HttpCode.Ok, getSIDCookie(wc));
 	    			}
 	    		}   	
 		}
@@ -281,5 +245,16 @@ public class LoginHandler extends ONCWebpageHandler
 		}
 		
 		return response;
+	}
+	
+	HttpCookie getSIDCookie(WebClient wc)
+	{
+		HttpCookie cookie = new HttpCookie("SID", wc.getSessionID());
+		cookie.setPath("/");
+		cookie.setDomain(".oncdms.org");
+		cookie.setSecure(true);
+		cookie.setHttpOnly(true);
+		
+		return cookie;
 	}
 }

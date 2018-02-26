@@ -30,8 +30,6 @@ import com.sun.net.httpserver.HttpsExchange;
 
 public class FamilyHandler extends ONCWebpageHandler
 {
-	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
-	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final int NUM_OF_WISHES_PROVIDED = 4;
 	private static final String GIFTS_REQUESTED_KEY = "giftreq";
@@ -55,13 +53,21 @@ public class FamilyHandler extends ONCWebpageHandler
 		ServerUI.getInstance().addLogMessage(mssg);
 		
 		if(requestURI.contains("/families"))
-		{		
-    			int year = Integer.parseInt((String) params.get("year"));
-    			int agentID = Integer.parseInt((String) params.get("agentid"));
-    			int groupID = Integer.parseInt((String) params.get("groupid"));
+		{
+			HtmlResponse htmlResponse;
     		
-    			HtmlResponse response = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
-    			sendHTMLResponse(t, response);
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+    				int year = Integer.parseInt((String) params.get("year"));
+    				int agentID = Integer.parseInt((String) params.get("agentid"));
+    				int groupID = Integer.parseInt((String) params.get("groupid"));
+    		
+    				htmlResponse = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+    			sendHTMLResponse(t, htmlResponse);
 		}
 		else if(requestURI.contains("/references"))
 		{
@@ -113,16 +119,14 @@ public class FamilyHandler extends ONCWebpageHandler
     		}
 		else if(requestURI.contains("/commonfamily.js"))
 		{
-			sendFile(t, "text/javascript", COMMON_FAMILY_JS_FILE);
+			sendFile(t, "text/javascript", "commonfamily");
 		}
 		else if(requestURI.contains("/newfamily"))
 		{
     			String response;
     		
     			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
-    			{
     				response = webpageMap.get("referral");
-    			}
     			else
     				response = invalidTokenReceived();
     		

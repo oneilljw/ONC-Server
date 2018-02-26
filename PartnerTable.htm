@@ -9,18 +9,16 @@
 	var currYear;
 	var partnerJson = [];
 	
-	sessionStorage.setItem('token', "REPLACE_TOKEN");
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	sessionStorage.setItem('curryear', new Date().getFullYear().toString());
 	
     $( document ).ready(function()
     {
-    		//update the nav bar links with token and set home link presence
+    		//update the nav bar links, set home link presence
     		if(sessionStorage.getItem('homelinkVisibility') === 'visible')
     		{
-    			document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
-    				+'&year=' + sessionStorage.getItem('curryear')
-    				+'&famref=' + sessionStorage.getItem('famref');
+//    		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear')
+//    				+ '&famref=' + sessionStorage.getItem('famref');
     		
     			var profileli = document.getElementById('profileli');
     			profileli.parentNode.removeChild(profileli);
@@ -30,11 +28,9 @@
     			var homelinkli = document.getElementById('homelinkli');
     			homelinkli.parentNode.removeChild(homelinkli);
     		}
- 
-  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
 		
     		//get the list of years from the data base so we can determine current year
-    		var dbyearsparams = "token=" + sessionStorage.getItem("token") + "&callback=?";
+    		var dbyearsparams = 'callback=?';
     		$.getJSON('dbStatus', dbyearsparams, function(data)
     		{	
     			var combo = document.getElementById('dbYears');
@@ -74,8 +70,7 @@
     {  	
     		//get updated agentJson from server and place into group combobox. agentid =-1 defaults
     		//to the logged in user
-    		var partnerparams = "token=" + sessionStorage.getItem("token") +
-    					  "&year=" + year +
+    		var partnerparams = "year=" + year +
     					  "&callback=?";
     	
     		$.getJSON('partners', partnerparams, function(data)
@@ -173,10 +168,8 @@
 
     function partnerAction(partnerID)
     {
-    	sessionStorage.setItem("partnerid", partnerID);
+   	 	sessionStorage.setItem("partnerid", partnerID);
 		var params = {}
-		
-		params["token"] = sessionStorage.getItem('token');
 		params["partnerid"] = partnerID;
 		
 		post('partnerupdate', params);
@@ -184,26 +177,24 @@
     
     function newPartner()
     {
-    	sessionStorage.setItem("partnerid", "New");
+    		sessionStorage.setItem("partnerid", "New");
     	
-    	var params = {}
-		params["token"] = sessionStorage.getItem('token');
-		
+    		var params = {}
 		post('partnerupdate', params);
     }
     
     function filterChanged()
     {
-    	updatePartnerTable();
+    		updatePartnerTable();
     }
     
     function onResetFilters()
     {
-    	var typeElement = document.getElementById('type');
-    	var statusElement = document.getElementById('status');
-    	var collectionElement = document.getElementById('collection');
+    		var typeElement = document.getElementById('type');
+    		var statusElement = document.getElementById('status');
+    		var collectionElement = document.getElementById('collection');
     	
-        typeElement.value = 'Any';
+        	typeElement.value = 'Any';
         statusElement.value = 'Any';
         collectionElement.value = 'Any';
 		
@@ -212,45 +203,44 @@
     
     function showEditProfileDialog() 
     {
-    	var params = "token=" + sessionStorage.getItem("token") + "&" + "callback=?";
+    		var params =	 "callback=?";
 			
-    	$.getJSON('getuser', params, function(user)
-    	{
-    		userJson = user;
-    		if(userJson.hasOwnProperty('error'))
-      		{
-				window.location=document.getElementById('timeoutanchor').href;
-      		}
-    		else if(userJson.lastname !== '')
+    		$.getJSON('getuser', params, function(user)
     		{
-    			document.getElementById('userfirstname').value = user.firstname;
-    	    	document.getElementById('userlastname').value = user.lastname;
-    	    	document.getElementById('userorg').value = user.org;
-    	    	document.getElementById('usertitle').value = user.title;
-    	    	document.getElementById('useremail').value = user.email;
-    	    	document.getElementById('userphone').value = user.phone;
-    		}
-    	});
+    			userJson = user;
+    			if(userJson.hasOwnProperty('error'))
+      		{
+					window.location=document.getElementById('timeoutanchor').href;
+      		}
+    			else if(userJson.lastname !== '')
+    			{
+    				document.getElementById('userfirstname').value = user.firstname;
+    	    			document.getElementById('userlastname').value = user.lastname;
+    	    			document.getElementById('userorg').value = user.org;
+    	    			document.getElementById('usertitle').value = user.title;
+    	    			document.getElementById('useremail').value = user.email;
+    	    			document.getElementById('userphone').value = user.phone;
+    			}
+    		});
     }
     
     function onChangePW() 
     {
-    	if(validate())
-    	{
+    		if(validate())
+    		{
 			var params = {}	
-			params["token"] = sessionStorage.getItem('token');
 			params["field1"] = document.getElementById('currpw').value;
 			params["field2"] = document.getElementById('newpw').value;
-    		$.post('reqchangepw', params, function(response)
-    		{
-    			document.getElementById('message').textContent= response;
-    		});
+    			$.post('reqchangepw', params, function(response)
+    			{
+    				document.getElementById('message').textContent= response;
+    			});
     		
-    		document.getElementById('currpw').value = "";
-	    	document.getElementById('newpw').value = "";
-	    	document.getElementById('verifypw').value = "";
-    		window.location=document.getElementById('closepopup').href;
-    	}
+    			document.getElementById('currpw').value = "";
+	    		document.getElementById('newpw').value = "";
+	    		document.getElementById('verifypw').value = "";
+    			window.location=document.getElementById('closepopup').href;
+    		}
     }
     
     function onUpdateProfile()
@@ -262,8 +252,7 @@
     		   document.getElementById('useremail').value !== userJson.email ||
     		    document.getElementById('userphone').value !== userJson.phone)
     	{
-    		var params = "token=" + sessionStorage.getItem("token")
-			+ "&" + "firstname=" + document.getElementById('userfirstname').value
+    		var params = "firstname=" + document.getElementById('userfirstname').value
 			+ "&" + "lastname=" + document.getElementById('userlastname').value
 			+ "&" + "org=" + document.getElementById('userorg').value
 			+ "&" + "title=" + document.getElementById('usertitle').value
@@ -287,7 +276,6 @@
     function onProfileNotChanged()
     {
 		var params = {}	
-		params["token"] = sessionStorage.getItem('token');
 		$.post('profileunchanged', params, function(response)
 		{
 			document.getElementById('message').textContent= response.message;
@@ -487,7 +475,7 @@
   </div>
   <nav>
    <ul>
-	    <li id="homelinkli"><a id='homelink'>Dashboard</a></li>
+	    <li id="homelinkli"><a id='homelink' href='dashboard'>Dashboard</a></li>
 	</ul>
 	<ul class='floatright'>
 		<li id='profileli'><a href="#">Profile <span class="caret"></span></a>
@@ -498,7 +486,7 @@
 		    </ul>
 		  </div>
 	    </li>
-	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	    <li id="logoutli"><a id='logoutlink' href='logout'>Logout</a></li>
 	</ul>
   </nav>
   <div class='controlbar'>

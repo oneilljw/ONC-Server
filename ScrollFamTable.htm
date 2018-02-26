@@ -9,7 +9,6 @@
 	var pyFamJson = [];
 	var cyFamJson = [];
 	
-	sessionStorage.setItem('token', "REPLACE_TOKEN");
 	sessionStorage.setItem('thanksgivingCutoff', "THANKSGIVING_CUTOFF");
 	sessionStorage.setItem('decemberCutoff', "DECEMBER_CUTOFF");
 	sessionStorage.setItem('editCutoff', "EDIT_CUTOFF");
@@ -17,7 +16,7 @@
 	
     $( document ).ready(function()
     {
-    		//update the nav bar links with token and set home link presence
+    		//update the nav bar links, set home link presence
     		if(sessionStorage.getItem('homelinkVisibility') === 'visible')
     		{
     			document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
@@ -33,7 +32,6 @@
     			homelinkli.parentNode.removeChild(homelinkli);
     		}
  
-//  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token');
   		document.getElementById('logoutlink').href='logout';
 		
    	 	//get the list of years from the data base and put it in the year combo box
@@ -109,11 +107,7 @@
     {  	
     		//get updated agentJson from server and place into group combobox. agentid =-1 defaults
     		//to the logged in user
-    		var groupparams = "token=" + sessionStorage.getItem("token") + 
-    					  "&agentid=-1" +
-    					  "&default=on" +
-    					  "&callback=?";
-    	
+    		var groupparams = "agentid=-1&default=on&callback=?";
     		$.getJSON('groups', groupparams, function(data)
     		{
     			//clear the group combobox
@@ -154,8 +148,7 @@
     
     function getFamiliesFromServer(year, agentid, groupid)
     {
-    		familiesparams = "token=" + sessionStorage.getItem("token") +
-			 			 "&year=" + year + 
+    		familiesparams = "year=" + year + 
 			 			 "&agentid=" + agentid +
 			 			 "&groupid=" + groupid + 
 			 			 "&callback=?";
@@ -400,8 +393,6 @@
     {
    	 	sessionStorage.setItem("targetid", targetID);
 		var params = {}
-		
-		params["token"] = sessionStorage.getItem('token');
 		params["targetid"] = targetID;
 		
 		if(table=== document.getElementById('pyTable'))
@@ -414,11 +405,8 @@
     {
     		sessionStorage.setItem("targetid", "NNA");
 		sessionStorage.setItem("prioryear", sessionStorage.getItem('curryear')-1);
-    	
-    		var params = {}
-		params["token"] = sessionStorage.getItem('token');
 		
-		post('newfamily', params);
+		post('newfamily', "");
     }
     
     function alreadyReferred(targetID)
@@ -435,7 +423,7 @@
     
     function showEditProfileDialog() 
     {
-    		var params = "token=" + sessionStorage.getItem("token") + "&" + "callback=?";
+    		var params = "callback=?";
 			
     		$.getJSON('getuser', params, function(user)
     		{
@@ -461,7 +449,6 @@
     		if(validate())
     		{
 			var params = {}	
-			params["token"] = sessionStorage.getItem('token');
 			params["field1"] = document.getElementById('currpw').value;
 			params["field2"] = document.getElementById('newpw').value;
     			$.post('reqchangepw', params, function(response)
@@ -485,8 +472,7 @@
     		   	document.getElementById('useremail').value !== userJson.email ||
     		    document.getElementById('userphone').value !== userJson.phone)
    	 	{
-    			var params = "token=" + sessionStorage.getItem("token")
-			+ "&" + "firstname=" + document.getElementById('userfirstname').value
+    			var params = "firstname=" + document.getElementById('userfirstname').value
 			+ "&" + "lastname=" + document.getElementById('userlastname').value
 			+ "&" + "org=" + document.getElementById('userorg').value
 			+ "&" + "title=" + document.getElementById('usertitle').value
@@ -510,7 +496,6 @@
     function onProfileNotChanged()
     {
 		var params = {}	
-		params["token"] = sessionStorage.getItem('token');
 		$.post('profileunchanged', params, function(response)
 		{
 			document.getElementById('message').textContent= response.message;

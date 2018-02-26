@@ -28,13 +28,12 @@
 	{
   		//set the hidden values
   		document.getElementById('year').value= sessionStorage.getItem("curryear");
-  		document.getElementById('token').value= sessionStorage.getItem("token");
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   		
-  		//update the nav bar links with token
-  		document.getElementById('logoutlink').href="logout?token=" + sessionStorage.getItem('token'); 
-  		document.getElementById('homelink').href="startpage?token=" + sessionStorage.getItem('token')
-		 +'&year=' + sessionStorage.getItem('curryear') +'&famref=' + sessionStorage.getItem('famref');
+  		//update the nav bar links
+  		document.getElementById('logoutlink').href="logout"; 
+  		document.getElementById('homelink').href="startpage?year=' + sessionStorage.getItem('curryear') 
+  				+'&famref=' + sessionStorage.getItem('famref');
   		
   		//clear the group combobox
 		groupcb.options.length = 0;
@@ -43,8 +42,7 @@
   		if(urlmode.indexOf("referral") > -1)
   		{
   			//is a re-referral. Get info for the family
-  			familyparams = "token=" + sessionStorage.getItem("token") + "&" +
-				"year=" + sessionStorage.getItem("prioryear") + "&" +
+  			familyparams = "year=" + sessionStorage.getItem("prioryear") + "&" +
 				"targetid=" + sessionStorage.getItem("targetid") + "&" +
 				"callback=?";
 
@@ -70,9 +68,7 @@
   		{
   			//is a new referral, get updated groups for the logged in user from server and place into group
   			//combobox. agentid =-1 defaults to the logged in user
-    			var groupparams = "token=" + sessionStorage.getItem("token") + 
-    					  "&agentid=-1" +
-    					  "&callback=?";
+    			var groupparams = "agentid=-1&callback=?";
  
     			$.getJSON('groups', groupparams, function(data)
     			{
@@ -427,7 +423,6 @@
 	</ul>
   </nav>
   <form id="familyform" action="referfamily" method="post">
-  <input id='token' type="hidden" name="token">
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
   <br>

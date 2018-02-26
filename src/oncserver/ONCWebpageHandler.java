@@ -42,16 +42,27 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
+
+	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
+	private static final String CLEAR_X_FILE = "clear_x.gif";
+	private static final String ONC_LOGO_FILE = "oncsplash.gif";
+	private static final String ONC_ICON_FILE = "ONC.ico";
+	private static final String VANILLA_FONT_FILE = "vanilla.ttf";
+	private static final String ONC_STYLE_SHEET_CSS = "ONCStyleSheet.css";
+	private static final String ONC_DIALOG__STYLE_SHEET_CSS = "ONCDialogStyleSheet.css";
+	private static final String JQUERY_JS_FILE = "jquery-1.11.3.js";
 	
 	protected static final String SESSION_ID_NAME = "SID=";
 	
 	protected ClientManager clientMgr;
 	protected static Map<String,String> webpageMap;
+	protected static Map<String, byte[]> webfileMap;
 	
 	ONCWebpageHandler()
 	{
 		clientMgr = ClientManager.getInstance();
 		loadWebpages();
+		loadWebFileMap();
 	}
 	
 	static String loadWebpages()
@@ -83,6 +94,28 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		}
 	};
 	
+	static void loadWebFileMap()
+	{
+		webfileMap = new HashMap<String, byte[]>();
+		try
+		{
+			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
+			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
+			webfileMap.put("clearx", readFileToByteArray(CLEAR_X_FILE));
+			webfileMap.put("onclogo", readFileToByteArray(ONC_LOGO_FILE));
+			webfileMap.put("oncicon", readFileToByteArray(ONC_ICON_FILE));
+			webfileMap.put("vanilla", readFileToByteArray(VANILLA_FONT_FILE));
+			webfileMap.put("oncstylesheet", readFileToByteArray(ONC_STYLE_SHEET_CSS));
+			webfileMap.put("oncdialogstylesheet", readFileToByteArray(ONC_DIALOG__STYLE_SHEET_CSS));
+			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	void sendHTMLResponse(HttpExchange t, HtmlResponse html) throws IOException
 	{
 		if(html.getCookie() != null)
@@ -100,7 +133,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		t.close();
 	}
 	
-	static String readFile( String file ) throws IOException
+	static String readFile(String file) throws IOException
 	{
 	    BufferedReader reader = new BufferedReader(new FileReader(file));
 	    String         line = null;
@@ -115,6 +148,22 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	    reader.close();
 	    
 	    return stringBuilder.toString();
+	}
+	
+	static byte[] readFileToByteArray(String filename) throws IOException
+	{
+		//get file
+	    String path = String.format("%s/%s", System.getProperty("user.dir"), filename);
+	    File file = new File(path);
+	    byte [] bytearray  = new byte [(int)file.length()];
+	      
+	    FileInputStream fis = new FileInputStream(file);
+	      
+	    BufferedInputStream bis = new BufferedInputStream(fis);
+	    bis.read(bytearray, 0, bytearray.length);
+	    bis.close();
+	    
+		return bytearray;
 	}
 	
 	Map<String, String> createMap(Map<String, Object> params, String[] keys)
@@ -151,7 +200,6 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		String response = webpageMap.get("familystatus");
 		response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
 		response = response.replace("USER_MESSAGE", message);
-		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 		response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
 		response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
 		response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
@@ -165,7 +213,6 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		String response = webpageMap.get("partnertable");
 		response = response.replace("USER_NAME", getUserFirstName(wc));
 		response = response.replace("USER_MESSAGE", message);
-		response = response.replace("REPLACE_TOKEN", wc.getSessionID().toString());
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
 		
 		return response;
@@ -176,7 +223,6 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		String response = webpageMap.get("dashboard");
 		response = response.replace("USER_NAME", getUserFirstName(wc));
 		response = response.replace("USER_MESSAGE", message);
-		response = response.replaceAll("REPLACE_TOKEN", wc.getSessionID().toString());
 		
 		return response;
 	}
@@ -217,18 +263,21 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	    h.add("Content-Type", mimetype);
 
 	    //get file
-	    String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
-	    File file = new File(path);
-	    byte [] bytearray  = new byte [(int)file.length()];
-	      
-	    FileInputStream fis = new FileInputStream(file);
-	      
-	    BufferedInputStream bis = new BufferedInputStream(fis);
-	    bis.read(bytearray, 0, bytearray.length);
-	    bis.close();
+	    byte[] bytearray = webfileMap.get(sheetname);
+	    	    
+//		String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
+//		File file = new File(path);
+//		byte [] bytearray  = new byte [(int)file.length()];
+//	      
+//	    FileInputStream fis = new FileInputStream(file);
+//	      
+//	    BufferedInputStream bis = new BufferedInputStream(fis);
+//	    bis.read(bytearray, 0, bytearray.length);
+//	    bis.close();
 	      	
 	    //send the response.
-	    t.sendResponseHeaders(HTTP_OK, file.length());
+//	    t.sendResponseHeaders(HTTP_OK, file.length());
+	    t.sendResponseHeaders(HTTP_OK, bytearray.length);
 	    OutputStream os = t.getResponseBody();
 	    os.write(bytearray,0,bytearray.length);
 	    os.close();
