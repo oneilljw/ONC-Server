@@ -30,6 +30,8 @@ public class CommonHandler extends ONCWebpageHandler
 			sendFile(t, "text/css", "oncstylesheet");
 		else if(requestURI.contains("/oncdialogstylesheet"))
 			sendFile(t, "text/css", "oncdialogstylesheet");
+		else if(requestURI.contains("/oncloginstylesheet"))
+			sendFile(t, "text/css", "oncloginstylesheet");
 		else if(requestURI.contains("/jquery.js"))
 			sendFile(t, "text/javascript", "jquery");
 	}

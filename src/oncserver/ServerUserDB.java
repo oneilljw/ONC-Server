@@ -11,9 +11,13 @@ import java.util.Map;
 
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.ChangePasswordRequest;
+import ourneighborschild.EmailAddress;
+import ourneighborschild.ONCEmail;
+import ourneighborschild.ONCEmailAttachment;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.ServerCredentials;
 import ourneighborschild.UserAccess;
 import ourneighborschild.UserPermission;
 import ourneighborschild.UserPreferences;
@@ -24,9 +28,14 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerUserDB extends ServerPermanentDB
 {
-	private static final int USER_RECORD_LENGTH = 23;
+	private static final int USER_RECORD_LENGTH = 26;
 	private static final String USER_PASSWORD_PREFIX = "onc";
 	private static final String USERDB_FILENAME = "newuser.csv";
+	private static final int RECOVERY_ID_LENGTH = 16;
+	
+	private static final String RECOVERY_EMAIL_ADDRESS = "schoolcontact@ourneighborschild.org";
+	private static final String RECOVERY_EMAIL_PASSWORD = "crazyelf";
+	
 	private static ServerUserDB instance  = null;
 	
 	private static ClientManager clientMgr;
@@ -64,6 +73,20 @@ public class ServerUserDB extends ServerPermanentDB
 			while(index < userAL.size() && userAL.get(index).getID() != userid)
 				index++;
 		
+			return index < userAL.size() ? userAL.get(index) : null;
+		}
+	}
+	
+	ONCServerUser findUserByRecoveryID(String recoveryID)
+	{
+		if(recoveryID.length() != RECOVERY_ID_LENGTH)
+			return null;
+		else
+		{
+			int index = 0;
+			while(index < userAL.size() && !userAL.get(index).getRecoveryID().equals(recoveryID))
+				index++;
+			
 			return index < userAL.size() ? userAL.get(index) : null;
 		}
 	}
@@ -387,7 +410,7 @@ public class ServerUserDB extends ServerPermanentDB
 				"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 
 				"SL Changed By", "Sessions", "Last Login", "Orginization", "Title",
 				"Email", "Phone", "Groups", "Font Size", "Wish Assignee Filter",
-				"Family DNS Filter"};
+				"Family DNS Filter", "Failed Count", "RecoveryID", "RecoveryID Time"};
 	}
 	
 	@Override
@@ -586,6 +609,23 @@ public class ServerUserDB extends ServerPermanentDB
 				bpFam.getReferringAgentPhone(), new LinkedList<Integer>());	
 	}
 	
+	ONCServerUser findUserByEmailAndPhone(String email, String phone)
+	{
+		int index = 0;
+		while(index < userAL.size() && !userAL.get(index).getEmail().equalsIgnoreCase(email))
+			index++;
+		
+		if(index < userAL.size() && getDigits(userAL.get(index).getHomePhone()).equals(getDigits(phone)))
+			return userAL.get(index);
+		else
+			return null;
+	}
+	
+	String getDigits(String pn)
+	{
+		return pn.replaceAll("\\D+","");
+	}
+	
 	
 	ImportONCObjectResponse processImportedReferringAgent(BritepathFamily bpFam, DesktopClient currClient)
 	{		
@@ -670,6 +710,81 @@ public class ServerUserDB extends ServerPermanentDB
 			bSaveRequired = true;
 		
 		return count;
+	}
+	
+	void createAndSendRecoveryEmail(ONCServerUser recUser)
+	{
+		//build the email
+		ArrayList<ONCEmail> emailAL = new ArrayList<ONCEmail>();
+		ArrayList<ONCEmailAttachment> attachmentAL = new ArrayList<ONCEmailAttachment>();
+		String subject = "Account Recovery - Our Neighbor's Child";
+		
+		//create the email body and recipient information in an
+		//ONCEmail object and add it to the email array list
+		//Create the email body if the user exists
+		String emailBody = createRecoveryEmail(recUser);
+			
+		//Create recipient list for email.
+		ArrayList<EmailAddress> recipientAddressList = new ArrayList<EmailAddress>();
+		
+		//verify the agent has a valid email address and name. If not, return an empty list
+		if(recUser != null && recUser.getEmail() != null && recUser.getEmail().length() > 2 &&
+				recUser.getLastName() != null && recUser.getLastName().trim().length() > 2)
+        {
+			//LIVE EMAIL ADDRESS
+			EmailAddress toAddress = new EmailAddress(recUser.getEmail(), recUser.getLastName());	//live
+			recipientAddressList.add(toAddress);    	
+        }
+	        
+	    //If the recovery email isn't valid, the message will not be sent.
+	    if(emailBody != null && !recipientAddressList.isEmpty())
+	        	emailAL.add(new ONCEmail(subject, emailBody, recipientAddressList));     	
+		
+		//Create the from address string array
+		EmailAddress fromAddress = new EmailAddress(RECOVERY_EMAIL_ADDRESS, "Our Neighbor's Child");
+//		EmailAddress fromAddress = new EmailAddress(TEST_AGENT_EMAIL_SENDER_ADDRESS, "Our Neighbor's Child");
+		
+		//Create the blind carbon copy list 
+		ArrayList<EmailAddress> bccList = new ArrayList<EmailAddress>();
+		bccList.add(new EmailAddress(RECOVERY_EMAIL_ADDRESS, "School Coordinator"));
+//		bccList.add(new EmailAddress("kellylavin1@gmail.com", "Kelly Lavin"));
+//		bccList.add(new EmailAddress("mnrogers123@msn.com", "Nicole Rogers"));
+//		bccList.add(new EmailAddress("johnwoneill@cox.net", "John O'Neill"));
+		
+		//Google Mail
+		ServerCredentials creds = new ServerCredentials("smtp.gmail.com", RECOVERY_EMAIL_ADDRESS, RECOVERY_EMAIL_PASSWORD);
+		
+	    ServerEmailer oncEmailer = new ServerEmailer(fromAddress, bccList, emailAL, attachmentAL, creds);
+	    oncEmailer.execute();
+	    
+	    //now that an email has been scheduled, update the user acoount 
+	}
+	
+	String createRecoveryEmail(ONCServerUser su)
+	{
+        //Create the text part of the email using html
+		String link = String.format("\"http://oncdms.org:%d/recoverylogin?caseID=%s\">recovery.oncdms.org", 
+				8902, su.getRecoveryID());
+		
+		String msg = "<html><body><div>" +
+			"<p>Dear " + su.getFirstName() + ",</p>"
+			+ "<p>Thank you for helping Our Neighbor's Child!! We received your recovery request.</p> "
+			+ "<p><b>Please read the directions in this email carefully in order to regain access to our website.</b></p>"
+			+ "<p>This email contains a link that will take you to our recovery login webpage. The link will "
+			+ "be active for approximately <b><i>one hour</i><b>. On the recovery login webpage, your User Name "
+			+ "will automatically appear in the User Name input field. Please take note of your User Name and "
+			+ "remember to use it for future access.</p>"
+			+ "<p>You must enter a case sensitive temporary password: <b>" + su.getUserPW()
+			+ " </b>in the Password input field prior to clicking the login button. If the recovery is successful,"
+			+ " our website will respond by requiring you to set a new password for subsequent access to your "
+			+ "account.</p>"	
+			+"<p>Here is the link to access our recovery login webpage: <a href=" + link + "</a></p>"
+		    +"<p>Our Neighbor's Child<br>"
+		    +"P.O. Box 276<br>"
+		    +"Centreville, VA 20120<br>"
+		    +"<a href=\"http://www.ourneighborschild.org\">www.ourneighborschild.org</a></p></div>";
+		    
+        return msg;
 	}
 /*	
 	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>

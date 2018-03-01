@@ -42,6 +42,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
+	private static final String VERIFY_IDENTITY_HTML = "VerifyIdentity.htm";
+	private static final String LOGIN_ERROR_HTML = "LoginError.htm";
+	private static final String RECOVERY_LOGIN_HTML = "LoginRecovery.htm";
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
 	private static final String CLEAR_X_FILE = "clear_x.gif";
@@ -50,6 +53,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String VANILLA_FONT_FILE = "vanilla.ttf";
 	private static final String ONC_STYLE_SHEET_CSS = "ONCStyleSheet.css";
 	private static final String ONC_DIALOG__STYLE_SHEET_CSS = "ONCDialogStyleSheet.css";
+	private static final String ONC_LOGIN__STYLE_SHEET_CSS = "ONCLoginStyleSheet.css";
 	private static final String JQUERY_JS_FILE = "jquery-1.11.3.js";
 	
 	protected static final String SESSION_ID_NAME = "SID=";
@@ -91,12 +95,15 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("updatepartner", readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_UPDATE_HTML)));
 			webpageMap.put("regiontable", readFile(String.format("%s/%s",System.getProperty("user.dir"), REGION_TABLE_HTML)));
 			webpageMap.put("updateregion", readFile(String.format("%s/%s",System.getProperty("user.dir"), REGION_UPDATE_HTML)));
-			webpageMap.put("driversignin", readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_SIGN_IN_HTML)));
-			webpageMap.put("volunteersignin", readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_SIGN_IN_HTML)));
-			webpageMap.put("volunteerregistration", readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_REGISTRATION_HTML)));
+			webpageMap.put("/driversignin", readFile(String.format("%s/%s",System.getProperty("user.dir"), DRIVER_SIGN_IN_HTML)));
+			webpageMap.put("/volunteersignin", readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_SIGN_IN_HTML)));
+			webpageMap.put("/volunteerregistration", readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_REGISTRATION_HTML)));
 			webpageMap.put("online", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML)));
-			webpageMap.put("welcome", readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML)));
+			webpageMap.put("offline", readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML)));
 			webpageMap.put("changepw", readFile(String.format("%s/%s",System.getProperty("user.dir"), CHANGE_PASSWORD_HTML)));
+			webpageMap.put("/lostcredentials", readFile(String.format("%s/%s",System.getProperty("user.dir"), VERIFY_IDENTITY_HTML)));
+			webpageMap.put("loginerror", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGIN_ERROR_HTML)));
+			webpageMap.put("recoverylogin", readFile(String.format("%s/%s",System.getProperty("user.dir"), RECOVERY_LOGIN_HTML)));
 			
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
 			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
@@ -106,6 +113,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("vanilla", readFileToByteArray(VANILLA_FONT_FILE));
 			webfileMap.put("oncstylesheet", readFileToByteArray(ONC_STYLE_SHEET_CSS));
 			webfileMap.put("oncdialogstylesheet", readFileToByteArray(ONC_DIALOG__STYLE_SHEET_CSS));
+			webfileMap.put("oncloginstylesheet", readFileToByteArray(ONC_LOGIN__STYLE_SHEET_CSS));
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
 			
 			return "UPDATED_WEBPAGES";

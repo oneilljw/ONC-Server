@@ -14,10 +14,6 @@
   		document.getElementById('year').value= new Date().getFullYear().toString();
   		document.getElementById('activity').value= '20';
   		
-  		//update the nav bar links with token
-  		document.getElementById('logoutlink').href="onchomepage";
-  		document.getElementById('homelink').href="onchomepage";
-  		
   		//show the success dialog if driver was registered
   		var urlmode = window.location.href;
 	  	if(urlmode.indexOf("registerdriver") > -1)
@@ -383,15 +379,15 @@
 <a href="#registereddlg" id="registeredanchor" style="visibility: hidden">Success</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">Delivery Volunteer Sign-In & Registation</span><br>
+    <p><span id="banner">Delivery Volunteer Sign-In & Registration</span><br>
 	<span id="message">(Please complete and click Sign-In / Register at the bottom of the form)</span></p>
   </div>
    <nav>
     <ul>
-	    <li id="homeli"><a id='homelink'>Home</a></li>
+	    <li id="homeli"><a id='homelink' href='onchomepage'>Home</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	    <li id="logoutli"><a id='logoutlink' href=onchomepage>Logout</a></li>
 	</ul>
   </nav>
   <form id='signinform' name='signinform'>  

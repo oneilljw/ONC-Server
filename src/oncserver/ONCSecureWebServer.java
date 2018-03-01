@@ -131,14 +131,13 @@ public class ONCSecureWebServer
 		int contextCount = 0;
 		
 		//set up the oncWebHttpHandler
-		String[] contexts = {"/dbStatus", "/agents", "/getagent", "/getmeal", "/children",
-							"/adults", "/wishes", "/reqchangepw","/activities", "/activitydays",
-							"/address", "/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",
-							"/profileunchanged", "/updateuser", "/driversignin", "/signindriver",
-							"/volunteersignin", "/signinvolunteer", "/partnerupdate", "/updatepartner",
-							"/contactinfo", "/groups", "/partners", "/partnertable",
-							"/regiontable", "/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
-							"/volunteerregistration", "/registervolunteer", "/dashboard",
+		String[] contexts = {"/dbStatus", "/agents", "/getagent", "/getmeal", "/children", "/adults", 
+							"/wishes", "/reqchangepw","/activities", "/activitydays", "/address", 
+							"/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",
+							"/profileunchanged", "/updateuser", "/partnerupdate", "/updatepartner",
+							"/contactinfo", "/groups", "/partners", "/partnertable", "/regiontable", 
+							"/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
+							"/dashboard",
 							};
 		
 		ONCWebHttpHandler oncHttpHandler = new ONCWebHttpHandler();
@@ -151,7 +150,7 @@ public class ONCSecureWebServer
 
 		//set up the login handler
 		String[] loginContexts = {"/welcome", "/logout", "/login", "/onchomepage", "/metrics",
-								  "/timeout"};
+								  "/timeout", "/lostcredentials", "/verifyidentity", "/recoverylogin"};
 		
 		LoginHandler loginHandler = new LoginHandler();
 		for(String contextname: loginContexts)
@@ -163,7 +162,7 @@ public class ONCSecureWebServer
 		
 		//set up the common handler
 		String[] commonContexts = {"/jquery.js", "/favicon.ico", "/oncsplash", "/clearx", "/onclogo", 
-								   "/oncstylesheet", "/oncdialogstylesheet", "/vanilla"};
+								   "/oncstylesheet", "/oncdialogstylesheet", "/oncloginstylesheet", "/vanilla"};
 		
 		CommonHandler commonHandler = new CommonHandler();
 		for(String contextname: commonContexts)
@@ -182,6 +181,18 @@ public class ONCSecureWebServer
 		for(String contextname: familyContexts)
 		{
 			context = server.createContext(contextname, familyHandler);
+			context.getFilters().add(new ParameterFilter());
+			contextCount++;
+		}
+		
+		//set up the volunteer handler
+		String[] volContexts = {"/driversignin", "/signindriver", "/volunteersignin", "/signinvolunteer",
+								"/volunteerregistration", "/registervolunteer"};
+				
+		VolunteerHandler volHandler = new VolunteerHandler();
+		for(String contextname : volContexts)
+		{
+			context = server.createContext(contextname, volHandler);
 			context.getFilters().add(new ParameterFilter());
 			contextCount++;
 		}

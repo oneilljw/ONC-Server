@@ -4,7 +4,8 @@ public enum HttpCode
 {
 	Ok (200),
 	Redirect (301),
-	Forbidden (403);
+	Forbidden (403),
+	Method_Not_Allowed (405);
 	
 	private final int code;
 	

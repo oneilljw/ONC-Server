@@ -1,104 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-    <title>Our Neighbor's Child Login</title>
-    <style>     
-    		body {background-color: white;}
-    		label
-    		{
-    			width: 5em;
-    			float: left;
-    			text-align: right;
-    			margin-right: 0.5em;
-    			display: block;
-    			color: black;
-    		}
-    		input
-    		{
-    			color: black;
-    			background: #FFFFE4;
-    			border: 1px solid #781351;
-    			width: 15em;
-    		}
-    		#submit
-    		{
-    			display: block;
-    			margin: 0px auto;
-    			margin-top: 12px;
-    			background-color: #336699;
-    			color: #ffffff;
-    			border: 4px outset white;
-    			width: 8em;
-    		}
-   		fieldset
-    		{
-  			margin: 0;
-  			position: absolute;            
-  			top: 56%; 
-  			left: 52%;                    
-   			transform: translate(-50%, -50%); 
-  			border: 4px solid #781351;
-    			color: #00F;
-    			background-color: #E8E8E8;
-    			width: 21em
-    		}
-    		legend
-    		{
-    			color: black;
-    			background: #ffa20c;
-    			border: 1px solid #781351;
-    			padding: 2px 6px
-    		}
-/*    
-		@font-face
-    		{
-  			font-family: 'vanilla';
-  			src: url('vanilla.ttf'); 
-		}
-    		#header
-    		{
-	   		font-family:"vanilla" !important;	
-   			font-size:40px !important;
-   			color:#FFFFFF !important;
-   			margin-top: 30px;
-   			margin-left: 40px;
-    		}
-*/    
-    		#inner
-    		{
-   			margin-top: -20px;
-			height:600px;
-			position: relative;
-			background-image: url(oncsplash.gif);
-			background-repeat: no-repeat;
-	  		background-position: center;
-		}
-		.legend-major
-		{
-  			padding: 0.2em 0.5em;
-  			border:2px solid black;
-  			background-color: #E5FFCC;
-  			font-size:80%;
-  			text-align:left;
-	 	}
-	 	.linetwo
-	 	{
-	 		margin-top: 12px;
-	 	}
-    </style>
+<meta charset="UTF-8">
+<title>Our Neighbor's Child Login</title>
+<link rel="stylesheet" type="text/css" href="oncloginstylesheet.css">
+<style>
+  a 
+  { 
+  	font-size: 12px;
+  	text-decoration: none;
+  }
+  a:link { color: red; }
+  a:visited { color: red; }
+  a:hover { color: green; }
+  #attempts 
+  {
+  	padding-top: 5px;
+  	color: red;
+  	font-size: 12px;
+  	float: left; 
+  }
+  #forgotpw { float: right; }
+</style>
 </head>
 <body>
   <div id="inner">
 	<form action="login" method="post">
       <fieldset>
-    	<legend class='legend-major'>Our Neighbor's Child Login</legend>
-    	<p align="center"><b><i>WELCOME_MESSAGE</i></b></p>
-    	<label for="username">User Name:</label>
-    	<input type="text" id="username" name="field1" autofocus/>
-    	<label for="password" class='linetwo' >Password:</label>
-    	<input class='linetwo' type="password" id="password" name="field2"><br>
-    	<input id="submit" type="submit" value="Login">
+    		<legend class='legend-major'>LEGEND_MESSAGE</legend>
+    		<p><font color="COLOR">WELCOME_MESSAGE</font></p>
+    		<label for="username">User Name:</label>
+    		<input type="text" id="username" name="field1" autofocus/>
+    		<label for="password" class='linetwo' >Password:</label>
+    		<input class='linetwo' type="password" id="password" name="field2">
+    		<input id="submit" type="submit" value="Login">
+    		<div>
+    		  <span id='attempts'>LOGIN_ATTEMPT</span>
+      	  <span id='forgotpw'><a href='lostcredentials'>Forgot Password?</a></span>
+      	</div>
       </fieldset>
     </form>
   </div>  
