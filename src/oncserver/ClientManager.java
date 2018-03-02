@@ -271,8 +271,16 @@ public class ClientManager extends ClientEventGenerator
 	 * **********************************************************************************/
 	void logoutWebClient(WebClient wc)
 	{
-		webClientAL.remove(wc);
-		fireClientChanged(this, ClientType.WEB, ClientEventType.LOGOUT, null);
+		System.out.println("Web client SID= " + wc.getSessionID());
+		int index = 0;
+		while(index<webClientAL.size() && !webClientAL.get(index).getSessionID().equals(wc.getSessionID()))
+			index++;
+		
+		if(index < webClientAL.size())
+		{
+			webClientAL.remove(index);
+			fireClientChanged(this, ClientType.WEB, ClientEventType.LOGOUT, null);
+		}
 	}
 	
 	void clientLoginAttempt(boolean bValid, String mssg)

@@ -83,18 +83,17 @@ public class LoginHandler extends ONCWebpageHandler
 		{
     			Headers respHeader = t.getResponseHeaders();
     			WebClient wc;
-    		
+    			
     			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
+    				//logout the client
+    				clientMgr.logoutWebClient(wc);
+    					
     				//advise the browser to delete the session cookie per RFC6265
     				ArrayList<String> headerCookieList = new ArrayList<String>();
     				String delCookie = String.format("%sdeleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT", SESSION_ID_NAME);
     				headerCookieList.add(delCookie);
-    				respHeader.put("Set-Cookie",  headerCookieList);
-    			
-    				//logout the client
-    				clientMgr.logoutWebClient(wc);
-    					
+    				respHeader.put("Set-Cookie",  headerCookieList);	
     			}
     			else		//Handle if client has timed out or is an impostor
     				clientMgr.addLogMessage("ONCHttpHandler.handle/logut: logout failure, client %s not found");
