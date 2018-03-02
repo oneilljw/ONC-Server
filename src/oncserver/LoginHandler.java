@@ -79,11 +79,11 @@ public class LoginHandler extends ONCWebpageHandler
     		
     			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
-		else if(requestURI.contains("/logout"))
+		else if(requestURI.equals("/logout"))
 		{
     			Headers respHeader = t.getResponseHeaders();
     			WebClient wc;
-    			
+    			clientMgr.addLogMessage("Logout request received");
     			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
     				//logout the client
@@ -96,7 +96,33 @@ public class LoginHandler extends ONCWebpageHandler
     				respHeader.put("Set-Cookie",  headerCookieList);	
     			}
     			else		//Handle if client has timed out or is an impostor
-    				clientMgr.addLogMessage("ONCHttpHandler.handle/logut: logout failure, client %s not found");
+    				clientMgr.addLogMessage("ONCHttpHandler.handle/logut: logout failure, client not found");
+    		
+    			//send a redirect header to redirect to the public ONC webpage
+    			ArrayList<String> headerLocationList = new ArrayList<String>();
+    			headerLocationList.add("http://www.ourneighborschild.org");
+    			respHeader.put("Location", headerLocationList);
+  	
+    			sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
+		}
+		else if(requestURI.equals("/terminate"))
+		{
+    			Headers respHeader = t.getResponseHeaders();
+    			WebClient wc;
+    			clientMgr.addLogMessage("Terminate request received");
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+    			{
+    				//logout the client
+    				clientMgr.logoutWebClient(wc);
+    					
+    				//advise the browser to delete the session cookie per RFC6265
+    				ArrayList<String> headerCookieList = new ArrayList<String>();
+    				String delCookie = String.format("%sdeleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT", SESSION_ID_NAME);
+    				headerCookieList.add(delCookie);
+    				respHeader.put("Set-Cookie",  headerCookieList);	
+    			}
+    			else		//Handle if client has timed out or is an impostor
+    				clientMgr.addLogMessage("ONCHttpHandler.handle/terminate: failure, client not found");
     		
     			//send a redirect header to redirect to the public ONC webpage
     			ArrayList<String> headerLocationList = new ArrayList<String>();

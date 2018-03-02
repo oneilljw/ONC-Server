@@ -271,7 +271,6 @@ public class ClientManager extends ClientEventGenerator
 	 * **********************************************************************************/
 	void logoutWebClient(WebClient wc)
 	{
-		System.out.println("Web client SID= " + wc.getSessionID());
 		int index = 0;
 		while(index<webClientAL.size() && !webClientAL.get(index).getSessionID().equals(wc.getSessionID()))
 			index++;

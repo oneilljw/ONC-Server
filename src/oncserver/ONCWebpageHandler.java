@@ -307,21 +307,19 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	
 	String invalidTokenReceived()
 	{
-		String response = null;
-		try {
-			if(ONCSecureWebServer.isWebsiteOnline())
-			{
-				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML));
-				response = response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
-			}
-			else
-			{
-				response = readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML));
-				response = response.replace("TIME_BACK_UP", "after 4pm EDT");
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		String response;
+		if(ONCSecureWebServer.isWebsiteOnline())
+		{
+			response = webpageMap.get("online");
+			response = response.replace("COLOR", "red");
+			response = response.replaceAll("LEGEND_MESSAGE", "Our Neighbor's Child Login");
+			response = response.replace("WELCOME_MESSAGE", "Your session expired, please login again:");
+			response = response.replace("LOGIN_ATTEMPT", "");
+		}
+		else
+		{
+			response = webpageMap.get("offline");
+			response = response.replace("TIME_BACK_UP", ONCSecureWebServer.getWebsiteTimeBackOnline());
 		}
 		
 		return response;
@@ -330,7 +328,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	HtmlResponse invalidTokenReceivedToJsonRequest(String mssg, String callback)
 	{
 		//send an error message json that will trigger a dialog box in the client
-		String json = "{\"error\":\"Your seesion expired due to inactivity\"}";
+		String json = "{\"error\":\"Your session expired due to inactivity\"}";
 		
 //		return callback +"(" + json +")";
 		
