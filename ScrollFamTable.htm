@@ -27,9 +27,7 @@
     			var homelinkli = document.getElementById('homelinkli');
     			homelinkli.parentNode.removeChild(homelinkli);
     		}
- 
-  		document.getElementById('logoutlink').href='logout';
-		
+    		
    	 	//get the list of years from the data base and put it in the year combo box
     		var dbyearsparams = "callback=?";
     		$.getJSON('dbStatus', dbyearsparams, function(data)
@@ -536,6 +534,12 @@
         return ok;
     }
 	
+	function onLogoutLink()
+	{
+		var params = {};
+		post('logout', params);
+	}
+	
 	function onSessionTimeout()
 	{
 		 window.location.assign('timeout');
@@ -553,14 +557,14 @@
 
 	    for(var key in params) 
 	    {
-	    	if(params.hasOwnProperty(key))
+	    		if(params.hasOwnProperty(key))
 	        {
 	            var hiddenField = document.createElement("input");
 	            hiddenField.setAttribute("type", "hidden");
 	            hiddenField.setAttribute("name", key);
 	            hiddenField.setAttribute("value", params[key]);
 
-	        	form.appendChild(hiddenField);
+	        		form.appendChild(hiddenField);
 	        }
 	    }
 
@@ -695,7 +699,7 @@
 		    </ul>
 		  </div>
 	    </li>
-	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	    <li id="logoutli"><a  href="javascript:onLogoutLink()">Logout</a></li>
 	</ul>
   </nav>
   <div class='controlbar'>

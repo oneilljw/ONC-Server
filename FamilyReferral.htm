@@ -31,8 +31,7 @@
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   		
   		//update the nav bar links
-  		document.getElementById('logoutlink').href="logout"; 
-  		document.getElementById('homelink').href="startpage?year=' + sessionStorage.getItem('curryear') 
+  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear') 
   				+'&famref=' + sessionStorage.getItem('famref');
   		
   		//clear the group combobox
@@ -419,7 +418,7 @@
 	    <li id="homeli"><a id='homelink'>Home</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink'>Logout</a></li>
+	    <li id="logoutli"><a href='javascript:onLogoutLink()'>Logout</a></li>
 	</ul>
   </nav>
   <form id="familyform" action="referfamily" method="post">

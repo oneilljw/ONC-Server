@@ -96,6 +96,12 @@
   		
   		return numberGood;
   	}
+  	
+  	function onLogoutLink()
+	{
+		var params = {};
+		post('logout', params);
+	}
 	
 	function onSessionTimeout()
 	{
@@ -165,7 +171,7 @@
 	    <li id="homeli"><a id='homelink' href='startpage'>Home</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink' href='logout'>Logout</a></li>
+	    <li id="logoutli"><a  href='javascript:onLogoutLink()'>Logout</a></li>
 	</ul>
   </nav>
   <form id="updatepartner" action="updatepartner" method="post">

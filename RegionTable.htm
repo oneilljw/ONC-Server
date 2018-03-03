@@ -148,6 +148,12 @@
     {
 		window.location=document.getElementById('closepopup').href;
     }
+    
+    function onLogoutLink()
+	{
+		var params = {};
+		post('logout', params);
+	}
 	
 	function onSessionTimeout()
 	{
@@ -304,7 +310,7 @@
 	    <li id="homelinkli"><a id='homelink' href='dashboard'>Dashboard</a></li>
 	</ul>
 	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink' href='logout'>Logout</a></li>
+	    <li id="logoutli"><a  href='javascript:onLogoutLink()'>Logout</a></li>
 	</ul>
   </nav>
   <div class='controlbar'>

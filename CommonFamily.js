@@ -1,7 +1,7 @@
 /*!
- * ONC Common Family JavaScript library v1.1
+ * ONC Common Family JavaScript library v1.2
  * Common functions for family referral and family info editing web pages
- * Date: 2017-11-01
+ * Date: 2018-03-03
  */
 function updateChildTable(bAction)
 {
@@ -700,6 +700,12 @@ function isNumericPhoneNumber(phonenumber, separator)
 		testNumber = phonenumber.replace(/./g, '');
 
 	return !isNaN(testNumber);	
+}
+
+function onLogoutLink()
+{
+	var params = {};
+	post('logout', params);
 }
 
 function onSessionTimeout()

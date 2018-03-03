@@ -317,6 +317,12 @@
         return ok;
     }
 	
+	function onLogoutLink()
+	{
+		var params = {};
+		post('logout', params);
+	}
+	
 	function onSessionTimeout()
 	{
 		 window.location.assign('timeout');
@@ -483,7 +489,7 @@
 		    </ul>
 		  </div>
 	    </li>
-	    <li id="logoutli"><a id='logoutlink' href='logout'>Logout</a></li>
+	    <li id="logoutli"><a href='javascript:onLogoutLink()'>Logout</a></li>
 	</ul>
   </nav>
   <div class='controlbar'>
