@@ -105,7 +105,7 @@ public class LoginHandler extends ONCWebpageHandler
   	
     			sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
 		}
-		else if(requestURI.equals("/terminate"))
+		else if(requestURI.startsWith("/logout"))
 		{
     			Headers respHeader = t.getResponseHeaders();
     			WebClient wc;
