@@ -104,14 +104,14 @@
     		var groupparams = "agentid=-1&default=on&callback=?";
     		$.getJSON('groups', groupparams, function(data)
     		{
-    			//clear the group combobox
-        		groupcb.options.length = 0;
+    				//clear the group combobox
+        			groupcb.options.length = 0;
     		
-	    		//add the groups for the agent
-    			for (var i=0; i < data.length; i++)
-    				addComboBoxOption(groupcb, data[i].name, data[i].id);
+	    			//add the groups for the agent
+    				for (var i=0; i < data.length; i++)
+    					addComboBoxOption(groupcb, data[i].name, data[i].id);
 	    	
-    			getAgentsAndFamiliesFromServer(agentcb, year, groupcb.value);
+    				getAgentsAndFamiliesFromServer(agentcb, year, groupcb.value);
     		});    	
     }
     
@@ -149,7 +149,9 @@
     	
     		$.getJSON('families', familiesparams, function(data)
     		{
-    			if(year === sessionStorage.getItem('curryear'))
+    			if(data.hasOwnProperty('error'))
+    				window.location=document.getElementById('timeoutanchor').href;
+    			else if(year === sessionStorage.getItem('curryear'))
     			{
     				cyFamJson = data;
         			updateCYTable();
@@ -765,7 +767,7 @@
       </tbody>
 	</table>
   </div>
-  <!-- Edit Profile Dialog -->
+<!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
 	<div id='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
@@ -791,12 +793,12 @@
     	</div> 
 	</div>
   </div>
-  <!-- FAQ sDialog -->
+<!-- FAQ Dialog -->
   <div id="faqdlg" class="textDialog">
 	<div id='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
 		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
+		  <img src="onclogo" height="45" width="65">
 		  <span id='dialogmssg'>Frequently Asked Questions (scroll to see all):</span>
 		</div>
     	<dl>
@@ -832,12 +834,12 @@
 		</dl>
 	</div>
   </div>
-  <!-- FAQ sDialog -->
+<!-- Codes Dialog -->
   <div id="defdlg" class="textDialog">
 	<div id='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
 		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
+		  <img src="onclogo" height="45" width="65">
 		  <span id='dialogmssg'>DNS Codes And Status Definitions (scroll to see all):</span>
 		</div>
     	<dl>
@@ -889,7 +891,7 @@
 		      		We were unable to confirm an adult would be home. Referring agents can help
 		      		ensure delivery by asking the family to respond to ONC's next attempt to contact them.
 		      </dd>
-		      <dt>Confirmed &#x2713</dt>
+		      <dt>Confirmed &#x2713;</dt>
 		      <dd>Applies to ONC Gift Delivery only: The family confirmed an adult would be home on
 		      		Sunday, December 17, 2017 from from 1pm - 4pm to accept gift delivery.
 		      </dd>
@@ -903,16 +905,16 @@
 		      <dt>Requested</dt>
 		      <dd>Indicates the family referral requested holiday gift assistance.</dd>
 		      <dt>Selected</dt>
-		      <dd>Indicates gifts have been selected for each eligble member in the family.</dd>
+		      <dd>Indicates gifts have been selected for each eligible member in the family.</dd>
 		      <dt>Received</dt>
-		      <dd>Indicates gifts have been received for each eligble member from an ONC gift assistance partner.</dd>
+		      <dd>Indicates gifts have been received for each eligible member from an ONC gift assistance partner.</dd>
 		      <dt>Verified</dt>
 		      <dd>Indicates gifts have been double-checked for accuracy in preparation for packaging.</dd>
 		      <dt>Packaged</dt>
 		      <dd>Indicates gifts have been packaged in preparation for delivery.</dd>
 		      <dt>Assigned</dt>
 		      <dd>Indicates gift delivery has been assigned to a delivery volunteer and delivery is pending.</dd>
-		      <dt>Delivered &#x2713</dt>
+		      <dt>Delivered &#x2713;</dt>
 		      <dd>Indicates gifts have been successfully delivered to the family's delivery address.</dd>
 		      <dt>Attempted</dt>
 		      <dd>Indicates that our volunteer attempted to deliver the family's gifts, by was unable to complete
@@ -924,7 +926,7 @@
 		      <dd>Indicates gifts have been given to the counselor who referred the family. The counselor will arrange
 		      		delivery directly with the family.
 		      </dd>
-		      <dt>Referred &#x2713</dt>
+		      <dt>Referred &#x2713;</dt>
 		      <dd>Indicates the family is not in ONC's serving area and a service provider in this family's
 		      		area has agreed to accept the referral and serve the family as resources are available.
 		      </dd>
@@ -941,7 +943,7 @@
 		      <dd>Indicates ONC has assigned, but not yet referred this request to WFCM or the meal 
 		      		assistance provider serving their area.
 		      </dd>
-		      <dt>Referred &#x2713</dt>
+		      <dt>Referred &#x2713;</dt>
 		      <dd>Indicates ONC referred the family's meal assistance request to WFCM or another
 		      		provider who will service the meal assistance request.
 		      </dd>
@@ -955,7 +957,7 @@
 	<div id='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
 		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
+		  <img src="onclogo" height="45" width="65">
 		  <span id='dialogmssg'>Change Password</span>
 		</div>
 		<p id='pw_mssg'>Enter current and new password:</p>
@@ -971,11 +973,11 @@
     	</div> 
 	</div>
   </div>
-  <!-- Timeout Dialog -->
+<!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
 	<div id='inner'>
 		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
+		  <img src="onclogo" height="45" width="65">
 		  <span id='dialogmssg'>Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>

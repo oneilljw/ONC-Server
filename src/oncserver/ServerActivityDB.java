@@ -14,23 +14,33 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import ourneighborschild.SignUp;
+import ourneighborschild.SignUpStatus;
 import ourneighborschild.VolunteerActivity;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerActivityDB extends ServerSeasonalDB
+public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 {
-	private static final int ACTIVITY_DB_HEADER_LENGTH = 16;
+	private static final int ACTIVITY_DB_HEADER_LENGTH = 17;
 	private static final int COMMENT_ACTIIVTY_IDENTIFIER_LENGTH = 4;
 	
-	private static List<ActivityDBYear> activityDB;
+	
 	private static ServerActivityDB instance = null;
+	private static SignUpGeniusIF geniusIF;
+	
+	private static List<ActivityDBYear> activityDB;
+	private List<SignUp> signUpList;
 
 	private ServerActivityDB() throws FileNotFoundException, IOException
 	{
 		//create the activity data bases for TOTAL_YEARS number of years
 		activityDB = new ArrayList<ActivityDBYear>();
+		
+		geniusIF = SignUpGeniusIF.getInstance();
+		geniusIF.addSignUpListener(this);
+		signUpList = new ArrayList<SignUp>();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -52,6 +62,11 @@ public class ServerActivityDB extends ServerSeasonalDB
 			//set the next id
 			activityDBYear.setNextID(getNextID(activityDBYear.getList()));
 		}
+		
+		//populate the list of sign ups. The SignUp Genius interface will create a thread
+		//that will fetch current signups and the callback thru the listener will populate
+		//the list
+		geniusIF.requestSignUpList(SignUpStatus.expired);
 	}
 	
 	public static ServerActivityDB getInstance() throws FileNotFoundException, IOException
@@ -328,6 +343,11 @@ public class ServerActivityDB extends ServerSeasonalDB
 		else
 			return "DELETE_FAILED";	
 	}
+	
+	String requestSignUps()
+	{
+		return null;
+	}
 
 
 	@Override
@@ -380,6 +400,48 @@ public class ServerActivityDB extends ServerSeasonalDB
 		return sdf.format(lastyearDate.getTime());
 	}
 	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void signUpDataReceived(SignUpEvent event)
+	{
+		if(event.type() == SignUpEventType.SIGNUP)
+		{
+			signUpList = (List<SignUp>) event.getSignUpObject();
+			
+			//debug
+//			for(SignUp su : signUpList)
+//				System.out.println(String.format("ServActDB.signUpDataRec: title= %s, id= %d ", su.getTitle(), su.getSignupid()));
+
+			//send the list to current year clients. Only current year clients should request 
+			//an update of sign-ups. This might have to be changed, however, such that this
+			//method has to determine the year for each sign up received and send multiple lists
+			Gson gson = new Gson();
+			Type listType = new TypeToken<ArrayList<SignUp>>(){}.getType();
+			
+			String clientSignUpJson = "UPDATED_SIGNUPS" + gson.toJson(signUpList, listType);
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientSignUpJson);
+		}	
+	}
+	
+	@Override
+	void save(int year)
+	{
+		 ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
+		 
+		 if(activityDBYear.isUnsaved())
+		 {
+			 String[] header = {"ID", "Genius ID", "Category" ,"Name","Start Date","Start Time",
+					 			"End Date","End Time", "Location", "Description", 
+					 			"Open", "Notify",
+					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
+			 
+			String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);
+			exportDBToCSV(activityDBYear.getList(), header, path);
+			activityDBYear.setChanged(false);
+		}
+	}
+	
 	private class ActivityDBYear extends ServerDBYear
 	{
 		private List<VolunteerActivity> activityList;
@@ -394,24 +456,6 @@ public class ServerActivityDB extends ServerSeasonalDB
 	    List<VolunteerActivity> getList() { return activityList; }
 	    
 	    void add(VolunteerActivity addedActivity) { activityList.add(addedActivity); }
-	}
-
-	@Override
-	void save(int year)
-	{
-		 ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
-		 
-		 if(activityDBYear.isUnsaved())
-		 {
-			 String[] header = {"ID", "Category" ,"Name","Start Date","Start Time",
-					 			"End Date","End Time", "Location", "Description", 
-					 			"Open", "Notify",
-					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
-			 
-			String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);
-			exportDBToCSV(activityDBYear.getList(), header, path);
-			activityDBYear.setChanged(false);
-		}
 	}
 	
 	private static class VolunteerActivityDateComparator implements Comparator<VolunteerActivity>

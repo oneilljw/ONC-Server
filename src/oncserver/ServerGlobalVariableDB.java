@@ -22,7 +22,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerGlobalVariableDB extends ServerSeasonalDB
 {
-	private static final int GV_HEADER_LENGTH = 7;
+	private static final int GV_HEADER_LENGTH = 8;
 	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	
@@ -80,6 +80,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	
 	Date getSeasonStartDate(int year) { return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartDate(); }
 	Calendar getSeasonStartCal(int year) { return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartCal(); }
+	int getSignUpID(int year) { return globalDB.get(year - BASE_YEAR).getServerGVs().getSignUpGeniusID(); }
 	
 //	Date getDateGiftsRecivedBy(int year)
 //	{
@@ -139,7 +140,8 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     								Long.parseLong(nextLine[1]),
     								nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
     								Long.parseLong(nextLine[3]), Long.parseLong(nextLine[4]),
-    								Long.parseLong(nextLine[5]), Long.parseLong(nextLine[6]));
+    								Long.parseLong(nextLine[5]), Long.parseLong(nextLine[6]),
+    								nextLine[7].isEmpty() ? -1 : Integer.parseInt(nextLine[7]));
     				
     				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
@@ -248,7 +250,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		ServerGVs newYearServerGVs = new ServerGVs(deliveryDate.getTime(), seasonStartDate.getTime(),
 													DEFAULT_ADDRESS, giftsreceivedDate.getTime(),
 													thanksgivingDeadline.getTime(), decemberDeadline.getTime(),
-													familyEditDeadline.getTime());
+													familyEditDeadline.getTime(), -1);
 		
 		GlobalVariableDBYear newGVDBYear = new GlobalVariableDBYear(newYear, newYearServerGVs);
 		globalDB.add(newGVDBYear);
@@ -266,7 +268,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Deadline",
-							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Logging Enabled"};
+							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Sign Up Genius ID"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_YEAR);
 		if(gvDBYear.isUnsaved())

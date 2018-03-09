@@ -22,12 +22,12 @@ import ourneighborschild.VolunteerActivity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerVolunteerDB extends ServerSeasonalDB
+public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListener
 {
-	private static final int DRIVER_DB_HEADER_LENGTH = 24;
+	private static final int DRIVER_DB_HEADER_LENGTH = 25;
 	private static final int ACTIVITY_STRING_COL = 13;
 	private static final int COMMENTS_STRING_COL = 15;
-	private static final String VOLUNTEER_EMAIL_ADDRESS = "schoolcontact@ourneighborschild.org";
+	private static final String VOLUNTEER_EMAIL_ADDRESS = "volunteer@ourneighborschild.org";
 	private static final String VOLUNTEER_EMAIL_PASSWORD = "crazyelf";
 	
 	private static List<VolunteerDBYear> driverDB;
@@ -36,6 +36,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	private static ClientManager clientMgr;
 	private static ServerWarehouseDB warehouseDB;
 	private static ServerActivityDB activityDB;
+	private static ServerGlobalVariableDB gvDB;
+	private static SignUpGeniusIF geniusIF;
 
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
 	{
@@ -45,6 +47,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		clientMgr = ClientManager.getInstance();
 		warehouseDB = ServerWarehouseDB.getInstance();
 		activityDB = ServerActivityDB.getInstance();
+		gvDB = ServerGlobalVariableDB.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -63,6 +66,18 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 			//set the next id
 			volunteerDBYear.setNextID(getNextID(volunteerDBYear.getList()));
 		}
+		
+		//connect to sign up genius thur the interface and add a listener to process updates
+		geniusIF = SignUpGeniusIF.getInstance();
+		geniusIF.addSignUpListener(this);
+		
+		//genius activity import test
+//		int signUpGeniusID;
+//		if((signUpGeniusID = gvDB.getSignUpID(2017)) > -1)
+//		{
+//			System.out.println(String.format("ServVolDB.constrct: Reqesting SignUp Content, signUpID= %d", signUpGeniusID));
+//			geniusIF.requestSignUpContent(signUpGeniusID, SignUpReportType.filled);
+//		}
 	}
 	
 	public static ServerVolunteerDB getInstance() throws FileNotFoundException, IOException
@@ -299,7 +314,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		{
 			//Didn't find the volunteer, create and add a new one, including their activity list
 			String group = volParams.get("group").equals("Other") ? volParams.get("groupother") : volParams.get("group");
-			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, volParams.get("delemail"), 
+			ONCVolunteer addedVol = new ONCVolunteer(-1, -1, "N/A", fn, ln, volParams.get("delemail"), 
 					volParams.get("delhousenum"), volParams.get("delstreet"), volParams.get("delunit"),
 					volParams.get("delcity"), volParams.get("delzipcode"), volParams.get("primaryphone"),
 					volParams.get("primaryphone"), "1", activityDB.createActivityList(year, activityParams), 
@@ -575,6 +590,11 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 				
 		return actTableHTML.toString();
 	}
+	
+	void processGeniusActivityUpdate()
+	{
+		
+	}
 
 	@Override
 	void addObject(int year, String[] nextLine)
@@ -594,6 +614,37 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 		volunteerDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 	
+	@Override
+	void save(int year)
+	{
+		 VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		 
+		 if(volunteerDBYear.isUnsaved())
+		 {
+			 String[] driverHeader = {"Driver ID", "Genius ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
+			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Comment", "Activity Code",
+			 			"Group", "Act Comments", "Qty", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
+			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
+			 
+			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);
+			exportDBToCSV(volunteerDBYear.getList(),  driverHeader, path);
+			volunteerDBYear.setChanged(false);
+		}
+	}
+	
+	@Override
+	public void signUpDataReceived(SignUpEvent event)
+	{
+		if(event.type() == SignUpEventType.REPORT)
+		{
+			@SuppressWarnings("unchecked")
+			List<SignUpActivity>  signUpActivityList = (List<SignUpActivity>) event.getSignUpObject();
+			for(SignUpActivity sua : signUpActivityList)
+				System.out.println(String.format("ServVolDB.signUpDataReceived: SignUp Item: %s, %s %s", 
+						sua.getItem(), sua.getFirstname(), sua.getLastname()));
+		}	
+	}
+	
 	private class VolunteerDBYear extends ServerDBYear
 	{
 		private List<ONCVolunteer> volList;
@@ -610,24 +661,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB
 	    void add(ONCVolunteer addedDriver) { volList.add(addedDriver); }
 	}
 
-	@Override
-	void save(int year)
-	{
-		 VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
-		 
-		 if(volunteerDBYear.isUnsaved())
-		 {
-			 String[] driverHeader = {"Driver ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
-			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Comment", "Activity Code",
-			 			"Group", "Act Comments", "Qty", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
-			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
-			 
-			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);
-			exportDBToCSV(volunteerDBYear.getList(),  driverHeader, path);
-			volunteerDBYear.setChanged(false);
-		}
-	}
-	
 	private static class VolunteerActivityDateComparator implements Comparator<VolunteerActivity>
 	{
 		@Override

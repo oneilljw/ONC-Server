@@ -65,15 +65,17 @@
     
     function getPartnersFromServer(year)
     {  	
-    		//get updated agentJson from server and place into group combobox. agentid =-1 defaults
-    		//to the logged in user
-    		var partnerparams = "year=" + year +
-    					  "&callback=?";
-    	
+    		//get partners from the server
+    		var partnerparams = "year=" + year + "&callback=?";
     		$.getJSON('partners', partnerparams, function(data)
     		{
-    			partnerJson = data;
-    			updatePartnerTable();
+    			if(data.hasOwnProperty('error'))
+    				window.location=document.getElementById('timeoutanchor').href;
+    			else
+    			{
+    				partnerJson = data;
+    				updatePartnerTable();
+    			}
     		});    	
     }
     
@@ -166,7 +168,7 @@
     function partnerAction(partnerID)
     {
    	 	sessionStorage.setItem("partnerid", partnerID);
-		var params = {}
+		var params = {};
 		params["partnerid"] = partnerID;
 		
 		post('partnerupdate', params);
@@ -176,7 +178,7 @@
     {
     		sessionStorage.setItem("partnerid", "New");
     	
-    		var params = {}
+    		var params = {};
 		post('partnerupdate', params);
     }
     
@@ -207,7 +209,7 @@
     			userJson = user;
     			if(userJson.hasOwnProperty('error'))
       		{
-					window.location=document.getElementById('timeoutanchor').href;
+				window.location=document.getElementById('timeoutanchor').href;
       		}
     			else if(userJson.lastname !== '')
     			{
@@ -230,7 +232,10 @@
 			params["field2"] = document.getElementById('newpw').value;
     			$.post('reqchangepw', params, function(response)
     			{
-    				document.getElementById('message').textContent= response;
+    				if(response.hasOwnProperty('error'))
+    					window.location=document.getElementById('timeoutanchor').href;
+    				else
+    					document.getElementById('message').textContent= response;
     			});
     		
     			document.getElementById('currpw').value = "";
@@ -242,11 +247,11 @@
     
     function onUpdateProfile()
     {
-    	if(document.getElementById('userfirstname').value !== userJson.firstname ||
-    		document.getElementById('userlastname').value !== userJson.lastname ||
-    		 document.getElementById('userorg').value !== userJson.org ||
-    		  document.getElementById('usertitle').value !== userJson.title ||
-    		   document.getElementById('useremail').value !== userJson.email ||
+    		if(document.getElementById('userfirstname').value !== userJson.firstname ||
+    			document.getElementById('userlastname').value !== userJson.lastname ||
+    		 	document.getElementById('userorg').value !== userJson.org ||
+    		  	document.getElementById('usertitle').value !== userJson.title ||
+    		   	document.getElementById('useremail').value !== userJson.email ||
     		    document.getElementById('userphone').value !== userJson.phone)
     	{
     		var params = "firstname=" + document.getElementById('userfirstname').value
@@ -259,7 +264,10 @@
 		
 			$.getJSON('updateuser', params, function(mssgJson)
 			{
-				document.getElementById('message').textContent= mssgJson.message;
+				if(mssgJson.hasOwnProperty('error'))
+					window.location=document.getElementById('timeoutanchor').href;
+				else
+					document.getElementById('message').textContent= mssgJson.message;
 			});
 		    		
 		    window.location=document.getElementById('closepopup').href;
@@ -275,7 +283,11 @@
 		var params = {}	
 		$.post('profileunchanged', params, function(response)
 		{
-			document.getElementById('message').textContent= response.message;
+			if(data.hasOwnProperty('error'))
+				window.location=document.getElementById('timeoutanchor').href;
+			else
+				document.getElementById('message').textContent= response.message;
+			
 		}, "jsonp");
 		
 		window.location=document.getElementById('closepopup').href;
@@ -438,11 +450,11 @@
 		.textDialog label
 		{
 			float: left;
-    		text-align: right;
-    		margin-right: 0.5em;
-    		display: block;
-    		color: black;
-    		font-size: 85%;
+    			text-align: right;
+    			margin-right: 0.5em;
+    			display: block;
+    			color: black;
+    			font-size: 85%;
 		}
 		dl
 		{	height:300px;
@@ -455,7 +467,7 @@
 		dt:before
 		{
 			content: '\A';
-    		white-space: pre;
+    			white-space: pre;
 		}
 		dd
 		{
@@ -464,7 +476,7 @@
 		#filterspan
 		{
 			display: inline-block;
-    		margin-left: 40px;
+    			margin-left: 40px;
 		}
     </style>
 </head>

@@ -148,7 +148,10 @@
 		
 			$.getJSON('updateuser', params, function(mssgJson)
 			{
-				document.getElementById('message').textContent= mssgJson.message;
+				if(mssgJson.hasOwnProperty('error'))
+					window.location=document.getElementById('timeoutanchor').href;
+				else
+					document.getElementById('message').textContent= mssgJson.message;
 			});
     		
     			window.location=document.getElementById('closepopup').href;
@@ -423,14 +426,18 @@
 
 		$.getJSON('children', childrenparams, function(data)
 		{
-			childrenJson = data;
-			updateChildTable();
-			if(childrenJson.length > 0)
-			{
-				getChildWishesFromServer(year, childrenJson[0].id);
-			}
+			if(data.hasOwnProperty('error'))
+				window.location=document.getElementById('timeoutanchor').href;
 			else
-				$("#twishbody").empty();
+			{
+				childrenJson = data;
+				updateChildTable();
+				
+				if(childrenJson.length > 0)
+					getChildWishesFromServer(year, childrenJson[0].id);
+				else
+					$("#twishbody").empty();
+			}
 		});
     }
     
@@ -631,7 +638,7 @@
 	function updateForChildSelection()
     {
     	//get selected year
-    	var childCB = document.getElementById("childfn");
+    		var childCB = document.getElementById("childfn");
 		var child = childrenJson[childCB.selectedIndex];
 		var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;

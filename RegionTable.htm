@@ -46,8 +46,13 @@
     	
     		$.getJSON('regions', params, function(data)
     		{
-    			regionJson = data;
-    			updateRegionTable();
+    			if(data.hasOwnProperty('error'))
+    				window.location=document.getElementById('timeoutanchor').href;
+    			else
+    			{
+    				regionJson = data;
+    				updateRegionTable();
+    			}
     		});
     }
     function updateRegionTable()
@@ -142,11 +147,6 @@
         
         for(i=0; i<codes.length; i++)
         	select.options[i] = new Option(codes[i], codes[i]);
-    }
-    
-    function onCancel()
-    {
-		window.location=document.getElementById('closepopup').href;
     }
     
     function onLogoutLink()
