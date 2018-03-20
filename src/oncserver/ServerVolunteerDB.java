@@ -25,8 +25,8 @@ import com.google.gson.reflect.TypeToken;
 public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListener
 {
 	private static final int DRIVER_DB_HEADER_LENGTH = 25;
-	private static final int ACTIVITY_STRING_COL = 13;
-	private static final int COMMENTS_STRING_COL = 15;
+	private static final int ACTIVITY_STRING_COL = 14;
+	private static final int COMMENTS_STRING_COL = 16;
 	private static final String VOLUNTEER_EMAIL_ADDRESS = "volunteer@ourneighborschild.org";
 	private static final String VOLUNTEER_EMAIL_PASSWORD = "crazyelf";
 	

@@ -23,7 +23,6 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
-import ourneighborschild.SignUpStatus;
 import ourneighborschild.UserAccess;
 import ourneighborschild.UserStatus;
 
@@ -34,7 +33,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 5.27f;
+	private static final float MINIMUM_CLIENT_VERSION = 5.28f;
 	
 	private int id;
 	private String version;
@@ -359,11 +358,11 @@ public class DesktopClient extends Thread
                 		clientMgr.addLogMessage(command);
                 		output.println(activityDB.getSignUps());
                 }
-                else if(command.startsWith("GET<request_signups>"))
+                else if(command.equals("GET<request_signups>"))
                 {
                 		clientMgr.addLogMessage(command);
                 		SignUpGeniusIF geniusIF = SignUpGeniusIF.getInstance();
-                		geniusIF.requestSignUpList(command.substring(20));
+                		geniusIF.requestSignUpList();
                 		output.println("REQUESTED_SIGNUPS");
                 }
                 else if(command.startsWith("POST<update_signup>"))

@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.SwingWorker;
@@ -17,12 +18,11 @@ import com.google.gson.Gson;
 import ourneighborschild.Frequency;
 import ourneighborschild.GeniusSignUps;
 import ourneighborschild.SignUp;
-import ourneighborschild.SignUpStatus;
 
 public class SignUpGeniusIF
 {
 	private static final String API_KEY = "NGJMZlhzZm5SK3d4L002ODFyek9iQT09";
-	private static final String SIGNUPS_URL = "https://api.signupgenius.com/v2/k/signups/created/%s/?user_key=%s";
+	private static final String SIGNUPS_URL = "https://api.signupgenius.com/v2/k/signups/created/all/?user_key=%s";
 	private static final String SIGNUP_REPORT_URL = "https://api.signupgenius.com/v2/k/signups/report/%s/%d/?user_key=%s";
 	
 	private static SignUpGeniusIF instance;
@@ -35,18 +35,9 @@ public class SignUpGeniusIF
 		return instance;
 	}
 
-	void requestSignUpList(SignUpStatus status)
+	void requestSignUpList()
 	{
-		String url = String.format(SIGNUPS_URL, status.urlCommand(), API_KEY);
-		SignUpGeniusImporter importer = new SignUpGeniusImporter(SignUpEventType.SIGNUP, url);
-		importer.execute();
-	}
-	
-	void requestSignUpList(String json)
-	{
-		Gson gson = new Gson();
-		SignUpStatus status = gson.fromJson(json, SignUpStatus.class);
-		String url = String.format(SIGNUPS_URL, status.urlCommand(), API_KEY);
+		String url = String.format(SIGNUPS_URL, API_KEY);
 		SignUpGeniusImporter importer = new SignUpGeniusImporter(SignUpEventType.SIGNUP, url);
 		importer.execute();
 	}
@@ -171,7 +162,7 @@ public class SignUpGeniusIF
 		//getters
 		public List<SignUp> getSignUps()
 		{
-			List<SignUp> list = new ArrayList<SignUp>();
+			List<SignUp> list = new LinkedList<SignUp>();
 			for(SignUp su : data)
 				list.add(su);
 			

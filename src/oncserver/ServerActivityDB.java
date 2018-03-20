@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,6 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 
 import ourneighborschild.SignUp;
-import ourneighborschild.SignUpStatus;
 import ourneighborschild.GeniusSignUps;
 import ourneighborschild.VolunteerActivity;
 
@@ -88,7 +88,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//populate the list of sign ups. The SignUp Genius interface will create a thread
 		//that will fetch current signups and the callback thru the listener will populate
 		//the list
-		geniusIF.requestSignUpList(SignUpStatus.ALL);
+		geniusIF.requestSignUpList();
 	}
 	
 	public static ServerActivityDB getInstance() throws FileNotFoundException, IOException
@@ -203,11 +203,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 				
 					//see if there are volunteer comments that need to be added to the activity
 					if(!zComments.isEmpty())
-					{
 						addVolunteerCommentsToActivity(volActivity, zComments);
 
-					}
-				
 					volActList.add(volActivity);
 				}
 			}
@@ -398,12 +395,6 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			return "DELETE_FAILED";	
 	}
 	
-	String requestSignUps()
-	{
-		return null;
-	}
-
-
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
@@ -454,9 +445,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return sdf.format(lastyearDate.getTime());
 	}
 	
-	SignUp findSignUp(int signupid)
+	SignUp findSignUp(List<SignUp> searchList, int signupid)
 	{
-		List<SignUp> searchList = geniusSignUps.getSignUpList();
 		int index = 0;
 		while(index < searchList.size() && searchList.get(index).getSignupid() != signupid)
 			index++;
@@ -474,16 +464,18 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			//the frequency and last import time setting in each existing sign up
 			GeniusSignUps geniusSignUpsImported = (GeniusSignUps) event.getSignUpObject();
 			geniusSignUps.setLastSignUpListImportTime(geniusSignUpsImported.getLastSignUpListImportTime());
+			
+			//remove any signUps in the current list that are not in the imported list
+			List<SignUp> currList = geniusSignUps.getSignUpList();
+			Iterator<SignUp> i = currList.iterator();
+			while (i.hasNext()) 
+				if(findSignUp(geniusSignUpsImported.getSignUpList(), i.next().getSignupid()) == null)
+					   i.remove();
 
-			if(geniusSignUpsImported.getSignUpList().isEmpty())
-				geniusSignUps.clear();
-			else
-			{	
-				for(SignUp importedSU : geniusSignUpsImported.getSignUpList())
-				if(findSignUp(importedSU.getSignupid()) == null &&
-					System.currentTimeMillis() < importedSU.getEndtimeInMillis())
-					geniusSignUps.add(importedSU);
-			}
+			//add signUps from the imported list if they are not already in the currList.
+			for(SignUp importedSU : geniusSignUpsImported.getSignUpList())
+				if(findSignUp(currList, importedSU.getSignupid()) == null)
+					currList.add(importedSU);
 			
 			bSignUpsSaveRequested = true;
 			
@@ -491,7 +483,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 //			for(SignUp addedSU : geniusSignUps.getSignUpList())
 //				System.out.println(String.format("ActDB.signUpDataRec: added %s, endtime %d", 
 //							addedSU.getTitle(), addedSU.getEndtime()));
-			saveSignUps();
+//			saveSignUps();
 			
 			Gson gson = new Gson();
 			String clientSignUpJson = "UPDATED_GENIUS_SIGNUPS" + gson.toJson(geniusSignUps, GeniusSignUps.class);
