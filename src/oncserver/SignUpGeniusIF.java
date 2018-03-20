@@ -14,6 +14,8 @@ import javax.swing.SwingWorker;
 
 import com.google.gson.Gson;
 
+import ourneighborschild.Frequency;
+import ourneighborschild.GeniusSignUps;
 import ourneighborschild.SignUp;
 import ourneighborschild.SignUpStatus;
 
@@ -35,7 +37,16 @@ public class SignUpGeniusIF
 
 	void requestSignUpList(SignUpStatus status)
 	{
-		String url = String.format(SIGNUPS_URL, status.toString(), API_KEY);
+		String url = String.format(SIGNUPS_URL, status.urlCommand(), API_KEY);
+		SignUpGeniusImporter importer = new SignUpGeniusImporter(SignUpEventType.SIGNUP, url);
+		importer.execute();
+	}
+	
+	void requestSignUpList(String json)
+	{
+		Gson gson = new Gson();
+		SignUpStatus status = gson.fromJson(json, SignUpStatus.class);
+		String url = String.format(SIGNUPS_URL, status.urlCommand(), API_KEY);
 		SignUpGeniusImporter importer = new SignUpGeniusImporter(SignUpEventType.SIGNUP, url);
 		importer.execute();
 	}
@@ -47,9 +58,9 @@ public class SignUpGeniusIF
 		importer.execute();
 	}
 	
-	void signUpInSummaryReceived(List<SignUp> signUpList)
-	{
-		this.fireSignUpDataChanged(this, SignUpEventType.SIGNUP, signUpList);
+	void signUpSummaryReceived(GeniusSignUps geniusSignUps)
+	{	
+		this.fireSignUpDataChanged(this, SignUpEventType.SIGNUP, geniusSignUps);
 	}
 	
 	void signUpContentReceived(List<SignUpActivity> activityList)
@@ -200,7 +211,8 @@ public class SignUpGeniusIF
     {
     		SignUpEventType type;
     		String url;
-    		SignUps signUps;
+//    	SignUps signUps;
+    		GeniusSignUps importedSignUps;
     		SignUpReport signUpReport;
     		
     		SignUpGeniusImporter(SignUpEventType type, String url)
@@ -226,14 +238,31 @@ public class SignUpGeniusIF
 
 				in.close();
 				
+//				System.out.println(String.format("GenIF response = %s", response.toString()));
+				
 				//process the data in the background thread
 				Gson gson = new Gson();
 				if(type == SignUpEventType.SIGNUP)
-					signUps = gson.fromJson(response.toString(), SignUps.class);
+				{
+					SignUps signUps =  gson.fromJson(response.toString(), SignUps.class);
+										
+					//Create a GeniusSignUps object. For each of the imported sign ups, initialize and 
+					//adjust the time
+					importedSignUps = new GeniusSignUps(signUps.getSignUps());
+
+					for(SignUp su : importedSignUps.getSignUpList())
+					{
+						//Initialize the member variables that are don't come from
+						//the genius import for each sign up. They will be null otherwise.
+						su.setLastImportTimeInMillis(0);
+						su.setFrequency(Frequency.NEVER);
+						
+						//adjust the SignUp Genius end time to milliseconds from seconds
+						su.setEndtime(su.getEndtimeInMillis() * 1000);
+					}
+				}
 				else
 					signUpReport = gson.fromJson(response.toString(), SignUpReport.class);
-
-//				System.out.println(String.format("GeniusIF.getSignUps: code= %d, reponse= %s", con.getResponseCode(), response));
 			} 
 			catch (MalformedURLException e) 
 			{
@@ -262,12 +291,9 @@ public class SignUpGeniusIF
 	    {
 	    		//notify the thread is complete
 	    		if(type == SignUpEventType.SIGNUP)
-	    			signUpInSummaryReceived(signUps.getSignUps());
-	    		else
+	    			signUpSummaryReceived(importedSignUps);
+	    		else if(type == SignUpEventType.REPORT)
 	    			signUpContentReceived(signUpReport.getContent().getSignUpActivities());
-	    			
-	    			
-	    	
 	    }
     }
 }

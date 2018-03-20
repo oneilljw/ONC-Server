@@ -1,6 +1,9 @@
 package oncserver;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.ParseException;
@@ -14,24 +17,38 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JOptionPane;
+
 import ourneighborschild.SignUp;
 import ourneighborschild.SignUpStatus;
+import ourneighborschild.GeniusSignUps;
 import ourneighborschild.VolunteerActivity;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
+
 public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 {
 	private static final int ACTIVITY_DB_HEADER_LENGTH = 17;
 	private static final int COMMENT_ACTIIVTY_IDENTIFIER_LENGTH = 4;
-	
+	private static final String GENIUS_STATUS_FILENAME = "GeniusSignUps.csv";
+	private static final int SIGNUP_RECORD_LENGTH = 5;
 	
 	private static ServerActivityDB instance = null;
 	private static SignUpGeniusIF geniusIF;
 	
 	private static List<ActivityDBYear> activityDB;
-	private List<SignUp> signUpList;
+	
+//	private GeniusStatus geniusStatus;
+	
+//	private List<SignUp> signUpList;
+//	private long lastSignUpListImportTime;
+	
+	private GeniusSignUps geniusSignUps;
+	private boolean bSignUpsSaveRequested;
 
 	private ServerActivityDB() throws FileNotFoundException, IOException
 	{
@@ -40,8 +57,13 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		
 		geniusIF = SignUpGeniusIF.getInstance();
 		geniusIF.addSignUpListener(this);
-		signUpList = new ArrayList<SignUp>();
-
+		
+		//create the list of genius sign-ups. The list of sign ups will populate on
+		//a callback from the separate thread that fetches signups from SignUp Genius
+		geniusSignUps = new GeniusSignUps();
+		importGeniusSignUps(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), GENIUS_STATUS_FILENAME), "Genius Sing Ups", SIGNUP_RECORD_LENGTH);
+		bSignUpsSaveRequested = false;
+		
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
 		{
@@ -66,7 +88,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//populate the list of sign ups. The SignUp Genius interface will create a thread
 		//that will fetch current signups and the callback thru the listener will populate
 		//the list
-		geniusIF.requestSignUpList(SignUpStatus.expired);
+		geniusIF.requestSignUpList(SignUpStatus.ALL);
 	}
 	
 	public static ServerActivityDB getInstance() throws FileNotFoundException, IOException
@@ -77,13 +99,23 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return instance;
 	}
 	
-	//Search the database for the activites for a specified year Return a json list
+	//Search the database for the activities for a specified year Return a json list
 	String getActivities(int year)
 	{
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<VolunteerActivity>>(){}.getType();
 			
 		String response = gson.toJson(activityDB.get(year - BASE_YEAR).getList(), listtype);
+		return response;	
+	}
+	
+	//Return the list of sign-ups
+	String getSignUps()
+	{
+		Gson gson = new Gson();
+//		Type listtype = new TypeToken<ArrayList<SignUp>>(){}.getType();
+				
+		String response = gson.toJson(geniusSignUps, GeniusSignUps.class);
 		return response;	
 	}
 	
@@ -320,6 +352,28 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			return "UPDATE_FAILED";
 	}
 	
+	String updateSignUp(String json)
+	{
+		//Create a sign-up object from the json
+		Gson gson = new Gson();
+		SignUp updatedSignUpReq = gson.fromJson(json, SignUp.class);
+		
+		//find the signUp and update it
+		List<SignUp> signUpList = geniusSignUps.getSignUpList();
+		int index = 0;
+		while(index < signUpList.size() && signUpList.get(index).getSignupid() != updatedSignUpReq.getSignupid())
+			index++;
+		
+		if(index < signUpList.size() && signUpList.get(index).getFrequency() != updatedSignUpReq.getFrequency())
+		{
+			signUpList.get(index).setFrequency(updatedSignUpReq.getFrequency());
+			bSignUpsSaveRequested = true;
+			return "UPDATED_SIGNUP" + gson.toJson(signUpList.get(index), SignUp.class);
+		}
+		else
+			return "UPDATE_FAILED";
+	}
+	
 	String delete(int year, String json)
 	{
 		//Create an object for the delete request
@@ -400,27 +454,50 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return sdf.format(lastyearDate.getTime());
 	}
 	
-	@SuppressWarnings("unchecked")
+	SignUp findSignUp(int signupid)
+	{
+		List<SignUp> searchList = geniusSignUps.getSignUpList();
+		int index = 0;
+		while(index < searchList.size() && searchList.get(index).getSignupid() != signupid)
+			index++;
+		
+		return index < searchList.size() ? searchList.get(index) : null;
+	}
+	 
 	@Override
 	public void signUpDataReceived(SignUpEvent event)
 	{
 		if(event.type() == SignUpEventType.SIGNUP)
 		{
-			signUpList = (List<SignUp>) event.getSignUpObject();
-			
-			//debug
-//			for(SignUp su : signUpList)
-//				System.out.println(String.format("ServActDB.signUpDataRec: title= %s, id= %d ", su.getTitle(), su.getSignupid()));
+			//Set the import time for the list of sign=ups. Go thru each of the imported sign ups.
+			//If it hasn't previously been imported, add it to the current list. That way we preserve
+			//the frequency and last import time setting in each existing sign up
+			GeniusSignUps geniusSignUpsImported = (GeniusSignUps) event.getSignUpObject();
+			geniusSignUps.setLastSignUpListImportTime(geniusSignUpsImported.getLastSignUpListImportTime());
 
-			//send the list to current year clients. Only current year clients should request 
-			//an update of sign-ups. This might have to be changed, however, such that this
-			//method has to determine the year for each sign up received and send multiple lists
-			Gson gson = new Gson();
-			Type listType = new TypeToken<ArrayList<SignUp>>(){}.getType();
+			if(geniusSignUpsImported.getSignUpList().isEmpty())
+				geniusSignUps.clear();
+			else
+			{	
+				for(SignUp importedSU : geniusSignUpsImported.getSignUpList())
+				if(findSignUp(importedSU.getSignupid()) == null &&
+					System.currentTimeMillis() < importedSU.getEndtimeInMillis())
+					geniusSignUps.add(importedSU);
+			}
 			
-			String clientSignUpJson = "UPDATED_SIGNUPS" + gson.toJson(signUpList, listType);
+			bSignUpsSaveRequested = true;
+			
+			//DEBUG. The save won't be necessary during a season as at least one year will be unlocked
+//			for(SignUp addedSU : geniusSignUps.getSignUpList())
+//				System.out.println(String.format("ActDB.signUpDataRec: added %s, endtime %d", 
+//							addedSU.getTitle(), addedSU.getEndtime()));
+			saveSignUps();
+			
+			Gson gson = new Gson();
+			String clientSignUpJson = "UPDATED_GENIUS_SIGNUPS" + gson.toJson(geniusSignUps, GeniusSignUps.class);
+			
 			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientSignUpJson);
+			clientMgr.notifyAllClients(clientSignUpJson);
 		}	
 	}
 	
@@ -439,6 +516,81 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(activityDBYear.getList(), header, path);
 			activityDBYear.setChanged(false);
+		 }
+		
+		 //test to see if genius status should be saved
+		 if(bSignUpsSaveRequested)
+			 saveSignUps();
+	}
+	
+	void importGeniusSignUps(String path, String name, int length) throws FileNotFoundException, IOException
+	{
+		CSVReader reader = new CSVReader(new FileReader(path));
+    		String[]nextLine, header;
+    	
+    		if((header = reader.readNext()) != null)	//Does file have records? 
+    		{
+    			//Read the User File
+    			if(header.length == length)	//Does the record have the right # of fields? 
+    			{
+    				//first record only contains one field and is the last import time for the sign-up list
+    				nextLine = reader.readNext();
+    				if(nextLine != null && nextLine.length > 0)	// nextLine[] is an array of fields from the record
+    				{
+    					geniusSignUps.setLastSignUpListImportTime(nextLine[0].isEmpty() ? 0 : Long.parseLong(nextLine[0]));
+    					while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
+        					geniusSignUps.add(new SignUp(nextLine));
+    				}
+    				else
+    				{
+    					String error = String.format("%s first record error, length = %d", name, nextLine.length);
+    					JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
+    				}
+    			}
+    			else
+    			{
+    				String error = String.format("%s file corrupted, header length = %d", name, header.length);
+    				JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
+    			}		   			
+    		}
+    		else
+    		{
+    			String error = String.format("%s file is empty", name);
+    			JOptionPane.showMessageDialog(null, error,  name + " Empty", JOptionPane.ERROR_MESSAGE);
+    		}
+    	
+    		reader.close();
+	}
+	
+	void saveSignUps()
+	{
+		if(bSignUpsSaveRequested)
+		{
+			String[] header = {"Last Import Time", "SignUp ID" ,"Title", "End Date", "Frequency"};
+			
+			String[] firstRow = new String[1];
+			firstRow[0] = Long.toString(geniusSignUps.getLastSignUpListImportTime());
+			
+			String path = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), GENIUS_STATUS_FILENAME);
+			File oncwritefile = new File(path);
+		
+			try 
+			{
+				CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
+				writer.writeNext(header);
+				writer.writeNext(firstRow);
+	    	
+				for(SignUp su : geniusSignUps.getSignUpList())
+					writer.writeNext(su.getExportRow());
+				
+				writer.close();
+				
+				bSignUpsSaveRequested = false;
+			} 
+			catch (IOException x)
+			{
+				System.err.format("IO Exception: %s%n", x.getMessage());
+			}
 		}
 	}
 	
@@ -448,8 +600,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	    	
 	    ActivityDBYear(int year)
 	    {
-	    	super();
-	    	activityList = new ArrayList<VolunteerActivity>();
+	    		super();
+	    		activityList = new ArrayList<VolunteerActivity>();
 	    }
 	    
 	    //getters

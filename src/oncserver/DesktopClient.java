@@ -23,6 +23,7 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.SignUpStatus;
 import ourneighborschild.UserAccess;
 import ourneighborschild.UserStatus;
 
@@ -352,6 +353,26 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		output.println(ONCSecureWebServer.getWebsiteStatusJson());
+                }
+                else if(command.startsWith("GET<genius_signups>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		output.println(activityDB.getSignUps());
+                }
+                else if(command.startsWith("GET<request_signups>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		SignUpGeniusIF geniusIF = SignUpGeniusIF.getInstance();
+                		geniusIF.requestSignUpList(command.substring(20));
+                		output.println("REQUESTED_SIGNUPS");
+                }
+                else if(command.startsWith("POST<update_signup>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = activityDB.updateSignUp(command.substring(19));
+                		clientMgr.addLogMessage(response);
+                		output.println(response);
+                		clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("GET<changes>"))
                 {   

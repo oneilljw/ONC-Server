@@ -16,6 +16,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
+import ourneighborschild.ActivityDB;
 import ourneighborschild.DBYear;
 
 import com.google.gson.Gson;

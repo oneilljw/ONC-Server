@@ -36,7 +36,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	private static ClientManager clientMgr;
 	private static ServerWarehouseDB warehouseDB;
 	private static ServerActivityDB activityDB;
-	private static ServerGlobalVariableDB gvDB;
 	private static SignUpGeniusIF geniusIF;
 
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
@@ -47,7 +46,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		clientMgr = ClientManager.getInstance();
 		warehouseDB = ServerWarehouseDB.getInstance();
 		activityDB = ServerActivityDB.getInstance();
-		gvDB = ServerGlobalVariableDB.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -71,9 +69,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		geniusIF = SignUpGeniusIF.getInstance();
 		geniusIF.addSignUpListener(this);
 		
-		//genius activity import test
-//		int signUpGeniusID;
-//		if((signUpGeniusID = gvDB.getSignUpID(2017)) > -1)
+//		int signUpGeniusID = 13520837;
+//		if(signUpGeniusID  > -1)
 //		{
 //			System.out.println(String.format("ServVolDB.constrct: Reqesting SignUp Content, signUpID= %d", signUpGeniusID));
 //			geniusIF.requestSignUpContent(signUpGeniusID, SignUpReportType.filled);
@@ -640,8 +637,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			@SuppressWarnings("unchecked")
 			List<SignUpActivity>  signUpActivityList = (List<SignUpActivity>) event.getSignUpObject();
 			for(SignUpActivity sua : signUpActivityList)
-				System.out.println(String.format("ServVolDB.signUpDataReceived: SignUp Item: %s, %s %s", 
-						sua.getItem(), sua.getFirstname(), sua.getLastname()));
+				System.out.println(String.format("ServVolDB.signUpDataReceived: SignUp Item: %s, %s %s %s", 
+						sua.getItem().trim(), sua.getFirstname(), sua.getLastname(), sua.getPhone()));
 		}	
 	}
 	
