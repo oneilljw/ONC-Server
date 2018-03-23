@@ -69,7 +69,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		geniusIF = SignUpGeniusIF.getInstance();
 		geniusIF.addSignUpListener(this);
 		
-//		int signUpGeniusID = 13520837;
+//		int signUpGeniusID = 13398811;
 //		if(signUpGeniusID  > -1)
 //		{
 //			System.out.println(String.format("ServVolDB.constrct: Reqesting SignUp Content, signUpID= %d", signUpGeniusID));
@@ -579,7 +579,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			{
 				actTableHTML.append("<tr><td>" + va.getName() + "</td>");
 				actTableHTML.append("<td>" + va.getStartDate() + "</td>");
-				actTableHTML.append("<td>" + va.getStartTime() + "</td>");
+//				actTableHTML.append("<td>" + va.getStartTime() + "</td>");
 				actTableHTML.append("<td>" + va.getLocation() + "</td></tr>");
 			}
 			
@@ -588,11 +588,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		return actTableHTML.toString();
 	}
 	
-	void processGeniusActivityUpdate()
-	{
-		
-	}
-
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
@@ -636,10 +631,34 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		{
 			@SuppressWarnings("unchecked")
 			List<SignUpActivity>  signUpActivityList = (List<SignUpActivity>) event.getSignUpObject();
+//			for(SignUpActivity sua : signUpActivityList)
+//				System.out.println(String.format("ServVolDB.signUpDataReceived: SignUp Item: %s, %s %s %s, id= %d", 
+//						sua.getItem().trim(), sua.getFirstname(), sua.getLastname(), sua.getPhone(), sua.getSlotitemid()));
+			
+			//create the unique activity list
+			List<SignUpActivity>  uniqueSignUpActivityList = new ArrayList<SignUpActivity>();
 			for(SignUpActivity sua : signUpActivityList)
-				System.out.println(String.format("ServVolDB.signUpDataReceived: SignUp Item: %s, %s %s %s", 
-						sua.getItem().trim(), sua.getFirstname(), sua.getLastname(), sua.getPhone()));
+				if(!isActivityInList(uniqueSignUpActivityList, sua.getSlotitemid()))
+				{
+					System.out.println(String.format("ServVolDB.signUpDataReceived: Adding UniqueAct: %s, id= %d, enddate= %d, endtime=%d", 
+							sua.getItem().trim(), sua.getSlotitemid(), sua.getEnddate(), sua.getEndtime()));
+					uniqueSignUpActivityList.add(sua);
+				}
+			
+			//print the list
+//			for(SignUpActivity usua : uniqueSignUpActivityList)
+//				System.out.println(String.format("ServVolDB.signUpDataReceived: UniqueAct: %s, id= %d", 
+//													usua.getItem().trim(), usua.getSlotitemid()));
 		}	
+	}
+	
+	boolean isActivityInList(List<SignUpActivity> list, long slotitemid)
+	{
+		int index = 0;
+		while(index < list.size() && list.get(index).getSlotitemid() != slotitemid)
+			index++;
+		
+		return index < list.size();
 	}
 	
 	private class VolunteerDBYear extends ServerDBYear
@@ -663,6 +682,18 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		@Override
 		public int compare(VolunteerActivity o1, VolunteerActivity o2)
 		{
+			if(o1.getStartDate() < o2.getStartDate())
+				return -1;
+			else if(o1.getStartDate() > o2.getStartDate())
+				return 1;
+			else
+				return 0;
+		}
+/*		
+		@Override
+		public int compare(VolunteerActivity o1, VolunteerActivity o2)
+		{
+			
 			SimpleDateFormat sdf = new SimpleDateFormat("M/d/yy");
 			Date o1StartDate, o2StartDate;
 			try 
@@ -677,5 +708,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 				
 			return o1StartDate.compareTo(o2StartDate);
 		}
+*/		
 	}
 }

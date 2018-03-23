@@ -25,10 +25,11 @@ public class SignUpActivity
 	private int hastime;
 	private String zipcode;
 	private String amountpaid;
-	private String enddate;
+	private long enddate;
 	private String item;
 	private long starttime;
 	private String city;
+	
 	String getLocation()
 	{
 		return location;
@@ -121,7 +122,7 @@ public class SignUpActivity
 	{
 		return amountpaid;
 	}
-	String getEnddate()
+	long getEnddate()
 	{
 		return enddate;
 	}

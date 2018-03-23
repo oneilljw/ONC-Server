@@ -32,7 +32,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 {
-	private static final int ACTIVITY_DB_HEADER_LENGTH = 17;
+	private static final int ACTIVITY_DB_HEADER_LENGTH = 15;
 	private static final int COMMENT_ACTIIVTY_IDENTIFIER_LENGTH = 4;
 	private static final String GENIUS_STATUS_FILENAME = "GeniusSignUps.csv";
 	private static final int SIGNUP_RECORD_LENGTH = 5;
@@ -88,7 +88,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//populate the list of sign ups. The SignUp Genius interface will create a thread
 		//that will fetch current signups and the callback thru the listener will populate
 		//the list
-		geniusIF.requestSignUpList();
+//		geniusIF.requestSignUpList();
 	}
 	
 	public static ServerActivityDB getInstance() throws FileNotFoundException, IOException
@@ -123,7 +123,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	{
 		return activityDB.get(year - BASE_YEAR).getList().size();
 	}
-	
+/*	
 	static HtmlResponse getActivityDayJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
@@ -176,7 +176,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
-	
+*/	
 	//creates a list of volunteer activities based on stored string of activity ID's 
 	//separated by the '_' character.
 	List<VolunteerActivity> createActivityList(int year, String zActivities, String zComments)
@@ -409,6 +409,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//The activity db year list is copied from the prior year, assuming it exists. All start
 		//and end times are adjusted for the change in year
 		ActivityDBYear newActivityDBYear = new ActivityDBYear(newYear);
+/*		
 		ActivityDBYear priorActivityDBYear = activityDB.get(newYear-1-BASE_YEAR);
 		
 		for(VolunteerActivity activity : priorActivityDBYear.getList())
@@ -420,7 +421,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			
 			newActivityDBYear.add(newYearActivity);
 		}
-		
+*/		
 		activityDB.add(newActivityDBYear);
 		newActivityDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
@@ -500,9 +501,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		 
 		 if(activityDBYear.isUnsaved())
 		 {
-			 String[] header = {"ID", "Genius ID", "Category" ,"Name","Start Date","Start Time",
-					 			"End Date","End Time", "Location", "Description", 
-					 			"Open", "Notify",
+			 String[] header = {"ID", "Genius ID", "Category" ,"Name","StartTimeMillis",
+					 			"EndTimeMillis", "Location", "Description", "Open", "Notify", 
 					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
 			 
 			String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);
@@ -553,6 +553,19 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
     	
     		reader.close();
 	}
+/*	
+	void forceSave(int year)
+	{
+		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
+		 
+		String[] header = {"ID", "Genius ID", "Category" ,"Name", "StartTimeMillis",
+					 			 "EndTimeMillis", "Location", "Description", "Open", "Notify",
+					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
+			 
+		String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);
+		exportDBToCSV(activityDBYear.getList(), header, path);
+	}
+*/	
 	
 	void saveSignUps()
 	{
@@ -585,7 +598,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			}
 		}
 	}
-	
+
 	private class ActivityDBYear extends ServerDBYear
 	{
 		private List<VolunteerActivity> activityList;
@@ -607,19 +620,12 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		@Override
 		public int compare(VolunteerActivity o1, VolunteerActivity o2)
 		{
-			SimpleDateFormat sdf = new SimpleDateFormat("M/d/yy");
-			Date o1StartDate, o2StartDate;
-			try 
-			{
-				o1StartDate = sdf.parse(o1.getStartDate());
-				o2StartDate = sdf.parse(o2.getStartDate());
-			} 
-			catch (ParseException e) 
-			{
+			if(o1.getStartDate() < o2.getStartDate())
+				return -1;
+			else if(o1.getStartDate() > o2.getStartDate())
+				return 1;
+			else
 				return 0;
-			}
-				
-			return o1StartDate.compareTo(o2StartDate);
 		}
 	}
 }

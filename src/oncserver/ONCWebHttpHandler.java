@@ -302,30 +302,30 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
         			
     			sendHTMLResponse(t, htmlResponse);
     		}
-    		else if(requestURI.contains("/activities"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-    				int year = Integer.parseInt((String) params.get("year"));
-    				htmlResponse = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
-    			
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/activitydays"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-    				int year = Integer.parseInt((String) params.get("year"));
-    				htmlResponse = ServerActivityDB.getActivityDayJSONP(year, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
-        			
-    			sendHTMLResponse(t, htmlResponse);
-    		}
+//    		else if(requestURI.contains("/activities"))
+//    		{
+//    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+//    			{
+//    				int year = Integer.parseInt((String) params.get("year"));
+//    				htmlResponse = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
+//    			}
+//    			else
+//    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+//    			
+//    			sendHTMLResponse(t, htmlResponse);
+//    		}
+//    		else if(requestURI.contains("/activitydays"))
+//    		{
+//    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+//    			{
+//    				int year = Integer.parseInt((String) params.get("year"));
+//    				htmlResponse = ServerActivityDB.getActivityDayJSONP(year, (String) params.get("callback"));
+//    			}
+//    			else
+//    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+//        			
+//    			sendHTMLResponse(t, htmlResponse);
+//    		}
     		else if(requestURI.contains("/contactinfo"))
     		{
     			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
