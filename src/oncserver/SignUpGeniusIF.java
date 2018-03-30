@@ -1,12 +1,16 @@
 package oncserver;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,7 +21,10 @@ import com.google.gson.Gson;
 
 import ourneighborschild.Frequency;
 import ourneighborschild.GeniusSignUps;
+import ourneighborschild.ONCVolunteer;
 import ourneighborschild.SignUp;
+import ourneighborschild.SignUpActivity;
+import ourneighborschild.VolunteerActivity;
 
 public class SignUpGeniusIF
 {
@@ -38,7 +45,7 @@ public class SignUpGeniusIF
 	void requestSignUpList()
 	{
 		String url = String.format(SIGNUPS_URL, API_KEY);
-		SignUpGeniusImporter importer = new SignUpGeniusImporter(SignUpEventType.SIGNUP, url);
+		SignUpGeniusImporter importer = new SignUpGeniusImporter(SignUpEventType.SIGNUP_IMPORT, url);
 		importer.execute();
 	}
 	
@@ -51,12 +58,12 @@ public class SignUpGeniusIF
 	
 	void signUpSummaryReceived(GeniusSignUps geniusSignUps)
 	{	
-		this.fireSignUpDataChanged(this, SignUpEventType.SIGNUP, geniusSignUps);
+		this.fireSignUpDataChanged(this, SignUpEventType.SIGNUP_IMPORT, geniusSignUps);
 	}
 	
-	void signUpContentReceived(List<SignUpActivity> activityList)
+	void signUpContentReceived(SignUpEventType type, List<VolunteerActivity> volActList)
 	{
-		this.fireSignUpDataChanged(this, SignUpEventType.REPORT, activityList);
+		this.fireSignUpDataChanged(this, type, volActList);
 	}
 	
 	//List of registered listeners for Client change events
@@ -97,6 +104,8 @@ public class SignUpGeniusIF
    				l.signUpDataReceived(event);
    		}
    }
+	
+	
 /*	
 	private String getSignUpData(String url)
 	{
@@ -202,9 +211,10 @@ public class SignUpGeniusIF
     {
     		SignUpEventType type;
     		String url;
-//    	SignUps signUps;
     		GeniusSignUps importedSignUps;
     		SignUpReport signUpReport;
+    		List<VolunteerActivity> newActivitiesFoundList;
+		List<VolunteerActivity> updatedActivitiesFoundList;
     		
     		SignUpGeniusImporter(SignUpEventType type, String url)
     		{
@@ -215,6 +225,7 @@ public class SignUpGeniusIF
 		@Override
 		protected Void doInBackground() throws Exception
 		{
+/*			
 			StringBuffer response = new StringBuffer();
 			try 
 			{
@@ -229,32 +240,41 @@ public class SignUpGeniusIF
 
 				in.close();
 				
+//				if(type == SignUpEventType.REPORT)
+//				{
+//					String path = String.format("%s/testfile.txt", System.getProperty("user.dir"));
+//					PrintWriter out = new PrintWriter(path);
+//					out.println(response.toString());
+//					out.close();
+//				}
+				
 //				System.out.println(String.format("GenIF response = %s", response.toString()));
 				
 				//process the data in the background thread
 				Gson gson = new Gson();
-				if(type == SignUpEventType.SIGNUP)
-				{
-					SignUps signUps =  gson.fromJson(response.toString(), SignUps.class);
-										
-					//Create a GeniusSignUps object. For each of the imported sign ups, initialize and 
-					//adjust the time
-					importedSignUps = new GeniusSignUps(signUps.getSignUps());
-
-					for(SignUp su : importedSignUps.getSignUpList())
-					{
-						//Initialize the member variables that are don't come from
-						//the genius import for each sign up. They will be null otherwise.
-						su.setLastImportTimeInMillis(0);
-						su.setFrequency(Frequency.NEVER);
-						
-						//adjust the SignUp Genius end time to milliseconds from seconds
-						su.setEndtime(su.getEndtimeInMillis() * 1000);
-					}
-				}
+				if(type == SignUpEventType.SIGNUP_IMPORT)
+					processSignUpsJson(response.toString());
 				else
+				{
+					//get the report that was imported
 					signUpReport = gson.fromJson(response.toString(), SignUpReport.class);
-			} 
+					
+					//create the unique activity list
+					List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpReport.getContent().getSignUpActivities());
+					
+					//create the new and modified activity lists
+					createNewAndModifiedActivityLists(uniqueActList);
+					
+					//create the unique volunteer list
+					List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpReport.getContent().getSignUpActivities());
+					
+				}
+			}
+			catch (UnknownHostException uhex) 
+			{
+				System.out.println(String.format("GeniusIF.doInBack: UnknownHostException"));
+				simulateGeniusReportFetch();
+			}
 			catch (MalformedURLException e) 
 			{
 				// TODO Auto-generated catch block
@@ -272,7 +292,185 @@ public class SignUpGeniusIF
 			}
 			
 			return null;
+*/			
+			simulateGeniusReportFetch();
+			return null;
 		}
+		
+		void processSignUpsJson(String json)
+		{
+			Gson gson = new Gson();
+			SignUps signUps =  gson.fromJson(json, SignUps.class);
+			
+			//Create a GeniusSignUps object. For each of the imported sign ups, initialize and 
+			//adjust the time
+			importedSignUps = new GeniusSignUps(signUps.getSignUps());
+
+			for(SignUp su : importedSignUps.getSignUpList())
+			{
+				//Initialize the member variables that are don't come from
+				//the genius import for each sign up. They will be null otherwise.
+				su.setLastImportTimeInMillis(0);
+				su.setFrequency(Frequency.NEVER);
+				
+				//adjust the SignUp Genius end time to milliseconds from seconds
+				su.setEndtime(su.getEndtimeInMillis() * 1000);
+			}	
+		}
+		
+		void simulateGeniusReportFetch()
+		{
+			String path = String.format("%s/testfile.txt", System.getProperty("user.dir"));
+			InputStream is = null;
+			try
+			{
+				is = new FileInputStream(path);
+			}
+			catch (FileNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			BufferedReader buf = new BufferedReader(new InputStreamReader(is)); 
+			String line = null;
+			try
+			{
+				line = buf.readLine();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			StringBuilder sb = new StringBuilder(); 
+			while(line != null)
+			{ 
+				sb.append(line).append("\n"); 
+				try
+				{
+					line = buf.readLine();
+				}
+				catch (IOException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
+			} 
+			
+			String response = sb.toString(); 
+//			System.out.println("Contents : " + fileAsString);
+
+			//get the report that was imported
+			Gson gson = new Gson();
+			SignUpReport signUpReport = gson.fromJson(response, SignUpReport.class);
+			
+			//create the unique activity list
+			List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpReport.getContent().getSignUpActivities());
+			
+			//create the new and modified activity lists
+			createNewAndModifiedActivityLists(uniqueActList);	
+			
+			//create the unique volunteer list
+			List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpReport.getContent().getSignUpActivities());
+			System.out.println(String.format("SignUpGen.doInBack: Unique Vol: %d", uniqueVolList.size()));
+		}
+		
+		List<SignUpActivity> createUniqueActivityList(List<SignUpActivity>  signUpActivityList)
+		{	
+			//create the unique activity list
+			List<SignUpActivity>  uniqueSignUpActivityList = new ArrayList<SignUpActivity>();
+			for(SignUpActivity sua : signUpActivityList)
+				if(!isActivityInList(uniqueSignUpActivityList, sua.getSlotitemid()))
+					uniqueSignUpActivityList.add(sua);
+			
+			return uniqueSignUpActivityList;
+		}
+		
+		List<ONCVolunteer> createUniqueVolunteerList(List<SignUpActivity>  signUpActivityList)
+		{	
+			//create the unique volunteer list
+			List<ONCVolunteer>  uniqueSignUpVolunteerList = new ArrayList<ONCVolunteer>();
+			for(SignUpActivity sua : signUpActivityList)
+			{	
+				ONCVolunteer importedVol = new ONCVolunteer(sua);
+				if(!isVolunteerInList(uniqueSignUpVolunteerList, importedVol))
+					uniqueSignUpVolunteerList.add(importedVol);
+			}
+			
+			return uniqueSignUpVolunteerList;
+		}
+		
+		boolean isActivityInList(List<SignUpActivity> list, long slotitemid)
+		{
+			int index = 0;
+			while(index < list.size() && list.get(index).getSlotitemid() != slotitemid)
+				index++;
+			
+			return index < list.size();
+		}
+		
+		boolean isVolunteerInList(List<ONCVolunteer> list, ONCVolunteer v)
+		{
+			int index = 0;
+			while(index < list.size() && !list.get(index).getEmail().equals(v.getEmail()))
+				index++;
+			
+			return index < list.size();
+		}
+		
+		void createNewAndModifiedActivityLists(List<SignUpActivity> uniqueActList)
+		{
+			newActivitiesFoundList = new ArrayList<VolunteerActivity>();
+			updatedActivitiesFoundList = new ArrayList<VolunteerActivity>();
+			
+			//clone a list of the current activities from the activity database
+			ServerActivityDB activityDB;
+			try
+			{
+				activityDB = ServerActivityDB.getInstance();
+				List<VolunteerActivity> cloneActList = activityDB.clone(DBManager.getCurrentYear());
+				
+				//compare the unique activity list to the cloned list. If a unique activity is not in 
+				//the current list or if the activity name, start, end or location has been modified, add
+				//the activity to the newAndModified activities list
+				for(SignUpActivity sua : uniqueActList)
+				{
+					VolunteerActivity importedVA = new VolunteerActivity(sua);
+					int index = 0, result = -1;
+					while(index < cloneActList.size() && 
+						(result = importedVA.compareActivities(cloneActList.get(index))) == VolunteerActivity.VOLUNTEER_ACTIVITY_DOES_NOT_MATCH)
+						index++;
+						
+					if(index < cloneActList.size())
+					{
+						//there is a match. If it's not an exact match, add it as a modified activity
+						if(result != VolunteerActivity.VOLUNTEER_ACTIVITY_EXACT_MATCH)
+						{
+							//add the current ID and add activity to update list
+							importedVA.setID(cloneActList.get(index).getID());
+							updatedActivitiesFoundList.add(importedVA);
+						}
+					}
+					else //there was not a match, it's a new activity
+						newActivitiesFoundList.add(importedVA);
+				}
+			}
+			catch (FileNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}				
+		}
+		
+		/***
+		 * 
+		 */
 		
 		 /*
 	     * Executed in event dispatching thread
@@ -281,10 +479,17 @@ public class SignUpGeniusIF
 	    public void done()
 	    {
 	    		//notify the thread is complete
-	    		if(type == SignUpEventType.SIGNUP)
+	    		if(type == SignUpEventType.SIGNUP_IMPORT)
 	    			signUpSummaryReceived(importedSignUps);
 	    		else if(type == SignUpEventType.REPORT)
-	    			signUpContentReceived(signUpReport.getContent().getSignUpActivities());
+	    		{
+	    			//if lists are not empty, notify clients
+	    			if(!updatedActivitiesFoundList.isEmpty())
+	    				signUpContentReceived(SignUpEventType.UPDATED_ACTIVITIES, updatedActivitiesFoundList);
+	    			
+	    			if(!newActivitiesFoundList.isEmpty())
+	    				signUpContentReceived(SignUpEventType.NEW_ACTIVITIES, newActivitiesFoundList);
+	    		}
 	    }
     }
 }

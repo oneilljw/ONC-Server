@@ -17,6 +17,7 @@ import ourneighborschild.ONCEmail;
 import ourneighborschild.ONCEmailAttachment;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.ServerCredentials;
+import ourneighborschild.SignUpActivity;
 import ourneighborschild.VolunteerActivity;
 
 import com.google.gson.Gson;
@@ -65,16 +66,16 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			volunteerDBYear.setNextID(getNextID(volunteerDBYear.getList()));
 		}
 		
-		//connect to sign up genius thur the interface and add a listener to process updates
+		//connect to sign up genius thru the interface and add a listener to process updates
 		geniusIF = SignUpGeniusIF.getInstance();
 		geniusIF.addSignUpListener(this);
 		
-//		int signUpGeniusID = 13398811;
-//		if(signUpGeniusID  > -1)
-//		{
-//			System.out.println(String.format("ServVolDB.constrct: Reqesting SignUp Content, signUpID= %d", signUpGeniusID));
-//			geniusIF.requestSignUpContent(signUpGeniusID, SignUpReportType.filled);
-//		}
+		int signUpGeniusID = 13398811;
+		if(signUpGeniusID  > -1)
+		{
+			System.out.println(String.format("ServVolDB.constrct: Reqesting SignUp Content, signUpID= %d", signUpGeniusID));
+			geniusIF.requestSignUpContent(signUpGeniusID, SignUpReportType.filled);
+		}
 	}
 	
 	public static ServerVolunteerDB getInstance() throws FileNotFoundException, IOException
@@ -627,29 +628,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	@Override
 	public void signUpDataReceived(SignUpEvent event)
 	{
-		if(event.type() == SignUpEventType.REPORT)
-		{
-			@SuppressWarnings("unchecked")
-			List<SignUpActivity>  signUpActivityList = (List<SignUpActivity>) event.getSignUpObject();
-//			for(SignUpActivity sua : signUpActivityList)
-//				System.out.println(String.format("ServVolDB.signUpDataReceived: SignUp Item: %s, %s %s %s, id= %d", 
-//						sua.getItem().trim(), sua.getFirstname(), sua.getLastname(), sua.getPhone(), sua.getSlotitemid()));
-			
-			//create the unique activity list
-			List<SignUpActivity>  uniqueSignUpActivityList = new ArrayList<SignUpActivity>();
-			for(SignUpActivity sua : signUpActivityList)
-				if(!isActivityInList(uniqueSignUpActivityList, sua.getSlotitemid()))
-				{
-					System.out.println(String.format("ServVolDB.signUpDataReceived: Adding UniqueAct: %s, id= %d, enddate= %d, endtime=%d", 
-							sua.getItem().trim(), sua.getSlotitemid(), sua.getEnddate(), sua.getEndtime()));
-					uniqueSignUpActivityList.add(sua);
-				}
-			
-			//print the list
-//			for(SignUpActivity usua : uniqueSignUpActivityList)
-//				System.out.println(String.format("ServVolDB.signUpDataReceived: UniqueAct: %s, id= %d", 
-//													usua.getItem().trim(), usua.getSlotitemid()));
-		}	
+		
 	}
 	
 	boolean isActivityInList(List<SignUpActivity> list, long slotitemid)
@@ -661,14 +640,16 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		return index < list.size();
 	}
 	
+	
+	
 	private class VolunteerDBYear extends ServerDBYear
 	{
 		private List<ONCVolunteer> volList;
 	    	
 	    VolunteerDBYear(int year)
 	    {
-	    	super();
-	    	volList = new ArrayList<ONCVolunteer>();
+	    		super();
+	    		volList = new ArrayList<ONCVolunteer>();
 	    }
 	    
 	    //getters

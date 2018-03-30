@@ -123,6 +123,17 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	{
 		return activityDB.get(year - BASE_YEAR).getList().size();
 	}
+	
+	List<VolunteerActivity> clone(int year)
+	{
+		List<VolunteerActivity> actList = activityDB.get(year - BASE_YEAR).getList();
+		List<VolunteerActivity> cloneList = new ArrayList<VolunteerActivity>();
+		
+		for(VolunteerActivity va : actList)
+			cloneList.add(new VolunteerActivity(va));
+		
+		return cloneList;		
+	}
 /*	
 	static HtmlResponse getActivityDayJSONP(int year, String callbackFunction)
 	{		
@@ -324,6 +335,21 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return "ADDED_ACTIVITY" + gson.toJson(addedActivity, VolunteerActivity.class);
 	}
 	
+	String add(int year, VolunteerActivity addedActivity) 
+	{	
+		//set the new ID and time stamp for the new activity
+		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
+		
+		addedActivity.setID(activityDBYear.getNextID());
+		addedActivity.setDateChanged(new Date());
+		
+		activityDBYear.add(addedActivity);
+		activityDBYear.setChanged(true);
+		
+		Gson gson = new Gson();
+		return  "ADDED_ACTIVITY" + gson.toJson(addedActivity, VolunteerActivity.class);
+	}
+	
 	String update(int year, String json)
 	{
 		//Create a volunteer activity object for the updated driver
@@ -347,6 +373,28 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		}
 		else
 			return "UPDATE_FAILED";
+	}
+	
+	String update(int year, VolunteerActivity updatedActivity)
+	{
+		//Find the position for the current activity being updated
+		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
+		List<VolunteerActivity> activityList = activityDBYear.getList();
+		int index = 0;
+		while(index < activityList.size() && activityList.get(index).getID() != updatedActivity.getID())
+			index++;
+		
+		//Replace the current object with the update
+		if(index < activityList.size())
+		{
+			activityList.set(index, updatedActivity);
+			activityDBYear.setChanged(true);
+			
+			Gson gson = new Gson();
+			return "UPDATED_ACTIVITY" + gson.toJson(updatedActivity, VolunteerActivity.class);
+		}
+		
+		return null;
 	}
 	
 	String updateSignUp(String json)
@@ -458,7 +506,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	@Override
 	public void signUpDataReceived(SignUpEvent event)
 	{
-		if(event.type() == SignUpEventType.SIGNUP)
+		if(event.type() == SignUpEventType.SIGNUP_IMPORT)
 		{
 			//Set the import time for the list of sign=ups. Go thru each of the imported sign ups.
 			//If it hasn't previously been imported, add it to the current list. That way we preserve
@@ -491,7 +539,55 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			
 			ClientManager clientMgr = ClientManager.getInstance();
 			clientMgr.notifyAllClients(clientSignUpJson);
-		}	
+		}
+		else if(event.type() == SignUpEventType.UPDATED_ACTIVITIES)
+		{
+			//process list of updated activities.
+			@SuppressWarnings("unchecked")
+			List<VolunteerActivity> updatedVAList = (List<VolunteerActivity>) event.getSignUpObject();
+			List<String> clientJsonMssgList = new ArrayList<String>();
+			
+			//add the updated activities to the database
+			for(VolunteerActivity va : updatedVAList)
+			{
+				String response = update(DBManager.getCurrentYear(), va);
+				if(response != null)
+					clientJsonMssgList.add(response);
+//				System.out.println(String.format("ServVolDB.newAndMod: updateAct: %s, id= %d, geniusid= %d, start= %d, end= %d",
+//						va.getName(), va.getID(), va.getGeniusID(), va.getStartDate(), va.getEndDate()));
+			}
+			
+			if(!clientJsonMssgList.isEmpty())
+			{
+				//there were updates, send list of updated json's to clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			}
+		}
+		else if(event.type() == SignUpEventType.NEW_ACTIVITIES)
+		{
+			//print the new activities list
+			@SuppressWarnings("unchecked")
+			List<VolunteerActivity> newVAList = (List<VolunteerActivity>) event.getSignUpObject();
+			List<String> clientJsonMssgList = new ArrayList<String>();
+			
+			for(VolunteerActivity va : newVAList)
+			{
+				String response = add(DBManager.getCurrentYear(), va);
+				if(response != null)
+					clientJsonMssgList.add(response);
+				
+//				System.out.println(String.format("ServVolDB.newAndMod: newAct: %s, id= %d, start= %d, end= %d",
+//						va.getName(), va.getGeniusID(), va.getStartDate(), va.getEndDate()));
+			}
+			
+			if(!clientJsonMssgList.isEmpty())
+			{
+				//there were new activities, send list of new json's to clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			}
+		}
 	}
 	
 	@Override
