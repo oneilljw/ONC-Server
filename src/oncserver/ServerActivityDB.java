@@ -553,7 +553,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 				String response = update(DBManager.getCurrentYear(), va);
 				if(response != null)
 					clientJsonMssgList.add(response);
-//				System.out.println(String.format("ServVolDB.newAndMod: updateAct: %s, id= %d, geniusid= %d, start= %d, end= %d",
+//				System.out.println(String.format("ServActDB.newAndMod: updateAct: %s, id= %d, geniusid= %d, start= %d, end= %d",
 //						va.getName(), va.getID(), va.getGeniusID(), va.getStartDate(), va.getEndDate()));
 			}
 			
@@ -577,7 +577,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 				if(response != null)
 					clientJsonMssgList.add(response);
 				
-//				System.out.println(String.format("ServVolDB.newAndMod: newAct: %s, id= %d, start= %d, end= %d",
+//				System.out.println(String.format("ServActDB.newAndMod: newAct: %s, id= %d, start= %d, end= %d",
 //						va.getName(), va.getGeniusID(), va.getStartDate(), va.getEndDate()));
 			}
 			

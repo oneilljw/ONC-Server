@@ -66,6 +66,11 @@ public class SignUpGeniusIF
 		this.fireSignUpDataChanged(this, type, volActList);
 	}
 	
+	void signUpVolunteersReceived(SignUpEventType type, List<ONCVolunteer> volList)
+	{
+		this.fireSignUpDataChanged(this, type, volList);
+	}
+	
 	//List of registered listeners for Client change events
 	protected ArrayList<SignUpListener> listeners;
    
@@ -215,6 +220,8 @@ public class SignUpGeniusIF
     		SignUpReport signUpReport;
     		List<VolunteerActivity> newActivitiesFoundList;
 		List<VolunteerActivity> updatedActivitiesFoundList;
+		List<ONCVolunteer> newVolunteerFoundList;
+		List<ONCVolunteer> updatedVolunteerFoundList;
     		
     		SignUpGeniusImporter(SignUpEventType type, String url)
     		{
@@ -268,6 +275,8 @@ public class SignUpGeniusIF
 					//create the unique volunteer list
 					List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpReport.getContent().getSignUpActivities());
 					
+					//create the new and modified volunteer lists
+					createNewAndModifiedVolunteerLists(uniqueVolList);	
 				}
 			}
 			catch (UnknownHostException uhex) 
@@ -373,7 +382,9 @@ public class SignUpGeniusIF
 			
 			//create the unique volunteer list
 			List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpReport.getContent().getSignUpActivities());
-			System.out.println(String.format("SignUpGen.doInBack: Unique Vol: %d", uniqueVolList.size()));
+		
+			//create the new and modified volunteer lists
+			createNewAndModifiedVolunteerLists(uniqueVolList);
 		}
 		
 		List<SignUpActivity> createUniqueActivityList(List<SignUpActivity>  signUpActivityList)
@@ -468,6 +479,54 @@ public class SignUpGeniusIF
 			}				
 		}
 		
+		void createNewAndModifiedVolunteerLists(List<ONCVolunteer> uniqueVolList)
+		{
+			newVolunteerFoundList = new ArrayList<ONCVolunteer>();
+			updatedVolunteerFoundList = new ArrayList<ONCVolunteer>();
+			
+			//clone a list of the current activities from the activity database
+			ServerVolunteerDB volDB;
+			try
+			{
+				volDB = ServerVolunteerDB.getInstance();
+				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentYear());
+				
+				//compare the unique volunteer list to the cloned list. If a volunteer is not in 
+				//the current list or if the volunteer name or contact info has been modified, add
+				//the volunteer to the newAndModified volunteer list
+				for(ONCVolunteer importedVol : uniqueVolList)
+				{
+					int index = 0, result = -1;
+					while(index < cloneVolList.size() && 
+						(result = importedVol.compareVolunteers(cloneVolList.get(index))) == ONCVolunteer.VOLUNTEER_DOES_NOT_MATCH)
+						index++;
+						
+					if(index < cloneVolList.size())
+					{
+						//there is a match. If it's not an exact match, add it as a modified activity
+						if(result != ONCVolunteer.VOLUNTEER_EXACT_MATCH)
+						{
+							//add the current ID and add activity to update list
+							importedVol.setID(cloneVolList.get(index).getID());
+							updatedVolunteerFoundList.add(importedVol);
+						}
+					}
+					else //there was not a match, it's a new activity
+						newVolunteerFoundList.add(importedVol);
+				}
+			}
+			catch (FileNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}				
+		}
+		
 		/***
 		 * 
 		 */
@@ -489,6 +548,13 @@ public class SignUpGeniusIF
 	    			
 	    			if(!newActivitiesFoundList.isEmpty())
 	    				signUpContentReceived(SignUpEventType.NEW_ACTIVITIES, newActivitiesFoundList);
+	    			
+	    			//if lists are not empty, notify clients
+	    			if(!updatedVolunteerFoundList.isEmpty())
+	    				signUpVolunteersReceived(SignUpEventType.UPDATED_VOLUNTEERS, updatedVolunteerFoundList);
+	    			
+	    			if(!newVolunteerFoundList.isEmpty())
+	    				signUpVolunteersReceived(SignUpEventType.NEW_VOLUNTEERS, newVolunteerFoundList);
 	    		}
 	    }
     }

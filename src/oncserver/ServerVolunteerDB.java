@@ -69,13 +69,14 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		//connect to sign up genius thru the interface and add a listener to process updates
 		geniusIF = SignUpGeniusIF.getInstance();
 		geniusIF.addSignUpListener(this);
-		
+/*		
 		int signUpGeniusID = 13398811;
 		if(signUpGeniusID  > -1)
 		{
 			System.out.println(String.format("ServVolDB.constrct: Reqesting SignUp Content, signUpID= %d", signUpGeniusID));
 			geniusIF.requestSignUpContent(signUpGeniusID, SignUpReportType.filled);
 		}
+*/		
 	}
 	
 	public static ServerVolunteerDB getInstance() throws FileNotFoundException, IOException
@@ -84,6 +85,17 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			instance = new ServerVolunteerDB();
 		
 		return instance;
+	}
+	
+	List<ONCVolunteer> clone(int year)
+	{
+		List<ONCVolunteer> volList = driverDB.get(year - BASE_YEAR).getList();
+		List<ONCVolunteer> cloneList = new ArrayList<ONCVolunteer>();
+		
+		for(ONCVolunteer v : volList)
+			cloneList.add(new ONCVolunteer(v));
+		
+		return cloneList;		
 	}
 	
 	//Search the database for the family. Return a json if the family is found. 
@@ -628,7 +640,55 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	@Override
 	public void signUpDataReceived(SignUpEvent event)
 	{
-		
+		if(event.type() == SignUpEventType.UPDATED_VOLUNTEERS)
+		{
+			//process list of updated activities.
+			@SuppressWarnings("unchecked")
+			List<ONCVolunteer> updatedVolList = (List<ONCVolunteer>) event.getSignUpObject();
+			List<String> clientJsonMssgList = new ArrayList<String>();
+			
+			//add the updated volunteers to the database
+			for(ONCVolunteer v : updatedVolList)
+			{
+				String response = update(DBManager.getCurrentYear(), v);
+				if(response != null)
+					clientJsonMssgList.add(response);
+				System.out.println(String.format("ServVolDB.newAndMod: updateVol: %s %s, id= %d",
+						v.getFirstName(), v.getLastName(), v.getID()));
+			}
+			
+			if(!clientJsonMssgList.isEmpty())
+			{
+				//there were updates, send list of updated json's to clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			}
+		}
+		else if(event.type() == SignUpEventType.NEW_VOLUNTEERS)
+		{
+			//print the new activities list
+			@SuppressWarnings("unchecked")
+			List<ONCVolunteer> newVolList = (List<ONCVolunteer>) event.getSignUpObject();
+			List<String> clientJsonMssgList = new ArrayList<String>();
+			
+			//add the updated volunteers to the database
+			for(ONCVolunteer v : newVolList)
+			{
+				String response = add(DBManager.getCurrentYear(), v);
+				if(response != null)
+					clientJsonMssgList.add(response);
+				
+				System.out.println(String.format("ServVolDB.newAndMod: newVol: %s %s, id= %d",
+						v.getFirstName(), v.getLastName(), v.getID()));
+			}
+			
+			if(!clientJsonMssgList.isEmpty())
+			{
+				//there were new activities, send list of new json's to clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			}
+		}
 	}
 	
 	boolean isActivityInList(List<SignUpActivity> list, long slotitemid)

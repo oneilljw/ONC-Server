@@ -92,6 +92,23 @@ public class VolunteerHandler extends ONCWebpageHandler
 										true, "Delivery Day Registration Webpage", callbackFunction);
 			sendHTMLResponse(t, htmlResponse); 
 		}
+		else if(requestURI.contains("/currentyear"))
+		{
+			String callbackFunction = (String) params.get("callback");
+			sendHTMLResponse(t, DBManager.getMostCurrentYearJSONP(callbackFunction)); 
+		}
+		else if(requestURI.contains("/contactinfo"))
+		{
+			int year = Integer.parseInt((String) params.get("year"));
+			String fn = (String) params.get("delFN") != null ? (String) params.get("delFN") : "";
+			String ln = (String) params.get("delLN") != null ? (String) params.get("delLN") : "";
+			String cell = (String) params.get("cell") != null ? (String) params.get("cell") : "";
+			String callback = (String) params.get("callback");
+		
+			htmlResponse = ServerVolunteerDB.getVolunteerJSONP(year, fn, ln, cell, callback);
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
 		else		//volunteer registration, volunteer sign-in, or driver sign-in
 		{
 			String response = webpageMap.get(requestURI);

@@ -135,7 +135,7 @@ public class ONCSecureWebServer
 							"/wishes", "/reqchangepw","/activities", "/activitydays", "/address", 
 							"/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",
 							"/profileunchanged", "/updateuser", "/partnerupdate", "/updatepartner",
-							"/contactinfo", "/groups", "/partners", "/partnertable", "/regiontable", 
+							"/groups", "/partners", "/partnertable", "/regiontable", 
 							"/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
 							"/dashboard",
 							};
@@ -187,7 +187,7 @@ public class ONCSecureWebServer
 		
 		//set up the volunteer handler
 		String[] volContexts = {"/driversignin", "/signindriver", "/volunteersignin", "/signinvolunteer",
-								"/volunteerregistration", "/registervolunteer"};
+								"/volunteerregistration", "/registervolunteer", "/currentyear", "/contactinfo"};
 				
 		VolunteerHandler volHandler = new VolunteerHandler();
 		for(String contextname : volContexts)

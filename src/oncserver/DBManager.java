@@ -16,7 +16,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
-import ourneighborschild.ActivityDB;
 import ourneighborschild.DBYear;
 
 import com.google.gson.Gson;
@@ -235,6 +234,12 @@ public class DBManager
 	static String getMostCurrentYear()
 	{
 		return getCurrentYear() > -1 ? Integer.toString(dbYearList.get(dbYearList.size()-1).getYear()) : "No Years";
+	}
+	
+	static HtmlResponse getMostCurrentYearJSONP(String callbackFunction)
+	{		
+		String response = String.format("%s({\"curryear\":%d})", callbackFunction, getCurrentYear());
+		return new HtmlResponse(response, HttpCode.Ok);		
 	}
 	
 	void exportDBYearsList()
