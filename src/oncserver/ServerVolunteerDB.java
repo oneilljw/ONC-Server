@@ -18,6 +18,7 @@ import ourneighborschild.ONCEmailAttachment;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.ServerCredentials;
 import ourneighborschild.SignUpActivity;
+import ourneighborschild.VolAct;
 import ourneighborschild.VolunteerActivity;
 
 import com.google.gson.Gson;
@@ -25,9 +26,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListener
 {
-	private static final int DRIVER_DB_HEADER_LENGTH = 25;
-	private static final int ACTIVITY_STRING_COL = 14;
-	private static final int COMMENTS_STRING_COL = 16;
+	private static final int DRIVER_DB_HEADER_LENGTH = 21;
 	private static final String VOLUNTEER_EMAIL_ADDRESS = "volunteer@ourneighborschild.org";
 	private static final String VOLUNTEER_EMAIL_PASSWORD = "crazyelf";
 	
@@ -37,6 +36,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	private static ClientManager clientMgr;
 	private static ServerWarehouseDB warehouseDB;
 	private static ServerActivityDB activityDB;
+	private static ServerVolunteerActivityDB volActDB;
 	private static SignUpGeniusIF geniusIF;
 
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
@@ -47,6 +47,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		clientMgr = ClientManager.getInstance();
 		warehouseDB = ServerWarehouseDB.getInstance();
 		activityDB = ServerActivityDB.getInstance();
+		volActDB = ServerVolunteerActivityDB.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -65,11 +66,11 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			//set the next id
 			volunteerDBYear.setNextID(getNextID(volunteerDBYear.getList()));
 		}
-		
+/*		
 		//connect to sign up genius thru the interface and add a listener to process updates
 		geniusIF = SignUpGeniusIF.getInstance();
 		geniusIF.addSignUpListener(this);
-/*		
+		
 		int signUpGeniusID = 13398811;
 		if(signUpGeniusID  > -1)
 		{
@@ -98,7 +99,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		return cloneList;		
 	}
 	
-	//Search the database for the family. Return a json if the family is found. 
 	String getDrivers(int year)
 	{
 		Gson gson = new Gson();
@@ -237,7 +237,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	}
 	
 	/************
-	 * Registers and signs in volunteers from the web site
+	 * Registers and signs in volunteers from the web site. If the volunteer is already in the database,
+	 * check to see if the activity is in the data base. If it's not, add the activity to the Volunteer
+	 * Activity database. 
 	 * @param year
 	 * @param volParams
 	 * @param callbackFunction
@@ -247,7 +249,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 											Map<String, String> activityParams,
 											boolean bWarehouseSignIn,
 											String website, String callbackFunction)
-	{		
+	{	
+		List<String> responseList = new ArrayList<String>();
+		
 		String fn = volParams.get("delFN");
 		String ln = volParams.get("delLN");
 		
@@ -259,9 +263,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 				 volList.get(index).getLastName().equalsIgnoreCase(ln)))
 			index++;
 		
-		if(index<volList.size())
+		if(index < volList.size())
 		{
-			//Found the volunteer, update their contact info and increment their sign-ins
+			//found the volunteer, update their contact info and increment their sign-ins
 			ONCVolunteer updatedVol = volList.get(index);
 			
 			if(bWarehouseSignIn)
@@ -303,18 +307,21 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 				//the prior list. If its a sign-in from the warehouse, add the one activity
 				//to the volunteers current activity list. The activity won't be added if it already
 				//exists per the VolunteerActivity API
-				List<VolunteerActivity> actList = activityDB.createActivityList(year, activityParams);
-				if(!bWarehouseSignIn)
-					updatedVol.setActivityList(actList);
-				else if(bWarehouseSignIn && actList.size() == 1) //only one activity from sign-ins
-					updatedVol.addActivity(actList.get(0));
+//				List<VolAct> volActList = activityDB.createActivityList(year, activityParams, updatedVol);
+				responseList = volActDB.processActivityList(year, activityDB.createActivityList(year, activityParams, updatedVol));
+				
+//				if(!bWarehouseSignIn)
+//					updatedVol.setActivityList(actList);
+//				else if(bWarehouseSignIn && actList.size() == 1) //only one activity from sign-ins
+//					updatedVol.addActivity(actList.get(0));				
 			}
 			
 			volDBYear.setChanged(true);
 			
 			//notify in year clients
 			Gson gson = new Gson();
-			clientMgr.notifyAllInYearClients(year, "UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
+			responseList.add("UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
+			clientMgr.notifyAllInYearClients(year, responseList);
 			
 			//if this registration came from a warehouse signin, update the warehouseDB
 			if(bWarehouseSignIn)
@@ -322,13 +329,18 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		}
 		else
 		{
+//			public ONCVolunteer(int driverid, String drvNum, String fName, String lName, String email, 
+//					String hNum, String street, String unit, String city, String zipcode, 
+//					String homePhone, String cellPhone, String group, String comment, 
+//					Date today, String changedBy)
+			
 			//Didn't find the volunteer, create and add a new one, including their activity list
-			String group = volParams.get("group").equals("Other") ? volParams.get("groupother") : volParams.get("group");
-			ONCVolunteer addedVol = new ONCVolunteer(-1, -1, "N/A", fn, ln, volParams.get("delemail"), 
+			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, volParams.get("delemail"), 
 					volParams.get("delhousenum"), volParams.get("delstreet"), volParams.get("delunit"),
-					volParams.get("delcity"), volParams.get("delzipcode"), volParams.get("primaryphone"),
-					volParams.get("primaryphone"), "1", activityDB.createActivityList(year, activityParams), 
-					group, volParams.get("comment"), new Date(), website);
+					volParams.get("delcity"), volParams.get("delzipcode"),
+					volParams.get("primaryphone"), volParams.get("primaryphone"),
+					volParams.get("group").equals("Other") ? volParams.get("groupother") : volParams.get("group"),
+					volParams.get("comment"), new Date(), website);
 			
 			addedVol.setID(volDBYear.getNextID());
 			if(bWarehouseSignIn)	
@@ -337,9 +349,12 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			volDBYear.add(addedVol);
 			volDBYear.setChanged(true);
 			
+			responseList = volActDB.processActivityList(year, activityDB.createActivityList(year, activityParams, addedVol));
+			
 			//notify in year clients
 			Gson gson = new Gson();
-			clientMgr.notifyAllInYearClients(year, "ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
+			responseList.add("ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
+			clientMgr.notifyAllInYearClients(year, responseList);
 			
 			//if this registration came from a warehouse signin, update the warehouseDB
 			if(bWarehouseSignIn)
@@ -584,20 +599,44 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		actTableHTML.append("<th align=\"left\"><u>Start Date</u></th>");
 		actTableHTML.append("<th align=\"left\"><u>Start Time</u></th>");
 		actTableHTML.append("<th align=\"left\"><u>Location</u></th>");
-		
-		//sort the search list by Start date
-		Collections.sort(v.getActivityList(), new VolunteerActivityDateComparator());
-		for(VolunteerActivity va : v.getActivityList())
-			if(v != null)
-			{
-				actTableHTML.append("<tr><td>" + va.getName() + "</td>");
-				actTableHTML.append("<td>" + va.getStartDate() + "</td>");
-//				actTableHTML.append("<td>" + va.getStartTime() + "</td>");
-				actTableHTML.append("<td>" + va.getLocation() + "</td></tr>");
-			}
+
+		try
+		{
+			ServerVolunteerActivityDB volActDB = ServerVolunteerActivityDB.getInstance();
+			ServerActivityDB servActDB = ServerActivityDB.getInstance();
 			
-		actTableHTML.append("</table>");
+			List<VolAct> vaList = volActDB.getVolunteerActivities(DBManager.getCurrentYear(), v);
+			List<VolunteerActivity> volunteerActivities = new ArrayList<VolunteerActivity>();
+			
+			for(VolAct va : vaList)
+				volunteerActivities.add(servActDB.findActivity(DBManager.getCurrentYear(), va.getActID()));
+			
+			//sort the search list by Start date
+			Collections.sort(volunteerActivities, new VolunteerActivityDateComparator());
+			for(VolunteerActivity va : volunteerActivities)
+				if(v != null)
+				{
+					actTableHTML.append("<tr><td>" + va.getName() + "</td>");
+					actTableHTML.append("<td>" + va.getStartDate() + "</td>");
+//					actTableHTML.append("<td>" + va.getStartTime() + "</td>");
+					actTableHTML.append("<td>" + va.getLocation() + "</td></tr>");
+				}
 				
+			actTableHTML.append("</table>");
+					
+			return actTableHTML.toString();
+		}
+		catch (FileNotFoundException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		return actTableHTML.toString();
 	}
 	
@@ -605,7 +644,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	void addObject(int year, String[] nextLine)
 	{
 		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
-		volunteerDBYear.add(new ONCVolunteer(nextLine, activityDB.createActivityList(year, nextLine[ACTIVITY_STRING_COL], nextLine[COMMENTS_STRING_COL])));	
+		volunteerDBYear.add(new ONCVolunteer(nextLine));	
 	}
 
 	@Override
@@ -627,8 +666,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		 if(volunteerDBYear.isUnsaved())
 		 {
 			 String[] driverHeader = {"Driver ID", "Genius ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
-			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Comment", "Activity Code",
-			 			"Group", "Act Comments", "Qty", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
+			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Comment",
+			 			"Group", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
 			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
 			 
 			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);
@@ -653,8 +692,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 				String response = update(DBManager.getCurrentYear(), v);
 				if(response != null)
 					clientJsonMssgList.add(response);
-				System.out.println(String.format("ServVolDB.newAndMod: updateVol: %s %s, id= %d",
-						v.getFirstName(), v.getLastName(), v.getID()));
+//				System.out.println(String.format("ServVolDB.newAndMod: updateVol: %s %s, id= %d",
+//						v.getFirstName(), v.getLastName(), v.getID()));
 			}
 			
 			if(!clientJsonMssgList.isEmpty())
@@ -678,8 +717,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 				if(response != null)
 					clientJsonMssgList.add(response);
 				
-				System.out.println(String.format("ServVolDB.newAndMod: newVol: %s %s, id= %d",
-						v.getFirstName(), v.getLastName(), v.getID()));
+//				System.out.println(String.format("ServVolDB.newAndMod: newVol: %s %s, id= %d",
+//						v.getFirstName(), v.getLastName(), v.getID()));
 			}
 			
 			if(!clientJsonMssgList.isEmpty())

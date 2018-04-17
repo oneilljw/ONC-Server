@@ -21,7 +21,9 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 
 import ourneighborschild.SignUp;
+import ourneighborschild.VolAct;
 import ourneighborschild.GeniusSignUps;
+import ourneighborschild.ONCVolunteer;
 import ourneighborschild.VolunteerActivity;
 
 import com.google.gson.Gson;
@@ -109,6 +111,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return response;	
 	}
 	
+	
 	//Return the list of sign-ups
 	String getSignUps()
 	{
@@ -133,6 +136,26 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			cloneList.add(new VolunteerActivity(va));
 		
 		return cloneList;		
+	}
+	
+	VolunteerActivity findActivity(int year, int actID)
+	{
+		List<VolunteerActivity> actList = activityDB.get(year - BASE_YEAR).getList();
+		int index = 0;
+		while(index < actList.size() && actList.get(index).getID() != actID)	
+			index++;
+		
+		return index < actList.size() ? actList.get(index) : null;
+	}
+	
+	VolunteerActivity findActivity(int year, long actGeniusID)
+	{
+		List<VolunteerActivity> actList = activityDB.get(year - BASE_YEAR).getList();
+		int index = 0;
+		while(index < actList.size() && actList.get(index).getGeniusID() != actGeniusID)	
+			index++;
+		
+		return index < actList.size() ? actList.get(index) : null;
 	}
 /*	
 	static HtmlResponse getActivityDayJSONP(int year, String callbackFunction)
@@ -187,46 +210,11 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
-*/	
-	//creates a list of volunteer activities based on stored string of activity ID's 
-	//separated by the '_' character.
-	List<VolunteerActivity> createActivityList(int year, String zActivities, String zComments)
-	{
-		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
-		List<VolunteerActivity> activityList = activityDBYear.getList();
-		
-		List<VolunteerActivity> volActList = new LinkedList<VolunteerActivity>();
-
-		if(!zActivities.isEmpty())
-		{
-			String[] activityParts = zActivities.split("_");
-		
-			for(String zActivity : activityParts)
-			{
-				int index = 0;
-				while(index < activityList.size() && activityList.get(index).getID() != Integer.parseInt(zActivity))
-					index++;
-			
-				if(index < activityList.size())
-				{
-					//create a deep copy of the activity
-					VolunteerActivity volActivity = new VolunteerActivity(activityList.get(index));
-				
-					//see if there are volunteer comments that need to be added to the activity
-					if(!zComments.isEmpty())
-						addVolunteerCommentsToActivity(volActivity, zComments);
-
-					volActList.add(volActivity);
-				}
-			}
-		}
-		
-		return volActList;
-	}
+*/
 	
-	//creates a list of volunteer activities based on a parameter map from the web site.
+	//creates a list of vol activities based on a parameter map from the web site.
 	//The parameter map contains the activity check boxes and activity comments
-	List<VolunteerActivity> createActivityList(int year, Map<String, String> actMap)
+	List<VolAct> createActivityList(int year, Map<String, String> actMap, ONCVolunteer v)
 	{
 //		Set<String> actkeyset = actMap.keySet();
 //		for(String key:actkeyset)
@@ -234,7 +222,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
 		List<VolunteerActivity> activityList = activityDBYear.getList();
-		List<VolunteerActivity> volActList = new LinkedList<VolunteerActivity>();
+		
+		List<VolAct> volActList = new LinkedList<VolAct>();
 		
 		//iterate thru the activity map and add the activities the volunteer sign up for plus 
 		//their comments
@@ -247,11 +236,11 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 					//check if the activity check box value == the vol activity id
 					if(Integer.parseInt(actMap.get(key)) == va.getID())
 					{
-						//create a deep copy of the activity and add the associated comment with 
-						//the actckbox key
-						VolunteerActivity volActivity = new VolunteerActivity(va);
-						volActivity.setComment(actMap.get("actcomment" + key.substring(8)));
-						volActList.add(volActivity);
+						//for each activity in the map, determine if it's already
+						VolAct volAct = new VolAct(-1, v.getID(), va.getID(), va.getGeniusID(), 1, 
+								actMap.get("actcomment" + key.substring(8)));
+					
+						volActList.add(volAct);
 						break;
 					}
 				}
@@ -263,35 +252,6 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 //					va.getName(), va.getComment()));
 			
 		return volActList;
-	}
-	
-	void addVolunteerCommentsToActivity(VolunteerActivity va, String zComments)
-	{
-		String[] commentsArray = zComments.split("_");
-		
-		int index = 0;
-		while(index < commentsArray.length && 
-			   commentsArray[index].length() >= COMMENT_ACTIIVTY_IDENTIFIER_LENGTH)
-		{
-			///each valid comment starts with a 4 character numeric activity identifier,
-			//break it out and test it's validity
-			String comment = commentsArray[index++];
-			
-			String actID = comment.substring(0, COMMENT_ACTIIVTY_IDENTIFIER_LENGTH);
-			String actComment = comment.substring(COMMENT_ACTIIVTY_IDENTIFIER_LENGTH);
-			
-//			System.out.println(String.format("ServActDB.addVolComments array: vaID: %d, commentArray size= %d, comment 0: %s, actID= %s, actCommnet= %s",
-//					va.getID(), commentsArray.length, commentsArray[0], actID, actComment));
-			
-			if(isNumeric(actID) && Integer.parseInt(actID) == va.getID())
-			{
-//				System.out.println(String.format("ServActDB.addVolComments: vaID: %d, set comment: %s",
-//						va.getID(), actComment));
-				
-				va.setComment(actComment);
-				break;
-			}
-		}
 	}
 /*	
 	static HtmlResponse getActivitiesJSONP(int year, String name, String callbackFunction)
@@ -597,7 +557,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		 
 		 if(activityDBYear.isUnsaved())
 		 {
-			 String[] header = {"ID", "Genius ID", "Category" ,"Name","StartTimeMillis",
+			 String[] header = {"ID", "Category" ,"Name","StartTimeMillis",
 					 			"EndTimeMillis", "Location", "Description", "Open", "Notify", 
 					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
 			 

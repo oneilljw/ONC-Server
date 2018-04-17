@@ -88,7 +88,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		
 		//notify all in year clients
 		Gson gson = new Gson();
-		clientMgr.notifyAllInYearClients(year, "ADDED_VOLUNTEER" + gson.toJson(addedVol, ONCVolunteer.class));
+		clientMgr.notifyAllInYearClients(year, "ADDED_WAREHOUSE_VOLUNTEER" + gson.toJson(addedVol, ONCVolunteer.class));
 	}
 
 	@Override

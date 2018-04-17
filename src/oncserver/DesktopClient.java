@@ -57,6 +57,7 @@ public class DesktopClient extends Thread
     private ServerPartnerDB serverPartnerDB;
     private ServerActivityDB activityDB;
     private ServerVolunteerDB volunteerDB;
+    private ServerVolunteerActivityDB volunteerActivityDB;
     private ServerWarehouseDB warehouseDB;
     private ServerFamilyHistoryDB famHistoryDB;
     private ServerWishCatalog wishCatalog;
@@ -106,6 +107,7 @@ public class DesktopClient extends Thread
 	        serverPartnerDB = ServerPartnerDB.getInstance();
 	        activityDB = ServerActivityDB.getInstance();
 	        volunteerDB = ServerVolunteerDB.getInstance();
+	        volunteerActivityDB = ServerVolunteerActivityDB.getInstance();
 	        warehouseDB = ServerWarehouseDB.getInstance();
 	        famHistoryDB = ServerFamilyHistoryDB.getInstance();
 	        wishCatalog = ServerWishCatalog.getInstance();
@@ -281,6 +283,12 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		String response = volunteerDB.getDrivers(year);
+                		output.println(response);
+                }
+                else if(command.startsWith("GET<volunteer_activities>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = volunteerActivityDB.getVolunteerActivities(year);
                 		output.println(response);
                 }
                 else if(command.startsWith("GET<deliveries>"))
@@ -735,6 +743,38 @@ public class DesktopClient extends Thread
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
+                else if(command.startsWith("POST<update_volunteer_activity>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = volunteerActivityDB.update(year, command.substring(31));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<delete_volunteer_activity>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = volunteerActivityDB.delete(year, command.substring(31));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<add_volunteer_activity>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = volunteerActivityDB.add(year, command.substring(28));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<volunteer_activity_group>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		List<String> responseList = volunteerActivityDB.addVolunteerActivityList(year, command.substring(30));
+                		output.println(responseList);
+                		clientMgr.notifyAllInYearClients(year, responseList);
+                }
+                
 /*MEALS ARE NOT UPDATED BY DESKTOP CLIENTS - NEW MEALS ARE ADDED
                 else if(command.startsWith("POST<update_meal>"))
                 {

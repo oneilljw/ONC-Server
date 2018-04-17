@@ -11,7 +11,9 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -384,7 +386,13 @@ public class SignUpGeniusIF
 			List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpReport.getContent().getSignUpActivities());
 		
 			//create the new and modified volunteer lists
-			createNewAndModifiedVolunteerLists(uniqueVolList);
+			createNewAndModifiedVolunteerLists(uniqueVolList, signUpReport.getContent().getSignUpActivities());
+			
+			//for the new volunteers, create their volunteer activity lists
+			for(ONCVolunteer v : newVolunteerFoundList)
+			{
+				List<VolunteerActivity> vaList = createVolunteerActivityList(signUpReport.getContent().getSignUpActivities(), v);
+			}
 		}
 		
 		List<SignUpActivity> createUniqueActivityList(List<SignUpActivity>  signUpActivityList)
@@ -479,8 +487,10 @@ public class SignUpGeniusIF
 			}				
 		}
 		
-		void createNewAndModifiedVolunteerLists(List<ONCVolunteer> uniqueVolList)
+		void createNewAndModifiedVolunteerLists(List<ONCVolunteer> uniqueVolList, List<SignUpActivity> suActList)
 		{
+			System.out.println(String.format("GenIF.createNewModVols: signUpList size= %d", suActList.size()));
+			
 			newVolunteerFoundList = new ArrayList<ONCVolunteer>();
 			updatedVolunteerFoundList = new ArrayList<ONCVolunteer>();
 			
@@ -503,7 +513,7 @@ public class SignUpGeniusIF
 						
 					if(index < cloneVolList.size())
 					{
-						//there is a match. If it's not an exact match, add it as a modified activity
+						//there is a match. If it's not an exact match, add it as a modified volunteer
 						if(result != ONCVolunteer.VOLUNTEER_EXACT_MATCH)
 						{
 							//add the current ID and add activity to update list
@@ -511,8 +521,10 @@ public class SignUpGeniusIF
 							updatedVolunteerFoundList.add(importedVol);
 						}
 					}
-					else //there was not a match, it's a new activity
+					else  //there was not a match, it's a new volunteer
+					{	
 						newVolunteerFoundList.add(importedVol);
+					}
 				}
 			}
 			catch (FileNotFoundException e)
@@ -527,9 +539,39 @@ public class SignUpGeniusIF
 			}				
 		}
 		
-		/***
-		 * 
-		 */
+		List<VolunteerActivity> createVolunteerActivityList(List<SignUpActivity> suActList, ONCVolunteer vol)
+		{
+			List<VolunteerActivity> vaList = new ArrayList<VolunteerActivity>();
+			
+			try
+			{
+				ServerActivityDB activityDB = ServerActivityDB.getInstance();
+				for(SignUpActivity sua : suActList)
+				{
+					//search thru the imported activities and find ones that the volunteer signed up for
+					if(sua.getEmail().equals(vol.getEmail()) && 
+						sua.getFirstname().equalsIgnoreCase(vol.getFirstName()) &&
+						 sua.getLastname().equalsIgnoreCase(vol.getLastName()))
+					{
+						VolunteerActivity actualActivity = activityDB.findActivity(DBManager.getCurrentYear(), sua.getSlotitemid());
+						if(actualActivity != null)
+							vaList.add(actualActivity);
+					}
+				}
+			}
+			catch (FileNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	
+			return vaList;
+		}
 		
 		 /*
 	     * Executed in event dispatching thread
