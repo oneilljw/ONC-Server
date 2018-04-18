@@ -26,6 +26,7 @@ import ourneighborschild.GeniusSignUps;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.SignUp;
 import ourneighborschild.SignUpActivity;
+import ourneighborschild.VolAct;
 import ourneighborschild.VolunteerActivity;
 
 public class SignUpGeniusIF
@@ -224,6 +225,8 @@ public class SignUpGeniusIF
 		List<VolunteerActivity> updatedActivitiesFoundList;
 		List<ONCVolunteer> newVolunteerFoundList;
 		List<ONCVolunteer> updatedVolunteerFoundList;
+		List<VolAct> newVolActFoundList;
+		List<VolAct> updatedVolActFoundList;
     		
     		SignUpGeniusImporter(SignUpEventType type, String url)
     		{
@@ -388,10 +391,23 @@ public class SignUpGeniusIF
 			//create the new and modified volunteer lists
 			createNewAndModifiedVolunteerLists(uniqueVolList, signUpReport.getContent().getSignUpActivities());
 			
-			//for the new volunteers, create their volunteer activity lists
+			//for the new volunteers, create their VolAct lists
 			for(ONCVolunteer v : newVolunteerFoundList)
 			{
-				List<VolunteerActivity> vaList = createVolunteerActivityList(signUpReport.getContent().getSignUpActivities(), v);
+				newVolActFoundList = createVolunteerActivityList(signUpReport.getContent().getSignUpActivities(), v);
+				//print the list for debug purposes
+//				for(VolAct va: newVolActFoundList)
+//					System.out.println(String.format("SUGIF.sim: new vol = %s, volID= %d actID = %d, qty= %d, comment= %s",
+//							v.getLNFI(), va.getVolID(), va.getActID(), va.getQty(), va.getComment()));
+			}
+			
+			//for the modified volunteers, create their VolAct lists
+			for(ONCVolunteer v : updatedVolunteerFoundList)
+			{
+				updatedVolActFoundList = createVolunteerActivityList(signUpReport.getContent().getSignUpActivities(), v);
+//				for(VolAct va: updatedVolActFoundList)
+//					System.out.println(String.format("SUGIF.sim: modified vol = %s, volID= %d actID = %d, qty= %d, comment= %s",
+//							v.getLNFI(), va.getVolID(), va.getActID(), va.getQty(), va.getComment()));
 			}
 		}
 		
@@ -489,8 +505,6 @@ public class SignUpGeniusIF
 		
 		void createNewAndModifiedVolunteerLists(List<ONCVolunteer> uniqueVolList, List<SignUpActivity> suActList)
 		{
-			System.out.println(String.format("GenIF.createNewModVols: signUpList size= %d", suActList.size()));
-			
 			newVolunteerFoundList = new ArrayList<ONCVolunteer>();
 			updatedVolunteerFoundList = new ArrayList<ONCVolunteer>();
 			
@@ -539,9 +553,9 @@ public class SignUpGeniusIF
 			}				
 		}
 		
-		List<VolunteerActivity> createVolunteerActivityList(List<SignUpActivity> suActList, ONCVolunteer vol)
+		List<VolAct> createVolunteerActivityList(List<SignUpActivity> suActList, ONCVolunteer vol)
 		{
-			List<VolunteerActivity> vaList = new ArrayList<VolunteerActivity>();
+			List<VolAct> vaList = new ArrayList<VolAct>();
 			
 			try
 			{
@@ -555,7 +569,8 @@ public class SignUpGeniusIF
 					{
 						VolunteerActivity actualActivity = activityDB.findActivity(DBManager.getCurrentYear(), sua.getSlotitemid());
 						if(actualActivity != null)
-							vaList.add(actualActivity);
+							vaList.add(new VolAct(-1, vol.getID(), actualActivity.getID(),
+										sua.getSlotitemid(), sua.getMyqty(), sua.getComment()));
 					}
 				}
 			}

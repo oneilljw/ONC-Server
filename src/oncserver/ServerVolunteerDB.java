@@ -3,8 +3,6 @@ package oncserver;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -77,7 +75,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			System.out.println(String.format("ServVolDB.constrct: Reqesting SignUp Content, signUpID= %d", signUpGeniusID));
 			geniusIF.requestSignUpContent(signUpGeniusID, SignUpReportType.filled);
 		}
-*/		
+*/
 	}
 	
 	public static ServerVolunteerDB getInstance() throws FileNotFoundException, IOException
