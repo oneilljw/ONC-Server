@@ -14,6 +14,7 @@ import com.sun.net.httpserver.HttpServer;
 public class ONCWebServer
 {
 //	private static final int CONCURRENT_THREADS = 2;
+	private static final int REDIRECT_PORT = 8903;
 	
 	private static ONCWebServer instance = null;
 	
@@ -22,8 +23,7 @@ public class ONCWebServer
 		ServerUI serverUI = ServerUI.getInstance();
 		
 		//create the web server
-		Integer publicPort = ServerPortManager.getPort("Public Port");
-		HttpServer server = HttpServer.create(new InetSocketAddress(publicPort), 0);
+		HttpServer server = HttpServer.create(new InetSocketAddress(REDIRECT_PORT), 0);
 		HttpContext context;
 		
 		//set up the oncWebHttpHandler

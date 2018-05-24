@@ -74,6 +74,11 @@ public class SignUpGeniusIF
 		this.fireSignUpDataChanged(this, type, volList);
 	}
 	
+	void signUpVolunteerActivitiesReceived(SignUpEventType type, List<VolAct> volActList)
+	{
+		this.fireSignUpDataChanged(this, type, volActList);
+	}
+	
 	//List of registered listeners for Client change events
 	protected ArrayList<SignUpListener> listeners;
    
@@ -391,6 +396,15 @@ public class SignUpGeniusIF
 			//create the new and modified volunteer lists
 			createNewAndModifiedVolunteerLists(uniqueVolList, signUpReport.getContent().getSignUpActivities());
 			
+			//for the modified volunteers, create their VolAct lists
+			for(ONCVolunteer v : updatedVolunteerFoundList)
+			{
+				updatedVolActFoundList = createVolunteerActivityList(signUpReport.getContent().getSignUpActivities(), v);
+//				for(VolAct va: updatedVolActFoundList)
+//					System.out.println(String.format("SUGIF.sim: modified vol = %s, volID= %d actID = %d, qty= %d, comment= %s",
+//							v.getLNFI(), va.getVolID(), va.getActID(), va.getQty(), va.getComment()));
+			}
+			
 			//for the new volunteers, create their VolAct lists
 			for(ONCVolunteer v : newVolunteerFoundList)
 			{
@@ -398,15 +412,6 @@ public class SignUpGeniusIF
 				//print the list for debug purposes
 //				for(VolAct va: newVolActFoundList)
 //					System.out.println(String.format("SUGIF.sim: new vol = %s, volID= %d actID = %d, qty= %d, comment= %s",
-//							v.getLNFI(), va.getVolID(), va.getActID(), va.getQty(), va.getComment()));
-			}
-			
-			//for the modified volunteers, create their VolAct lists
-			for(ONCVolunteer v : updatedVolunteerFoundList)
-			{
-				updatedVolActFoundList = createVolunteerActivityList(signUpReport.getContent().getSignUpActivities(), v);
-//				for(VolAct va: updatedVolActFoundList)
-//					System.out.println(String.format("SUGIF.sim: modified vol = %s, volID= %d actID = %d, qty= %d, comment= %s",
 //							v.getLNFI(), va.getVolID(), va.getActID(), va.getQty(), va.getComment()));
 			}
 		}
@@ -606,12 +611,20 @@ public class SignUpGeniusIF
 	    			if(!newActivitiesFoundList.isEmpty())
 	    				signUpContentReceived(SignUpEventType.NEW_ACTIVITIES, newActivitiesFoundList);
 	    			
-	    			//if lists are not empty, notify clients
 	    			if(!updatedVolunteerFoundList.isEmpty())
 	    				signUpVolunteersReceived(SignUpEventType.UPDATED_VOLUNTEERS, updatedVolunteerFoundList);
 	    			
 	    			if(!newVolunteerFoundList.isEmpty())
 	    				signUpVolunteersReceived(SignUpEventType.NEW_VOLUNTEERS, newVolunteerFoundList);
+	    			
+	    			//must update these lists for the id's of new activities and new volunteers
+	    			//before adding new volActs
+	    			
+	    			if(!updatedVolActFoundList.isEmpty())
+	    				signUpVolunteerActivitiesReceived(SignUpEventType.UPDATED_VOLUNTEER_ACTIVITIES, updatedVolActFoundList);
+	    			
+	    			if(!newVolActFoundList.isEmpty())
+	    				signUpVolunteerActivitiesReceived(SignUpEventType.NEW_VOLUNTEERS, newVolActFoundList);
 	    		}
 	    }
     }

@@ -28,7 +28,7 @@ import ourneighborschild.WebsiteStatus;
 
 public class ONCSecureWebServer
 {
-	private static final int WEB_SERVER_PORT = 8902;
+	private static final int SECURE_WEB_SERVER_PORT = 8902;
 	private static final int CONCURRENT_THREADS = 5;
 	private static final String ONC_SERVER_KEYSTORE = "oncdms.jks";
 	private static final String ONC_STORE_PASSWORD = "oncpassword";
@@ -66,7 +66,7 @@ public class ONCSecureWebServer
 			tmf.init(keystore);
 			
 			// create https server
-			server = HttpsServer.create(new InetSocketAddress(WEB_SERVER_PORT), 0);
+			server = HttpsServer.create(new InetSocketAddress(SECURE_WEB_SERVER_PORT), 0);
 			
 			// create ssl context
 			SSLContext sslContext = SSLContext.getInstance("TLSv1");

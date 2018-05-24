@@ -299,7 +299,55 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	@Override
 	public void signUpDataReceived(SignUpEvent event)
 	{
-	
+		if(event.type() == SignUpEventType.UPDATED_VOLUNTEER_ACTIVITIES)
+		{
+			//process list of updated volunteer activities.
+			@SuppressWarnings("unchecked")
+			List<VolAct> updatedVolActList = (List<VolAct>) event.getSignUpObject();
+			List<String> clientJsonMssgList = new ArrayList<String>();
+			
+			//add the updated volunteers to the database
+			for(VolAct va : updatedVolActList)
+			{
+				String response = update(DBManager.getCurrentYear(), va);
+				if(response != null)
+					clientJsonMssgList.add(response);
+//				System.out.println(String.format("ServVolDB.newAndMod: updateVol: %s %s, id= %d",
+//						v.getFirstName(), v.getLastName(), v.getID()));
+			}
+			
+			if(!clientJsonMssgList.isEmpty())
+			{
+				//there were updates, send list of updated json's to clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			}
+		}
+		else if(event.type() == SignUpEventType.NEW_VOLUNTEERS)
+		{
+			//print the new volunteer activities list
+			@SuppressWarnings("unchecked")
+			List<VolAct> newVolActList = (List<VolAct>) event.getSignUpObject();
+			List<String> clientJsonMssgList = new ArrayList<String>();
+			
+			//add the updated volunteers to the database
+			for(VolAct va : newVolActList)
+			{
+				String response = add(DBManager.getCurrentYear(), va);
+				if(response != null)
+					clientJsonMssgList.add(response);
+				
+//				System.out.println(String.format("ServVolDB.newAndMod: newVol: %s %s, id= %d",
+//						v.getFirstName(), v.getLastName(), v.getID()));
+			}
+			
+			if(!clientJsonMssgList.isEmpty())
+			{
+				//there were new activities, send list of new json's to clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			}
+		}
 	}
 
 	@Override
