@@ -27,7 +27,7 @@ import ourneighborschild.ONCVolunteer;
 import ourneighborschild.SignUp;
 import ourneighborschild.SignUpActivity;
 import ourneighborschild.VolAct;
-import ourneighborschild.VolunteerActivity;
+import ourneighborschild.Activity;
 
 public class SignUpGeniusIF
 {
@@ -64,7 +64,7 @@ public class SignUpGeniusIF
 		this.fireSignUpDataChanged(this, SignUpEventType.SIGNUP_IMPORT, geniusSignUps);
 	}
 	
-	void signUpContentReceived(SignUpEventType type, List<VolunteerActivity> volActList)
+	void signUpContentReceived(SignUpEventType type, List<Activity> volActList)
 	{
 		this.fireSignUpDataChanged(this, type, volActList);
 	}
@@ -226,8 +226,8 @@ public class SignUpGeniusIF
     		String url;
     		GeniusSignUps importedSignUps;
     		SignUpReport signUpReport;
-    		List<VolunteerActivity> newActivitiesFoundList;
-		List<VolunteerActivity> updatedActivitiesFoundList;
+    		List<Activity> newActivitiesFoundList;
+		List<Activity> updatedActivitiesFoundList;
 		List<ONCVolunteer> newVolunteerFoundList;
 		List<ONCVolunteer> updatedVolunteerFoundList;
 		List<VolAct> newVolActFoundList;
@@ -461,31 +461,31 @@ public class SignUpGeniusIF
 		
 		void createNewAndModifiedActivityLists(List<SignUpActivity> uniqueActList)
 		{
-			newActivitiesFoundList = new ArrayList<VolunteerActivity>();
-			updatedActivitiesFoundList = new ArrayList<VolunteerActivity>();
+			newActivitiesFoundList = new ArrayList<Activity>();
+			updatedActivitiesFoundList = new ArrayList<Activity>();
 			
 			//clone a list of the current activities from the activity database
 			ServerActivityDB activityDB;
 			try
 			{
 				activityDB = ServerActivityDB.getInstance();
-				List<VolunteerActivity> cloneActList = activityDB.clone(DBManager.getCurrentYear());
+				List<Activity> cloneActList = activityDB.clone(DBManager.getCurrentYear());
 				
 				//compare the unique activity list to the cloned list. If a unique activity is not in 
 				//the current list or if the activity name, start, end or location has been modified, add
 				//the activity to the newAndModified activities list
 				for(SignUpActivity sua : uniqueActList)
 				{
-					VolunteerActivity importedVA = new VolunteerActivity(sua);
+					Activity importedVA = new Activity(sua);
 					int index = 0, result = -1;
 					while(index < cloneActList.size() && 
-						(result = importedVA.compareActivities(cloneActList.get(index))) == VolunteerActivity.VOLUNTEER_ACTIVITY_DOES_NOT_MATCH)
+						(result = importedVA.compareActivities(cloneActList.get(index))) == Activity.VOLUNTEER_ACTIVITY_DOES_NOT_MATCH)
 						index++;
 						
 					if(index < cloneActList.size())
 					{
 						//there is a match. If it's not an exact match, add it as a modified activity
-						if(result != VolunteerActivity.VOLUNTEER_ACTIVITY_EXACT_MATCH)
+						if(result != Activity.VOLUNTEER_ACTIVITY_EXACT_MATCH)
 						{
 							//add the current ID and add activity to update list
 							importedVA.setID(cloneActList.get(index).getID());
@@ -572,7 +572,7 @@ public class SignUpGeniusIF
 						sua.getFirstname().equalsIgnoreCase(vol.getFirstName()) &&
 						 sua.getLastname().equalsIgnoreCase(vol.getLastName()))
 					{
-						VolunteerActivity actualActivity = activityDB.findActivity(DBManager.getCurrentYear(), sua.getSlotitemid());
+						Activity actualActivity = activityDB.findActivity(DBManager.getCurrentYear(), sua.getSlotitemid());
 						if(actualActivity != null)
 							vaList.add(new VolAct(-1, vol.getID(), actualActivity.getID(),
 										sua.getSlotitemid(), sua.getMyqty(), sua.getComment()));

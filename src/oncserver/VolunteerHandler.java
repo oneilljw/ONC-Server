@@ -57,6 +57,8 @@ public class VolunteerHandler extends ONCWebpageHandler
 		{
 			int year = Integer.parseInt((String)params.get("year"));
 			String callbackFunction = (String) params.get("callback");
+			
+//			printParameters(t);	//DEBUG
 		
 			String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
 							"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
@@ -68,7 +70,7 @@ public class VolunteerHandler extends ONCWebpageHandler
 			activityParams.put("actckbox0", volParams.get("activity"));
 			activityParams.put("actcomment0","New volunteer registered in warehouse");
 		    		
-			htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year,  volParams, activityParams,
+			htmlResponse = ServerVolunteerDB.signInVolunteerJSONP(year,  volParams, activityParams,
 										true, "Warehouse Registration Webpage", callbackFunction);
 		
 			sendHTMLResponse(t, htmlResponse);  
@@ -88,7 +90,7 @@ public class VolunteerHandler extends ONCWebpageHandler
 			activityParams.put("actckbox0",volParams.get("activity"));
 			activityParams.put("actcomment0","New delivery volunteer on delivery day");
 		    		
-			htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year, volParams, activityParams,
+			htmlResponse = ServerVolunteerDB.signInVolunteerJSONP(year, volParams, activityParams,
 										true, "Delivery Day Registration Webpage", callbackFunction);
 			sendHTMLResponse(t, htmlResponse); 
 		}
@@ -108,6 +110,25 @@ public class VolunteerHandler extends ONCWebpageHandler
 			htmlResponse = ServerVolunteerDB.getVolunteerJSONP(year, fn, ln, cell, callback);
 			
 			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/volunteersignin"))
+		{
+			String response = webpageMap.get(requestURI);
+			response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
+			
+			//is it Delivery Day?
+			if(ServerGlobalVariableDB.isDeliveryDay(DBManager.getCurrentYear()))
+			{
+				response = response.replaceAll("BANNER_TITLE", "ONC Delivery Day Volunteer Sign-In");
+				response = response.replace("IS_DELIVERY_DAY?", "true");
+			}
+			else
+			{
+				response = response.replaceAll("BANNER_TITLE", "ONC Volunteer Sign-In");
+				response = response.replace("IS_DELIVERY_DAY?", "false");
+			}
+
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
 		else		//volunteer registration, volunteer sign-in, or driver sign-in
 		{

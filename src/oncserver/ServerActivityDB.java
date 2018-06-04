@@ -24,7 +24,7 @@ import ourneighborschild.SignUp;
 import ourneighborschild.VolAct;
 import ourneighborschild.GeniusSignUps;
 import ourneighborschild.ONCVolunteer;
-import ourneighborschild.VolunteerActivity;
+import ourneighborschild.Activity;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -105,7 +105,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	String getActivities(int year)
 	{
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<VolunteerActivity>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<Activity>>(){}.getType();
 			
 		String response = gson.toJson(activityDB.get(year - BASE_YEAR).getList(), listtype);
 		return response;	
@@ -127,20 +127,20 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return activityDB.get(year - BASE_YEAR).getList().size();
 	}
 	
-	List<VolunteerActivity> clone(int year)
+	List<Activity> clone(int year)
 	{
-		List<VolunteerActivity> actList = activityDB.get(year - BASE_YEAR).getList();
-		List<VolunteerActivity> cloneList = new ArrayList<VolunteerActivity>();
+		List<Activity> actList = activityDB.get(year - BASE_YEAR).getList();
+		List<Activity> cloneList = new ArrayList<Activity>();
 		
-		for(VolunteerActivity va : actList)
-			cloneList.add(new VolunteerActivity(va));
+		for(Activity va : actList)
+			cloneList.add(new Activity(va));
 		
 		return cloneList;		
 	}
 	
-	VolunteerActivity findActivity(int year, int actID)
+	Activity findActivity(int year, int actID)
 	{
-		List<VolunteerActivity> actList = activityDB.get(year - BASE_YEAR).getList();
+		List<Activity> actList = activityDB.get(year - BASE_YEAR).getList();
 		int index = 0;
 		while(index < actList.size() && actList.get(index).getID() != actID)	
 			index++;
@@ -148,9 +148,9 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return index < actList.size() ? actList.get(index) : null;
 	}
 	
-	VolunteerActivity findActivity(int year, long actGeniusID)
+	Activity findActivity(int year, long actGeniusID)
 	{
-		List<VolunteerActivity> actList = activityDB.get(year - BASE_YEAR).getList();
+		List<Activity> actList = activityDB.get(year - BASE_YEAR).getList();
 		int index = 0;
 		while(index < actList.size() && actList.get(index).getGeniusID() != actGeniusID)	
 			index++;
@@ -211,6 +211,30 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 */
+	/******
+	 * Returns an activity based on time. Finds the closest match from an activity. Used
+	 * when volunteer registers in the warehouse and didn't already register thru sign-up genius.
+	 * An activity matches if it's start time and end times are between the +/- the tolerance
+	 * passed as a parameter.
+	 * @param year - int of the year activity match is for
+	 * @param time - long of UTC in milliseconds used for match search
+	 * @param tolerance - range in minutes search will use before and after start time and end time for a match
+	 * @return
+	 */
+	Activity matchActivity(int year, long time, int tolerance)
+	{
+		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
+		List<Activity> activityList = activityDBYear.getList();
+		
+		int offset = tolerance * 1000 * 60; 	//convert minutes to milliseconds
+		
+		int index = 0;
+		while(index < activityList.size() && !(activityList.get(index).getStartDate() >= time - offset &&
+										time <= activityList.get(index).getEndDate() + offset))
+			index++;
+		
+		return index < activityList.size() ? activityList.get(index) : null;
+	}
 	
 	//creates a list of vol activities based on a parameter map from the web site.
 	//The parameter map contains the activity check boxes and activity comments
@@ -221,7 +245,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 //			System.out.println(String.format("ActivityDB actMapKey= %s, actMapvalue= %s", key, (String)actMap.get(key)));
 		
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
-		List<VolunteerActivity> activityList = activityDBYear.getList();
+		List<Activity> activityList = activityDBYear.getList();
 		
 		List<VolAct> volActList = new LinkedList<VolAct>();
 		
@@ -231,7 +255,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		{
 			if(key.startsWith("actckbox"))
 			{	
-				for(VolunteerActivity va : activityList)
+				for(Activity va : activityList)
 				{
 					//check if the activity check box value == the vol activity id
 					if(Integer.parseInt(actMap.get(key)) == va.getID())
@@ -281,7 +305,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		
 		//Create a volunteer activity object for the new activity
 		Gson gson = new Gson();
-		VolunteerActivity addedActivity = gson.fromJson(json, VolunteerActivity.class);
+		Activity addedActivity = gson.fromJson(json, Activity.class);
 				
 		//set the new ID and timestamp for the new activity
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
@@ -292,10 +316,10 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		activityDBYear.add(addedActivity);
 		activityDBYear.setChanged(true);
 				
-		return "ADDED_ACTIVITY" + gson.toJson(addedActivity, VolunteerActivity.class);
+		return "ADDED_ACTIVITY" + gson.toJson(addedActivity, Activity.class);
 	}
 	
-	String add(int year, VolunteerActivity addedActivity) 
+	String add(int year, Activity addedActivity) 
 	{	
 		//set the new ID and time stamp for the new activity
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
@@ -307,19 +331,19 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		activityDBYear.setChanged(true);
 		
 		Gson gson = new Gson();
-		return  "ADDED_ACTIVITY" + gson.toJson(addedActivity, VolunteerActivity.class);
+		return  "ADDED_ACTIVITY" + gson.toJson(addedActivity, Activity.class);
 	}
 	
 	String update(int year, String json)
 	{
 		//Create a volunteer activity object for the updated driver
 		Gson gson = new Gson();
-		VolunteerActivity updatedActivity = gson.fromJson(json, VolunteerActivity.class);
+		Activity updatedActivity = gson.fromJson(json, Activity.class);
 		updatedActivity.setDateChanged(new Date());
 		
 		//Find the position for the current activity being updated
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
-		List<VolunteerActivity> activityList = activityDBYear.getList();
+		List<Activity> activityList = activityDBYear.getList();
 		int index = 0;
 		while(index < activityList.size() && activityList.get(index).getID() != updatedActivity.getID())
 			index++;
@@ -329,17 +353,17 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		{
 			activityList.set(index, updatedActivity);
 			activityDBYear.setChanged(true);
-			return "UPDATED_ACTIVITY" + gson.toJson(updatedActivity, VolunteerActivity.class);
+			return "UPDATED_ACTIVITY" + gson.toJson(updatedActivity, Activity.class);
 		}
 		else
 			return "UPDATE_FAILED";
 	}
 	
-	String update(int year, VolunteerActivity updatedActivity)
+	String update(int year, Activity updatedActivity)
 	{
 		//Find the position for the current activity being updated
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
-		List<VolunteerActivity> activityList = activityDBYear.getList();
+		List<Activity> activityList = activityDBYear.getList();
 		int index = 0;
 		while(index < activityList.size() && activityList.get(index).getID() != updatedActivity.getID())
 			index++;
@@ -351,7 +375,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			activityDBYear.setChanged(true);
 			
 			Gson gson = new Gson();
-			return "UPDATED_ACTIVITY" + gson.toJson(updatedActivity, VolunteerActivity.class);
+			return "UPDATED_ACTIVITY" + gson.toJson(updatedActivity, Activity.class);
 		}
 		
 		return null;
@@ -383,11 +407,11 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	{
 		//Create an object for the delete request
 		Gson gson = new Gson();
-		VolunteerActivity deletedActivity = gson.fromJson(json, VolunteerActivity.class);
+		Activity deletedActivity = gson.fromJson(json, Activity.class);
 		
 		//find and remove the deleted activity from the data base
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
-		List<VolunteerActivity> activityList = activityDBYear.getList();
+		List<Activity> activityList = activityDBYear.getList();
 		
 		int index = 0;
 		while(index < activityList.size() && activityList.get(index).getID() != deletedActivity.getID())
@@ -407,7 +431,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	void addObject(int year, String[] nextLine)
 	{
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
-		activityDBYear.add(new VolunteerActivity(nextLine));	
+		activityDBYear.add(new Activity(nextLine));	
 	}
 
 	@Override
@@ -504,11 +528,11 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		{
 			//process list of updated activities.
 			@SuppressWarnings("unchecked")
-			List<VolunteerActivity> updatedVAList = (List<VolunteerActivity>) event.getSignUpObject();
+			List<Activity> updatedVAList = (List<Activity>) event.getSignUpObject();
 			List<String> clientJsonMssgList = new ArrayList<String>();
 			
 			//add the updated activities to the database
-			for(VolunteerActivity va : updatedVAList)
+			for(Activity va : updatedVAList)
 			{
 				String response = update(DBManager.getCurrentYear(), va);
 				if(response != null)
@@ -528,10 +552,10 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		{
 			//print the new activities list
 			@SuppressWarnings("unchecked")
-			List<VolunteerActivity> newVAList = (List<VolunteerActivity>) event.getSignUpObject();
+			List<Activity> newVAList = (List<Activity>) event.getSignUpObject();
 			List<String> clientJsonMssgList = new ArrayList<String>();
 			
-			for(VolunteerActivity va : newVAList)
+			for(Activity va : newVAList)
 			{
 				String response = add(DBManager.getCurrentYear(), va);
 				if(response != null)
@@ -657,24 +681,24 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 
 	private class ActivityDBYear extends ServerDBYear
 	{
-		private List<VolunteerActivity> activityList;
+		private List<Activity> activityList;
 	    	
 	    ActivityDBYear(int year)
 	    {
 	    		super();
-	    		activityList = new ArrayList<VolunteerActivity>();
+	    		activityList = new ArrayList<Activity>();
 	    }
 	    
 	    //getters
-	    List<VolunteerActivity> getList() { return activityList; }
+	    List<Activity> getList() { return activityList; }
 	    
-	    void add(VolunteerActivity addedActivity) { activityList.add(addedActivity); }
+	    void add(Activity addedActivity) { activityList.add(addedActivity); }
 	}
 	
-	private static class VolunteerActivityDateComparator implements Comparator<VolunteerActivity>
+	private static class VolunteerActivityDateComparator implements Comparator<Activity>
 	{
 		@Override
-		public int compare(VolunteerActivity o1, VolunteerActivity o2)
+		public int compare(Activity o1, Activity o2)
 		{
 			if(o1.getStartDate() < o2.getStartDate())
 				return -1;

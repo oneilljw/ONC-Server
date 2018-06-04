@@ -135,7 +135,7 @@ public class ONCSecureWebServer
 							"/wishes", "/reqchangepw","/activities", "/activitydays", "/address", 
 							"/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",
 							"/profileunchanged", "/updateuser", "/partnerupdate", "/updatepartner",
-							"/groups", "/partners", "/partnertable", "/regiontable", 
+							"/groups", "/volunteergroups", "/partners", "/partnertable", "/regiontable", 
 							"/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
 							"/dashboard",
 							};

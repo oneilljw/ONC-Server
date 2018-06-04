@@ -22,7 +22,7 @@ import ourneighborschild.UserPermission;
 public class ServerGroupDB extends ServerPermanentDB 
 {
 	private static final String GROUP_DB_FILENAME = "GroupDB.csv";
-	private static final int GROUP_RECORD_LENGTH = 9;
+	private static final int GROUP_RECORD_LENGTH = 11;
 	
 	private static ServerGroupDB instance = null;
 	
@@ -55,7 +55,7 @@ public class ServerGroupDB extends ServerPermanentDB
 	}
 	
 	/********
-	 * returns a json list of groups based on the users permission
+	 * returns a json list of non-Volunteer groups based on the users permission
 	 * @param loggedInUser
 	 * @param agentID
 	 * @param callbackFunction
@@ -80,7 +80,7 @@ public class ServerGroupDB extends ServerPermanentDB
 			if(bDefault)
 			{
 				ONCGroup allGroup = new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
-									loggedInUser.getLNFI(), "All", GroupType.Community, 1);
+									loggedInUser.getLNFI(), "All", GroupType.Community, 1, false, false);
 				returnList.add(0, allGroup);
 			}
 		}
@@ -100,7 +100,7 @@ public class ServerGroupDB extends ServerPermanentDB
 				
 				if(returnList.isEmpty())
 					returnList.add(new ONCGroup(-2, new Date(), loggedInUser.getLNFI(), 3, "", 
-									loggedInUser.getLNFI(), "None", GroupType.Community, 1));
+									loggedInUser.getLNFI(), "None", GroupType.Community, 1, false, false));
 				
 				Collections.sort(returnList, new ONCGroupNameComparator());
 			}
@@ -123,6 +123,42 @@ public class ServerGroupDB extends ServerPermanentDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
+	
+	/********
+	 * returns a json list of Volunteer groups based on inclusion on webpage dropdown
+	 * @param loggedInUser
+	 * @param agentID
+	 * @param callbackFunction
+	 * @return
+	 */
+	static HtmlResponse getVolunteerGroupListJSONP(String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<ONCGroup>>(){}.getType();
+
+		List<ONCGroup> returnList = new LinkedList<ONCGroup>();
+		
+		for(ONCGroup g : groupList)
+			if(g.getType() == GroupType.Volunteer && g.includeOnWebpage())
+				returnList.add(g);
+		
+		Collections.sort(returnList, new ONCGroupNameComparator());
+		
+		//add an artificial "Self" group to the top of the list
+		returnList.add(0, new ONCGroup(-2, new Date(), "", 3, "", 
+				"", "Self", GroupType.Volunteer, 1, true, true));
+		
+		//add an artificial "Other" group to the bottom of the list. ID = -3 tells the web page
+		//to display a text field requiring the user to specify the actual group their with
+		returnList.add(new ONCGroup(-3, new Date(), "", 3, "", 
+				"", "Other", GroupType.Volunteer, 1, true, true));
+		
+		String response = gson.toJson(returnList, listtype);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+	
 	static ONCGroup getGroup(int groupID)
 	{
 		int index = 0;
@@ -203,7 +239,7 @@ public class ServerGroupDB extends ServerPermanentDB
 	String[] getExportHeader()
 	{
 		return new String[] {"ID", "Date Changed", "Changed By", "SL Position", "SL Message", 
-							 "SL Changed By","Name", "Type", "Permission"};
+							 "SL Changed By","Name", "Type", "Permission", "Website?", "Contact Info?"};
 	}
 
 	@Override

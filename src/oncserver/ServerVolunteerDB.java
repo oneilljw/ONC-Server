@@ -17,7 +17,7 @@ import ourneighborschild.ONCVolunteer;
 import ourneighborschild.ServerCredentials;
 import ourneighborschild.SignUpActivity;
 import ourneighborschild.VolAct;
-import ourneighborschild.VolunteerActivity;
+import ourneighborschild.Activity;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -235,7 +235,137 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	}
 	
 	/************
-	 * Registers and signs in volunteers from the web site. If the volunteer is already in the database,
+	 * Signs in volunteers from the web site. If the volunteer is already in the database,
+	 * simply notes the have check into the warehouse. If they're not, adds them as a new
+	 * volunteer. Asks the activity database for the closest activity match to create an 
+	 * activity for the volunteer.
+	 * Activity database. 
+	 * @param year
+	 * @param volParams
+	 * @param callbackFunction
+	 * @return
+	 */
+	static HtmlResponse signInVolunteerJSONP(int year, Map<String, String> volParams,
+											Map<String, String> activityParams,
+											boolean bWarehouseSignIn,
+											String website, String callbackFunction)
+	{	
+		List<String> responseList = new ArrayList<String>();
+		
+		String fn = volParams.get("delFN");
+		String ln = volParams.get("delLN");
+		
+		VolunteerDBYear volDBYear = driverDB.get(year - BASE_YEAR);
+		List<ONCVolunteer>volList = volDBYear.getList();
+		
+		int index=0;
+		while(index < volList.size() && !(volList.get(index).getFirstName().equalsIgnoreCase(fn) && 
+				 volList.get(index).getLastName().equalsIgnoreCase(ln)))
+			index++;
+		
+		if(index < volList.size())
+		{
+			//found the volunteer, update their contact info and increment their sign-ins.
+			//if the volunteer has already registered, don't worry about activities	
+			ONCVolunteer updatedVol = volList.get(index);
+			
+			if(bWarehouseSignIn)
+			{
+				updatedVol.setSignIns(updatedVol.getSignIns() + 1);
+				updatedVol.setDateChanged(new Date());
+			}
+			
+			if(volParams.get("group").equals("Other"))
+				updatedVol.setOrganization(volParams.get("groupother"));
+			else
+				updatedVol.setOrganization(volParams.get("group"));
+			
+			if(volParams.get("group").equals("Self") || volParams.get("group").equals("Other"))
+			{
+				if(!volParams.get("delhousenum").isEmpty())
+					updatedVol.setHouseNum(volParams.get("delhousenum"));
+				if(!volParams.get("delstreet").isEmpty())
+					updatedVol.setStreet(volParams.get("delstreet"));
+				if(!volParams.get("delunit").isEmpty())
+					updatedVol.setUnit(volParams.get("delunit"));
+				if(!volParams.get("delcity").isEmpty())
+					updatedVol.setCity(volParams.get("delcity"));
+				if(!volParams.get("delzipcode").isEmpty())
+					updatedVol.setZipCode(volParams.get("delzipcode")); 
+				if(!volParams.get("delemail").isEmpty())
+					updatedVol.setEmail(volParams.get("delemail"));
+				if(!volParams.get("comment").isEmpty())
+					updatedVol.setComment(volParams.get("comment"));
+				
+				//check if the single phone provided in the sign-in matches either of the current
+				//phones. If it doesn't, assume it's a cell phone and update it.
+				String webphone = volParams.get("primaryphone");
+				if(!webphone.isEmpty() && !webphone.equals(updatedVol.getHomePhone()) && 
+					!webphone.equals(updatedVol.getCellPhone()))
+					updatedVol.setCellPhone(volParams.get("primaryphone"));			
+			}
+			
+			volDBYear.setChanged(true);
+			
+			//notify in year clients that the volunteer has signed in
+			Gson gson = new Gson();
+			responseList.add("UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
+			clientMgr.notifyAllInYearClients(year, responseList);
+			
+			//notify the the warehouseDB of the sign-in
+			warehouseDB.add(year, updatedVol);
+		}
+		else	
+		{
+			//Didn't find the volunteer, create and add a new one, including the activity that
+			//matches from the Activity DB.
+			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, volParams.get("delemail"), 
+					volParams.get("delhousenum"), volParams.get("delstreet"), volParams.get("delunit"),
+					volParams.get("delcity"), volParams.get("delzipcode"),
+					volParams.get("primaryphone"), volParams.get("primaryphone"),
+					volParams.get("group").equals("Other") ? volParams.get("groupother") : volParams.get("group"),
+					volParams.get("comment"), new Date(), website);
+			
+			addedVol.setID(volDBYear.getNextID());
+			if(bWarehouseSignIn)	
+				addedVol.setSignIns(addedVol.getSignIns() + 1);
+			
+			volDBYear.add(addedVol);
+			volDBYear.setChanged(true);
+			
+			//ask the activity DB for the activity that matches the sign-in within +/- 59 minutes
+			//of the activity start and end dates/times
+			Activity activity = activityDB.matchActivity(year, 1513524400000L, 59);	//test for dday 2017
+//			Activity activity = activityDB.matchActivity(year, System.currentTimeMillis(), 59);
+			if(activity != null)
+			{
+				//DEBUG
+//				System.out.println(String.format("ServVolDB.signInVol: actID = %d, name= %s",
+//						activity.getID(), activity.getName()));
+				
+				//create the volAct and ask the VolActDB to add it. 
+				VolAct addVAReq = new VolAct(-1, addedVol.getID(), activity.getID(), activity.getGeniusID(), 1, "");
+				responseList.add(volActDB.add(year, addVAReq));
+			}
+			
+			//notify in year clients
+			Gson gson = new Gson();
+			responseList.add("ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
+			clientMgr.notifyAllInYearClients(year, responseList);
+			
+			//if this registration came from a warehouse sign-in, update the warehouseDB
+			warehouseDB.add(year, addedVol);
+		}
+		
+		String responseJson = String.format("{\"message\":\"%s, thank you for volunteering "
+				+ "with Our Neighbor's Child!\"}", volParams.get("delFN"));
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + responseJson +")", HttpCode.Ok);		
+	}
+	
+	/************
+	 * Registers volunteers from the web site. If the volunteer is already in the database,
 	 * check to see if the activity is in the data base. If it's not, add the activity to the Volunteer
 	 * Activity database. 
 	 * @param year
@@ -272,6 +402,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 				updatedVol.setDateChanged(new Date());
 			}
 			
+			//A DESIGN QUESTION IS SHOULD WE CHANGE THE GROUP FIELD FROM A STRING TO AN INTEGER AND
+			//FORCE ALL GROUPS TO BE IN THE GROUP DATABASE? THIS WILL CHANGE THE GROUP BEHAVIOR.
 			if(volParams.get("group").equals("Other"))
 				updatedVol.setOrganization(volParams.get("groupother"));
 			else
@@ -305,13 +437,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 				//the prior list. If its a sign-in from the warehouse, add the one activity
 				//to the volunteers current activity list. The activity won't be added if it already
 				//exists per the VolunteerActivity API
-//				List<VolAct> volActList = activityDB.createActivityList(year, activityParams, updatedVol);
-				responseList = volActDB.processActivityList(year, activityDB.createActivityList(year, activityParams, updatedVol));
-				
-//				if(!bWarehouseSignIn)
-//					updatedVol.setActivityList(actList);
-//				else if(bWarehouseSignIn && actList.size() == 1) //only one activity from sign-ins
-//					updatedVol.addActivity(actList.get(0));				
+				responseList = volActDB.processActivityList(year, activityDB.createActivityList(year, activityParams, updatedVol));			
 			}
 			
 			volDBYear.setChanged(true);
@@ -320,18 +446,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			Gson gson = new Gson();
 			responseList.add("UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
 			clientMgr.notifyAllInYearClients(year, responseList);
-			
-			//if this registration came from a warehouse signin, update the warehouseDB
-			if(bWarehouseSignIn)
-				warehouseDB.add(year, updatedVol);
 		}
-		else
+		else	
 		{
-//			public ONCVolunteer(int driverid, String drvNum, String fName, String lName, String email, 
-//					String hNum, String street, String unit, String city, String zipcode, 
-//					String homePhone, String cellPhone, String group, String comment, 
-//					Date today, String changedBy)
-			
 			//Didn't find the volunteer, create and add a new one, including their activity list
 			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, volParams.get("delemail"), 
 					volParams.get("delhousenum"), volParams.get("delstreet"), volParams.get("delunit"),
@@ -354,17 +471,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			responseList.add("ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
 			clientMgr.notifyAllInYearClients(year, responseList);
 			
-			//if this registration came from a warehouse signin, update the warehouseDB
-			if(bWarehouseSignIn)
-				warehouseDB.add(year, addedVol);
-			else
-			{
-/*				//DISABLE AUTO EMAIL FOR NOW
-				List<ONCVolunteer> emailList = new ArrayList<ONCVolunteer>();
-				emailList.add(addedVol);
-				createAndSendVolunteerEmail(0, emailList);
-*/
-			}
+			//DISABLE AUTO EMAIL FOR NOW
+//				List<ONCVolunteer> emailList = new ArrayList<ONCVolunteer>();
+//				emailList.add(addedVol);
+//				createAndSendVolunteerEmail(0, emailList);
 		}
 		
 		String responseJson = String.format("{\"message\":\"%s, thank you for volunteering "
@@ -604,14 +714,14 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			ServerActivityDB servActDB = ServerActivityDB.getInstance();
 			
 			List<VolAct> vaList = volActDB.getVolunteerActivities(DBManager.getCurrentYear(), v);
-			List<VolunteerActivity> volunteerActivities = new ArrayList<VolunteerActivity>();
+			List<Activity> activities = new ArrayList<Activity>();
 			
 			for(VolAct va : vaList)
-				volunteerActivities.add(servActDB.findActivity(DBManager.getCurrentYear(), va.getActID()));
+				activities.add(servActDB.findActivity(DBManager.getCurrentYear(), va.getActID()));
 			
 			//sort the search list by Start date
-			Collections.sort(volunteerActivities, new VolunteerActivityDateComparator());
-			for(VolunteerActivity va : volunteerActivities)
+			Collections.sort(activities, new VolunteerActivityDateComparator());
+			for(Activity va : activities)
 				if(v != null)
 				{
 					actTableHTML.append("<tr><td>" + va.getName() + "</td>");
@@ -755,10 +865,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	    void add(ONCVolunteer addedDriver) { volList.add(addedDriver); }
 	}
 
-	private static class VolunteerActivityDateComparator implements Comparator<VolunteerActivity>
+	private static class VolunteerActivityDateComparator implements Comparator<Activity>
 	{
 		@Override
-		public int compare(VolunteerActivity o1, VolunteerActivity o2)
+		public int compare(Activity o1, Activity o2)
 		{
 			if(o1.getStartDate() < o2.getStartDate())
 				return -1;

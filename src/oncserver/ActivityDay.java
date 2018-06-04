@@ -5,13 +5,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import ourneighborschild.VolunteerActivity;
+import ourneighborschild.Activity;
 
 public class ActivityDay 
 {
 	private int id;
 	private String day;
-	private List<VolunteerActivity> actList;
+	private List<Activity> actList;
 	
 	public ActivityDay(int id, String day)
 	{
@@ -29,14 +29,14 @@ public class ActivityDay
 			this.day = "Error: Unable to determine date";
 		}
 		
-		this.actList = new ArrayList<VolunteerActivity>();
+		this.actList = new ArrayList<Activity>();
 	}
 	
 	//getters
 	int getID() { return id; }
 	String getDay() { return day; }
 	
-	void addActivity(VolunteerActivity va)
+	void addActivity(Activity va)
 	{
 		actList.add(va);
 	}

@@ -25,8 +25,37 @@
   		
   			//set the activity to the activity id for Warehouse Support
   			document.getElementById('activity').value= '20';
+  			
+  			getVolunteerGroups();
 	  	}
 	});
+  	
+  	function getVolunteerGroups()
+  	{
+  		//get the volunteer groups and popluate the volunteer group select
+		var curryearparams = "callback=?";
+		$.getJSON('volunteergroups', curryearparams, function(groups)
+	    	{	
+			var groupcb = document.getElementById('groupselect');
+			for (var i = 0; i < groups.length; i++)
+				addComboBoxOption(groupcb, groups[i].name, groups[i].id, groups[i].bContactInfoRqrd);
+	    	});
+  	}
+  	
+  	function addComboBoxOption(combobox, text, value, attribute)
+	{
+		var option = document.createElement("option");
+		option.text = text;
+    		option.value = value;
+    		try 
+    		{
+        		combobox.add(option, null); //Standard 
+    		}
+    		catch(error)
+    		{
+        		combobox.add(option); // IE only
+    		}
+	}
   	
   	function onGroupChange()
   	{
@@ -36,7 +65,7 @@
   		var groupOtherLabelELement = document.getElementById("groupotherlbl");
   		var groupOtherElement = document.getElementById('groupother');
   		
-  		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Other')
+  		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === '-3')
   		{
   			groupOtherLabelELement.style.visibility="visible";
   			groupOtherElement.style.visibility="visible";
@@ -56,10 +85,7 @@
   	
   	function getContactInfo()
   	{
-  		if((document.getElementById('groupselect').value === "Self" ||
-  			document.getElementById('groupselect').value === "Other") &&
-  			 document.getElementById('delfn').value.length > 0 && 
-  			  document.getElementById('delln').value.length > 0 )
+  		if(document.getElementById('delfn').value.length > 0 && document.getElementById('delln').value.length > 0 )
   		{
   			var contactparams = "year=" + document.getElementById('year').value
 			+ "&delFN=" + document.getElementById('delfn').value
@@ -71,12 +97,31 @@
   				//if retrun is good, set the fields
   				if(driver.id > -1)
   				{
-  					//set the group. If not selected, select default index (0)
-  					document.getElementById('groupselect').value = driver.organization;
-  					if(document.getElementById('groupselect').selectedIndex === -1)
+  					//search for the group. If it's not empty and not found, show other
+  					var dd = document.getElementById('groupselect');
+  					var index = 0;
+  					while (index < dd.options.length && dd.options[index].text !== driver.organization)
+  						index++;
+  						
+  					if(index < dd.options.length)
   					{
-  						document.getElementById('groupselect').selectedIndex = 0;
+  						dd.selectedIndex = index;
   					}
+  					else
+  					{
+  						//set selection to "Other" and populate the group other field
+  						dd.selectedIndex = dd.options.length-1;	//set to "Other"
+  						document.getElementById('groupother').value = driver.organization;
+  						document.getElementById("groupotherlbl").style.visibility = 'visible';
+  				  		document.getElementById('groupother').style.visibility = 'visible';
+  					}
+					
+    						
+//  					document.getElementById('groupselect').value = driver.organization;
+//  					if(document.getElementById('groupselect').selectedIndex === -1)
+//  					{
+//  						document.getElementById('groupselect').selectedIndex = 0;
+//  					}
   					
   					document.getElementById('delfn').value = driver.firstName;
   					document.getElementById('delln').value = driver.lastName;
@@ -189,7 +234,7 @@
 		var groupSelectElement = document.getElementById('groupselect');
   		var groupOtherElement = document.getElementById('groupother');
   		
-  		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Other' &&
+  		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === '-3' &&
   			groupOtherElement.value.length === 0)
   		{	
   			var elementsWithErrors = [groupOtherElement];
@@ -255,14 +300,7 @@
 		var errorElement = document.getElementById('errormessage');
 		var groupSelectElement = document.getElementById('groupselect');
 		
-		if(groupSelectElement.value === 'Self' && 
-			verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
-			verifyZipCodes(zipElements, errorElement) &&
-			 verifyPhoneNumbers() && verifyEmail(emailElement))
-		{
-			submitSignIn();
-		}
-		else if(groupSelectElement.value === 'Other' && 
+		if(groupSelectElement.value === '-3' && 
 				verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
 				verifyZipCodes(zipElements, errorElement) &&
 				 verifyPhoneNumbers() && verifyEmail(emailElement) && 
@@ -270,9 +308,9 @@
 		{
 			submitSignIn();
 		}
-		else if(groupSelectElement.value != 'Self' &&
-				 groupSelectElement.value != 'Other' &&
-				  verifyRequiredFields(verifyNameElements, errorElement))
+		else if(verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
+				verifyZipCodes(zipElements, errorElement) &&
+				verifyPhoneNumbers() && verifyEmail(emailElement)) 
 		{
 			submitSignIn();
 		}	
@@ -387,7 +425,7 @@
 <a href="#registereddlg" id="registeredanchor" style="visibility: hidden">Success</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">Delivery Volunteer Sign-In & Registration</span><br>
+    <p><span id="banner">Delivery Volunteer Sign-In/Registration</span><br>
 	<span id="message">(Please complete and click Sign-In / Register at the bottom of the form)</span></p>
   </div>
    <nav>
@@ -403,7 +441,7 @@
   <input id="activity" type="hidden" name="activity">
   <br>
   <fieldset>
-  <legend class="legend-major">Volunteer Information: If you pre-registered via the ONC Website/SignUpGenius, enter your first and last name and we'll look for the rest of your info</legend>
+  <legend class="legend-major">Volunteer Information: If you registered via the ONC Website/SignUpGenius, enter the first and last name you used when you registered and we'll lookup your contact information</legend>
     <div class= 'inputline' >
       <label for="delfn">Your Name:</label>
       <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" onchange ='getContactInfo()'>
@@ -413,7 +451,7 @@
 	  </span>
     </div>
     <div id= 'contactdiv'>
-      <label id='phonelbl' for="primaryphone"">Cell Phone #:</label>
+      <label id='phonelbl' for="primaryphone">Cell Phone #:</label>
       <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #" onchange= 'verifyPhoneNumber(0)'>
 	  <label id='emaillbl' for="delemail">Email:</label>
 	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
@@ -422,39 +460,13 @@
 	    <input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
       	<input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
       	<input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
-      	<input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
-      	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
+      	<input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City' autocomplete='off'>
+      	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11' placeholder='Zip Code' autocomplete='off' >
   	  </div>
   	</div>
   <div class= 'inputline'>
     <label for="groupselect">Group or Organization:</label>
-     <select id="groupselect" title="Group" name="group" onchange="onGroupChange()">
-		<option value="Self">Self</option>
-		<option value="Centreville NHS">Centreville NHS</option>
-		<option value="Centreville SGA">Centreville SGA</option>
-		<option value="Chantilly LAX">Chantilly LAX</option>
-		<option value="Chantilly NHS">Chantilly NHS</option>
-		<option value="Chantilly SGA">Chantilly SGA</option>
-		<option value="FlintHill Football">Flint Hill Football</option>
-		<option value="GS Troop 6673">GS Troop 6673</option>
-		<option value="Hilton Garden Inn">HiltonGardenInn</option>
-		<option value="INOVA">INOVA Cardiology</option>
-		<option value="Intercoastal Mortgage">Intercoastal Mortgage</option>
-		<option value="Metronome">Metronome</option>
-		<option value="OBC Crutchfield">OBC Crutchfield</option>
-		<option value="Team P">Ponce Team P</option>
-		<option value="Quest">Quest Diagnostics</option>
-		<option value="Salesforce">Salesforce</option>
-		<option value="Splunk">Splunk</option>
-		<option value="ScottLong">Scott Long Construction</option>
-		<option value="Westfield Football">Westfield Football</option>
-		<option value="Westfield Interact">Westfield Interact</option>
-		<option value="Westfield Key Club">Westfield Key Club</option>
-		<option value="Westfield LAX">Westfield LAX</option>
-		<option value="Westfield NHS">Westfield NHS</option>
-		<option value="Westfield SGA">Westfield SGA</option>
-		<option value="Other">Other</option>
-	  </select>
+      <select id="groupselect" title="Group" name="group" onchange="onGroupChange()"></select>
  	<label id='groupotherlbl' for="groupother" style="visibility: hidden;">Group Name:</label>
 	<input id="groupother" title="Other group or organizaton name" name="groupother" type="text" size="35" placeholder="Other Group or Organization Name" style="visibility: hidden;">
 	

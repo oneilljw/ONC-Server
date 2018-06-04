@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>ONC Warehouse Volunteer Sign-In</title>
+  <title>ONC Volunteer Sign-In</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="jquery.js"></script>
   <script> 
   	var errorColor = '#FF9999';
+  	var DisplayMode = {NO_CONTACT_INFO: 0, CONTACT_INFO: 1, CONTACT_INFO_EXTENDED: 2};
+  	var bDeliveryDay = IS_DELIVERY_DAY?;
   	
   	$( document ).ready(function()
 	{
-  		//show the success dialog if driver was registered
+  		//show the success dialog if volunteer signed in successfully
   		var urlmode = window.location.href;
 	  	if(urlmode.indexOf("signinvolunteer") > -1)
   			window.location=document.getElementById('registeredanchor').href;
@@ -25,61 +27,67 @@
   		
   			//set the activity to the activity id for Warehouse Support
   			document.getElementById('activity').value= '25';
+  			
+  			getVolunteerGroups();
 	  	}
 	});
   	
+  	function getVolunteerGroups()
+  	{
+  		//get the volunteer groups and popluate the volunteer group select
+		var curryearparams = "callback=?";
+		$.getJSON('volunteergroups', curryearparams, function(groups)
+	    	{	
+			var groupcb = document.getElementById('groupselect');
+			for (var i = 0; i < groups.length; i++)
+				addComboBoxOption(groupcb, groups[i].name, groups[i].id, groups[i].bContactInfoRqrd);
+	    	});
+  	}
+  	
+  	function addComboBoxOption(combobox, text, value, attribute)
+	{
+		var option = document.createElement("option");
+		option.text = text;
+    		option.value = value;
+    		option.setAttribute("data-visible", attribute);
+    		try 
+    		{
+        		combobox.add(option, null); //Standard 
+    		}
+    		catch(error)
+    		{
+        		combobox.add(option); // IE only
+    		}
+	}
+  	
   	function onGroupChange()
   	{
-  		clearAllButGroupSelect();
-  		
   		var groupSelectElement = document.getElementById('groupselect');
-  		var groupOtherLabelELement = document.getElementById("groupotherlbl");
-  		var groupOtherElement = document.getElementById('groupother');
-  		
-  		var selectValue = groupSelectElement.options[groupSelectElement.selectedIndex].value;
-  		
-  		if(selectValue === 'Other')
+  		if(groupSelectElement.options[groupSelectElement.selectedIndex].getAttribute('data-visible') === 'false')
   		{
   			document.getElementById('activity').value= '25';
-  			
-  			groupOtherLabelELement.style.visibility="visible";
-  			groupOtherElement.style.visibility="visible";
-  			
-  			document.getElementById('contactdiv').style.display = "block";
-  			document.getElementById('commentdiv').style.display = "block";
+  			if(bDeliveryDay)
+  				setDisplayMode(DisplayMode.CONTACT_INFO);	
+  			else
+  				setDisplayMode(DisplayMode.NO_CONTACT_INFO);
   		}
-  		else if(selectValue.includes('Centreville') || selectValue.includes('Chantilly') ||
-  				selectValue.includes('Westfield') || selectValue.includes('FlintHill'))	
+  		else if(groupSelectElement.options[groupSelectElement.selectedIndex].value === '-3')
   		{
   			document.getElementById('activity').value= '24';
-  			
-  			groupOtherLabelELement.style.visibility="hidden";
-  			groupOtherElement.style.visibility="hidden";
-  			
-  			document.getElementById('contactdiv').style.display = "none";
-  			document.getElementById('commentdiv').style.display = "none";
+  			setDisplayMode(DisplayMode.CONTACT_INFO_EXTENDED);
   		}
-  		else 
+  		else
   		{
-  			document.getElementById('activity').value= '25';
-  			
-  			groupOtherLabelELement.style.visibility="hidden";
-  			groupOtherElement.style.visibility="hidden";
-  			
-  			document.getElementById('contactdiv').style.display = "block";
-  			document.getElementById('commentdiv').style.display = "none";
+  			document.getElementById('activity').value= '24';
+  			setDisplayMode(DisplayMode.CONTACT_INFO);
   		}
   	}
   	
   	function getContactInfo()
   	{
   		var groupSelectElement = document.getElementById('groupselect');
-  		var selectValue = groupSelectElement.options[groupSelectElement.selectedIndex].value;
   		
-  		if(!(selectValue.includes('Chantilly') || selectValue.includes('Centreville') ||
-  			selectValue.includes('Westfield') || selectValue.includes('FlintHill')) &&
-  			 document.getElementById('delfn').value.length > 0 && 
-  			  document.getElementById('delln').value.length > 0 )
+  		if(document.getElementById('delfn').value.length > 0 && document.getElementById('delln').value.length > 0 )
   		{
   			var contactparams = "year=" + document.getElementById('year').value
 			+ "&delFN=" + document.getElementById('delfn').value
@@ -91,6 +99,19 @@
   				//if retrun is good, set the fields
   				if(driver.id > -1)
   				{
+  					//search for the group. If it's not empty and not found, show other
+  					var dd = document.getElementById('groupselect');
+  					var index = 0;
+  					while (index < dd.options.length && dd.options[index].text !== driver.organization)
+  						index++;
+  						
+  					if(index < dd.options.length)
+  						dd.selectedIndex = index;
+  					else
+  						dd.selectedIndex = dd.options.length-1;	//set to "Other"
+  						
+  					onGroupChange();
+  						
   					document.getElementById('delfn').value = driver.firstName;
   					document.getElementById('delln').value = driver.lastName;
   					document.getElementById('delemail').value = driver.email;
@@ -266,7 +287,7 @@
 		var errorElement = document.getElementById('errormessage');
 		var groupSelectElement = document.getElementById('groupselect');
 		
-		if(groupSelectElement.value === 'Other')
+		if(groupSelectElement.value === '-3')
 		{
 			if(verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
 				verifyZipCodes(zipElements, errorElement) &&
@@ -276,12 +297,18 @@
 				submitSignIn();
 			}
 		}
-		else if(groupSelectElement.value.includes('Chantilly') ||
-				  groupSelectElement.value.includes('Centreville') ||
-				   groupSelectElement.value.includes('Westfield') ||
-				    groupSelectElement.value.includes('FlintHill'))
+		else if(groupSelectElement.getAttribute("data-visible") === 'false' && !bDeliveryDay)
 		{
 			if(verifyRequiredFields(verifyNameElements, errorElement))
+			{
+				submitSignIn();
+			}
+		}
+		else if(groupSelectElement.getAttribute("data-visible") === 'false' && bDeliveryDay)
+		{
+			if(verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
+					verifyZipCodes(zipElements, errorElement) &&
+					 verifyPhoneNumbers() && verifyEmail(emailElement))
 			{
 				submitSignIn();
 			}
@@ -323,12 +350,35 @@
     		}, "json");
 	}
 	
+	function setDisplayMode(mode)
+	{
+		if(mode === DisplayMode.CONTACT_INFO)
+		{
+			document.getElementById('contactdiv').style.display = 'block';
+			document.getElementById("groupotherlbl").style.visibility = 'hidden';
+		  	document.getElementById('groupother').style.visibility = 'hidden';
+		  	document.getElementById('commentdiv').style.display = 'none';
+		}
+		else if(mode === DisplayMode.CONTACT_INFO_EXTENDED)
+		{
+			document.getElementById('contactdiv').style.display = 'block';
+			document.getElementById("groupotherlbl").style.visibility = 'visible';
+		  	document.getElementById('groupother').style.visibility = 'visible';
+		  	document.getElementById('commentdiv').style.display = 'block';	
+		}
+		else
+		{
+			document.getElementById('contactdiv').style.display = 'none';
+			document.getElementById("groupotherlbl").style.visibility = 'hidden';
+		  	document.getElementById('groupother').style.visibility = 'hidden';
+		  	document.getElementById('commentdiv').style.display = 'none"';
+		}	
+	}
+	
 	function clearForm()
 	{
-		
 		document.getElementById('groupselect').selectedIndex = 0;
-		document.getElementById("groupotherlbl").style.visibility = 'hidden';
-  		document.getElementById('groupother').style.visibility = 'hidden';
+		onGroupChange();
   		clearAllButGroupSelect();
 	}
 	
@@ -366,6 +416,10 @@
   </script>
   <style>
 	#submitspan {float: right;}
+	.rightspan
+	{
+		float: right;
+	}
 	#errormessage
 	{
 		float: left;
@@ -401,7 +455,7 @@
 <a href="#registereddlg" id="registeredanchor" style="visibility: hidden">Success</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">ONC Warehouse Volunteer Sign-In</span><br>
+    <p><span id="banner">BANNER_TITLE</span><br>
 	<span id="message">(Please complete and click Sign In)</span></p>
   </div>
    <nav>
@@ -417,45 +471,23 @@
   <input id="activity" type="hidden" name="activity">
   <br>
   <fieldset>
-  <legend class="legend-major">Volunteer Information: If you pre-registered via the ONC Website/SignUpGenius, enter your first and last name and we'll look for the rest of your info</legend>
-  <div class= 'inputline'>
-    <label for="groupselect">Group or Organization:</label>
-     <select id="groupselect" title="Group" name="group" onchange="onGroupChange()">
-		<option value="Self">Self</option>
-		<option value="CentrevilleNHS">Centreville NHS</option>
-		<option value="CentrevilleSGA">Centreville SGA</option>
-		<option value="ChantillyLAX">Chantilly LAX</option>
-		<option value="ChantillyNHS">Chantilly NHS</option>
-		<option value="ChantillySGA">Chantilly SGA</option>
-		<option value="FlintHillFB">Flint Hill Football</option>
-		<option value="GSTroop6673">GS Troop 6673</option>
-		<option value="HiltonGardenInn">HiltonGardenInn</option>
-		<option value="INOVA">INOVA Cardiology</option>
-		<option value="IntercoastalMortgage">Intercoastal Mortgage</option>
-		<option value="Metronome">Metronome</option>
-		<option value="OBCCrutchfield">OBC Crutchfield</option>
-		<option value="Quest">Quest Diagnostics</option>
-		<option value="Salesforce">Salesforce</option>
-		<option value="Splunk">Splunk</option>
-		<option value="ScottLong">Scott Long Construction</option>
-		<option value="WestfieldFB">Westfield Football</option>
-		<option value="WestfieldInteract">Westfield Interact</option>
-		<option value="WestfieldKey">Westfield Key Club</option>
-		<option value="WestfieldLAX">Westfield LAX</option>
-		<option value="WestfieldNHS">Westfield NHS</option>
-		<option value="WestfieldSGA">Westfield SGA</option>
-		<option value="Other">Other</option>
-	  </select>
- 	<label id='groupotherlbl' for="groupother" style="visibility: hidden;">Group Name:</label>
-	<input id="groupother" title="Other group or organizaton name" name="groupother" type="text" size="35" placeholder="Other Group or Organization Name" style="visibility: hidden;">
-	</div>
-  	<div class= 'inputline' >
+    <legend class="legend-major">Volunteer Information: If you registered via the ONC Website/SignUpGenius, enter the first and last name you used when you registered and we'll lookup your contact information</legend>
+  <div class= 'inputline' >
       <label for="delfn">Your Name:</label>
       <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" onchange ='getContactInfo()'>
       <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" onchange ='getContactInfo()'>
-    </div>
+      <span class='rightspan'>
+	  <input id="btnclear" class='rightspan' type="button" value='Reset' style="background-color: #336699; color: #ffffff;" title="Click to clear info" onclick= clearForm()>
+	  </span>
+  </div>
+  <div class= 'inputline'>
+    <label for="groupselect">Group or Organization:</label>
+      <select id="groupselect" title="Group" name="group" onchange="onGroupChange()"></select>
+ 	<label id='groupotherlbl' for="groupother" style="visibility: hidden;">Group Name:</label>
+	<input id="groupother" title="Other group or organizaton name" name="groupother" type="text" size="35" placeholder="Other Group or Organization Name" style="visibility: hidden;">
+  </div>
     <div id= 'contactdiv'>
-      <label id='phonelbl' for="primaryphone"">Cell Phone #:</label>
+      <label id='phonelbl' for="primaryphone">Cell Phone #:</label>
       <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #" onchange= 'verifyPhoneNumber(0)'>
 	  <label id='emaillbl' for="delemail">Email:</label>
 	  <input id="delemail" title="Email Address" name="delemail" type="email" size="30" placeholder="email address" autocomplete= "off">
@@ -464,8 +496,8 @@
 	    <input id="delhousenum" title="House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
       	<input id="delstreet" title="Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
       	<input id="delunit" title="Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
-      	<input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City', autocomplete='off'>
-      	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11', placeholder='Zip Code' autocomplete='off' >
+      	<input id="delcity" title="City" name="delcity" type='text' size='16' placeholder='City' autocomplete='off'>
+      	<input id="delzipcode" title="Zip Code" name="delzipcode" type='text' size='11' placeholder='Zip Code' autocomplete='off' >
   	  </div>
   	</div>  
   <div id= 'commentdiv'>
