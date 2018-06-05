@@ -65,35 +65,31 @@ public class VolunteerHandler extends ONCWebpageHandler
 							"group", "comment", "activity"};
 		
 			Map<String, String> volParams = createMap(params, volKeys);
-		
-			Map<String, String> activityParams = new HashMap<String, String>();
-			activityParams.put("actckbox0", volParams.get("activity"));
-			activityParams.put("actcomment0","New volunteer registered in warehouse");
 		    		
-			htmlResponse = ServerVolunteerDB.signInVolunteerJSONP(year,  volParams, activityParams,
-										true, "Warehouse Registration Webpage", callbackFunction);
+			htmlResponse = ServerVolunteerDB.signInVolunteerJSONP(year, volParams, true,
+											"Volunteer Sign-In Webpage", callbackFunction);
 		
 			sendHTMLResponse(t, htmlResponse);  
 		}
-		else if(requestURI.equals("/signindriver"))
-		{
-			int year = Integer.parseInt((String)params.get("year"));
-			String callbackFunction = (String) params.get("callback");
-		    		
-			String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
-		    					"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
-		    					"group", "comment", "activity"};
-		    		
-			Map<String, String> volParams = createMap(params, volKeys);
-		
-			Map<String, String> activityParams = new HashMap<String, String>();
-			activityParams.put("actckbox0",volParams.get("activity"));
-			activityParams.put("actcomment0","New delivery volunteer on delivery day");
-		    		
-			htmlResponse = ServerVolunteerDB.signInVolunteerJSONP(year, volParams, activityParams,
-										true, "Delivery Day Registration Webpage", callbackFunction);
-			sendHTMLResponse(t, htmlResponse); 
-		}
+//		else if(requestURI.equals("/signindriver"))
+//		{
+//			int year = Integer.parseInt((String)params.get("year"));
+//			String callbackFunction = (String) params.get("callback");
+//		    		
+//			String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
+//		    					"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
+//		    					"group", "comment", "activity"};
+//		    		
+//			Map<String, String> volParams = createMap(params, volKeys);
+//		
+//			Map<String, String> activityParams = new HashMap<String, String>();
+//			activityParams.put("actckbox0",volParams.get("activity"));
+//			activityParams.put("actcomment0","New delivery volunteer on delivery day");
+//		    		
+//			htmlResponse = ServerVolunteerDB.signInVolunteerJSONP(year, volParams, activityParams,
+//										true, "Delivery Day Registration Webpage", callbackFunction);
+//			sendHTMLResponse(t, htmlResponse); 
+//		}
 		else if(requestURI.contains("/currentyear"))
 		{
 			String callbackFunction = (String) params.get("callback");
@@ -114,7 +110,10 @@ public class VolunteerHandler extends ONCWebpageHandler
 		else if(requestURI.contains("/volunteersignin"))
 		{
 			String response = webpageMap.get(requestURI);
+			
+			//Pre-process the web page adding current variables
 			response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
+			response = response.replace("CURRENT_YEAR", Integer.toString(DBManager.getCurrentYear()));
 			
 			//is it Delivery Day?
 			if(ServerGlobalVariableDB.isDeliveryDay(DBManager.getCurrentYear()))

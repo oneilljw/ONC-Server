@@ -214,26 +214,34 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	/******
 	 * Returns an activity based on time. Finds the closest match from an activity. Used
 	 * when volunteer registers in the warehouse and didn't already register thru sign-up genius.
-	 * An activity matches if it's start time and end times are between the +/- the tolerance
-	 * passed as a parameter.
+	 * The closest match is defined as the activity with a start time that is the closest to the
+	 * time passed as a parameter
 	 * @param year - int of the year activity match is for
 	 * @param time - long of UTC in milliseconds used for match search
 	 * @param tolerance - range in minutes search will use before and after start time and end time for a match
 	 * @return
 	 */
-	Activity matchActivity(int year, long time, int tolerance)
+	Activity matchActivity(int year, long time)
 	{
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
 		List<Activity> activityList = activityDBYear.getList();
 		
-		int offset = tolerance * 1000 * 60; 	//convert minutes to milliseconds
-		
-		int index = 0;
-		while(index < activityList.size() && !(activityList.get(index).getStartDate() >= time - offset &&
-										time <= activityList.get(index).getEndDate() + offset))
-			index++;
-		
-		return index < activityList.size() ? activityList.get(index) : null;
+		Activity closestActivity = null;
+		long closest_time = -1;
+		for(Activity act : activityList)
+		{
+			//calculate the time difference
+			long diff = act.getStartDate() - time;
+			long abs_diff = diff < 0 ? -diff : diff;
+			
+			if(closest_time < 0 || closest_time > abs_diff)
+			{
+				closest_time = abs_diff;
+				closestActivity = act;
+			}
+		}
+			
+		return closestActivity;
 	}
 	
 	//creates a list of vol activities based on a parameter map from the web site.

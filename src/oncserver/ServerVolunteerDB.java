@@ -246,9 +246,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	 * @return
 	 */
 	static HtmlResponse signInVolunteerJSONP(int year, Map<String, String> volParams,
-											Map<String, String> activityParams,
-											boolean bWarehouseSignIn,
-											String website, String callbackFunction)
+											boolean bWarehouseSignIn, String website,
+											String callbackFunction)
 	{	
 		List<String> responseList = new ArrayList<String>();
 		
@@ -335,8 +334,8 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			
 			//ask the activity DB for the activity that matches the sign-in within +/- 59 minutes
 			//of the activity start and end dates/times
-			Activity activity = activityDB.matchActivity(year, 1513524400000L, 59);	//test for dday 2017
-//			Activity activity = activityDB.matchActivity(year, System.currentTimeMillis(), 59);
+//			Activity activity = activityDB.matchActivity(year, 1513532756000L);	//test for dday 2017 1745 UTC
+			Activity activity = activityDB.matchActivity(year, System.currentTimeMillis());
 			if(activity != null)
 			{
 				//DEBUG
@@ -353,7 +352,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			responseList.add("ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
 			clientMgr.notifyAllInYearClients(year, responseList);
 			
-			//if this registration came from a warehouse sign-in, update the warehouseDB
+			//notify the warehouseDB of a sign-in
 			warehouseDB.add(year, addedVol);
 		}
 		

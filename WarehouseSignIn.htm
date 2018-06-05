@@ -8,7 +8,7 @@
   <script> 
   	var errorColor = '#FF9999';
   	var DisplayMode = {NO_CONTACT_INFO: 0, CONTACT_INFO: 1, CONTACT_INFO_EXTENDED: 2};
-  	var bDeliveryDay = IS_DELIVERY_DAY?;
+  	var bDeliveryDay = IS_DELIVERY_DAY?;		//is pre-porcessed at server to "true" or "false";
   	
   	$( document ).ready(function()
 	{
@@ -19,15 +19,12 @@
 	  	else
 	  	{
 	  		//get the most current year from the database
-  			var curryearparams = "callback=?";
-  			$.getJSON('currentyear', curryearparams, function(year)
-  	    		{	
-  				document.getElementById('year').value= year.curryear;
-  	    		});
+//  			var curryearparams = "callback=?";
+//			$.getJSON('currentyear', curryearparams, function(year)
+//      		{	
+//  				document.getElementById('year').value= year.curryear;
+//  	    		});
   		
-  			//set the activity to the activity id for Warehouse Support
-  			document.getElementById('activity').value= '25';
-  			
   			getVolunteerGroups();
 	  	}
 	});
@@ -65,22 +62,15 @@
   		var groupSelectElement = document.getElementById('groupselect');
   		if(groupSelectElement.options[groupSelectElement.selectedIndex].getAttribute('data-visible') === 'false')
   		{
-  			document.getElementById('activity').value= '25';
   			if(bDeliveryDay)
   				setDisplayMode(DisplayMode.CONTACT_INFO);	
   			else
   				setDisplayMode(DisplayMode.NO_CONTACT_INFO);
   		}
   		else if(groupSelectElement.options[groupSelectElement.selectedIndex].value === '-3')
-  		{
-  			document.getElementById('activity').value= '24';
   			setDisplayMode(DisplayMode.CONTACT_INFO_EXTENDED);
-  		}
   		else
-  		{
-  			document.getElementById('activity').value= '24';
   			setDisplayMode(DisplayMode.CONTACT_INFO);
-  		}
   	}
   	
   	function getContactInfo()
@@ -327,7 +317,6 @@
 		var groupSelectElement = document.getElementById('groupselect');
 		
 		var volunteerparams = "year=" + document.getElementById('year').value
-						+ "&activity=" + document.getElementById('activity').value
 						+ "&delFN=" + document.getElementById('delfn').value
 						+ "&delLN=" + document.getElementById('delln').value
 						+ "&groupother=" + document.getElementById('groupother').value
@@ -467,8 +456,7 @@
 	</ul>
   </nav>
   <form id='signinform' name='signinform'>  
-  <input id="year" type="hidden" name="year">
-  <input id="activity" type="hidden" name="activity">
+  <input id="year" value=CURRENT_YEAR type="hidden" name="year">
   <br>
   <fieldset>
     <legend class="legend-major">Volunteer Information: If you registered via the ONC Website/SignUpGenius, enter the first and last name you used when you registered and we'll lookup your contact information</legend>
