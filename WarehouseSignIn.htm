@@ -58,7 +58,10 @@
   					if(index < dd.options.length)
   						dd.selectedIndex = index;
   					else
+  					{
   						dd.selectedIndex = dd.options.length-1;	//set to "Other"
+  						document.getElementById('groupother').value = driver.organization;
+  					}	
   						
   					onGroupChange();
   						
