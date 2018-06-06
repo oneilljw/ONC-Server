@@ -159,6 +159,37 @@ public class ServerGroupDB extends ServerPermanentDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
+	static String getVolunteerGroupHTMLSelectOptions()
+	{
+		//create the list of groups that are used to pre-process the web page
+		List<ONCGroup> preprocessGroupList = new LinkedList<ONCGroup>();
+		
+		for(ONCGroup g : groupList)
+			if(g.getType() == GroupType.Volunteer && g.includeOnWebpage())
+				preprocessGroupList.add(g);
+		
+		Collections.sort(preprocessGroupList, new ONCGroupNameComparator());
+		
+		//add an artificial "Self" group to the top of the list
+		preprocessGroupList.add(0, new ONCGroup(-2, new Date(), "", 3, "", 
+				"", "Self", GroupType.Volunteer, 1, true, true));
+		
+		//add an artificial "Other" group to the bottom of the list. ID = -3 tells the web page
+		//to display a text field requiring the user to specify the actual group their with
+		preprocessGroupList.add(new ONCGroup(-3, new Date(), "", 3, "", 
+				"", "Other", GroupType.Volunteer, 1, true, true));
+		
+		StringBuffer buff = new StringBuffer();
+		
+		//convert list to an html option string
+		for(ONCGroup g : preprocessGroupList)
+			if(g.getType() == GroupType.Volunteer && g.includeOnWebpage())
+				buff.append(String.format("<option value=\"%d\" data-visible=\"%s\">%s</option>", 
+						g.getID(), Boolean.toString(g.contactInfoRqrd()), g.getName()));
+
+		return buff.toString();
+	}
+	
 	static ONCGroup getGroup(int groupID)
 	{
 		int index = 0;

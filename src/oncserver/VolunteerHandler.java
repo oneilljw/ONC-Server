@@ -111,9 +111,10 @@ public class VolunteerHandler extends ONCWebpageHandler
 		{
 			String response = webpageMap.get(requestURI);
 			
-			//Pre-process the web page adding current variables
+			//Pre-process the web page adding current variables, including group select options
 			response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
 			response = response.replace("CURRENT_YEAR", Integer.toString(DBManager.getCurrentYear()));
+			response = response.replace("<option>SELECT_OPTIONS</option>", ServerGroupDB.getVolunteerGroupHTMLSelectOptions());
 			
 			//is it Delivery Day?
 			if(ServerGlobalVariableDB.isDeliveryDay(DBManager.getCurrentYear()))

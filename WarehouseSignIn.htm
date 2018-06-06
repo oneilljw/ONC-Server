@@ -8,54 +8,14 @@
   <script> 
   	var errorColor = '#FF9999';
   	var DisplayMode = {NO_CONTACT_INFO: 0, CONTACT_INFO: 1, CONTACT_INFO_EXTENDED: 2};
-  	var bDeliveryDay = IS_DELIVERY_DAY?;		//is pre-porcessed at server to "true" or "false";
+  	var bDeliveryDay = IS_DELIVERY_DAY?;		//is pre-processed at server to "true" or "false";
   	
   	$( document ).ready(function()
 	{
   		//show the success dialog if volunteer signed in successfully
-  		var urlmode = window.location.href;
-	  	if(urlmode.indexOf("signinvolunteer") > -1)
+	  	if(window.location.href.indexOf("signinvolunteer") > -1)
   			window.location=document.getElementById('registeredanchor').href;
-	  	else
-	  	{
-	  		//get the most current year from the database
-//  			var curryearparams = "callback=?";
-//			$.getJSON('currentyear', curryearparams, function(year)
-//      		{	
-//  				document.getElementById('year').value= year.curryear;
-//  	    		});
-  		
-  			getVolunteerGroups();
-	  	}
 	});
-  	
-  	function getVolunteerGroups()
-  	{
-  		//get the volunteer groups and popluate the volunteer group select
-		var curryearparams = "callback=?";
-		$.getJSON('volunteergroups', curryearparams, function(groups)
-	    	{	
-			var groupcb = document.getElementById('groupselect');
-			for (var i = 0; i < groups.length; i++)
-				addComboBoxOption(groupcb, groups[i].name, groups[i].id, groups[i].bContactInfoRqrd);
-	    	});
-  	}
-  	
-  	function addComboBoxOption(combobox, text, value, attribute)
-	{
-		var option = document.createElement("option");
-		option.text = text;
-    		option.value = value;
-    		option.setAttribute("data-visible", attribute);
-    		try 
-    		{
-        		combobox.add(option, null); //Standard 
-    		}
-    		catch(error)
-    		{
-        		combobox.add(option); // IE only
-    		}
-	}
   	
   	function onGroupChange()
   	{
@@ -211,7 +171,7 @@
 		var groupSelectElement = document.getElementById('groupselect');
   		var groupOtherElement = document.getElementById('groupother');
   		
-  		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === 'Other' &&
+  		if(groupSelectElement.options[groupSelectElement.selectedIndex].value === '-3' &&
   			groupOtherElement.value.length === 0)
   		{	
   			var elementsWithErrors = [groupOtherElement];
@@ -261,7 +221,7 @@
 			elements[index++].style.backgroundColor = errorColor;
 	}
 	
-	function submitRegistration()
+	function verifySignIn()
 	{
 		var verifyNameElements= [document.getElementById('delfn'),
 		                     	 document.getElementById('delln')];
@@ -313,7 +273,7 @@
 	
 	function submitSignIn()
 	{
-		//Post a JSON request with the required information
+		//post a JSON request with the required information
 		var groupSelectElement = document.getElementById('groupselect');
 		
 		var volunteerparams = "year=" + document.getElementById('year').value
@@ -384,6 +344,7 @@
   		document.getElementById('delcity').value = "";
   		document.getElementById('delzipcode').value = "";
   		document.getElementById('comment').value = "";
+  		document.getElementById('errormessage').textContent = "";
   		
   		document.getElementById('delfn').style.backgroundColor = '#FFFFFF';
 		document.getElementById('delln').style.backgroundColor = '#FFFFFF';
@@ -404,11 +365,8 @@
 	
   </script>
   <style>
-	#submitspan {float: right;}
-	.rightspan
-	{
-		float: right;
-	}
+    .inputline {display: block; margin-bottom: 10px;}
+	.rightspan {float: right;}
 	#errormessage
 	{
 		float: left;
@@ -416,28 +374,9 @@
 		font-style: italic;
 		color: black;
 	}
-	#emaillbl, #groupotherlbl
-	{
-		padding-left: 15px;
-	}
-	.inputline
-	{
-		display: block;
-		margin-bottom: 10px;
-	}
-	#contactdiv
-	{
-		display: block;
-		margin-bottom: 10px;
-	}
-	#addressdiv
-	{
-		margin-top: 10px;
-	}
-	#commentdiv
-	{
-		display: none;
-	}
+	#emaillbl, #groupotherlbl { padding-left: 15px; }
+	#addressdiv {margin-top: 10px;}
+	#commentdiv {display: none;}
   </style>
 </head>
 <body>
@@ -470,11 +409,11 @@
   </div>
   <div class= 'inputline'>
     <label for="groupselect">Group or Organization:</label>
-      <select id="groupselect" title="Group" name="group" onchange="onGroupChange()"></select>
+      <select id="groupselect" title="Group" name="group" onchange="onGroupChange()"><option>SELECT_OPTIONS</option></select>
  	<label id='groupotherlbl' for="groupother" style="visibility: hidden;">Group Name:</label>
 	<input id="groupother" title="Other group or organizaton name" name="groupother" type="text" size="35" placeholder="Other Group or Organization Name" style="visibility: hidden;">
   </div>
-    <div id= 'contactdiv'>
+    <div id= 'contactdiv' class= 'inputline'>
       <label id='phonelbl' for="primaryphone">Cell Phone #:</label>
       <input id="primaryphone" title="Phone #" name="primaryphone" type="text" size="18" placeholder="Phone #" onchange= 'verifyPhoneNumber(0)'>
 	  <label id='emaillbl' for="delemail">Email:</label>
@@ -489,15 +428,15 @@
   	  </div>
   	</div>  
   <div id= 'commentdiv'>
-      <label for="commnet">Comment:</label>
+      <label for="comment">Comment:</label>
  	  <input id= 'comment' title='Add Any Comments' name= 'comment' type= 'text' size= '100' placeholder= 'Add a comment' autocomplete= 'off'>
   </div>
   </fieldset>
   <br>
   <div>
   	<span id="errormessage"></span>
-  	<span id="submitspan">
-  	  <input id="btnsubmit" type="button" value="Sign In" style="background-color: #336699; color: #ffffff;" title="Click to sign in" onclick= submitRegistration()>
+  	<span class ='rightspan'>
+  	  <input id="btnsubmit" type="button" value="Sign In" style="background-color: #336699; color: #ffffff;" title="Click to sign in" onclick= verifySignIn()>
   	</span>
   </div>
  </form>
