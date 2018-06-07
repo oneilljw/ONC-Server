@@ -17,7 +17,7 @@ public class CommonHandler extends ONCWebpageHandler
 		ServerUI.getInstance().addLogMessage(mssg);
 
 		if(requestURI.contains("/oncsplash"))
-			sendFile(t, "image/gif", "oncsplash");
+			sendFile(t, "image/gif", "oncsplash.gif");
 		else if(requestURI.contains("/clearx"))
 			sendCachedFile(t, "image/gif", "clearx");
 		else if(requestURI.contains("/onclogo"))
