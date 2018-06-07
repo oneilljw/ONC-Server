@@ -241,7 +241,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     											ONCUser.class));
     				
     					//return response
-    					responseJson =  "{\"message\":\"User Profile Reviewed\"}";
+    					responseJson =  "{\"message\":\"User Profile Information Validated\"}";
     				}
     				else	//no change detected 
     					responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
