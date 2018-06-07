@@ -253,8 +253,8 @@ public class ServerUI extends JPanel implements ClientListener
 		
 		String line = new SimpleDateFormat("MM/dd/yy H:mm:ss.S").format(timestamp.getTime());
 		
-//		logTA.append(line + ": " + mssg + "\n");
-//		logTA.setCaretPosition(logTA.getDocument().getLength());
+		logTA.append(line + ": " + mssg + "\n");
+		logTA.setCaretPosition(logTA.getDocument().getLength());
 		
 		return line;
 	}
