@@ -119,7 +119,7 @@ public class FamilyHandler extends ONCWebpageHandler
     		}
 		else if(requestURI.contains("/commonfamily.js"))
 		{
-			sendCachedFile(t, "text/javascript", "commonfamily");
+			sendCachedFile(t, "text/javascript", "commonfamily", false);
 		}
 		else if(requestURI.contains("/newfamily"))
 		{

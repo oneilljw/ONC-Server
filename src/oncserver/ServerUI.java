@@ -63,7 +63,7 @@ public class ServerUI extends JPanel implements ClientListener
 	private static ServerUI instance = null;	//Only one UI
 	private transient ImageIcon imageIcons[];
 	public JButton btnStartServer, btnStopServer;
-	private JTextArea logTA;
+	private static JTextArea logTA;
 	private List<String> logList;
 	private ServerStoplight stoplight;
 //	private JRadioButton rbStoplight;
@@ -246,7 +246,19 @@ public class ServerUI extends JPanel implements ClientListener
 		imageIcons[3] = createImageIcon("traffic-lights-red-icon.gif", "Red Light Icon");
 		imageIcons[4] = createImageIcon("traffic-lights-off-icon.gif", "Off Light Icon");	
 	}
-
+	
+	static String addDebugMessage(String mssg)
+	{
+		Calendar timestamp = Calendar.getInstance();
+		
+		String line = new SimpleDateFormat("MM/dd/yy H:mm:ss.S").format(timestamp.getTime());
+		
+//		logTA.append(line + ": " + mssg + "\n");
+//		logTA.setCaretPosition(logTA.getDocument().getLength());
+		
+		return line;
+	}
+	
 	void addLogMessage(String mssg)
 	{
 		Calendar timestamp = Calendar.getInstance();

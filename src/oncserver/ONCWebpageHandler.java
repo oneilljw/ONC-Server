@@ -277,14 +277,22 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		}
 	}
 	
-	void sendCachedFile(HttpExchange t, String mimetype, String sheetname) throws IOException
+	void sendCachedFile(HttpExchange t, String mimetype, String sheetname, boolean debugMode) throws IOException
 	{
+		if(debugMode)
+			ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: sheetname= %s", sheetname));
 		// add the required response header
 	    Headers h = t.getResponseHeaders();
 	    h.add("Content-Type", mimetype);
+	    
+	    if(debugMode)
+	    	ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: header content added, type= %s", mimetype));
 
 	    //get file
 	    byte[] bytearray = webfileMap.get(sheetname);
+	    
+	    if(debugMode)
+	    		ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: bytearray size= %d", bytearray.length));
 	    	    
 //		String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
 //		File file = new File(path);
@@ -299,10 +307,29 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	    //send the response.
 //	    t.sendResponseHeaders(HTTP_OK, file.length());
 	    t.sendResponseHeaders(HTTP_OK, bytearray.length);
+	    
+	    if(debugMode)
+	    		ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: sent response headers, code= %d, length= %d", HTTP_OK, bytearray.length)); 
+	    
 	    OutputStream os = t.getResponseBody();
+	    
+	    if(debugMode)
+	    		ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: got response body"));
+	    
 	    os.write(bytearray,0,bytearray.length);
+	    
+	    if(debugMode)
+	    		ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: wrote response, length= %d", bytearray.length));
+	    
 	    os.close();
+	    
+	    if(debugMode)
+	    		ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: closed output stream"));
+	    
 	    t.close();
+	    
+	    if(debugMode)
+	    		ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: closed HttpExchange"));
 	}
 	
 	void sendFile(HttpExchange t, String mimetype, String sheetname) throws IOException

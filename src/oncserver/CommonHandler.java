@@ -17,22 +17,22 @@ public class CommonHandler extends ONCWebpageHandler
 		ServerUI.getInstance().addLogMessage(mssg);
 
 		if(requestURI.contains("/oncsplash"))
-			sendFile(t, "image/gif", "oncsplash.gif");
+			sendCachedFile(t, "image/gif", "oncsplash", false);
 		else if(requestURI.contains("/clearx"))
-			sendCachedFile(t, "image/gif", "clearx");
+			sendCachedFile(t, "image/gif", "clearx", false);
 		else if(requestURI.contains("/onclogo"))
-			sendCachedFile(t, "image/gif", "onclogo");
+			sendCachedFile(t, "image/gif", "onclogo", false);
 		else if(requestURI.contains("/favicon.ico"))
-			sendCachedFile(t, "image/x-icon ", "oncicon");
+			sendCachedFile(t, "image/x-icon ", "oncicon", false);
 		else if(requestURI.contains("/vanilla.ttf"))
-			sendCachedFile(t, "application/octet-stream", "vanilla");
+			sendCachedFile(t, "application/octet-stream", "vanilla", false);
 		else if(requestURI.contains("/oncstylesheet"))
-			sendCachedFile(t, "text/css", "oncstylesheet");
+			sendCachedFile(t, "text/css", "oncstylesheet", false);
 		else if(requestURI.contains("/oncdialogstylesheet"))
-			sendCachedFile(t, "text/css", "oncdialogstylesheet");
+			sendCachedFile(t, "text/css", "oncdialogstylesheet", false);
 		else if(requestURI.contains("/oncloginstylesheet"))
-			sendCachedFile(t, "text/css", "oncloginstylesheet");
+			sendCachedFile(t, "text/css", "oncloginstylesheet", false);
 		else if(requestURI.contains("/jquery.js"))
-			sendCachedFile(t, "text/javascript", "jquery");
+			sendCachedFile(t, "text/javascript", "jquery", false);
 	}
 }
