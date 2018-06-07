@@ -277,7 +277,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		}
 	}
 	
-	void sendFile(HttpExchange t, String mimetype, String sheetname) throws IOException
+	void sendCachedFile(HttpExchange t, String mimetype, String sheetname) throws IOException
 	{
 		// add the required response header
 	    Headers h = t.getResponseHeaders();
@@ -299,6 +299,31 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	    //send the response.
 //	    t.sendResponseHeaders(HTTP_OK, file.length());
 	    t.sendResponseHeaders(HTTP_OK, bytearray.length);
+	    OutputStream os = t.getResponseBody();
+	    os.write(bytearray,0,bytearray.length);
+	    os.close();
+	    t.close();
+	}
+	
+	void sendFile(HttpExchange t, String mimetype, String sheetname) throws IOException
+	{
+		// add the required response header
+	    Headers h = t.getResponseHeaders();
+	    h.add("Content-Type", mimetype);
+
+	    //get file   
+		String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
+		File file = new File(path);
+		byte [] bytearray  = new byte [(int)file.length()];
+	      
+	    FileInputStream fis = new FileInputStream(file);
+	      
+	    BufferedInputStream bis = new BufferedInputStream(fis);
+	    bis.read(bytearray, 0, bytearray.length);
+	    bis.close();
+	      	
+	    //send the response.
+	    t.sendResponseHeaders(HTTP_OK, file.length());
 	    OutputStream os = t.getResponseBody();
 	    os.write(bytearray,0,bytearray.length);
 	    os.close();

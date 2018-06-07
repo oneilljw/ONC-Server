@@ -19,20 +19,20 @@ public class CommonHandler extends ONCWebpageHandler
 		if(requestURI.contains("/oncsplash"))
 			sendFile(t, "image/gif", "oncsplash");
 		else if(requestURI.contains("/clearx"))
-			sendFile(t, "image/gif", "clearx");
+			sendCachedFile(t, "image/gif", "clearx");
 		else if(requestURI.contains("/onclogo"))
-			sendFile(t, "image/gif", "onclogo");
+			sendCachedFile(t, "image/gif", "onclogo");
 		else if(requestURI.contains("/favicon.ico"))
-			sendFile(t, "image/x-icon ", "oncicon");
+			sendCachedFile(t, "image/x-icon ", "oncicon");
 		else if(requestURI.contains("/vanilla.ttf"))
-			sendFile(t, "application/octet-stream", "vanilla");
+			sendCachedFile(t, "application/octet-stream", "vanilla");
 		else if(requestURI.contains("/oncstylesheet"))
-			sendFile(t, "text/css", "oncstylesheet");
+			sendCachedFile(t, "text/css", "oncstylesheet");
 		else if(requestURI.contains("/oncdialogstylesheet"))
-			sendFile(t, "text/css", "oncdialogstylesheet");
+			sendCachedFile(t, "text/css", "oncdialogstylesheet");
 		else if(requestURI.contains("/oncloginstylesheet"))
-			sendFile(t, "text/css", "oncloginstylesheet");
+			sendCachedFile(t, "text/css", "oncloginstylesheet");
 		else if(requestURI.contains("/jquery.js"))
-			sendFile(t, "text/javascript", "jquery");
+			sendCachedFile(t, "text/javascript", "jquery");
 	}
 }
