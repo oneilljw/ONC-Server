@@ -25,6 +25,7 @@ import ourneighborschild.VolAct;
 import ourneighborschild.GeniusSignUps;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.Activity;
+import ourneighborschild.Frequency;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -35,22 +36,16 @@ import au.com.bytecode.opencsv.CSVWriter;
 public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 {
 	private static final int ACTIVITY_DB_HEADER_LENGTH = 15;
-	private static final int COMMENT_ACTIIVTY_IDENTIFIER_LENGTH = 4;
 	private static final String GENIUS_STATUS_FILENAME = "GeniusSignUps.csv";
 	private static final int SIGNUP_RECORD_LENGTH = 5;
 	
 	private static ServerActivityDB instance = null;
+	
 	private static SignUpGeniusIF geniusIF;
-	
-	private static List<ActivityDBYear> activityDB;
-	
-//	private GeniusStatus geniusStatus;
-	
-//	private List<SignUp> signUpList;
-//	private long lastSignUpListImportTime;
-	
 	private GeniusSignUps geniusSignUps;
 	private boolean bSignUpsSaveRequested;
+	
+	private static List<ActivityDBYear> activityDB;
 
 	private ServerActivityDB() throws FileNotFoundException, IOException
 	{
@@ -403,8 +398,23 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		
 		if(index < signUpList.size() && signUpList.get(index).getFrequency() != updatedSignUpReq.getFrequency())
 		{
-			signUpList.get(index).setFrequency(updatedSignUpReq.getFrequency());
+			SignUp updatedSignUp = signUpList.get(index);
+			
+			//if change was to import the signup one time, then initiate the import and set the
+			//frequency to NEVER. A one-time import request requires the user to select another periodic 
+			//frequency to restart automated imports
+			if(updatedSignUpReq.getFrequency() == Frequency.ONE_TIME && geniusIF != null)
+			{
+				geniusIF.requestSignUpContent(updatedSignUp, SignUpReportType.filled);
+				updatedSignUp.setFrequency(Frequency.NEVER);
+			}
+			else
+			{
+				updatedSignUp.setFrequency(updatedSignUpReq.getFrequency());
+			}
+			
 			bSignUpsSaveRequested = true;
+			
 			return "UPDATED_SIGNUP" + gson.toJson(signUpList.get(index), SignUp.class);
 		}
 		else
@@ -498,15 +508,16 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	@Override
 	public void signUpDataReceived(SignUpEvent event)
 	{
-		if(event.type() == SignUpEventType.SIGNUP_IMPORT)
+		if(event.type() == SignUpEventType.SIGNUP_LIST_IMPORT)
 		{
 			//Set the import time for the list of sign=ups. Go thru each of the imported sign ups.
 			//If it hasn't previously been imported, add it to the current list. That way we preserve
 			//the frequency and last import time setting in each existing sign up
 			GeniusSignUps geniusSignUpsImported = (GeniusSignUps) event.getSignUpObject();
+			geniusSignUps.setSignUpList(geniusSignUpsImported.getSignUpList());
 			geniusSignUps.setLastSignUpListImportTime(geniusSignUpsImported.getLastSignUpListImportTime());
-			
-			//remove any signUps in the current list that are not in the imported list
+/*			
+			//replace all signups in the current list with the imported list
 			List<SignUp> currList = geniusSignUps.getSignUpList();
 			Iterator<SignUp> i = currList.iterator();
 			while (i.hasNext()) 
@@ -517,7 +528,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			for(SignUp importedSU : geniusSignUpsImported.getSignUpList())
 				if(findSignUp(currList, importedSU.getSignupid()) == null)
 					currList.add(importedSU);
-			
+*/			
 			bSignUpsSaveRequested = true;
 			
 			//DEBUG. The save won't be necessary during a season as at least one year will be unlocked
@@ -532,17 +543,27 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			ClientManager clientMgr = ClientManager.getInstance();
 			clientMgr.notifyAllClients(clientSignUpJson);
 		}
+		if(event.type() == SignUpEventType.REPORT)
+		{
+			bSignUpsSaveRequested = true;
+			
+			Gson gson = new Gson();
+			String clientSignUpJson = "UPDATED_GENIUS_SIGNUPS" + gson.toJson(geniusSignUps, GeniusSignUps.class);
+			
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllClients(clientSignUpJson);
+		}
 		else if(event.type() == SignUpEventType.UPDATED_ACTIVITIES)
 		{
 			//process list of updated activities.
 			@SuppressWarnings("unchecked")
-			List<Activity> updatedVAList = (List<Activity>) event.getSignUpObject();
+			List<Activity> updatedActList = (List<Activity>) event.getSignUpObject();
 			List<String> clientJsonMssgList = new ArrayList<String>();
 			
 			//add the updated activities to the database
-			for(Activity va : updatedVAList)
+			for(Activity act : updatedActList)
 			{
-				String response = update(DBManager.getCurrentYear(), va);
+				String response = update(DBManager.getCurrentYear(), act);
 				if(response != null)
 					clientJsonMssgList.add(response);
 //				System.out.println(String.format("ServActDB.newAndMod: updateAct: %s, id= %d, geniusid= %d, start= %d, end= %d",

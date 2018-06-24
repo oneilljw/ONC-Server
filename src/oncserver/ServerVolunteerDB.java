@@ -24,11 +24,11 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListener
 {
-	private static final int DRIVER_DB_HEADER_LENGTH = 21;
+	private static final int VOLUNTEER_DB_HEADER_LENGTH = 21;
 	private static final String VOLUNTEER_EMAIL_ADDRESS = "volunteer@ourneighborschild.org";
 	private static final String VOLUNTEER_EMAIL_PASSWORD = "crazyelf";
 	
-	private static List<VolunteerDBYear> driverDB;
+	private static List<VolunteerDBYear> volDB;
 	private static ServerVolunteerDB instance = null;
 	
 	private static ClientManager clientMgr;
@@ -40,7 +40,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
 	{
 		//create the driver data bases for TOTAL_YEARS number of years
-		driverDB = new ArrayList<VolunteerDBYear>();
+		volDB = new ArrayList<VolunteerDBYear>();
+		
+		geniusIF = SignUpGeniusIF.getInstance();
+		geniusIF.addSignUpListener(this);
 		
 		clientMgr = ClientManager.getInstance();
 		warehouseDB = ServerWarehouseDB.getInstance();
@@ -54,28 +57,20 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			VolunteerDBYear volunteerDBYear = new VolunteerDBYear(year);
 									
 			//add the list of children for the year to the db
-			driverDB.add(volunteerDBYear);
+			volDB.add(volunteerDBYear);
 									
 			//import the volunteers from persistent store
-			importDB(year, String.format("%s/%dDB/DriverDB.csv",
+			importDB(year, String.format("%s/%dDB/VolunteerDB.csv",
 					System.getProperty("user.dir"),
-						year), "Driver DB", DRIVER_DB_HEADER_LENGTH);
+						year), "Volunteer DB", VOLUNTEER_DB_HEADER_LENGTH);
 		
 			//set the next id
 			volunteerDBYear.setNextID(getNextID(volunteerDBYear.getList()));
 		}
-/*		
-		//connect to sign up genius thru the interface and add a listener to process updates
-		geniusIF = SignUpGeniusIF.getInstance();
-		geniusIF.addSignUpListener(this);
 		
-		int signUpGeniusID = 13398811;
-		if(signUpGeniusID  > -1)
-		{
-			System.out.println(String.format("ServVolDB.constrct: Reqesting SignUp Content, signUpID= %d", signUpGeniusID));
-			geniusIF.requestSignUpContent(signUpGeniusID, SignUpReportType.filled);
-		}
-*/
+		//connect to sign up genius thru the interface
+//		geniusIF = SignUpGeniusIF.getInstance();
+//		geniusIF.requestSignUpContent(13398811, SignUpReportType.filled);
 	}
 	
 	public static ServerVolunteerDB getInstance() throws FileNotFoundException, IOException
@@ -88,7 +83,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	
 	List<ONCVolunteer> clone(int year)
 	{
-		List<ONCVolunteer> volList = driverDB.get(year - BASE_YEAR).getList();
+		List<ONCVolunteer> volList = volDB.get(year - BASE_YEAR).getList();
 		List<ONCVolunteer> cloneList = new ArrayList<ONCVolunteer>();
 		
 		for(ONCVolunteer v : volList)
@@ -102,14 +97,14 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCVolunteer>>(){}.getType();
 			
-		String response = gson.toJson(driverDB.get(year - BASE_YEAR).getList(), listtype);
+		String response = gson.toJson(volDB.get(year - BASE_YEAR).getList(), listtype);
 		return response;	
 	}
 	
 	static HtmlResponse getVolunteerJSONP(int year, String fn, String ln, String cell, String callbackFunction)
 	{		
 		Gson gson = new Gson();
-		List<ONCVolunteer> searchList = driverDB.get(year - BASE_YEAR).getList();
+		List<ONCVolunteer> searchList = volDB.get(year - BASE_YEAR).getList();
 		
 		String response;
 		int index=0;
@@ -153,7 +148,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		ONCVolunteer addedDriver = gson.fromJson(json, ONCVolunteer.class);
 				
 		//set the new ID for the new driver
-		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
 		addedDriver.setID(volunteerDBYear.getNextID());
 		volunteerDBYear.add(addedDriver);
 		volunteerDBYear.setChanged(true);
@@ -161,22 +156,21 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		return "ADDED_DRIVER" + gson.toJson(addedDriver, ONCVolunteer.class);
 	}
 	
-	String add(int year, ONCVolunteer addedVol) 
+	ONCVolunteer add(int year, ONCVolunteer addedVol) 
 	{		
 		//set the new ID for the new driver
-		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
 		addedVol.setID(volunteerDBYear.getNextID());
 		volunteerDBYear.add(addedVol);
 		volunteerDBYear.setChanged(true);
 		
-		Gson gson = new Gson();
-		return "ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class);
+		return addedVol;
 	}
 	
 	String addVolunteerGroup(int year, String volunteerGroupJson, DesktopClient currClient)
 	{
 		//get the current year volunteer list for the proper year
-		List<ONCVolunteer> cyVolList = driverDB.get(year - BASE_YEAR).getList();
+		List<ONCVolunteer> cyVolList = volDB.get(year - BASE_YEAR).getList();
 		
 		//create the response list of jsons
 		List<String> jsonResponseList = new ArrayList<String>();
@@ -197,13 +191,15 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			if(index == cyVolList.size())
 			{
 				//no match found, add the input volunteer to the current year list
-				String response = add(year, inputVol);
-				jsonResponseList.add(response);
+				ONCVolunteer addedVol = add(year, inputVol);
+				if(addedVol != null)
+					jsonResponseList.add("ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
 			}
 		}
 		
 		//notify all other clients of the imported volunteer objects
-		clientMgr.notifyAllOtherInYearClients(currClient, jsonResponseList);
+		if(!jsonResponseList.isEmpty())
+			clientMgr.notifyAllOtherInYearClients(currClient, jsonResponseList);
 		
 		Type listOfChanges = new TypeToken<ArrayList<String>>(){}.getType();
 		return "ADDED_VOLUNTEER_GROUP" + gson.toJson(jsonResponseList, listOfChanges);
@@ -223,8 +219,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		for(ONCVolunteer inputVol : inputVolList)
 		{
 			//volunteer found, add the input volunteer to the current year list
-			String response = update(year, inputVol);
-			jsonResponseList.add(response);
+			ONCVolunteer updatedVol = update(year, inputVol);
+			if(updatedVol != null)
+				jsonResponseList.add("UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
 		}
 		
 		//notify all other clients of the imported volunteer objects
@@ -254,7 +251,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		String fn = volParams.get("delFN");
 		String ln = volParams.get("delLN");
 		
-		VolunteerDBYear volDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volDBYear = volDB.get(year - BASE_YEAR);
 		List<ONCVolunteer>volList = volDBYear.getList();
 		
 		int index=0;
@@ -342,8 +339,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 //				System.out.println(String.format("ServVolDB.signInVol: actID = %d, name= %s",
 //						activity.getID(), activity.getName()));
 				
-				//create the volAct and ask the VolActDB to add it. 
-				VolAct addVAReq = new VolAct(-1, addedVol.getID(), activity.getID(), activity.getGeniusID(), 1, "");
+				//create the volAct and ask the VolActDB to add it. Set geniusID to -1 to indicate
+				//the volunteer activity was not imported from SignUp Genius
+				VolAct addVAReq = new VolAct(-1, addedVol.getID(), activity.getID(), -1, 1, "");
 				responseList.add(volActDB.add(year, addVAReq));
 			}
 			
@@ -382,7 +380,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		String fn = volParams.get("delFN");
 		String ln = volParams.get("delLN");
 		
-		VolunteerDBYear volDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volDBYear = volDB.get(year - BASE_YEAR);
 		List<ONCVolunteer>volList = volDBYear.getList();
 		
 		int index=0;
@@ -490,7 +488,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		ONCVolunteer updatedDriver = gson.fromJson(json, ONCVolunteer.class);
 		
 		//Find the position for the current driver being updated
-		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
 		List<ONCVolunteer> dAL = volunteerDBYear.getList();
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != updatedDriver.getID())
@@ -507,12 +505,12 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			return "UPDATE_FAILED";
 	}
 	
-	String update(int year, ONCVolunteer updatedVolunteer)
+	ONCVolunteer update(int year, ONCVolunteer updatedVolunteer)
 	{
-		Gson gson = new Gson();
+//		Gson gson = new Gson();
 		
 		//Find the position for the current volunteer being updated
-		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
 		List<ONCVolunteer> dAL = volunteerDBYear.getList();
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != updatedVolunteer.getID())
@@ -523,10 +521,12 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		{
 			dAL.set(index, updatedVolunteer);
 			volunteerDBYear.setChanged(true);
-			return "UPDATED_DRIVER" + gson.toJson(updatedVolunteer, ONCVolunteer.class);
+//			return "UPDATED_DRIVER" + gson.toJson(updatedVolunteer, ONCVolunteer.class);
+			return updatedVolunteer;
 		}
 		else
-			return "UPDATE_FAILED";
+//			return "UPDATE_FAILED";
+			return null;
 	}
 	
 	String delete(int year, String json)
@@ -536,7 +536,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		ONCVolunteer deletedDriver = gson.fromJson(json, ONCVolunteer.class);
 		
 		//find and remove the deleted child from the data base
-		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
 		List<ONCVolunteer> dAL = volunteerDBYear.getList();
 		
 		int index = 0;
@@ -555,7 +555,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	
 	ONCVolunteer getDriverByDriverNumber(int year, String drvNum)
 	{
-		List<ONCVolunteer> dAL = driverDB.get(year-BASE_YEAR).getList();
+		List<ONCVolunteer> dAL = volDB.get(year-BASE_YEAR).getList();
 		
 		//find the driver
 		int index = 0;	
@@ -566,6 +566,63 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			return dAL.get(index);
 		else
 			return null;	
+	}
+	
+	List<ONCVolunteer> processUpdatedSignUpGeniusVolunteers(List<ONCVolunteer> sugVolList)
+	{
+		Gson gson = new Gson();
+		List<ONCVolunteer> updatedVolList = new ArrayList<ONCVolunteer>();
+		List<String> clientJsonMssgList = new ArrayList<String>();
+		
+		//add the updated volunteers to the database
+		for(ONCVolunteer v : sugVolList)
+		{
+			ONCVolunteer updatedVol = update(DBManager.getCurrentYear(), v);
+			if(updatedVol != null)
+			{
+				updatedVolList.add(updatedVol);
+				clientJsonMssgList.add("UPDATED_DRIVER" + gson.toJson(updatedVol, ONCVolunteer.class));
+			}
+		}
+		
+		if(!clientJsonMssgList.isEmpty())
+		{
+			//there were updated volunteers, send list of new json's to clients
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+		}
+		
+		return updatedVolList;
+	}
+	
+	List<ONCVolunteer> processNewSignUpGeniusVolunteers(List<ONCVolunteer> sugVolList)
+	{
+		Gson gson = new Gson();
+		List<ONCVolunteer> newVolList = new ArrayList<ONCVolunteer>();
+		List<String> clientJsonMssgList = new ArrayList<String>();
+		
+		//add the new volunteers to the database
+		for(ONCVolunteer v : sugVolList)
+		{
+			ONCVolunteer addedVol = add(DBManager.getCurrentYear(), v);
+			if(addedVol != null)
+			{
+				newVolList.add(addedVol);
+				clientJsonMssgList.add("ADDED_DRIVER" + gson.toJson(addedVol, ONCVolunteer.class));
+			}
+			
+//			System.out.println(String.format("ServVolDB.newAndMod: newVol: %s %s, id= %d",
+//					v.getFirstName(), v.getLastName(), v.getID()));
+		}
+		
+		if(!clientJsonMssgList.isEmpty())
+		{
+			//there were new activities, send list of new json's to clients
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+		}
+		
+		return newVolList;
 	}
 	
 	void updateDriverDeliveryCounts(int year, String drvNum1, String drvNum2)
@@ -750,7 +807,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
 		volunteerDBYear.add(new ONCVolunteer(nextLine));	
 	}
 
@@ -761,14 +818,14 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		//The driver db year list is initially empty prior to the import of drivers, so all we
 		//do here is create a new DriverDBYear for the newYear and save it.
 		VolunteerDBYear volunteerDBYear = new VolunteerDBYear(newYear);
-		driverDB.add(volunteerDBYear);
+		volDB.add(volunteerDBYear);
 		volunteerDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 	
 	@Override
 	void save(int year)
 	{
-		 VolunteerDBYear volunteerDBYear = driverDB.get(year - BASE_YEAR);
+		 VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
 		 
 		 if(volunteerDBYear.isUnsaved())
 		 {
@@ -777,63 +834,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			 			"Group", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
 			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
 			 
-			String path = String.format("%s/%dDB/DriverDB.csv", System.getProperty("user.dir"), year);
+			String path = String.format("%s/%dDB/VolunteerDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(volunteerDBYear.getList(),  driverHeader, path);
 			volunteerDBYear.setChanged(false);
-		}
-	}
-	
-	@Override
-	public void signUpDataReceived(SignUpEvent event)
-	{
-		if(event.type() == SignUpEventType.UPDATED_VOLUNTEERS)
-		{
-			//process list of updated activities.
-			@SuppressWarnings("unchecked")
-			List<ONCVolunteer> updatedVolList = (List<ONCVolunteer>) event.getSignUpObject();
-			List<String> clientJsonMssgList = new ArrayList<String>();
-			
-			//add the updated volunteers to the database
-			for(ONCVolunteer v : updatedVolList)
-			{
-				String response = update(DBManager.getCurrentYear(), v);
-				if(response != null)
-					clientJsonMssgList.add(response);
-//				System.out.println(String.format("ServVolDB.newAndMod: updateVol: %s %s, id= %d",
-//						v.getFirstName(), v.getLastName(), v.getID()));
-			}
-			
-			if(!clientJsonMssgList.isEmpty())
-			{
-				//there were updates, send list of updated json's to clients
-				ClientManager clientMgr = ClientManager.getInstance();
-				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
-			}
-		}
-		else if(event.type() == SignUpEventType.NEW_VOLUNTEERS)
-		{
-			//print the new activities list
-			@SuppressWarnings("unchecked")
-			List<ONCVolunteer> newVolList = (List<ONCVolunteer>) event.getSignUpObject();
-			List<String> clientJsonMssgList = new ArrayList<String>();
-			
-			//add the updated volunteers to the database
-			for(ONCVolunteer v : newVolList)
-			{
-				String response = add(DBManager.getCurrentYear(), v);
-				if(response != null)
-					clientJsonMssgList.add(response);
-				
-//				System.out.println(String.format("ServVolDB.newAndMod: newVol: %s %s, id= %d",
-//						v.getFirstName(), v.getLastName(), v.getID()));
-			}
-			
-			if(!clientJsonMssgList.isEmpty())
-			{
-				//there were new activities, send list of new json's to clients
-				ClientManager clientMgr = ClientManager.getInstance();
-				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
-			}
 		}
 	}
 	
@@ -846,8 +849,12 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		return index < list.size();
 	}
 	
-	
-	
+	@Override
+	public void signUpDataReceived(SignUpEvent event)
+	{
+		// TODO Auto-generated method stub
+		
+	}
 	private class VolunteerDBYear extends ServerDBYear
 	{
 		private List<ONCVolunteer> volList;

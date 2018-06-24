@@ -56,6 +56,17 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		return instance;
 	}
 	
+	List<VolAct> clone(int year)
+	{
+		List<VolAct> volActList = volunteerActivityDB.get(year - BASE_YEAR).getList();
+		List<VolAct> cloneList = new ArrayList<VolAct>();
+		
+		for(VolAct va: volActList)
+			cloneList.add(new VolAct(va));
+		
+		return cloneList;		
+	}
+	
 	String getVolunteerActivities(int year)
 	{
 		Gson gson = new Gson();
@@ -112,6 +123,21 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		}
 		
 		return clientNotificationList;
+	}
+	
+	void processAddedActivities(int year, List<VolAct> newVAList)
+	{
+		List<String> addedVAJsonMssgList = new ArrayList<String>();
+		
+		for(VolAct va : newVAList)
+			addedVAJsonMssgList.add(add(year, va));
+			
+		if(!addedVAJsonMssgList.isEmpty())
+		{
+			//there were new volunteer activities, send list of new json's to clients
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), addedVAJsonMssgList);
+		}
 	}
 
 	@Override
@@ -211,7 +237,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 			volActDBYear.setChanged(true);
 			
 			Gson gson = new Gson();
-			return "UPDATED__VOLUNTEER_ACTIVITY" + gson.toJson(updatedActivity, VolAct.class);
+			return "UPDATED_VOLUNTEER_ACTIVITY" + gson.toJson(updatedActivity, VolAct.class);
 		}
 		
 		return null;
@@ -239,6 +265,96 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		}
 		else
 			return "DELETE_FAILED";	
+	}
+	
+	String delete(int year, VolAct deletedVA)
+	{
+		Gson gson = new Gson();
+		
+		//find and remove the deleted volunteer activity from the data base
+		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		List<VolAct> vaList = volActDBYear.getList();
+		
+		int index = 0;
+		while(index < vaList.size() && vaList.get(index).getID() != deletedVA.getID())
+			index++;
+		
+		if(index < vaList.size())
+		{
+			vaList.remove(index);
+			volActDBYear.setChanged(true);
+			return "DELETED_VOLUNTEER_ACTIVITY" + gson.toJson(deletedVA, VolAct.class);
+		}
+		else
+			return "DELETE_FAILED";	
+	}
+	
+	void processNewSignUpGeniusVolunteerActivities(int year, List<VolAct> sugNewVAList)
+	{
+		List<String> clientJsonMssgList = new ArrayList<String>();
+		
+		//add the new volunteer activities to the database
+		for(VolAct va : sugNewVAList)
+		{
+			String response = add(year, va);
+			if(response != null)
+				clientJsonMssgList.add(response);
+		}
+		
+		if(!clientJsonMssgList.isEmpty())
+		{
+			//there were new activities, send list of new json's to clients
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+		}
+	}
+	
+	void processUpdatedSignUpGeniusVolunteerActivities(int year, List<VolAct> sugModVAList)
+	{
+		List<String> clientJsonMssgList = new ArrayList<String>();
+		
+		//update the volunteer activities in the database
+		for(VolAct va : sugModVAList)
+		{
+//			System.out.println(String.format("ServVADB.processUpdatedVA's: updating VA id=%d, volID=%d, actID=%d, qty=%d, comment=%s",
+//					va.getID(), va.getVolID(), va.getActID(), va.getQty(), va.getComment()));
+			
+			String response = update(year, va);
+			if(response != null)
+			{
+				clientJsonMssgList.add(response);
+//				System.out.println("ServVADB.processUpdatedVA's: updating VA: " + response);
+			}
+		}
+		
+		if(!clientJsonMssgList.isEmpty())
+		{
+			//there were updated activities, send list of new json's to clients
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+		}
+		
+//		System.out.println(String.format("ServVADB.processUpdatedVA's: clientJsonMssgList size=%d", clientJsonMssgList.size()));
+	}
+	
+	void processDeletedSignUpGeniusVolunteerActivities(int year, List<VolAct> sugDelVAList)
+	{
+		List<String> clientJsonMssgList = new ArrayList<String>();
+		
+		//remove volunteer activities in the database
+		for(VolAct va : sugDelVAList)
+		{
+			String response = delete(year, va);
+			if(response != null)
+				clientJsonMssgList.add(response);
+		}
+		
+		if(!clientJsonMssgList.isEmpty())
+		{
+			//there were deleted activities, send list of new json's to clients
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+		}
 	}
 	
 	@Override
@@ -323,7 +439,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
 			}
 		}
-		else if(event.type() == SignUpEventType.NEW_VOLUNTEERS)
+		else if(event.type() == SignUpEventType.NEW_VOLUNTEER_ACTIVITIES)
 		{
 			//print the new volunteer activities list
 			@SuppressWarnings("unchecked")

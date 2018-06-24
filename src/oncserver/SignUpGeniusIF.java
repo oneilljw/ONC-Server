@@ -3,6 +3,7 @@ package oncserver;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,6 +22,7 @@ import javax.swing.SwingWorker;
 
 import com.google.gson.Gson;
 
+import au.com.bytecode.opencsv.CSVWriter;
 import ourneighborschild.Frequency;
 import ourneighborschild.GeniusSignUps;
 import ourneighborschild.ONCVolunteer;
@@ -47,36 +49,24 @@ public class SignUpGeniusIF
 
 	void requestSignUpList()
 	{
-		String url = String.format(SIGNUPS_URL, API_KEY);
-		SignUpGeniusImporter importer = new SignUpGeniusImporter(SignUpEventType.SIGNUP_IMPORT, url);
+		SignUpGeniusImporter importer = new SignUpGeniusImporter();
 		importer.execute();
 	}
 	
-	void requestSignUpContent(int signupid, SignUpReportType reportType)
+	void requestSignUpContent(SignUp signup, SignUpReportType reportType)
 	{
-		String url = String.format(SIGNUP_REPORT_URL, reportType.toString(), signupid, API_KEY);
-		SignUpGeniusImporter importer = new SignUpGeniusImporter(SignUpEventType.REPORT, url);
+		SignUpGeniusImporter importer = new SignUpGeniusImporter(signup, reportType);
 		importer.execute();
 	}
 	
 	void signUpSummaryReceived(GeniusSignUps geniusSignUps)
 	{	
-		this.fireSignUpDataChanged(this, SignUpEventType.SIGNUP_IMPORT, geniusSignUps);
+		this.fireSignUpDataChanged(this, SignUpEventType.SIGNUP_LIST_IMPORT, geniusSignUps);
 	}
 	
-	void signUpContentReceived(SignUpEventType type, List<Activity> volActList)
+	void signUpContentReceived(SignUpEventType type, Object object)
 	{
-		this.fireSignUpDataChanged(this, type, volActList);
-	}
-	
-	void signUpVolunteersReceived(SignUpEventType type, List<ONCVolunteer> volList)
-	{
-		this.fireSignUpDataChanged(this, type, volList);
-	}
-	
-	void signUpVolunteerActivitiesReceived(SignUpEventType type, List<VolAct> volActList)
-	{
-		this.fireSignUpDataChanged(this, type, volActList);
+		this.fireSignUpDataChanged(this, type, object);
 	}
 	
 	//List of registered listeners for Client change events
@@ -117,8 +107,6 @@ public class SignUpGeniusIF
    				l.signUpDataReceived(event);
    		}
    }
-	
-	
 /*	
 	private String getSignUpData(String url)
 	{
@@ -224,25 +212,35 @@ public class SignUpGeniusIF
     {
     		SignUpEventType type;
     		String url;
+    		SignUp signup;
     		GeniusSignUps importedSignUps;
     		SignUpReport signUpReport;
     		List<Activity> newActivitiesFoundList;
+    		List<SignUpActivity> signUpActList;
 		List<Activity> updatedActivitiesFoundList;
 		List<ONCVolunteer> newVolunteerFoundList;
 		List<ONCVolunteer> updatedVolunteerFoundList;
-		List<VolAct> newVolActFoundList;
-		List<VolAct> updatedVolActFoundList;
     		
-    		SignUpGeniusImporter(SignUpEventType type, String url)
+		//constructor for importing list of sign-ups in ONC account
+    		SignUpGeniusImporter()
     		{
-    			this.type = type;
-    			this.url = url;
+    			this.type = SignUpEventType.SIGNUP_LIST_IMPORT;
+    			this.signup = null;
+    			this.url = String.format(SIGNUPS_URL, API_KEY);
+    		}
+    		
+    		//constructor for importing volunteers and activities from a specific sign-up in ONC account
+    		SignUpGeniusImporter(SignUp signup, SignUpReportType reportType)
+    		{
+    			this.type = SignUpEventType.REPORT;
+    			this.signup = signup;
+    			this.url = String.format(SIGNUP_REPORT_URL, reportType.toString(), signup.getSignupid(), API_KEY) ;
     		}
     	
 		@Override
 		protected Void doInBackground() throws Exception
 		{
-/*			
+			
 			StringBuffer response = new StringBuffer();
 			try 
 			{
@@ -269,30 +267,33 @@ public class SignUpGeniusIF
 				
 				//process the data in the background thread
 				Gson gson = new Gson();
-				if(type == SignUpEventType.SIGNUP_IMPORT)
+				if(type == SignUpEventType.SIGNUP_LIST_IMPORT)
 					processSignUpsJson(response.toString());
 				else
 				{
 					//get the report that was imported
 					signUpReport = gson.fromJson(response.toString(), SignUpReport.class);
+					signUpActList = signUpReport.getContent().getSignUpActivities();
+					System.out.println(String.format("GeniusIF.doInBack: #Activities Imported= %d", 
+							signUpReport.getContent().getSignUpActivities().size()));
 					
 					//create the unique activity list
-					List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpReport.getContent().getSignUpActivities());
+					List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpActList);
 					
 					//create the new and modified activity lists
-					createNewAndModifiedActivityLists(uniqueActList);
+					createNewAndModifiedActivityLists(uniqueActList);	
 					
-					//create the unique volunteer list
-					List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpReport.getContent().getSignUpActivities());
-					
+					//create a list of unique volunteers present in the imported sign-up
+					List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpActList);
+				
 					//create the new and modified volunteer lists
-					createNewAndModifiedVolunteerLists(uniqueVolList);	
+					createNewAndModifiedVolunteerLists(uniqueVolList, signUpActList);	
 				}
 			}
 			catch (UnknownHostException uhex) 
 			{
 				System.out.println(String.format("GeniusIF.doInBack: UnknownHostException"));
-				simulateGeniusReportFetch();
+//				simulateGeniusReportFetch();
 			}
 			catch (MalformedURLException e) 
 			{
@@ -310,9 +311,7 @@ public class SignUpGeniusIF
 				e.printStackTrace();
 			}
 			
-			return null;
-*/			
-			simulateGeniusReportFetch();
+//			simulateGeniusReportFetch();
 			return null;
 		}
 		
@@ -383,39 +382,29 @@ public class SignUpGeniusIF
 			//get the report that was imported
 			Gson gson = new Gson();
 			SignUpReport signUpReport = gson.fromJson(response, SignUpReport.class);
-			
+			signUpActList = signUpReport.getContent().getSignUpActivities();
+//			System.out.println(String.format("SUGIF.simGenRptFetch: signUpActList size=%d", signUpActList.size()));
 			//create the unique activity list
-			List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpReport.getContent().getSignUpActivities());
+			List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpActList);
 			
 			//create the new and modified activity lists
 			createNewAndModifiedActivityLists(uniqueActList);	
 			
-			//create the unique volunteer list
-			List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpReport.getContent().getSignUpActivities());
+			//create a list of unique volunteers present in the imported sign-up
+			List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpActList);
 		
 			//create the new and modified volunteer lists
-			createNewAndModifiedVolunteerLists(uniqueVolList, signUpReport.getContent().getSignUpActivities());
-			
-			//for the modified volunteers, create their VolAct lists
-			for(ONCVolunteer v : updatedVolunteerFoundList)
-			{
-				updatedVolActFoundList = createVolunteerActivityList(signUpReport.getContent().getSignUpActivities(), v);
-//				for(VolAct va: updatedVolActFoundList)
-//					System.out.println(String.format("SUGIF.sim: modified vol = %s, volID= %d actID = %d, qty= %d, comment= %s",
-//							v.getLNFI(), va.getVolID(), va.getActID(), va.getQty(), va.getComment()));
-			}
-			
-			//for the new volunteers, create their VolAct lists
-			for(ONCVolunteer v : newVolunteerFoundList)
-			{
-				newVolActFoundList = createVolunteerActivityList(signUpReport.getContent().getSignUpActivities(), v);
-				//print the list for debug purposes
-//				for(VolAct va: newVolActFoundList)
-//					System.out.println(String.format("SUGIF.sim: new vol = %s, volID= %d actID = %d, qty= %d, comment= %s",
-//							v.getLNFI(), va.getVolID(), va.getActID(), va.getQty(), va.getComment()));
-			}
+			createNewAndModifiedVolunteerLists(uniqueVolList, signUpActList);	
 		}
 		
+		/***
+		 * Parses the list of imported sign-up activities and produces a list of unique sign-up genius
+		 * activities in the list. A volunteer may sign-up for multiple activities, this method
+		 * produces a list in which an activity occurs once, regardless of how many volunteers
+		 * and activities are in the sign-up
+		 * @param signUpActivityList
+		 * @return
+		 */
 		List<SignUpActivity> createUniqueActivityList(List<SignUpActivity>  signUpActivityList)
 		{	
 			//create the unique activity list
@@ -427,6 +416,13 @@ public class SignUpGeniusIF
 			return uniqueSignUpActivityList;
 		}
 		
+		/***
+		 * Parses the list of imported sign-up activities and produces a list of unique volunteers
+		 * in the list. A volunteer may sign-up for multiple activities, this method produces a list
+		 * where the volunteers is listed once, regardless of how many activities they signed up for.
+		 * @param signUpActivityList
+		 * @return
+		 */
 		List<ONCVolunteer> createUniqueVolunteerList(List<SignUpActivity>  signUpActivityList)
 		{	
 			//create the unique volunteer list
@@ -452,8 +448,10 @@ public class SignUpGeniusIF
 		
 		boolean isVolunteerInList(List<ONCVolunteer> list, ONCVolunteer v)
 		{
-			int index = 0;
-			while(index < list.size() && !list.get(index).getEmail().equals(v.getEmail()))
+			int index = 0;	
+			while(index < list.size() && !(list.get(index).getFirstName().equalsIgnoreCase(v.getFirstName()) &&
+					list.get(index).getLastName().equalsIgnoreCase(v.getLastName()) &&
+					list.get(index).getEmail().equalsIgnoreCase(v.getEmail())))
 				index++;
 			
 			return index < list.size();
@@ -528,8 +526,8 @@ public class SignUpGeniusIF
 					int index = 0, result = -1;
 					while(index < cloneVolList.size() && 
 						(result = importedVol.compareVolunteers(cloneVolList.get(index))) == ONCVolunteer.VOLUNTEER_DOES_NOT_MATCH)
-						index++;
-						
+						index++;	
+
 					if(index < cloneVolList.size())
 					{
 						//there is a match. If it's not an exact match, add it as a modified volunteer
@@ -597,13 +595,25 @@ public class SignUpGeniusIF
 	     * Executed in event dispatching thread
 	     */
 	    @Override
-	    public void done()
+	    protected void done()
 	    {
 	    		//notify the thread is complete
-	    		if(type == SignUpEventType.SIGNUP_IMPORT)
+	    		if(type == SignUpEventType.SIGNUP_LIST_IMPORT)
 	    			signUpSummaryReceived(importedSignUps);
 	    		else if(type == SignUpEventType.REPORT)
 	    		{
+	    			//update the time sign up was imported and notify the clients that a signup was imported
+	    			signup.setLastImportTimeInMillis(System.currentTimeMillis());
+	    			
+//	    			System.out.println(String.format("GeniusIF.done: #SignUpImported ID= %d, time=%d", 
+//	    					signup.getSignupid(), signup.getLastImportTimeInMillis()));
+//	    			System.out.println(String.format("GeniusIF.done: #Updated Activities= %d", updatedActivitiesFoundList.size()));
+//	    			System.out.println(String.format("GeniusIF.done: #New Activities= %d", newActivitiesFoundList.size())); 
+//	    			System.out.println(String.format("GeniusIF.done: #Updated Volunteers= %d", updatedVolunteerFoundList.size())); 
+//	    			System.out.println(String.format("GeniusIF.done: #New Volunteers= %d", newVolunteerFoundList.size())); 
+				
+	    			signUpContentReceived(SignUpEventType.REPORT, signup);
+	    				
 	    			//if lists are not empty, notify clients
 	    			if(!updatedActivitiesFoundList.isEmpty())
 	    				signUpContentReceived(SignUpEventType.UPDATED_ACTIVITIES, updatedActivitiesFoundList);
@@ -612,20 +622,289 @@ public class SignUpGeniusIF
 	    				signUpContentReceived(SignUpEventType.NEW_ACTIVITIES, newActivitiesFoundList);
 	    			
 	    			if(!updatedVolunteerFoundList.isEmpty())
-	    				signUpVolunteersReceived(SignUpEventType.UPDATED_VOLUNTEERS, updatedVolunteerFoundList);
+	    			{
+//	    				//for debug, print the updatedVolFoundList
+//	    				for(ONCVolunteer uv : updatedVolunteerFoundList)
+//	    					System.out.println(String.format("SUGIF.done: updatedVolID=%d, fn= %s, ln= %s, email= %s",
+// 							uv.getID(), uv.getFirstName(), uv.getLastName(), uv.getEmail()));
+	    				
+	    				ServerVolunteerDB volDB;
+						try
+						{
+							volDB = ServerVolunteerDB.getInstance();
+							volDB.processUpdatedSignUpGeniusVolunteers(updatedVolunteerFoundList);
+						}
+						catch (FileNotFoundException e)
+						{
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						catch (IOException e)
+						{
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+	    			}
 	    			
 	    			if(!newVolunteerFoundList.isEmpty())
-	    				signUpVolunteersReceived(SignUpEventType.NEW_VOLUNTEERS, newVolunteerFoundList);
+	    			{
+	    				ServerVolunteerDB volDB;
+					try
+					{
+						//add the new volunteers found to the volunteer data base and get their actual IDs
+						volDB = ServerVolunteerDB.getInstance();
+						volDB.processNewSignUpGeniusVolunteers(newVolunteerFoundList);
+							
+//						//for debug, print the addedVolList
+//		    				for(ONCVolunteer nv :addedVolList)
+//		    				System.out.println(String.format("SUGIF.done: newVolID=%d, fn= %s, ln= %s, email= %s",
+//		    							nv.getID(), nv.getFirstName(), nv.getLastName(), nv.getEmail()));
+		    				
+		    				
+					}
+					catch (FileNotFoundException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					catch (IOException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	    			}
 	    			
-	    			//must update these lists for the id's of new activities and new volunteers
-	    			//before adding new volActs
-	    			
-	    			if(!updatedVolActFoundList.isEmpty())
-	    				signUpVolunteerActivitiesReceived(SignUpEventType.UPDATED_VOLUNTEER_ACTIVITIES, updatedVolActFoundList);
-	    			
-	    			if(!newVolActFoundList.isEmpty())
-	    				signUpVolunteerActivitiesReceived(SignUpEventType.NEW_VOLUNTEERS, newVolActFoundList);
+	    			//process sign-up for volunteer activities
+	    			ImportedVolunteerActivityProcessor vaProcessor= new ImportedVolunteerActivityProcessor(signUpActList);
+	    			vaProcessor.execute();
 	    		}
 	    }
     }
+    
+    /***************************************************************************************************
+     * This class processes sign-ups from sign up genius to determine which volunteer activities
+     * are already in the data base and which are new, have been modified or deleted
+     * ***************************************************************************************************/
+     public class ImportedVolunteerActivityProcessor extends SwingWorker<Void, Void>
+     {
+    	 	private List<SignUpActivity> signUpActList;
+    	 	private List<VolAct> modVAList;
+		private List<VolAct> newVAList;
+		private List<VolAct> delVAList;
+//		private List<VolAct> sameVAList;
+    	 	
+    	 	ImportedVolunteerActivityProcessor(List<SignUpActivity> signUpActList)
+    	 	{
+    	 		this.signUpActList = signUpActList;
+    	 		this.modVAList = new ArrayList<VolAct>();
+			this.newVAList = new ArrayList<VolAct>();
+			this.delVAList = new ArrayList<VolAct>();
+//			this.sameVAList = new ArrayList<VolAct>();
+    	 	}
+    	 	
+		@Override
+		protected Void doInBackground() throws Exception
+		{
+			///clone a list of the current activities from the activity database and a list of current
+			//volunteers from the volunteer database
+			ServerActivityDB actDB;
+			ServerVolunteerDB volDB;
+			ServerVolunteerActivityDB volActDB;
+			try
+			{
+				//get clone lists of current activities, volunteers and volunteer activities
+				//in the database. The activity and volunteer databases will have been
+				//updated post import. We'll use them to align the volunteer activities 
+				//imported
+				actDB = ServerActivityDB.getInstance();
+				List<Activity> cloneActList = actDB.clone(DBManager.getCurrentYear());
+				
+				volDB = ServerVolunteerDB.getInstance();
+				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentYear());
+				
+				volActDB = ServerVolunteerActivityDB.getInstance();
+				List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentYear());
+				
+				//for each imported sua, find the activity and volunteer. They will be in the
+				//cloned DB's. Create a new VA and add it to a new VA list
+				List<VolAct> suaVAList = new ArrayList<VolAct>();
+				for(SignUpActivity sua : signUpActList)
+				{
+					//find the activity in the clone list. 
+					int actIndex = 0;
+					while(actIndex < cloneActList.size() && cloneActList.get(actIndex).getGeniusID() != sua.getSlotitemid())
+						actIndex++;
+					
+					if(actIndex < cloneActList.size())
+					{
+						//found the activity, now find the volunteer
+						Activity act = cloneActList.get(actIndex);
+
+						//find the volunteer in the clone list. If found, create a new VolunteerActivity
+						//and add it to the volunteerActivityList. A volunteer is declared a match if
+						//their first and last names plus their email addresses match
+						int volIndex = 0;
+						while(volIndex < cloneVolList.size() &&
+								!(cloneVolList.get(volIndex).getFirstName().equalsIgnoreCase(sua.getFirstname()) &&
+								cloneVolList.get(volIndex).getLastName().equalsIgnoreCase(sua.getLastname()) &&
+								cloneVolList.get(volIndex).getEmail().equalsIgnoreCase(sua.getEmail())))
+							volIndex++;
+						
+						if(volIndex < cloneVolList.size())
+							suaVAList.add(new VolAct(-1, cloneVolList.get(volIndex).getID(), act.getID(),
+													act.getGeniusID(), sua.getMyqty(), sua.getComment()));
+					}
+				}
+				
+//				System.out.println(String.format("SUGIF.VAImporter.DIB: suaVAList size=%d", suaVAList.size()));
+//				
+//				for(VolAct va : suaVAList)
+//					System.out.println(String.format("SUGIF.VAImporter.DIB: va id=%d, volid=%d, actid=%d, genid=%d, qty=%d, comment=%s",
+//							va.getID(), va.getVolID(), va.getActID(), va.getGeniusID(), va.getQty(), va.getComment()));
+					
+				
+//				writeToFile(suaVAList);
+				
+				//now that we've got the list of imported volunteer acts with correct activity and
+				//volunteer id's, compare to the current cloned volunteer activity database to see what's changed
+				for(VolAct suaVA : suaVAList)
+				{
+					int index = 0;
+					while(index < cloneVolActList.size() && (cloneVolActList.get(index).getVolID() != suaVA.getVolID() ||
+															cloneVolActList.get(index).getActID() != suaVA.getActID()))
+					
+						index++;
+					
+//					System.out.println(String.format("SUGIF.dib: volID= %d, actID=%d, index= %d", suaVA.getVolID(), suaVA.getActID(), index));
+					
+					if(index == cloneVolActList.size()) 
+					{	
+						//did not find the volID and the actID, so it's a new volunteer activity
+						newVAList.add(new VolAct(-1, suaVA.getVolID(), suaVA.getActID(), suaVA.getGeniusID(),
+													suaVA.getQty(), suaVA.getComment()));
+					}
+					else if(index < cloneVolActList.size() && 
+							 cloneVolActList.get(index).getQty() != suaVA.getQty() ||
+							  !cloneVolActList.get(index).getComment().equals(suaVA.getComment()))
+					{
+						//found the volID and actID, however, qty and/or comment don't match, update both
+						cloneVolActList.get(index).setQty(suaVA.getQty());
+						cloneVolActList.get(index).setComment(suaVA.getComment());
+						modVAList.add(cloneVolActList.get(index));
+					}
+//					else
+//						sameVAList.add(cloneVolActList.get(index));
+				}
+				
+				//now that we've determined new and modified VA's, compare current DB VA's to the import
+				//to see if any must be removed. It should be removed if it came from sign-up genius
+				//previously and is no longer in the import. These are sign-up genius volunteers who
+				//change their activities during the season
+				for(VolAct cloneVA : cloneVolActList)
+				{
+					if(cloneVA.getGeniusID() > -1)
+					{
+						int index = 0;
+						while(index < suaVAList.size())
+						{	
+							if(suaVAList.get(index).getVolID() != cloneVA.getVolID() ||
+								suaVAList.get(index).getActID() != cloneVA.getActID())
+								index++;
+							else
+								break;
+						}
+						
+						if(index == suaVAList.size()) //did not find the volID and the actID, so it's a new deleted activity
+							delVAList.add(new VolAct(cloneVA.getID(), cloneVA.getVolID(), cloneVA.getActID(), cloneVA.getGeniusID(),
+													cloneVA.getQty(), cloneVA.getComment()));
+					}
+				}
+			}
+			catch (FileNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
+			return null;
+		}
+/*		
+		void writeToFile(List<VolAct> vaList)
+		{
+			 
+			String[] header = {"ID", "Vol ID" ,"Act ID","Genius ID", "Qty", "Comment"};
+				 
+			String path = String.format("%s/DebugVAFile.csv", System.getProperty("user.dir"));
+			
+			try 
+		    {
+		    		CSVWriter writer = new CSVWriter(new FileWriter(path));
+		    		writer.writeNext(header);
+		    	 
+		    		for(int index=0; index < vaList.size(); index++)
+		    		{
+		    			VolAct va = vaList.get(index);
+		    			writer.writeNext(va.getExportRow());	//Get ONCObject row
+		    		}
+		    		
+		    		writer.close();
+		    } 
+		    catch (IOException x)
+		    {
+		    		System.err.format("IO Exception: %s%n", x);
+		    }	
+		}
+*/		
+		@Override
+		protected void done()
+		{
+			try
+			{
+//				System.out.println(String.format("GeniusVAIMP.done: #Same VA's= %d", sameVAList.size()));
+//				System.out.println(String.format("GeniusVAImp.done: #Updated VA's= %d", modVAList.size()));
+//  				System.out.println(String.format("GeniusVAIMP.done: #New VA's= %d", newVAList.size()));
+//  				System.out.println(String.format("GeniusVAIMP.done: #Deleted VA's= %d", delVAList.size()));
+    				
+				ServerVolunteerActivityDB vaDB = ServerVolunteerActivityDB.getInstance();
+				if(!modVAList.isEmpty())
+					vaDB.processUpdatedSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), modVAList);
+				
+				if(!newVAList.isEmpty())
+					vaDB.processNewSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), newVAList);
+				
+				if(!delVAList.isEmpty())
+					vaDB.processDeletedSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), delVAList);
+			}
+			catch (FileNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+/*			
+			//print the new VA's found
+			for(VolAct newVA : newVAList)
+				System.out.println(String.format("SUGIF.VAImporter.done: new VA id= %d, volID=%d, actID=%d, genID=%d, qty=%d, comment=%s",
+						newVA.getID(), newVA.getVolID(), newVA.getActID(), newVA.getGeniusID(), newVA.getQty(), newVA.getComment()));
+			
+			//print the modified VA's found
+			for(VolAct modVA : modVAList)
+				System.out.println(String.format("SUGIF.VAImporter.done: modified VA id= %d, volID=%d, actID=%d, genID=%d, qty=%d, comment=%s",
+						modVA.getID(), modVA.getVolID(), modVA.getActID(), modVA.getGeniusID(), modVA.getQty(), modVA.getComment()));
+			
+			//print the deleted VA's found
+			for(VolAct delVA : delVAList)
+				System.out.println(String.format("SUGIF.VAImporter.done: deleted VA id= %d, volID=%d, actID=%d, genID=%d, qty=%d, comment=%s",
+						delVA.getID(), delVA.getVolID(), delVA.getActID(), delVA.getGeniusID(), delVA.getQty(), delVA.getComment()));
+*/
+		}
+     }
 }
