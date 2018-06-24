@@ -274,8 +274,6 @@ public class SignUpGeniusIF
 					//get the report that was imported
 					signUpReport = gson.fromJson(response.toString(), SignUpReport.class);
 					signUpActList = signUpReport.getContent().getSignUpActivities();
-					System.out.println(String.format("GeniusIF.doInBack: #Activities Imported= %d", 
-							signUpReport.getContent().getSignUpActivities().size()));
 					
 					//create the unique activity list
 					List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpActList);
