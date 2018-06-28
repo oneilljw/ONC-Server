@@ -5,6 +5,12 @@
   <title>ONC Region Page</title>
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+   <script type="text/javascript">
+    //<![CDATA[ 
+	  var tlJsHost = ((window.location.protocol == "https:") ? "https://secure.comodo.com/" : "http://www.trustlogo.com/");
+	  document.write(unescape("%3Cscript src='" + tlJsHost + "trustlogo/javascript/trustlogo.js' type='text/javascript'%3E%3C/script%3E"));
+	//]]>
+  </script>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
@@ -136,6 +142,10 @@
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
+    <span id='trust'>
+	    <script type="text/javascript">TrustLogo("http://oncdms.org:8903/trustlogo", "CL1", "none");</script>
+  	    <a  href="https://www.instantssl.com/" id="comodoTL">Essential SSL</a>
+  	</span>
     <p><span id="banner">ONC Region Form</span><br>
 	<span id="message">(please complete and click Submit to add or update a street)</span></p>
   </div>

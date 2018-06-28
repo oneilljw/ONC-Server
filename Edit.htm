@@ -5,6 +5,12 @@
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script type="text/javascript">
+    //<![CDATA[ 
+	  var tlJsHost = ((window.location.protocol == "https:") ? "https://secure.comodo.com/" : "http://www.trustlogo.com/");
+	  document.write(unescape("%3Cscript src='" + tlJsHost + "trustlogo/javascript/trustlogo.js' type='text/javascript'%3E%3C/script%3E"));
+	//]]>
+  </script>
   <script src="commonfamily.js"></script>
   <script> 
   	var errorColor = '#FF9999';
@@ -123,6 +129,10 @@
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
+    <span id='trust'>
+	    <script type="text/javascript">TrustLogo("http://oncdms.org:8903/trustlogo", "CL1", "none");</script>
+  	    <a  href="https://www.instantssl.com/" id="comodoTL">Essential SSL</a>
+  	</span>
     <p><span id="banner">ONC Family Contact Information Update Form</span><br>
 	<span id="message">(please edit and click Submit To ONC to update contact info)</span></p>
   </div>
