@@ -48,7 +48,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
 	private static final String CLEAR_X_FILE = "clear_x.gif";
-	private static final String ONC_LOGO_FILE = "oncsplash.gif";
+	private static final String ONC_LOGO_FILE = "onclogosmall.gif";
 	private static final String ONC_ICON_FILE = "ONC.ico";
 	private static final String VANILLA_FONT_FILE = "vanilla.ttf";
 	private static final String ONC_STYLE_SHEET_CSS = "ONCStyleSheet.css";

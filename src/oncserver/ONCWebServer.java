@@ -43,7 +43,7 @@ public class ONCWebServer
 		HttpContext context;
 		
 		//set up the oncWebHttpHandler
-		String[] contexts = {"/", "/trustlogo"};
+		String[] contexts = {"/", "/trustlogo", "/onclogo"};
 		
 		PublicWebsiteHandler handler = new PublicWebsiteHandler();
 		for(String contextname:contexts)
