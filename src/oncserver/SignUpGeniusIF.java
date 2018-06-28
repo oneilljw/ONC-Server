@@ -240,7 +240,7 @@ public class SignUpGeniusIF
 		@Override
 		protected Void doInBackground() throws Exception
 		{
-			
+/*			
 			StringBuffer response = new StringBuffer();
 			try 
 			{
@@ -308,8 +308,8 @@ public class SignUpGeniusIF
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-//			simulateGeniusReportFetch();
+*/			
+			simulateGeniusReportFetch();
 			return null;
 		}
 		

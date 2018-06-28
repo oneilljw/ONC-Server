@@ -381,6 +381,14 @@ public class DesktopClient extends Thread
                 		output.println(response);
                 		clientMgr.notifyAllOtherClients(this, response);
                 }
+                else if(command.startsWith("POST<update_genius_signups>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = activityDB.updateGeniusSignUps(command.substring(27));
+                		clientMgr.addLogMessage(response);
+                		output.println(response);
+                		clientMgr.notifyAllOtherClients(this, response);
+                }
                 else if(command.startsWith("GET<changes>"))
                 {   
 //                	if(changeQ.peek() == null)

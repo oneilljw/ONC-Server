@@ -1,5 +1,7 @@
 package oncserver;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -13,12 +15,12 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.JOptionPane;
+import javax.swing.Timer;
 
 import ourneighborschild.SignUp;
 import ourneighborschild.VolAct;
@@ -39,11 +41,14 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	private static final String GENIUS_STATUS_FILENAME = "GeniusSignUps.csv";
 	private static final int SIGNUP_RECORD_LENGTH = 5;
 	
+	private static final int GENIUS_IMPORT_TIMER_RATE = 1000 * 30 * 2; //1 minutes
+	
 	private static ServerActivityDB instance = null;
 	
 	private static SignUpGeniusIF geniusIF;
 	private GeniusSignUps geniusSignUps;
 	private boolean bSignUpsSaveRequested;
+	private Timer geniusImportTimer;
 	
 	private static List<ActivityDBYear> activityDB;
 
@@ -86,6 +91,10 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//that will fetch current signups and the callback thru the listener will populate
 		//the list
 //		geniusIF.requestSignUpList();
+		
+		//Create the sign-up genius import timer and enable it if GENIUS_IMPORT_ENABLED
+		geniusImportTimer = new Timer(GENIUS_IMPORT_TIMER_RATE, new GeniusImportTimerListener());
+		geniusImportTimer.start();
 	}
 	
 	public static ServerActivityDB getInstance() throws FileNotFoundException, IOException
@@ -421,6 +430,27 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			return "UPDATE_FAILED";
 	}
 	
+	String updateGeniusSignUps(String json)
+	{
+		//Create a sign-up object from the json
+		Gson gson = new Gson();
+		GeniusSignUps updatedGeniusSignUpsReq = gson.fromJson(json, GeniusSignUps.class);
+		
+		//The only thing that can change in the geniusSignUps object in this method is whether
+		//automatic import is enabled. If there was a change in automated import, update the 
+		//current object, save it, and notify clients.
+		if(geniusSignUps.isImportEnabled() != updatedGeniusSignUpsReq.isImportEnabled())
+		{
+			geniusSignUps.setSignUpImportEnabled(updatedGeniusSignUpsReq.isImportEnabled());
+			bSignUpsSaveRequested = true;
+//			saveSignUps();	//only for test purposes.
+			
+			return "UPDATED_GENIUS_SIGNUPS" + gson.toJson(geniusSignUps, GeniusSignUps.class);
+		}
+		else
+			return "UPDATE_FAILED";
+	}
+	
 	String delete(int year, String json)
 	{
 		//Create an object for the delete request
@@ -510,7 +540,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	{
 		if(event.type() == SignUpEventType.SIGNUP_LIST_IMPORT)
 		{
-			//Set the import time for the list of sign=ups. Go thru each of the imported sign ups.
+			//Set the import time for the list of sign-ups. Go thru each of the imported sign ups.
 			//If it hasn't previously been imported, add it to the current list. That way we preserve
 			//the frequency and last import time setting in each existing sign up
 			GeniusSignUps geniusSignUpsImported = (GeniusSignUps) event.getSignUpObject();
@@ -619,7 +649,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			activityDBYear.setChanged(false);
 		 }
 		
-		 //test to see if genius status should be saved
+		 //test to see if genius sign-up status should be saved
 		 if(bSignUpsSaveRequested)
 			 saveSignUps();
 	}
@@ -634,19 +664,30 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
     			//Read the User File
     			if(header.length == length)	//Does the record have the right # of fields? 
     			{
-    				//first record only contains one field and is the last import time for the sign-up list
-    				nextLine = reader.readNext();
-    				if(nextLine != null && nextLine.length > 0)	// nextLine[] is an array of fields from the record
+    				//first two records only contain one field and are whether imports are enabled
+    				//and the last import time for the sign-up list
+    				nextLine = reader.readNext();	//should be whether imports are enabled
+    				if(nextLine != null && nextLine.length > 0)	
     				{
-    					geniusSignUps.setLastSignUpListImportTime(nextLine[0].isEmpty() ? 0 : Long.parseLong(nextLine[0]));
-    					while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
-        					geniusSignUps.add(new SignUp(nextLine));
+    					geniusSignUps.setSignUpImportEnabled(nextLine[0].equalsIgnoreCase("true"));
+    					nextLine = reader.readNext();	//should be last time list of sign-ups was imported
+    					if(nextLine != null && nextLine.length > 0)	
+    					{
+    						geniusSignUps.setLastSignUpListImportTime(nextLine[0].isEmpty() ? 0 : Long.parseLong(nextLine[0]));
+    						while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
+    							geniusSignUps.add(new SignUp(nextLine));
+    					}
+    					else
+    					{
+    						String error = String.format("%s first record error, length = %d", name, nextLine.length);
+    						JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
+    					}
     				}
     				else
-    				{
-    					String error = String.format("%s first record error, length = %d", name, nextLine.length);
-    					JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
-    				}
+				{
+					String error = String.format("%s first record error, length = %d", name, nextLine.length);
+					JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
+				}
     			}
     			else
     			{
@@ -679,20 +720,24 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	void saveSignUps()
 	{
 		if(bSignUpsSaveRequested)
-		{
-			String[] header = {"Last Import Time", "SignUp ID" ,"Title", "End Date", "Frequency"};
-			
-			String[] firstRow = new String[1];
-			firstRow[0] = Long.toString(geniusSignUps.getLastSignUpListImportTime());
-			
+		{	
 			String path = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), GENIUS_STATUS_FILENAME);
 			File oncwritefile = new File(path);
 		
+			String[] header = {"Last Import Time", "SignUp ID" ,"Title", "End Date", "Frequency"};
+			
+			String[] firstRow = new String[1];
+			firstRow[0] = geniusSignUps.isImportEnabled() ? "true" : "false";
+			
+			String[] secondRow = new String[1];
+			secondRow[0] = Long.toString(geniusSignUps.getLastSignUpListImportTime());
+			
 			try 
 			{
 				CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
 				writer.writeNext(header);
 				writer.writeNext(firstRow);
+				writer.writeNext(secondRow);
 	    	
 				for(SignUp su : geniusSignUps.getSignUpList())
 					writer.writeNext(su.getExportRow());
@@ -736,5 +781,29 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			else
 				return 0;
 		}
+	}
+	
+	private class GeniusImportTimerListener implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent arg0) 
+		{
+			if(geniusIF != null && geniusSignUps != null && geniusSignUps.isImportEnabled())
+				for(SignUp su : geniusSignUps.getSignUpList())
+				{
+					long time_diff = System.currentTimeMillis() - su.getLastImportTimeInMillis();
+					
+//					//DEBUG
+//					if(su.getFrequency().compareTo(Frequency.ONE_TIME) > 0)
+//						System.out.println(String.format("ServActDB.TimerListener: time diff to import %s is %d seconds, interval= %d seconds",
+//							su.getTitle(), time_diff/1000, su.getFrequency().interval()/1000));
+					
+					if(su.getFrequency().compareTo(Frequency.ONE_TIME) > 0 && time_diff >= su.getFrequency().interval())
+					{
+						geniusIF.requestSignUpContent(su, SignUpReportType.filled);
+//						System.out.println(String.format("Importing %s signup", su.getTitle()));
+					}
+				}
+		}	
 	}
 }
