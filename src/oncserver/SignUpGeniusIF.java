@@ -3,7 +3,6 @@ package oncserver;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,9 +11,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,7 +19,6 @@ import javax.swing.SwingWorker;
 
 import com.google.gson.Gson;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import ourneighborschild.Frequency;
 import ourneighborschild.GeniusSignUps;
 import ourneighborschild.ONCVolunteer;
@@ -239,8 +235,7 @@ public class SignUpGeniusIF
     	
 		@Override
 		protected Void doInBackground() throws Exception
-		{
-/*			
+		{			
 			StringBuffer response = new StringBuffer();
 			try 
 			{
@@ -307,9 +302,8 @@ public class SignUpGeniusIF
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-*/			
-			simulateGeniusReportFetch();
+			}			
+//			simulateGeniusReportFetch();
 			return null;
 		}
 		
