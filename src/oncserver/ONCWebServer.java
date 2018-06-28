@@ -1,14 +1,9 @@
 package oncserver;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpContext;

@@ -12,12 +12,14 @@ public class CommonHandler extends ONCWebpageHandler
 	{
 		HttpsExchange t = (HttpsExchange) te;
 		String requestURI = t.getRequestURI().toASCIIString();
-    	
+		
 		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI.getInstance().addLogMessage(mssg);
 
 		if(requestURI.contains("/oncsplash"))
 			sendCachedFile(t, "image/gif", "oncsplash", false);
+		else if(requestURI.contains("/trustlogo"))
+			sendCachedFile(t, "image/png", "trustlogo", false);
 		else if(requestURI.contains("/clearx"))
 			sendCachedFile(t, "image/gif", "clearx", false);
 		else if(requestURI.contains("/onclogo"))
