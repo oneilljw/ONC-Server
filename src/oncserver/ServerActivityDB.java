@@ -640,7 +640,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		 
 		 if(activityDBYear.isUnsaved())
 		 {
-			 String[] header = {"ID", "Category" ,"Name","StartTimeMillis",
+			 String[] header = {"ID", "Genius ID", "Category" ,"Name","StartTimeMillis",
 					 			"EndTimeMillis", "Location", "Description", "Open", "Notify", 
 					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
 			 

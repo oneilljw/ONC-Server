@@ -35,7 +35,7 @@ public abstract class ServerSeasonalDB extends ONCServerDB
     			}
     			else
     			{
-    				String error = String.format("%s file corrupted, header length = %d", name, header.length);
+    				String error = String.format("%s file corrupted, header length = %d", path, header.length);
     				JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
     			}		   			
     		}

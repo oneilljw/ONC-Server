@@ -829,7 +829,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		 
 		 if(volunteerDBYear.isUnsaved())
 		 {
-			 String[] driverHeader = {"Driver ID", "Genius ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
+			 String[] driverHeader = {"Driver ID", "Driver Num" ,"First Name", "Last Name", "House Number", "Street",
 			 			"Unit", "City", "Zip", "Email", "Home Phone", "Cell Phone", "Comment",
 			 			"Group", "# Del. Assigned", "#Sign-Ins", "Time Stamp", "Changed By",
 			 			"Stoplight Pos", "Stoplight Mssg", "Changed By"};
