@@ -504,9 +504,6 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 */		
 		activityDB.add(newActivityDBYear);
 		newActivityDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
-		
-		geniusSignUps = new GeniusSignUps();
-		bSignUpsSaveRequested = true;
 	}
 	
 	String updateDateForNewYear(int newYear, String priorDate)
