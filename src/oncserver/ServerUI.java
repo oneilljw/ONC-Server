@@ -378,6 +378,10 @@ public class ServerUI extends JPanel implements ClientListener
 	
 	private class ServerStoplight extends JRadioButton
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private int stoplightPos;
 		
 		ServerStoplight()

@@ -676,6 +676,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
     						geniusSignUps.setLastSignUpListImportTime(nextLine[0].isEmpty() ? 0 : Long.parseLong(nextLine[0]));
     						while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
     							geniusSignUps.add(new SignUp(nextLine));
+    						
+    						ServerUI.addDebugMessage(String.format("#SignUp's in DB: %d", geniusSignUps.getSignUpList().size()));
     					}
     					else
     					{
