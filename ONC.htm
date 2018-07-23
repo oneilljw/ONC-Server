@@ -352,7 +352,7 @@
 		removeOptions(document.getElementById("childfn"));
 		document.getElementById('age').value= '';
 		
-		$("#twishbody").empty();
+		clearWishTable();
 		
 		document.getElementById('mealtype').value = '';
 	  	document.getElementById('dietres').value = '';
@@ -437,7 +437,7 @@
 				if(childrenJson.length > 0)
 					getChildWishesFromServer(year, childrenJson[0].id);
 				else
-					$("#twishbody").empty();
+					clearWishTable();
 			}
 		});
     }
@@ -492,13 +492,25 @@
 	
 	function updateWishTable(wishJson)
     {
-    		$("#twishbody").empty();
+		clearWishTable();
     	
     		for(var i=0; i<wishJson.length; i++)
 		{
-    			addWishTableRow(i, wishJson[i]);	//add row to table
+    			updateWishTableRow(i, wishJson[i])
 		}
     }
+	
+	function clearWishTable()
+	{
+		for(var i=0; i<3; i++)	//clear the three wishes
+		{
+			document.getElementById('wishname' + i).selectedIndex = '-1';
+			document.getElementById('wishdetail' + i).value = '';
+			document.getElementById('wishres' + i).selectedIndex = '-1';
+			document.getElementById('wishpartner' + i).selectedIndex = '-1';
+			document.getElementById('wishstatus' + i).value = '';
+		}	
+	}
 	
 	function updateAdultTable()
     {
@@ -537,29 +549,22 @@
         tabBody.appendChild(row);
     }
 	
-	function addWishTableRow(wn, childwish)
+	function updateWishTableRow(wn, childwish)
     {
-		var wishinfo= [wn+1, childwish.name, childwish.detail, childwish.restriction, childwish.partner, childwish.status];
-		var wishcolumnsize= ['56px', '120px', '240px', '8px', '240px', '80px'];
-		var wishfieldsize= [1, 12, 32, 1, 32, 10];
-        
-	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
-        row=document.createElement("tr");
-         
-        for(index=0; index < wishinfo.length; index++)	//create the child info cells
-        {
-        		cell= document.createElement("td");
-        		cell.style.width = wishcolumnsize[index];
-    	    		content= document.createElement("input");
- 	    		content.type="text";
-        		content.value = wishinfo[index];
-        		content.readOnly = true;
-        		content.setAttribute("size", wishfieldsize[index]);
-        		cell.appendChild(content);
-        		row.appendChild(cell);
-        }
-        
-        tabBody.appendChild(row);
+        elementName= document.getElementById("wishname" + wn);
+        	elementName.value= childwish.wishID;
+        		
+        	elementDetail= document.getElementById("wishdetail" + wn);
+        	elementDetail.value=childwish.detail;
+        		
+        	elementRes= document.getElementById("wishres" + wn);
+        	elementRes.value=childwish.restriction;
+        		
+        	elementPartner= document.getElementById("wishpartner" + wn);
+        	elementPartner.value=childwish.partnerID;
+        		
+        	elementPartner= document.getElementById("wishstatus" + wn);
+        	elementPartner.value=childwish.status;
     }
 	
 	function addAdultTableRow(anum, adult)
@@ -587,6 +592,25 @@
 
         tabBody.appendChild(row);
     }
+	
+	function addOptionsToSelect(selectElement)
+	{
+		var wishes = ["Accessories","Baby Item"
+			,"Bedding","Bike","Blanket","Book","CD","Coat","Clothes",
+			"Craft","Doll","DVD","Educational Gift","Electronic","Game","Gift Card",
+			"Helmet","Musical Inst","Puzzle","Sports Item","Scooter/Hlmt","Shoes",
+			"Special Req.","Toy","Video Game","Games or Puzzles","Jewelry",
+			"Skateboard & Helmet","Scooter & Helmet","Anything","Scooter",
+			"Skateboard","Toy or Game"];
+		
+		for (var i = 0; i<wishes.length; i++)
+		{
+		    var opt = document.createElement('option');
+		    opt.value = wishes[i];
+		    opt.innerHTML = wishes[i];
+		    selectElement.appendChild(opt);
+		}
+	}
 	
 	function getAge(childbirthdate)
 	{
@@ -638,7 +662,7 @@
 	
 	function updateForChildSelection()
     {
-    	//get selected year
+    		//get selected year
     		var childCB = document.getElementById("childfn");
 		var child = childrenJson[childCB.selectedIndex];
 		var yearCB = document.getElementById("yearlist");
@@ -862,6 +886,14 @@
 		background-color: #E8E8E8;
 		border: 1px solid black;
 	}
+	#updatewishinfo { float: right; }
+	.wishnum
+	{
+		text-align: center;
+		width: 48px;
+	}
+	.wishname { width: 144px; }
+	.wishstatus { width: 80px; }
 	table, th, td {border: 1px solid black;}
 	#searchbar {float: right;}
 	#resultbar 
@@ -887,8 +919,9 @@
   <div id='topbar' class="topbar">
     <img src="onclogo" height="55" width="75"/>
     <span id='trust'>
-	    <script type="text/javascript">TrustLogo("https://oncdms.org:8902/trustlogo", "CL1", "none");</script>
-  	    <a  href="https://www.instantssl.com/" id="comodoTL">Essential SSL</a>
+<!-- <img src="https://oncdms.org:8902/trustlogo"></img> -->   		
+	<script type="text/javascript">TrustLogo("https://oncdms.org:8902/trustlogo", "CL1", "none");</script>	  
+ 	<a  href="https://www.instantssl.com/" id="comodoTL">Essential SSL</a>   	    
   	</span>
 	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child's Data Management System</span><br>
 	<span id="message">USER_MESSAGE</span></p>
@@ -957,7 +990,7 @@
   <form id="familyreferral">
   <br>
   <fieldset id='faminfofs'>
-  <legend class="legend-major">Family Information & Status</legend>
+  <legend class="legend-major">Family Information And Status</legend>
     <label id= 'lblhohln' for="hohln">Last Name:</label>
     <input id='hohln' title="Last Name" name="hohLN" type="text" size="17" readonly>
     <label id= 'lblhohfn' for="hohfn">First Name:</label>
@@ -1069,19 +1102,44 @@
    <select id="childfn" onchange="updateForChildSelection()"> </select>
    <label>is a</label>
    <input id='age' type='text' size='13'>
+   <input id='updatewishinfo' type= 'button' value='Update Wish Info'>
   	<table id="wishtable" border="1">
   	<thead>
-    	<tr>
-        	<th>Wish #</th>
-        	<th>Name</th>
+    	  <tr>
+        	<th>Gift #</th>
+        	<th>Gift</th>
         	<th>Detail</th>
         	<th>Res</th>
         	<th>Partner</th>
         	<th>Status</th>	
-    	</tr>
-      </thead>
-      <tbody id="twishbody">
-      </tbody>
+    	  </tr>
+    </thead>
+    <tbody id="twishbody">
+      <tr>
+ 	    <td><input class='wishnum' type='text' value='1' readonly></td>      	 
+        	<td><select id='wishname0' class='wishname'><option>WISH_0_OPTIONS</option></select></td>
+        	<td><input id='wishdetail0' type='text' value='detail'></td>
+        	<td><select id='wishres0'><option></option><option>*</option><option>#</option></select></td>
+        	<td><select id='wishpartner0'><option>PARTNER_0_OPTIONS</option></select></td>
+        	<td><input id='wishstatus0' type='text' class='wishstatus' readonly></td>
+    	  </tr>
+    	  <tr>
+        	<td><input class='wishnum' type='text' value='2' readonly></td>
+        	<td><select id='wishname1' class='wishname'><option>WISH_1_OPTIONS</option></select></td>
+        	<td><input id='wishdetail1' type='text' value='detail'></td>
+        <td><select id='wishres1'><option></option><option>*</option><option>#</option></select></td>
+        	<td><select id='wishpartner1'><option>PARTNER_1_OPTIONS</option></select></td>
+        	<td><input id='wishstatus1' type='text' class='wishstatus' readonly></td>
+    	  </tr>
+    	  <tr>
+        <td><input class='wishnum' type='text' value='3' readonly></td>
+        <td><select id='wishname2' class='wishname'><option>WISH_2_OPTIONS</option></select></td>
+        	<td><input id='wishdetail2' type='text' value='detail'></td>
+        	<td><select id='wishres2'><option></option><option>*</option><option>#</option></select></td>
+        	<td><select id='wishpartner2'><option>PARTNER_2_OPTIONS</option></select></td>
+        	<td><input id='wishstatus2' type='text' class='wishstatus' readonly></td>
+    	  </tr>
+    </tbody>
   </table>
   </fieldset>
   <br>
@@ -1094,7 +1152,7 @@
   </fieldset>
   <br>
   <fieldset>
-   <legend class="legend-major">Family Details, Notes & Instructions</legend>
+   <legend class="legend-major">Family Details, Notes And Instructions</legend>
     <fieldset class='floatleft'>
 		<legend>Details</legend> 
 		<textarea id="detail" rows="4" cols="36"></textarea>  

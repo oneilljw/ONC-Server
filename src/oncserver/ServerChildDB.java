@@ -129,20 +129,24 @@ public class ServerChildDB extends ServerSeasonalDB
 						int wishRestriction = cw.getChildWishIndicator();
 						String[] restrictions = {" ", "*", "#"};
 						String partner;
+						int partnerID;
 						if(cw.getChildWishAssigneeID() < 1)
 						{
-							partner = "";		
+							partner = "";
+							partnerID = -1;
 						}
 						else
 						{
 							ONCPartner org = serverPartnerDB.getPartner(year,cw.getChildWishAssigneeID());
 							partner = org.getLastName();
+							partnerID = org.getID();
 						}
 						
 						responseList.add(new WebChildWish(wishCatalog.findWishNameByID(year, cw.getWishID()),
+															cw.getWishID(),
 															cw.getChildWishDetail(), 
 															restrictions[wishRestriction], 
-															partner, cw.getChildWishStatus()));
+															partner, partnerID, cw.getChildWishStatus()));
 					}
 				}
 			}

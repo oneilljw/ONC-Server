@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import ourneighborschild.Address;
+import ourneighborschild.GiftCollection;
 import ourneighborschild.ONCChildWish;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.WishStatus;
@@ -20,6 +21,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 {
 	private static final int ORGANIZATION_DB_HEADER_LENGTH = 36;
 	private static final int STATUS_CONFIRMED = 5;
+	private static final int ORG_TYPE_CLOTHING = 4;
 	
 	private static List<PartnerDBYear> partnerDB;
 	
@@ -624,6 +626,46 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		exportDBToCSV(pyPerformancePartnerList, header, path);
 	}
 	
+	/*****************************************************************************************
+	 * Creates a string of confirmed partners, as HTML options, that take ornaments, broken into
+	 * two parts. The first part of the string are options that contain confirmed businesses, 
+	 * churches and schools, sorted alphabetically. The last part of the string are options that
+	 * contain all other confirmed partners sorted alphabetically
+	 *****************************************************************************************/
+	static String getConfirmedPartnerHTMLOptionList(int year, GiftCollection collectionType)
+	{
+		//Create two lists, the list to be returned and a temporary list
+		ArrayList<ONCPartner> confirmedPartnerList = new ArrayList<ONCPartner>();
+		ArrayList<ONCPartner> confirmedPartnerOtherList = new ArrayList<ONCPartner>();
+		
+		//Add the confirmed business, church and schools to the returned list and add all other 
+		//confirmed partners to the temporary list
+		for(ONCPartner o: partnerDB.get(year - BASE_YEAR).getList())
+		{
+			if(o.getStatus() == STATUS_CONFIRMED && o.getGiftCollectionType() == collectionType && 
+				o.getType() < ORG_TYPE_CLOTHING)
+				confirmedPartnerList.add(o);
+			else if(o.getStatus() == STATUS_CONFIRMED && o.getGiftCollectionType() == collectionType)
+				confirmedPartnerOtherList.add(o);		
+		}
+		
+		//Sort the two lists alphabetically by partner name
+		PartnerLastNameComparator nameComparator = new PartnerLastNameComparator();
+		Collections.sort(confirmedPartnerList, nameComparator);	//Sort alphabetically
+		Collections.sort(confirmedPartnerOtherList, nameComparator);	//Sort alphabetically
+		
+		//Append the all other temporary confirmed list to the bottom of the confirmed list
+		for(ONCPartner otherOrg:confirmedPartnerOtherList)
+			confirmedPartnerList.add(otherOrg);
+		
+		//create a HTML option string
+		StringBuffer buff = new StringBuffer("<option value=-1>None</option>");
+		for(ONCPartner p : confirmedPartnerList)
+			buff.append(String.format("<option value=%d>%s</option>", p.getID(), p.getLastName()));
+		
+		return buff.toString();
+	}
+	
 	private class PartnerDBYear extends ServerDBYear
 	{
 		private List<ONCPartner> pList;
@@ -669,6 +711,15 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		public int compare(ONCWebPartner o1, ONCWebPartner o2)
 		{			
 			return o1.getName().compareTo(o2.getName());
+		}
+	}
+	
+	private static class PartnerLastNameComparator implements Comparator<ONCPartner>
+	{
+		@Override
+		public int compare(ONCPartner o1, ONCPartner o2)
+		{			
+			return o1.getLastName().compareTo(o2.getLastName());
 		}
 	}
 }

@@ -176,6 +176,17 @@ public class ServerWishCatalog extends ServerPermanentDB
 		else
 			return -1;
 	}
+	
+	static String getWishHTMLOptions(int wn)
+	{
+		StringBuffer buff = new StringBuffer();
+		
+		for(ONCWish w : catalogDB)
+			if(w.canBeWish(wn))
+				buff.append(String.format("<option value=%d>%s</option>", w.getID(), w.getName()));
+		
+		return buff.toString();
+	}
 
 	@Override
 	void addObject(String[] nextLine)

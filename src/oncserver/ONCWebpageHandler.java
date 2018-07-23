@@ -149,7 +149,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
     			header.put("Set-Cookie", headerList);
 		}
 		
-		t.sendResponseHeaders(html.getCode(), html.getResponse().length());
+		t.sendResponseHeaders(html.getCode(), html.getResponse().getBytes().length);
 		OutputStream os = t.getResponseBody();
 		os.write(html.getResponse().getBytes());
 		os.close();
@@ -354,7 +354,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	    //send the response.
 	    t.sendResponseHeaders(HTTP_OK, file.length());
 	    OutputStream os = t.getResponseBody();
-	    os.write(bytearray,0,bytearray.length);
+	    os.write(bytearray, 0, bytearray.length);
 	    os.close();
 	    t.close();
 	}

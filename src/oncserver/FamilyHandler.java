@@ -15,6 +15,7 @@ import java.util.TimeZone;
 import ourneighborschild.Address;
 import ourneighborschild.AddressValidation;
 import ourneighborschild.AdultGender;
+import ourneighborschild.GiftCollection;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
@@ -191,6 +192,12 @@ public class FamilyHandler extends ONCWebpageHandler
     				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", "");
     				response = response.replace("REPLACE_FAM_REF", "NNA");
+    				response = response.replace("<option>WISH_0_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(0));
+    				response = response.replace("<option>WISH_1_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(1));
+    				response = response.replace("<option>WISH_2_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(2));
+    				response = response.replace("<option>PARTNER_0_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(2017, GiftCollection.Ornament));
+    				response = response.replace("<option>PARTNER_1_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(2017, GiftCollection.Ornament));
+    				response = response.replace("<option>PARTNER_2_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(2017, GiftCollection.Ornament));
     			}
     			else
     				response = invalidTokenReceived();
@@ -902,5 +909,10 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 		
 		return errorMap;
+	}
+	
+	String getWishOptionsHTML(int wn)
+	{
+		return ServerWishCatalog.getWishHTMLOptions(wn);
 	}
 }
