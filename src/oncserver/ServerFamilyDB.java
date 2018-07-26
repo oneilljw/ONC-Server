@@ -591,9 +591,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		int reg = 0; //initialize return value to no region found
 		
 		//address is new or has changed, update the region
-		RegionDB regionDB = null;
+		ServerRegionDB serverRegionDB = null;
 		try {
-			regionDB = RegionDB.getInstance(null);
+			serverRegionDB = ServerRegionDB.getInstance(null);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -602,9 +602,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			e.printStackTrace();
 		}
 		
-		if(regionDB != null)
+		if(serverRegionDB != null)
 		{
-			reg = RegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
+			reg = ServerRegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
 											updatedFamily.getStreet(), updatedFamily.getUnit(),
 											  updatedFamily.getCity(), updatedFamily.getZipCode()));
 			
@@ -927,7 +927,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			List<ONCAdult> adultList = adultDB.getAdultsInFamily(year, fam.getID());
 			
 			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,
-													RegionDB.getRegion(fam.getRegion()),
+													ServerRegionDB.getRegion(fam.getRegion()),
 													ServerGroupDB.getGroup(fam.getGroupID()).getName(),
 													childList, adultList);
 			
@@ -1349,9 +1349,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
     {
     	String oncNum = null;
     	//Verify region number is valid. If it's not return an error
-    	RegionDB regionDB = null;
+    	ServerRegionDB serverRegionDB = null;
 		try {
-			regionDB = RegionDB.getInstance(null);
+			serverRegionDB = ServerRegionDB.getInstance(null);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1362,10 +1362,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
     	 
     	if(region == 0)		//Don't assign numbers without known valid region addresses
     		oncNum = "NNA";
-    	else if(regionDB != null && regionDB.isRegionValid(region))
+    	else if(serverRegionDB != null && serverRegionDB.isRegionValid(region))
     	{
     		int start = oncnumRegionRanges[region];
-    		int	end = oncnumRegionRanges[(region+1) % regionDB.getNumberOfRegions()];
+    		int	end = oncnumRegionRanges[(region+1) % serverRegionDB.getNumberOfRegions()];
     		
     		String searchstring = Integer.toString(start);
     		while(start < end && searchForONCNumber(year, searchstring) != -1)

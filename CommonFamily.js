@@ -1,7 +1,7 @@
 /*!
  * ONC Common Family JavaScript library v1.2
  * Common functions for family referral and family info editing web pages
- * Date: 2018-03-03
+ * Date: 2018-07-23
  */
 function updateChildTable(bAction)
 {
@@ -388,11 +388,6 @@ function cityChanged(elementName)
 	{
 		zipElement.options[0] = new Option('22152', '22152');
 	}
-		
-//	if(elementName === 'city')
-//		verifyHOHAddress();
-//	else
-//		verifyDeliveryAddress();	
 }
 	
 function removeOptions(select)
@@ -405,14 +400,14 @@ function verifyHOHAddress()
 {
 	//called when HOH address inputs change
 	var addrElement = [document.getElementById('housenum'), 
-    	               document.getElementById('street'),
-        	           document.getElementById('unit'),
-        	           document.getElementById('city'), 
+    	               	   document.getElementById('street'),
+    	               	   document.getElementById('unit'),
+    	               	   document.getElementById('city'), 
 	                   document.getElementById('zipcode')];
 	
 	var unitElement = [document.getElementById('unit')];
 	
-	//check to see that housenum and street are not blank
+	//check to see that house number and street are not blank
 	if(addrElement[0].value !== "" && addrElement[1].value !== "" )
 	{
 		//form the address url
@@ -489,7 +484,10 @@ function onSubmit()
 {
 	var errorElement = document.getElementById('errormessage');
 	
-	//called when HOH address inputs change
+	//HOH name elements
+	var hohNameElement = [document.getElementById('hohfn'), 
+   						  document.getElementById('hohln')];
+	//HOH address elements
 	var hohAddrElement = [document.getElementById('housenum'), 
     	               		document.getElementById('street'),
     	               		document.getElementById('unit'),
@@ -498,7 +496,7 @@ function onSubmit()
 	
 	var hohUnitElement = [document.getElementById('unit')];
 	
-	//now check the delivery address
+	//delivery address elements
 	var delAddrElement = [document.getElementById('delhousenum'),
 						document.getElementById('delstreet'),
 						document.getElementById('delunit'),
@@ -511,107 +509,119 @@ function onSubmit()
 	var phoneMssg= verifyPhoneNumbers();
 	if(phoneMssg != '')
 	{
+		//one or more phone #'s are bad
 		errorElement.textContent=phoneMssg;
 	}
 	else	
 	{
-		//phone numbares are good, check to see that HoH and Delivery addresses are good
-		if(hohAddrElement[0].value !== "" && hohAddrElement[1].value !== "" )
+		//phone numbers are good, check to see that we have first and last names and
+		//HoH and Delivery addresses are good. First check the delivery address
+		if(hohNameElement[0].value !== "" && hohNameElement[1].value !== "")
 		{
-			//form the HoH address url
-       		var hohAddressparams = createAddressParams(hohAddrElement);
-       		var addrresponse;
-       		$.getJSON('address', hohAddressparams, function(data)
-      		{
-      			addresponse = data;
-      		
-      			if(addresponse.hasOwnProperty('error'))
-      			{
-					window.location=document.getElementById('timeoutanchor').href;
-      			}
-      			else if(addresponse.errorCode === 0)
-      			{
-      				changeAddressBackground(hohAddrElement, '#FFFFFF');
+			if(delAddrElement[0].value !== "" && delAddrElement[1].value !== "" )
+			{
+				//form the delivery address url
+	       		$.getJSON('address', createAddressParams(delAddrElement), function(addresponse)
+	      		{
+	       			console.log(addresponse);
+	      			if(addresponse.hasOwnProperty('error'))
+	      			{
+						window.location=document.getElementById('timeoutanchor').href;
+	      			}
+	      			else if(addresponse.errorCode === 0)
+	      			{
+	      				changeAddressBackground(delAddrElement, '#FFFFFF');
 
-      				//HoH address is good, now check the delivery address. If same as 
-      				//HoH address no need to check, else, check to see that delivery
-      				//housenum and street are provided
-      				if(document.getElementById('sameaddress').checked === true)
-      				{
-      					changeAddressBackground(delAddrElement, '#FFFFFF');		      					
-      					
-						//if phone #'s are ok, HoH ddresses is valid, and del address is identical
-						document.getElementById("familyform").submit();
-      				}
-      				else
-      				{
-      					if(delAddrElement[0].value !== "" && delAddrElement[1].value !== "" )
-      					{
-      						//form the address url
-      						var delAddressparams = createAddressParams(delAddrElement);
-      						var addrresponse;
-      						$.getJSON('address',  delAddressparams, function(data)
-      						{
-      							addresponse = data;
-	      		
-      							if(addresponse.hasOwnProperty('error'))
-      							{
-      								window.location=document.getElementById('timeoutanchor').href;
-      							}
-      							else if(addresponse.errorCode === 0)
-      							{
-      								changeAddressBackground(delAddrElement, '#FFFFFF');		      					
+	      				//delivery address is good, now check the HoH address. If same as 
+	      				//delivery address no need to check, else, check to see that HoH
+	      				//house # and street are provided
+	      				if(document.getElementById('sameaddress').checked === true)
+	      				{
+	      					changeAddressBackground(hohAddrElement, '#FFFFFF');		      					
 	      					
-      								//if phone #'s are ok and both addresses are valid, it's ok to submit
-      								document.getElementById("familyform").submit();
-      							}	
-      							else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-      							{
-      								changeAddressBackground(delAddrElement, errorColor);
-      								errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
-      							}
-      							else if(addresponse.errorCode === 2)
-      							{
-      								changeAddressBackground(delAddrElement, '#FFFFFF');
-      								changeAddressBackground(delUnitElement, errorColor);
-      								errorElement.textContent = "Submission Error: Delivery address unit error";
-      							}
-      						});
-      					}
-      					else
-      					{
-      						changeAddressBackground(delAddrElement, errorColor);
-      						errorElement.textContent = "Submission Error: Delivery address incomplete";
-      					}
-      				}	
-      			}	
-      			else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-      			{
-      				changeAddressBackground(hohAddrElement, errorColor);
-      				errorElement.textContent = "Submission Error: HoH address incomplete or does not exist";
-      			}
-      			else if(addresponse.errorCode === 2)
-      			{
-      				changeAddressBackground(hohAddrElement, '#FFFFFF');
-      				changeAddressBackground(hohUnitElement, errorColor);
-      				errorElement.textContent = "Submission Error: HoH address unit error";
-      			}
-      		});
+							//if phone #'s are ok, delivery address is valid, and HoH address is identical
+							document.getElementById("familyform").submit();
+	      				}
+	      				else
+	      				{
+	      					if(hohAddrElement[0].value !== "" && hohAddrElement[1].value !== "" )
+	      					{
+	      						$.getJSON('address',  createAddressParams(hohAddrElement), function(addresponse)
+	      						{
+	      							if(addresponse.hasOwnProperty('error'))
+	      							{
+	      								window.location=document.getElementById('timeoutanchor').href;
+	      							}
+	      							else if(addresponse.errorCode === 0)
+	      							{
+	      								changeAddressBackground(hohAddrElement, '#FFFFFF');		      					
+		      					
+	      								//if phone #'s are ok and both addresses are valid, it's ok to submit
+	      								document.getElementById("familyform").submit();
+	      							}	
+	      							else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+	      							{
+	      								changeAddressBackground(hohAddrElement, errorColor);
+	      								errorElement.textContent = "Submission Error: HoH address incomplete or does not exist";
+	      								document.getElementById('badfammssg').textContent = addresponse.errMssg;
+	      								window.location=document.getElementById('badfamanchor').href;
+	      							}
+	      							else if(addresponse.errorCode === 2)
+	      							{
+	      								changeAddressBackground(hohAddrElement, '#FFFFFF');
+	      								changeAddressBackground(hohUnitElement, errorColor);
+	      								errorElement.textContent = "Submission Error: HoH address unit error";
+	      							}
+	      						});
+	      					}
+	      					else
+	      					{
+	      						changeAddressBackground(hohAddrElement, errorColor);
+	      						errorElement.textContent = "Submission Error: HoH address incomplete";
+	      						document.getElementById('badfammssg').textContent = "Submission Error: HoH address incomplete";
+								window.location=document.getElementById('badfamanchor').href;
+	      					}
+	      				}	
+	      			}	
+	      			else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
+	      			{
+	      				changeAddressBackground(delAddrElement, errorColor);
+	      				errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
+	      				document.getElementById('badfammssg').textContent = addresponse.errMssg;
+	      				window.location=document.getElementById('badfamanchor').href;
+	      			}
+	      			else if(addresponse.errorCode === 2)
+	      			{
+	      				changeAddressBackground(delAddrElement, '#FFFFFF');
+	      				changeAddressBackground(delUnitElement, errorColor);
+	      				errorElement.textContent = "Submission Error: Delivery address unit error";
+	      			}
+	      		});
+			}
+			else
+			{
+				changeAddressBackground(delAddrElement, errorColor);
+				errorElement.textContent = "Submission Error: Delivery address incomplete";
+				document.getElementById('badfammssg').textContent = "Submission Error: Delivery address incomplete";
+				window.location=document.getElementById('badfamanchor').href;
+			}
 		}
 		else
 		{
-			changeAddressBackground(hohAddrElement, errorColor);
-				errorElement.textContent = "Submission Error: HoH address incomplete";
-		}
+			changeAddressBackground(hElement, errorColor);
+			errorElement.textContent = "Submission Error: HOH First and/or Last Names missing";
+			document.getElementById('badfammssg').textContent = "Submission Error: HOH First or Last Names missing";
+			window.location=document.getElementById('badfamanchor').href;
+		}	
 	}
 }
 
 function onZipChanged(zipelement)
 {
-	if(zipelement === 'zipcode')
-		verifyHOHAddress();
-	else
-		verifyDeliveryAddress();
+//	if(zipelement === 'zipcode')
+//		verifyHOHAddress();
+//	else
+//		verifyDeliveryAddress();
 }
 
 function changeAddressBackground(elements, color)
@@ -622,8 +632,7 @@ function changeAddressBackground(elements, color)
 
 function createAddressParams(addrElement)
 {	
-	var addressparams = "token=" + sessionStorage.getItem("token") + "&" +
-						"housenum=" + encodeURIComponent(addrElement[0].value) + "&" +
+	var addressparams = "housenum=" + encodeURIComponent(addrElement[0].value) + "&" +
 						"street=" + encodeURIComponent(addrElement[1].value) + "&" +
 						"unit=" + encodeURIComponent(addrElement[2].value) + "&" +
 						"city=" + addrElement[3].value + "&" +
@@ -711,4 +720,30 @@ function onLogoutLink()
 function onSessionTimeout()
 {
 	 window.location.assign('timeout');
+}
+function post(path, params, method) 
+{
+    method = method || "post"; // Set method to post by default if not specified.
+
+    // The rest of this code assumes you are not using a library.
+    // It can be made less wordy if you use one.
+    var form = document.createElement("form");
+    form.setAttribute("method", method);
+    form.setAttribute("action", path);
+
+    for(var key in params) 
+    {
+    		if(params.hasOwnProperty(key))
+        {
+            var hiddenField = document.createElement("input");
+            hiddenField.setAttribute("type", "hidden");
+            hiddenField.setAttribute("name", key);
+            hiddenField.setAttribute("value", params[key]);
+
+        		form.appendChild(hiddenField);
+        }
+    }
+
+    document.body.appendChild(form);
+    form.submit();
 }

@@ -48,7 +48,7 @@ public class DesktopClient extends Thread
     
     private DBManager dbManager;
     private ServerUserDB userDB;
-    private RegionDB regionDB;
+    private ServerRegionDB serverRegionDB;
     private ServerGlobalVariableDB globalvariableDB;
     private ServerFamilyDB serverFamilyDB;
     private ServerGroupDB serverGroupDB;
@@ -98,7 +98,7 @@ public class DesktopClient extends Thread
         {
         		dbManager = DBManager.getInstance(clientMgr.getAppIcon());
 			userDB = ServerUserDB.getInstance();
-			regionDB = RegionDB.getInstance(clientMgr.getAppIcon());
+			serverRegionDB = ServerRegionDB.getInstance(clientMgr.getAppIcon());
 	        globalvariableDB = ServerGlobalVariableDB.getInstance();
 	        serverFamilyDB = ServerFamilyDB.getInstance();
 	        serverGroupDB = ServerGroupDB.getInstance();
@@ -202,7 +202,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<regions>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = regionDB.getRegions();
+                		String response = serverRegionDB.getRegions();
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 }
@@ -227,7 +227,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<regionmatch>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = regionDB.getRegionMatch(command.substring(16));
+                		String response = serverRegionDB.getRegionMatch(command.substring(16));
                 		output.println(response);
                 }
                 else if(command.startsWith("GET<familys>"))
@@ -1111,7 +1111,7 @@ public class DesktopClient extends Thread
     }
     
     int getYear() { return year; }
-    
+/*    
     String verifyAddress(String jsonAddress)
 	{
     		Gson gson = new Gson();
@@ -1133,5 +1133,6 @@ public class DesktopClient extends Thread
 		String jsonResult = gson.toJson(new AddressValidation(bAddressGood, errorCode), AddressValidation.class);
 		
 		return jsonResult;
-	}
+	}	
+*/		
 }

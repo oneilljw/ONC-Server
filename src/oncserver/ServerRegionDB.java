@@ -14,42 +14,63 @@ import javax.swing.JOptionPane;
 
 import ourneighborschild.Address;
 import ourneighborschild.Region;
+import ourneighborschild.School;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-public class RegionDB extends ServerPermanentDB
+public class ServerRegionDB extends ServerPermanentDB
 {
 	/**
 	 * 
 	 */
-	private static final int ONC_REGION_HEADER_LENGTH = 10;
-	private static final String FILENAME = "Regions_2017.csv";
+	private static final int ONC_REGION_HEADER_LENGTH = 13;
+	private static final String FILENAME = "Regions_2018.csv";
 	
-	private static RegionDB instance = null;
+	private static ServerRegionDB instance = null;
 	private static List<Region> regionAL;
 	private static List<String> zipcodeList;	//list of unique zip codes in region db
 	private static String[] regions = {"?", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
 										"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
+	private static List<School> schoolList;
 	private ImageIcon oncIcon;
 	
 	private static List<Integer> hashIndex;
 	
-	protected RegionDB(ImageIcon appicon) throws FileNotFoundException, IOException
+	private ServerRegionDB(ImageIcon appicon) throws FileNotFoundException, IOException
 	{
 		oncIcon = appicon;
+		
+		//Create the list of elementary schools in ONC's serving area
+		schoolList = new ArrayList<School>();
+		schoolList.add(new School("A", new Address("15301", "", "", "Lee", "Highway", "", "", "Centreville", "20120"), "Bull Run"));
+		schoolList.add(new School("B", new Address("14400", "", "", "New Braddock", "Road", "", "", "Centreville", "20121"), "Centre Ridge"));
+		schoolList.add(new School("C", new Address("14330", "", "", "Green Trais", "Blvd", "", "", "Centreville", "20121"), "Centreville"));
+		schoolList.add(new School("D", new Address("13340", "", "", "Leland", "Road", "", "", "Centreville", "20120"), "Powell"));
+		schoolList.add(new School("E", new Address("13611", "", "", "Springstone", "Drive", "", "", "Clifton", "20124"), "Union Mill"));
+		schoolList.add(new School("F", new Address("5301", "", "", "Sully Station", "Drive", "", "", "Centreville", "20120"), "Cub Run"));
+		schoolList.add(new School("G", new Address("15450", "", "", "Martins Hundred", "Drive", "", "", "Centreville", "20120"), "Virginia Run"));
+		schoolList.add(new School("H", new Address("15109", "", "", "Carlbern", "Drive", "", "", "Centreville", "20120"), "Deer Park"));
+		schoolList.add(new School("I", new Address("6100", "", "", "Stone", "Road", "", "", "Centreville", "20120"), "London Towne"));
+		schoolList.add(new School("J", new Address("4200", "", "", "Lees Corner", "Road", "", "", "Chantilly", "20151"), "Brookfield"));
+		schoolList.add(new School("K", new Address("13006", "", "", "Point Pleasant", "Drive", "", "", "Fairfax", "22033"), "Greenbriar East"));
+		schoolList.add(new School("L", new Address("13300", "", "", "Poplar Tree", "Road", "", "", "Fairfax", "22033"), "Greenbriar West"));
+		schoolList.add(new School("M", new Address("13500", "", "", "Hollinger", "Avenue", "", "", "Fairfax", "22033"), "Lees Corner"));
+		schoolList.add(new School("N", new Address("13440", "", "", "Melville", "Lane", "", "", "Chantilly", "20151"), "Poplar Tree"));
+		schoolList.add(new School("O", new Address("5400", "", "", "Willow Springs School", "Road", "", "", "Fairfax", "22030"), "Willow Springs"));
+		schoolList.add(new School("P", new Address("3210", "", "", "Kincross", "Circle", "", "", "Herndon", "20171"), "Oak Hill"));
+		schoolList.add(new School("Q", new Address("2708", "", "", "Centreville", "Road", "", "", "Herndon", "20171"), "Floris"));
+		schoolList.add(new School("R", new Address("2480", "", "", "River Birch", "Drive", "", "", "Herndon", "20171"), "Lutie Lewis Coates"));
+		schoolList.add(new School("S", new Address("2499", "", "", "Thomas Jefferson", "Drive", "", "", "Herndon", "20171"), "McNair"));
 		
 		regionAL = new ArrayList<Region>();
 
 		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), FILENAME), "Region DB", ONC_REGION_HEADER_LENGTH);
 		nextID = getNextID(regionAL);
 		bSaveRequired = false;
-		
-//		if(regAL.size() == 0)
-//			getONCRegions(System.getProperty("user.dir") +"/regions_2017.csv");
-		
+
 		//build zip code list
 		zipcodeList = new ArrayList<String>();
 		buildZipCodeList();
@@ -59,27 +80,6 @@ public class RegionDB extends ServerPermanentDB
 		//names that start with a digit at the top of the list
 		hashIndex = new ArrayList<Integer>();
 		buildHashIndex();
-/*		
-		Collections.sort(regionAL, new RegionStreetNameComparator());	//sort region list by street name
-		
-		hashIndex = new ArrayList<Integer>();
-		int index = 0;	//used to iterate the region list
-		int regionIndex = 1;	//used to iterate the regions array
-		
-		hashIndex.add(0);	//add the first row to the hash: it's the streets that start with a digit
-		while(index < regionAL.size() && regionIndex < regions.length)		
-		{
-			if(regionAL.get(index).getStreetName().charAt(0) == regions[regionIndex].charAt(0))
-			{
-				hashIndex.add(index++);
-				regionIndex++;
-			}
-			else
-				index++;
-		}
-		
-		hashIndex.add(regionAL.size());	//add the last index into the hash table
-*/		
 	}
 	
 	void buildHashIndex()
@@ -113,10 +113,10 @@ public class RegionDB extends ServerPermanentDB
 		hashIndex.add(regionAL.size());	//add the last index into the hash table
 	}
 	
-	public static RegionDB getInstance(ImageIcon appicon) throws FileNotFoundException, IOException
+	public static ServerRegionDB getInstance(ImageIcon appicon) throws FileNotFoundException, IOException
 	{
 		if(instance == null)
-			instance = new RegionDB(appicon);
+			instance = new ServerRegionDB(appicon);
 		
 		return instance;
 	}
@@ -216,6 +216,15 @@ public class RegionDB extends ServerPermanentDB
 		return index < zipcodeList.size();
 	}
 	
+	boolean isSchoolAddress(Address address)
+	{
+		int index = 0;
+		while(index < schoolList.size() && !schoolList.get(index).getAddress().matches(address))
+			index++;
+		
+		return index < schoolList.size();
+	}
+	
 	Region add(Region addedRegion)
 	{
 		//set the new ID for the region
@@ -249,9 +258,7 @@ public class RegionDB extends ServerPermanentDB
 		{
 			return null;
 		}
-	}
-
-	
+	}	
 /*	
 	int getRegionMatch(Address matchAddress)
 	{
@@ -457,7 +464,8 @@ public class RegionDB extends ServerPermanentDB
 	@Override
 	String[] getExportHeader()
 	{
-		return new String[] {"ID","Street Name","Street Type","Region","Street Dir","Street Post Dir",
+		return new String[] {"ID","Street Name","Street Type","Region","School Region",
+							"School","SchoolAddress?","Street Dir","Street Post Dir",
 							"Address Low","Address High","Odd Even","Zip Code"};
 	}
 	

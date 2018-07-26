@@ -7,13 +7,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
 import ourneighborschild.Address;
-import ourneighborschild.AddressValidation;
 import ourneighborschild.AdultGender;
 import ourneighborschild.GiftCollection;
 import ourneighborschild.MealStatus;
@@ -161,8 +159,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			String response;
     			WebClient wc;
     		
-    			if(t.getRequestMethod().toLowerCase().equals("post") && 
-    					params.containsKey("token") && params.containsKey("year") &&
+    			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("year") &&
     					((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)) 
     			{
     				//process referral and send family status web page back to client
@@ -220,8 +217,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			String response = null;
     			WebClient wc; 		
 
-    			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("token") &&
-    				params.containsKey("year") &&
+    			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("year") &&
     				((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null))
     			{
     				//submission processed, send the home page back to the user
@@ -815,7 +811,7 @@ public class FamilyHandler extends ONCWebpageHandler
 //			String direction = chkAddress.getStreetDir().isEmpty() ? "" : chkAddress.getStreetDir() + ".";
 //			System.out.println(String.format("%s%s %s%s %s %s %s %s",chkAddress.getStreetNum(), postDir, direction, 
 //						chkAddress.getStreetName(), chkAddress.getStreetType(), chkAddress.getUnit(), chkAddress.getCity(), chkAddress.getZipCode()));
-			bAddressGood = RegionDB.isAddressValid(chkAddress);
+			bAddressGood = ServerRegionDB.isAddressValid(chkAddress);
 		}
 		
 		return bAddressGood;
@@ -830,11 +826,12 @@ public class FamilyHandler extends ONCWebpageHandler
 			 && params.containsKey("delzipcode") && (zipCode = (String) params.get("delzipcode")) != null)
 		{
 			//don't need unit or city to check region validity
-			bAddressGood = RegionDB.isAddressValid(new Address(houseNum, streetName, "", "", zipCode));
+			bAddressGood = ServerRegionDB.isAddressValid(new Address(houseNum, streetName, "", "", zipCode));
 		}
 		
 		return bAddressGood;
 	}
+/*	
 	String verifyAddress(Map<String, Object> params)
 	{
 		String callback = (String) params.get("callback");
@@ -868,7 +865,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		
 		return callback +"(" + json +")";
 	}
-	
+
 	Map<String, String> verifyReferralInformation(Map<String, Object> params)
 	{
 		Map<String, String> errorMap = new HashMap<String, String>();
@@ -915,4 +912,5 @@ public class FamilyHandler extends ONCWebpageHandler
 	{
 		return ServerWishCatalog.getWishHTMLOptions(wn);
 	}
+*/	
 }

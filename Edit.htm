@@ -139,7 +139,7 @@
 	    <li id="logoutli"><a href='javascript:onLogoutLink()'>Logout</a></li>
 	</ul>
   </nav>
-  <form id="familyform" action="updatefamily" onsubmit="return onSubmit()" method="post">
+  <form id="familyform" action="updatefamily" method="post">
   <input id="year" type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
   <br>
@@ -331,6 +331,17 @@
   	</span>
   </div>
 </form>
+!-- Invalid Family Dialog -->
+  <div id="badfamdlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65">
+		  <span id="badfamheader">Invalid Family Update</span>
+		</div>
+		<p id='badfammssg'></p>
+	</div>
+  </div>
 <!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
 	<div id='inner'>

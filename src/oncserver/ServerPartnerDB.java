@@ -261,9 +261,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		int reg = 0; //initialize return value to no region found
 		
 		//address is new or has changed, update the region
-		RegionDB regionDB = null;
+		ServerRegionDB serverRegionDB = null;
 		try {
-			regionDB = RegionDB.getInstance(null);
+			serverRegionDB = ServerRegionDB.getInstance(null);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -272,9 +272,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			e.printStackTrace();
 		}
 		
-		if(regionDB != null)
+		if(serverRegionDB != null)
 		{
-			reg = RegionDB.searchForRegionMatch(new Address(updatedOrg.getHouseNum(),
+			reg = ServerRegionDB.searchForRegionMatch(new Address(updatedOrg.getHouseNum(),
 											updatedOrg.getStreet(), "",  updatedOrg.getCity(),
 											 updatedOrg.getZipCode()));
 			updatedOrg.setRegion(reg);
@@ -296,9 +296,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		//set the region for the new partner
 		ClientManager clientMgr = ClientManager.getInstance();
-		RegionDB regionDB = null;
+		ServerRegionDB serverRegionDB = null;
 		try {
-			regionDB = RegionDB.getInstance(clientMgr.getAppIcon());
+			serverRegionDB = ServerRegionDB.getInstance(clientMgr.getAppIcon());
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -307,8 +307,8 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			e.printStackTrace();
 		}
 		
-		if(regionDB != null)
-			addedPartner.setRegion(RegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
+		if(serverRegionDB != null)
+			addedPartner.setRegion(ServerRegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
 															addedPartner.getStreet(), "", addedPartner.getCity(),
 															addedPartner.getZipCode())));
 		else
@@ -329,9 +329,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		//set the region for the new partner
 		ClientManager clientMgr = ClientManager.getInstance();
-		RegionDB regionDB = null;
+		ServerRegionDB serverRegionDB = null;
 		try {
-			regionDB = RegionDB.getInstance(clientMgr.getAppIcon());
+			serverRegionDB = ServerRegionDB.getInstance(clientMgr.getAppIcon());
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -340,8 +340,8 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			e.printStackTrace();
 		}
 		
-		if(regionDB != null)
-			addedPartner.setRegion(RegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
+		if(serverRegionDB != null)
+			addedPartner.setRegion(ServerRegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
 															addedPartner.getStreet(), "", addedPartner.getCity(),
 															addedPartner.getZipCode())));
 		else

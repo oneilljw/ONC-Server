@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ourneighborschild.Address;
@@ -120,7 +122,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
     			{
     				String zipCode = (String) params.get("zipcode");
-    				htmlResponse = RegionDB.getAddressesJSONP(zipCode, (String) params.get("callback"));
+    				htmlResponse = ServerRegionDB.getAddressesJSONP(zipCode, (String) params.get("callback"));
     			}
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
@@ -130,7 +132,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     		else if(requestURI.contains("/zipcodes"))
     		{
     			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    				htmlResponse = RegionDB.getZipCodeJSONP((String) params.get("callback"));
+    				htmlResponse = ServerRegionDB.getZipCodeJSONP((String) params.get("callback"));
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
     			
@@ -216,7 +218,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     			{
     				String regionID = (String) params.get("regionid");
         		
-    				htmlResponse = RegionDB.getRegionJSONP(regionID, (String) params.get("callback"));
+    				htmlResponse = ServerRegionDB.getRegionJSONP(regionID, (String) params.get("callback"));
     			}
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
@@ -502,6 +504,13 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		
 		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode"};
 		Map<String, String> addressMap = createMap(params, addressKeys);
+		Map<Integer, String> errMssgMap = new HashMap<Integer, String>();
+		errMssgMap.put(1, "ERROR: Address is not a residence in Fairfax County, VA. Please provide a "
+									+ "valid address.");
+		errMssgMap.put(2, "ERROR: Address has multiple residences, you must provide an apartment or unit number.");
+		errMssgMap.put(4, "ERROR: Address is not served by ONC. Either refer this family to"
+				+ "a service provider serving this address or, if your school whishes to assume"
+				+ "responsiblity for gift delivery, enter the address of your school as the delivery address.");
 		
 //		for(String key:addressMap.keySet())
 //			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));
@@ -512,7 +521,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		//diagnostic print
 //		System.out.println(chkAddress.getPrintableAddress());
 
-		boolean bAddressValid  = RegionDB.isAddressValid(chkAddress);
+		boolean bAddressValid  = ServerRegionDB.isAddressValid(chkAddress);
 		int errorCode = bAddressValid ? 0 : 1;
 		
 		//check that a unit might be missing. If a unit is already provided, no need to perform the check.
@@ -525,9 +534,16 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		boolean bAddressGood = bAddressValid && !bUnitMissing;
 		
 		Gson gson = new Gson();
-		String json = gson.toJson(new AddressValidation(bAddressGood, errorCode), AddressValidation.class);
+		String json;
+		if(errorCode == 0)
+			json = gson.toJson(new AddressValidation(bAddressGood, false, errorCode), AddressValidation.class);
+		else if(errorCode == 1 || errorCode == 3)
+			json = gson.toJson(new AddressValidation(bAddressGood, false, errorCode, errMssgMap.get(1)), AddressValidation.class);
+		else if(errorCode == 2)
+			json = gson.toJson(new AddressValidation(bAddressGood, false, errorCode, errMssgMap.get(2)), AddressValidation.class);
+		else
+			json = gson.toJson(new AddressValidation(bAddressGood, false, errorCode, errMssgMap.get(4)), AddressValidation.class);
 		
-//		return callback +"(" + json +")";
 		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
 	}
 	
@@ -663,11 +679,11 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 	ResponseCode processRegionUpdate(WebClient wc, Map<String, Object> params)
 	{				
 		//get database references
-		RegionDB regionDB= null;
+		ServerRegionDB serverRegionDB= null;
 				
 		try
 		{
-			regionDB = RegionDB.getInstance(null);
+			serverRegionDB = ServerRegionDB.getInstance(null);
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -707,7 +723,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		//determine if its an add partner request or a partner update request
 		if(regionMap.get("regionid").equals("New"))
 		{
-			Region addedRegion = regionDB.add(returnedRegion);
+			Region addedRegion = serverRegionDB.add(returnedRegion);
 			
 			if(addedRegion != null)
 			{
@@ -721,7 +737,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		}
 		else
 		{
-			Region updatedRegion = regionDB.update(returnedRegion);
+			Region updatedRegion = serverRegionDB.update(returnedRegion);
 			if(updatedRegion != null)
 			{
 				rc = new ResponseCode(String.format("Region %d, %s successfully updated", 

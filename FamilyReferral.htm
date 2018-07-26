@@ -48,7 +48,7 @@
 
 			$.getJSON('getfamily', familyparams, function(family)
 			{
-				console.log(family);
+//				console.log(family);
 				document.getElementById('hohfn').value= family.HOHFirstName;
 				document.getElementById('hohln').value= family.HOHLastName;
 				
@@ -408,6 +408,7 @@
   </style>
 </head>
 <body>
+  <a href="#badfamdlg" id="badfamanchor" style="visibility: hidden">Bad Family Referral</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
@@ -505,10 +506,7 @@
   <fieldset>
   <legend class="legend-major">Delivery Address and Transportation: Provide address that ONC will use for gift delivery and family's access to transportation</legend>
 	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
-<!--<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" onchange="verifyDeliveryAddress()" autocomplete="off" required> -->	
-<!--<input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" onchange="verifyDeliveryAddress()" autocomplete="off" required> -->	
-<!--<input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" onchange="verifyDeliveryAddress()" autocomplete="off"> -->	
-    <input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
     <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
     <select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged('delcity')">
@@ -666,6 +664,17 @@
   	</span>
   </div>
 </form>
+<!-- Invalid Family Dialog -->
+  <div id="badfamdlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65">
+		  <span id="badfamheader">Invalid Family Referral</span>
+		</div>
+		<p id='badfammssg'></p>
+	</div>
+  </div>
 <!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
 	<div id='inner'>
