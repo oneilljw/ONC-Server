@@ -27,7 +27,7 @@ public class ServerRegionDB extends ServerPermanentDB
 	 * 
 	 */
 	private static final int ONC_REGION_HEADER_LENGTH = 13;
-	private static final String FILENAME = "Regions_2018.csv";
+	private static final String FILENAME = "Regions_New.csv";
 	
 	private static ServerRegionDB instance = null;
 	private static List<Region> regionAL;
@@ -64,6 +64,7 @@ public class ServerRegionDB extends ServerPermanentDB
 		schoolList.add(new School("Q", new Address("2708", "", "", "Centreville", "Road", "", "", "Herndon", "20171"), "Floris"));
 		schoolList.add(new School("R", new Address("2480", "", "", "River Birch", "Drive", "", "", "Herndon", "20171"), "Lutie Lewis Coates"));
 		schoolList.add(new School("S", new Address("2499", "", "", "Thomas Jefferson", "Drive", "", "", "Herndon", "20171"), "McNair"));
+		schoolList.add(new School("T", new Address("3500", "", "", "West Ox", "Road", "", "", "Fairfax", "22033"), "Navy"));
 		
 		regionAL = new ArrayList<Region>();
 
@@ -482,9 +483,6 @@ public class ServerRegionDB extends ServerPermanentDB
 		{
 			String sn1 = region1.getStreetName();
 			String sn2 = region2.getStreetName();
-			
-//			Integer si1 = Character.getNumericValue(streetname1.charAt(0));	//non digit returns -1
-//			Integer si2 = Character.getNumericValue(streetname2.charAt(0));
 			
 			if(Character.isLetter(sn1.charAt(0)) && Character.isLetter(sn2.charAt(0)))
 				return sn1.compareTo(sn2);

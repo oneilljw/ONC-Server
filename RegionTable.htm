@@ -60,14 +60,16 @@
     {
     		$("#regiontbody").empty();
     		var region = document.getElementById('region').value;
+    		var schoolRegion = document.getElementById('school').value;
     	
     		var count = 0;
     		for(var i=0; i<regionJson.length; i++)
 		{
-	   		if(region === 'Any' || region === regionJson[i].region)
+	   		if((region === 'Any' || region === regionJson[i].region) &&
+	   			(schoolRegion === 'Any' || schoolRegion === regionJson[i].schoolRegion))
 	   		{
-    			addTableRow(regionJson[i], document.getElementById('regiontable'),'Edit');	//add row to table
-    			count++;
+    				addTableRow(regionJson[i], document.getElementById('regiontable'),'Edit');	//add row to table
+    				count++;
 	   		}
 		}
     	
@@ -83,21 +85,21 @@
     {
         if (!document.getElementsByTagName) return;
         	
-        var regioninfo = [region.streetDir, region.streetName, region.streetType, region.postDir, region.zipCode, region.region, region.addressNumLow, region.addressNumHi];
+        var regioninfo = [region.streetDir, region.streetName, region.streetType, region.postDir, region.zipCode, region.region, region.addressNumLow, region.addressNumHi, region.school];
         
-        var cellwidth = ['40px', '320px', '80px', '80px', '96px', '64px', '80px', '80px', '80px'];
-        var cellAlign = ['center', 'left', 'center', 'center', 'left', 'center', 'left', 'left'];
+        var cellwidth = ['40px', '240px', '64px', '64px', '96px', '64px', '64px', '64px', '160px', '64px'];
+        var cellAlign = ['center', 'left', 'center', 'center', 'left', 'center', 'left', 'left', 'left'];
         
 	    var tabBody = regiontable.getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
         for(index=0; index < regioninfo.length; index++)	//create the family info cells
         {
-        	cell = document.createElement("td");
-        	cell.appendChild(document.createTextNode(regioninfo[index]));
-        	cell.style.width = cellwidth[index];
-        	cell.style.textAlign = cellAlign[index];
-        	row.appendChild(cell);
+        		cell = document.createElement("td");
+        		cell.appendChild(document.createTextNode(regioninfo[index]));
+        		cell.style.width = cellwidth[index];
+        		cell.style.textAlign = cellAlign[index];
+        		row.appendChild(cell);
         }
         
         btn = document.createElement("button");
@@ -207,10 +209,11 @@
         }
 
         .dircol { width: 40px; }
-        .namecol { width: 320px; }
+        .namecol { width: 240px; }
         .zipcodecol { width: 96px}
         .regioncol { width: 64px; }
-        .add { width: 80px; }
+        .add { width: 64px; }
+        .schoolcol { width: 160px; }
         
         /* only styling below here */
         table { border-collapse: collapse; }       
@@ -355,6 +358,32 @@
 		    <option value="Y">Y</option>
 		    <option value="X">Z</option>
 		  </select>
+		  <label for='school'>School:</label>
+	  	  <select id="school" title="Elementary School" onchange="filterChanged()">
+	  	  	<option value="Any">Any</option>
+	  		<option value="J">Brookfield</option>
+	  		<option value="A">Bull Run</option>
+	  		<option value="B">Centre Ridge</option>
+	  		<option value="C">Centreville</option>
+	  		<option value="F">Cub Run</option>
+	  		<option value="H">Deer Park</option>
+	  		<option value="Q">Floris</option>
+	  		<option value="K">Greenbriar East</option>
+	  		<option value="L">Greenbriar West</option>
+	  		<option value="M">Lees Corner</option>
+	  		<option value="I">LondonTowne</option>
+	  		<option value="R">Lutie Lewis Coates</option>
+	  		<option value="S">McNair</option>
+	  		<option value="T">Navy</option>
+	  		<option value="P">Oak Hill</option>
+	  		<option value="N">Poplar Tree</option>
+	  		<option value="D">Powell</option>
+	  		<option value="E">Union Mill</option>
+	  		<option value="G">Virginia Run</option>
+	  		<option value="O">Willow Springs</option>
+	  		<option value="X">Missing</option>
+	  		<option value="Z">None of the Above</option>
+		  </select>
 		  <button id="reset" onclick="onResetFilters()">Reset</button>
 		</span>
 		<span class='floatright'>
@@ -366,14 +395,15 @@
 	<table id="regiontable">
       <thead>
         <tr>
-       		<th class='dircol'>Dir</th>
-       		<th class='namecol'>Street Name</th>
-       		<th class='add'>Type</th>
+       	<th class='dircol'>Dir</th>
+       	<th class='namecol'>Street Name</th>
+       	<th class='add'>Type</th>
         	<th class='add'>Post Dir</th>
         	<th class='zipcodecol'>Zip Code</th>
         	<th class='regioncol'>Region</th>
         	<th class='add'>Low #</th>
         	<th class='add'>High #</th>
+        	<th class='schoolcol'>School</th>
         	<th class='add'>Action</th>
         </tr>
       </thead>
