@@ -466,7 +466,7 @@ public class ServerRegionDB extends ServerPermanentDB
 	String[] getExportHeader()
 	{
 		return new String[] {"ID","Street Name","Street Type","Region","School Region",
-							"School","SchoolAddress?","Street Dir","Street Post Dir",
+							"School","Location","Street Dir","Street Post Dir",
 							"Address Low","Address High","Odd Even","Zip Code"};
 	}
 	

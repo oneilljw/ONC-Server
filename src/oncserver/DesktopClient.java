@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.TimeZone;
 
-import ourneighborschild.Address;
-import ourneighborschild.AddressValidation;
 import ourneighborschild.Login;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
@@ -33,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 5.31f;
+	private static final float MINIMUM_CLIENT_VERSION = 5.32f;
 	
 	private int id;
 	private String version;
