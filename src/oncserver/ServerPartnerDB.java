@@ -274,10 +274,10 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		if(serverRegionDB != null)
 		{
-			reg = ServerRegionDB.searchForRegionMatch(new Address(updatedOrg.getHouseNum(),
+			RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(new Address(updatedOrg.getHouseNum(),
 											updatedOrg.getStreet(), "",  updatedOrg.getCity(),
 											 updatedOrg.getZipCode()));
-			updatedOrg.setRegion(reg);
+			updatedOrg.setRegion(rSC.getRegion());
 		}
 		
 		return reg;
@@ -308,9 +308,13 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		}
 		
 		if(serverRegionDB != null)
-			addedPartner.setRegion(ServerRegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
-															addedPartner.getStreet(), "", addedPartner.getCity(),
-															addedPartner.getZipCode())));
+		{
+			RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
+					addedPartner.getStreet(), "", addedPartner.getCity(),
+					addedPartner.getZipCode()));
+			
+			addedPartner.setRegion(rSC.getRegion());
+		}
 		else
 			addedPartner.setRegion(0);
 		
@@ -341,9 +345,13 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		}
 		
 		if(serverRegionDB != null)
-			addedPartner.setRegion(ServerRegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
-															addedPartner.getStreet(), "", addedPartner.getCity(),
-															addedPartner.getZipCode())));
+		{
+			RegionAndSchoolCode rSC = (ServerRegionDB.searchForRegionMatch(new Address(addedPartner.getHouseNum(), 
+					addedPartner.getStreet(), "", addedPartner.getCity(),
+					addedPartner.getZipCode())));
+		
+			addedPartner.setRegion(rSC.getRegion());
+		}
 		else
 			addedPartner.setRegion(0);
 		

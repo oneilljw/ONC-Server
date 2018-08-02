@@ -10,8 +10,10 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.swing.JOptionPane;
@@ -44,7 +46,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 43;
+	private static final int FAMILYDB_HEADER_LENGTH = 44;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	
@@ -58,7 +60,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static List<FamilyDBYear> familyDB;
 	private static ServerFamilyDB instance = null;
 	private static int highestRefNum;
-//	private static List<int[]> oncNumRanges;
+	private static Map<String, ONCNumRange> oncnumRangeMap;
 	
 	private static ServerFamilyHistoryDB familyHistoryDB;
 	private static ServerUserDB userDB;
@@ -67,15 +69,35 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	
 	private static ClientManager clientMgr;
 	
-	//THIS IS A TEMPORARY HACK FOR 2017 - NEED TO HAVE ONC NUM RANGES GENERATED AUTOMATICALLY
-	int[] oncnumRegionRanges = {1599,100,125,140,240,465,475,525,615,765,805,835,840,845,850,
-								855,1000,1030,1170,1175,1180,1190,1220,1245,1260,1359,1360};
-	
 	private ServerFamilyDB() throws FileNotFoundException, IOException
 	{
-		//create the family data bases for the years of ONC Server operation starting with 2012
-//		oncNumRanges = new ArrayList<int[]>();
-		
+		//create the ONC number range map. The map key is the school code for each school in ONC's
+		//3 school pyramids. The start and end range values are based on an analysis of number 
+		//of families referred from 2015 - 2018
+		//THIS IS A TEMPORARY HACK FOR 2018 - NEED TO HAVE ONC NUM RANGES GENERATED AUTOMATICALLY
+		oncnumRangeMap = new HashMap<String, ONCNumRange>();
+		oncnumRangeMap.put("A", new ONCNumRange(100, 250));
+		oncnumRangeMap.put("B", new ONCNumRange(251, 426));
+		oncnumRangeMap.put("C", new ONCNumRange(427, 477));
+		oncnumRangeMap.put("D", new ONCNumRange(478, 528));
+		oncnumRangeMap.put("E", new ONCNumRange(529, 539));
+		oncnumRangeMap.put("F", new ONCNumRange(540, 590));
+		oncnumRangeMap.put("G", new ONCNumRange(591, 741));
+		oncnumRangeMap.put("H", new ONCNumRange(742, 792));
+		oncnumRangeMap.put("I", new ONCNumRange(793, 1018));
+		oncnumRangeMap.put("J", new ONCNumRange(1019, 1169));
+		oncnumRangeMap.put("K", new ONCNumRange(1170, 1195));
+		oncnumRangeMap.put("L", new ONCNumRange(1196, 1221));
+		oncnumRangeMap.put("M", new ONCNumRange(1222, 1247));
+		oncnumRangeMap.put("N", new ONCNumRange(1248, 1268));
+		oncnumRangeMap.put("O", new ONCNumRange(1269, 1274));
+		oncnumRangeMap.put("P", new ONCNumRange(1275, 1280));
+		oncnumRangeMap.put("Q", new ONCNumRange(1281, 1286));
+		oncnumRangeMap.put("R", new ONCNumRange(1287, 1292));
+		oncnumRangeMap.put("S", new ONCNumRange(1293, 1299));
+		oncnumRangeMap.put("Y", new ONCNumRange(1300, 1399));
+		oncnumRangeMap.put("Z", new ONCNumRange(1400, 1499));
+	
 		familyDB = new ArrayList<FamilyDBYear>();
 		
 		//populate the family data base for the last TOTAL_YEARS from persistent store
@@ -507,7 +529,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				  !currFam.getZipCode().equals(updatedFamily.getZipCode()))
 			{
 //				System.out.println(String.format("FamilyDB - update: region change, old region is %d", currFam.getRegion()));
-				updateRegion(updatedFamily);	
+				updateRegionAndSchoolCode(updatedFamily);	
 			}
 			
 			//check if the update is requesting automatic assignment of an ONC family number
@@ -516,7 +538,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			if(bAutoAssign && !updatedFamily.getONCNum().equals("DEL") && updatedFamily.getRegion() != 0 &&
 						  !Character.isDigit(updatedFamily.getONCNum().charAt(0)))
 			{
-				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getRegion()));
+				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getSchoolCode()));
 			}
 			
 			//check to see if either status is changing, if so, add a history item
@@ -558,7 +580,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				  !currFam.getZipCode().equals(updatedFamily.getZipCode()))
 			{
 //				System.out.println(String.format("FamilyDB - update: region change, old region is %d", currFam.getRegion()));
-				updateRegion(updatedFamily);	
+				updateRegionAndSchoolCode(updatedFamily);	
 			}
 			
 			//check if the update is requesting automatic assignment of an ONC family number
@@ -567,7 +589,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			if(bAutoAssign && !updatedFamily.getONCNum().equals("DEL") && updatedFamily.getRegion() != 0 &&
 						  !Character.isDigit(updatedFamily.getONCNum().charAt(0)))
 			{
-				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getRegion()));
+				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getSchoolCode()));
 			}
 			
 			//add a history item so change can be tracked. Changed by is the web user who made the change
@@ -586,32 +608,36 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	int updateRegion(ONCFamily updatedFamily)
+	RegionAndSchoolCode updateRegionAndSchoolCode(ONCFamily updatedFamily)
 	{
-		int reg = 0; //initialize return value to no region found
+		RegionAndSchoolCode rSC = new RegionAndSchoolCode(0, "Z");
 		
 		//address is new or has changed, update the region
 		ServerRegionDB serverRegionDB = null;
-		try {
+		try 
+		{
 			serverRegionDB = ServerRegionDB.getInstance(null);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		}
+		catch (FileNotFoundException e) 
+		{
+			return new RegionAndSchoolCode(0, "Z");
+		} 
+		catch (IOException e) 
+		{
+			return new RegionAndSchoolCode(0, "Z");
 		}
 		
 		if(serverRegionDB != null)
 		{
-			reg = ServerRegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
+			rSC = ServerRegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
 											updatedFamily.getStreet(), updatedFamily.getUnit(),
 											  updatedFamily.getCity(), updatedFamily.getZipCode()));
 			
-			updatedFamily.setRegion(reg);
+			updatedFamily.setRegion(rSC.getRegion());
+			updatedFamily.setSchoolCode(rSC.getSchoolCode());
 		}
 		
-		return reg;
+		return rSC;
 	}
 	
 	@Override
@@ -634,13 +660,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//a duplicate family. 
 			
 			
-			//set region for family
-			int region = updateRegion(addedFam);
-			addedFam.setRegion(region);
+			//set region and school code for family
+			updateRegionAndSchoolCode(addedFam);
 		
 			//create the ONC number
-			String oncNum = generateONCNumber(year, region);
-			addedFam.setONCNum(oncNum);
+			addedFam.setONCNum(generateONCNumber(year, addedFam.getSchoolCode()));
 			
 			//set the new ID for the added family
 			addedFam.setID(fDBYear.getNextID());
@@ -762,13 +786,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//get the family data base for the correct year
 			FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 			
-			//set region for family
-			int region = updateRegion(addedFam);
-			addedFam.setRegion(region);
+			//set region and school code for family
+			updateRegionAndSchoolCode(addedFam);
 			
 			//create the ONC number
-			String oncNum = generateONCNumber(year, region);
-			addedFam.setONCNum(oncNum);
+			addedFam.setONCNum(generateONCNumber(year, addedFam.getSchoolCode()));
 			
 			//set the new ID for the added family
 			int famID = fDBYear.getNextID();
@@ -1201,16 +1223,17 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	{
 		FamilyDBYear famDBYear = familyDB.get(year - BASE_YEAR);
 
-		Calendar date_changed = Calendar.getInstance();	//No date_changed in ONCFamily yet
-		if(!nextLine[6].isEmpty())
-			date_changed.setTimeInMillis(Long.parseLong(nextLine[6]));
+//		Calendar date_changed = Calendar.getInstance();	//No date_changed in ONCFamily yet
+//		if(!nextLine[6].isEmpty())
+//			date_changed.setTimeInMillis(Long.parseLong(nextLine[6]));
 			
 		famDBYear.add(new ONCFamily(nextLine));
 	}
 	
 	void save(int year)
 	{
-		String[] header = {"ONC ID", "ONCNum", "Region", "ODB Family #", "Batch #", "DNS Code", "Family Status", "Delivery Status",
+		String[] header = {"ONC ID", "ONCNum", "Region", "School Code", "ODB Family #", "Batch #", 
+				"DNS Code", "Family Status", "Delivery Status",
 				"Speak English?","Language if No", "Caller", "Notes", "Delivery Instructions",
 				"Client Family", "First Name", "Last Name", "House #", "Street", "Unit #", "City", "Zip Code",
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
@@ -1332,7 +1355,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	
 	 /******************************************************************************************
      * This method automatically generates an ONC Number for family that does not have an ONC
-     * number already assigned. The method uses the integer region number passed (after checking
+     * number already assigned. The method uses the school code string passed (after checking
      * to see if it is in the valid range) and indexes into the oncnumRegionRanges array to get
      * the starting ONC number for the region. It then queries the family array to see if that
      * number is already in use. If it's in use, it goes to the next number to check again. It 
@@ -1342,52 +1365,33 @@ public class ServerFamilyDB extends ServerSeasonalDB
      * acknowledges the error, it will return string "OOR" for out of range.
      * If the region isn't valid, it will complain and then return the string "RNV" for region
      * not valid 
-     * @param region
+     * @param schoolCode - String
      * @return
      ********************************************************************************************/
-    String generateONCNumber(int year, int region)
+    String generateONCNumber(int year, String schoolCode)
     {
-    	String oncNum = null;
-    	//Verify region number is valid. If it's not return an error
-    	ServerRegionDB serverRegionDB = null;
-		try {
-			serverRegionDB = ServerRegionDB.getInstance(null);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	//assume RegionDB already created
-    	 
-    	if(region == 0)		//Don't assign numbers without known valid region addresses
-    		oncNum = "NNA";
-    	else if(serverRegionDB != null && serverRegionDB.isRegionValid(region))
-    	{
-    		int start = oncnumRegionRanges[region];
-    		int	end = oncnumRegionRanges[(region+1) % serverRegionDB.getNumberOfRegions()];
-    		
-    		String searchstring = Integer.toString(start);
-    		while(start < end && searchForONCNumber(year, searchstring) != -1)
-    			searchstring = Integer.toString(++start);
-    		
-    		if(start==end)
-    		{
-    			oncNum = "OOR";		//Not enough size in range
-//    			System.out.println(String.format("ERROR: Too many families in region %d," + 
-//    					", can't automatically assign an ONC Nubmer", region));
-    		}
-    		else
-    			oncNum = Integer.toString(start);	
-    	}
-    	else
-    	{
-//   		System.out.println(String.format("ERROR: ONC Region Invalid: Region %d is not in " +
-//					"the vaild range", region));
-    		oncNum = "RNV";
-    	}	
+    		String oncNum = null;
     	
-    	return oncNum;
+		if(oncnumRangeMap.containsKey(schoolCode))
+		{
+			int start = oncnumRangeMap.get(schoolCode).getStart();
+			int	end = oncnumRangeMap.get(schoolCode).getEnd();
+			
+			String searchstring = Integer.toString(start);
+			while(start < end && searchForONCNumber(year, searchstring) != -1)
+				searchstring = Integer.toString(++start);
+			
+			if(start==end)
+			{
+				oncNum = "OOR";		//Not enough size in range
+			}
+			else
+				oncNum = Integer.toString(start);
+		}
+		else
+			oncNum = "NNA";
+		
+    		return oncNum;
     }
     
     /***
@@ -1872,16 +1876,32 @@ public class ServerFamilyDB extends ServerSeasonalDB
     
     private class NewFamStatus
     {
-    	private int famStatus;
-    	private int giftStatus;
+    		private int famStatus;
+    		private int giftStatus;
     	
-    	NewFamStatus(int famStatus, int giftStatus)
-    	{
-    		this.famStatus = famStatus;
-    		this.giftStatus = giftStatus;
-    	}
+    		NewFamStatus(int famStatus, int giftStatus)
+    		{
+    			this.famStatus = famStatus;
+    			this.giftStatus = giftStatus;
+    		}
     	
-    	String getNewFamStatus() { return Integer.toString(famStatus); }
-    	String getNewGiftStatus() { return Integer.toString(giftStatus); }
+    		String getNewFamStatus() { return Integer.toString(famStatus); }
+    		String getNewGiftStatus() { return Integer.toString(giftStatus); }
+    }
+    
+    private class ONCNumRange
+    {
+    		int start;
+    		int end;
+    		
+    		ONCNumRange(int start, int end)
+    		{
+    			this.start = start;
+    			this.end = end;
+    		}
+    		
+    		//getters
+    		int getStart() { return start; }
+    		int getEnd() { return end; }
     }
 }

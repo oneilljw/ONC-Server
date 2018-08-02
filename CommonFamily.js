@@ -197,8 +197,11 @@ function cityChanged(elementName)
 		zipElement.options[2] = new Option('22031', '22031');
 		zipElement.options[3] = new Option('22032', '22032');
 		zipElement.options[4] = new Option('22033', '22033');
-		zipElement.options[5] = new Option('22037', '22037');
-		zipElement.options[6] = new Option('22039', '22039');
+		zipElement.options[5] = new Option('22034', '22034');
+		zipElement.options[6] = new Option('22035', '22035');
+		zipElement.options[7] = new Option('22036', '22036');
+		zipElement.options[8] = new Option('22037', '22037');
+		zipElement.options[9] = new Option('22038', '22038');
 	}
 	else if(cityElement.value === 'Fairfax Station')
 	{

@@ -34,8 +34,8 @@
   		     	updateAdultTable(true);
   		     	
   		     	//now that inputs are set for family, enable the address input listeners
-  		     	document.getElementById('city').setAttribute('onchange','onCityChanged("city")');
-  		     	document.getElementById('delcity').setAttribute('onchange','onCityChanged("delcity")');
+  		     	document.getElementById('city').setAttribute('onchange','cityChanged("city")');
+  		     	document.getElementById('delcity').setAttribute('onchange','cityChanged("delcity")');
  
   		     	//get meal and update if family meal id > 1
   		     	if(family.mealID > -1)

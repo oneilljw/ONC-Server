@@ -64,7 +64,6 @@ public class ServerRegionDB extends ServerPermanentDB
 		schoolList.add(new School("Q", new Address("2708", "", "", "Centreville", "Road", "", "", "Herndon", "20171"), "Floris"));
 		schoolList.add(new School("R", new Address("2480", "", "", "River Birch", "Drive", "", "", "Herndon", "20171"), "Lutie Lewis Coates"));
 		schoolList.add(new School("S", new Address("2499", "", "", "Thomas Jefferson", "Drive", "", "", "Herndon", "20171"), "McNair"));
-		schoolList.add(new School("T", new Address("3500", "", "", "West Ox", "Road", "", "", "Fairfax", "22033"), "Navy"));
 		
 		regionAL = new ArrayList<Region>();
 
@@ -149,7 +148,10 @@ public class ServerRegionDB extends ServerPermanentDB
 		if(searchAddress.getStreetNum().isEmpty() || searchAddress.getStreetName().isEmpty())
 			return "NO_MATCH" + Integer.toString(0);
 		else	
-			return "MATCH" + Integer.toString(searchForRegionMatch(searchAddress));		
+		{
+			RegionAndSchoolCode rSC = searchForRegionMatch(searchAddress);
+			return "MATCH" + Integer.toString(rSC.getRegion());
+		}
 	}
 	
 	static HtmlResponse getAddressesJSONP(String zipCode, String callbackFunction)
@@ -374,14 +376,14 @@ public class ServerRegionDB extends ServerPermanentDB
 		return output;
 	}
 */	
-	static int searchForRegionMatch(Address searchAddress)
+	static RegionAndSchoolCode searchForRegionMatch(Address searchAddress)
 	{	
 		//determine which part of the region list to search based on street name. Street names that start
 		//with a digit are first in the region list. searchAddres[2] is the street name
 		int searchIndex, endIndex;
 		
 		if(searchAddress.getStreetName().isEmpty())
-			return 0;	//if no street name, can't find a region.
+			return new RegionAndSchoolCode(0, "Z");	//if no street name, can't find a region or school code
 		else
 		{
 			if(Character.isDigit(searchAddress.getStreetName().charAt(0)))
@@ -399,14 +401,18 @@ public class ServerRegionDB extends ServerPermanentDB
 			while(searchIndex < endIndex && !regionAL.get(searchIndex).isRegionMatch(searchAddress))
 				searchIndex++;
 		
-			//If match not found return region = 0, else return region
-			return searchIndex == endIndex ? 0 : getRegionNumber(regionAL.get(searchIndex).getRegion());
+			//If match not found return region = 0, else return region and school code
+			if(searchIndex == endIndex)
+				return new RegionAndSchoolCode(0, "Z");
+			else
+				return new RegionAndSchoolCode(getRegionNumber(regionAL.get(searchIndex).getRegion()),
+												regionAL.get(searchIndex).getSchoolRegion());
 		}
 	}
 	
 	static boolean isAddressValid(Address chkAddress)
 	{
-		return searchForRegionMatch(chkAddress) > 0;		
+		return searchForRegionMatch(chkAddress).getRegion() > 0;		
 	}
 	
 	static int getRegionNumber(String r) //Returns 0 if r is null or empty, number corresponding to letter otherwise
