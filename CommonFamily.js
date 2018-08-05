@@ -33,25 +33,25 @@ function addChildTableRow(cnum, child, bAction)
 	
     for(index=0; index < childinfo.length; index++)	//create the child info cells
     {
-    	cell= document.createElement("td");
+    		cell= document.createElement("td");
 	    content= document.createElement("input");
 	    	content.type="text";
 	    	content.name=fieldname[index] + cnum;
-    	content.value = childinfo[index];
-    	content.setAttribute("size", fieldsize[index]);
+	    	content.value = childinfo[index];
+	    	content.setAttribute("size", fieldsize[index]);
     		
-    	cell.appendChild(content);
-    	row.appendChild(cell);
+	    	cell.appendChild(content);
+	    	row.appendChild(cell);
     }
     
     if(bAction === true)
     {
-    	btn = document.createElement("button");
-    	btn.value=cnum;
-    	btn.type="button";
-    	btn.innerHTML = "Remove";
-    	btn.onclick=function() {removeChild(cnum);};
-    	row.appendChild(btn);
+    		btn = document.createElement("button");
+    		btn.value=cnum;
+    		btn.type="button";
+    		btn.innerHTML = "Remove";
+    		btn.onclick=function() {removeChild(cnum);};
+    		row.appendChild(btn);
     }
     
     tabBody.appendChild(row);
@@ -561,20 +561,9 @@ function onSubmit()
 		      					
 	      								//if phone #'s are ok and both addresses are valid, it's ok to submit
 	      								document.getElementById("familyform").submit();
-	      							}	
-	      							else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-	      							{
-	      								changeAddressBackground(hohAddrElement, errorColor);
-	      								errorElement.textContent = "Submission Error: HoH address incomplete or does not exist";
-	      								document.getElementById('badfammssg').textContent = addresponse.errMssg;
-	      								window.location=document.getElementById('badfamanchor').href;
 	      							}
-	      							else if(addresponse.errorCode === 2)
-	      							{
-	      								changeAddressBackground(hohAddrElement, '#FFFFFF');
-	      								changeAddressBackground(hohUnitElement, errorColor);
-	      								errorElement.textContent = "Submission Error: HoH address unit error";
-	      							}
+	      							else
+	      								processAddressError(addresponse, hohAddrElement, hohUnitElement, errorElement);
 	      						});
 	      					}
 	      					else
@@ -585,20 +574,9 @@ function onSubmit()
 								window.location=document.getElementById('badfamanchor').href;
 	      					}
 	      				}	
-	      			}	
-	      			else if(addresponse.errorCode === 1 || addresponse.errorCode === 3)
-	      			{
-	      				changeAddressBackground(delAddrElement, errorColor);
-	      				errorElement.textContent = "Submission Error: Delivery address incomplete or does not exist";
-	      				document.getElementById('badfammssg').textContent = addresponse.errMssg;
-	      				window.location=document.getElementById('badfamanchor').href;
 	      			}
-	      			else if(addresponse.errorCode === 2)
-	      			{
-	      				changeAddressBackground(delAddrElement, '#FFFFFF');
-	      				changeAddressBackground(delUnitElement, errorColor);
-	      				errorElement.textContent = "Submission Error: Delivery address unit error";
-	      			}
+	      			else
+	      				processAddressError(addresponse, delAddrElement, delUnitElement, errorElement);
 	      		});
 			}
 			else
@@ -617,6 +595,38 @@ function onSubmit()
 			window.location=document.getElementById('badfamanchor').href;
 		}	
 	}
+}
+
+function processAddressError(addresponse, addrElement, addrUnitElement, errorElement)
+{
+	var addrType;
+	if(addrUnitElement === document.getElementById('delunit'))
+		addrType = 'Delivery';
+	else
+		addrType = 'HOH';
+	
+	if(addresponse.errorCode === 1 )	//address was not found
+	{
+		changeAddressBackground(addrElement, errorColor);
+		errorElement.textContent = "Submission Error: " + addrType + " address incomplete or does not exist";
+		document.getElementById('badfammssg').textContent = addresponse.errMssg;
+		window.location=document.getElementById('badfamanchor').href;
+	}
+	else if(addresponse.errorCode === 2)	//address found, missing unit
+	{
+		changeAddressBackground(addrElement, '#FFFFFF');
+		changeAddressBackground(addrUnitElement, errorColor);
+		errorElement.textContent = "Submission Error: Delivery address unit error";
+		document.getElementById('badfammssg').textContent = addresponse.errMssg;
+		window.location=document.getElementById('badfamanchor').href;
+	}
+	else if(addresponse.errorCode === 3)	//address and unit good, not in serving area
+	{
+		changeAddressBackground(addrElement, '#FFFFFF');
+		errorElement.textContent = "Error: Address not served by ONC";
+		document.getElementById('badfammssg').textContent = addresponse.errMssg;
+		window.location=document.getElementById('badfamanchor').href;
+	}	
 }
 
 function onZipChanged(zipelement)

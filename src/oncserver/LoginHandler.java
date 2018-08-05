@@ -357,7 +357,7 @@ public class LoginHandler extends ONCWebpageHandler
 	    				userMssg = "You last visited " + sdf.format(lastLogin.getTime());
 	    			}
 
-	    			response = new HtmlResponse(getHomePageHTML(wc, userMssg), HttpCode.Ok, getSIDCookie(wc));
+	    			response = new HtmlResponse(getHomePageHTML(wc, userMssg, false), HttpCode.Ok, getSIDCookie(wc));
 	    		}
 	    	}   	
 		

@@ -205,7 +205,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		return map;
 	}
 	
-	String getHomePageHTML(WebClient wc, String message)
+	String getHomePageHTML(WebClient wc, String message, boolean bShowSuccessDialog)
 	{
 		//determine which home page to send to client based on UserPermission
 		if(wc.getWebUser().getPermission() == UserPermission.Sys_Admin)
@@ -215,10 +215,10 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
 			return getPartnerTableWebpage(wc, message);	//send the partner table page
 		else	 
-			return getFamilyStatusWebpage(wc, message);	//send the famiy status page
+			return getFamilyStatusWebpage(wc, message, bShowSuccessDialog); //send the family status page
 	}
 	
-	String getFamilyStatusWebpage(WebClient wc, String message)
+	String getFamilyStatusWebpage(WebClient wc, String message, boolean bShowSuccessDialog)
 	{
 		String response = webpageMap.get("familystatus");
 		response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
@@ -227,6 +227,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
 		response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+		response = response.replace("SHOW_SUCCESS_DIALOG", bShowSuccessDialog ? "true" : "false");
+		String successMssg = String.format("%s", message);
+		response = response.replace("SUCCESS_DIALOG_MESSAGE", bShowSuccessDialog ? successMssg : "");
 		
 		return response;
 	}

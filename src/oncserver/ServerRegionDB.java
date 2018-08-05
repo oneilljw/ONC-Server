@@ -376,14 +376,23 @@ public class ServerRegionDB extends ServerPermanentDB
 		return output;
 	}
 */	
+	/***
+	 * Searches the region DB for a match to the search address. Possible outcomes are:
+	 * If the address is found, therefore it's a valid Fairfax County address for ONC. In that case 
+	 * the region number and school code are returned. The region still may be 26 ("Z") and
+	 * the school code might be that as well.
+	 * If the address is not found. In that case region 0 and school code Z are returned.
+	 * @param searchAddress
+	 * @return
+	 */
 	static RegionAndSchoolCode searchForRegionMatch(Address searchAddress)
 	{	
 		//determine which part of the region list to search based on street name. Street names that start
-		//with a digit are first in the region list. searchAddres[2] is the street name
+		//with a digit are first in the region list.
 		int searchIndex, endIndex;
 		
 		if(searchAddress.getStreetName().isEmpty())
-			return new RegionAndSchoolCode(0, "Z");	//if no street name, can't find a region or school code
+			return new RegionAndSchoolCode(0, "Z", 1);	//if no street name, can't find a region or school code
 		else
 		{
 			if(Character.isDigit(searchAddress.getStreetName().charAt(0)))
@@ -403,10 +412,10 @@ public class ServerRegionDB extends ServerPermanentDB
 		
 			//If match not found return region = 0, else return region and school code
 			if(searchIndex == endIndex)
-				return new RegionAndSchoolCode(0, "Z");
+				return new RegionAndSchoolCode(0, "Z", 1);
 			else
 				return new RegionAndSchoolCode(getRegionNumber(regionAL.get(searchIndex).getRegion()),
-												regionAL.get(searchIndex).getSchoolRegion());
+												regionAL.get(searchIndex).getSchoolRegion(), 1);
 		}
 	}
 	

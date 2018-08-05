@@ -10,6 +10,7 @@
   <script>
 	var pyFamJson = [];
 	var cyFamJson = [];
+	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;
 	
 	sessionStorage.setItem('thanksgivingCutoff', "THANKSGIVING_CUTOFF");
 	sessionStorage.setItem('decemberCutoff', "DECEMBER_CUTOFF");
@@ -62,6 +63,10 @@
     			var groupcb = document.getElementById('pygroups');
     			var agentcb = document.getElementById('pyagents');
     			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('prioryear'), groupcb, agentcb);
+    			
+    			//show the success dialog if this page loaded due to a successful referral or update
+    		  	if(bShowSuccessDialog)
+    	  			window.location=document.getElementById('successanchor').href;
     		});
     	
     	
@@ -97,6 +102,8 @@
         			window.location=document.getElementById('editprofileanchor').href;
             }
     		});
+        
+     	
     });
     
     function getGroupsAgentsAndFamiliesFromServer(year, groupcb, agentcb)
@@ -677,6 +684,7 @@
 <body>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <a href="#successdlg" id="successanchor" style="visibility: hidden">Success</a>
   <header>
     <div id="topbar" class="topbar">
       <img src="onclogo" height="55" width="75"/>
@@ -982,6 +990,17 @@
     	</div> 
 	</div>
   </div>
+<!-- Success Dialog -->
+  <div id="successdlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65">
+		  <span id="successfamheader">Successful Submittal</span>
+		</div>
+		<p id='successfammssg'>SUCCESS_DIALOG_MESSAGE</p>
+	</div>
+  </div>  
 <!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
 	<div id='inner'>

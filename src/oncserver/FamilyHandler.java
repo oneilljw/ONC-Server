@@ -137,7 +137,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			WebClient wc;
     			
     			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    				response = getFamilyStatusWebpage(wc, "");
+    				response = getFamilyStatusWebpage(wc, "", false);
     			else
     				response = invalidTokenReceived();
     		
@@ -164,7 +164,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			{
     				//process referral and send family status web page back to client
     				ResponseCode frc = processFamilyReferral(wc, params);
-    				response = getFamilyStatusWebpage(wc, frc.getMessage());
+    				response = getFamilyStatusWebpage(wc, frc.getMessage(), true);
     			}
     			else
     				response = invalidTokenReceived();
@@ -222,7 +222,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			{
     				//submission processed, send the home page back to the user
     				ResponseCode frc = processFamilyUpdate(wc, params);
-    				response = getHomePageHTML(wc, frc.getMessage());
+    				response = getFamilyStatusWebpage(wc, frc.getMessage(), true);
     			}
     			else
     				response = invalidTokenReceived();

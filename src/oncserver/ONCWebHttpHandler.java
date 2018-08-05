@@ -44,7 +44,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     		{
     			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
-    				String response = getHomePageHTML(wc, "");
+    				String response = getHomePageHTML(wc, "", false);
     				sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     			}
     			else
@@ -439,7 +439,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     				if(retCode == 0)
     				{
     					//submission successful, send the family table page back to the user
-    					response = getHomePageHTML(wc, "Your password change was successful!");
+    					response = getHomePageHTML(wc, "Your password change was successful!", false);
     				}
     				else if(retCode == -1)
     				{
@@ -504,13 +504,6 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		
 		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode"};
 		Map<String, String> addressMap = createMap(params, addressKeys);
-		Map<Integer, String> errMssgMap = new HashMap<Integer, String>();
-		errMssgMap.put(1, "ERROR: Address is not a residence in Fairfax County, VA. Please provide a "
-									+ "valid address.");
-		errMssgMap.put(2, "ERROR: Address has multiple residences, you must provide an apartment or unit number.");
-		errMssgMap.put(4, "ERROR: Address is not served by ONC. Either refer this family to"
-				+ "a service provider serving this address or, if your school whishes to assume"
-				+ "responsiblity for gift delivery, enter the address of your school as the delivery address.");
 		
 //		for(String key:addressMap.keySet())
 //			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));
@@ -519,31 +512,44 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 								addressMap.get("unit"), addressMap.get("city"), addressMap.get("zipcode"));
 		
 		//diagnostic print
-//		System.out.println(chkAddress.getPrintableAddress());
-
-		boolean bAddressValid  = ServerRegionDB.isAddressValid(chkAddress);
-		int errorCode = bAddressValid ? 0 : 1;
+//		System.out.println(String.format("WebHdlr.verAdd: chkAddress= %s", chkAddress.getPrintableAddress()));
 		
-		//check that a unit might be missing. If a unit is already provided, no need to perform the check.
-		boolean bUnitMissing = addressMap.get("unit").trim().isEmpty() && ApartmentDB.isAddressAnApartment(chkAddress);
-		
-		if(bUnitMissing)
-			errorCode += 2;
-		
-//		System.out.println("HttpHandler.verifyAddress: ErrorCode: "+ errorCode);		
-		boolean bAddressGood = bAddressValid && !bUnitMissing;
-		
+		RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(chkAddress);
+		//First, check to see if the address is in the database. If it is, check to see if it requires
+		//an apartment. it might be missing. If the apartment check passes, then 
+		//check the school code. If the code is Y, then the school is in the ONC served zip codes
+		//but is not in one of the three pyramids. If the code is Z, then the school is not in an onc
+		//zipcode. If the code is A thru S, then all the checks pass.
 		Gson gson = new Gson();
 		String json;
-		if(errorCode == 0)
-			json = gson.toJson(new AddressValidation(bAddressGood, false, errorCode), AddressValidation.class);
-		else if(errorCode == 1 || errorCode == 3)
-			json = gson.toJson(new AddressValidation(bAddressGood, false, errorCode, errMssgMap.get(1)), AddressValidation.class);
-		else if(errorCode == 2)
-			json = gson.toJson(new AddressValidation(bAddressGood, false, errorCode, errMssgMap.get(2)), AddressValidation.class);
-		else
-			json = gson.toJson(new AddressValidation(bAddressGood, false, errorCode, errMssgMap.get(4)), AddressValidation.class);
-		
+		String errMssg;
+		if(rSC.getRegion() == 0)	//address is not in the database
+		{	
+			errMssg = "ERROR: Address is not a residence in Fairfax County, VA. Please provide a valid address.";
+			json = gson.toJson(new AddressValidation(false, 1, errMssg), AddressValidation.class);
+		}
+		else if(addressMap.get("unit").trim().isEmpty() && ApartmentDB.isAddressAnApartment(chkAddress))
+		{	
+			errMssg = "ERROR: Address has multiple residences, you must provide an apartment or unit number.";
+			json = gson.toJson(new AddressValidation(false, 2, errMssg), AddressValidation.class);
+		}
+		else if(rSC.getSchoolCode().equals("Z")) //address is in Fairfax county but not in one of ONC's zipcodes
+		{
+			errMssg = "ERROR: Address is valid, but is outside ONC's served zip codes. Either refer this family to "
+					+ "a service provider serving this address or, if your school wishes to assume "
+					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.";
+			json = gson.toJson(new AddressValidation(false, 3, errMssg), AddressValidation.class);
+		}
+		else if(rSC.getSchoolCode().equals("Y"))//address is in ONC served zipcode but not in one of the three pyramids
+		{	
+			errMssg = "ERROR: Address is valid, but is outside ONC's served school pyramids."
+					+ " Either refer this family to a service provider serving this address or, if your school wishes to assume "
+					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.";
+			json = gson.toJson(new AddressValidation(false, 3, errMssg), AddressValidation.class);
+		}
+		else	//address is good to accept
+			json = gson.toJson(new AddressValidation(false, 0), AddressValidation.class);	
+
 		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
 	}
 	

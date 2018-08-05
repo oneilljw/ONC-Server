@@ -609,36 +609,18 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	}
 	
 	RegionAndSchoolCode updateRegionAndSchoolCode(ONCFamily updatedFamily)
-	{
-		RegionAndSchoolCode rSC = new RegionAndSchoolCode(0, "Z");
-		
-		//address is new or has changed, update the region
-		ServerRegionDB serverRegionDB = null;
-		try 
-		{
-			serverRegionDB = ServerRegionDB.getInstance(null);
-		}
-		catch (FileNotFoundException e) 
-		{
-			return new RegionAndSchoolCode(0, "Z");
-		} 
-		catch (IOException e) 
-		{
-			return new RegionAndSchoolCode(0, "Z");
-		}
-		
-		if(serverRegionDB != null)
-		{
-			rSC = ServerRegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
-											updatedFamily.getStreet(), updatedFamily.getUnit(),
-											  updatedFamily.getCity(), updatedFamily.getZipCode()));
+	{		
+		//address is new or has changed, set or update the region and school code
+		RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
+					updatedFamily.getStreet(), updatedFamily.getUnit(),
+					  updatedFamily.getCity(), updatedFamily.getZipCode()));
+
+		updatedFamily.setRegion(rSC.getRegion());
+		updatedFamily.setSchoolCode(rSC.getSchoolCode());
 			
-			updatedFamily.setRegion(rSC.getRegion());
-			updatedFamily.setSchoolCode(rSC.getSchoolCode());
-		}
-		
 		return rSC;
 	}
+		
 	
 	@Override
 	String add(int year, String json)
