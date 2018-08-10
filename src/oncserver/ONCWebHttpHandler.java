@@ -4,8 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ourneighborschild.Address;
@@ -24,6 +22,18 @@ import com.google.gson.Gson;
 public class ONCWebHttpHandler extends ONCWebpageHandler
 {
 	private static final int STATUS_CONFIRMED = 5;
+	
+	private static final int RC_ADDRESS_IS_VALID = 0;
+	private static final int RC_ADDRESS_IS_SCHOOL = 1;
+	private static final int RC_ADDRESS_NOT_VALID = 2;
+	private static final int RC_ADDRESS_MISSING_UNIT = 3;
+	private static final int RC_ADDRESS_NOT_IN_SERVED_ZIPCODE = 4;
+	private static final int RC_ADDRESS_NOT_IN_SERVED_PYRAMID = 5;
+	
+	private static final int EC_ADDRESS_NOT_VALID = 1;
+	private static final int EC_ADDRESS_MISSING_UNIT = 2;
+	private static final int EC_ADDRESS_NOT_IN_SERVED_ZIPCODE = 4;
+	private static final int EC_ADDRESS_NOT_IN_SERVED_PYRAMID = 8;
 	
 	public void handle(HttpExchange te) throws IOException 
     {
@@ -335,8 +345,11 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 //    		}
     		else if(requestURI.contains("/address"))
     		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
-    				htmlResponse = verifyAddress(params);	//verify the address and send response
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{
+//    			htmlResponse = verifyAddress(params);	//verify the address and send response
+    				htmlResponse = verifyHoHAndDeliveryAddress(params);
+    			}
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
     		
@@ -497,60 +510,185 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     			sendHTMLResponse(t, htmlresponse);
     		}    					
     }
-
+/*
 	HtmlResponse verifyAddress(Map<String, Object> params)
 	{
 		String callback = (String) params.get("callback");
 		
-		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode"};
+		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode", "sameaddress"};
 		Map<String, String> addressMap = createMap(params, addressKeys);
 		
 //		for(String key:addressMap.keySet())
 //			System.out.println(String.format("ONCHttpHandler.verifyAddress: key=%s, value=%s", key, addressMap.get(key)));
 		
-		Address chkAddress = new Address(addressMap.get("housenum"), addressMap.get("street"),
-								addressMap.get("unit"), addressMap.get("city"), addressMap.get("zipcode"));
-		
-		//diagnostic print
-//		System.out.println(String.format("WebHdlr.verAdd: chkAddress= %s", chkAddress.getPrintableAddress()));
-		
-		RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(chkAddress);
-		//First, check to see if the address is in the database. If it is, check to see if it requires
+		int chkAddressResult = checkAddress(new Address(addressMap.get("housenum"), addressMap.get("street"),
+								addressMap.get("unit"), addressMap.get("city"), addressMap.get("zipcode")));
+		//First, check to see if the address is a school. If it is, accept it. If not a school, check if 
+		//the address is in the database. If it is, check to see if it requires
 		//an apartment. it might be missing. If the apartment check passes, then 
 		//check the school code. If the code is Y, then the school is in the ONC served zip codes
 		//but is not in one of the three pyramids. If the code is Z, then the school is not in an onc
-		//zipcode. If the code is A thru S, then all the checks pass.
+		//zip code. If the code is A thru S, then all the checks pass.
 		Gson gson = new Gson();
 		String json;
 		String errMssg;
-		if(rSC.getRegion() == 0)	//address is not in the database
+		if(chkAddressResult == RC_ADDRESS_IS_SCHOOL)	//if address is school, address is valid
+		{
+			json = gson.toJson(new AddressValidation(), AddressValidation.class);
+		}
+		else if(chkAddressResult == RC_ADDRESS_NOT_VALID)	//address is not in the database
 		{	
 			errMssg = "ERROR: Address is not a residence in Fairfax County, VA. Please provide a valid address.";
-			json = gson.toJson(new AddressValidation(false, 1, errMssg), AddressValidation.class);
+			json = gson.toJson(new AddressValidation(1, errMssg), AddressValidation.class);
 		}
-		else if(addressMap.get("unit").trim().isEmpty() && ApartmentDB.isAddressAnApartment(chkAddress))
+		else if(chkAddressResult == RC_ADDRESS_MISSING_UNIT)
 		{	
 			errMssg = "ERROR: Address has multiple residences, you must provide an apartment or unit number.";
-			json = gson.toJson(new AddressValidation(false, 2, errMssg), AddressValidation.class);
+			json = gson.toJson(new AddressValidation(2, errMssg), AddressValidation.class);
 		}
-		else if(rSC.getSchoolCode().equals("Z")) //address is in Fairfax county but not in one of ONC's zipcodes
+		else if(chkAddressResult == RC_ADDRESS_NOT_IN_SERVED_ZIPCODE)
 		{
 			errMssg = "ERROR: Address is valid, but is outside ONC's served zip codes. Either refer this family to "
 					+ "a service provider serving this address or, if your school wishes to assume "
 					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.";
-			json = gson.toJson(new AddressValidation(false, 3, errMssg), AddressValidation.class);
+			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
 		}
-		else if(rSC.getSchoolCode().equals("Y"))//address is in ONC served zipcode but not in one of the three pyramids
+		else if(chkAddressResult == RC_ADDRESS_NOT_IN_SERVED_PYRAMID)
 		{	
 			errMssg = "ERROR: Address is valid, but is outside ONC's served school pyramids."
 					+ " Either refer this family to a service provider serving this address or, if your school wishes to assume "
 					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.";
-			json = gson.toJson(new AddressValidation(false, 3, errMssg), AddressValidation.class);
+			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
 		}
 		else	//address is good to accept
-			json = gson.toJson(new AddressValidation(false, 0), AddressValidation.class);	
+			json = gson.toJson(new AddressValidation(), AddressValidation.class);	
 
 		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
+	}
+*/	
+	HtmlResponse verifyHoHAndDeliveryAddress(Map<String, Object> params)
+	{
+		String callback = (String) params.get("callback");
+		
+		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode", "sameaddress",
+								"delhousenum", "delstreet", "delunit", "delcity", "delzipcode"};
+		Map<String, String> addressMap = createMap(params, addressKeys);
+		
+//		System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: #params keys= %d", params.size()));
+		for(String key:addressMap.keySet())
+			System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: key=%s, value=%s", key, addressMap.get(key)));
+		
+		int delAddressCheckResult = checkAddress(new Address(addressMap.get("delhousenum"), addressMap.get("delstreet"),
+								addressMap.get("delunit"), addressMap.get("delcity"), addressMap.get("delzipcode")));
+		
+		//diagnostic print
+//		System.out.println(String.format("WebHdlr.verAdd: chkAddress= %s", chkAddress.getPrintableAddress()));
+		
+		//First, check to see if the address is in the database. If it is, check to see if it requires
+		//an apartment. it might be missing. If the apartment check passes, then 
+		//check the school code. If the code is Y, then the school is in the ONC served zip codes
+		//but is not in one of the three pyramids. If the code is Z, then the school is not in an onc
+		//zip code. If the code is A thru S, then all the checks pass.
+		Gson gson = new Gson();
+		String json;
+		int returnCode = 0;
+
+		String errMssg = "";
+		AddressValidation hohAddrErrorResult = new AddressValidation();
+		AddressValidation delAddrErrorResult = new AddressValidation();
+		
+		if(delAddressCheckResult != RC_ADDRESS_IS_SCHOOL)		//if address is school, address is valid
+		{
+			//del address isn't school, check the result against the region street data base
+			if(delAddressCheckResult > RC_ADDRESS_IS_SCHOOL)
+			{
+				//delivery address isn't valid and isn't a school, so process the error
+				delAddrErrorResult = processAddressError(delAddressCheckResult, "Delivery");
+			}
+			
+			//check the HoH address if not the same as the delivery address
+			if(addressMap.get("sameaddress").equals("false"))
+			{
+				//check the HoH address as well
+				int hohAddrCheckResult = checkAddress(new Address(addressMap.get("housenum"), addressMap.get("street"),
+						addressMap.get("unit"), addressMap.get("city"), addressMap.get("zipcode")));
+				
+				if(hohAddrCheckResult > RC_ADDRESS_IS_SCHOOL) //hoh address has an error
+					hohAddrErrorResult = processAddressError(hohAddrCheckResult, "HOH");		
+			}
+			
+			//create the combined hoh and del return code. Only add the hoh return code if the hoh
+			//address check had an invalid or missing unit error.
+			
+			errMssg = "Error: " + delAddrErrorResult.getErrorMessage();
+			
+			if(hohAddrErrorResult.getReturnCode() == EC_ADDRESS_NOT_VALID ||
+				hohAddrErrorResult.getReturnCode() == EC_ADDRESS_MISSING_UNIT)
+			{	
+					returnCode = hohAddrErrorResult.getReturnCode()  << 4;
+					errMssg = errMssg.replace(".", ", and " + hohAddrErrorResult.getErrorMessage());
+			}
+			
+			returnCode = returnCode | delAddrErrorResult.getReturnCode();
+		}
+		
+		System.out.println(String.format("ONCWebHttpHdlr.verifyHoHAndDelAdd: rc= %d, mssg= %s", returnCode, errMssg));
+		
+		json = gson.toJson(new AddressValidation(returnCode, errMssg), AddressValidation.class);
+		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
+	}
+	
+	AddressValidation processAddressError(int delAddressResult, String addrType)
+	{
+		String delErrMssg = "";
+		int returnCode = 0;
+		
+		if(delAddressResult == RC_ADDRESS_NOT_VALID)	//address is not in the database
+		{	
+			delErrMssg = String.format("%s address is not a valid residential address in Fairfax County.", addrType);
+			returnCode = returnCode | EC_ADDRESS_NOT_VALID ;
+		}
+		else if(delAddressResult == RC_ADDRESS_MISSING_UNIT)
+		{	
+			delErrMssg = String.format("%s address has multiple residences, you must provide an apartment or unit number.", addrType);
+			returnCode = returnCode | EC_ADDRESS_MISSING_UNIT;
+		}
+		else if(delAddressResult == RC_ADDRESS_NOT_IN_SERVED_ZIPCODE)
+		{
+			delErrMssg = String.format("%s address is valid, however, not in ONC's served zip codes. Either refer this family to "
+					+ "a service provider serving this address or, if your school wishes to assume "
+					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.", addrType);
+			returnCode = returnCode | EC_ADDRESS_NOT_IN_SERVED_ZIPCODE;
+		}
+		else if(delAddressResult == RC_ADDRESS_NOT_IN_SERVED_PYRAMID)
+		{	
+			delErrMssg =  String.format("%s address is valid, however, it's not in one of ONC's served school pyramids."
+					+ " Either refer this family to a service provider serving this address or, if your school wishes to assume "
+					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.", addrType);
+			returnCode = returnCode | EC_ADDRESS_NOT_IN_SERVED_PYRAMID;
+		}
+		
+		return new AddressValidation(returnCode, delErrMssg);
+	}
+	
+	int checkAddress(Address chkAddress)
+	{
+		if(ServerRegionDB.isAddressServedSchool(chkAddress))
+			return RC_ADDRESS_IS_SCHOOL;
+		else
+		{	
+			RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(chkAddress);
+			if(rSC.getRegion() == 0)
+				return  RC_ADDRESS_NOT_VALID;
+			else if(chkAddress.getUnit().trim().isEmpty() && ApartmentDB.isAddressAnApartment(chkAddress))	
+				return  RC_ADDRESS_MISSING_UNIT;
+			else if(rSC.getSchoolCode().equals("Z"))
+				return  RC_ADDRESS_NOT_IN_SERVED_ZIPCODE;
+			else if(rSC.getSchoolCode().equals("Y"))	
+				return RC_ADDRESS_NOT_IN_SERVED_PYRAMID;
+			else	//address is good to accept
+				return RC_ADDRESS_IS_VALID;
+		}
 	}
 	
 	ResponseCode processPartnerUpdate(WebClient wc, Map<String, Object> params)
@@ -726,7 +864,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		ResponseCode rc = null;
 //		Gson gson = new Gson();
 //		String mssg;
-		//determine if its an add partner request or a partner update request
+		//determine if its an add region request or a region update request
 		if(regionMap.get("regionid").equals("New"))
 		{
 			Region addedRegion = serverRegionDB.add(returnedRegion);

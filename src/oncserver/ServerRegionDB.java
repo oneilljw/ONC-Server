@@ -1,9 +1,14 @@
 package oncserver;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,6 +25,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import au.com.bytecode.opencsv.CSVReader;
+import ourneighborschild.GoogleGeocode;
 
 public class ServerRegionDB extends ServerPermanentDB
 {
@@ -29,11 +35,16 @@ public class ServerRegionDB extends ServerPermanentDB
 	private static final int ONC_REGION_HEADER_LENGTH = 13;
 	private static final String FILENAME = "Regions_New.csv";
 	
+	private static final String GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
+	private static final String MNR_URL = "http://www.fairfaxcounty.gov/FFXGISAPI/v1/report?location=%s&format=json";
+	
+	
 	private static ServerRegionDB instance = null;
 	private static List<Region> regionAL;
 	private static List<String> zipcodeList;	//list of unique zip codes in region db
 	private static String[] regions = {"?", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
 										"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
+	private static String[] servedZipCodes = {"20120", "20121", "20124", "20151", "22033", "22039"};
 	private static List<School> schoolList;
 	private ImageIcon oncIcon;
 	
@@ -45,25 +56,25 @@ public class ServerRegionDB extends ServerPermanentDB
 		
 		//Create the list of elementary schools in ONC's serving area
 		schoolList = new ArrayList<School>();
-		schoolList.add(new School("A", new Address("15301", "", "", "Lee", "Highway", "", "", "Centreville", "20120"), "Bull Run"));
-		schoolList.add(new School("B", new Address("14400", "", "", "New Braddock", "Road", "", "", "Centreville", "20121"), "Centre Ridge"));
-		schoolList.add(new School("C", new Address("14330", "", "", "Green Trais", "Blvd", "", "", "Centreville", "20121"), "Centreville"));
-		schoolList.add(new School("D", new Address("13340", "", "", "Leland", "Road", "", "", "Centreville", "20120"), "Powell"));
-		schoolList.add(new School("E", new Address("13611", "", "", "Springstone", "Drive", "", "", "Clifton", "20124"), "Union Mill"));
-		schoolList.add(new School("F", new Address("5301", "", "", "Sully Station", "Drive", "", "", "Centreville", "20120"), "Cub Run"));
-		schoolList.add(new School("G", new Address("15450", "", "", "Martins Hundred", "Drive", "", "", "Centreville", "20120"), "Virginia Run"));
-		schoolList.add(new School("H", new Address("15109", "", "", "Carlbern", "Drive", "", "", "Centreville", "20120"), "Deer Park"));
-		schoolList.add(new School("I", new Address("6100", "", "", "Stone", "Road", "", "", "Centreville", "20120"), "London Towne"));
-		schoolList.add(new School("J", new Address("4200", "", "", "Lees Corner", "Road", "", "", "Chantilly", "20151"), "Brookfield"));
-		schoolList.add(new School("K", new Address("13006", "", "", "Point Pleasant", "Drive", "", "", "Fairfax", "22033"), "Greenbriar East"));
-		schoolList.add(new School("L", new Address("13300", "", "", "Poplar Tree", "Road", "", "", "Fairfax", "22033"), "Greenbriar West"));
-		schoolList.add(new School("M", new Address("13500", "", "", "Hollinger", "Avenue", "", "", "Fairfax", "22033"), "Lees Corner"));
-		schoolList.add(new School("N", new Address("13440", "", "", "Melville", "Lane", "", "", "Chantilly", "20151"), "Poplar Tree"));
-		schoolList.add(new School("O", new Address("5400", "", "", "Willow Springs School", "Road", "", "", "Fairfax", "22030"), "Willow Springs"));
-		schoolList.add(new School("P", new Address("3210", "", "", "Kincross", "Circle", "", "", "Herndon", "20171"), "Oak Hill"));
-		schoolList.add(new School("Q", new Address("2708", "", "", "Centreville", "Road", "", "", "Herndon", "20171"), "Floris"));
-		schoolList.add(new School("R", new Address("2480", "", "", "River Birch", "Drive", "", "", "Herndon", "20171"), "Lutie Lewis Coates"));
-		schoolList.add(new School("S", new Address("2499", "", "", "Thomas Jefferson", "Drive", "", "", "Herndon", "20171"), "McNair"));
+		schoolList.add(new School("A", new Address("15301", "", "", "Lee", "Highway", "", "", "Centreville", "20120"), "Bull Run", "38.828835,-77.475749"));
+		schoolList.add(new School("B", new Address("14400", "", "", "New Braddock", "Road", "", "", "Centreville", "20121"), "Centre Ridge", "38.826088,-77.445725"));
+		schoolList.add(new School("C", new Address("14330", "", "", "Green Trais", "Blvd", "", "", "Centreville", "20121"), "Centreville", "38.820056,-77.440809"));
+		schoolList.add(new School("D", new Address("13340", "", "", "Leland", "Road", "", "", "Centreville", "20120"), "Powell", "38.846304,-77.407887"));
+		schoolList.add(new School("E", new Address("13611", "", "", "Springstone", "Drive", "", "", "Clifton", "20124"), "Union Mill", "38.820727,-77.417579"));
+		schoolList.add(new School("F", new Address("5301", "", "", "Sully Station", "Drive", "", "", "Centreville", "20120"), "Cub Run", "38.865949,-77.458535"));
+		schoolList.add(new School("G", new Address("15450", "", "", "Martins Hundred", "Drive", "", "", "Centreville", "20120"), "Virginia Run", "38.852333,-77.485570"));
+		schoolList.add(new School("H", new Address("15109", "", "", "Carlbern", "Drive", "", "", "Centreville", "20120"), "Deer Park", "38.855992,-77.470855"));
+		schoolList.add(new School("I", new Address("6100", "", "", "Stone", "Road", "", "", "Centreville", "20120"), "London Towne", "38.839880,-77.456534"));
+		schoolList.add(new School("J", new Address("4200", "", "", "Lees Corner", "Road", "", "", "Chantilly", "20151"), "Brookfield", "38.882490,-77.419328"));
+		schoolList.add(new School("K", new Address("13006", "", "", "Point Pleasant", "Drive", "", "", "Fairfax", "22033"), "Greenbriar East", "38.872170,-77.394355"));
+		schoolList.add(new School("L", new Address("13300", "", "", "Poplar Tree", "Road", "", "", "Fairfax", "22033"), "Greenbriar West", "38.876560,-77.405355"));
+		schoolList.add(new School("M", new Address("13500", "", "", "Hollinger", "Avenue", "", "", "Fairfax", "22033"), "Lees Corner", "38.890636,-77.411140"));
+		schoolList.add(new School("N", new Address("13440", "", "", "Melville", "Lane", "", "", "Chantilly", "20151"), "Poplar Tree", "38.863387,-77.414740"));
+		schoolList.add(new School("O", new Address("5400", "", "", "Willow Springs School", "Road", "", "", "Fairfax", "22030"), "Willow Springs", "38.832115,-77.379740"));
+		schoolList.add(new School("P", new Address("3210", "", "", "Kincross", "Circle", "", "", "Herndon", "20171"), "Oak Hill", "38.913202,-77.408478"));
+		schoolList.add(new School("Q", new Address("2708", "", "", "Centreville", "Road", "", "", "Herndon", "20171"), "Floris", "38.936122,-77.414987"));
+		schoolList.add(new School("R", new Address("2480", "", "", "River Birch", "Road", "", "", "Herndon", "20171"), "Lutie Lewis Coates", "38.952190,-77.419300"));
+		schoolList.add(new School("S", new Address("2499", "", "", "Thomas Jefferson", "Drive", "", "", "Herndon", "20171"), "McNair", "38.946508,-77.404669"));
 		
 		regionAL = new ArrayList<Region>();
 
@@ -228,10 +239,40 @@ public class ServerRegionDB extends ServerPermanentDB
 		return index < schoolList.size();
 	}
 	
+	String getSchoolRegion(String schoolName, String zipcode)
+	{
+		int index = 0;
+		while(index < schoolList.size() && 
+			  !(schoolList.get(index).getName().equalsIgnoreCase(schoolName) && 
+				 schoolList.get(index).getAddress().getZipCode().equals(zipcode)))
+			index++;
+		
+		if(index < schoolList.size())
+			return schoolList.get(index).getCode();
+		else if(zipcode.equals("20120") || zipcode.equals("20121") || zipcode.equals("20151")
+				|| zipcode.equals("20151") ||  zipcode.equals("22033") || zipcode.equals("22039"))
+			return "Y";
+		else
+			return "Z";
+	}
+	
 	Region add(Region addedRegion)
 	{
 		//set the new ID for the region
 		addedRegion.setID(nextID++);	//Set id for new region
+		
+		//need to determine lat/long and Elementary School for region.
+		String streetname = addedRegion.getStreetName().trim().replaceAll(" ", "+");
+		
+		String address = String.format("%d+%s+%s", addedRegion.getAddressNumLow(), streetname, addedRegion.getZipCode());
+		GoogleGeocode geocode = getGoogleGeocode(address);
+		String latlong = geocode.getGeocode();
+		FCSchool fcSchool = getSchool(latlong);
+		
+		//add the location, school and school region to the added Region object
+		addedRegion.setLocation(latlong);
+		addedRegion.setSchool(fcSchool.getName());
+		addedRegion.setSchoolRegion(getSchoolRegion(fcSchool.getName(), addedRegion.getZipCode()));
 		
 		//add the region to the  database and rebuild the zip code list. Mark for save
 		regionAL.add(addedRegion);
@@ -424,6 +465,15 @@ public class ServerRegionDB extends ServerPermanentDB
 		return searchForRegionMatch(chkAddress).getRegion() > 0;		
 	}
 	
+	static boolean isAddressServedSchool(Address ckAddress)
+	{
+		int index = 0;
+		while(index < schoolList.size() && !schoolList.get(index).getAddress().matches(ckAddress))
+			index++;
+		
+		return index < schoolList.size();
+	}
+	
 	static int getRegionNumber(String r) //Returns 0 if r is null or empty, number corresponding to letter otherwise
 	{
 		int index = 0;
@@ -470,6 +520,115 @@ public class ServerRegionDB extends ServerPermanentDB
 	
 	int getNumberOfRegions() { return regions.length; }
 	boolean isRegionValid(int region) { return region >=0 && region < regions.length; }
+	
+	//Get a geocode location from Google Maps 
+	GoogleGeocode getGoogleGeocode(String address)
+	{
+		//Turn the string into a valid URL
+		URL dirurl= null;
+		try 
+		{
+			dirurl = new URL(GEOCODE_URL + address + "&key=AIzaSyBtlgXPY8LqmSSs3V6SRrT6dW0oEpAHAZg");
+		} 
+		catch (MalformedURLException e2) 
+		{
+			e2.printStackTrace();
+		}
+					
+		//Attempt to open the URL via a network connection to the Internet
+		HttpURLConnection httpconn= null;
+		try {httpconn = (HttpURLConnection)dirurl.openConnection();} 
+		catch (IOException e1) {e1.printStackTrace();}
+					
+		//It opened successfully, get the data
+		StringBuffer response = new StringBuffer();
+		try 
+		{
+			if(httpconn.getResponseCode() == HttpURLConnection.HTTP_OK)
+			{
+				BufferedReader input = new BufferedReader(new InputStreamReader(httpconn.getInputStream()),8192);
+				String strLine = null;
+				while ((strLine = input.readLine()) != null)
+					response.append(strLine);					
+				input.close();
+			}
+		}
+		catch (IOException e1)
+		{
+			ServerUI.addDebugMessage(String.format("Can't get Google Geocode Location for %s", address));
+			response = null;
+		}
+		
+		Gson gson = new Gson();
+		return response != null ? gson.fromJson(response.toString(), GoogleGeocode.class) : null;
+	}
+	
+	//location is geocode (lat/long) from Google Maps 
+	FCSchool getSchool(String location)
+	{
+		//remove any white space from location
+		String urllocation = location.replaceAll(" ", "");
+		//Turn the string into a valid URL
+		URL mnrurl = null;
+		try 
+		{
+			mnrurl = new URL(String.format(MNR_URL, urllocation));
+			System.out.println("MNR URL: " + mnrurl.toString());
+		} 
+		catch (MalformedURLException e2) 
+		{
+			e2.printStackTrace();
+		}
+							
+		//Attempt to open the URL via a network connection to the Internet
+		HttpURLConnection httpconn= null;
+		try 
+		{
+			httpconn = (HttpURLConnection) mnrurl.openConnection();
+		} 
+		catch (IOException e1)
+		{
+			e1.printStackTrace();
+		}
+							
+		//It opened successfully, get the data
+		StringBuffer response = new StringBuffer();
+		try 
+		{
+			if(httpconn.getResponseCode() == HttpURLConnection.HTTP_OK)
+			{
+				BufferedReader input = new BufferedReader(new InputStreamReader(httpconn.getInputStream()), 16384);
+				String strLine = null;
+				while ((strLine = input.readLine()) != null)
+					response.append(strLine);					
+				input.close();
+			}
+			else
+				System.out.println("Response code not 200, it was: " + httpconn.getResponseCode());
+		}
+		catch (IOException e1)
+		{
+			return null;
+		}
+				
+		//find the elementary school json in the response
+		int esIndex = response.indexOf("elementaryschool");
+		if(esIndex > -1)
+		{	
+			int esJsonStart = response.indexOf("{", esIndex);
+			int esJsonEnd = response.indexOf("}", esJsonStart);
+//			System.out.println(String.format("esStart= %d, jsonStart= %d, jsonEnd= %d",  esIndex, esJsonStart, esJsonEnd));
+			String esJson = response.substring(esJsonStart, esJsonEnd+1);
+//			System.out.println("ES Json: " + esJson);
+			Gson gson = new Gson();
+			FCSchool elemSchool = gson.fromJson(esJson, FCSchool.class);
+//			System.out.println("ES in Json: " + elemSchool.getName());;
+				
+			return elemSchool;
+		}
+		else
+			return null;
+	}	
 	
 	@Override
 	void addObject(String[] nextLine) 
@@ -549,5 +708,28 @@ public class ServerRegionDB extends ServerPermanentDB
 	String add(String userjson) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	private class FCSchool
+	{		
+		private String label;
+		private String name;
+		@SuppressWarnings("unused")
+		private String retrieveURL;
+		@SuppressWarnings("unused")
+		private String url;
+		@SuppressWarnings("unused")
+		private String point;
+		@SuppressWarnings("unused")
+		private int distance;
+		@SuppressWarnings("unused")
+		private String address;
+		@SuppressWarnings("unused")
+		private String city;
+		private String zip;
+		@SuppressWarnings("unused")
+		private int schoolnumber;
+		
+		String getName() { return name.isEmpty() ? label : name; }
 	}
 }

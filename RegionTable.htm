@@ -137,8 +137,10 @@
     function onResetFilters()
     {
     		var regionElement = document.getElementById('region');
+    		var schoolElement = document.getElementById('school');
     	
         regionElement.value = 'Any';
+        schoolElement.value = 'Any';
         updateRegionTable();
     }
     
@@ -403,7 +405,7 @@
         	<th class='regioncol'>Region</th>
         	<th class='add'>Low #</th>
         	<th class='add'>High #</th>
-        	<th class='schoolcol'>Elem School</th>
+        	<th class='schoolcol'>Elementary School</th>
         	<th class='add'>Action</th>
         </tr>
       </thead>
