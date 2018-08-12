@@ -31,7 +31,7 @@ public abstract class ServerPermanentDB extends ONCServerDB
     			if(header.length == length)	//Does the record have the right # of fields? 
     			{
     				while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
-    					addObject(nextLine);
+    					addObject(name, nextLine);
     			}
     			else
     			{
@@ -48,7 +48,7 @@ public abstract class ServerPermanentDB extends ONCServerDB
     		reader.close();
 	}
 	
-	abstract void addObject(String[] nextLine);
+	abstract void addObject(String type, String[] nextLine);
 	
 	void save()
 	{

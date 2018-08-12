@@ -189,7 +189,7 @@ public class ServerWishCatalog extends ServerPermanentDB
 	}
 
 	@Override
-	void addObject(String[] nextLine)
+	void addObject(String type, String[] nextLine) 
 	{
 		catalogDB.add(new ONCWish(nextLine));
 	}

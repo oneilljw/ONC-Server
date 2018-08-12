@@ -263,7 +263,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		//address is new or has changed, update the region
 		ServerRegionDB serverRegionDB = null;
 		try {
-			serverRegionDB = ServerRegionDB.getInstance(null);
+			serverRegionDB = ServerRegionDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -295,10 +295,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		addedPartner.setID(partnerDBYear.getNextID());
 		
 		//set the region for the new partner
-		ClientManager clientMgr = ClientManager.getInstance();
 		ServerRegionDB serverRegionDB = null;
 		try {
-			serverRegionDB = ServerRegionDB.getInstance(clientMgr.getAppIcon());
+			serverRegionDB = ServerRegionDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -332,10 +331,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		addedPartner.setID(partnerDBYear.getNextID());
 		
 		//set the region for the new partner
-		ClientManager clientMgr = ClientManager.getInstance();
 		ServerRegionDB serverRegionDB = null;
 		try {
-			serverRegionDB = ServerRegionDB.getInstance(clientMgr.getAppIcon());
+			serverRegionDB = ServerRegionDB.getInstance();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

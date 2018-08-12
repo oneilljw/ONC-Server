@@ -76,7 +76,7 @@ public class DBManager
 		try
 		{
 			userDB = ServerUserDB.getInstance();
-			dbPermanentAutosaveList.add(ServerRegionDB.getInstance(appicon));
+			dbPermanentAutosaveList.add(ServerRegionDB.getInstance());
 			ApartmentDB.getInstance(); //saved when new season created, never changed during season
 			dbSeasonalAutosaveList.add(ServerGlobalVariableDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerPartnerDB.getInstance());

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
-import java.util.Set;
 
 import ourneighborschild.Address;
 import ourneighborschild.AddressValidation;
@@ -828,7 +827,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				
 		try
 		{
-			serverRegionDB = ServerRegionDB.getInstance(null);
+			serverRegionDB = ServerRegionDB.getInstance();
 		} 
 		catch (FileNotFoundException e) 
 		{

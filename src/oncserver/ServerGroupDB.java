@@ -261,7 +261,7 @@ public class ServerGroupDB extends ServerPermanentDB
 	}
 
 	@Override
-	void addObject(String[] nextLine) 
+	void addObject(String type, String[] nextLine) 
 	{
 		groupList.add(new ONCGroup(nextLine));		
 	}

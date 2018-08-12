@@ -96,7 +96,7 @@ public class DesktopClient extends Thread
         {
         		dbManager = DBManager.getInstance(clientMgr.getAppIcon());
 			userDB = ServerUserDB.getInstance();
-			serverRegionDB = ServerRegionDB.getInstance(clientMgr.getAppIcon());
+			serverRegionDB = ServerRegionDB.getInstance();
 	        globalvariableDB = ServerGlobalVariableDB.getInstance();
 	        serverFamilyDB = ServerFamilyDB.getInstance();
 	        serverGroupDB = ServerGroupDB.getInstance();
@@ -203,6 +203,12 @@ public class DesktopClient extends Thread
                 		String response = serverRegionDB.getRegions();
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
+                }
+                else if(command.startsWith("GET<served_schools>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = serverRegionDB.getServedSchools();
+                		output.println(response);
                 }
                 else if(command.startsWith("GET<globals>"))
                 {

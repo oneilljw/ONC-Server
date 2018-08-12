@@ -17,6 +17,8 @@ function updateChildTable(bAction, bShowSchool)
   	      source: schools
   	    });
   	  });
+    
+    $('ul.ui-autocomplete.ui-menu').css({fontSize: '12px', width: '300px'});
 }
 function updateAdultTable(bAction)
 {

@@ -360,7 +360,7 @@ public class ServerUserDB extends ServerPermanentDB
 	 } 
 	
 	@Override
-	void addObject(String[] nextLine) 
+	void addObject(String type, String[] nextLine) 
 	{
 		Calendar date_changed = Calendar.getInstance();
 		if(!nextLine[6].isEmpty())

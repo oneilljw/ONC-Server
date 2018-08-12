@@ -141,7 +141,7 @@ public class ServerWishDetailDB extends ServerPermanentDB
 	}
 
 	@Override
-	void addObject(String[] nextLine)
+	void addObject(String type, String[] nextLine) 
 	{
 //		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
 //		detailDBYear.add(new WishDetail(nextLine));
