@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 import ourneighborschild.Address;
 import ourneighborschild.AddressValidation;
@@ -844,26 +845,26 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		
 //		Set<String> keyset = regionMap.keySet();
 //		for(String key:keyset)
-//			System.out.println(String.format("regionMap key=%s, value=%s", key, regionMap.get(key)));
+//			System.out.println(String.format("ONCWebHdlr.processRegUpdate: regionMap key=%s, value=%s", key, regionMap.get(key)));
 		
-		
-		String[] regionLine = new String[10];
+		String[] regionLine = new String[13];
 		regionLine[0] = regionMap.get("regionid").equals("New") ? "-1" : regionMap.get("regionid");
 		regionLine[1] = regionMap.get("street").trim().toUpperCase();
 		regionLine[2] = regionMap.get("type");
 		regionLine[3] = regionMap.get("region");
-		regionLine[4] = regionMap.get("dir");
-		regionLine[5] = regionMap.get("postdir");
-		regionLine[6] = regionMap.get("addlo").trim();
-		regionLine[7] = regionMap.get("addhi").trim();
-		regionLine[8] = "";
-		regionLine[9] = regionMap.get("zipcode");
+		regionLine[4] = "";	//schoolRegion is assigned when added
+		regionLine[5] = "";	//school is assigned when added
+		regionLine[6] = "";	//location is assigned when added
+		regionLine[7] = regionMap.get("dir");
+		regionLine[8] = regionMap.get("postdir");
+		regionLine[9] = regionMap.get("addlo").trim();
+		regionLine[10] = regionMap.get("addhi").trim();
+		regionLine[11] = "";
+		regionLine[12] = regionMap.get("zipcode");
 		
 		Region returnedRegion = new Region(regionLine);
-		
 		ResponseCode rc = null;
-//		Gson gson = new Gson();
-//		String mssg;
+
 		//determine if its an add region request or a region update request
 		if(regionMap.get("regionid").equals("New"))
 		{
@@ -873,8 +874,6 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			{
 				rc = new ResponseCode(String.format("Region %d, %s successfully added to the database", 
 									addedRegion.getID(), addedRegion.getStreetName()));
-//				mssg = "ADDED_REGION" + gson.toJson(addedRegion, Region.class);
-//				clientMgr.notifyAllInYearClients(year, mssg);
 			}
 			else
 				rc = new ResponseCode("Region was unable to be added to the database");
@@ -886,12 +885,9 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			{
 				rc = new ResponseCode(String.format("Region %d, %s successfully updated", 
 										updatedRegion.getID(), updatedRegion.getStreetName()));
-				
-//				mssg = "UPDATED_REGION" + gson.toJson(updatedRegion, Region.class);
-//				clientMgr.notifyAllInYearClients(year, mssg);
 			}
 			else
-				rc = new ResponseCode("Region was not found in the database or was unchanged");
+				rc = new ResponseCode("Region was not able to be updated");
 		}
 		
 		return rc;	

@@ -123,4 +123,15 @@ public abstract class ONCServerDB
 		else
 			return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
 	}
+	
+	protected String toTitleCase(String inputString)
+	{
+	    String[] arr = inputString.trim().toLowerCase().split(" ");
+	    StringBuffer sb = new StringBuffer();
+
+	    for (int i = 0; i < arr.length; i++) 
+	        sb.append(Character.toUpperCase(arr[i].charAt(0))).append(arr[i].substring(1)).append(" ");
+	             
+	    return sb.toString().trim();
+	}  
 }

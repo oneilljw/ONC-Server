@@ -44,7 +44,7 @@ public class ServerRegionDB extends ServerPermanentDB
 	private static List<String> zipcodeList;	//list of unique zip codes in region db
 	private static String[] regions = {"?", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
 										"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
-	private static String[] servedZipCodes = {"20120", "20121", "20124", "20151", "22033", "22039"};
+	private static List<String> servedZipCodesList;
 	private static List<School> schoolList;
 	private ImageIcon oncIcon;
 	
@@ -53,6 +53,15 @@ public class ServerRegionDB extends ServerPermanentDB
 	private ServerRegionDB(ImageIcon appicon) throws FileNotFoundException, IOException
 	{
 		oncIcon = appicon;
+		
+		//cerate the list of served zip codes
+		servedZipCodesList = new ArrayList<String>();
+		servedZipCodesList.add("20120");
+		servedZipCodesList.add("20121");
+		servedZipCodesList.add("20124");
+		servedZipCodesList.add("20151");
+		servedZipCodesList.add("22033");
+		servedZipCodesList.add("22039");
 		
 		//Create the list of elementary schools in ONC's serving area
 		schoolList = new ArrayList<School>();
@@ -249,11 +258,19 @@ public class ServerRegionDB extends ServerPermanentDB
 		
 		if(index < schoolList.size())
 			return schoolList.get(index).getCode();
-		else if(zipcode.equals("20120") || zipcode.equals("20121") || zipcode.equals("20151")
-				|| zipcode.equals("20151") ||  zipcode.equals("22033") || zipcode.equals("22039"))
+		else if(isZipCodeServed(zipcode))
 			return "Y";
 		else
 			return "Z";
+	}
+	
+	boolean isZipCodeServed(String zipcode)
+	{
+		int index = 0;
+		while(index < servedZipCodesList.size() && !servedZipCodesList.get(index).equals(zipcode))
+			index++;
+		
+		return index < servedZipCodesList.size();
 	}
 	
 	Region add(Region addedRegion)
@@ -263,29 +280,40 @@ public class ServerRegionDB extends ServerPermanentDB
 		
 		//need to determine lat/long and Elementary School for region.
 		String streetname = addedRegion.getStreetName().trim().replaceAll(" ", "+");
+		String address = String.format("%d+%s+%s", addedRegion.getAddressNumLow(), streetname, 
+													addedRegion.getZipCode());
 		
-		String address = String.format("%d+%s+%s", addedRegion.getAddressNumLow(), streetname, addedRegion.getZipCode());
+		//Need to add error processing here. Can't add a street without it's lat/long, and school.
 		GoogleGeocode geocode = getGoogleGeocode(address);
-		String latlong = geocode.getGeocode();
-		FCSchool fcSchool = getSchool(latlong);
+		FCSchool fcSchool = null;
+		if(geocode != null)
+		{
+			String latlong = geocode.getGeocode();
+			if((fcSchool = getSchool(latlong)) != null)
+			{
+				//add the location, school and school region to the added Region object
+				addedRegion.setLocation(latlong);
+				
+				String schoolName = toTitleCase(fcSchool.getName());
+				addedRegion.setSchool(schoolName);
+				addedRegion.setSchoolRegion(getSchoolRegion(schoolName, addedRegion.getZipCode()));
+				
+				//add the region to the  database and rebuild the zip code list. Mark for save
+				regionAL.add(addedRegion);
+				buildHashIndex();
+				buildZipCodeList();
+				bSaveRequired = true;
+				
+//				System.out.println(String.format("ServRegDB.add: Added %s", addedRegion.getPrintalbeRegion()));
+			}
+		}
 		
-		//add the location, school and school region to the added Region object
-		addedRegion.setLocation(latlong);
-		addedRegion.setSchool(fcSchool.getName());
-		addedRegion.setSchoolRegion(getSchoolRegion(fcSchool.getName(), addedRegion.getZipCode()));
-		
-		//add the region to the  database and rebuild the zip code list. Mark for save
-		regionAL.add(addedRegion);
-		buildHashIndex();
-		buildZipCodeList();
-		bSaveRequired = true;
-		
-		return addedRegion;
+		return geocode == null ? null : fcSchool == null ? null : addedRegion;
 	}
 	
 	Region update(Region updateRegion)
 	{	
-		//Find the position for the current family being replaced
+		//Find the position for the current region being replaced
 		int index = 0;
 		while(index < regionAL.size() && regionAL.get(index).getID() != updateRegion.getID())
 			index++;
@@ -294,14 +322,44 @@ public class ServerRegionDB extends ServerPermanentDB
 		//region with the update
 		if(index < regionAL.size() && !updateRegion.isRegionMatch(regionAL.get(index)))
 		{
-			regionAL.set(index, updateRegion);
-			bSaveRequired = true;
-			return updateRegion;
+			
+			//lat/long and elementary school may have changed, need to update them as well
+			//Need to add error processing here. Can't add a street without it's lat/long, and school.
+			String streetname = updateRegion.getStreetName().trim().replaceAll(" ", "+");
+			String address = String.format("%d+%s+%s", updateRegion.getAddressNumLow(), streetname, 
+														updateRegion.getZipCode());
+			GoogleGeocode geocode = getGoogleGeocode(address);
+			FCSchool fcSchool = null;
+			if(geocode != null)
+			{
+				String latlong = geocode.getGeocode();
+				if((fcSchool = getSchool(latlong)) != null)
+				{
+					//add the location, school and school region to the added Region object
+					updateRegion.setLocation(latlong);
+					
+					String schoolName = toTitleCase(fcSchool.getName());
+					updateRegion.setSchool(schoolName);
+					updateRegion.setSchoolRegion(getSchoolRegion(schoolName, updateRegion.getZipCode()));
+					
+					//add the region to the  database and rebuild the zip code list. Mark for save
+					regionAL.set(index, updateRegion);
+					buildHashIndex();
+					buildZipCodeList();
+					bSaveRequired = true;
+					
+					System.out.println(String.format("ServRegDB.add: Added %s", updateRegion.getPrintalbeRegion()));
+					
+					return updateRegion;
+				}
+				else
+					return null;
+			}
+			else
+				return null;
 		}
 		else
-		{
 			return null;
-		}
 	}	
 /*	
 	int getRegionMatch(Address matchAddress)
@@ -573,7 +631,7 @@ public class ServerRegionDB extends ServerPermanentDB
 		try 
 		{
 			mnrurl = new URL(String.format(MNR_URL, urllocation));
-			System.out.println("MNR URL: " + mnrurl.toString());
+//			System.out.println("MNR URL: " + mnrurl.toString());
 		} 
 		catch (MalformedURLException e2) 
 		{
