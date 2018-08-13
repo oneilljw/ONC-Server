@@ -19,6 +19,7 @@ import javax.swing.JOptionPane;
 import ourneighborschild.Address;
 import ourneighborschild.Region;
 import ourneighborschild.School;
+import ourneighborschild.SchoolType;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -35,7 +36,7 @@ public class ServerRegionDB extends ServerPermanentDB
 	private static final String REGION_FILENAME = "Regions_New.csv";
 	private static final String REGION_DB_NAME = "RegionDB";
 	
-	private static final int SCHOOL_DB_HEADER_LENGTH = 12;
+	private static final int SCHOOL_DB_HEADER_LENGTH = 14;
 	private static final String SCHOOL_FILENAME = "ServedSchoolsDB.csv";
 	private static final String SCHOOL_DB_NAME = "ServedSchoolsDB";
 	
@@ -159,10 +160,15 @@ public class ServerRegionDB extends ServerPermanentDB
 	
 	String getServedSchools()
 	{
+		List<School> esSchoolList = new ArrayList<School>();
+		for(School sch : schoolList)
+			if(sch.getType() == SchoolType.ES)
+				esSchoolList.add(sch);
+		
 		Gson gson = new Gson();
 		Type listOfSchools = new TypeToken<ArrayList<School>>(){}.getType();
 		
-		String response = gson.toJson(schoolList, listOfSchools);
+		String response = gson.toJson(esSchoolList, listOfSchools);
 		return response;	
 	}
 	

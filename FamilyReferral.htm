@@ -26,6 +26,7 @@
   	      source: schools
   	    });
   	  });
+  	$('ul.ui-autocomplete.ui-menu').css({fontSize: '12px', width: '300px'});
   	
   	//set the date picker to go back 19 years. Max age of a child ONC serves
   	$(function() {
@@ -407,6 +408,11 @@
 	}
 	.ui-datepicker-calendar .ui-state-active  { background: #fff000; }
 	.ui-datepicker thead { background-color: #f7f7f7; }
+	ul.ui-autocomplete.ui-menu
+	{
+		font-size:12px;
+		width:300px;
+	}
 	#submitspan {float: right;}
 	#errormessage
 	{
@@ -586,7 +592,7 @@
 		<option value="Girl">Girl</option>
 		<option value="Unknown">Unknown</option>
 	</select>
-	<input id="childschool" class = 'schoolname' title="School attended, if none, enter Pre-K" type="text" size="20" placeholder="School">
+	<input id="childschool" class='schoolname' title="School attended, if none, enter Pre-K" type="text" size="20" placeholder="School">
 	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
 	<button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button>
   <table id="childtable" border="1">

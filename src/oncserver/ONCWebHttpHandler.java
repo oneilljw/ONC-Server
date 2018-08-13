@@ -575,8 +575,8 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		Map<String, String> addressMap = createMap(params, addressKeys);
 		
 //		System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: #params keys= %d", params.size()));
-		for(String key:addressMap.keySet())
-			System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: key=%s, value=%s", key, addressMap.get(key)));
+//		for(String key:addressMap.keySet())
+//			System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: key=%s, value=%s", key, addressMap.get(key)));
 		
 		int delAddressCheckResult = checkAddress(new Address(addressMap.get("delhousenum"), addressMap.get("delstreet"),
 								addressMap.get("delunit"), addressMap.get("delcity"), addressMap.get("delzipcode")));
@@ -632,7 +632,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			returnCode = returnCode | delAddrErrorResult.getReturnCode();
 		}
 		
-		System.out.println(String.format("ONCWebHttpHdlr.verifyHoHAndDelAdd: rc= %d, mssg= %s", returnCode, errMssg));
+//		System.out.println(String.format("ONCWebHttpHdlr.verifyHoHAndDelAdd: rc= %d, mssg= %s", returnCode, errMssg));
 		
 		json = gson.toJson(new AddressValidation(returnCode, errMssg), AddressValidation.class);
 		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
