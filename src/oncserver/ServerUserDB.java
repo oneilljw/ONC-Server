@@ -612,10 +612,11 @@ public class ServerUserDB extends ServerPermanentDB
 	ONCServerUser findUserByEmailAndPhone(String email, String phone)
 	{
 		int index = 0;
-		while(index < userAL.size() && !userAL.get(index).getEmail().equalsIgnoreCase(email))
+		while(index < userAL.size() && !(userAL.get(index).getEmail().equalsIgnoreCase(email) &&
+				getDigits(userAL.get(index).getHomePhone()).equals(getDigits(phone))))
 			index++;
 		
-		if(index < userAL.size() && getDigits(userAL.get(index).getHomePhone()).equals(getDigits(phone)))
+		if(index < userAL.size())
 			return userAL.get(index);
 		else
 			return null;
