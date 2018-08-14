@@ -764,7 +764,7 @@ public class ServerUserDB extends ServerPermanentDB
 	String createRecoveryEmail(ONCServerUser su)
 	{
         //Create the text part of the email using html
-		String link = String.format("\"http://oncdms.org:%d/recoverylogin?caseID=%s\">recovery.oncdms.org", 
+		String link = String.format("\"https://oncdms.org:%d/recoverylogin?caseID=%s\">recovery.oncdms.org", 
 				8902, su.getRecoveryID());
 		
 		String msg = "<html><body><div>" +
