@@ -4,7 +4,8 @@
   <title>ONC Family Contact Info Update</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script src="https://secure.comodo.com/trustlogo/javascript/trustlogo.js" type="text/javascript"></script>
   <script src="commonfamily.js"></script>
   <script> 
@@ -28,7 +29,7 @@
   		     	updateFamilyInfo(family);
   		     	
   		     	childrenJson = family.childList;
-  		     	updateChildTable(true, true);
+  		     	updateChildTable(false, true);
   		     	
   		     	adultsJson = family.adultList;
   		     	updateAdultTable(true);
@@ -52,7 +53,14 @@
   		     	else
   		     		document.getElementById('mealstatus').value = "None Requested";
   			});
-  		}	
+  		}
+  		
+  		$( ".address" ).tooltip({
+    		  content: "Uncheck same address to edit",
+    		  disabled: true,
+    		  tooltipClass: "addresstooltip",
+    		  position: { my: "left center", at: "right center" }  
+    		});
 	});
   	
   	function updateFamilyInfo(family)
@@ -118,6 +126,12 @@
 		color: red;
 	}
 	table, th, td {border: 1px solid black;}
+	.addresstooltip
+	{
+  		background-color: black;
+  		color: rgb(255, 77, 85) !important;
+  		font-size: 11px;
+	}
   </style>
 </head>
 <body>

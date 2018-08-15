@@ -14,12 +14,6 @@
   	var childrenJson= [];
   	var adultsJson= [];
   	var errorColor = '#FF9999';
-  	var schools = ["Brookfield ES","Bull Run ES","Centre Ridge ES","Centreville ES","Centreville HS",
-  					"Chantilly Acadamy","Chantilly HS","Cub Run ES","Deer Park ES","Floris ES","Franklin MS",
-  					"Greenbriar East ES","Greenbriar West ES","Homeschooled", "Lees Corner ES","Lutie Lewis Coates ES",
-  					"Liberty MS","London Towne ES","McNair ES","Mountain View HS","None","Oak Hill ES","Poplar Tree ES",
-  					"Powell ES", "Pre-K","Rocky Run MS","Stone MS", "Union Mill ES", "Virginia Run ES", 
-  					"Westfield HS","Willow Springs ES"];
   	
   	$( function() {
   	    $( ".schoolname" ).autocomplete({
@@ -114,6 +108,13 @@
   			{
   				return false;
   			}
+  		});
+  		
+  		$( ".address" ).tooltip({
+  		  content: "Uncheck same address to edit",
+  		  disabled: true,
+  		  tooltipClass: "addresstooltip",
+  		  position: { my: "left center", at: "right center" }  
   		});
 	});	
 	
@@ -397,7 +398,6 @@
         		combobox.add(option); // IE only
     		}
 	}
-
   </script>
   <style>
 	.ui-datepicker
@@ -423,10 +423,17 @@
 	}
 	table, th, td {border: 1px solid black;}
 	th, td {min-width: 60px; }
+	.addresstooltip
+	{
+  		background-color: black;
+  		color: rgb(255, 77, 85) !important;
+  		font-size: 11px;
+	}
   </style>
 </head>
 <body>
   <a href="#badfamdlg" id="badfamanchor" style="visibility: hidden">Bad Family Referral</a>
+  <a href="#verifdlg" id="verifanchor" style="visibility: hidden">Address Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
@@ -466,8 +473,8 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-    <input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+    <input id="housenum" class='address' title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+    <input id="street" class='address' title="Street Name" name="street" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" autocomplete="off">
     <select id="city" title="City" name="city" onchange="cityChanged('city')">
     	<option value="Centreville">Centreville</option>
@@ -518,13 +525,14 @@
 		<option value="20122">20122</option>
 	</select>
 	<input title="Email address" name="email" type="email" size="30" placeholder="email address">
+	<button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
   </fieldset>
   <br>
   <fieldset>
   <legend class="legend-major">Delivery Address and Transportation: Provide address that ONC will use for gift delivery and family's access to transportation</legend>
 	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
-	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
-    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+	<input id="delhousenum" class='address' title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+    	<input id="delstreet" class='address' title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
     <select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged('delcity')">
     	<option value="Centreville">Centreville</option>
@@ -574,6 +582,7 @@
 		<option value="20121">20121</option>
 		<option value="20122">20122</option>
 	</select>
+	<button type="button" id='verifydeladdress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
   <br><br>
   <label>Does the family have their own transportation? </label>
   <input id="transYes" type="radio" name="transportation" value="Yes">Yes
@@ -689,6 +698,17 @@
 		  <span id="badfamheader">Invalid Family Referral</span>
 		</div>
 		<p id='badfammssg'></p>
+	</div>
+  </div>
+  <!-- Address Verification Dialog -->
+  <div id="verifdlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65">
+		  <span id="verifheader">Address Verification</span>
+		</div>
+		<p id='verifmssg'></p>
 	</div>
   </div>
 <!-- Timeout Dialog -->

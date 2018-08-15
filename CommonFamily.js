@@ -3,6 +3,13 @@
  * Common functions for family referral and family info editing web pages
  * Date: 2018-07-23
  */
+var schools = ["Brookfield ES","Bull Run ES","Centre Ridge ES","Centreville ES","Centreville HS",
+  					"Chantilly Acadamy","Chantilly HS","Cub Run ES","Deer Park ES","Floris ES","Franklin MS",
+  					"Greenbriar East ES","Greenbriar West ES","Homeschooled", "Lees Corner ES","Lutie Lewis Coates ES",
+  					"Liberty MS","London Towne ES","McNair ES","Mountain View HS","None","Oak Hill ES","Poplar Tree ES",
+  					"Powell ES", "Pre-K","Rocky Run MS","Stone MS", "Union Mill ES", "Virginia Run ES", 
+  					"Westfield HS","Willow Springs ES"];
+
 function updateChildTable(bAction, bShowSchool)
 {
     $("#tchildbody").empty();
@@ -11,12 +18,12 @@ function updateChildTable(bAction, bShowSchool)
 	{
     		addChildTableRow(i, childrenJson[i], bAction, bShowSchool);	//add row to table
 	}
-    
+   
     $( function() {
-  	    $( ".schoolname" ).autocomplete({
-  	      source: schools
-  	    });
-  	  });
+    		$( ".schoolname" ).autocomplete({
+    			source: schools
+    		});
+    	});
     
     $('ul.ui-autocomplete.ui-menu').css({fontSize: '12px', width: '300px'});
 }
@@ -45,10 +52,8 @@ function addChildTableRow(cnum, child, bAction, bShowSchool)
 	    content= document.createElement("input");
 	    	content.type="text";
 	    	content.id=fieldname[index] + cnum;
-	    	
-	    	console.log("Adding child " + cnum);
-	    	
 	    	content.name=fieldname[index] + cnum;
+	    	content.readOnly=!bAction;
 	    	
 	    	if(fieldname[index] === 'childschool' && !bShowSchool)
 	    		content.value = '';
@@ -86,6 +91,7 @@ function addAdultTableRow(anum, adult, bAction)
     adultname.type="text";
     adultname.name="adultname" + anum;
     adultname.value = adult.name;
+    adultname.readOnly = !bAction;
     adultname.setAttribute("size", 27);
     cell.appendChild(adultname);
     row.appendChild(cell);
@@ -112,11 +118,17 @@ function addAdultTableRow(anum, adult, bAction)
     tabBody.appendChild(row);
 }
 function sameAddressClicked(cb)
-{
-	if(cb.checked == true)	//copy the address input elements to delivery address elements and verify	
-		copyAddressToDeliveryAddress();	
+{	
+	if(cb.checked == true)	//copy the address input elements to delivery address elements and verify
+	{	
+		copyAddressToDeliveryAddress();
+		$( ".address" ).tooltip( "option", "disabled", false);
+	}
 	else	//clear the delivery address elements
+	{
 		clearDeliveryAddress();
+		$( ".address" ).tooltip( "option", "disabled", true);
+	}
 }
   	
 function copyAddressToDeliveryAddress()
@@ -467,8 +479,10 @@ function onSubmit()
 				hohAddrElement[0].value !== "" && hohAddrElement[1].value != "")
 			{
 				//form the address check url
-	       		$.getJSON('address', createAddressParams(hohAddrElement, delAddrElement), function(addresponse)
+	       		$.getJSON('checkaddresses', createAllAddressParams(hohAddrElement, delAddrElement), function(addresponse)
 	      		{
+	       			console.log(addresponse);
+	       			
 	      			if(addresponse.hasOwnProperty('error'))
 	      			{
 						window.location=document.getElementById('timeoutanchor').href;
@@ -521,7 +535,7 @@ function processAddressError(addresponse, delAddrElement, delAddrUnitElement, ho
 	
 	//clear delivery and hoh backgrounds
 	changeAddressBackground(hohAddrElement,'#FFFFFF');
-	changeAddressBackground(delAddrUnitElement,'#FFFFFF');
+	changeAddressBackground(delAddrElement,'#FFFFFF');
 	
 	if(hohMissing > 0)	
 	{
@@ -563,7 +577,7 @@ function changeAddressBackground(elements, color)
 		elements[i].style.backgroundColor = color;
 }
 
-function createAddressParams(hohAddrElement, delAddrElement)
+function createAllAddressParams(hohAddrElement, delAddrElement)
 {	
 	var addressparams = "housenum=" + encodeURIComponent(hohAddrElement[0].value) + "&" +
 						"street=" + encodeURIComponent(hohAddrElement[1].value) + "&" +
@@ -576,6 +590,17 @@ function createAddressParams(hohAddrElement, delAddrElement)
 						"delunit=" + encodeURIComponent(delAddrElement[2].value) + "&" +
 						"delcity=" + delAddrElement[3].value + "&" +
 						"delzipcode=" + delAddrElement[4].value + "&" +
+						"callback=?";
+	return addressparams;
+}
+
+function createAddressParams(addrElement)
+{	
+	var addressparams = "housenum=" + encodeURIComponent(addrElement[0].value) + "&" +
+						"street=" + encodeURIComponent(addrElement[1].value) + "&" +
+						"unit=" + encodeURIComponent(addrElement[2].value) + "&" +
+						"city=" + addrElement[3].value + "&" +
+						"zipcode=" + addrElement[4].value + "&" +
 						"callback=?";
 	return addressparams;
 }
@@ -628,7 +653,6 @@ function verifyPhoneNumbers()
 
 function verifyPhoneNumber(elementNum)
 {
-	
 	var phoneElement= [document.getElementById('homephone'), 
 						document.getElementById('cellphone'),
 						document.getElementById('altphone')];
@@ -664,6 +688,54 @@ function isNumericPhoneNumber(phonenumber, separator)
 		testNumber = phonenumber.replace(/./g, '');
 
 	return !isNaN(testNumber);	
+}
+
+function verifyAddress(element)
+{
+	var prefix = '';
+	if(element.id==='verifydeladdress')
+		prefix = 'del';
+	
+	var addrFields = ["housenum", "street", "unit", "city", "zipcode"];
+	
+	var addrElement = [];
+	for(var index=0; index<addrFields.length; index++)
+		addrElement.push(document.getElementById(prefix + addrFields[index]));
+	
+	var unitElement = [document.getElementById(prefix + 'unit')];
+	
+	if(addrElement[0].value !== "" && addrElement[1].value !== "")
+	{
+		//form the address check url
+       	$.getJSON('address', createAddressParams(addrElement), function(addresponse)
+      	{
+       		if(addresponse.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+       		else
+       		{
+       			if(addresponse.returnCode == 0)	//valid
+       				changeAddressBackground(addrElement, '#FFFFFF');
+       			else if(addresponse.returnCode === 2)	//missing unit
+       			{
+       				changeAddressBackground(addrElement, '#FFFFFF');
+       				changeAddressBackground(unitElement, errorColor);
+       			}	
+       			else		//not in county or not served
+       				changeAddressBackground(addrElement, errorColor);
+       			
+       			document.getElementById('verifmssg').innerHTML = addresponse.errMssg;
+      			window.location=document.getElementById('verifanchor').href;
+       		}	
+      	});
+	}
+	else
+	{
+		changeAddressBackground(addrElement, errorColor);
+		document.getElementById('verifmssg').innerHTML = "ERROR: Error: Address incomplete";
+		window.location=document.getElementById('verifanchor').href;
+	}
 }
 
 function onLogoutLink()

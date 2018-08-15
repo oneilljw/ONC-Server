@@ -347,6 +347,17 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     		{
     			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
     			{
+    				htmlResponse = verifyAddress(params);	//verify the address and send response
+    			}
+    			else
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+    		
+    			sendHTMLResponse(t, htmlResponse);
+    		}
+    		else if(requestURI.contains("/checkaddresses"))
+    		{
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{
 //    			htmlResponse = verifyAddress(params);	//verify the address and send response
     				htmlResponse = verifyHoHAndDeliveryAddress(params);
     			}
@@ -510,12 +521,12 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     			sendHTMLResponse(t, htmlresponse);
     		}    					
     }
-/*
+
 	HtmlResponse verifyAddress(Map<String, Object> params)
 	{
 		String callback = (String) params.get("callback");
 		
-		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode", "sameaddress"};
+		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode"};
 		Map<String, String> addressMap = createMap(params, addressKeys);
 		
 //		for(String key:addressMap.keySet())
@@ -523,49 +534,40 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		
 		int chkAddressResult = checkAddress(new Address(addressMap.get("housenum"), addressMap.get("street"),
 								addressMap.get("unit"), addressMap.get("city"), addressMap.get("zipcode")));
-		//First, check to see if the address is a school. If it is, accept it. If not a school, check if 
-		//the address is in the database. If it is, check to see if it requires
-		//an apartment. it might be missing. If the apartment check passes, then 
-		//check the school code. If the code is Y, then the school is in the ONC served zip codes
-		//but is not in one of the three pyramids. If the code is Z, then the school is not in an onc
-		//zip code. If the code is A thru S, then all the checks pass.
+		
 		Gson gson = new Gson();
 		String json;
 		String errMssg;
 		if(chkAddressResult == RC_ADDRESS_IS_SCHOOL)	//if address is school, address is valid
 		{
-			json = gson.toJson(new AddressValidation(), AddressValidation.class);
+			json = gson.toJson(new AddressValidation(0, "VALID: Address is a served school"), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_NOT_VALID)	//address is not in the database
 		{	
-			errMssg = "ERROR: Address is not a residence in Fairfax County, VA. Please provide a valid address.";
+			errMssg = "ERROR: Address is not a residence in Fairfax County";
 			json = gson.toJson(new AddressValidation(1, errMssg), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_MISSING_UNIT)
 		{	
-			errMssg = "ERROR: Address has multiple residences, you must provide an apartment or unit number.";
+			errMssg = "ERROR: Address requires an apartment number.";
 			json = gson.toJson(new AddressValidation(2, errMssg), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_NOT_IN_SERVED_ZIPCODE)
 		{
-			errMssg = "ERROR: Address is valid, but is outside ONC's served zip codes. Either refer this family to "
-					+ "a service provider serving this address or, if your school wishes to assume "
-					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.";
+			errMssg = "ERROR: Address is not served by ONC";
 			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_NOT_IN_SERVED_PYRAMID)
 		{	
-			errMssg = "ERROR: Address is valid, but is outside ONC's served school pyramids."
-					+ " Either refer this family to a service provider serving this address or, if your school wishes to assume "
-					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.";
+			errMssg = "ERROR: Address is outside ONC's served school pyramids.";
 			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
 		}
 		else	//address is good to accept
-			json = gson.toJson(new AddressValidation(), AddressValidation.class);	
+			json = gson.toJson(new AddressValidation(0, "VALID: Address is a served residence!"), AddressValidation.class);	
 
 		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
 	}
-*/	
+	
 	HtmlResponse verifyHoHAndDeliveryAddress(Map<String, Object> params)
 	{
 		String callback = (String) params.get("callback");
@@ -574,11 +576,11 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 								"delhousenum", "delstreet", "delunit", "delcity", "delzipcode"};
 		Map<String, String> addressMap = createMap(params, addressKeys);
 		
-//		System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: #params keys= %d", params.size()));
-//		for(String key:addressMap.keySet())
-//			System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: key=%s, value=%s", key, addressMap.get(key)));
+		System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: #params keys= %d", params.size()));
+		for(String key:addressMap.keySet())
+			System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: key=%s, value=%s", key, addressMap.get(key)));
 		
-		int delAddressCheckResult = checkAddress(new Address(addressMap.get("delhousenum"), addressMap.get("delstreet"),
+		int delAddrCheckResult = checkAddress(new Address(addressMap.get("delhousenum"), addressMap.get("delstreet"),
 								addressMap.get("delunit"), addressMap.get("delcity"), addressMap.get("delzipcode")));
 		
 		//diagnostic print
@@ -594,16 +596,16 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		int returnCode = 0;
 
 		String errMssg = "";
-		AddressValidation hohAddrErrorResult = new AddressValidation();
 		AddressValidation delAddrErrorResult = new AddressValidation();
+		AddressValidation hohAddrErrorResult = new AddressValidation();
 		
-		if(delAddressCheckResult != RC_ADDRESS_IS_SCHOOL)		//if address is school, address is valid
+		if(delAddrCheckResult != RC_ADDRESS_IS_SCHOOL)		//if address is school, address is valid
 		{
 			//del address isn't school, check the result against the region street data base
-			if(delAddressCheckResult > RC_ADDRESS_IS_SCHOOL)
+			if(delAddrCheckResult > RC_ADDRESS_IS_SCHOOL)
 			{
 				//delivery address isn't valid and isn't a school, so process the error
-				delAddrErrorResult = processAddressError(delAddressCheckResult, "Delivery");
+				delAddrErrorResult = processAddressError(delAddrCheckResult, "Delivery");
 			}
 			
 			//check the HoH address if not the same as the delivery address
@@ -614,19 +616,24 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 						addressMap.get("unit"), addressMap.get("city"), addressMap.get("zipcode")));
 				
 				if(hohAddrCheckResult > RC_ADDRESS_IS_SCHOOL) //hoh address has an error
-					hohAddrErrorResult = processAddressError(hohAddrCheckResult, "HOH");		
+					hohAddrErrorResult = processAddressError(hohAddrCheckResult, "HOH");
+				
+				System.out.println(String.format("ONCWebHdlr: hohCkResult=%d, HohAddrErrorRC=%d, hohAddrErrorMssg=%s",
+						hohAddrCheckResult, hohAddrErrorResult.getReturnCode(), hohAddrErrorResult.getErrorMessage()));
 			}
 			
 			//create the combined hoh and del return code. Only add the hoh return code if the hoh
 			//address check had an invalid or missing unit error.
-			
 			errMssg = "Error: " + delAddrErrorResult.getErrorMessage();
 			
 			if(hohAddrErrorResult.getReturnCode() == EC_ADDRESS_NOT_VALID ||
 				hohAddrErrorResult.getReturnCode() == EC_ADDRESS_MISSING_UNIT)
 			{	
 					returnCode = hohAddrErrorResult.getReturnCode()  << 4;
-					errMssg = errMssg.replace(".", ", and " + hohAddrErrorResult.getErrorMessage());
+					if(delAddrErrorResult.getErrorMessage().isEmpty())
+						errMssg = errMssg.concat(hohAddrErrorResult.getErrorMessage());
+					else	
+						errMssg = errMssg.replace(".", ", and " + hohAddrErrorResult.getErrorMessage());
 			}
 			
 			returnCode = returnCode | delAddrErrorResult.getReturnCode();

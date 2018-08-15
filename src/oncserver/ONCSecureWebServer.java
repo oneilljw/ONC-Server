@@ -133,11 +133,11 @@ public class ONCSecureWebServer
 		//set up the oncWebHttpHandler
 		String[] contexts = {"/dbStatus", "/agents", "/getagent", "/getmeal", "/children", "/adults", 
 							"/wishes", "/reqchangepw","/activities", "/activitydays", "/address", 
-							"/changepw", "/startpage", "/getuser", "/getstatus", "/getpartner",
-							"/profileunchanged", "/updateuser", "/partnerupdate", "/updatepartner",
+							"/checkaddresses", "/changepw", "/startpage", "/getuser", "/getstatus",
+							"/getpartner", "/updateuser", "/partnerupdate", "/updatepartner",
 							"/groups", "/volunteergroups", "/partners", "/partnertable", "/regiontable", 
 							"/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
-							"/dashboard",
+							"/profileunchanged", "/dashboard",
 							};
 		
 		ONCWebHttpHandler oncHttpHandler = new ONCWebHttpHandler();
