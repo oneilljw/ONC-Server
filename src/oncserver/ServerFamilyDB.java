@@ -170,7 +170,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
-	static HtmlResponse getFamiliesJSONP(int year, int agentID, int groupID, String callbackFunction)
+	static HtmlResponse getFamiliesJSONP(int year, int reqAgentID, ONCServerUser loggedInUser, int reqGroupID, String callbackFunction)
 	{	
 		Gson gson = new Gson();
 		Type listOfWebsiteFamilies = new TypeToken<ArrayList<ONCWebsiteFamily>>(){}.getType();
@@ -178,16 +178,72 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
 		ArrayList<ONCWebsiteFamily> responseList = new ArrayList<ONCWebsiteFamily>();
 		
-		if(agentID > -1)
+		if(reqAgentID < 0 && reqGroupID < 0)
+		{
+			//case: requested agent = ANY, request group = ANY
+			//can only happen if loggedInUser permission > AGENT. If the requested agent is
+			//the logged-in user and their permissions are higher then Agent return all families
+			if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
+				for(ONCFamily f : searchList)
+					responseList.add(new ONCWebsiteFamily(f));
+		}
+		else if(reqAgentID < 0 && reqGroupID >= 0)
+		{
+			//case: requested agent = ANY, specific group request
+			//if logged in user is a member of the requested group and the group is sharing, 
+			//return all families referred in the group
+			ONCGroup group = ServerGroupDB.getGroup(reqGroupID);
+			if(loggedInUser.isInGroup(reqGroupID) && group.getPermission() == ONCGroup.SHARING)
+			{
+				for(ONCFamily f : searchList)
+					if(f.getGroupID() == reqGroupID)
+						responseList.add(new ONCWebsiteFamily(f));
+			}
+		}
+		else if(reqAgentID >= 0 && reqGroupID < 0)
+		{
+			//case: specific requested agent, requested group = ANY
+			//if the requested user is the logged in user, return all families referred by the agent
+			//regardless of group. 
+			for(ONCFamily f : searchList)
+				if(f.getAgentID() == loggedInUser.getID())
+					responseList.add(new ONCWebsiteFamily(f));
+		}
+		else if(reqAgentID >= 0 && reqGroupID >=0)
+		{
+			//case: specific requested agent, specific requested group
+			//if the requested agent is the logged in user and is in the requested group, return the
+			//families referred by the agent. If the requested agent is not the logged in user and the
+			//requested agent is in the requested group and the group is sharing, return the requested 
+			//agents referrals in the group.
+			ONCGroup reqGroup = ServerGroupDB.getGroup(reqGroupID);
+			ONCServerUser reqAgent = ServerUserDB.getServerUser(reqAgentID);
+			if(reqAgentID == loggedInUser.getID() && loggedInUser.isInGroup(reqGroupID))
+			{	
+				for(ONCFamily f : searchList)
+					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
+						responseList.add(new ONCWebsiteFamily(f));
+			}
+			else if(reqAgentID != loggedInUser.getID() && reqAgent.isInGroup(reqGroupID) && 
+					reqGroup.getPermission() == ONCGroup.SHARING)
+			{	
+				for(ONCFamily f : searchList)
+					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
+						responseList.add(new ONCWebsiteFamily(f));
+			}
+		}
+/*		
+		if(loggedInUser.getID() > -1)
 		{
 			//add only the families referred by that agent
 			for(ONCFamily f : searchList)
-				if(f.getAgentID() == agentID)
+				if(f.getAgentID() == loggedInUser.getID())
 					responseList.add(new ONCWebsiteFamily(f));
 		}
-		else if(agentID == -1 && groupID <= -1)
+		else if(loggedInUser.getID() == -1 && groupID <= -1)
 		{
-			//add all families referred in that year
+			//This is only allowed for users with permission > AGENT. If so, add all families 
+			//referred in that year, else send back all families from the logged in agent
 			for(ONCFamily f : searchList)
 				responseList.add(new ONCWebsiteFamily(f));
 		}
@@ -212,11 +268,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			else
 			{
 				for(ONCFamily f : searchList)
-				if(f.getAgentID() == agentID)
+				if(f.getAgentID() == loggedInUser.getID())
 					responseList.add(new ONCWebsiteFamily(f));
 			}	
 		}
-		
+*/		
 		//sort the list by HoH last name
 		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
 		
@@ -245,7 +301,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
-	static HtmlResponse getAgentsWhoReferredJSONP(int year, ONCServerUser agent, int groupID, String callbackFunction)
+	static HtmlResponse getAgentsWhoReferredJSONP(int year, ONCServerUser loggedInAgent, int groupID, String callbackFunction)
 	{
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCWebAgent>>(){}.getType();
@@ -253,21 +309,21 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		
 		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
 		
-		if(agent.getPermission().compareTo(UserPermission.Admin) >= 0 && groupID == -1)
+		if(loggedInAgent.getPermission().compareTo(UserPermission.Admin) >= 0 && groupID == -1)
 		{
 			//Admin or higher user, group selection was "All"
 			for(ONCFamily f : searchList)
 				if(!isInList(f.getAgentID(), agentReferredInYearList))
 					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
 		}
-		else if(agent.getPermission().compareTo(UserPermission.Admin) >= 0 && groupID > -1)
+		else if(loggedInAgent.getPermission().compareTo(UserPermission.Admin) >= 0 && groupID > -1)
 		{
 			//Admin or higher user, specific group selected
 			for(ONCFamily f : searchList)
 				if(f.getGroupID() == groupID && !isInList(f.getAgentID(), agentReferredInYearList))
 					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
 		}
-		else if(agent.getPermission() == UserPermission.Agent && groupID > -1 &&
+		else if(loggedInAgent.getPermission() == UserPermission.Agent && groupID > -1 &&
 				ServerGroupDB.getGroup(groupID).getPermission() == ONCGroup.SHARING)
 		{
 			//Agent user, specific group selected and group is sharing
@@ -278,7 +334,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		else
 		{
 			//just return a list with only the user, regardless of who referred, group, etc.
-			agentReferredInYearList.add(new ONCWebAgent(agent));
+			agentReferredInYearList.add(new ONCWebAgent(loggedInAgent));
 		}
 		
 		//sort the list by name and add an "anyone" to the top of the list
