@@ -54,14 +54,14 @@ public class FamilyHandler extends ONCWebpageHandler
 		if(requestURI.contains("/families"))
 		{
 			HtmlResponse htmlResponse;
-    		
-			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			WebClient wc = clientMgr.findAndValidateClient(t.getRequestHeaders());
+			if(wc != null)
 			{
     				int year = Integer.parseInt((String) params.get("year"));
     				int agentID = Integer.parseInt((String) params.get("agentid"));
     				int groupID = Integer.parseInt((String) params.get("groupid"));
     		
-    				htmlResponse = ServerFamilyDB.getFamiliesJSONP(year, agentID, groupID, (String) params.get("callback"));
+    				htmlResponse = ServerFamilyDB.getFamiliesJSONP(year, agentID, wc.getWebUser(), groupID, (String) params.get("callback"));
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));

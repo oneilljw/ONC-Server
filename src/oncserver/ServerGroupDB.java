@@ -80,14 +80,14 @@ public class ServerGroupDB extends ServerPermanentDB
 			if(bDefault)
 			{
 				ONCGroup allGroup = new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
-									loggedInUser.getLNFI(), "All", GroupType.Community, 1, false, false);
+									loggedInUser.getLNFI(), "Any", GroupType.Community, 1, false, false);
 				returnList.add(0, allGroup);
 			}
 		}
-		else
+		else //user with permission AGENT logged in
 		{	
-			if(agentID < 0 || loggedInUser.getID() == agentID)
-			{
+//			if(agentID < 0 || loggedInUser.getID() == agentID)
+//			{
 				for(Integer groupID : loggedInUser.getGroupList())
 				{
 					int index = 0;
@@ -98,24 +98,29 @@ public class ServerGroupDB extends ServerPermanentDB
 						returnList.add(groupList.get(index));
 				}
 				
+				Collections.sort(returnList, new ONCGroupNameComparator());
+				
 				if(returnList.isEmpty())
-					returnList.add(new ONCGroup(-2, new Date(), loggedInUser.getLNFI(), 3, "", 
+					returnList.add(0, new ONCGroup(-2, new Date(), loggedInUser.getLNFI(), 3, "", 
 									loggedInUser.getLNFI(), "None", GroupType.Community, 1, false, false));
+				else if(returnList.size() > 1)
+					returnList.add(0, new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
+									loggedInUser.getLNFI(), "Any", GroupType.Community, 1, false, false));
 				
 				Collections.sort(returnList, new ONCGroupNameComparator());
-			}
-			else
-			{
-				//return a group list that is the intersection of the logged in agents groups and the
-				//selected agents groups
-				ONCServerUser selectedAgent = ServerUserDB.getServerUser(agentID);
-				for(Integer groupID : loggedInUser.getGroupList())
-					for(Integer selAgentGroupID :selectedAgent.getGroupList())
-						if(selAgentGroupID == groupID)
-							returnList.add(groupList.get(groupID));
-							
-				Collections.sort(returnList, new ONCGroupNameComparator());
-			}
+//			}
+//			else
+//			{
+//				//return a group list that is the intersection of the logged in agents groups and the
+//				//selected agents groups
+//				ONCServerUser selectedAgent = ServerUserDB.getServerUser(agentID);
+//				for(Integer groupID : loggedInUser.getGroupList())
+//					for(Integer selAgentGroupID :selectedAgent.getGroupList())
+//						if(selAgentGroupID == groupID)
+//							returnList.add(groupList.get(groupID));
+//							
+//				Collections.sort(returnList, new ONCGroupNameComparator());
+//			}
 		}
 		
 		String response = gson.toJson(returnList, listtype);
