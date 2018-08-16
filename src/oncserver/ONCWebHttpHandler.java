@@ -576,9 +576,9 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 								"delhousenum", "delstreet", "delunit", "delcity", "delzipcode"};
 		Map<String, String> addressMap = createMap(params, addressKeys);
 		
-		System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: #params keys= %d", params.size()));
-		for(String key:addressMap.keySet())
-			System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: key=%s, value=%s", key, addressMap.get(key)));
+//		System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: #params keys= %d", params.size()));
+//		for(String key:addressMap.keySet())
+//			System.out.println(String.format("ONCHttpHandler..verifyHoHAndDelAdd: key=%s, value=%s", key, addressMap.get(key)));
 		
 		int delAddrCheckResult = checkAddress(new Address(addressMap.get("delhousenum"), addressMap.get("delstreet"),
 								addressMap.get("delunit"), addressMap.get("delcity"), addressMap.get("delzipcode")));
@@ -618,8 +618,8 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				if(hohAddrCheckResult > RC_ADDRESS_IS_SCHOOL) //hoh address has an error
 					hohAddrErrorResult = processAddressError(hohAddrCheckResult, "HOH");
 				
-				System.out.println(String.format("ONCWebHdlr: hohCkResult=%d, HohAddrErrorRC=%d, hohAddrErrorMssg=%s",
-						hohAddrCheckResult, hohAddrErrorResult.getReturnCode(), hohAddrErrorResult.getErrorMessage()));
+//				System.out.println(String.format("ONCWebHdlr: hohCkResult=%d, HohAddrErrorRC=%d, hohAddrErrorMssg=%s",
+//						hohAddrCheckResult, hohAddrErrorResult.getReturnCode(), hohAddrErrorResult.getErrorMessage()));
 			}
 			
 			//create the combined hoh and del return code. Only add the hoh return code if the hoh
