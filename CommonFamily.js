@@ -435,43 +435,56 @@ function onSubmit()
 {
 	var errorElement = document.getElementById('errormessage');
 	
-	//HOH name elements
-	var hohNameElement = [document.getElementById('hohfn'), 
-   						  document.getElementById('hohln')];
-	//HOH address elements
-	var hohAddrElement = [document.getElementById('housenum'), 
-    	               		document.getElementById('street'),
-    	               		document.getElementById('unit'),
-    	               		document.getElementById('city'), 
-    	               		document.getElementById('zipcode')];
-	
-	var hohUnitElement = [document.getElementById('unit')];
-	
-	//delivery address elements
-	var delAddrElement = [document.getElementById('delhousenum'),
-						document.getElementById('delstreet'),
-						document.getElementById('delunit'),
-						document.getElementById('delcity'), 
-						document.getElementById('delzipcode')];
-
-	var delUnitElement = [document.getElementById('delunit')];
-	
 	//check phone numbers
 	var phoneMssg= verifyPhoneNumbers();
 	var schoolsMssg = verifySchools();
+	var giftsmealsMssg = verifyGiftsAndMeals();
 	if(phoneMssg != '')
 	{
 		//one or more phone #'s are bad
 		errorElement.textContent=phoneMssg;
+		document.getElementById('badfammssg').textContent = phoneMssg;
+		window.location=document.getElementById('badfamanchor').href;
 	}
 	else if(schoolsMssg != '')
 	{
 		//one or more schools are missing
 		errorElement.textContent = schoolsMssg;
+		document.getElementById('badfammssg').textContent = schoolsMssg;
+		window.location=document.getElementById('badfamanchor').href;
+	}
+	else if(giftsmealsMssg != '')
+	{
+		//neither gifts nor meals was requested
+		errorElement.textContent = giftsmealsMssg;
+		document.getElementById('badfammssg').textContent = giftsmealsMssg;
+		window.location=document.getElementById('badfamanchor').href;
 	}
 	else	
 	{
-		//phone numbers are good, check to see that we have first and last names and
+		//HOH name elements
+		var hohNameElement = [document.getElementById('hohfn'), 
+	   						  document.getElementById('hohln')];
+		//HOH address elements
+		var hohAddrElement = [document.getElementById('housenum'), 
+	    	               		document.getElementById('street'),
+	    	               		document.getElementById('unit'),
+	    	               		document.getElementById('city'), 
+	    	               		document.getElementById('zipcode')];
+		
+		var hohUnitElement = [document.getElementById('unit')];
+		
+		//delivery address elements
+		var delAddrElement = [document.getElementById('delhousenum'),
+							document.getElementById('delstreet'),
+							document.getElementById('delunit'),
+							document.getElementById('delcity'), 
+							document.getElementById('delzipcode')];
+
+		var delUnitElement = [document.getElementById('delunit')];
+		
+		//phone numbers, schools are good and at least gift or meal assistance was requested.
+		//Check to see that we have first and last names and
 		//HoH and Delivery addresses are good. First check the delivery address
 		if(hohNameElement[0].value !== "" && hohNameElement[1].value !== "")
 		{
@@ -616,8 +629,19 @@ function verifySchools()
 		{
 			var cnum = i+1;
 			schoolElement.style.backgroundColor = errorColor;
-			errorMssg = "Error: School Missing for Child " + cnum;
+			errorMssg = "Error: School Missing for Child";
 		}	
+	}	
+	return errorMssg;
+}
+
+function verifyGiftsAndMeals()
+{
+	var errorMssg = "";
+	if(document.getElementById('giftreq').checked === false && 
+		document.getElementById('mealreq').checked === false)
+	{
+		errorMssg = "Error: Neither gift nor meal assistance requested";
 	}	
 	return errorMssg;
 }
