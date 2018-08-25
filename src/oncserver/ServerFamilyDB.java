@@ -178,18 +178,46 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
 		ArrayList<ONCWebsiteFamily> responseList = new ArrayList<ONCWebsiteFamily>();
 		
-		if(reqAgentID < 0 && reqGroupID < 0)
+		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
+			reqAgentID < 0 && reqGroupID < 0)
 		{
-			//case: requested agent = ANY, request group = ANY
+			//case: admin or higher login, requested agent = ANY, request group = ANY
 			//can only happen if loggedInUser permission > AGENT. If the requested agent is
 			//the logged-in user and their permissions are higher then Agent return all families
-			if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
-				for(ONCFamily f : searchList)
+			for(ONCFamily f : searchList)
+				responseList.add(new ONCWebsiteFamily(f));
+		}
+		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
+				reqAgentID >= 0 && reqGroupID < 0)
+		{
+			//case: admin or higher login, logged in user, specific agent, any group
+			//return all referrals from the agent.
+			for(ONCFamily f : searchList)
+				if(f.getAgentID() == reqAgentID)
 					responseList.add(new ONCWebsiteFamily(f));
 		}
-		else if(reqAgentID < 0 && reqGroupID >= 0)
+		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
+				reqAgentID < 0 && reqGroupID >= 0)
 		{
-			//case: requested agent = ANY, specific group request
+			//case: admin or higher login, logged in user, any agent, specific group
+			//return all referrals from the group.
+			for(ONCFamily f : searchList)
+				if(f.getGroupID() == reqGroupID)
+					responseList.add(new ONCWebsiteFamily(f));
+		}
+		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
+				reqAgentID >= 0 && reqGroupID >= 0)
+		{
+			//case: admin or higher login, logged in user, any agent, specific group
+			//return all referrals from the group.
+			for(ONCFamily f : searchList)
+				if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
+					responseList.add(new ONCWebsiteFamily(f));
+		}
+		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
+				reqAgentID < 0 && reqGroupID >= 0)
+		{
+			//case: agent logged in, requested agent = ANY, specific group request
 			//if logged in user is a member of the requested group and the group is sharing, 
 			//return all families referred in the group
 			ONCGroup group = ServerGroupDB.getGroup(reqGroupID);
@@ -200,18 +228,20 @@ public class ServerFamilyDB extends ServerSeasonalDB
 						responseList.add(new ONCWebsiteFamily(f));
 			}
 		}
-		else if(reqAgentID >= 0 && reqGroupID < 0)
+		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
+				 reqAgentID >= 0 && reqGroupID < 0)
 		{
-			//case: specific requested agent, requested group = ANY
+			//case: agent logged in, specific requested agent, requested group = ANY
 			//if the requested user is the logged in user, return all families referred by the agent
 			//regardless of group. 
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == loggedInUser.getID())
 					responseList.add(new ONCWebsiteFamily(f));
 		}
-		else if(reqAgentID >= 0 && reqGroupID >=0)
+		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
+				 reqAgentID >= 0 && reqGroupID >=0)
 		{
-			//case: specific requested agent, specific requested group
+			//case: agent logged in, specific requested agent, specific requested group
 			//if the requested agent is the logged in user and is in the requested group, return the
 			//families referred by the agent. If the requested agent is not the logged in user and the
 			//requested agent is in the requested group and the group is sharing, return the requested 
