@@ -2,12 +2,13 @@
 <html>
 <head lang="en">
   <title>ONC Family Contact Info Update</title>
-  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
-  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="//code.jquery.com/jquery-1.12.4.js"></script>
   <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <script src="https://secure.comodo.com/trustlogo/javascript/trustlogo.js" type="text/javascript"></script>
   <script src="commonfamily.js"></script>
+  <script src="https://secure.comodo.com/trustlogo/javascript/trustlogo.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css"> 
   <script> 
   	var errorColor = '#FF9999';
   	
@@ -57,7 +58,7 @@
   		
   		$( ".address" ).tooltip({
     		  content: "Uncheck same address to edit",
-    		  disabled: true,
+    		  disabled: false,
     		  tooltipClass: "addresstooltip",
     		  position: { my: "left center", at: "right center" }  
     		});
@@ -135,6 +136,7 @@
   </style>
 </head>
 <body>
+  <a href="#verifdlg" id="verifanchor" style="visibility: hidden">Address Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
@@ -174,8 +176,8 @@
 		<option value="?">Unknown</option>
 	</select>
 	<br>
-	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
-    <input id="street" title="Street Name" name="street" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+	<input id="housenum" class='address' title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+    <input id="street" class='address'title="Street Name" name="street" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" autocomplete="off">
     <select id="city" title="City" name="city">
 		<option value="Centreville">Centreville</option>
@@ -226,14 +228,15 @@
 		<option value="20122">20122</option>
 	</select>
 	<input id="email" title="E-mail address" name="email" type="email" size="30" placeholder="email address">
+	<button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
   </fieldset>
   <br>
   <fieldset>
   <legend class="legend-major">Delivery Address: Update address that ONC will use for gift delivery</legend>
     <input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
 <!--<input id="checkbox" type="checkbox" name="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:-->
-	<input id="delhousenum" title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
-    <input id="delstreet" title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+	<input id="delhousenum" class='address' title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
+    <input id="delstreet" class='address' title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
     <select id="delcity" title="Delivery City" name="delcity">
 		<option value="Centreville">Centreville</option>
@@ -283,6 +286,7 @@
 		<option value="20121">20121</option>
 		<option value="20122">20122</option>
 	</select>
+	<button type="button" id='verifydeladdress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
   </fieldset>
   <br>
   <fieldset>
@@ -341,10 +345,21 @@
   	<span id="errormessage"></span>
   	<span id="submitspan">
   	  <label for="submit">Please check that all fields are complete prior to submission: </label> 	 
-  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit()>
+  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit(false)>
   	</span>
   </div>
 </form>
+<!-- Address Verification Dialog -->
+  <div id="verifdlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65">
+		  <span id="verifheader">Address Verification</span>
+		</div>
+		<p id='verifmssg'></p>
+	</div>
+  </div>
 <!-- Invalid Family Dialog -->
   <div id="badfamdlg" class="modalDialog">
 	<div id='inner'>

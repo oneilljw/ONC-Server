@@ -431,14 +431,17 @@ function removeOptions(select)
         select.remove(i);   
 }
 
-function onSubmit()
+function onSubmit(bReferral)
 {
 	var errorElement = document.getElementById('errormessage');
 	
 	//check phone numbers
 	var phoneMssg= verifyPhoneNumbers();
 	var schoolsMssg = verifySchools();
-	var giftsmealsMssg = verifyGiftsAndMeals();
+	var giftsmealsMssg = '';
+	if(bReferral === true)	//only check if it's a referral submission
+		giftsmealsMssg = verifyGiftsAndMeals();		
+		
 	if(phoneMssg != '')
 	{
 		//one or more phone #'s are bad
@@ -637,7 +640,7 @@ function verifySchools()
 
 function verifyGiftsAndMeals()
 {
-	var errorMssg = "";
+	var errorMssg = '';
 	if(document.getElementById('giftreq').checked === false && 
 		document.getElementById('mealreq').checked === false)
 	{
@@ -757,7 +760,7 @@ function verifyAddress(element)
 	else
 	{
 		changeAddressBackground(addrElement, errorColor);
-		document.getElementById('verifmssg').innerHTML = "ERROR: Error: Address incomplete";
+		document.getElementById('verifmssg').innerHTML = "ERROR: Address incomplete";
 		window.location=document.getElementById('verifanchor').href;
 	}
 }
