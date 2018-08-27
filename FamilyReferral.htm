@@ -160,6 +160,7 @@
         		wish.readOnly = true;
         		wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
         		wish.setAttribute("size", 22);
+        		wish.onchange = function(wish) { onWishInputChanged(wish); };
         		wlcell.appendChild(wish);
         		row.appendChild(wlcell);
         }
@@ -413,6 +414,20 @@
         		combobox.add(option); // IE only
     		}
 	}
+	function onWishInputChanged(wishevent)
+	{
+		var content = document.getElementById(event.target.id).value.toLowerCase();
+		if(content.includes('gift card') || content.includes('giftcard'))
+		{
+			document.getElementById('giftcardmssg').textContent = "Is recipient middle school age or older?" +
+					"\r\n\r\nIf not, an age appropriate gift will be\r\nsubstituted unless extenuating" +
+					"\r\ncircumstances are noted in Family Details." +
+					"\r\n\r\nPlease include type of gift card requested " +
+					"\r\n(i.e.: Target, Amazon, iTunes, etc.)";
+			
+			window.location=document.getElementById('giftcardanchor').href;
+		}	
+	}
   </script>
   <style>
 	.ui-datepicker
@@ -444,10 +459,12 @@
   		color: rgb(255, 77, 85) !important;
   		font-size: 11px;
 	}
+	#giftcardmssg {white-space: pre;}
   </style>
 </head>
 <body>
   <a href="#badfamdlg" id="badfamanchor" style="visibility: hidden">Bad Family Referral</a>
+  <a href="#giftcarddlg" id="giftcardanchor" style="visibility: hidden">Gift Card Warning</a>
   <a href="#verifdlg" id="verifanchor" style="visibility: hidden">Address Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
@@ -713,6 +730,17 @@
 		  <span id="badfamheader">Invalid Family Referral</span>
 		</div>
 		<p id='badfammssg'></p>
+	</div>
+  </div>
+  <!-- Gift Card Warning Dialog -->
+  <div id="giftcarddlg" class="modalDialog">
+	<div id='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div id='dialogtopbar'>
+		  <img src="onclogo" height="45" width="65">
+		  <span id="giftcardheader">Gift Cards</span>
+		</div>
+		<p id='giftcardmssg'></p>
 	</div>
   </div>
   <!-- Address Verification Dialog -->
