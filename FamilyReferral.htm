@@ -160,6 +160,7 @@
         		wish.readOnly = true;
         		wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
         		wish.setAttribute("size", 22);
+        		wish.setAttribute('data-age', calculateAge(child.sDOB));
         		wish.onchange = function(wish) { onWishInputChanged(wish); };
         		wlcell.appendChild(wish);
         		row.appendChild(wlcell);
@@ -416,17 +417,21 @@
 	}
 	function onWishInputChanged(wishevent)
 	{
-		var content = document.getElementById(event.target.id).value.toLowerCase();
-		if(content.includes('gift card') || content.includes('giftcard'))
-		{
-			document.getElementById('giftcardmssg').textContent = "Is recipient middle school age or older?" +
-					"\r\n\r\nIf not, an age appropriate gift will be\r\nsubstituted unless extenuating" +
+		var childage = document.getElementById(event.target.id).getAttribute('data-age');
+		if(childage < 11)
+		{	
+			var content = document.getElementById(event.target.id).value.toLowerCase();
+			if(content.includes('gift card') || content.includes('giftcard'))
+			{
+				document.getElementById('giftcardmssg').textContent = "This child is younger than 11 years old." +
+					"\r\n\r\nAn age appropriate gift will be\r\nsubstituted unless extenuating" +
 					"\r\ncircumstances are noted in Family Details." +
-					"\r\n\r\nPlease include type of gift card requested " +
+					"\r\n\r\nIf extenuating circumstances exist,\r\n\please include type of gift card requested " +
 					"\r\n(i.e.: Target, Amazon, iTunes, etc.)";
 			
-			window.location=document.getElementById('giftcardanchor').href;
-		}	
+				window.location=document.getElementById('giftcardanchor').href;
+			}
+		}
 	}
   </script>
   <style>
