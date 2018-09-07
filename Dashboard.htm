@@ -469,11 +469,11 @@
   </div>
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
-	<div id='inner'>
+	<div class='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
-		  <span id='dialogmssg'>Update ONC Profile</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class='logospan'>Update ONC Profile</span>
 		</div>
     	<p><label class='lbl_ep' for="userfirstname">First Name:</label>
     	<input class='inp_ep' type="text" id="userfirstname" name="firstname" autofocus></p>
@@ -488,25 +488,25 @@
     	<p><label class='lbl_ep' for="userphone">Phone:</label>
     	<input class='inp_ep' type="text" id="userphone" name="phone"><br></p>
     	<div id='buttonbar'>
-      	  <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
-      	  <button id="update" onclick="onUpdateProfile()">Update</button>
+    	  <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+      <button id="update" onclick="onUpdateProfile()">Update</button>
     	</div> 
 	</div>
   </div>
 <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
-	<div id='inner'>
+	<div class='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
-		  <span id='dialogmssg'>Change Password</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class='logospan'>Change Password</span>
 		</div>
 		<p id='pw_mssg'>Enter current and new password:</p>
     	<p><label class='lbl_pw' for="currpw">Current Password:</label>
     	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
-    	<p><label class='lbl_pw'for="newpw">New Password:</label>
+    	<p><label class='lbl_pw' for="newpw">New Password:</label>
     	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
-    	<p><label class='lbl_pw'for="verifypw" >Verify Password:</label>
+    	<p><label class='lbl_pw' for="verifypw" >Verify Password:</label>
     	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
     	<div id='buttonbar'>
       	  <button id="cancel" onclick="onCancel()">Cancel</button>
