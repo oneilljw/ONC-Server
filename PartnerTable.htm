@@ -599,11 +599,11 @@
   </div>
   <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
-	<div id='inner'>
+	<div class='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
-		  <span id='dialogmssg'>Change Password</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class='logospan'>Change Password</span>
 		</div>
 		<p id='pw_mssg'>Enter current and new password:</p>
     	<p><label class='lbl_pw' for="currpw">Current Password:</label>
@@ -620,16 +620,16 @@
   </div>
   <!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
-	<div id='inner'>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
+	<div class='inner'>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo"/>
 		  <span id='dialogmssg'>Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>
     	<div id='buttonbar'>
-      	  <button id="submit" onclick="onSessionTimeout()">Logout</button>
+      	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
     	</div> 
 	</div>
-  </div>
+  </div>  
 </body>
 </html>

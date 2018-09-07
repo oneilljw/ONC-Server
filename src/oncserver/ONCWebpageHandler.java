@@ -50,6 +50,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String CLEAR_X_FILE = "clear_x.gif";
 	private static final String ONC_LOGO_FILE = "onclogosmall.gif";
 	private static final String TRUST_LOGO_FILE = "comodo_secure_seal_76x26_transp.png";
+	private static final String ERROR_ICON_FILE = "if_Error_381599.png";
+	private static final String CHECKMARK_ICON_FILE = "if_Checkmark_1891021.png";
 	private static final String ONC_ICON_FILE = "ONC.ico";
 	private static final String VANILLA_FONT_FILE = "vanilla.ttf";
 	private static final String ONC_STYLE_SHEET_CSS = "ONCStyleSheet.css";
@@ -110,7 +112,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
 			webfileMap.put("clearx", readFileToByteArray(CLEAR_X_FILE));
 			webfileMap.put("onclogo", readFileToByteArray(ONC_LOGO_FILE));
-			webfileMap.put("trustlogo", readFileToByteArray(TRUST_LOGO_FILE));	
+			webfileMap.put("trustlogo", readFileToByteArray(TRUST_LOGO_FILE));
+			webfileMap.put("erroricon", readFileToByteArray(ERROR_ICON_FILE));
+			webfileMap.put("checkmarkicon", readFileToByteArray(CHECKMARK_ICON_FILE));
 			webfileMap.put("oncicon", readFileToByteArray(ONC_ICON_FILE));
 			webfileMap.put("vanilla", readFileToByteArray(VANILLA_FONT_FILE));
 			webfileMap.put("oncstylesheet", readFileToByteArray(ONC_STYLE_SHEET_CSS));

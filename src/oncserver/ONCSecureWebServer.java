@@ -162,7 +162,7 @@ public class ONCSecureWebServer
 		
 		//set up the common handler
 		String[] commonContexts = {"/trustlogo", "/jquery.js", "/favicon.ico", "/oncsplash", "/clearx", "/onclogo", 
-								   "/oncstylesheet", "/oncdialogstylesheet", 
+								   "/oncstylesheet", "/oncdialogstylesheet", "/erroricon", "/checkmarkicon",
 								   "/oncloginstylesheet", "/vanilla"};
 		
 		CommonHandler commonHandler = new CommonHandler();

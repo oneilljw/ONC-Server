@@ -289,6 +289,7 @@ public class ServerUserDB extends ServerPermanentDB
 				{
 					//user id found, current password matches and user first and last names match
 					su.setUserPW(newPW);
+					su.disableRecoveryID();
 					if(su.changePasswordRqrd())
 					{
 						//need to notify other clients of update to user
@@ -336,6 +337,7 @@ public class ServerUserDB extends ServerPermanentDB
 			if(su.pwMatch(currpw))
 			{
 				su.setUserPW(newpw);
+				su.disableRecoveryID();
 				
 				if(su.changePasswordRqrd())
 				{
@@ -764,22 +766,22 @@ public class ServerUserDB extends ServerPermanentDB
 	String createRecoveryEmail(ONCServerUser su)
 	{
         //Create the text part of the email using html
-		String link = String.format("\"https://oncdms.org:%d/recoverylogin?caseID=%s\">recovery.oncdms.org", 
+		String link = String.format("\"https://oncdms.org:%d/recoverylogin?caseID=%s\">Account Recovery Link", 
 				8902, su.getRecoveryID());
 		
 		String msg = "<html><body><div>" +
 			"<p>Dear " + su.getFirstName() + ",</p>"
-			+ "<p>Thank you for helping Our Neighbor's Child!! We received your recovery request.</p> "
-			+ "<p><b>Please read the directions in this email carefully in order to regain access to our website.</b></p>"
-			+ "<p>This email contains a link that will take you to our recovery login webpage. The link will "
-			+ "be active for approximately <b><i>one hour</i><b>. On the recovery login webpage, your User Name "
-			+ "will automatically appear in the User Name input field. Please take note of your User Name and "
-			+ "remember to use it for future access.</p>"
-			+ "<p>You must enter a case sensitive temporary password: <b>" + su.getUserPW()
-			+ " </b>in the Password input field prior to clicking the login button. If the recovery is successful,"
-			+ " our website will respond by requiring you to set a new password for subsequent access to your "
-			+ "account.</p>"	
-			+"<p>Here is the link to access our recovery login webpage: <a href=" + link + "</a></p>"
+			+ "<p>Thank you for connecting families in your school with holiday assistance through Our Neighbor's "
+			+ "Child. We received your account recovery request and have provided detailed instructions in this "
+			+ "email. Clicking on Account Recovery Link [below] will take you to our recovery webpage. "
+			+ "<b>IMPORTANT: For security reasons, this link will be active for one hour.</b></p> "
+			+ "<p>Once you reach the recovery webpage, your User Name will automatically appear in the "
+			+ "User Name field. Please make note of it for future access. Please enter the following "
+			+ "case sensitive temporary password: <b>" + su.getUserPW() + "</b> in the Password field prior to "
+			+ "clicking the login button.</p>"
+			+ "<p>If account recovery is successful, you will be prompted to set a new password for subsequent "
+			+ "access to your account. Use the temporary password again to set a new password.</p>"
+			+"<p><b><a href=" + link + "</a></b></p>"
 		    +"<p>Our Neighbor's Child<br>"
 		    +"P.O. Box 276<br>"
 		    +"Centreville, VA 20120<br>"

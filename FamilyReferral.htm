@@ -418,16 +418,22 @@
 	function onWishInputChanged(wishevent)
 	{
 		var childage = document.getElementById(event.target.id).getAttribute('data-age');
-		if(childage < 11)
+		if(childage < 13)
 		{	
 			var content = document.getElementById(event.target.id).value.toLowerCase();
 			if(content.includes('gift card') || content.includes('giftcard'))
 			{
-				document.getElementById('giftcardmssg').textContent = "This child is younger than 11 years old." +
-					"\r\n\r\nAn age appropriate gift will be\r\nsubstituted unless extenuating" +
-					"\r\ncircumstances are noted in Family Details." +
-					"\r\n\r\nIf extenuating circumstances exist,\r\n\please include type of gift card requested " +
-					"\r\n(i.e.: Target, Amazon, iTunes, etc.)";
+//				document.getElementById('giftcardmssg').textContent = "This child is younger than 11 years old." +
+//					"\r\n\r\nAn age appropriate gift will be\r\nsubstituted unless extenuating" +
+//					"\r\ncircumstances are noted in Family Details." +
+//					"\r\n\r\nIf extenuating circumstances exist,\r\n\please include type of gift card requested " +
+//					"\r\n(i.e.: Target, Amazon, iTunes, etc.)";
+				
+				document.getElementById('giftcardmssg').textContent = "Based on limited availability, ONC" +
+				"\r\ngenerally provides gift cards to children\r\n13 and older. If there is an extenuating" +
+				"\r\ncircumstance requiring a gift card," +
+				"\r\nplease note it in Family Details below\r\n\and include the type of gift card" +
+				"\r\n(i.e.: Target, Amazon, iTunes, etc.)\r\nwith the correspoding wish.";
 			
 				window.location=document.getElementById('giftcardanchor').href;
 			}
@@ -464,7 +470,12 @@
   		color: rgb(255, 77, 85) !important;
   		font-size: 11px;
 	}
-	#giftcardmssg {white-space: pre;}
+	#giftcardmssg 
+	{
+		margin-top: 0px;
+		white-space: pre;
+	}
+	
   </style>
 </head>
 <body>
@@ -714,7 +725,7 @@
 	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <fieldset id='groupfs'>
-   <legend class="legend-major">Family Group: Select the group this family is being referred from</legend>
+   <legend class="legend-major">Family Group: Select this referral's originating school/organization</legend>
     <select id="groupcb" name='group' title="Family Group"></select>
   </fieldset>
   <br>
@@ -728,42 +739,46 @@
 </form>
 <!-- Invalid Family Dialog -->
   <div id="badfamdlg" class="modalDialog">
-	<div id='inner'>
+	<div class='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65">
-		  <span id="badfamheader">Invalid Family Referral</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class="logospan">Invalid Family Referral</span>
 		</div>
-		<p id='badfammssg'></p>
-	</div>
-  </div>
-  <!-- Gift Card Warning Dialog -->
-  <div id="giftcarddlg" class="modalDialog">
-	<div id='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65">
-		  <span id="giftcardheader">Gift Cards</span>
-		</div>
-		<p id='giftcardmssg'></p>
+		<span class='verifspan'><img class='errorimg' src="erroricon"></span>
+		<span id='badfammssg'></span>
 	</div>
   </div>
   <!-- Address Verification Dialog -->
   <div id="verifdlg" class="modalDialog">
-	<div id='inner'>
+	<div class='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65">
-		  <span id="verifheader">Address Verification</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class='logospan'>Address Verification</span>
 		</div>
-		<p id='verifmssg'></p>
+		<div>
+		  <span class='verifspan'><img id='verifimg' class='errorimg' src="erroricon"></span>
+		  <span id='verifmssg'></span>
+		</div>
+	</div>
+  </div>
+  <!-- Gift Card Warning Dialog -->
+  <div id="giftcarddlg" class="modalDialog">
+	<div class='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class=logospan>Gift Cards</span>
+		</div>
+		  <p id='giftcardmssg'></p>
 	</div>
   </div>
 <!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
-	<div id='inner'>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
+	<div class='inner'>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo"/>
 		  <span id='dialogmssg'>Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>

@@ -540,30 +540,31 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		String errMssg;
 		if(chkAddressResult == RC_ADDRESS_IS_SCHOOL)	//if address is school, address is valid
 		{
-			json = gson.toJson(new AddressValidation(0, "VALID: Address is a served school"), AddressValidation.class);
+			json = gson.toJson(new AddressValidation(0, "Address is a school in school pyramids "
+													+ "served by ONC"), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_NOT_VALID)	//address is not in the database
 		{	
-			errMssg = "ERROR: Address is not a residence in Fairfax County";
+			errMssg = "Address is not a residence in Fairfax County";
 			json = gson.toJson(new AddressValidation(1, errMssg), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_MISSING_UNIT)
 		{	
-			errMssg = "ERROR: Address requires an apartment number.";
+			errMssg = "Address requires an apartment or unit number.";
 			json = gson.toJson(new AddressValidation(2, errMssg), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_NOT_IN_SERVED_ZIPCODE)
 		{
-			errMssg = "ERROR: Address is not served by ONC";
+			errMssg = "Address is not a residence in ONC's serving area";
 			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_NOT_IN_SERVED_PYRAMID)
 		{	
-			errMssg = "ERROR: Address is outside ONC's served school pyramids.";
+			errMssg = "Address is not in ONC's served school pyramids.";
 			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
 		}
 		else	//address is good to accept
-			json = gson.toJson(new AddressValidation(0, "VALID: Address is a served residence!"), AddressValidation.class);	
+			json = gson.toJson(new AddressValidation(0, "Address is a residence served by ONC"), AddressValidation.class);	
 
 		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
 	}
@@ -624,7 +625,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			
 			//create the combined hoh and del return code. Only add the hoh return code if the hoh
 			//address check had an invalid or missing unit error.
-			errMssg = "Error: " + delAddrErrorResult.getErrorMessage();
+			errMssg = delAddrErrorResult.getErrorMessage();
 			
 			if(hohAddrErrorResult.getReturnCode() == EC_ADDRESS_NOT_VALID ||
 				hohAddrErrorResult.getReturnCode() == EC_ADDRESS_MISSING_UNIT)
@@ -652,26 +653,28 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		
 		if(delAddressResult == RC_ADDRESS_NOT_VALID)	//address is not in the database
 		{	
-			delErrMssg = String.format("%s address is not a valid residential address in Fairfax County.", addrType);
+			delErrMssg = String.format("The %s address is not a valid residential address in Fairfax County. "
+									+ "Please provide a valid address in ONC's serving area.", addrType);
 			returnCode = returnCode | EC_ADDRESS_NOT_VALID ;
 		}
 		else if(delAddressResult == RC_ADDRESS_MISSING_UNIT)
 		{	
-			delErrMssg = String.format("%s address has multiple residences, you must provide an apartment or unit number.", addrType);
+			delErrMssg = String.format("The %s address has multiple residences, an apartment or unit number "
+										+ "is requried.", addrType);
 			returnCode = returnCode | EC_ADDRESS_MISSING_UNIT;
 		}
 		else if(delAddressResult == RC_ADDRESS_NOT_IN_SERVED_ZIPCODE)
 		{
-			delErrMssg = String.format("%s address is valid, however, not in ONC's served zip codes. Either refer this family to "
-					+ "a service provider serving this address or, if your school wishes to assume "
-					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.", addrType);
+			delErrMssg = String.format("The %s address entered is not within zip codes served by ONC. "
+					+ "Please refer this family to a service provider serving this address. You may also enter "
+					+ "your school's address and ONC will bring the gifts to you for distribution.", addrType);
 			returnCode = returnCode | EC_ADDRESS_NOT_IN_SERVED_ZIPCODE;
 		}
 		else if(delAddressResult == RC_ADDRESS_NOT_IN_SERVED_PYRAMID)
 		{	
-			delErrMssg =  String.format("%s address is valid, however, it's not in one of ONC's served school pyramids."
-					+ " Either refer this family to a service provider serving this address or, if your school wishes to assume "
-					+ "responsiblity for gift delivery, enter the address of your school as the delivery address.", addrType);
+			delErrMssg = String.format("The %s address entered is not in a school pyramid served by ONC. "
+					+ "Please refer this family to a service provider serving this address. You may also enter "
+					+ "your school's address and ONC will bring the gifts to you for distribution.", addrType);
 			returnCode = returnCode | EC_ADDRESS_NOT_IN_SERVED_PYRAMID;
 		}
 		

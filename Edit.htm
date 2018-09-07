@@ -136,6 +136,7 @@
   </style>
 </head>
 <body>
+  <a href="#badfamdlg" id="badfamanchor" style="visibility: hidden">Bad Family Referral</a>
   <a href="#verifdlg" id="verifanchor" style="visibility: hidden">Address Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
@@ -349,26 +350,30 @@
   	</span>
   </div>
 </form>
-<!-- Address Verification Dialog -->
-  <div id="verifdlg" class="modalDialog">
-	<div id='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65">
-		  <span id="verifheader">Address Verification</span>
-		</div>
-		<p id='verifmssg'></p>
-	</div>
-  </div>
 <!-- Invalid Family Dialog -->
   <div id="badfamdlg" class="modalDialog">
-	<div id='inner'>
+	<div class='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65">
-		  <span id="badfamheader">Invalid Family Update</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class="logospan">Invalid Family Referral</span>
 		</div>
-		<p id='badfammssg'></p>
+		<span class='verifspan'><img class='errorimg' src="erroricon"></span>
+		<span id='badfammssg'></span>
+	</div>
+  </div>
+  <!-- Address Verification Dialog -->
+  <div id="verifdlg" class="modalDialog">
+	<div class='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class='logospan'>Address Verification</span>
+		</div>
+		<div>
+		  <span class='verifspan'><img id='verifimg' class='errorimg' src="erroricon"></span>
+		  <span id='verifmssg'></span>
+		</div>
 	</div>
   </div>
 <!-- Timeout Dialog -->

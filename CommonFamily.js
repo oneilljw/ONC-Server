@@ -497,8 +497,6 @@ function onSubmit(bReferral)
 				//form the address check url
 	       		$.getJSON('checkaddresses', createAllAddressParams(hohAddrElement, delAddrElement), function(addresponse)
 	      		{
-	       			console.log(addresponse);
-	       			
 	      			if(addresponse.hasOwnProperty('error'))
 	      			{
 						window.location=document.getElementById('timeoutanchor').href;
@@ -516,7 +514,7 @@ function onSubmit(bReferral)
 			{
 				changeAddressBackground(delAddrElement, errorColor);
 				changeAddressBackground(hohAddrElement, errorColor);
-				errorElement.textContent = "Submission Error: Delivery or HoH address incomplete";
+				errorElement.textContent = "Submission Error: Delivery or HoH address is incomplete";
 				document.getElementById('badfammssg').textContent = "Submission Error: Delivery or HOH address incomplete";
 				window.location=document.getElementById('badfamanchor').href;
 			}
@@ -526,7 +524,7 @@ function onSubmit(bReferral)
 			changeAddressBackground(hElement, errorColor);
 			changeAddressBackground(delAddrElement, '#FFFFFF');
 			changeAddressBackground(hohAddrElement, '#FFFFFF');
-			errorElement.textContent = "Submission Error: HOH First and/or Last Names missing";
+			errorElement.textContent = "Submission Error: HOH First and/or Last Name is missing";
 			document.getElementById('badfammssg').textContent = "Submission Error: HOH First or Last Names missing";
 			window.location=document.getElementById('badfamanchor').href;
 		}	
@@ -576,11 +574,11 @@ function processAddressError(addresponse, delAddrElement, delAddrUnitElement, ho
 	}
 	else if(delOutOfArea > 0)
 	{
-		errorElement.textContent = "Error: Valid delivery address; Is outside of ONC serving area";
+		errorElement.textContent = "Error: Valid delivery address but outside of ONC serving area";
 	}
 	else if(delOutOfPyramid > 0)
 	{
-		errorElement.textContent = "Error: Valid delivery address; Is not in a school pyramid ONC serves";
+		errorElement.textContent = "Error: Valid delivery address but not in a school pyramid ONC serves";
 	}
 		
 	document.getElementById('badfammssg').textContent = addresponse.errMssg;
@@ -632,7 +630,7 @@ function verifySchools()
 		{
 			var cnum = i+1;
 			schoolElement.style.backgroundColor = errorColor;
-			errorMssg = "Error: School Missing for Child";
+			errorMssg = "School Missing for Child";
 		}	
 	}	
 	return errorMssg;
@@ -644,7 +642,7 @@ function verifyGiftsAndMeals()
 	if(document.getElementById('giftreq').checked === false && 
 		document.getElementById('mealreq').checked === false)
 	{
-		errorMssg = "Error: Neither gift nor meal assistance requested";
+		errorMssg = "Neither gift nor meal assistance requested";
 	}	
 	return errorMssg;
 }
@@ -659,7 +657,7 @@ function verifyPhoneNumbers()
 		document.getElementById('cellphone').value.length === 0 &&
 		 document.getElementById('altphone').value.length === 0)
 	{
-		errorMssg= "Error: At least one valid phone number is required for referral";
+		errorMssg= "At least one valid phone number is required for referral";
 		document.getElementById('homephone').style.backgroundColor = errorColor;
 		document.getElementById('cellphone').style.backgroundColor = errorColor;
 		document.getElementById('altphone').style.backgroundColor = errorColor;
@@ -743,14 +741,21 @@ function verifyAddress(element)
        		else
        		{
        			if(addresponse.returnCode == 0)	//valid
+       			{
        				changeAddressBackground(addrElement, '#FFFFFF');
+       				document.getElementById("verifimg").src="checkmarkicon";
+       			}
        			else if(addresponse.returnCode === 2)	//missing unit
        			{
        				changeAddressBackground(addrElement, '#FFFFFF');
        				changeAddressBackground(unitElement, errorColor);
+       				document.getElementById("verifimg").src="erroricon";
        			}	
        			else		//not in county or not served
+       			{	
        				changeAddressBackground(addrElement, errorColor);
+       				document.getElementById("verifimg").src="erroricon";
+       			}
        			
        			document.getElementById('verifmssg').innerHTML = addresponse.errMssg;
       			window.location=document.getElementById('verifanchor').href;
@@ -760,7 +765,8 @@ function verifyAddress(element)
 	else
 	{
 		changeAddressBackground(addrElement, errorColor);
-		document.getElementById('verifmssg').innerHTML = "ERROR: Address incomplete";
+		document.getElementById("verifimg").src="erroricon";
+		document.getElementById('verifmssg').innerHTML = "Address is incomplete. Please enter both a House # and a Street Name";
 		window.location=document.getElementById('verifanchor').href;
 	}
 }

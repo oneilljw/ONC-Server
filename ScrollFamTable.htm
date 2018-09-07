@@ -830,23 +830,24 @@
 		  </dd>
 		  <dt>Q: Some of the families I submitted are listed as "referred". What does this mean?</dt>
 		  <dd>A: We have two organizations in our area who provide holiday assistance, (one food, 
-		  		 the other gifts) but to make life a little easier, ONC manages the intake for 
+		  		 the other gifts) but to make life a little easier, ONC manages intake for 
 		  		 both.
 		  </dd><dd><br>			
 				Under Meal Status, "referred" means that this referral has been sent to WFCM 
-				(Western Fairfax Christian Ministries). Once that status moves to "Referred", 
+				(Western Fairfax Christian Ministries). Once the status changes to "Referred", 
 				any questions regarding food should be directed to Jennie Bush at WFCM.  
 				jbush@wfcmva.org.
 		  </dd><dd><br>				
 				A Gift Status of "referred" would only apply to Herndon or Fairfax residents 
-				just outside our serving area. We coordinate with these other service 
-				providers and when appropriate, the referral is sent to that group for service. 
-				If you have a GIFT status question about a family marked "referred, please 
+				just outside our serving area. We coordinate with other service 
+				providers and when appropriate, a referral is sent to another group for service. 
+				If you have a GIFT status question about a family marked "referred", please 
 				contact Kelly Lavin at ONC, kellylavin@ourneighborschild.org.
 		  </dd><dd><br>		
-				ONC accepts holiday assistance requests for children in the FCPS School 
-				Pyramids of  Centreville, Westfield and Chantilly. A complete listing of 
-				schools is on our website.  
+				ONC accepts holiday assistance requests for families with children in the FCPS Centreville,
+				Westfield and Chantilly school pyramids who also have addresses in one of the following zip 
+				codes: Centreville: 20120 or 20121, Chantilly: 20151, Clifton: 20124, Fairfax: 22033 and 
+				Fairfax Station: 22039. 
 		  </dd>
 		</dl>
 	</div>
@@ -969,20 +970,20 @@
         </dl>
 	</div>
   </div>
-<!-- Change Password Dialog -->
+ <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
-	<div id='inner'>
+	<div class='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65">
-		  <span id='dialogmssg'>Change Password</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class='logospan'>Change Password</span>
 		</div>
 		<p id='pw_mssg'>Enter current and new password:</p>
     	<p><label class='lbl_pw' for="currpw">Current Password:</label>
     	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
-    	<p><label class='lbl_pw'for="newpw">New Password:</label>
+    	<p><label class='lbl_pw' for="newpw">New Password:</label>
     	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
-    	<p><label class='lbl_pw'for="verifypw" >Verify Password:</label>
+    	<p><label class='lbl_pw' for="verifypw" >Verify Password:</label>
     	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
     	<div id='buttonbar'>
       	  <button id="cancel" onclick="onCancel()">Cancel</button>
@@ -992,21 +993,24 @@
   </div>
 <!-- Success Dialog -->
   <div id="successdlg" class="modalDialog">
-	<div id='inner'>
+	<div class='inner'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65">
-		  <span id="successfamheader">Successful Submittal</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class=logospan id="successfamheader">Successful Referral</span>
 		</div>
-		<p id='successfammssg'>SUCCESS_DIALOG_MESSAGE</p>
+		<div>
+		  <span class='verifspan'><img class='errorimg' src="checkmarkicon"></span>
+		  <span id='successfammssg'>SUCCESS_DIALOG_MESSAGE</span>
+		</div>
 	</div>
   </div>  
 <!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
 	<div id='inner'>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65">
-		  <span id='dialogmssg'>Session Timeout</span>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class=logospan id="successfamheader">Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>
     	<div id='buttonbar'>

@@ -218,8 +218,8 @@ public class LoginHandler extends ONCWebpageHandler
 					//send an error message web page that user wasn't found
 					html = webpageMap.get("loginerror");
     					html = html.replace("COLOR", "red");
-    					html = html.replace("LEGEND_MESSAGE", "Unable to find user");
-    					html = html.replace("ERROR_MESSAGE", "We are unable to find your account, please contact ONC at schoolcontact@ourneighborschild.org");
+    					html = html.replace("LEGEND_MESSAGE", "Recovery Unavailable");
+    					html = html.replace("ERROR_MESSAGE", "We are unable process your request, please contact ONC at schoolcontact@ourneighborschild.org");
 				}
 			}
 			else
@@ -227,8 +227,8 @@ public class LoginHandler extends ONCWebpageHandler
 				//send an error message web page that recovery link was 
 				html = webpageMap.get("loginerror");
 				html = html.replace("COLOR", "red");
-				html = html.replace("LEGEND_MESSAGE", "Format Error");
-				html = html.replace("ERROR_MESSAGE", "We are unable to find your account, please contact ONC at schoolcontact@ourneighborschild.org");
+				html = html.replace("LEGEND_MESSAGE", "Recovery Error");
+				html = html.replace("ERROR_MESSAGE", "We are unable to process your request, please contact ONC at schoolcontact@ourneighborschild.org");
 			}
 			
 			sendHTMLResponse(t, new HtmlResponse(html, HttpCode.Ok));
@@ -401,7 +401,7 @@ public class LoginHandler extends ONCWebpageHandler
 			}
 			else
 			{	
-				//sent a reset email to the user's email address from school contact
+				//send a reset email to the user's email address from school contact
 				serverUser.createRecoveryID();
 				serverUser.createTemporaryPassword();
 				serverUser.setStatus(UserStatus.Change_PW);
