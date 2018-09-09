@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -224,12 +225,16 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	
 	String getFamilyStatusWebpage(WebClient wc, String message, boolean bShowSuccessDialog)
 	{
+		Calendar deliveryDay = ServerGlobalVariableDB.getDeliveryDay(DBManager.getCurrentYear());
+		SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy");
+		
 		String response = webpageMap.get("familystatus");
 		response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
 		response = response.replace("USER_MESSAGE", message);
 		response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
 		response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
 		response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+		response = response.replace("DELIVERY_DATE", sdf.format(deliveryDay.getTime()));
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
 		response = response.replace("SHOW_SUCCESS_DIALOG", bShowSuccessDialog ? "true" : "false");
 		String successMssg = String.format("%s", message);

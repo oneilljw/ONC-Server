@@ -114,12 +114,14 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		//check if today is delivery day
 		Calendar delDayCal = globalDB.get(year - BASE_YEAR).getServerGVs().getDeliveryDateCal();
 		Calendar today = Calendar.getInstance();
-		
-		//TEST PURPOSES ONLY -- SET TODAY TO DELIVERY DAY 2017
-//		today.set(2017, 11, 17, 15, 10, 20);	
-		
+
 		return delDayCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
 				delDayCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR);
+	}
+	
+	static Calendar getDeliveryDay(int year)
+	{
+		return globalDB.get(year - BASE_YEAR).getServerGVs().getDeliveryDateCal();
 	}
 /*	
 	Date getDecemberDeadline(int year)
