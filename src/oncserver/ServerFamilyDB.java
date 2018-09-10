@@ -170,7 +170,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
-	static HtmlResponse getFamiliesJSONP(int year, int reqAgentID, ONCServerUser loggedInUser, int reqGroupID, String callbackFunction)
+	static HtmlResponse getFamiliesJSONP(int year, Integer reqAgentID, ONCServerUser loggedInUser, Integer reqGroupID, String callbackFunction)
 	{	
 		Gson gson = new Gson();
 		Type listOfWebsiteFamilies = new TypeToken<ArrayList<ONCWebsiteFamily>>(){}.getType();
@@ -178,7 +178,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
 		ArrayList<ONCWebsiteFamily> responseList = new ArrayList<ONCWebsiteFamily>();
 		
-		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
+		if(reqAgentID == null || reqGroupID == null)
+		{
+			
+		}
+		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
 			reqAgentID < 0 && reqGroupID < 0)
 		{
 			//case: admin or higher login, requested agent = ANY, request group = ANY
