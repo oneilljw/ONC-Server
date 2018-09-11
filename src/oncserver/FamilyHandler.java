@@ -58,8 +58,12 @@ public class FamilyHandler extends ONCWebpageHandler
 			if(wc != null)
 			{
     				int year = Integer.parseInt((String) params.get("year"));
-    				int agentID = Integer.parseInt((String) params.get("agentid"));
-    				int groupID = Integer.parseInt((String) params.get("groupid"));
+    				
+    				String zAgentID = (String) params.get("agentid");
+    				Integer agentID = zAgentID == null? null : Integer.parseInt((String) params.get("agentid"));
+    				
+    				String zGroupID = (String) params.get("agentid");
+    				Integer groupID = zGroupID==null? null : Integer.parseInt((String) params.get("groupid"));
     		
     				htmlResponse = ServerFamilyDB.getFamiliesJSONP(year, agentID, wc.getWebUser(), groupID, (String) params.get("callback"));
 			}

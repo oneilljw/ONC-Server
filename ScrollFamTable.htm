@@ -140,11 +140,11 @@
 			else if(data.length > 1)
 				addComboBoxOption(agtcb, "Anyone", -1);
     	
-    		//add the agents for the year
+    			//add the agents for the year
 			for (var i=0; i < data.length; i++)
 				addComboBoxOption(agtcb, data[i].name, data[i].id);
     		
-    		//get the families
+    			//get the families
 			getFamiliesFromServer(year, agtcb.value.toString(), groupid);
 		});
     }
@@ -253,16 +253,18 @@
     {
     		$("#pytbody").empty();
     		var e = document.getElementById("pyagents");
-    		var agentID = e.value;
-
     		var count = 0;
-    		for(var i=0; i<pyFamJson.length; i++)
-		{
-    			if(agentID == -1 || agentID == pyFamJson[i].agentID)
-    			{
-    			addTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
-    			count++;
-    			}
+    		if(e.length > 0)
+    		{
+    			var agentID = e.value;
+    			for(var i=0; i<pyFamJson.length; i++)
+			{
+    				if(agentID == -1 || agentID == pyFamJson[i].agentID)
+    				{
+    				addTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
+    				count++;
+    				}
+			}
 		}
     	
     		//clear the search box
@@ -277,16 +279,18 @@
     {
     		$("#cytbody").empty();
     		var e = document.getElementById("curragents");
-    		var agentID = e.options[e.selectedIndex].value;
-    	
     		var count = 0;
-    		for(var i=0; i<cyFamJson.length; i++)
-		{
-    			if(agentID == -1 || agentID == cyFamJson[i].agentID)
-    			{
-    				addTableRow(cyFamJson[i], cyTable, "Edit");	//add row to table
-    				count++;
-    			}
+    		if(e.length > 0)
+    		{
+    			var agentID = e.options[e.selectedIndex].value;
+    			for(var i=0; i<cyFamJson.length; i++)
+			{
+    				if(agentID == -1 || agentID == cyFamJson[i].agentID)
+    				{
+    					addTableRow(cyFamJson[i], cyTable, "Edit");	//add row to table
+    					count++;
+    				}
+			}
 		}
     	
     		//clear the search box

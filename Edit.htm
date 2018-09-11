@@ -326,20 +326,22 @@
   <fieldset>
   <legend class="legend-major">Meal Assistance Request Status: Review Only</legend>
  	<label for='mealstatus'>Status:</label>
-	<input id='mealstatus' type="text" size="22" title="Status of meal request" disabled>
+	<input id='mealstatus' type="text" size="18" title="Status of meal request" disabled>
 	<label for='mealtype'>Requested For:</label>
-    <select id="mealtype" name="mealtype" style="width: 136px" title="For which holidays does the family need meal assistance: Thanksgiving, December or Both?" disabled>
+    <select id="mealtype" name="mealtype" style="width: 180px" title="Which holidays did the family request meal assistance: Thanksgiving, December or both, with priority shown first" disabled>
 		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
 		<option value="Thanksgiving">Thanksgiving</option>
 		<option value="December">December</option>
+		<option value="Thanksgiving_December">Thanksgiving and December, if available"</option>
+		<option value="December_Thanksgiving">December and Thanksgiving, if available"</option>
 	</select>
 	<label for='dietres'>Restrictions:</label>
-	<input id="dietres" type="text" name="dietres" size="50" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
+	<input id="dietres" type="text" name="dietres" size="56" placeholder="Dietary restrictions for the family" title="Describe any family dietary restrictions" disabled>
   </fieldset>
   <br>
   <fieldset>
    <legend class="legend-major">Family Details: Update details (if any) about family you think ONC should know</legend>
-	<input id="detail" type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
+	<input id="detail" type="text" name="detail" size="144" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <br>
   <div>
@@ -378,14 +380,14 @@
   </div>
 <!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
-	<div id='inner'>
-		<div id='dialogtopbar'>
-		  <img src="onclogo" height="45" width="65"/>
+	<div class='inner'>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo"/>
 		  <span id='dialogmssg'>Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>
     	<div id='buttonbar'>
-      	  <button id="submit" onclick="onSessionTimeout()">Ok</button>
+      	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
     	</div> 
 	</div>
   </div>    

@@ -374,23 +374,25 @@
 		}
 		else if(sessionStorage.getItem('thanksgivingCutoff') === 'disabled')
 		{
-			var choices = ["December"];
+			var choices = {"December":"December"};
 			mealCombo.disabled = false;
 			dietres.disabled = false;
 		}
 		else
 		{
-			var choices = ["Thanksgiving", "December"];
+			var choices = {"Thanksgiving":"Thanksgiving", "December":"December",
+							"Thanksgiving and December, if available":"Thanksgiving_December",
+							"December and Thanksgiving, if available":"December_Thanksgiving"};
 			mealCombo.disabled = false;
 			dietres.disabled = false;	
 		}
 		
 		//add the meal choices
-		for (var i=0; i < choices.length; i++)
+		for(var key in choices)
 		{
 			var mealOption = document.createElement("option");
-			mealOption.text = choices[i];
-	    		mealOption.value = choices[i];
+			mealOption.text = key;
+	    		mealOption.value = choices[key];
 	    		try 
 	    		{
 	        		mealCombo.add(mealOption, null); //Standard 
