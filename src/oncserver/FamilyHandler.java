@@ -180,9 +180,15 @@ public class FamilyHandler extends ONCWebpageHandler
     			String response = null;
     			WebClient wc;
     		
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+    			if(params.containsKey("year") &&
+    					(wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
     				//send the onc web page
+    				String zYear = (String) params.get("year");
+    				int year = DBManager.getCurrentYear();
+    				if(zYear.equals("-1") && isNumeric(zYear))
+    					year = Integer.parseInt(zYear);
+    				
     				String userFN;
     				if(wc.getWebUser().getFirstName().equals(""))
     					userFN = wc.getWebUser().getLastName();
@@ -193,12 +199,12 @@ public class FamilyHandler extends ONCWebpageHandler
     				response = response.replace("USER_NAME", userFN);
     				response = response.replace("USER_MESSAGE", "");
     				response = response.replace("REPLACE_FAM_REF", "NNA");
-    				response = response.replace("<option>WISH_0_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(0));
-    				response = response.replace("<option>WISH_1_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(1));
-    				response = response.replace("<option>WISH_2_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(2));
-    				response = response.replace("<option>PARTNER_0_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(2017, GiftCollection.Ornament));
-    				response = response.replace("<option>PARTNER_1_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(2017, GiftCollection.Ornament));
-    				response = response.replace("<option>PARTNER_2_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(2017, GiftCollection.Ornament));
+    				response = response.replace("<option>WISH_0_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(year, 0));
+    				response = response.replace("<option>WISH_1_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(year, 1));
+    				response = response.replace("<option>WISH_2_OPTIONS</option>", ServerWishCatalog.getWishHTMLOptions(year, 2));
+    				response = response.replace("<option>PARTNER_0_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(year, GiftCollection.Ornament));
+    				response = response.replace("<option>PARTNER_1_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(year, GiftCollection.Ornament));
+    				response = response.replace("<option>PARTNER_2_OPTIONS</option>", ServerPartnerDB.getConfirmedPartnerHTMLOptionList(year, GiftCollection.Ornament));
     			}
     			else
     				response = invalidTokenReceived();

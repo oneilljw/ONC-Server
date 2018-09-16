@@ -6,20 +6,18 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import ourneighborschild.ONCObject;
 import ourneighborschild.WishDetail;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerWishDetailDB extends ServerPermanentDB
+public class ServerWishDetailDB extends ServerSeasonalDB
 {
-//	private static final int WISH_DETAIL_HEADER_LENGTH = 3;
-	private static final int DETAIL_RECORD_LENGTH = 3;
-	private static final String DETAIL_FILENAME = "WishDetailDB.csv";
+	private static final int DB_RECORD_LENGTH = 3;
+	private static final String DB_FILENAME = "WishDetailDB.csv";
 
-//	private static List<WishDetailDBYear> wdDB;
-	private static List<WishDetail> wdDB;
+	private static List<WishDetailDBYear> wdDB;
+//	private static List<WishDetail> wdDB;
 //	int nextID;
 //	boolean bSaveRequired;
 	private static ServerWishDetailDB instance = null;
@@ -27,9 +25,9 @@ public class ServerWishDetailDB extends ServerPermanentDB
 	private ServerWishDetailDB() throws FileNotFoundException, IOException
 	{
 		//create the wish detail data bases for TOTAL_YEARS number of years
-//		wdDB = new ArrayList<WishDetailDBYear>();
-		wdDB = new ArrayList<WishDetail>();
-/*														
+		wdDB = new ArrayList<WishDetailDBYear>();
+//		wdDB = new ArrayList<WishDetail>();
+														
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
 		{
 			//create the wish detail list for year
@@ -39,16 +37,18 @@ public class ServerWishDetailDB extends ServerPermanentDB
 			wdDB.add(detailDBYear);
 			
 			//import the data from persistent store	
-			importDB(year, String.format("%s/%dDB/WishDetailDB.csv", System.getProperty("user.dir"),
-							year), "Wish Catalog", WISH_DETAIL_HEADER_LENGTH);
+			importDB(year, String.format("%s/%dDB/%s", System.getProperty("user.dir"),
+							year, DB_FILENAME), "Wish Detail", DB_RECORD_LENGTH);
 			
 			//set the next ID
 			detailDBYear.setNextID(getNextID(detailDBYear.getList()));
 		}
-*/		
+
+/*
 		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), DETAIL_FILENAME), "Wish Detail", DETAIL_RECORD_LENGTH);
 		nextID = getNextID(wdDB);
 		bSaveRequired = false;
+*/		
 	}
 	
 	public static ServerWishDetailDB getInstance() throws FileNotFoundException, IOException
@@ -66,39 +66,41 @@ public class ServerWishDetailDB extends ServerPermanentDB
 		WishDetail reqWishDetail = gson.fromJson(json, WishDetail.class);
 		
 		//Find the position for the current wish detail being updated
-//		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-//		List<WishDetail> wishdetailAL = detailDBYear.getList();
+		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+		List<WishDetail> wishdetailAL = detailDBYear.getList();
 		int index = 0;
-		while(index < wdDB.size() && wdDB.get(index).getID() != reqWishDetail.getID())
+		while(index < wishdetailAL.size() && wishdetailAL.get(index).getID() != reqWishDetail.getID())
 			index++;
 		
 		//If wish detail is located, replace the current wish detail with the update.
-		if(index == wdDB.size()) 
+		if(index == wishdetailAL.size()) 
 		{
-			WishDetail currWishDetail = wdDB.get(index);
+			WishDetail currWishDetail = wishdetailAL.get(index);
 			return "UPDATE_FAILED" + gson.toJson(currWishDetail , WishDetail.class);
 		}
 		else
 		{
-			wdDB.set(index, reqWishDetail);
-			bSaveRequired = true;
+			wishdetailAL.set(index, reqWishDetail);
+//			bSaveRequired = true;
 			return "UPDATED_WISH_DETAIL" + json;
 		}
 	}
 	
 	@Override
-	String add(String json)
+	String add(int year, String json)
 	{
 		//Create a wish detail object
 		Gson gson = new Gson();
 		WishDetail addedWishDetail = gson.fromJson(json, WishDetail.class);
 	
 		//set the new id for the detail and add to the year data base
-//		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		addedWishDetail.setID(nextID++);
-		wdDB.add(addedWishDetail);
-		bSaveRequired = true;
-//		detailDBYear.setChanged(true);
+		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+		List<WishDetail> wishdetailAL = detailDBYear.getList();
+		
+		addedWishDetail.setID(detailDBYear.getNextID());
+		wishdetailAL.add(addedWishDetail);
+//		bSaveRequired = true;
+		detailDBYear.setChanged(true);
 		
 		return "ADDED_WISH_DETAIL" + gson.toJson(addedWishDetail, WishDetail.class);
 	}
@@ -109,20 +111,20 @@ public class ServerWishDetailDB extends ServerPermanentDB
 		Gson gson = new Gson();
 		WishDetail reqDelWishDetail = gson.fromJson(json, WishDetail.class);
 		
-		//find the partner in the db
-//		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-//		List<WishDetail> wishdetailAL = detailDBYear.getList();
+		//find the detail in the db
+		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+		List<WishDetail> wishdetailAL = detailDBYear.getList();
 	
 		int index = 0;
-		while(index < wdDB.size() && wdDB.get(index).getID() != reqDelWishDetail.getID())
+		while(index < wishdetailAL.size() && wishdetailAL.get(index).getID() != reqDelWishDetail.getID())
 			index++;
 		
 		//partner must be present and have no ornaments assigned to be deleted
-		if(index < wdDB.size())
+		if(index < wishdetailAL.size())
 		{
-			wdDB.remove(index);
-			bSaveRequired = true;
-//			detailDBYear.setChanged(true);
+			wishdetailAL.remove(index);
+//			bSaveRequired = true;
+			detailDBYear.setChanged(true);
 			return "DELETED_WISH_DETAIL" + json;
 		}
 		else
@@ -134,34 +136,38 @@ public class ServerWishDetailDB extends ServerPermanentDB
 	{
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<WishDetail>>(){}.getType();
+		
+		//find the detail year in the db
+		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+		List<WishDetail> wishdetailAL = detailDBYear.getList();
 			
-		String response = gson.toJson(wdDB, listtype);
+		String response = gson.toJson(wishdetailAL, listtype);
 		
 		return response;	
 	}
 
 	@Override
-	void addObject(String type, String[] nextLine) 
+	void addObject(int year, String[] nextLine) 
 	{
-//		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-//		detailDBYear.add(new WishDetail(nextLine));
-		wdDB.add(new WishDetail(nextLine));
+		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
+		detailDBYear.add(new WishDetail(nextLine));
+//		wdDB.add(new WishDetail(nextLine));
 	}
-/*	
+	
 	private class WishDetailDBYear extends ServerDBYear
 	{
 		private List<WishDetail> wdList;
 	    	
 	    WishDetailDBYear(int year)
 	    {
-	    	super();
-	    	wdList = new ArrayList<WishDetail>();
+	    		super();
+	    		wdList = new ArrayList<WishDetail>();
 	    }
 	    	
 	    //getters
 	    List<WishDetail> getList() { return wdList; }
-	    	
-	    void add(WishDetail addedDetail) {wdList.add(addedDetail); }
+	
+	    void add(WishDetail addedDetail) { wdList.add(addedDetail); }
 	}
 
 	@Override
@@ -177,7 +183,27 @@ public class ServerWishDetailDB extends ServerPermanentDB
 			detailDBYear.setChanged(false);
 		}
 	}
+	
+	@Override
+	void createNewYear(int newYear)
+	{
+		//create a new wish detail data base year for the year provided in the newYear parameter
+		//The wish detail db year list is copy of the prior year, so get the list from the prior 
+		//year and make a deep copy, then save it as the new year
+					
+		//create the new PartnerDBYear
+		WishDetailDBYear wdDBYear = new WishDetailDBYear(newYear);
+		wdDB.add(wdDBYear);
+						
+		//add a deep copy of each wish detail from last year the new season wish detail list
+		List<WishDetail> lyDetailList = wdDB.get(wdDB.size()-1).getList();
+		for(WishDetail lyWD : lyDetailList)
+			wdDBYear.add(new WishDetail(lyWD));	//makes a deep copy of last year
+					
+		wdDBYear.setChanged(true);	//mark this db for persistent saving on the next save event	
+	}
 
+/*	
 	@Override
 	void save()
 	{
@@ -206,7 +232,7 @@ public class ServerWishDetailDB extends ServerPermanentDB
 			}
 		}
 	}
-*/	
+	
 	@Override
 	String[] getExportHeader() { return new String[] {"Wish Detail ID", "Name", "Choices"}; }
 	
@@ -215,4 +241,5 @@ public class ServerWishDetailDB extends ServerPermanentDB
 	
 	@Override
 	List<? extends ONCObject> getONCObjectList() { return wdDB; }
+*/	
 }

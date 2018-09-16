@@ -29,10 +29,11 @@
 	    			{
 	        			yearCombo.add(option); // IE only
 	    			}
-	    		
-	    			sessionStorage.setItem('curryear', yearCombo.value);
     			}
-    		
+ 
+    			sessionStorage.setItem('curryear', yearCombo.value);
+    			setFamilyViewLink(yearCombo.value);
+    			
     			google.charts.load('current', {packages: ['corechart', 'bar']});
             google.charts.setOnLoadCallback(drawFamStatusChart);		
     		
@@ -49,6 +50,12 @@
     	
     		window.setInterval(drawFamStatusChart, 300000);	//five minutes
     	});
+    
+    function setFamilyViewLink(var year)
+    {
+   	 	var linkElem = document.getElementById('familyviewlink');
+		linkElem.href='/familyview?year=' + year; 
+    }
     
     function drawFamStatusChart() 
     {
@@ -276,6 +283,7 @@
     		var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
 		sessionStorage.setItem('curryear', year);
+		setFamilyViewLink(year);
 		drawFamStatusChart();
     }
 	
@@ -419,7 +427,7 @@
 	    <li><a href="#">Families <span class="caret"></span></a>
 		  <div>
 		    <ul>
-		   	  <li><a href="familyview">View Family</a></li>
+		   	  <li><a id='familyviewlink' href="familyview?year=-1">View Family</a></li>
 			  <li><a href="familystatus">Refer Family</a></li>
 		    </ul>
 		  </div>

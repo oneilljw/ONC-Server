@@ -636,7 +636,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_catwish>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = wishCatalog.add(command.substring(17));
+                		String response = wishCatalog.add(year, command.substring(17));
                 		output.println(response);
 //                	clientMgr.dataChanged(this, response);
                 		clientMgr.notifyAllOtherClients(this, response);
@@ -660,7 +660,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_wishdetail>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = wishDetailDB.add(command.substring(20));
+                		String response = wishDetailDB.add(year, command.substring(20));
                 		output.println(response);
 //                	clientMgr.dataChanged(this, response);
                 		clientMgr.notifyAllOtherClients(this, response);

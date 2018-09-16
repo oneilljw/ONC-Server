@@ -456,4 +456,12 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		for(String key:keyset)
 			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
 	}
+	
+	static boolean isNumeric(String str)
+	{
+		if(str == null || str.isEmpty())
+			return false;
+		else
+			return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
+	}
 }
