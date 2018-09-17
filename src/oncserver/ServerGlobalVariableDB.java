@@ -22,9 +22,10 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerGlobalVariableDB extends ServerSeasonalDB
 {
-	private static final int GV_HEADER_LENGTH = 7;
+	private static final int GV_HEADER_LENGTH = 8;
 	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
+	private static final int DEFAULT_GIFT = -1;
 	
 	private static ServerGlobalVariableDB instance = null;
 	private static List<GlobalVariableDBYear> globalDB;
@@ -60,7 +61,10 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		
 //		gvjson = gson.toJson(gvAL.get(year - BASE_YEAR), ServerGVs.class);
+//		ServerGVs sgvs = globalDB.get(year - BASE_YEAR).getServerGVs();
 		gvjson = gson.toJson(globalDB.get(year - BASE_YEAR).getServerGVs(), ServerGVs.class);
+		
+//		System.out.println(String.format("ServGlobVarDB.getGVs: gvs.getDefaultGiftID= %d", sgvs.getDefaultGiftID() ));
 		
 		if(gvjson != null)
 			return "GLOBALS" + gvjson;
@@ -154,7 +158,8 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     								Long.parseLong(nextLine[1]),
     								nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
     								Long.parseLong(nextLine[3]), Long.parseLong(nextLine[4]),
-    								Long.parseLong(nextLine[5]), Long.parseLong(nextLine[6]));
+    								Long.parseLong(nextLine[5]), Long.parseLong(nextLine[6]),
+    								nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]));
     				
     				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
@@ -281,7 +286,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Deadline",
-							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline"};
+							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Default Gift"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_YEAR);
 		if(gvDBYear.isUnsaved())
