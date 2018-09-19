@@ -51,6 +51,7 @@
   			//is a re-referral. Get info for the family
   			familyparams = "year=" + sessionStorage.getItem("prioryear") + "&" +
 				"targetid=" + sessionStorage.getItem("targetid") + "&" +
+				"schools=false" + "&" +
 				"callback=?";
 
 			$.getJSON('getfamily', familyparams, function(family)
@@ -60,7 +61,7 @@
 				document.getElementById('hohln').value= family.HOHLastName;
 				
 				childrenJson = family.childList;
-  		     	updateChildTable(true, false);	//Make agent add school
+  		     	updateChildTable(true);
   		     	updateWishTable();
   		     	
   		     	adultsJson = family.adultList;
@@ -193,7 +194,7 @@
         		child["school"] = document.getElementById('childschool').value;
         		childrenJson.push(child);
         
-        		updateChildTable(true, true);
+        		updateChildTable(true);
         		updateWishTable();
         
         		clearAddChild();
@@ -221,7 +222,7 @@
 	{
 		childrenJson.splice(index, 1);
 		
-		updateChildTable(true, true);
+		updateChildTable(true);
         updateWishTable();	
 	}
 	

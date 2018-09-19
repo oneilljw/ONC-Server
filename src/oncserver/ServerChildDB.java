@@ -66,7 +66,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		return response;	
 	}
 	
-	static HtmlResponse getChildrenInFamilyJSONP(int year, int famID, String callbackFunction)
+	static HtmlResponse getChildrenInFamilyJSONP(int year, int famID, boolean bIncludeSchool, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listOfChildren = new TypeToken<ArrayList<ONCWebChild>>(){}.getType();
@@ -76,7 +76,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		
 		for(ONCChild c: searchList)
 			if(c.getFamID() == famID)
-				responseList.add(new ONCWebChild(c));
+				responseList.add(new ONCWebChild(c, bIncludeSchool));
 		
 		String response = gson.toJson(responseList, listOfChildren);
 
@@ -392,13 +392,13 @@ public class ServerChildDB extends ServerSeasonalDB
 		return fChildrenAL;
 	}
 	
-	List<ONCWebChild> getWebChildList(int year, int famid)
+	List<ONCWebChild> getWebChildList(int year, int famid, boolean bIncludeSchool)
 	{
 		ArrayList<ONCWebChild> fChildrenAL = new ArrayList<ONCWebChild>();
 		
 		for(ONCChild c:childDB.get(year-BASE_YEAR).getList())
 			if(c.getFamID() == famid)
-				fChildrenAL.add(new ONCWebChild(c));
+				fChildrenAL.add(new ONCWebChild(c, bIncludeSchool));
 		
 		return fChildrenAL;
 	}

@@ -10,13 +10,13 @@ var schools = ["Brookfield ES","Bull Run ES","Centre Ridge ES","Centreville ES",
   					"Powell ES", "Pre-K","Rocky Run MS","Stone MS", "Union Mill ES", "Virginia Run ES", 
   					"Westfield HS","Willow Springs ES"];
 
-function updateChildTable(bAction, bShowSchool)
+function updateChildTable(bAction)
 {
     $("#tchildbody").empty();
     	
     for(var i=0; i<childrenJson.length; i++)
 	{
-    		addChildTableRow(i, childrenJson[i], bAction, bShowSchool);	//add row to table
+    		addChildTableRow(i, childrenJson[i], bAction);	//add row to table
 	}
    
     $( function() {
@@ -37,7 +37,7 @@ function updateAdultTable(bAction)
 	}
 }
 
-function addChildTableRow(cnum, child, bAction, bShowSchool)
+function addChildTableRow(cnum, child, bAction)
 {
     var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
     var fieldname = ["childfn", "childln", "childdob", "childgender", "childschool"];
@@ -54,12 +54,7 @@ function addChildTableRow(cnum, child, bAction, bShowSchool)
 	    	content.id=fieldname[index] + cnum;
 	    	content.name=fieldname[index] + cnum;
 	    	content.readOnly=!bAction;
-	    	
-	    	if(fieldname[index] === 'childschool' && !bShowSchool)
-	    		content.value = '';
-	    	else
-	    		content.value = childinfo[index];
-	    	
+	    	content.value = childinfo[index];
 	    	content.setAttribute("size", fieldsize[index]);
 	    	
 	    	if(fieldname[index] === 'childschool')

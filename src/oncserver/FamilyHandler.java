@@ -112,8 +112,9 @@ public class FamilyHandler extends ONCWebpageHandler
 			{
 				int year = Integer.parseInt((String) params.get("year"));
 				String targetID = (String) params.get("targetid");
+				boolean bIncludeSchool = ((String) params.get("schools")).equalsIgnoreCase("true") ? true : false;
         		
-				htmlResponse = ServerFamilyDB.getFamilyJSONP(year, targetID, (String) params.get("callback"));
+				htmlResponse = ServerFamilyDB.getFamilyJSONP(year, targetID, bIncludeSchool, (String) params.get("callback"));
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));

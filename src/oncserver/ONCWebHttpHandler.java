@@ -284,7 +284,8 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     			{
     				int year = Integer.parseInt((String) params.get("year"));
         			int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
-    				htmlResponse =  ServerChildDB.getChildrenInFamilyJSONP(year, famID, (String) params.get("callback"));
+        			boolean bIncludeSchool = ((String) params.get("schools")).equalsIgnoreCase("true") ? true : false;
+    				htmlResponse =  ServerChildDB.getChildrenInFamilyJSONP(year, famID,  bIncludeSchool, (String) params.get("callback"));
     			}
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));

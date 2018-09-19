@@ -1001,7 +1001,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return "FAMILY_NOT_FOUND";
 	}
 	
-	static HtmlResponse getFamilyJSONP(int year, String targetID, String callbackFunction)
+	static HtmlResponse getFamilyJSONP(int year, String targetID, boolean bIncludeSchools, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		String response;
@@ -1017,7 +1017,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			ONCFamily fam = fAL.get(index);
 			
 			//get a list of the children
-			List<ONCWebChild> childList = childDB.getWebChildList(year, fam.getID());
+			List<ONCWebChild> childList = childDB.getWebChildList(year, fam.getID(), bIncludeSchools);
 			List<ONCAdult> adultList = adultDB.getAdultsInFamily(year, fam.getID());
 			
 			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,

@@ -23,6 +23,7 @@
   		{
   			familyparams = "year=" + sessionStorage.getItem("curryear") + "&" +
   							"targetid=" + sessionStorage.getItem("targetid") + "&" +
+  							"schools=true" + "&" +
   							"callback=?";
   			
   			$.getJSON('getfamily', familyparams, function(family)
