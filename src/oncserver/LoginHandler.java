@@ -388,7 +388,18 @@ public class LoginHandler extends ONCWebpageHandler
 		ONCServerUser serverUser = (ONCServerUser) userDB.findUserByEmailAndPhone(email, phone);
 		if(serverUser != null)
 	    	{
-			if(serverUser.getStatus() == UserStatus.Inactive)
+			if(serverUser.getAccess() != UserAccess.Website || serverUser.getAccess() != UserAccess.AppAndWebsite)
+			{
+				//send a webpage that informs user that we've sent them an email
+				html = webpageMap.get("loginerror");
+				html = html.replace("COLOR", "red");
+				html = html.replace("LEGEND_MESSAGE", "Identity Verified, Access Unauthorized");
+				html = html.replace("ERROR_MESSAGE", "We found your account, however, website access isn't authorized. "
+									+ "You'll need to contact ONC at schoolcontact@ourneighborschild.org "
+									+ "to authorize website access.");
+				response = new HtmlResponse(html, HttpCode.Ok);
+			}
+			else if(serverUser.getStatus() == UserStatus.Inactive)
 			{
 				//send a webpage that informs user that we've sent them an email
 				html = webpageMap.get("loginerror");
@@ -399,6 +410,7 @@ public class LoginHandler extends ONCWebpageHandler
 									+ "to unlock your account.");
 				response = new HtmlResponse(html, HttpCode.Ok);
 			}
+			
 			else
 			{	
 				//send a reset email to the user's email address from school contact
