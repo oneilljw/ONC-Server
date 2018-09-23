@@ -328,9 +328,9 @@ public class FamilyHandler extends ONCWebpageHandler
 					addedMeal != null ? addedMeal.getID() : -1,
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
 					Transportation.valueOf(familyMap.get("transportation")));
-			
-		ONCFamily addedFamily = serverFamilyDB.add(year, fam);
 		
+		//add the family and family history to the data base
+		ONCFamily addedFamily = serverFamilyDB.add(year, fam);
 		if(addedFamily != null)
 		{
 			//add the family history object and update the family history object id

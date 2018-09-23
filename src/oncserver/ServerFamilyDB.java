@@ -862,7 +862,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			updateRegionAndSchoolCode(addedFam);
 			
 			//create the ONC number
-			addedFam.setONCNum(generateONCNumber(year, addedFam.getSchoolCode()));
+			String newONCNum = generateONCNumber(year, addedFam.getSchoolCode());
+			addedFam.setONCNum(newONCNum);
 			
 			//set the new ID for the added family
 			int famID = fDBYear.getNextID();
@@ -874,12 +875,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				targetID = generateReferenceNumber();
 				addedFam.setReferenceNum(targetID);
 			}
-			
+/*			
 			//add the family history 
 			ONCFamilyHistory histItem = addHistoryItem(year, addedFam.getID(), addedFam.getFamilyStatus(), addedFam.getGiftStatus(),
 										"", "Family Referred", addedFam.getChangedBy(), false);
-			addedFam.setDeliveryID(histItem.getID());
 			
+			addedFam.setDeliveryID(histItem.getID());
+*/			
 			//add to the family data base
 			fDBYear.add(addedFam);
 			fDBYear.setChanged(true);
