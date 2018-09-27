@@ -388,7 +388,7 @@ public class LoginHandler extends ONCWebpageHandler
 		ONCServerUser serverUser = (ONCServerUser) userDB.findUserByEmailAndPhone(email, phone);
 		if(serverUser != null)
 	    	{
-			if(serverUser.getAccess() != UserAccess.Website || serverUser.getAccess() != UserAccess.AppAndWebsite)
+			if(serverUser.getAccess() == UserAccess.App)
 			{
 				//send a webpage that informs user that we've sent them an email
 				html = webpageMap.get("loginerror");

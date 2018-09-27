@@ -426,17 +426,11 @@
 			var content = document.getElementById(event.target.id).value.toLowerCase();
 			if(content.includes('gift card') || content.includes('giftcard'))
 			{
-//				document.getElementById('giftcardmssg').textContent = "This child is younger than 11 years old." +
-//					"\r\n\r\nAn age appropriate gift will be\r\nsubstituted unless extenuating" +
-//					"\r\ncircumstances are noted in Family Details." +
-//					"\r\n\r\nIf extenuating circumstances exist,\r\n\please include type of gift card requested " +
-//					"\r\n(i.e.: Target, Amazon, iTunes, etc.)";
-				
 				document.getElementById('giftcardmssg').textContent = "Based on limited availability, ONC" +
 				"\r\ngenerally provides gift cards to children\r\n13 and older. If there is an extenuating" +
 				"\r\ncircumstance requiring a gift card," +
 				"\r\nplease note it in Family Details below\r\n\and include the type of gift card" +
-				"\r\n(i.e.: Target, Amazon, iTunes, etc.)\r\nwith the correspoding wish.";
+				"\r\n(i.e.: Target, Amazon, iTunes, etc.)\r\nwith the corresponding wish.";
 			
 				window.location=document.getElementById('giftcardanchor').href;
 			}

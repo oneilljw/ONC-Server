@@ -640,6 +640,22 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			
 			returnCode = returnCode | delAddrErrorResult.getReturnCode();
 		}
+		else
+		{
+			//Delivery address is a school. HoH address cannot be a school, it can be anything else
+			int hohAddrCheckResult = checkAddress(new Address(addressMap.get("housenum"), addressMap.get("street"),
+					addressMap.get("unit"), addressMap.get("city"), addressMap.get("zipcode")));
+			
+			if(hohAddrCheckResult == RC_ADDRESS_IS_SCHOOL) //Error: hoh can't be a school if del address is a school
+			{
+				errMssg = String.format("The HoH address cannot be a school address in Fairfax County. "
+						+ "Please provide the family's actual, valid Fairfax County address. To refer "
+						+ "a family without a vaild Fairfax County residential address, please send an email "
+						+ "to schoolcontact@ourneighborschild.org");
+				
+				returnCode = returnCode | EC_ADDRESS_NOT_VALID ;
+			}	
+		}
 		
 //		System.out.println(String.format("ONCWebHttpHdlr.verifyHoHAndDelAdd: rc= %d, mssg= %s", returnCode, errMssg));
 		

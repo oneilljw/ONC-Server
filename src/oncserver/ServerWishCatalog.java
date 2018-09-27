@@ -223,7 +223,8 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Wish Detail ID", "Name", "Choices"};
+		String[] header = {"Wish Detail ID", "Name", "List Index", "Wish Detail 1 ID",
+				"Wish Detail 2 ID", "Wish Detail 3 ID", "Wish Detail 4 ID"};
 		
 		WishCatalogDBYear catDBYear = catalogDB.get(year - BASE_YEAR);
 		if(catDBYear.isUnsaved())
