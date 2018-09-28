@@ -527,7 +527,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 	{
 		String callback = (String) params.get("callback");
 		
-		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode"};
+		String[] addressKeys = {"housenum", "street", "unit", "city", "zipcode", "type"};
 		Map<String, String> addressMap = createMap(params, addressKeys);
 		
 //		for(String key:addressMap.keySet())
@@ -541,8 +541,17 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		String errMssg;
 		if(chkAddressResult == RC_ADDRESS_IS_SCHOOL)	//if address is school, address is valid
 		{
-			json = gson.toJson(new AddressValidation(0, "Address is a school in school pyramids "
-													+ "served by ONC"), AddressValidation.class);
+			if(addressMap.get("type").equals("del"))
+			{
+				json = gson.toJson(new AddressValidation(0, "Address is a school in school pyramids "
+						+ "served by ONC"), AddressValidation.class);
+			}
+			else
+			{
+				errMssg = "Address is a school, it must be a residence in Fairfax County. "
+						+ "Only the delivery address can be a school in ONC served school pyramids.";
+				json = gson.toJson(new AddressValidation(1, errMssg), AddressValidation.class);
+			}
 		}
 		else if(chkAddressResult == RC_ADDRESS_NOT_VALID)	//address is not in the database
 		{	

@@ -5,7 +5,6 @@
   <script src="//code.jquery.com/jquery-1.12.4.js"></script>
   <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script src="commonfamily.js"></script>
-  <script src="https://secure.comodo.com/trustlogo/javascript/trustlogo.js" type="text/javascript"></script>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css"> 
@@ -34,7 +33,7 @@
   		     	updateChildTable(false, true);
   		     	
   		     	adultsJson = family.adultList;
-  		     	updateAdultTable(true);
+  		     	updateAdultTable(false);
   		     	
   		     	//now that inputs are set for family, enable the address input listeners
   		     	document.getElementById('city').setAttribute('onchange','cityChanged("city")');
@@ -142,10 +141,6 @@
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id="topbar" class="topbar">
     <img src="onclogo" height="55" width="75"/>
-    <span id='trust'>
-	    <script type="text/javascript">TrustLogo("https://oncdms.org:8902/trustlogo", "CL1", "none");</script>
-  	    <a  href="https://www.instantssl.com/" id="comodoTL">Essential SSL</a>
-  	</span>
     <p><span id="banner">ONC Family Contact Information Update Form</span><br>
 	<span id="message">(please edit and click Submit To ONC to update contact info)</span></p>
   </div>

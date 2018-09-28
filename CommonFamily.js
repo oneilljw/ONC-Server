@@ -603,13 +603,14 @@ function createAllAddressParams(hohAddrElement, delAddrElement)
 	return addressparams;
 }
 
-function createAddressParams(addrElement)
+function createAddressParams(addrElement, type)
 {	
 	var addressparams = "housenum=" + encodeURIComponent(addrElement[0].value) + "&" +
 						"street=" + encodeURIComponent(addrElement[1].value) + "&" +
 						"unit=" + encodeURIComponent(addrElement[2].value) + "&" +
 						"city=" + addrElement[3].value + "&" +
 						"zipcode=" + addrElement[4].value + "&" +
+						"type=" + type + "&" +
 						"callback=?";
 	return addressparams;
 }
@@ -727,7 +728,7 @@ function verifyAddress(element)
 	if(addrElement[0].value !== "" && addrElement[1].value !== "")
 	{
 		//form the address check url
-       	$.getJSON('address', createAddressParams(addrElement), function(addresponse)
+       	$.getJSON('address', createAddressParams(addrElement, prefix), function(addresponse)
       	{
        		if(addresponse.hasOwnProperty('error'))
       		{

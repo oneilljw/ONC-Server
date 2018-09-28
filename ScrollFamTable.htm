@@ -6,7 +6,6 @@
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script type="text/javascript"></script>
-  <script src="https://secure.comodo.com/trustlogo/javascript/trustlogo.js" type="text/javascript"></script>
   <script>
 	var pyFamJson = [];
 	var cyFamJson = [];
@@ -31,6 +30,30 @@
     			homelinkli.parentNode.removeChild(homelinkli);
     		}
     		
+    		// Write on keyup event of keyword prior year seach input element
+        $("#pysearch").keyup(function(){
+                _this = this;
+                // Show only matching TR, hide rest of them
+                $.each($("#pyTable tbody tr"), function() {
+                    if($(this).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
+                       $(this).hide();
+                    else
+                       $(this).show();                
+                });
+        });
+        	
+        // Write on keyup event of keyword current year seach input element
+        $("#cysearch").keyup(function(){
+                _this = this;
+                // Show only matching TR, hide rest of them
+                $.each($("#cyTable tbody tr"), function() {
+                    if($(this).find('td').eq(2).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
+                       $(this).hide();
+                    else
+                       $(this).show();                
+                });
+        });
+    		
    	 	//get the list of years from the data base and put it in the year combo box
     		var dbyearsparams = "callback=?";
     		$.getJSON('dbStatus', dbyearsparams, function(data)
@@ -53,58 +76,143 @@
     				btnRNF.style.backgroundColor='Gray';
     	       		btnRNF.disabled = true;
     			}
-    		
-    			//get the current year groups, agents & families
-    			var groupcb = document.getElementById('currgroups');
-    			var agentcb = document.getElementById('curragents');
-    			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('curryear'), groupcb, agentcb);
-    		
-    			//get the prior year groups, agents & families
-    			var groupcb = document.getElementById('pygroups');
-    			var agentcb = document.getElementById('pyagents');
-    			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('prioryear'), groupcb, agentcb);
     			
-    			//show the success dialog if this page loaded due to a successful referral or update
-    		  	if(bShowSuccessDialog)
-    	  			window.location=document.getElementById('successanchor').href;
+    			getPYandCYIntialGroupsAgentsAndFamlies();
+    			
+//    			//get the current year groups, agents & families
+//    			var groupcb = document.getElementById('currgroups');
+//    			var agentcb = document.getElementById('curragents');
+//    			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('curryear'), groupcb, agentcb);
+//    		
+//    			//get the prior year groups, agents & families
+//    			var groupcb = document.getElementById('pygroups');
+//    			var agentcb = document.getElementById('pyagents');
+//    			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('prioryear'), groupcb, agentcb);
+//    			
+//    			//show the success dialog if this page loaded due to a successful referral or update
+//    		  	if(bShowSuccessDialog)
+//    	  			window.location=document.getElementById('successanchor').href;
     		});
     	
     	
-    		// Write on keyup event of keyword prior year seach input element
-        $("#pysearch").keyup(function(){
-            _this = this;
-            // Show only matching TR, hide rest of them
-            $.each($("#pyTable tbody tr"), function() {
-                if($(this).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
-                   $(this).hide();
-                else
-                   $(this).show();                
-            });
-        });
-    	
-     // Write on keyup event of keyword current year seach input element
-        $("#cysearch").keyup(function(){
-            _this = this;
-            // Show only matching TR, hide rest of them
-            $.each($("#cyTable tbody tr"), function() {
-                if($(this).find('td').eq(2).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
-                   $(this).hide();
-                else
-                   $(this).show();                
-            });
-        });
+    		
      
-        $.getJSON('getstatus', dbyearsparams, function(status)
-        {
-        		if(status.userstatus === 'Update_Profile')
-            {
-        			showEditProfileDialog();
-        			window.location=document.getElementById('editprofileanchor').href;
-            }
-    		});
-        
-     	
+//        $.getJSON('getstatus', dbyearsparams, function(status)
+//        {
+//        		if(status.userstatus === 'Update_Profile')
+//            {
+//        			showEditProfileDialog();
+//        			window.location=document.getElementById('editprofileanchor').href;
+//            }
+//    		}); 	
     });
+    
+    //this function gets current year agents and families before prior year beacuse we use the
+    //current year families to deterimine the button status in the prior year family table
+    function getPYandCYIntialGroupsAgentsAndFamlies()
+    {
+    		var pyGroupCBElem = document.getElementById('pygroups');
+    		var cyGroupCBElem = document.getElementById('currgroups');
+    		
+   	 	//get groups from server and place into the group comboboxes. agentid =-1 defaults
+		//to the logged in user
+		var groupparams = "agentid=-1&default=on&callback=?";
+		$.getJSON('groups', groupparams, function(data)
+		{
+			//clear the group comboboxes
+    			pyGroupCBElem.options.length = 0;
+    			cyGroupCBElem.options.length = 0;
+		
+    			//add the groups for the agent
+			for (var i=0; i < data.length; i++)
+			{
+				addComboBoxOption(pyGroupCBElem, data[i].name, data[i].id);
+				addComboBoxOption(cyGroupCBElem, data[i].name, data[i].id);
+			}
+    			
+    			//now that we have the groups, get the prior year agent combo box content
+    			var pyAgentCBElem = document.getElementById('pyagents');
+    			var cyAgentCBElem = document.getElementById('curragents');
+    			pyAgentCBElem.options.length = 0;
+    			cyAgentCBElem.options.length = 0;
+		
+			//populate the current year agent combobox
+	    		var agentsparams ="year=" + sessionStorage.getItem('curryear') + "&groupid=" + cyGroupCBElem.value + "&callback=?";
+			$.getJSON('agents', agentsparams, function(cyAgentData)
+			{
+				//add the "Anyone" option if there is more than one agent object
+				if(cyAgentData.hasOwnProperty('error'))
+					window.location=document.getElementById('timeoutanchor').href;
+				else if(cyAgentData.length > 1)
+					addComboBoxOption(cyAgentCBElem, "Anyone", -1);
+	    	
+	    			//add the agents for the year
+				for (var i=0; i < cyAgentData.length; i++)
+					addComboBoxOption(cyAgentCBElem, cyAgentData[i].name, cyAgentData[i].id);
+	    			
+	    			//populate the current year families
+	    			var familiesparams = "year=" + sessionStorage.getItem('curryear') + 
+	    								"&agentid=" + cyAgentCBElem.value + 
+	    								"&groupid=" + cyGroupCBElem.value + "&callback=?";
+    				$.getJSON('families', familiesparams, function(cyFamData)
+    				{
+    					if(cyFamData.hasOwnProperty('error'))
+    						window.location=document.getElementById('timeoutanchor').href;
+    					else
+    					{
+    						cyFamJson = cyFamData;
+    						updateCYTable();
+    					}
+    					
+    					//populate the prior year agent combobox
+    					var agentsparams ="year=" + sessionStorage.getItem('prioryear') + "&groupid=" + pyGroupCBElem.value + "&callback=?";
+    					$.getJSON('agents', agentsparams, function(pyAgentData)
+    					{
+    						//add the "Anyone" option if there is more than one agent object
+    						if(pyAgentData.hasOwnProperty('error'))
+    							window.location=document.getElementById('timeoutanchor').href;
+    						else if(pyAgentData.length > 1)
+    							addComboBoxOption(pyAgentCBElem, "Anyone", -1);
+    			    	
+    			    			//add the agents for the prior year
+    						for (var i=0; i < pyAgentData.length; i++)
+    							addComboBoxOption(pyAgentCBElem, pyAgentData[i].name, pyAgentData[i].id);
+    			    			
+    			    			//populate prior year families
+	    					var familiesparams = "year=" + sessionStorage.getItem('prioryear') + 
+	    								"&agentid=" + pyAgentCBElem.value + 
+	    								"&groupid=" + pyGroupCBElem.value + "&callback=?";
+    						$.getJSON('families', familiesparams, function(pyFamData)
+    						{
+    							if(pyFamData.hasOwnProperty('error'))
+    								window.location=document.getElementById('timeoutanchor').href;
+    							else
+    							{
+    								pyFamJson = pyFamData;
+    								updatePYTable();
+    							}
+    							
+    							//if the page load was the result of a successful referral, show the dialog box
+    			    		  		if(bShowSuccessDialog)
+    			    	  				window.location=document.getElementById('successanchor').href;
+    			    		  		else
+    			    		  		{
+    			    		  			var dbyearsparams = "callback=?";
+    			    		  			$.getJSON('getstatus', dbyearsparams, function(status)
+    			    		  			{
+    			    		  				if(status.userstatus === 'Update_Profile')
+    			    		  			    {
+    			    		  			    		showEditProfileDialog();
+    			    		  			        	window.location=document.getElementById('editprofileanchor').href;
+    			    		  			    }
+    			    		  			}); 	
+    			    		  		}
+    						});
+    					});
+    				});	    			
+			});
+		});
+    }
     
     function getGroupsAgentsAndFamiliesFromServer(year, groupcb, agentcb)
     {  	
@@ -151,10 +259,7 @@
     
     function getFamiliesFromServer(year, agentid, groupid)
     {
-    		familiesparams = "year=" + year + 
-			 			 "&agentid=" + agentid +
-			 			 "&groupid=" + groupid + 
-			 			 "&callback=?";
+    		var familiesparams = "year=" + year + "&agentid=" + agentid + "&groupid=" + groupid + "&callback=?";
     	
     		$.getJSON('families', familiesparams, function(data)
     		{
@@ -261,8 +366,8 @@
 			{
     				if(agentID == -1 || agentID == pyFamJson[i].agentID)
     				{
-    				addTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
-    				count++;
+    					addTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
+    					count++;
     				}
 			}
 		}
@@ -692,10 +797,6 @@
   <header>
     <div id="topbar" class="topbar">
       <img src="onclogo" height="55" width="75"/>
-      <span id='trust'>
-	    <script type="text/javascript">TrustLogo("https://oncdms.org:8902/trustlogo", "CL1", "none");</script>
-  	    <a  href="https://www.instantssl.com/" id="comodoTL">Essential SSL</a>
-  	  </span>
 	  <p><span id="banner">USER_NAME, welcome to Our Neighbor's Child's Family Referral System</span><br>
 	<span id="message">USER_MESSAGE</span></p>
 	
