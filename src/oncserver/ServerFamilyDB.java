@@ -35,7 +35,6 @@ import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
-import ourneighborschild.ONCWebsiteFamilyExtended;
 import ourneighborschild.UserPermission;
 import ourneighborschild.WishStatus;
 import au.com.bytecode.opencsv.CSVReader;
@@ -66,6 +65,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerUserDB userDB;
 	private static ServerChildDB childDB;
 	private static ServerAdultDB adultDB;
+	private static ServerMealDB mealDB;
 	
 	private static ClientManager clientMgr;
 	
@@ -126,6 +126,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		childDB = ServerChildDB.getInstance();
 		adultDB = ServerAdultDB.getInstance();
 		userDB = ServerUserDB.getInstance();
+		mealDB = ServerMealDB.getInstance();
 
 		clientMgr = ClientManager.getInstance();
 	}
@@ -1018,14 +1019,16 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		{
 			ONCFamily fam = fAL.get(index);
 			
-			//get a list of the children
+			//get a list of the children, list of adults, agent and meal, if there is a meal
 			List<ONCWebChild> childList = childDB.getWebChildList(year, fam.getID(), bIncludeSchools);
 			List<ONCAdult> adultList = adultDB.getAdultsInFamily(year, fam.getID());
+			ONCWebAgent famAgent = userDB.getWebAgent(fam.getAgentID());
+			ONCMeal famMeal = fam.getMealID() > -1 ? mealDB.getMeal(year,  fam.getMealID()) : null;
 			
 			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,
 													ServerRegionDB.getRegion(fam.getRegion()),
 													ServerGroupDB.getGroup(fam.getGroupID()).getName(),
-													childList, adultList);
+													childList, adultList, famAgent, famMeal);
 			
 			response = gson.toJson(webFam, ONCWebsiteFamilyExtended.class);
 		}

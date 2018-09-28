@@ -567,6 +567,15 @@ public class ServerUserDB extends ServerPermanentDB
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+	
+	ONCWebAgent getWebAgent(int agentID)
+	{		
+		int index=0;
+		while(index < userAL.size() && userAL.get(index).getID() != agentID)
+			index++;
+		
+		return index < userAL.size() ? new ONCWebAgent(userAL.get(index)) : null;	
 	}	
 		
 	private ONCServerUser createSeverUserFromBritepathsReferral(BritepathFamily bpFam, DesktopClient currClient)

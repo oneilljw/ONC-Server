@@ -83,6 +83,18 @@ public class ServerMealDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
+	ONCMeal getMeal(int year, int mID)
+	{		
+	
+		List<ONCMeal> mAL = mealDB.get(year-BASE_YEAR).getList();
+		
+		int index=0;
+		while(index<mAL.size() && mAL.get(index).getID() != mID)
+			index++;
+		
+		return index < mAL.size() ? mAL.get(index) : null; 	
+	}
+	
 	//add used by desktop client to add a meal
 	@Override
 	String add(int year, String mealjson)

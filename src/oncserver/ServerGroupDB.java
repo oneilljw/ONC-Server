@@ -70,9 +70,10 @@ public class ServerGroupDB extends ServerPermanentDB
 		
 		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
 		{
-			//admin or sys admin users return all groups
+			//admin or sys admin users return all non-volunteer groups
 			for(ONCGroup g : groupList)
-				returnList.add(g);
+				if(g.getType().compareTo(GroupType.Volunteer) < 0)
+					returnList.add(g);
 			
 			Collections.sort(returnList, new ONCGroupNameComparator());
 			

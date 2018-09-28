@@ -242,16 +242,17 @@
     
     function getFamilyFromServer(year, id)
     {
-    		familyparams = "year=" + year + "&targetid=" + id + "&callback=?";
+    		familyparams = "year=" + year + "&targetid=" + id + "&schools=true" + "&callback=?";
     		$.getJSON('getfamily', familyparams, function(data)
     		{
+    			console.log(data);
     			famJson = data;
     			if(famJson.hasOwnProperty('error'))
       		{
 				window.location=document.getElementById('timeoutanchor').href;
       		}
     			else
-    			{	
+    			{
     				document.getElementById('onc').value= famJson.oncNum;
 				document.getElementById('ref').value= famJson.targetID;
 				document.getElementById('batch').value= famJson.BatchNum;
@@ -290,10 +291,50 @@
 	  					document.getElementById(delAddrElements[i]).value = hohAddrParts[i];
 	  			}
 	  			
-				getAgentFromServer(year, famJson.agentID);
-				getFamiliesChildrenFromServer(year, famJson.targetID);
-				getAdultsFromServer(year, famJson.targetID);
-				getMealFromServer(year, famJson.mealID);
+	  			//populate the agent info
+    				document.getElementById('agentname').value= famJson.agent.name;
+				document.getElementById('agentorg').value= famJson.agent.org;
+				document.getElementById('agenttitle').value= famJson.agent.title;
+    				document.getElementById('agentphone').value= famJson.agent.phone;
+				document.getElementById('agentemail').value= famJson.agent.email;
+				
+				//populate the meal info
+				if(famJson.mealID > -1)
+				{
+					document.getElementById('mealtype').value = famJson.meal.type;
+		   	  		document.getElementById('dietres').value = famJson.meal.dietaryRestrictions;
+				}
+				else
+	    			{
+	   				document.getElementById('mealtype').value = "None";
+  					document.getElementById('dietres').value = "";
+	    			}
+				
+				//poplulate the children
+				childrenJson = data.childList;
+				updateChildTable();
+				
+				//populate the adults
+				adultsJson = data.adultList;
+				updateAdultTable();
+				
+				childwishparams= "year=" + year + "&childid=" + childrenJson[0].id + "&callback=?";
+				$.getJSON('wishes', childwishparams, function(wishdata)
+				{
+					wishJson = wishdata;
+					updateWishTable(wishJson);
+				});
+				
+				//get and populate the wishes
+//				if(childrenJson.length > 0)
+//					getChildWishesFromServer(year, childrenJson[0].id);
+//				else
+//					clearWishTable();
+
+//				getAgentFromServer(year, famJson.agentID);
+//				getFamiliesChildrenFromServer(year, famJson.targetID);
+//				getAdultsFromServer(year, famJson.targetID);
+//				getMealFromServer(year, famJson.mealID);
 			
 				if(famJson.DNSCode !== '')
 					document.getElementById('faminfofs').style.backgroundColor = "#FF3333";
@@ -359,47 +400,47 @@
 	  	document.getElementById('faminfofs').style.backgroundColor = "#E8E8E8";
     }
     
-    function getAdultsFromServer(year, targetid)
-    {
-    		adultsparams=  "year=" + year + "&" + "targetid=" + targetid + "&" + "callback=?";
-			
-		$.getJSON('adults', adultsparams, function(data)
-		{
-			if(data.hasOwnProperty('error'))
-				window.location=document.getElementById('timeoutanchor').href;
-    			else
-    			{	
-	    			adultsJson = data;
-	     		updateAdultTable();
-    			}
-		});
-    }
+//    function getAdultsFromServer(year, targetid)
+//    {
+//    		adultsparams=  "year=" + year + "&" + "targetid=" + targetid + "&" + "callback=?";
+//			
+//		$.getJSON('adults', adultsparams, function(data)
+//		{
+//			if(data.hasOwnProperty('error'))
+//				window.location=document.getElementById('timeoutanchor').href;
+//    			else
+//    			{	
+//	    			adultsJson = data;
+//	     		updateAdultTable();
+//    			}
+//		});
+//    }
     
-    function getMealFromServer(year, mealid)
-    {
-    		//get meal and update if family meal id > 1
-	    if(mealid > -1)
-		{
-	     	var mealparams = "year=" + year + "&mealid=" + mealid + "&callback=?";	
-	     					
-	     	$.getJSON('getmeal', mealparams, function(meal)
-	     	{
-	     		if(meal.hasOwnProperty('error'))
-					window.location=document.getElementById('timeoutanchor').href;
-	    			else
-	    			{	
-	       			document.getElementById('mealtype').value = meal.type;
-	   	  			document.getElementById('dietres').value = meal.dietaryRestrictions;
-	    			}
-	   		});
-    		}
-	    else
-	    {
-	   		document.getElementById('mealstat').value = "None Requested";
-	   		document.getElementById('mealtype').value = "None";
-    			document.getElementById('dietres').value = "";
-    		}   		
-    }
+//    function getMealFromServer(year, mealid)
+//    {
+//    		//get meal and update if family meal id > 1
+//	    if(mealid > -1)
+//		{
+//	     	var mealparams = "year=" + year + "&mealid=" + mealid + "&callback=?";	
+//	     					
+//	     	$.getJSON('getmeal', mealparams, function(meal)
+//	     	{
+//	     		if(meal.hasOwnProperty('error'))
+//					window.location=document.getElementById('timeoutanchor').href;
+//	    			else
+//	    			{	
+//	       			document.getElementById('mealtype').value = meal.type;
+//	   	  			document.getElementById('dietres').value = meal.dietaryRestrictions;
+//	    			}
+//	   		});
+//   		}
+//	    else
+//	    {
+//	   		document.getElementById('mealstat').value = "None Requested";
+//	   		document.getElementById('mealtype').value = "None";
+//  			document.getElementById('dietres').value = "";
+//    		}   		
+//    }
     
     function getAgentFromServer(year, agtid)
     {
