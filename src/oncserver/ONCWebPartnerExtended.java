@@ -1,99 +1,85 @@
 package oncserver;
 
+import ourneighborschild.GiftCollection;
 import ourneighborschild.ONCPartner;
 
 public class ONCWebPartnerExtended extends ONCWebPartner
 {
-	private String lastName;
-	private String firstName;
-	private String houseNum;
-	private String street;
-	private String unit;
-	private String city;
-	private String zipCode;
-	private String homePhone;
-	private String other;
-	private String deliverTo;
-	private String specialNotes;
-	private String contact;
-	private String contact_email;
-	private String contact_phone;
-	private String contact2;
-	private String contact2_email;
-	private String contact2_phone;
-	private String pyRequested;
-	private String pyAssigned;
-	private String pyDelivered;
-	private String pyReceivedBeforeDeadline;
-	private String pyReceivedAfterDeadline;
-
-	public ONCWebPartnerExtended(ONCPartner p) 
+	private String status;
+	private String type;
+	private GiftCollection collection;
+	private String orn_req;
+	private String orn_assigned;
+	private String orn_delivered;
+	private String orn_received;
+	private String orn_rec_before;
+	private String orn_rec_after;
+	
+	public ONCWebPartnerExtended(ONCPartner p)
 	{
 		super(p);
-		parseName(p.getLastName());
-		this.houseNum = p.getHouseNum();
-		this.street = p.getStreet();
-		this.unit = p.getUnit();
-		this.city = p.getCity();
-		this.zipCode = p.getZipCode();
-		this.homePhone = p.getHomePhone();
-		this.other = p.getOther();
-		this.deliverTo= p.getDeliverTo();
-		this.specialNotes = p.getSpecialNotes();
-		this.contact = p.getContact();
-		this.contact_email = p.getContact_email();
-		this.contact_phone = p.getContact_phone();
-		this.contact2 =  p.getContact2();
-		this.contact2_email = p.getContact2_email();
-		this.contact2_phone = p.getContact2_phone();
-		this.pyRequested = Integer.toString(p.getPriorYearRequested());
-		this.pyAssigned = Integer.toString(p.getPriorYearAssigned());
-		this.pyDelivered = Integer.toString(p.getPriorYearDelivered());
-		this.pyReceivedBeforeDeadline = Integer.toString(p.getPriorYearReceivedBeforeDeadline());
-		this.pyReceivedAfterDeadline = Integer.toString(p.getPriorYearReceivedAfterDeadline());
+		this.status = getStatusString(p.getStatus());
+		this.type = getTypeString(p.getType());
+		this.collection = p.getGiftCollectionType();
+		this.orn_req = Integer.toString(p.getNumberOfOrnamentsRequested());
+		this.orn_assigned = Integer.toString(p.getNumberOfOrnamentsAssigned());
+		this.orn_delivered = Integer.toString(p.getNumberOfOrnamentsDelivered());
+		this.orn_received = Integer.toString(p.getNumberOfOrnamentsReceivedBeforeDeadline() + p.getNumberOfOrnamentsReceivedAfterDeadline());
+		this.orn_rec_before = Integer.toString(p.getNumberOfOrnamentsReceivedBeforeDeadline());
+		this.orn_rec_after = Integer.toString(p.getNumberOfOrnamentsReceivedAfterDeadline());
 	}
 	
 	//getters
-	String getLastName()	{ return lastName; }
-	String getFirstName()	{ return firstName; }
-	String getHouseNum()	{ return houseNum; }
-	String getStreet()	{return street; }
-	String getUnit() { return unit; }
-	String getCity()	{return city; }
-	String getZipCode()	{ return zipCode; }
-	String getHomePhone()	{ return homePhone; }
-	String getOther()	{ return other; }
-	String getDeliverTo() { return deliverTo; }
-	String getSpecialNotes()	{ return specialNotes; }
-	String getContact()	{ return contact; }
-	String getContact_email()	{ return contact_email; }
-	String getContact_phone()	{ return contact_phone; }
-	String getContact2()	{ return contact2; }
-	String getContact2_email()	{ return contact2_email; }
-	String getContact2_phone()	{ return contact2_phone; }
-	String getPriorYearRequested() { return pyRequested; }
-	String getPriorYearAssigned() { return pyAssigned; }
-	String getPriorYearDelivered() { return pyDelivered; }
-	String getPriorYearReceivedBeforeDeadline() { return pyReceivedBeforeDeadline; }
-	String getPriorYearReceivedAfterDeadline() { return pyReceivedAfterDeadline; }
+	String getStatus() { return status; }
+	String getType() { return type; }
+	GiftCollection getCollectionType() { return collection; }
+	String getNumberOfOrnamentsRequested()	{ return orn_req; }
+	String getNumberOfOrnamentsAssigned() { return orn_assigned; }
+	String getNumberOfOrnamentsDelivered() { return orn_delivered; }
+	String getNumberOfOrnamentsReceived() { return orn_received; }
+	String getNumberOfOrnamentsReceivedBeforeDeadline() { return orn_rec_before; }
+	String getNumberOfOrnamentsReceivedAfterDeadline() { return orn_rec_after; }
 	
-	void parseName(String name)
+	String getStatusString(int status) 
+	{ 
+		String[] stati = {"No Action Yet", "1st Email Sent", "Responded", "2nd Email Sent", 
+							"Called, Left Mssg", "Confirmed", "Not Participating"};
+		
+		return stati[status];
+	}
+	
+	String getTypeString(int type)
 	{
-		String[] parts = name.split(",", 2);
-		if(parts.length == 0)
-		{
-			this.firstName = "";
-			this.lastName = "";
-		}
-		else if(parts.length == 1)
-		{
-			this.firstName = "";
-			this.lastName = name.trim();
-		}
+		String[] types = {"Any","Business","Church","School", "Clothing", "Coat", "ONC Shopper"};
+		return types[type];
+	}
+	
+	static int getStatus(String zStatus)
+	{
+		String[] stati = {"No Action Yet", "1st Email Sent", "Responded", "2nd Email Sent", 
+				"Called, Left Mssg", "Confirmed", "Not Participating"};
+		
+		int index = 0;
+		while(index < stati.length && !stati[index].equals(zStatus))
+			index++;
+			
+		if(index < stati.length)
+			return index;
 		else
-		{
-			this.firstName = parts[1].trim();
-			this.lastName = parts[0].trim();
-		}
+			return 0;	
+	}
+	
+	static int getType(String zType)
+	{
+		String[] types = {"Any","Business","Church","School", "Clothing", "Coat", "ONC Shopper"};
+		
+		int index = 0;
+		while(index < types.length && !types[index].equals(zType))
+			index++;
+			
+		if(index < types.length)
+			return index;
+		else
+			return 0;
 	}
 }

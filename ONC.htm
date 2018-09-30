@@ -27,6 +27,25 @@
 		document.getElementById('srch-prior').style.visibility = 'hidden';
 		document.getElementById('srch-next').style.visibility = 'hidden';
 		
+		$("#search").keyup(function (e) {
+    			if(e.keyCode == 13) 
+    			{
+        			onSearch();
+   		 	}
+		});
+
+		// CLEARABLE INPUT
+		$(document).on('input', '.clearable', function()
+		{
+    			$(this)[tog(this.value)]('x');    	    
+				}).on('mousemove', '.x', function( e ){
+    			$(this)[tog(this.offsetWidth-18 < e.clientX-this.getBoundingClientRect().left)]('onX');
+				}).on('touchstart click', '.onX', function( ev ){
+    					ev.preventDefault();
+    					onClearSearch();
+    			$(this).removeClass('x onX').val('').change();   	    
+		});
+		
     		//get the list of years from the data base and put it in the year combo box
     		var dbyearsparams = "callback=?";
     		$.getJSON('dbStatus', dbyearsparams, function(data)
@@ -49,35 +68,16 @@
     			}
 
     			document.getElementById('yearlist').value= sessionStorage.getItem('curryear');
-    			getFamilyReferencesFromServer(sessionStorage.getItem('curryear'));
-    		});
-    	
-    		$("#search").keyup(function (e) {
-    	    		if(e.keyCode == 13) 
-    	    		{
-    	        		onSearch();
-    	   		 }
-    		});
-    	
-    		// CLEARABLE INPUT
-    		$(document).on('input', '.clearable', function()
-    		{
-    	    		$(this)[tog(this.value)]('x');    	    
-    		}).on('mousemove', '.x', function( e ){
-    	    		$(this)[tog(this.offsetWidth-18 < e.clientX-this.getBoundingClientRect().left)]('onX');
-    		}).on('touchstart click', '.onX', function( ev ){
-    	    		ev.preventDefault();
-    	    		onClearSearch();
-    	    		$(this).removeClass('x onX').val('').change();   	    
-    		});
-    	
-    		$.getJSON('getstatus', dbyearsparams, function(status)
-    		{
-    			if(status.userstatus === 'Update_Profile')
-    			{
-				showEditProfileDialog();
-				window.location=document.getElementById('editprofileanchor').href;
-    			}
+    			getCatalogPartnersFamilyReferencesFromServer(sessionStorage.getItem('curryear'));
+    			
+    			$.getJSON('getstatus', dbyearsparams, function(status)
+    		    	{
+    		    		if(status.userstatus === 'Update_Profile')
+    		    		{
+    					showEditProfileDialog();
+    					window.location=document.getElementById('editprofileanchor').href;
+    		    		}
+    		    	});
     		});
     });
     
@@ -162,33 +162,56 @@
     		}
     }
     
-    function getFamilyReferencesFromServer(year)
+    function getCatalogPartnersFamilyReferencesFromServer(year)
     {
-    		familyparams = "year=" + year + "&callback=?";
-    		$.getJSON('references', familyparams, function(data)
+    		var params = "year=" + year + "&callback=?";
+    		$.getJSON('giftcatalog', params, function(catalog)
     		{
-    			familyRefs = data;
-    			if(familyRefs.hasOwnProperty('error'))
-      		{
-				window.location=document.getElementById('timeoutanchor').href;
-      		}
-    			else if(familyRefs.length=== 0)
-    			{
-    				famIndex=0;
-    				clearPageData();
-    			}
-    			else if(sessionStorage.getItem('famref')=== 'NNA')
-    			{
-    				famIndex= 0;
-    				getFamilyFromServer(year, familyRefs[0].id);
-    			}
-    			else
-    			{
-    				findFamilyIndexAndGetFamily(year, sessionStorage.getItem('famref'))
-    			}
-    		
-    			var resultEl = document.getElementById('resultbar');
-			resultEl.textContent = "Families: " + familyRefs.length.toString();
+    			if(catalog.hasOwnProperty('error'))
+          	{
+    				window.location=document.getElementById('timeoutanchor').href;
+          	}
+   			else
+   			{
+   				var partnerparams = "year=" + year + "&confirmed=true&callback=?";
+    				$.getJSON('partners', partnerparams, function(partnerlist)
+    	    			{
+   					var mask = [1,2,4];
+   					for(var wn=0; wn<3; wn++)
+   					{
+   						//build the catalog for each wish
+   	   					var giftlist=[];
+   	   					for(var i=0; i<catalog.length; i++)
+   	   						if((catalog[i].listindex & mask[wn]) > 0)
+   	   							giftlist.push(catalog[i]);
+   	   				
+   						addOptionsToSelect(document.getElementById('wishname'+ wn), giftlist);
+   						addOptionsToSelect(document.getElementById('wishpartner'+ wn), partnerlist);
+   					}	
+
+    					$.getJSON('references', params, function(data)
+    			   	 	{
+    			    			familyRefs = data;
+    			    			if(familyRefs.length=== 0)
+    			    			{
+    			    				famIndex=0;
+    			    				clearPageData();
+    			    			}
+    			    			else if(sessionStorage.getItem('famref')=== 'NNA')
+    			    			{
+    			    				famIndex= 0;
+    			    				getFamilyFromServer(year, familyRefs[0].id);
+    			    			}
+    			    			else
+    			    			{
+    			    				findFamilyIndexAndGetFamily(year, sessionStorage.getItem('famref'))
+    			    			}
+    			    		
+    			    			var resultEl = document.getElementById('resultbar');
+    						resultEl.textContent = "Families: " + familyRefs.length.toString();
+    			    		});
+    	    			});
+    			}	
     		});
     }
     
@@ -245,7 +268,6 @@
     		familyparams = "year=" + year + "&targetid=" + id + "&schools=true" + "&callback=?";
     		$.getJSON('getfamily', familyparams, function(data)
     		{
-    			console.log(data);
     			famJson = data;
     			if(famJson.hasOwnProperty('error'))
       		{
@@ -324,18 +346,7 @@
 					wishJson = wishdata;
 					updateWishTable(wishJson);
 				});
-				
-				//get and populate the wishes
-//				if(childrenJson.length > 0)
-//					getChildWishesFromServer(year, childrenJson[0].id);
-//				else
-//					clearWishTable();
-
-//				getAgentFromServer(year, famJson.agentID);
-//				getFamiliesChildrenFromServer(year, famJson.targetID);
-//				getAdultsFromServer(year, famJson.targetID);
-//				getMealFromServer(year, famJson.mealID);
-			
+						
 				if(famJson.DNSCode !== '')
 					document.getElementById('faminfofs').style.backgroundColor = "#FF3333";
 				else if(famJson.bGiftCardOnly === true)
@@ -398,88 +409,6 @@
 	  	document.getElementById('dietres').value = '';
 	  	
 	  	document.getElementById('faminfofs').style.backgroundColor = "#E8E8E8";
-    }
-    
-//    function getAdultsFromServer(year, targetid)
-//    {
-//    		adultsparams=  "year=" + year + "&" + "targetid=" + targetid + "&" + "callback=?";
-//			
-//		$.getJSON('adults', adultsparams, function(data)
-//		{
-//			if(data.hasOwnProperty('error'))
-//				window.location=document.getElementById('timeoutanchor').href;
-//    			else
-//    			{	
-//	    			adultsJson = data;
-//	     		updateAdultTable();
-//    			}
-//		});
-//    }
-    
-//    function getMealFromServer(year, mealid)
-//    {
-//    		//get meal and update if family meal id > 1
-//	    if(mealid > -1)
-//		{
-//	     	var mealparams = "year=" + year + "&mealid=" + mealid + "&callback=?";	
-//	     					
-//	     	$.getJSON('getmeal', mealparams, function(meal)
-//	     	{
-//	     		if(meal.hasOwnProperty('error'))
-//					window.location=document.getElementById('timeoutanchor').href;
-//	    			else
-//	    			{	
-//	       			document.getElementById('mealtype').value = meal.type;
-//	   	  			document.getElementById('dietres').value = meal.dietaryRestrictions;
-//	    			}
-//	   		});
-//   		}
-//	    else
-//	    {
-//	   		document.getElementById('mealstat').value = "None Requested";
-//	   		document.getElementById('mealtype').value = "None";
-//  			document.getElementById('dietres').value = "";
-//    		}   		
-//    }
-    
-    function getAgentFromServer(year, agtid)
-    {
-    		agentparams = "year=" + year + "&agentid=" + agtid + "&callback=?";
-    		$.getJSON('getagent', agentparams, function(data)
-    		{
-    			if(data.hasOwnProperty('error'))
-					window.location=document.getElementById('timeoutanchor').href;
-	    		else
-	    		{	
-    				agtJson = data;
-    				document.getElementById('agentname').value= agtJson.name;
-				document.getElementById('agentorg').value= agtJson.org;
-				document.getElementById('agenttitle').value= agtJson.title;
-    				document.getElementById('agentphone').value= agtJson.phone;
-				document.getElementById('agentemail').value= agtJson.email;
-	    		}
-    		});
-    }
-    
-    function getFamiliesChildrenFromServer(year, targetid)
-    {
-    		childrenparams=  "year=" + year + "&" + "targetid=" + targetid + "&" + "callback=?";
-
-		$.getJSON('children', childrenparams, function(data)
-		{
-			if(data.hasOwnProperty('error'))
-				window.location=document.getElementById('timeoutanchor').href;
-			else
-			{
-				childrenJson = data;
-				updateChildTable();
-				
-				if(childrenJson.length > 0)
-					getChildWishesFromServer(year, childrenJson[0].id);
-				else
-					clearWishTable();
-			}
-		});
     }
     
     function getChildWishesFromServer(year, childid)
@@ -633,21 +562,14 @@
         tabBody.appendChild(row);
     }
 	
-	function addOptionsToSelect(selectElement)
+	function addOptionsToSelect(selectElement, options)
 	{
-		var wishes = ["Accessories","Baby Item"
-			,"Bedding","Bike","Blanket","Book","CD","Coat","Clothes",
-			"Craft","Doll","DVD","Educational Gift","Electronic","Game","Gift Card",
-			"Helmet","Musical Inst","Puzzle","Sports Item","Scooter/Hlmt","Shoes",
-			"Special Req.","Toy","Video Game","Games or Puzzles","Jewelry",
-			"Skateboard & Helmet","Scooter & Helmet","Anything","Scooter",
-			"Skateboard","Toy or Game"];
-		
-		for (var i = 0; i<wishes.length; i++)
+		removeOptions(selectElement);
+		for (var i = 0; i<options.length; i++)
 		{
 		    var opt = document.createElement('option');
-		    opt.value = wishes[i];
-		    opt.innerHTML = wishes[i];
+		    opt.value = options[i].id;
+		    opt.innerHTML = options[i].name;
 		    selectElement.appendChild(opt);
 		}
 	}
@@ -691,13 +613,19 @@
 	
 	function updateForYearSelection()
     {
-    	//get selected year
+   	 	//get selected year
     		var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
 		
 		sessionStorage.setItem('curryear', year);
 		sessionStorage.setItem('famref', "NNA");
-		getFamilyReferencesFromServer(year);
+		
+		//get the wish catalog for the year
+		
+		//get the confirmed partner list for the year
+		
+		//get the family refrences for the year
+		getCatalogPartnersFamilyReferencesFromServer(year);
     }
 	
 	function updateForChildSelection()
@@ -719,7 +647,7 @@
 		var i;
 		for(i=select.options.length-1;i>=0;i--)
 		{
-	    	select.remove(i);
+	   	 	select.remove(i);
 	    }
 	}
 	
@@ -845,7 +773,7 @@
 	function validate()
     {
 		var mssgEl = document.getElementById("pw_mssg");
-    	var currpwEl = document.getElementById("currpw");
+    		var currpwEl = document.getElementById("currpw");
         var pass1El = document.getElementById("newpw");
         var pass2El = document.getElementById("verifypw");
         var ok = true;
@@ -963,18 +891,10 @@
   </div>
   <nav>
 	<ul>
-<!--	  <li><a href="">Agents <span class="caret"></span></a>
-		  <div>
-		    <ul>
-			  <li><a href="">Manage Agents</a></li>
-		    </ul>
-		  </div>
-	    </li> `-->
 	    <li><a href="dashboard">Dashboard</a></li>
 	    <li><a href="#">Families <span class="caret"></span></a>
 		  <div>
 		    <ul>
-<!-- 		  <li><a href="">Manage Families</a></li>  -->	
 			  <li><a href="familystatus">Refer Family</a></li>
 		    </ul>
 		  </div>
@@ -982,15 +902,13 @@
 	    <li><a href="#">Partners <span class="caret"></span></a>
 		  <div>
 		    <ul>
-<!-- 		  <li><a href="">Manage Partners</a></li>  -->	
 			  <li><a href="partnertable">View Partners</a></li>
 		    </ul>
 		  </div>
 	    </li>
 	     <li><a href="#">Regions <span class="caret"></span></a>
 		  <div>
-		    <ul>
-<!-- 		  <li><a href="">Manage Regionss</a></li>  -->	
+		    <ul>	
 			  <li><a href="regiontable">View Regions</a></li>
 		    </ul>
 		  </div>
@@ -1152,26 +1070,26 @@
     <tbody id="twishbody">
       <tr>
  	    <td><input class='wishnum' type='text' value='1' readonly></td>      	 
-        	<td><select id='wishname0' class='wishname'><option>WISH_0_OPTIONS</option></select></td>
+        	<td><select id='wishname0' class='wishname'></select></td>
         	<td><input id='wishdetail0' type='text' value='detail'></td>
         	<td><select id='wishres0'><option></option><option>*</option><option>#</option></select></td>
-        	<td><select id='wishpartner0'><option>PARTNER_0_OPTIONS</option></select></td>
+        	<td><select id='wishpartner0'></select></td>
         	<td><input id='wishstatus0' type='text' class='wishstatus' readonly></td>
     	  </tr>
     	  <tr>
         	<td><input class='wishnum' type='text' value='2' readonly></td>
-        	<td><select id='wishname1' class='wishname'><option>WISH_1_OPTIONS</option></select></td>
+        	<td><select id='wishname1' class='wishname'></select></td>
         	<td><input id='wishdetail1' type='text' value='detail'></td>
         <td><select id='wishres1'><option></option><option>*</option><option>#</option></select></td>
-        	<td><select id='wishpartner1'><option>PARTNER_1_OPTIONS</option></select></td>
+        	<td><select id='wishpartner1'></select></td>
         	<td><input id='wishstatus1' type='text' class='wishstatus' readonly></td>
     	  </tr>
     	  <tr>
         <td><input class='wishnum' type='text' value='3' readonly></td>
-        <td><select id='wishname2' class='wishname'><option>WISH_2_OPTIONS</option></select></td>
+        <td><select id='wishname2' class='wishname'></select></td>
         	<td><input id='wishdetail2' type='text' value='detail'></td>
         	<td><select id='wishres2'><option></option><option>*</option><option>#</option></select></td>
-        	<td><select id='wishpartner2'><option>PARTNER_2_OPTIONS</option></select></td>
+        	<td><select id='wishpartner2'></select></td>
         	<td><input id='wishstatus2' type='text' class='wishstatus' readonly></td>
     	  </tr>
     </tbody>
@@ -1181,9 +1099,9 @@
   <fieldset>
   <legend class="legend-major">Meal Assistance</legend>
   	<label for="mealtype">Requested Holiday: </label>
-    <input id="mealtype" name="mealtype" size="18" readonly>
+    <input id="mealtype" name="mealtype" size="24" readonly>
     <label for="deitres">Restrictions: </label>
-	<input id="dietres" type="text" name="dietres" size="68" readonly>
+	<input id="dietres" type="text" name="dietres" size="62" readonly>
   </fieldset>
   <br>
   <fieldset>

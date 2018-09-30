@@ -72,20 +72,53 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		return response;	
 	}
 	
-	static HtmlResponse getPartnersJSONP(int year, String callbackFunction)
-	{		
+	static HtmlResponse getPartnersJSONP(int year, boolean bConfirmedOnly, String callbackFunction)
+	{	
+		String response = "";
 		Gson gson = new Gson();
-		Type listOfWebPartners = new TypeToken<ArrayList<ONCWebPartner>>(){}.getType();
+			
+		if(bConfirmedOnly)	//return a list of confirmed partners who have ornament collection types.
+		{
+			//Create two lists, the list to be returned and a temporary list
+			ArrayList<ONCWebPartner> confirmedWebPartnerList = new ArrayList<ONCWebPartner>();
+			ArrayList<ONCWebPartner> confirmedWebPartnerOtherList = new ArrayList<ONCWebPartner>();
+			Type listOfWebPartners = new TypeToken<ArrayList<ONCWebPartner>>(){}.getType();
+			
+			//Add the confirmed business, church and schools to the returned list and add all other 
+			//confirmed partners to the temporary list
+			for(ONCPartner p: partnerDB.get(year - BASE_YEAR).getList())
+			{
+				if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollection.Ornament
+						&& p.getType() < ORG_TYPE_CLOTHING)
+				{
+					confirmedWebPartnerList.add(new ONCWebPartner(p));
+				}
+				else if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollection.Ornament)
+					confirmedWebPartnerOtherList.add(new ONCWebPartner(p));		
+			}
+			
+			//Sort the two lists alphabetically by partner name
+			Collections.sort(confirmedWebPartnerList, new PartnerNameComparator());	//Sort alphabetically
+			Collections.sort(confirmedWebPartnerOtherList, new PartnerNameComparator());	//Sort alphabetically
+			
+			//Append the all other temporary confirmed list to the bottom of the confirmed list
+			for(ONCWebPartner otherOrg:confirmedWebPartnerOtherList)
+				confirmedWebPartnerList.add(otherOrg);
+			
+			response = gson.toJson(confirmedWebPartnerList, listOfWebPartners);
+		}
+		else		//return a list of all in year partners sorted alphabetically
+		{
+			Type listOfWebPartnersExtended = new TypeToken<ArrayList<ONCWebPartnerExtended>>(){}.getType();
+			ArrayList<ONCWebPartnerExtended> webPartnerExtendedList = new ArrayList<ONCWebPartnerExtended>();
+			for(ONCPartner p :  partnerDB.get(year-BASE_YEAR).getList())
+			{
+				webPartnerExtendedList.add(new ONCWebPartnerExtended(p));
+				Collections.sort(webPartnerExtendedList, new PartnerNameComparator());
+				response = gson.toJson(webPartnerExtendedList, listOfWebPartnersExtended);
+			}
+		}
 		
-		ArrayList<ONCWebPartner> webPartnerList = new ArrayList<ONCWebPartner>();
-		
-		for(ONCPartner p :  partnerDB.get(year-BASE_YEAR).getList())
-			webPartnerList.add(new ONCWebPartner(p));
-		
-		Collections.sort(webPartnerList, new PartnerNameComparator());
-
-		String response = gson.toJson(webPartnerList, listOfWebPartners);
-
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
@@ -104,7 +137,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		if(index<pAL.size())
 		{
 			ONCPartner partner = pAL.get(index);
-			response = gson.toJson(new ONCWebPartnerExtended(partner), ONCWebPartnerExtended.class);
+			response = gson.toJson(new ONCWebPartnerFull(partner), ONCWebPartnerFull.class);
 		}
 		else
 			response = "";
@@ -632,46 +665,6 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		exportDBToCSV(pyPerformancePartnerList, header, path);
 	}
 	
-	/*****************************************************************************************
-	 * Creates a string of confirmed partners, as HTML options, that take ornaments, broken into
-	 * two parts. The first part of the string are options that contain confirmed businesses, 
-	 * churches and schools, sorted alphabetically. The last part of the string are options that
-	 * contain all other confirmed partners sorted alphabetically
-	 *****************************************************************************************/
-	static String getConfirmedPartnerHTMLOptionList(int year, GiftCollection collectionType)
-	{
-		//Create two lists, the list to be returned and a temporary list
-		ArrayList<ONCPartner> confirmedPartnerList = new ArrayList<ONCPartner>();
-		ArrayList<ONCPartner> confirmedPartnerOtherList = new ArrayList<ONCPartner>();
-		
-		//Add the confirmed business, church and schools to the returned list and add all other 
-		//confirmed partners to the temporary list
-		for(ONCPartner o: partnerDB.get(year - BASE_YEAR).getList())
-		{
-			if(o.getStatus() == STATUS_CONFIRMED && o.getGiftCollectionType() == collectionType && 
-				o.getType() < ORG_TYPE_CLOTHING)
-				confirmedPartnerList.add(o);
-			else if(o.getStatus() == STATUS_CONFIRMED && o.getGiftCollectionType() == collectionType)
-				confirmedPartnerOtherList.add(o);		
-		}
-		
-		//Sort the two lists alphabetically by partner name
-		PartnerLastNameComparator nameComparator = new PartnerLastNameComparator();
-		Collections.sort(confirmedPartnerList, nameComparator);	//Sort alphabetically
-		Collections.sort(confirmedPartnerOtherList, nameComparator);	//Sort alphabetically
-		
-		//Append the all other temporary confirmed list to the bottom of the confirmed list
-		for(ONCPartner otherOrg:confirmedPartnerOtherList)
-			confirmedPartnerList.add(otherOrg);
-		
-		//create a HTML option string
-		StringBuffer buff = new StringBuffer("<option value=-1>None</option>");
-		for(ONCPartner p : confirmedPartnerList)
-			buff.append(String.format("<option value=%d>%s</option>", p.getID(), p.getLastName()));
-		
-		return buff.toString();
-	}
-	
 	private class PartnerDBYear extends ServerDBYear
 	{
 		private List<ONCPartner> pList;
@@ -717,15 +710,6 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		public int compare(ONCWebPartner o1, ONCWebPartner o2)
 		{			
 			return o1.getName().compareTo(o2.getName());
-		}
-	}
-	
-	private static class PartnerLastNameComparator implements Comparator<ONCPartner>
-	{
-		@Override
-		public int compare(ONCPartner o1, ONCPartner o2)
-		{			
-			return o1.getLastName().compareTo(o2.getLastName());
 		}
 	}
 }

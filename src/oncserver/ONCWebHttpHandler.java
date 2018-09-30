@@ -117,10 +117,13 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     		}
     		else if(requestURI.contains("/partners"))
     		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null &&
+    					params.containsKey("year") && params.containsKey("confirmed"))
     			{
     				int year = Integer.parseInt((String) params.get("year"));
-    				htmlResponse = ServerPartnerDB.getPartnersJSONP(year, (String) params.get("callback"));
+    				String confirmed = (String) params.get("confirmed");
+    				boolean bConfirmedOnly = confirmed.equalsIgnoreCase("true");
+    				htmlResponse = ServerPartnerDB.getPartnersJSONP(year, bConfirmedOnly, (String) params.get("callback"));
     			}
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
@@ -520,7 +523,23 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     			
     			HtmlResponse htmlresponse = new HtmlResponse(response, HttpCode.Ok);
     			sendHTMLResponse(t, htmlresponse);
-    		}    					
+    		} 
+    		else if(requestURI.contains("/giftcatalog"))
+    		{
+    			String response;
+    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null  &&
+    					params.containsKey("year") && params.containsKey("callback"))
+    			{	
+    				int year = Integer.parseInt((String) params.get("year"));
+    				response = ServerWishCatalog.getGiftCatalogJSONP(year, (String) params.get("callback"));
+    			}
+    			else
+        			response = invalidTokenReceived();
+    			
+    			String callback = (String) params.get("callback");
+    			HtmlResponse htmlresponse = new HtmlResponse(callback +"(" + response +")", HttpCode.Ok);
+    			sendHTMLResponse(t, htmlresponse); 
+    		}
     }
 
 	HtmlResponse verifyAddress(Map<String, Object> params)
@@ -775,8 +794,8 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			ONCPartner addPartner = new ONCPartner(-1, new Date(),
 					wc.getWebUser().getLNFI(), 3,
 					"New partner", wc.getWebUser().getLNFI(), 
-					ONCWebPartner.getStatus(partnerMap.get("status")),
-					ONCWebPartner.getType(partnerMap.get("type")),
+					ONCWebPartnerExtended.getStatus(partnerMap.get("status")),
+					ONCWebPartnerExtended.getType(partnerMap.get("type")),
 					GiftCollection.valueOf(partnerMap.get("collection")), partName,
 					partnerMap.get("housenum"), partnerMap.get("street"), partnerMap.get("unit"),
 					partnerMap.get("city"), partnerMap.get("zipcode"), partnerMap.get("phone"),
@@ -809,7 +828,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				updatePartner.setStoplightPos(3);
 				updatePartner.setStoplightMssg("Update Partner via website");
 				updatePartner.setStoplightMssg(wc.getWebUser().getLNFI());
-				updatePartner.setType(ONCWebPartner.getType(partnerMap.get("type")));
+				updatePartner.setType(ONCWebPartnerExtended.getType(partnerMap.get("type")));
 				updatePartner.setGiftCollectionType(GiftCollection.valueOf(partnerMap.get("collection")));
 				updatePartner.setLastName(partName);
 				updatePartner.setHouseNum(partnerMap.get("housenum"));
@@ -822,7 +841,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				if(!(currPartner.getStatus() == STATUS_CONFIRMED && 
 					currPartner.getNumberOfOrnamentsRequested() > 0))
 				{
-					updatePartner.setStatus(ONCWebPartner.getStatus(partnerMap.get("status")));
+					updatePartner.setStatus(ONCWebPartnerExtended.getStatus(partnerMap.get("status")));
 					updatePartner.setNumberOfOrnamentsRequested(orn_req);
 				}
 				

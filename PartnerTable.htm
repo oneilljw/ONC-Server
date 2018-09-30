@@ -66,7 +66,7 @@
     function getPartnersFromServer(year)
     {  	
     		//get partners from the server
-    		var partnerparams = "year=" + year + "&callback=?";
+    		var partnerparams = "year=" + year + "&confirmed=false&callback=?";
     		$.getJSON('partners', partnerparams, function(data)
     		{
     			if(data.hasOwnProperty('error'))

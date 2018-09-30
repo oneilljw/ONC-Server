@@ -80,8 +80,6 @@
   				//if return is good, set the fields
   				if(vol.id > -1)
   				{
-  					console.log(vol);
-  					
   					document.getElementById('delfn').value = vol.firstName;
   					document.getElementById('delln').value = vol.lastName;
   					document.getElementById('delemail').value = vol.email;
@@ -464,7 +462,6 @@
 	
 	function createCheckBoxElement(name, value, text, element)
 	{
-//		console.log(name + ", " + value + "," + text);
 		var checkbox = document.createElement('input');
 		checkbox.type = "checkbox";
 		checkbox.name = name;

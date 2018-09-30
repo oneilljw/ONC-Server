@@ -137,7 +137,7 @@ public class ONCSecureWebServer
 							"/getpartner", "/updateuser", "/partnerupdate", "/updatepartner",
 							"/groups", "/volunteergroups", "/partners", "/partnertable", "/regiontable", 
 							"/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
-							"/profileunchanged", "/dashboard",
+							"/profileunchanged", "/dashboard", "/giftcatalog"
 							};
 		
 		ONCWebHttpHandler oncHttpHandler = new ONCWebHttpHandler();

@@ -179,6 +179,24 @@ public class ServerWishCatalog extends ServerSeasonalDB
 			return -1;
 	}
 	
+	static String getGiftCatalogJSONP(int year, String callbackFunction)
+	{
+		List<ONCWish> websiteGiftList = new ArrayList<ONCWish>();
+		
+		//get list for year
+		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
+		List<ONCWish> wishList = catalogDBYear.getList();
+		
+		for(ONCWish w : wishList)
+			if(w.getListindex() > 0)
+				websiteGiftList.add(w);
+		
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<ONCWish>>(){}.getType();
+		String json = gson.toJson(websiteGiftList, listtype);
+		return json;
+	}
+	
 	static String getWishHTMLOptions(int year, int wn)
 	{
 		StringBuffer buff = new StringBuffer();
