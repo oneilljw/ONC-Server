@@ -516,7 +516,7 @@ function onSubmit(bReferral)
 		}
 		else
 		{
-			changeAddressBackground(hElement, errorColor);
+			changeAddressBackground(hohAddrElement, errorColor);
 			changeAddressBackground(delAddrElement, '#FFFFFF');
 			changeAddressBackground(hohAddrElement, '#FFFFFF');
 			errorElement.textContent = "Submission Error: HOH First and/or Last Name is missing";

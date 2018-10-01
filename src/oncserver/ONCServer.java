@@ -151,7 +151,7 @@ public class ONCServer
     		serverIF.start();
 		serverUI.setStoplight(0, "Server started");	//Set server status to green - running
 		
-		serverUI.addLogMessage("App Server Interface Loop started");
+		serverUI.addUIAndLogMessage("App Server Interface Loop started");
 		
 		serverUI.btnStartServer.setVisible(false);
 		serverUI.btnStopServer.setVisible(true);
@@ -174,7 +174,7 @@ public class ONCServer
 		}
 		serverUI.setStoplight(2, "Server Stopped");	//Set server status to red - stopped
 		
-		serverUI.addLogMessage("Server Interface Loop stopped");
+		serverUI.addUIAndLogMessage("Server Interface Loop stopped");
 		
 		serverUI.btnStartServer.setVisible(true);
 		serverUI.btnStopServer.setVisible(false);

@@ -14,7 +14,7 @@ public class CommonHandler extends ONCWebpageHandler
 		String requestURI = t.getRequestURI().toASCIIString();
 		
 		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
-		ServerUI.getInstance().addLogMessage(mssg);
+		ServerUI.getInstance().addUIAndLogMessage(mssg);
 
 		if(requestURI.contains("/oncsplash"))
 			sendCachedFile(t, "image/gif", "oncsplash", false);

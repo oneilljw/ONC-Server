@@ -52,7 +52,7 @@ public class LoginHandler extends ONCWebpageHandler
 		String requestURI = t.getRequestURI().toASCIIString();
 		
 		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
-		ServerUI.getInstance().addLogMessage(mssg);
+		ServerUI.getInstance().addUIAndLogMessage(mssg);
 		
 		//DEBUG CODE FOR EXPIRIMENTING WITH COOKIE SECUIRTY MANAGMENT	
 //		Headers reqHeaders = t.getRequestHeaders();

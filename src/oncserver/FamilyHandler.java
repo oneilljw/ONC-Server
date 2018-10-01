@@ -48,7 +48,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		String requestURI = t.getRequestURI().toASCIIString();
     	
 		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
-		ServerUI.getInstance().addLogMessage(mssg);
+		ServerUI.getInstance().addUIAndLogMessage(mssg);
 		
 		if(requestURI.contains("/families"))
 		{
@@ -167,6 +167,7 @@ public class FamilyHandler extends ONCWebpageHandler
     					((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)) 
     			{
     				//process referral and send family status web page back to client
+    				logParameters(params, requestURI);
     				ResponseCode frc = processFamilyReferral(wc, params);
     				response = getFamilyStatusWebpage(wc, frc.getMessage(), true);
     			}

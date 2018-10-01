@@ -64,7 +64,7 @@ public class ServerUI extends JPanel implements ClientListener
 	private transient ImageIcon imageIcons[];
 	public JButton btnStartServer, btnStopServer;
 	private static JTextArea logTA;
-	private List<String> logList;
+	private static List<String> logList;
 	private ServerStoplight stoplight;
 //	private JRadioButton rbStoplight;
 	private JTable desktopClientTable, websiteClientTable;
@@ -259,7 +259,18 @@ public class ServerUI extends JPanel implements ClientListener
 		return line;
 	}
 	
-	void addLogMessage(String mssg)
+	static String addLogMessage(String mssg)
+	{
+		Calendar timestamp = Calendar.getInstance();
+		
+		String line = new SimpleDateFormat("MM/dd/yy H:mm:ss.S").format(timestamp.getTime());
+		
+		logList.add(line + ": " + mssg);
+		
+		return line;
+	}
+	
+	void addUIAndLogMessage(String mssg)
 	{
 		Calendar timestamp = Calendar.getInstance();
 		
@@ -297,7 +308,7 @@ public class ServerUI extends JPanel implements ClientListener
 		if(ce.getEventType() == ClientEventType.MESSAGE)
 		{
 			String mssg = (String) ce.getObject();
-			addLogMessage(mssg);
+			addUIAndLogMessage(mssg);
 		}
 		else if(ce.getClientType() == ClientType.DESKTOP)
 		{
@@ -305,7 +316,7 @@ public class ServerUI extends JPanel implements ClientListener
 			
 			if(ce.getEventType() == ClientEventType.CONNECTED)
 			{
-				addLogMessage(String.format("Client %d connected, ip= %s", 
+				addUIAndLogMessage(String.format("Client %d connected, ip= %s", 
 								c.getClientID(), c.getClientRemoteSocketAddress()));
 			}
 			else if(ce.getEventType() == ClientEventType.TERMINAL)
@@ -313,27 +324,27 @@ public class ServerUI extends JPanel implements ClientListener
 				long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
 				String mssg = String.format("Client %d heart beat terminal, not detected in %d seconds",
 												c.getClientID(), timeSinceLastHeartbeat/1000);
-				addLogMessage(mssg);
+				addUIAndLogMessage(mssg);
 			}
 			else if(ce.getEventType() == ClientEventType.LOST)
 			{
 				long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
 				String mssg = String.format("Client %d heart beat lost, not detected in %d seconds",
 												c.getClientID(), timeSinceLastHeartbeat/1000);
-				addLogMessage(mssg);
+				addUIAndLogMessage(mssg);
 			}
 			else if(ce.getEventType() == ClientEventType.ACTIVE)
 			{
 				long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
 				String mssg = String.format("Client %d heart beat recovered, detected in %d seconds",
 												c.getClientID(), timeSinceLastHeartbeat/1000);
-				addLogMessage(mssg);
+				addUIAndLogMessage(mssg);
 			}
 			else if(ce.getEventType() == ClientEventType.DIED)
 			{
 				String mssg = String.format("Client %d heart beat remained terminal, client killed", 
 											c.getClientID());					
-				addLogMessage(mssg);
+				addUIAndLogMessage(mssg);
 			}
 			
 			desktopClientTM.fireTableDataChanged();

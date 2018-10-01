@@ -457,6 +457,20 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			System.out.println(String.format("uri=%s, key=%s, value=%s", t.getRequestURI().toASCIIString(), key, params.get(key)));
 	}
 	
+	void logParameters(Map<String, Object> map, String URI)
+	{
+		StringBuffer buff = new StringBuffer(URI + "?");
+		for(String key : map.keySet())
+		{
+			Object obj = map.get(key);
+			if(obj instanceof String)
+				buff.append(String.format("%s=%s&", key, map.get(key)));
+		}
+		
+		ServerUI.addLogMessage(buff.toString());
+		ServerUI.addDebugMessage(buff.toString());
+	}
+	
 	static boolean isNumeric(String str)
 	{
 		if(str == null || str.isEmpty())

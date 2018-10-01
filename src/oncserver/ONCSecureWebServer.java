@@ -225,7 +225,7 @@ public class ONCSecureWebServer
 			serverUI.setStoplight(1, "Logging disabled");
 		}
 				
-		serverUI.addLogMessage(String.format("Web Server started: %d contexts, logging %s", 
+		serverUI.addUIAndLogMessage(String.format("Web Server started: %d contexts, logging %s", 
 					contextCount, websiteStatus.isWebsiteLoggingEnabled() ? "enabled" : "disabled"));
 	}
 		

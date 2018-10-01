@@ -42,7 +42,7 @@ public class ONCWebServer
 		server.start();
 		
 		
-		serverUI.addLogMessage(String.format("Public Web Server started: %d contexts", contexts.length));
+		serverUI.addUIAndLogMessage(String.format("Public Web Server started: %d contexts", contexts.length));
 	}
 	
 	public static ONCWebServer getInstance() throws IOException

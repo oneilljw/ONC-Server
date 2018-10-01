@@ -20,7 +20,7 @@ public class VolunteerHandler extends ONCWebpageHandler
     	
 		String mssg = String.format("HTTP request %s: %s:%s", t.getRemoteAddress().toString(), t.getRequestMethod(), requestURI);
 		ServerUI serverUI = ServerUI.getInstance();
-		serverUI.addLogMessage(mssg);
+		serverUI.addUIAndLogMessage(mssg);
 		
 		HtmlResponse htmlResponse;
 		
