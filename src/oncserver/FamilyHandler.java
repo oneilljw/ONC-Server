@@ -20,6 +20,7 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCMeal;
+import ourneighborschild.ONCServerUser;
 import ourneighborschild.Transportation;
 
 import com.google.gson.Gson;
@@ -300,6 +301,20 @@ public class FamilyHandler extends ONCWebpageHandler
 		//whether to perform a prior year check after the family and children objects are created
 		boolean bNewFamily = familyMap.get("targetid").contains("NNA") || familyMap.get("targetid").equals("");
 		
+		//make sure we got a group from the rest call. if not, figure out the group by the agent
+		int group = -1;
+		ONCServerUser agent = wc.getWebUser();
+		if(params.containsKey("group") && isNumeric((String) params.get("group")))
+		{
+			group = Integer.parseInt((String) params.get("group"));
+		}
+		else
+		{
+			List<Integer> groupIDList = agent.getGroupList();
+			if(!groupIDList.isEmpty())
+				group = groupIDList.get(0);
+		}
+		
 		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
 					familyMap.get("targetid"), "B-DI", 
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
@@ -312,8 +327,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
 					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
-					createWishList(params), wc.getWebUser().getID(), 
-					Integer.parseInt((String) params.get("group")),
+					createWishList(params), agent.getID(), group, 
 					addedMeal != null ? addedMeal.getID() : -1,
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
 					Transportation.valueOf(familyMap.get("transportation")));

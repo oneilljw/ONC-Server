@@ -68,7 +68,7 @@
   		     	
   		     	//update the family group select
   		     	addComboBoxOption(groupcb, family.groupName, family.groupID);
-  		     	document.getElementById('groupfs').style.visibility='hidden';
+//  		     	document.getElementById('groupfs').style.visibility='hidden';
 			});
   		}
   		else
@@ -83,11 +83,11 @@
     				for (var i=0; i < data.length; i++)
     					addComboBoxOption(groupcb, data[i].name, data[i].id);
 	    			
-    				var groupfselem = document.getElementById('groupfs');
-	    			if(data.length > 1)
-	    				groupfselem.style.visibility='visible';
-	    			else	
-	  				groupfselem.style.visibility='hidden';
+//    			var groupfselem = document.getElementById('groupfs');
+//	    			if(data.length > 1)
+//	    				groupfselem.style.visibility='visible';
+//	    			else	
+//	  				groupfselem.style.visibility='hidden';
     			});    	
   		}
   		
