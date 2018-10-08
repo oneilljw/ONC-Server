@@ -104,7 +104,7 @@ public class ServerGroupDB extends ServerPermanentDB
 				if(returnList.isEmpty())
 					returnList.add(0, new ONCGroup(-2, new Date(), loggedInUser.getLNFI(), 3, "", 
 									loggedInUser.getLNFI(), "None", GroupType.Community, 1, false, false));
-				else if(returnList.size() > 1)
+				else if(bDefault && returnList.size() > 1)
 					returnList.add(0, new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
 									loggedInUser.getLNFI(), "Any", GroupType.Community, 1, false, false));
 				

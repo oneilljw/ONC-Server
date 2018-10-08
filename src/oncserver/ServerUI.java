@@ -493,7 +493,7 @@ public class ServerUI extends JPanel implements ClientListener
 			sdf = new SimpleDateFormat("MM/dd H:mm:ss");
 			clientMgr = ClientManager.getInstance();
 		}
-		
+																													
 		private static final long serialVersionUID = 1L;
 		
 		private String[] columnNames = {"ID", "First Name", "Last Name", 
@@ -524,7 +524,7 @@ public class ServerUI extends JPanel implements ClientListener
         	else if (col == CLIENT_HB_COL)
         		return "O";
         	else if (col == CLIENT_YEAR_COL)
-            	return Integer.toString(timestamp.get(Calendar.YEAR));
+            	return Integer.toString(DBManager.getCurrentYear());
         	else if (col == CLIENT_VER_COL)
         		return "Web";
         	else if (col == CLIENT_TIMESTAMP_COL)
