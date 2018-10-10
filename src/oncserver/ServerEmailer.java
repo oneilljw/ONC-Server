@@ -129,10 +129,10 @@ public class ServerEmailer extends SwingWorker<Void, Void> implements TransportL
     
         for(int i=0; i<attachmentAL.size(); i++)
         {
-        	imagePart.add(new MimeBodyPart()); 
-        	imagePart.get(i).attachFile(System.getProperty("user.dir") + "/" + attachmentAL.get(i).getFilename());   
-        	imagePart.get(i).setContentID("<" + attachmentAL.get(i).getCID() + ">");
-        	imagePart.get(i).setDisposition(attachmentAL.get(i).getDisposition());
+        		imagePart.add(new MimeBodyPart()); 
+        		imagePart.get(i).attachFile(attachmentAL.get(i).getFile());   
+        		imagePart.get(i).setContentID("<" + attachmentAL.get(i).getCID() + ">");
+        		imagePart.get(i).setDisposition(attachmentAL.get(i).getDisposition());
         }
         
         //Create the email body
