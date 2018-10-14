@@ -683,12 +683,12 @@ function verifyPhoneNumber(elementNum)
 	
 	if(number == '')	
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-	else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-' &&
-			isNumericPhoneNumber(number, '-'))
+	else if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-' && isNumericPhoneNumber(number, '-'))
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-	else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.' && 
-			isNumericPhoneNumber(number, '.'))
+	else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.' && isNumericPhoneNumber(number, '.'))
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
+//	else if(number.length===12 && number.charAt(3)===' ' && number.charAt(7)==='.' && isNumericPhoneNumber(number, '.'))
+//		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
 	else if(number.length===10 && !isNaN(number))
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
 	else
@@ -702,12 +702,17 @@ function verifyPhoneNumber(elementNum)
 
 function isNumericPhoneNumber(phonenumber, separator)
 {
+//	var testNumberA = phonenumber.replace(/-/g, '');
+//	var testNumberB = testNumberA.replace(/./g, '');
+//	var testNumberC = testNumberB.replace(/\s/g, '');
+//	console.log(testNumberC);
 	var testNumber = phonenumber;
 	if(separator === '-')
 		testNumber = phonenumber.replace(/-/g, '');
 	else if(separator === '.')
 		testNumber = phonenumber.replace(/./g, '');
 
+//	console.log('phonenumber= ' + phonenumber + ', testnumberC= ' + testNumberC);
 	return !isNaN(testNumber);	
 }
 

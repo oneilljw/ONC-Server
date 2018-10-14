@@ -1153,15 +1153,15 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	void familyMealAdded(int year, ONCMeal addedMeal)
 	{
 		ONCFamily fam = getFamily(year, addedMeal.getFamilyID());
-		if(fam != null && fam.getMealStatus() != addedMeal.getStatus())
+		if(fam != null)
 		{
 			fam.setMealID(addedMeal.getID());
 			fam.setMealStatus(addedMeal.getStatus());
 			familyDB.get(year - BASE_YEAR).setChanged(true);
 			
 			Gson gson = new Gson();
-	    	String changeJson = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-	    	clientMgr.notifyAllInYearClients(year, changeJson);	//null to notify all clients
+	    		String changeJson = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+	    		clientMgr.notifyAllInYearClients(year, changeJson);	//null to notify all clients
 		}
 	}
 	
