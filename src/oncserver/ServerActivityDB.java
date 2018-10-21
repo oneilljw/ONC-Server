@@ -41,7 +41,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	private static final String GENIUS_STATUS_FILENAME = "GeniusSignUps.csv";
 	private static final int SIGNUP_RECORD_LENGTH = 5;
 	
-	private static final int GENIUS_IMPORT_TIMER_RATE = 1000 * 30 * 2; //1 minutes
+	private static final int GENIUS_IMPORT_TIMER_RATE = 1000 * 30; //30 seconds
 	
 	private static ServerActivityDB instance = null;
 	
@@ -81,7 +81,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 						year), "Activity DB", ACTIVITY_DB_HEADER_LENGTH);
 			
 			//sort the search list by Start date
-			Collections.sort(activityDBYear.getList(), new VolunteerActivityDateComparator());
+			Collections.sort(activityDBYear.getList(), new ActivityDateComparator());
 		
 			//set the next id
 			activityDBYear.setNextID(getNextID(activityDBYear.getList()));
@@ -414,7 +414,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			//frequency to restart automated imports
 			if(updatedSignUpReq.getFrequency() == Frequency.ONE_TIME && geniusIF != null)
 			{
-				geniusIF.requestSignUpContent(updatedSignUp, SignUpReportType.filled);
+				geniusIF.requestSignUpContent(updatedSignUp, SignUpReportType.available);
 				updatedSignUp.setFrequency(Frequency.NEVER);
 			}
 			else
@@ -486,22 +486,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	void createNewYear(int newYear)
 	{
 		//create a new Activity data base year for the year provided in the newYear parameter
-		//The activity db year list is copied from the prior year, assuming it exists. All start
-		//and end times are adjusted for the change in year
+		//The activity db year list is empty at the beginning of a new year.
 		ActivityDBYear newActivityDBYear = new ActivityDBYear(newYear);
-/*		
-		ActivityDBYear priorActivityDBYear = activityDB.get(newYear-1-BASE_YEAR);
-		
-		for(VolunteerActivity activity : priorActivityDBYear.getList())
-		{
-			VolunteerActivity newYearActivity = new VolunteerActivity(activity);
-			
-			newYearActivity.setStartDate(updateDateForNewYear(newYear, activity.getStartDate()));
-			newYearActivity.setEndDate(updateDateForNewYear(newYear, activity.getEndDate()));
-			
-			newActivityDBYear.add(newYearActivity);
-		}
-*/		
 		activityDB.add(newActivityDBYear);
 		newActivityDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
@@ -612,6 +598,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			//print the new activities list
 			@SuppressWarnings("unchecked")
 			List<Activity> newVAList = (List<Activity>) event.getSignUpObject();
+			Collections.sort(newVAList, new ActivityDateComparator());	//sort by start date
+			
 			List<String> clientJsonMssgList = new ArrayList<String>();
 			
 			for(Activity va : newVAList)
@@ -771,7 +759,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	    void add(Activity addedActivity) { activityList.add(addedActivity); }
 	}
 	
-	private static class VolunteerActivityDateComparator implements Comparator<Activity>
+	private static class ActivityDateComparator implements Comparator<Activity>
 	{
 		@Override
 		public int compare(Activity o1, Activity o2)

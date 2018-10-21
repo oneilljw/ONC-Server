@@ -12,8 +12,10 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.swing.SwingWorker;
 
@@ -30,7 +32,7 @@ import ourneighborschild.Activity;
 public class SignUpGeniusIF
 {
 	private static final String API_KEY = "NGJMZlhzZm5SK3d4L002ODFyek9iQT09";
-	private static final String SIGNUPS_URL = "https://api.signupgenius.com/v2/k/signups/created/all/?user_key=%s";
+	private static final String SIGNUPS_URL = "https://api.signupgenius.com/v2/k/signups/created/active/?user_key=%s";
 	private static final String SIGNUP_REPORT_URL = "https://api.signupgenius.com/v2/k/signups/report/%s/%d/?user_key=%s";
 	
 	private static SignUpGeniusIF instance;
@@ -230,7 +232,13 @@ public class SignUpGeniusIF
     		{
     			this.type = SignUpEventType.REPORT;
     			this.signup = signup;
-    			this.url = String.format(SIGNUP_REPORT_URL, reportType.toString(), signup.getSignupid(), API_KEY) ;
+    			this.url = String.format(SIGNUP_REPORT_URL, reportType.toString(), signup.getSignupid(), API_KEY);
+    			
+    			//initialize the lists
+    			newActivitiesFoundList = new ArrayList<Activity>();
+    			updatedActivitiesFoundList = new ArrayList<Activity>();
+    			newVolunteerFoundList = new ArrayList<ONCVolunteer>();
+    			updatedVolunteerFoundList = new ArrayList<ONCVolunteer>();
     		}
     	
 		@Override
@@ -249,17 +257,7 @@ public class SignUpGeniusIF
 					response.append(inputLine);
 
 				in.close();
-				
-//				if(type == SignUpEventType.REPORT)
-//				{
-//					String path = String.format("%s/testfile.txt", System.getProperty("user.dir"));
-//					PrintWriter out = new PrintWriter(path);
-//					out.println(response.toString());
-//					out.close();
-//				}
-				
-//				System.out.println(String.format("GenIF response = %s", response.toString()));
-				
+							
 				//process the data in the background thread
 				Gson gson = new Gson();
 				if(type == SignUpEventType.SIGNUP_LIST_IMPORT)
@@ -267,8 +265,19 @@ public class SignUpGeniusIF
 				else
 				{
 					//get the report that was imported
-					signUpReport = gson.fromJson(response.toString(), SignUpReport.class);
-					signUpActList = signUpReport.getContent().getSignUpActivities();
+//					System.out.println(String.format("SUGIF.GenRptFetch: signUpJson= %s", response.toString()));
+					signUpReport = gson.fromJson(response.toString(), SignUpReport.class); //create the report from the json
+					signUpActList = signUpReport.getContent().getSignUpActivities(); //get the list of signUpActivities
+					
+//					System.out.println(String.format("SUGIF.GenRptFetch: signUpActList size=%d", signUpActList.size()));
+					
+					//not all sign up activities have an end date. If they don't, set the end date to Christmas Day
+					//for the current season. Note: SignUpActivity times are in seconds not milliseconds
+					Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+					xmasDay.set(DBManager.getCurrentYear(),11,25,5,0,0);
+					for(SignUpActivity sua : signUpActList)
+						if(sua.getEnddate() == 0)
+							sua.setEnddate(xmasDay.getTimeInMillis()/1000);	//milliseconds to seconds
 					
 					//create the unique activity list
 					List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpActList);
@@ -280,7 +289,8 @@ public class SignUpGeniusIF
 					List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpActList);
 				
 					//create the new and modified volunteer lists
-					createNewAndModifiedVolunteerLists(uniqueVolList, signUpActList);	
+					if(!uniqueVolList.isEmpty())
+						createNewAndModifiedVolunteerLists(uniqueVolList, signUpActList);
 				}
 			}
 			catch (UnknownHostException uhex) 
@@ -369,13 +379,22 @@ public class SignUpGeniusIF
 			} 
 			
 			String response = sb.toString(); 
-//			System.out.println("Contents : " + fileAsString);
+//			System.out.println("Simulated SignUpReportJson: " + response);
 
 			//get the report that was imported
 			Gson gson = new Gson();
-			SignUpReport signUpReport = gson.fromJson(response, SignUpReport.class);
-			signUpActList = signUpReport.getContent().getSignUpActivities();
+			signUpReport = gson.fromJson(response, SignUpReport.class);	//create the report from the json
+			signUpActList = signUpReport.getContent().getSignUpActivities();	//get the list of signUpActivities
 //			System.out.println(String.format("SUGIF.simGenRptFetch: signUpActList size=%d", signUpActList.size()));
+			
+			//not all sign up activities have an end date. If they don't, set the end date to Christmas Day
+			//for the current season.
+			Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+			xmasDay.set(DBManager.getCurrentYear(),11,25,5,0,0);
+			for(SignUpActivity sua : signUpActList)
+				if(sua.getEnddate() == 0)
+					sua.setEnddate(xmasDay.getTimeInMillis()/1000);	//note: SignUpActivity times are in secs not millis
+					
 			//create the unique activity list
 			List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpActList);
 			
@@ -386,7 +405,8 @@ public class SignUpGeniusIF
 			List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpActList);
 		
 			//create the new and modified volunteer lists
-			createNewAndModifiedVolunteerLists(uniqueVolList, signUpActList);	
+			if(!uniqueVolList.isEmpty())
+				createNewAndModifiedVolunteerLists(uniqueVolList, signUpActList);
 		}
 		
 		/***
@@ -397,7 +417,7 @@ public class SignUpGeniusIF
 		 * @param signUpActivityList
 		 * @return
 		 */
-		List<SignUpActivity> createUniqueActivityList(List<SignUpActivity>  signUpActivityList)
+		List<SignUpActivity> createUniqueActivityList(List<SignUpActivity> signUpActivityList)
 		{	
 			//create the unique activity list
 			List<SignUpActivity>  uniqueSignUpActivityList = new ArrayList<SignUpActivity>();
@@ -421,9 +441,12 @@ public class SignUpGeniusIF
 			List<ONCVolunteer>  uniqueSignUpVolunteerList = new ArrayList<ONCVolunteer>();
 			for(SignUpActivity sua : signUpActivityList)
 			{	
-				ONCVolunteer importedVol = new ONCVolunteer(sua);
-				if(!isVolunteerInList(uniqueSignUpVolunteerList, importedVol))
-					uniqueSignUpVolunteerList.add(importedVol);
+				if(!sua.getFirstname().isEmpty() && !sua.getLastname().isEmpty() && !sua.getEmail().isEmpty())
+				{
+					ONCVolunteer importedVol = new ONCVolunteer(sua);
+					if(!isVolunteerInList(uniqueSignUpVolunteerList, importedVol))
+						uniqueSignUpVolunteerList.add(importedVol);
+				}
 			}
 			
 			return uniqueSignUpVolunteerList;
@@ -451,9 +474,6 @@ public class SignUpGeniusIF
 		
 		void createNewAndModifiedActivityLists(List<SignUpActivity> uniqueActList)
 		{
-			newActivitiesFoundList = new ArrayList<Activity>();
-			updatedActivitiesFoundList = new ArrayList<Activity>();
-			
 			//clone a list of the current activities from the activity database
 			ServerActivityDB activityDB;
 			try
@@ -500,9 +520,6 @@ public class SignUpGeniusIF
 		
 		void createNewAndModifiedVolunteerLists(List<ONCVolunteer> uniqueVolList, List<SignUpActivity> suActList)
 		{
-			newVolunteerFoundList = new ArrayList<ONCVolunteer>();
-			updatedVolunteerFoundList = new ArrayList<ONCVolunteer>();
-			
 			//clone a list of the current activities from the activity database
 			ServerVolunteerDB volDB;
 			try
@@ -596,14 +613,14 @@ public class SignUpGeniusIF
 	    		{
 	    			//update the time sign up was imported and notify the clients that a signup was imported
 	    			signup.setLastImportTimeInMillis(System.currentTimeMillis());
-	    			
-//	    			System.out.println(String.format("GeniusIF.done: #SignUpImported ID= %d, time=%d", 
-//	    					signup.getSignupid(), signup.getLastImportTimeInMillis()));
-//	    			System.out.println(String.format("GeniusIF.done: #Updated Activities= %d", updatedActivitiesFoundList.size()));
-//	    			System.out.println(String.format("GeniusIF.done: #New Activities= %d", newActivitiesFoundList.size())); 
-//	    			System.out.println(String.format("GeniusIF.done: #Updated Volunteers= %d", updatedVolunteerFoundList.size())); 
-//	    			System.out.println(String.format("GeniusIF.done: #New Volunteers= %d", newVolunteerFoundList.size())); 
-				
+/*	    			
+	    			System.out.println(String.format("GeniusIF.done: #SignUpImported ID= %d, time=%d", 
+	    					signup.getSignupid(), signup.getLastImportTimeInMillis()));
+	    			System.out.println(String.format("GeniusIF.done: #Updated Activities= %d", updatedActivitiesFoundList.size()));
+	    			System.out.println(String.format("GeniusIF.done: #New Activities= %d", newActivitiesFoundList.size())); 
+	    			System.out.println(String.format("GeniusIF.done: #Updated Volunteers= %d", updatedVolunteerFoundList.size())); 
+	    			System.out.println(String.format("GeniusIF.done: #New Volunteers= %d", newVolunteerFoundList.size())); 
+*/				
 	    			signUpContentReceived(SignUpEventType.REPORT, signup);
 	    				
 	    			//if lists are not empty, notify clients

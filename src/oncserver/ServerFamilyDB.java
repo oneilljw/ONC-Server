@@ -85,8 +85,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		oncnumRangeMap.put("G", new ONCNumRange(591, 741));
 		oncnumRangeMap.put("H", new ONCNumRange(742, 792));
 		oncnumRangeMap.put("I", new ONCNumRange(793, 1018));
-		oncnumRangeMap.put("J", new ONCNumRange(1019, 1169));
-		oncnumRangeMap.put("K", new ONCNumRange(1170, 1195));
+		oncnumRangeMap.put("J", new ONCNumRange(1019, 1164));
+		oncnumRangeMap.put("K", new ONCNumRange(1165, 1195));
 		oncnumRangeMap.put("L", new ONCNumRange(1196, 1221));
 		oncnumRangeMap.put("M", new ONCNumRange(1222, 1247));
 		oncnumRangeMap.put("N", new ONCNumRange(1248, 1268));

@@ -814,9 +814,9 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	@Override
 	void createNewYear(int newYear)
 	{
-		//create a new Driver data base year for the year provided in the newYear parameter
-		//The driver db year list is initially empty prior to the import of drivers, so all we
-		//do here is create a new DriverDBYear for the newYear and save it.
+		//create a new ONCVolunteer data base year for the year provided in the newYear parameter
+		//The ONCVolunteer db year list is initially empty prior to the import of volunteers, so all we
+		//do here is create a new VolunteerDBYear for the newYear and save it.
 		VolunteerDBYear volunteerDBYear = new VolunteerDBYear(newYear);
 		volDB.add(volunteerDBYear);
 		volunteerDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
