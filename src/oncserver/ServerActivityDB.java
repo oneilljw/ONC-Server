@@ -422,7 +422,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			//frequency to restart automated imports
 			if(updatedSignUpReq.getFrequency() == Frequency.ONE_TIME && geniusIF != null)
 			{
-				geniusIF.requestSignUpContent(updatedSignUp, SignUpReportType.available);
+				geniusIF.requestSignUpContent(updatedSignUp, SignUpReportType.all);
 				updatedSignUp.setFrequency(Frequency.NEVER);
 			}
 			else
@@ -860,7 +860,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 					
 					if(su.getFrequency().compareTo(Frequency.ONE_TIME) > 0 && time_diff >= su.getFrequency().interval())
 					{
-						geniusIF.requestSignUpContent(su, SignUpReportType.filled);
+						geniusIF.requestSignUpContent(su, SignUpReportType.all);
 //						System.out.println(String.format("Importing %s signup", su.getTitle()));
 					}
 				}
