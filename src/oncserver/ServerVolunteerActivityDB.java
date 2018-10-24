@@ -10,6 +10,7 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import ourneighborschild.Activity;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.VolAct;
 
@@ -85,6 +86,17 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 				volList.add(va);
 		
 		return volList;
+	}
+	
+	//method returns number of volunteers who have signed up for an activity in a given year
+	int getVolunteerCount(int year, Activity a)
+	{
+		int volCount = 0;
+		for(VolAct va : volunteerActivityDB.get(year - BASE_YEAR).getList())
+			if(va.getActID() == a.getID())
+				volCount += va.getQty();
+				
+		return volCount;
 	}
 	
 	//method examines each activity in the parameter list. If the activity already exists and is unmodified, 

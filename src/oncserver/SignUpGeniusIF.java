@@ -213,9 +213,10 @@ public class SignUpGeniusIF
     		SignUp signup;
     		GeniusSignUps importedSignUps;
     		SignUpReport signUpReport;
-    		List<Activity> newActivitiesFoundList;
     		List<SignUpActivity> signUpActList;
-		List<Activity> updatedActivitiesFoundList;
+    		List<Activity> newActivitiesFoundList;
+    		List<Activity> updatedActivitiesFoundList;
+    		List<Activity> deletedActivitiesFoundList;
 		List<ONCVolunteer> newVolunteerFoundList;
 		List<ONCVolunteer> updatedVolunteerFoundList;
     		
@@ -237,13 +238,15 @@ public class SignUpGeniusIF
     			//initialize the lists
     			newActivitiesFoundList = new ArrayList<Activity>();
     			updatedActivitiesFoundList = new ArrayList<Activity>();
+    			deletedActivitiesFoundList = new ArrayList<Activity>();
     			newVolunteerFoundList = new ArrayList<ONCVolunteer>();
     			updatedVolunteerFoundList = new ArrayList<ONCVolunteer>();
     		}
     	
 		@Override
 		protected Void doInBackground() throws Exception
-		{			
+		{
+/*			
 			StringBuffer response = new StringBuffer();
 			try 
 			{
@@ -282,8 +285,8 @@ public class SignUpGeniusIF
 					//create the unique activity list
 					List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpActList);
 					
-					//create the new and modified activity lists
-					createNewAndModifiedActivityLists(uniqueActList);	
+					//create the new, modified and deleted activity lists
+					createNewModifiedAndDeletedActivityLists(uniqueActList);	
 					
 					//create a list of unique volunteers present in the imported sign-up
 					List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpActList);
@@ -312,8 +315,9 @@ public class SignUpGeniusIF
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}			
-//			simulateGeniusReportFetch();
+			}
+*/			
+			simulateGeniusReportFetch();
 			return null;
 		}
 		
@@ -340,7 +344,7 @@ public class SignUpGeniusIF
 		
 		void simulateGeniusReportFetch()
 		{
-			String path = String.format("%s/testfile.txt", System.getProperty("user.dir"));
+			String path = String.format("%s/testfile3.txt", System.getProperty("user.dir"));
 			InputStream is = null;
 			try
 			{
@@ -399,7 +403,7 @@ public class SignUpGeniusIF
 			List<SignUpActivity> uniqueActList = createUniqueActivityList(signUpActList);
 			
 			//create the new and modified activity lists
-			createNewAndModifiedActivityLists(uniqueActList);	
+			createNewModifiedAndDeletedActivityLists(uniqueActList);	
 			
 			//create a list of unique volunteers present in the imported sign-up
 			List<ONCVolunteer> uniqueVolList = createUniqueVolunteerList(signUpActList);
@@ -472,19 +476,41 @@ public class SignUpGeniusIF
 			return index < list.size();
 		}
 		
-		void createNewAndModifiedActivityLists(List<SignUpActivity> uniqueActList)
+		void createNewModifiedAndDeletedActivityLists(List<SignUpActivity> importedUniqueActList)
 		{
 			//clone a list of the current activities from the activity database
 			ServerActivityDB activityDB;
+			ServerVolunteerActivityDB volActDB;
 			try
 			{
 				activityDB = ServerActivityDB.getInstance();
+				volActDB = ServerVolunteerActivityDB.getInstance();
 				List<Activity> cloneActList = activityDB.clone(DBManager.getCurrentYear());
+				List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentYear());
 				
-				//compare the unique activity list to the cloned list. If a unique activity is not in 
-				//the current list or if the activity name, start, end or location has been modified, add
+				//compare the clone list to the imported activity list. Identify previously imported
+				//sign up genius activities that are no longer in the signup. They can only be deleted
+				//if no volunteers have already signed up for the activity
+				for(Activity a : cloneActList)
+				{
+					int index = 0;
+					while(index < importedUniqueActList.size())
+					{
+						Activity importedVA = new Activity(importedUniqueActList.get(index));
+						int result = a.compareActivities(importedVA);
+						if(result >= Activity.VOLUNTEER_ACTIVITY_GENIUS_MATCH)
+							break;
+						else
+							index++;
+					}
+					
+					if(index == importedUniqueActList.size() && getVolunteerCount(cloneVolActList, a) == 0)
+						deletedActivitiesFoundList.add(a);
+				}
+				//compare the imported unique activity list to the cloned list. If a unique activity is not
+				//in the current list or if the activity name, start, end or location has been modified, add
 				//the activity to the newAndModified activities list
-				for(SignUpActivity sua : uniqueActList)
+				for(SignUpActivity sua : importedUniqueActList)
 				{
 					Activity importedVA = new Activity(sua);
 					int index = 0, result = -1;
@@ -492,10 +518,11 @@ public class SignUpGeniusIF
 						(result = importedVA.compareActivities(cloneActList.get(index))) == Activity.VOLUNTEER_ACTIVITY_DOES_NOT_MATCH)
 						index++;
 						
-					if(index < cloneActList.size())
+					if(index < cloneActList.size())	//at least a partial match
 					{
-						//there is a match. If it's not an exact match, add it as a modified activity
-						if(result != Activity.VOLUNTEER_ACTIVITY_EXACT_MATCH)
+						//there is a match. If it's not an exact match but the
+						//genius ID's match, the date/time has been updated
+						if(result == Activity.VOLUNTEER_ACTIVITY_GENIUS_MATCH)
 						{
 							//add the current ID and add activity to update list
 							importedVA.setID(cloneActList.get(index).getID());
@@ -516,6 +543,17 @@ public class SignUpGeniusIF
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}				
+		}
+		
+		//method returns number of volunteers who have signed up for an activity in a given year
+		int getVolunteerCount(List<VolAct> cloneVolActList, Activity a)
+		{
+			int volCount = 0;
+			for(VolAct va : cloneVolActList)
+				if(va.getActID() == a.getID())
+					volCount += va.getQty();
+			
+			return volCount;
 		}
 		
 		void createNewAndModifiedVolunteerLists(List<ONCVolunteer> uniqueVolList, List<SignUpActivity> suActList)
@@ -616,20 +654,28 @@ public class SignUpGeniusIF
 /*	    			
 	    			System.out.println(String.format("GeniusIF.done: #SignUpImported ID= %d, time=%d", 
 	    					signup.getSignupid(), signup.getLastImportTimeInMillis()));
-	    			System.out.println(String.format("GeniusIF.done: #Updated Activities= %d", updatedActivitiesFoundList.size()));
 	    			System.out.println(String.format("GeniusIF.done: #New Activities= %d", newActivitiesFoundList.size())); 
+	    			System.out.println(String.format("GeniusIF.done: #Updated Activities= %d", updatedActivitiesFoundList.size()));
+	    			System.out.println(String.format("GeniusIF.done: #Deleted Activities= %d", deletedActivitiesFoundList.size())); 
 	    			System.out.println(String.format("GeniusIF.done: #Updated Volunteers= %d", updatedVolunteerFoundList.size())); 
 	    			System.out.println(String.format("GeniusIF.done: #New Volunteers= %d", newVolunteerFoundList.size())); 
 */				
 	    			signUpContentReceived(SignUpEventType.REPORT, signup);
 	    				
 	    			//if lists are not empty, notify clients
+	    			if(!deletedActivitiesFoundList.isEmpty())
+	    				signUpContentReceived(SignUpEventType.DELETED_ACTIVITIES, deletedActivitiesFoundList);
+	    			
 	    			if(!updatedActivitiesFoundList.isEmpty())
 	    				signUpContentReceived(SignUpEventType.UPDATED_ACTIVITIES, updatedActivitiesFoundList);
 	    			
+	    			for(Activity ua : updatedActivitiesFoundList)
+	    				System.out.println(String.format("ServActDB.printActivities %s: act ID= %d, actGenID= %d, act Name= %s",
+	    						"UPDATED ACTS FOUND:", ua.getID(), ua.getGeniusID(),ua.getName()));
+	    			
 	    			if(!newActivitiesFoundList.isEmpty())
 	    				signUpContentReceived(SignUpEventType.NEW_ACTIVITIES, newActivitiesFoundList);
-	    			
+	    				
 	    			if(!updatedVolunteerFoundList.isEmpty())
 	    			{
 //	    				//for debug, print the updatedVolFoundList
@@ -727,7 +773,7 @@ public class SignUpGeniusIF
 				//imported
 				actDB = ServerActivityDB.getInstance();
 				List<Activity> cloneActList = actDB.clone(DBManager.getCurrentYear());
-				
+
 				volDB = ServerVolunteerDB.getInstance();
 				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentYear());
 				
@@ -739,39 +785,35 @@ public class SignUpGeniusIF
 				List<VolAct> suaVAList = new ArrayList<VolAct>();
 				for(SignUpActivity sua : signUpActList)
 				{
-					//find the activity in the clone list. 
-					int actIndex = 0;
-					while(actIndex < cloneActList.size() && cloneActList.get(actIndex).getGeniusID() != sua.getSlotitemid())
-						actIndex++;
-					
-					if(actIndex < cloneActList.size())
+					//find the activity in the clone list only if the sua has a last name and email.
+					if(!sua.getLastname().isEmpty() && !sua.getEmail().isEmpty())
 					{
-						//found the activity, now find the volunteer
-						Activity act = cloneActList.get(actIndex);
+						int actIndex = 0;
+						while(actIndex < cloneActList.size() && cloneActList.get(actIndex).getGeniusID() != sua.getSlotitemid())
+							actIndex++;
+					
+						if(actIndex < cloneActList.size())
+						{
+							//found the activity, now find the volunteer
+							Activity act = cloneActList.get(actIndex);
 
-						//find the volunteer in the clone list. If found, create a new VolunteerActivity
-						//and add it to the volunteerActivityList. A volunteer is declared a match if
-						//their first and last names plus their email addresses match
-						int volIndex = 0;
-						while(volIndex < cloneVolList.size() &&
+							//find the volunteer in the clone list. If found, create a new VolunteerActivity
+							//and add it to the volunteerActivityList. A volunteer is declared a match if
+							//their first and last names plus their email addresses match
+							int volIndex = 0;
+							while(volIndex < cloneVolList.size() &&
 								!(cloneVolList.get(volIndex).getFirstName().equalsIgnoreCase(sua.getFirstname()) &&
 								cloneVolList.get(volIndex).getLastName().equalsIgnoreCase(sua.getLastname()) &&
 								cloneVolList.get(volIndex).getEmail().equalsIgnoreCase(sua.getEmail())))
 							volIndex++;
 						
-						if(volIndex < cloneVolList.size())
-							suaVAList.add(new VolAct(-1, cloneVolList.get(volIndex).getID(), act.getID(),
+							if(volIndex < cloneVolList.size())
+								suaVAList.add(new VolAct(-1, cloneVolList.get(volIndex).getID(), act.getID(),
 													act.getGeniusID(), sua.getMyqty(), sua.getComment()));
+						}
 					}
 				}
-				
-//				System.out.println(String.format("SUGIF.VAImporter.DIB: suaVAList size=%d", suaVAList.size()));
-//				
-//				for(VolAct va : suaVAList)
-//					System.out.println(String.format("SUGIF.VAImporter.DIB: va id=%d, volid=%d, actid=%d, genid=%d, qty=%d, comment=%s",
-//							va.getID(), va.getVolID(), va.getActID(), va.getGeniusID(), va.getQty(), va.getComment()));
-					
-				
+
 //				writeToFile(suaVAList);
 				
 				//now that we've got the list of imported volunteer acts with correct activity and

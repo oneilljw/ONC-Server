@@ -162,6 +162,14 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return index < actList.size() ? actList.get(index) : null;
 	}
 /*	
+	void printActivities(int year, String mssg)
+	{
+		List<Activity> actList = activityDB.get(year - BASE_YEAR).getList();
+		for(Activity a : actList)
+			System.out.println(String.format("ServActDB.printActivities %s: act ID= %d, actGenID= %d, act Name= %s",
+					mssg, a.getID(), a.getGeniusID(),a.getName()));		
+	}
+	
 	static HtmlResponse getActivityDayJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
@@ -451,28 +459,62 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			return "UPDATE_FAILED";
 	}
 	
-	String delete(int year, String json)
+	String delete(int year, Activity delAct)
 	{
-		//Create an object for the delete request
-		Gson gson = new Gson();
-		Activity deletedActivity = gson.fromJson(json, Activity.class);
-		
 		//find and remove the deleted activity from the data base
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
 		List<Activity> activityList = activityDBYear.getList();
 		
 		int index = 0;
-		while(index < activityList.size() && activityList.get(index).getID() != deletedActivity.getID())
+		while(index < activityList.size() && activityList.get(index).getID() != delAct.getID())
 			index++;
 		
 		if(index < activityList.size())
 		{
+			Gson gson = new Gson();
+			Activity deletedActivity = activityList.get(index);
 			activityList.remove(index);
 			activityDBYear.setChanged(true);
-			return "DELETED_ACTIVITY" + json;
+			return "DELETED_ACTIVITY" + gson.toJson(deletedActivity, Activity.class);
 		}
 		else
 			return "DELETE_FAILED";	
+	}
+	
+	//deletes an Activity from the database. An activity can only be deleted if it doesn't have
+	//any volunteers who have signed up for it. A delete request for an Activity that already
+	//has volunteers will fail
+	String delete(int year, String json)
+	{
+		//get pointer to the VolunteerActivityDB
+		try
+		{
+			ServerVolunteerActivityDB volActDB = ServerVolunteerActivityDB.getInstance();
+			//Create an object for the delete request
+			Gson gson = new Gson();
+			Activity deletedActivity = gson.fromJson(json, Activity.class);
+			
+			//find and remove the deleted activity from the data base
+			ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
+			List<Activity> activityList = activityDBYear.getList();
+			
+			int index = 0;
+			while(index < activityList.size() && activityList.get(index).getID() != deletedActivity.getID())
+				index++;
+			
+			if(index < activityList.size() && volActDB.getVolunteerCount(year, activityList.get(index)) == 0)
+			{
+				activityList.remove(index);
+				activityDBYear.setChanged(true);
+				return "DELETED_ACTIVITY" + json;
+			}
+			else
+				return "DELETE_FAILED";	
+		}
+		catch (IOException e)
+		{
+			return "DELETE_FAILED";	
+		}
 	}
 	
 	@Override
@@ -568,6 +610,34 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			
 			ClientManager clientMgr = ClientManager.getInstance();
 			clientMgr.notifyAllClients(clientSignUpJson);
+		}
+		else if(event.type() == SignUpEventType.DELETED_ACTIVITIES)
+		{
+			//process the deleted activities list
+			@SuppressWarnings("unchecked")
+			List<Activity> delActList = (List<Activity>) event.getSignUpObject();
+			List<String> clientJsonMssgList = new ArrayList<String>();
+			
+			for(Activity a : delActList)
+			{
+				String response = delete(DBManager.getCurrentYear(), a);
+				
+//				System.out.println(String.format("ServActDB.createNewModAndDel: delAct: id=%d, GenID=%d, name=%s, response=%s",
+//						a.getID(), a.getGeniusID(), a.getName(), response == null ? "null" : response));
+				
+				if(response != null)
+					clientJsonMssgList.add(response);
+				
+//				System.out.println(String.format("ServActDB.newAndMod: newAct: %s, id= %d, start= %d, end= %d",
+//						va.getName(), va.getGeniusID(), va.getStartDate(), va.getEndDate()));
+			}
+			
+			if(!clientJsonMssgList.isEmpty())
+			{
+				//there were new activities, send list of new json's to clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			}
 		}
 		else if(event.type() == SignUpEventType.UPDATED_ACTIVITIES)
 		{
