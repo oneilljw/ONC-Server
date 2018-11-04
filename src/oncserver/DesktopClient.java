@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 6.11f;
+	private static final float MINIMUM_CLIENT_VERSION = 6.12f;
 	
 	private int id;
 	private String version;
@@ -1104,8 +1104,8 @@ public class DesktopClient extends Thread
   
     		for(ONCChild c:childDB.getList(year))  
     			for(int wn=0; wn < NUMBER_OF_WISHES_PER_CHILD; wn++)		
-    				if(c.getChildWishID(wn) > -1) //Wish must have a valid ID
-    					childwishAL.add(ServerChildWishDB.getWish(year, c.getChildWishID(wn)));
+    				if(c.getChildGiftID(wn) > -1) //Wish must have a valid ID
+    					childwishAL.add(ServerChildWishDB.getWish(year, c.getChildGiftID(wn)));
     	
     		//Convert the array list to a json and return it
     		Gson gson = new Gson();

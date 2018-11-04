@@ -6,11 +6,14 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import ourneighborschild.HistoryRequest;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCPartner;
+import ourneighborschild.ONCUser;
 import ourneighborschild.WishStatus;
 
 import com.google.gson.Gson;
@@ -21,11 +24,15 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	private static final int CHILD_WISH_DB_HEADER_LENGTH = 10;
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
+	private static final int PARTNER_TYPE_ONC_SHOPPER = 6;
+	private static final int WISH_INDICATOR_ALLOW_SUBSTITUE = 2;
+	private static final String CHILD_WISH_DEFAULT_DETAIL = "Age appropriate";
 	private static ServerChildWishDB instance = null;
 
 	private static List<ChildWishDBYear> childwishDB;
 	private ServerChildDB childDB; //Reference used to update ChildWishID's 
 	private ServerPartnerDB serverPartnerDB;
+	private static ClientManager clientMgr;
 	
 	private ServerChildWishDB() throws FileNotFoundException, IOException
 	{
@@ -54,6 +61,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 
 		childDB = ServerChildDB.getInstance();
 		serverPartnerDB = ServerPartnerDB.getInstance();
+		clientMgr = ClientManager.getInstance();
 	}
 	
 	public static ServerChildWishDB getInstance() throws FileNotFoundException, IOException
@@ -145,6 +153,244 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		processWishAdded(year, oldWish, addedWish);
 		
 		return "WISH_ADDED" + gson.toJson(addedWish, ONCChildWish.class);
+	}
+/*	
+	String add(int year, String wishjson, ONCUser user)
+	{
+		//Create a child wish object for the added wish
+		Gson gson = new Gson();
+		ONCChildWish addedWish = gson.fromJson(wishjson, ONCChildWish.class);
+		
+		//retrieve the child wish data base for the year and set the new ID for the added child wish
+		ChildWishDBYear cwDBYear = childwishDB.get(year - BASE_YEAR);
+		addedWish.setID(cwDBYear.getNextID());
+				
+		//retrieve the old wish being replaced
+		ONCChildWish oldWish = getWish(year, addedWish.getChildID(), addedWish.getWishNumber());
+		
+		//determine if we need to change the partner id. If the wish is changing, a new partner must
+		//be assigned in a second step. Set this wish partner to NO_PARTNER (-1). A prior wish must
+		//have existed in order to assign a partner.  
+		boolean bPartnerChanged = false;
+		ONCPartner newPartner = new ONCPartner(-1, "None", "None");
+		int newPartnerID;
+		if(oldWish != null && oldWish.getWishID() != addedWish.getWishID())
+			newPartner = new ONCPartner(-1, "None", "None");
+//			newPartnerID = -1;
+		else if(oldWish != null && oldWish.getChildWishAssigneeID() != addedWish.getChildWishAssigneeID())
+		{
+//			newPartnerID = addedWish.getChildWishAssigneeID();
+			newPartner =  serverPartnerDB.getPartner(year,  addedWish.getChildWishAssigneeID());
+		}
+		
+		if(oldWish != null)
+		{
+			//determine if the detail needs to change
+			String updatedDetail = checkForDetailChange(addedWish, newPartner, oldWish);
+			addedWish.setChildWishDetail(updatedDetail);
+		
+			//determine if the status needs to change
+			WishStatus updatedStatus = checkForStatusChange(addedWish, newPartner, oldWish);
+			addedWish.setChildWishStatus(updatedStatus);
+		}
+		
+		
+		//determine if adding the wish changes any other wish for this child
+		//must check to see if new wish is wish 0 and has changed to/from a 
+		//Bike. If so, wish 2 must become a Helmet/Empty
+		ONCChild child = childDB.getChild(year, addedWish.getChildID());
+		int bikeID = ServerWishCatalog.findWishIDByName(year, "Bike");
+		int helmetID = ServerWishCatalog.findWishIDByName(year, "Helmet");
+		ONCChildWish corollaryWish = null, oldCorollaryWish = null;
+		if(addedWish.getWishNumber() == 0 && oldWish != null && oldWish.getWishID() != bikeID && 
+				addedWish.getWishID() == bikeID || addedWish.getWishNumber() == 0 && oldWish == null &&
+					addedWish.getWishID() == bikeID)		
+		{
+			//add Helmet as the childs second gift (gift 1)
+			oldCorollaryWish = getWish(year, addedWish.getChildID(), 1);
+			corollaryWish = new ONCChildWish(cwDBYear.getNextID(), child.getID(), helmetID, "", 1, 1, 
+					WishStatus.Selected, -1, user.getLNFI(), new Date());
+			
+//			helmetResponse = serverIF.sendRequest("POST<childwish>" + gson.toJson(helmetCW, ONCChildWish.class));
+//			if(helmetResponse != null && helmetResponse.startsWith("WISH_ADDED"))
+//					processAddedWish(this, helmetResponse.substring(10));
+		}
+		//if replaced wish was a bike and now isn't and wish 1 was a helmet, make
+		//wish one empty
+		else if(addedWish.getWishNumber() == 0 && oldWish != null && child.getChildGiftID(1) > -1 &&
+				 oldWish.getWishID() == bikeID && addedWish.getWishID() != bikeID)
+		{
+			//replace Helmet as the child's second gift (gift 1) with None
+			oldCorollaryWish = getWish(year, addedWish.getChildID(), 1);
+			corollaryWish = new ONCChildWish(cwDBYear.getNextID(), child.getID(), -1, "", 1, 0, 
+					WishStatus.Not_Selected, -1, user.getLNFI(), new Date());
+//			helmetResponse = serverIF.sendRequest("POST<childwish>" + gson.toJson(helmetCW, ONCChildWish.class));
+//			if(helmetResponse != null && helmetResponse.startsWith("WISH_ADDED"))
+//					processAddedWish(this, helmetResponse.substring(10));
+		}
+		
+		//Add the new wish to the proper data base
+		cwDBYear.add(addedWish);
+		cwDBYear.setChanged(true);
+		
+		//Update the child object with new wish
+		childDB.updateChildsWishID(year, addedWish);
+		
+		//process new wish to see if other data bases require update. They do if the wish
+		//status has caused a family status change or if a partner assignment has changed
+		processWishAdded(year, oldWish, addedWish);
+		
+		//if the was a corollary wish change, handle it as well. This includes notifying in-year
+		//clients of the change
+		if(corollaryWish != null);
+		{
+			cwDBYear.add(corollaryWish);
+			childDB.updateChildsWishID(year, corollaryWish);
+			processWishAdded(year, oldCorollaryWish, corollaryWish);
+			clientMgr.notifyAllInYearClients(year, "WISH_ADDED" + gson.toJson(corollaryWish, ONCChildWish.class));
+		}
+		
+		return "WISH_ADDED" + gson.toJson(addedWish, ONCChildWish.class);
+	}
+*/	
+	/*******************************************************************************************
+	 * This method implements a rules engine governing the relationship between a wish type and
+	 * wish status and wish assignment and wish status. It is called when a child's wish or
+	 * assignee changes and implements an automatic change of wish status.
+	 * 
+	 * For example, if a child's base wish is empty and it is changing to a wish selected from
+	 * the catalog, this method will set the wish status to CHILD_WISH_SELECTED. Conversely, if
+	 * a wish was selected from the catalog and is reset to empty, the wish status is set to
+	 * CHILD_WISH_EMPTY.
+	 ************************************************************************************************************/
+	WishStatus checkForStatusChange(ONCChildWish addedWish, ONCPartner reqPartner, ONCChildWish oldWish)
+	{
+		WishStatus currStatus, newStatus;
+		
+		if(oldWish == null)	//Creating first wish
+			currStatus = WishStatus.Not_Selected;
+		else	
+			currStatus = oldWish.getChildWishStatus();
+		
+		//set new status = current status for default return
+		newStatus = currStatus;
+		
+		switch(currStatus)
+		{
+			case Not_Selected:
+				if(addedWish.getWishID() > -1 && reqPartner != null && reqPartner.getID() != -1)
+					newStatus = WishStatus.Assigned;	//wish assigned from inventory
+				else if(addedWish.getWishID() > -1)
+					newStatus = WishStatus.Selected;
+				break;
+				
+			case Selected:
+				if(addedWish.getWishID() == -1)
+					newStatus = WishStatus.Not_Selected;
+				else if(reqPartner != null && reqPartner.getID() != -1)
+					newStatus = WishStatus.Assigned;
+				break;
+				
+			case Assigned:
+				if(addedWish.getWishID() == -1)
+					newStatus = WishStatus.Not_Selected;
+				else if(oldWish.getWishID() != addedWish.getWishID())
+					newStatus = WishStatus.Selected;
+				else if(reqPartner == null || reqPartner != null && reqPartner.getID() == -1)
+					newStatus = WishStatus.Selected;
+				else if(addedWish.getChildWishStatus() == WishStatus.Delivered)
+					newStatus = WishStatus.Delivered;
+				break;
+				
+			case Delivered:
+				if(addedWish.getChildWishStatus() == WishStatus.Returned)
+					newStatus = WishStatus.Returned;
+				else if(addedWish.getChildWishStatus() == WishStatus.Delivered && reqPartner != null && 
+							reqPartner.getID() > -1 && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
+					newStatus = WishStatus.Shopping;
+				else if(addedWish.getChildWishStatus() == WishStatus.Delivered && reqPartner != null && reqPartner.getID() > -1)
+					newStatus = WishStatus.Assigned;
+				else if(addedWish.getChildWishStatus() == WishStatus.Shopping)
+					newStatus = WishStatus.Shopping;
+				else if(addedWish.getChildWishStatus() == WishStatus.Received)
+					newStatus = WishStatus.Received;
+				break;
+				
+			case Returned:
+				if(addedWish.getWishID() == -1)
+					newStatus = WishStatus.Not_Selected;
+				else if(reqPartner != null && reqPartner.getID() == -1)
+					newStatus = WishStatus.Selected;
+				else if(reqPartner != null && reqPartner.getType() != PARTNER_TYPE_ONC_SHOPPER)
+					newStatus = WishStatus.Assigned;
+				else if(reqPartner != null && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
+					newStatus = WishStatus.Shopping;
+				break;
+				
+			case Shopping:
+				if(addedWish.getChildWishStatus() == WishStatus.Returned)
+					newStatus = WishStatus.Returned;
+				else if(addedWish.getChildWishStatus() == WishStatus.Received)
+					newStatus = WishStatus.Received;
+				break;
+				
+			case Received:
+				if(addedWish.getChildWishStatus() == WishStatus.Missing)
+					newStatus = WishStatus.Missing;
+				else if(addedWish.getChildWishStatus() == WishStatus.Distributed)
+					newStatus = WishStatus.Distributed;
+				else if(addedWish.getChildWishStatus() == WishStatus.Delivered)
+					newStatus = WishStatus.Delivered;
+				break;
+				
+			case Distributed:
+				if(addedWish.getChildWishStatus() == WishStatus.Missing)
+					newStatus = WishStatus.Missing;
+				else if(addedWish.getChildWishStatus() == WishStatus.Verified)
+					newStatus = WishStatus.Verified;
+				break;
+			
+			case Missing:
+				if(addedWish.getChildWishStatus() == WishStatus.Received)
+					newStatus = WishStatus.Received;
+				else if(reqPartner != null && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
+					newStatus = WishStatus.Shopping;
+				else if(addedWish.getChildWishStatus() == WishStatus.Assigned && reqPartner != null && reqPartner.getID() > -1)
+					newStatus = WishStatus.Assigned;
+				break;
+				
+			case Verified:
+				if(addedWish.getChildWishStatus() == WishStatus.Missing)
+					newStatus = WishStatus.Missing;
+				break;
+				
+			default:
+				break;
+		}
+		
+		return newStatus;			
+	}
+	
+	/*** checks for automatic change of wish detail. An automatic change is triggered if
+	 * the replaced wish is of status Delivered and requested parter is of type ONC Shopper
+	 * and the requested wish indicator is #. 
+	 */
+	String checkForDetailChange(ONCChildWish addedWish, ONCPartner reqPartner, ONCChildWish replWish)
+	{
+//		if(replWish != null && reqPartner != null)
+//			System.out.println(String.format("ChildWishDB.checkforDetailChange: replWishStatus= %s, reqWishInd= %d, reqPartnerType = %d, reqDetail= %s",
+//				replWish.getChildWishStatus().toString(), reqWishRes, reqPartner.getType(),
+//				reqWishDetail));
+		
+		if(replWish != null && reqPartner != null && 
+			replWish.getChildWishStatus() == WishStatus.Delivered && 
+			 reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER && 
+			  addedWish.getChildWishIndicator() == WISH_INDICATOR_ALLOW_SUBSTITUE)
+		{
+			return CHILD_WISH_DEFAULT_DETAIL;
+		}
+		else
+			return addedWish.getChildWishDetail();
 	}
 	
 	void processWishAdded(int year, ONCChildWish oldWish, ONCChildWish addedWish)

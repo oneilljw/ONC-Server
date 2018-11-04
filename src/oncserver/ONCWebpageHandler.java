@@ -220,10 +220,11 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
 			return getPartnerTableWebpage(wc, message);	//send the partner table page
 		else	 
-			return getFamilyStatusWebpage(wc, message, bShowSuccessDialog); //send the family status page
+			return getFamilyStatusWebpage(wc, message, message, "Sucessful Referral", bShowSuccessDialog); //send the family status page
 	}
 	
-	String getFamilyStatusWebpage(WebClient wc, String message, boolean bShowSuccessDialog)
+	String getFamilyStatusWebpage(WebClient wc, String message, String successMssg, 
+			String successDlgTitle, boolean bShowSuccessDialog)
 	{
 		Calendar deliveryDay = ServerGlobalVariableDB.getDeliveryDay(DBManager.getCurrentYear());
 		SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy");
@@ -237,7 +238,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		response = response.replace("DELIVERY_DATE", sdf.format(deliveryDay.getTime()));
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
 		response = response.replace("SHOW_SUCCESS_DIALOG", bShowSuccessDialog ? "true" : "false");
-		String successMssg = String.format("%s", message);
+		response = response.replace("SUCCESS_DIALOG_HEADER", successDlgTitle);
+//		String successMssg = String.format("%s", message);
 		response = response.replace("SUCCESS_DIALOG_MESSAGE", bShowSuccessDialog ? successMssg : "");
 		
 		return response;

@@ -142,7 +142,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			WebClient wc;
     			
     			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    				response = getFamilyStatusWebpage(wc, "", false);
+    				response = getFamilyStatusWebpage(wc, "", "", "", false);
     			else
     				response = invalidTokenReceived();
     		
@@ -170,7 +170,7 @@ public class FamilyHandler extends ONCWebpageHandler
     				//process referral and send family status web page back to client
     				logParameters(params, requestURI);
     				ResponseCode frc = processFamilyReferral(wc, params);
-    				response = getFamilyStatusWebpage(wc, frc.getMessage(), true);
+    				response = getFamilyStatusWebpage(wc, frc.getMessage(), frc.getSuccessMessage(), "Successful Wait List Referral",true);
     			}
     			else
     				response = invalidTokenReceived();
@@ -223,7 +223,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			{
     				//submission processed, send the home page back to the user
     				ResponseCode frc = processFamilyUpdate(wc, params);
-    				response = getFamilyStatusWebpage(wc, frc.getMessage(), true);
+    				response = getFamilyStatusWebpage(wc, frc.getMessage(), frc.getMessage(), "Family Update Successful",true);
     			}
     			else
     				response = invalidTokenReceived();
@@ -520,8 +520,19 @@ public class FamilyHandler extends ONCWebpageHandler
 				
 			clientMgr.notifyAllInYearClients(year, mssgList);
 			
-			return new ResponseCode(String.format("%s Family Referral Accepted, ONC# %s",
-									addedFamily.getLastName(), addedFamily.getONCNum()));
+//			String mssg = String.format("%s Family Referral Accepted, ONC# %s",
+//					addedFamily.getLastName(), addedFamily.getONCNum());
+			
+			String mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
+						addedFamily.getLastName(), addedFamily.getONCNum());
+			String successMssg = String.format("%s Family Referral received for ONC's Wait List, ONC# %s. "
+					+ "Once Family Status is marked \"Verified\" please notify the family that gift pickup will "
+					+ "take place on 12/22 from 10am-noon at the Centreville Regional Library. Photo ID "
+					+ "matching HOH required. This is for wait list GIFTS only. Please contact WFCM for "
+					+ "post-deadline food requests.",
+					addedFamily.getLastName(), addedFamily.getONCNum());
+
+			return new ResponseCode(mssg, successMssg, addedFamily.getONCNum());
 		}
 		else
 			return new ResponseCode("Family Referral Failure: Unable to Process Referral");
@@ -695,16 +706,16 @@ public class FamilyHandler extends ONCWebpageHandler
 					String mssg;
 					mssg = "UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class);
 					clientMgr.notifyAllInYearClients(year, mssg);
-					return new ResponseCode(updateFam.getLastName() + " Family Update Accepted");
+					return new ResponseCode(updateFam.getLastName() + " Family Update Accepted", null, null);
 				}
 				else
-					return new ResponseCode("Family Referral Rejected: Unable to Save Update");
+					return new ResponseCode("Family Referral Rejected: Unable to Save Update", null, null);
 			}
 			else
-				return new ResponseCode("Family Referral Unchanged: No change was detected");	
+				return new ResponseCode("Family Referral Unchanged: No change was detected", null, null);	
 		}
 		else
-			return new ResponseCode("Family Referral Rejected: Family Not Found in Database");	
+			return new ResponseCode("Family Referral Rejected: Family Not Found in Database", null, null);	
 	}
 	
 	/**************************************************************************************************

@@ -240,9 +240,9 @@ public class PriorYearDB extends ServerSeasonalDB
 			ONCFamily lyfam = serverFamilyDB.getFamily(newYear-1, lyc.getFamID());
 			if(isNumeric(lyfam.getONCNum()) && Integer.parseInt(lyfam.getONCNum()) >= 100)
 			{
-				ONCChildWish lyChildWish1 = ServerChildWishDB.getWish(newYear-1, lyc.getChildWishID(0));
-				ONCChildWish lyChildWish2 = ServerChildWishDB.getWish(newYear-1, lyc.getChildWishID(1));
-				ONCChildWish lyChildWish3 = ServerChildWishDB.getWish(newYear-1, lyc.getChildWishID(2));
+				ONCChildWish lyChildWish1 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(0));
+				ONCChildWish lyChildWish2 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(1));
+				ONCChildWish lyChildWish3 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(2));
 				
 				//determine the wishes from last year. Check to ensure the child wish existed. If it didn't, 
 				//set the wish blank

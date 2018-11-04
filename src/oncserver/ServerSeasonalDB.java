@@ -7,6 +7,7 @@ import java.io.IOException;
 import javax.swing.JOptionPane;
 
 import au.com.bytecode.opencsv.CSVReader;
+import ourneighborschild.ONCUser;
 
 public abstract class ServerSeasonalDB extends ONCServerDB
 {
@@ -16,7 +17,7 @@ public abstract class ServerSeasonalDB extends ONCServerDB
 	protected static final int AGENT_UPDATED = 1;
 	protected static final int AGENT_ADDED = 2;
 	
-	abstract String add(int year, String userjson);
+	abstract String add(int year, String addjson);
 	
 	abstract void createNewYear(int year);	//used to create a new year from the authorized client
 	

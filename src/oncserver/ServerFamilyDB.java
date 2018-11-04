@@ -1112,23 +1112,23 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    //if gift status has changed, update the data base and notify clients
 	    if(newGiftStatus != fam.getGiftStatus() || bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
 	    {
-	    	if(newGiftStatus != fam.getGiftStatus())
-	    	{
-	    		//create a family history change
-	    		fam.setGiftStatus(newGiftStatus);
-	    		ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
+	    		if(newGiftStatus != fam.getGiftStatus())
+	    		{
+	    			//create a family history change
+	    			fam.setGiftStatus(newGiftStatus);
+	    			ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
 						"", "Gift Status Change", fam.getChangedBy(), true);
-	    		fam.setDeliveryID(addedHistItem.getID());
-	    	}
+	    			fam.setDeliveryID(addedHistItem.getID());
+	    		}
 	    	
-	    	if(bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
-	    		fam.setGiftCardOnly(bNewGiftCardOnlyFamily);
+	    		if(bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
+	    			fam.setGiftCardOnly(bNewGiftCardOnlyFamily);
 	    	
-	    	familyDB.get(year - BASE_YEAR).setChanged(true);
+	    		familyDB.get(year - BASE_YEAR).setChanged(true);
 	    	
-	    	Gson gson = new Gson();
-	    	String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-	    	clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+	    		Gson gson = new Gson();
+	    		String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+	    		clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 	    }
 	}
 	
@@ -1189,14 +1189,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				//if all gifts aren't assigned, then not a gift card only family
 				int wn = 0;
 				while(wn < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
-					if(c.getChildWishID(wn++) == -1)
+					if(c.getChildGiftID(wn++) == -1)
 						bGiftCardOnlyFamily = false;
 				
 				//if all are assigned, examine each gift to see if it's a gift card
 				int giftindex = 0;
 				while(giftindex < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
 				{
-					ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildWishID(giftindex++));
+					ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildGiftID(giftindex++));
 					if(cw.getWishID() != giftCardID)	//gift card?
 						bGiftCardOnlyFamily = false;
 				}	
@@ -1236,13 +1236,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		{
 			for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
 			{
-				ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildWishID(wn));
+				ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildGiftID(wn));
 				
 				//if cw is null, it means that the wish doesn't exist yet. If that's the case, 
 				//set the status to the lowest status possible as if the wish existed
 				WishStatus childwishstatus = WishStatus.Not_Selected;	//Lowest possible child wish status
 				if(cw != null)
-					childwishstatus = ServerChildWishDB.getWish(year, c.getChildWishID(wn)).getChildWishStatus();
+					childwishstatus = ServerChildWishDB.getWish(year, c.getChildGiftID(wn)).getChildWishStatus();
 					
 				if(wishstatusmatrix[childwishstatus.statusIndex()].compareTo(lowestfamstatus) < 0)
 					lowestfamstatus = wishstatusmatrix[childwishstatus.statusIndex()];

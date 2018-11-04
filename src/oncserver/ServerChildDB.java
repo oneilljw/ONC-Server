@@ -119,13 +119,13 @@ public class ServerChildDB extends ServerSeasonalDB
 				for(int wn=0; wn < 3; wn++)
 				{
 					//has the wish been created?
-					if(c.getChildWishID(wn) == -1)
+					if(c.getChildGiftID(wn) == -1)
 					{
 						responseList.add(new WebChildWish());	//not created
 					}
 					else		
 					{
-						ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildWishID(wn));
+						ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildGiftID(wn));
 						int wishRestriction = cw.getChildWishIndicator();
 						String[] restrictions = {" ", "*", "#"};
 						String partner;
@@ -275,7 +275,7 @@ public class ServerChildDB extends ServerSeasonalDB
 			//decrement partner wish assignment counts
 			for(int wn= 0; wn < NUMBER_WISHES_PER_CHILD; wn++)
 			{
-				int childWishID = deletedChild.getChildWishID(wn);
+				int childWishID = deletedChild.getChildGiftID(wn);
 				
 				if(childWishID != -1)	//does the wish exist?
 				{
@@ -375,7 +375,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		if(index < cAL.size())
 		{
 			ONCChild c = cAL.get(index);
-			c.setChildWishID(addedWish.getID(), addedWish.getWishNumber());
+			c.setChildGiftID(addedWish.getID(), addedWish.getWishNumber());
 			childDBYear.setChanged(true);
 		}
 	}
@@ -390,6 +390,17 @@ public class ServerChildDB extends ServerSeasonalDB
 				fChildrenAL.add(c);
 		
 		return fChildrenAL;
+	}
+	
+	ONCChild getChild(int year, int childID)
+	{
+		List<ONCChild> cAL = childDB.get(year-BASE_YEAR).getList();
+		
+		int index = 0;
+		while(index < cAL.size() && cAL.get(index).getID() != childID)
+			index++;
+		
+		return index < cAL.size() ? cAL.get(index) : null;
 	}
 	
 	List<ONCWebChild> getWebChildList(int year, int famid, boolean bIncludeSchool)
