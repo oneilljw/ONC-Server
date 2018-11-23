@@ -11,5 +11,7 @@ public enum SignUpEventType
 	NEW_VOLUNTEERS,					//distribution of the new volunteers list
 	UPDATED_VOLUNTEER_ACTIVITIES,	//distribution of updated volunteer activities from an import
 	NEW_VOLUNTEER_ACTIVITIES,		//distribution of new volunteer activities from an import
-	DELETED_VOLUNTEER_ACTIVITIES;	//distribution of deleted volunteer activities from an import
+	DELETED_VOLUNTEER_ACTIVITIES,	//distribution of deleted volunteer activities from an import
+	UPDATED_PARTNERS,				//distribution of updated volunteer activities from an import
+	NEW_PARTNERS;					//distribution of new partners from an import
 }

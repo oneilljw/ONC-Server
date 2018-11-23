@@ -21,15 +21,19 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	private static ServerVolunteerActivityDB instance = null;
 	private static List<VolunteerActivityDBYear> volunteerActivityDB;
 	
-	private static SignUpGeniusIF geniusIF;
+//	private static SignUpGeniusIF geniusIF;
+	private static SignUpGeniusVolunteerImporter signUpVolunteerImporter;
 	
 	private ServerVolunteerActivityDB() throws FileNotFoundException, IOException
 	{
 		//create the activity data bases for TOTAL_YEARS number of years
 		volunteerActivityDB = new ArrayList<VolunteerActivityDBYear>();
 		
-		geniusIF = SignUpGeniusIF.getInstance();
-		geniusIF.addSignUpListener(this);
+//		geniusIF = SignUpGeniusIF.getInstance();
+//		geniusIF.addSignUpListener(this);
+		
+		signUpVolunteerImporter = SignUpGeniusVolunteerImporter.getInstance();
+		signUpVolunteerImporter.addSignUpListener(this);
 		
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)

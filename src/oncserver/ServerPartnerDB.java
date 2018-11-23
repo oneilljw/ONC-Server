@@ -17,7 +17,7 @@ import ourneighborschild.WishStatus;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerPartnerDB extends ServerSeasonalDB
+public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 {
 	private static final int ORGANIZATION_DB_HEADER_LENGTH = 36;
 	private static final int STATUS_CONFIRMED = 5;
@@ -27,10 +27,15 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	
 	private static ServerPartnerDB instance = null;
 	
+	private static SignUpGeniusClothingImporter signUpClothingImporter;
+	
 	private ServerPartnerDB() throws FileNotFoundException, IOException
 	{
 		//create the partner data bases for TOTAL_YEARS number of years
 		partnerDB = new ArrayList<PartnerDBYear>();
+		
+		signUpClothingImporter = SignUpGeniusClothingImporter.getInstance();
+		signUpClothingImporter.addSignUpListener(this);
 				
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
 		{
@@ -70,6 +75,17 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		String response = gson.toJson(partnerDB.get(year - BASE_YEAR).getList(), listOfPartners);
 		return response;	
+	}
+	
+	List<ONCPartner> clone(int year)
+	{
+		List<ONCPartner> partnerList = partnerDB.get(year - BASE_YEAR).getList();
+		List<ONCPartner> cloneList = new ArrayList<ONCPartner>();
+		
+		for(ONCPartner p :partnerList)
+			cloneList.add(new ONCPartner(p));
+		
+		return cloneList;		
 	}
 	
 	static HtmlResponse getPartnersJSONP(int year, boolean bConfirmedOnly, String callbackFunction)
@@ -223,7 +239,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	
 	ONCPartner update(int year, ONCPartner updatedPartner)
 	{	
-		//Find the position for the current family being replaced
+		//Find the position for the current partner being replaced
 		ONCPartner currPartner = null;
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		List<ONCPartner> oAL = partnerDBYear.getList();
@@ -680,7 +696,62 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	    	
 	    	void add(ONCPartner addedOrg) { pList.add(addedOrg); }
 	}
-
+	@Override
+	public void signUpDataReceived(SignUpEvent event)
+	{
+//		System.out.println(String.format("ServPartdb.SUDataRec: type= %s", event.type().toString()));
+		if(event.type() == SignUpEventType.UPDATED_PARTNERS || event.type() == SignUpEventType.NEW_PARTNERS )
+		{
+			Gson gson = new Gson();
+			
+			//process list of updated partners.
+			@SuppressWarnings("unchecked")
+			List<ONCPartner> changedPartnerList = (List<ONCPartner>) event.getSignUpObject();
+			List<String> clientJsonMssgList = new ArrayList<String>();
+			
+			//add the updated partners to the database
+			if(event.type() == SignUpEventType.UPDATED_PARTNERS)
+			{
+				//print the lists
+//    				for(ONCPartner p : changedPartnerList)
+//    				System.out.println(String.format("ServPartnerDB.SUDataRec: updated partner id= %d. name= %s, contact= %s, "
+//    					+ "email= %s, phone= %s, address = %s %s %s %s", p.getID(),
+//    					p.getLastName(), p.getContact(), p.getContact_email(), p.getContact_phone(),
+//    					p.getHouseNum(), p.getStreet(), p.getCity(), p.getZipCode()));
+    				
+				for(ONCPartner p : changedPartnerList)
+				{
+					ONCPartner updatedPartner = update(DBManager.getCurrentYear(), p);
+					if(updatedPartner != null)
+						clientJsonMssgList.add("UPDATED_PARTNER" + gson.toJson(updatedPartner, ONCPartner.class));
+				}
+			}
+			else
+			{
+				//print the lists
+ //   				for(ONCPartner p : changedPartnerList)
+ //   					System.out.println(String.format("ServPartnerDB.SUDataRec: new partner name= %s, contact= %s, "
+ //   					+ "email= %s, phone= %s, address = %s %s %s %s",
+ //   					p.getLastName(), p.getContact(), p.getContact_email(), p.getContact_phone(),
+ //   					p.getHouseNum(), p.getStreet(), p.getCity(), p.getZipCode()));
+    				
+				for(ONCPartner p : changedPartnerList)
+				{
+					ONCPartner addedPartner = add(DBManager.getCurrentYear(), p);
+					if(addedPartner != null)
+						clientJsonMssgList.add("ADDED_PARTNER" + gson.toJson(addedPartner, ONCPartner.class));
+				}
+			}
+			
+			if(!clientJsonMssgList.isEmpty())
+			{
+				//there were updates, send list of updated json's to clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			}
+		}
+	}
+	
 	@Override
 	void save(int year)
 	{

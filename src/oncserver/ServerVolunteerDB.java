@@ -35,15 +35,15 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	private static ServerWarehouseDB warehouseDB;
 	private static ServerActivityDB activityDB;
 	private static ServerVolunteerActivityDB volActDB;
-	private static SignUpGeniusIF geniusIF;
+//	private static SignUpGeniusIF geniusIF;
 
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
 	{
 		//create the driver data bases for TOTAL_YEARS number of years
 		volDB = new ArrayList<VolunteerDBYear>();
 		
-		geniusIF = SignUpGeniusIF.getInstance();
-		geniusIF.addSignUpListener(this);
+//		geniusIF = SignUpGeniusIF.getInstance();
+//		geniusIF.addSignUpListener(this);
 		
 		clientMgr = ClientManager.getInstance();
 		warehouseDB = ServerWarehouseDB.getInstance();

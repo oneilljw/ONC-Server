@@ -47,13 +47,13 @@ public class SignUpGeniusIF
 
 	void requestSignUpList()
 	{
-		SignUpGeniusImporter importer = new SignUpGeniusImporter();
+		SignUpGeniusVolunteerImporter importer = new SignUpGeniusVolunteerImporter();
 		importer.execute();
 	}
 	
 	void requestSignUpContent(SignUp signup, SignUpReportType reportType)
 	{
-		SignUpGeniusImporter importer = new SignUpGeniusImporter(signup, reportType);
+		SignUpGeniusVolunteerImporter importer = new SignUpGeniusVolunteerImporter(signup, reportType);
 		importer.execute();
 	}
 	
@@ -203,10 +203,10 @@ public class SignUpGeniusIF
 	}
 	
 	/***************************************************************************************************
-    * This class communicates with SignUp Genius thru it's api to fetch season data. This executes as a 
-    * background task since the size of SignUps can grow large.
+    * This class communicates with SignUp Genius thru it's api to fetch season volunteer and activity data.
+    * This executes as a background task since the size of SignUps can grow large.
     * ***************************************************************************************************/
-    public class SignUpGeniusImporter extends SwingWorker<Void, Void>
+    public class SignUpGeniusVolunteerImporter extends SwingWorker<Void, Void>
     {
     		SignUpEventType type;
     		String url;
@@ -221,7 +221,7 @@ public class SignUpGeniusIF
 		List<ONCVolunteer> updatedVolunteerFoundList;
     		
 		//constructor for importing list of sign-ups in ONC account
-    		SignUpGeniusImporter()
+    		SignUpGeniusVolunteerImporter()
     		{
     			this.type = SignUpEventType.SIGNUP_LIST_IMPORT;
     			this.signup = null;
@@ -229,7 +229,7 @@ public class SignUpGeniusIF
     		}
     		
     		//constructor for importing volunteers and activities from a specific sign-up in ONC account
-    		SignUpGeniusImporter(SignUp signup, SignUpReportType reportType)
+    		SignUpGeniusVolunteerImporter(SignUp signup, SignUpReportType reportType)
     		{
     			this.type = SignUpEventType.REPORT;
     			this.signup = signup;
@@ -600,7 +600,7 @@ public class SignUpGeniusIF
 				e.printStackTrace();
 			}				
 		}
-		
+/*		
 		List<VolAct> createVolunteerActivityList(List<SignUpActivity> suActList, ONCVolunteer vol)
 		{
 			List<VolAct> vaList = new ArrayList<VolAct>();
@@ -635,7 +635,7 @@ public class SignUpGeniusIF
 	
 			return vaList;
 		}
-		
+*/		
 		 /*
 	     * Executed in event dispatching thread
 	     */

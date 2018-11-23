@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 6.12f;
+	private static final float MINIMUM_CLIENT_VERSION = 6.13f;
 	
 	private int id;
 	private String version;
@@ -373,8 +373,10 @@ public class DesktopClient extends Thread
                 else if(command.equals("GET<request_signups>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		SignUpGeniusIF geniusIF = SignUpGeniusIF.getInstance();
-                		geniusIF.requestSignUpList();
+//                	SignUpGeniusIF geniusIF = SignUpGeniusIF.getInstance();
+//                	geniusIF.requestSignUpList();
+                		SignUpGeniusSignUpListImporter suListImporter = SignUpGeniusSignUpListImporter.getInstance();
+                		suListImporter.requestSignUpList();
                 		output.println("REQUESTED_SIGNUPS");
                 }
                 else if(command.startsWith("POST<update_signup>"))

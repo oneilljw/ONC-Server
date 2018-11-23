@@ -23,6 +23,7 @@ import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
 import ourneighborschild.SignUp;
+import ourneighborschild.SignUpType;
 import ourneighborschild.VolAct;
 import ourneighborschild.GeniusSignUps;
 import ourneighborschild.ONCVolunteer;
@@ -39,13 +40,17 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 {
 	private static final int ACTIVITY_DB_HEADER_LENGTH = 15;
 	private static final String GENIUS_STATUS_FILENAME = "GeniusSignUps.csv";
-	private static final int SIGNUP_RECORD_LENGTH = 5;
+	private static final int SIGNUP_RECORD_LENGTH = 6;
 	
 	private static final int GENIUS_IMPORT_TIMER_RATE = 1000 * 30; //30 seconds
 	
 	private static ServerActivityDB instance = null;
 	
-	private static SignUpGeniusIF geniusIF;
+	private static SignUpGeniusSignUpListImporter signUpListImporter;
+	private static SignUpGeniusVolunteerImporter signUpVolunteerImporter;
+	private static SignUpGeniusClothingImporter signUpClothingImporter;
+	
+//	private static SignUpGeniusIF geniusIF;
 	private GeniusSignUps geniusSignUps;
 	private boolean bSignUpsSaveRequested;
 	private Timer geniusImportTimer;
@@ -57,8 +62,17 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//create the activity data bases for TOTAL_YEARS number of years
 		activityDB = new ArrayList<ActivityDBYear>();
 		
-		geniusIF = SignUpGeniusIF.getInstance();
-		geniusIF.addSignUpListener(this);
+//		geniusIF = SignUpGeniusIF.getInstance();
+//		geniusIF.addSignUpListener(this);
+		
+		signUpListImporter = SignUpGeniusSignUpListImporter.getInstance();
+		signUpListImporter.addSignUpListener(this);
+		
+		signUpVolunteerImporter = SignUpGeniusVolunteerImporter.getInstance();
+		signUpVolunteerImporter.addSignUpListener(this);
+		
+		signUpClothingImporter = SignUpGeniusClothingImporter.getInstance();
+		signUpClothingImporter.addSignUpListener(this);
 		
 		//create the list of genius sign-ups. The list of sign ups will populate on
 		//a callback from the separate thread that fetches signups from SignUp Genius
@@ -91,6 +105,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//that will fetch current signups and the callback thru the listener will populate
 		//the list
 //		geniusIF.requestSignUpList();
+//		signUpListImporter.requestSignUpList();
 		
 		//Create the sign-up genius import timer and enable it if GENIUS_IMPORT_ENABLED
 		geniusImportTimer = new Timer(GENIUS_IMPORT_TIMER_RATE, new GeniusImportTimerListener());
@@ -356,12 +371,12 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	
 	String update(int year, String json)
 	{
-		//Create a volunteer activity object for the updated driver
+		//Create an object from the json for the updated activity
 		Gson gson = new Gson();
 		Activity updatedActivity = gson.fromJson(json, Activity.class);
 		updatedActivity.setDateChanged(new Date());
 		
-		//Find the position for the current activity being updated
+		//Find the current activity being updated
 		ActivityDBYear activityDBYear = activityDB.get(year - BASE_YEAR);
 		List<Activity> activityList = activityDBYear.getList();
 		int index = 0;
@@ -413,22 +428,35 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		while(index < signUpList.size() && signUpList.get(index).getSignupid() != updatedSignUpReq.getSignupid())
 			index++;
 		
-		if(index < signUpList.size() && signUpList.get(index).getFrequency() != updatedSignUpReq.getFrequency())
+		if(index < signUpList.size() && 
+			(signUpList.get(index).getFrequency() != updatedSignUpReq.getFrequency() ||
+			 signUpList.get(index).getSignUpType() != updatedSignUpReq.getSignUpType()))
 		{
-			SignUp updatedSignUp = signUpList.get(index);
+			//a request to change the sginUps Frequency or SignUpType confirmed. 
+			SignUp currentSignUp = signUpList.get(index);
+			currentSignUp.setSignUpType(updatedSignUpReq.getSignUpType());
 			
-			//if change was to import the signup one time, then initiate the import and set the
+			//if change was to import the SignUp one time, then initiate the import and set the
 			//frequency to NEVER. A one-time import request requires the user to select another periodic 
 			//frequency to restart automated imports
-			if(updatedSignUpReq.getFrequency() == Frequency.ONE_TIME && geniusIF != null)
+			if(updatedSignUpReq.getFrequency() == Frequency.ONE_TIME && 
+				updatedSignUpReq.getSignUpType() == SignUpType.Volunteer && signUpVolunteerImporter != null)
+//			if(updatedSignUpReq.getFrequency() == Frequency.ONE_TIME && geniusIF != null)
 			{
-				geniusIF.requestSignUpContent(updatedSignUp, SignUpReportType.all);
-				updatedSignUp.setFrequency(Frequency.NEVER);
+//				geniusIF.requestSignUpContent(updatedSignUp, SignUpReportType.all);
+				signUpVolunteerImporter.requestSignUpContent(currentSignUp, SignUpReportType.all);
+				currentSignUp.setFrequency(Frequency.NEVER);
+			}
+			else if(updatedSignUpReq.getFrequency() == Frequency.ONE_TIME && 
+					 (updatedSignUpReq.getSignUpType() == SignUpType.Clothing || 
+					   updatedSignUpReq.getSignUpType() == SignUpType.Coat) &&
+					 	signUpClothingImporter != null)
+			{
+				signUpClothingImporter.requestSignUpContent(currentSignUp, updatedSignUpReq.getSignUpType(), SignUpReportType.all);
+				currentSignUp.setFrequency(Frequency.NEVER);
 			}
 			else
-			{
-				updatedSignUp.setFrequency(updatedSignUpReq.getFrequency());
-			}
+				currentSignUp.setFrequency(updatedSignUpReq.getFrequency());
 			
 			bSignUpsSaveRequested = true;
 			
@@ -554,13 +582,19 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		return sdf.format(lastyearDate.getTime());
 	}
 	
-	SignUp findSignUp(List<SignUp> searchList, int signupid)
+	SignUp findSignUp(int signupid)
 	{
-		int index = 0;
-		while(index < searchList.size() && searchList.get(index).getSignupid() != signupid)
+		if(geniusSignUps != null)
+		{		
+			int index = 0;
+			while(index < geniusSignUps.getSignUpList().size() &&
+					geniusSignUps.getSignUpList().get(index).getSignupid() != signupid)
 			index++;
 		
-		return index < searchList.size() ? searchList.get(index) : null;
+			return index < geniusSignUps.getSignUpList().size() ? geniusSignUps.getSignUpList().get(index) : null;
+		}
+		else
+			return null;
 	}
 	 
 	@Override
@@ -603,13 +637,24 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		}
 		if(event.type() == SignUpEventType.REPORT)
 		{
-			bSignUpsSaveRequested = true;
-			
-			Gson gson = new Gson();
-			String clientSignUpJson = "UPDATED_GENIUS_SIGNUPS" + gson.toJson(geniusSignUps, GeniusSignUps.class);
-			
-			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllClients(clientSignUpJson);
+			//find the signUp in the list of signUps, replace it, and notify clients
+			SignUp updatedSignUp = (SignUp) event.getSignUpObject();
+			List<SignUp> signUpList = geniusSignUps.getSignUpList();
+			int index = 0;
+			while(index < signUpList.size() && signUpList.get(index).getSignupid() != updatedSignUp.getSignupid())
+				index++;
+				
+			if(index < signUpList.size())
+			{
+				signUpList.set(index, updatedSignUp);
+				bSignUpsSaveRequested = true;
+				
+				Gson gson = new Gson();
+				String clientSignUpJson = "UPDATED_SIGNUP" + gson.toJson(updatedSignUp, SignUp.class);
+				
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllClients(clientSignUpJson);
+			}	
 		}
 		else if(event.type() == SignUpEventType.DELETED_ACTIVITIES)
 		{
@@ -784,7 +829,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			String path = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), GENIUS_STATUS_FILENAME);
 			File oncwritefile = new File(path);
 		
-			String[] header = {"Last Import Time", "SignUp ID" ,"Title", "End Date", "Frequency"};
+			String[] header = {"Last Import Time", "SignUp ID" ,"Title", "End Date", "Frequency", "Type"};
 			
 			String[] firstRow = new String[1];
 			firstRow[0] = geniusSignUps.isImportEnabled() ? "true" : "false";
@@ -796,11 +841,11 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			{
 				CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
 				writer.writeNext(header);
-				writer.writeNext(firstRow);
-				writer.writeNext(secondRow);
+				writer.writeNext(firstRow);	//import enabled
+				writer.writeNext(secondRow);	//Last time list of SignUps was imported
 	    	
 				for(SignUp su : geniusSignUps.getSignUpList())
-					writer.writeNext(su.getExportRow());
+					writer.writeNext(su.getExportRow());	//SignUps
 				
 				writer.close();
 				
@@ -848,7 +893,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		@Override
 		public void actionPerformed(ActionEvent arg0) 
 		{
-			if(geniusIF != null && geniusSignUps != null && geniusSignUps.isImportEnabled())
+			if(signUpVolunteerImporter != null && geniusSignUps != null && geniusSignUps.isImportEnabled())
+//			if(geniusIF != null && geniusSignUps != null && geniusSignUps.isImportEnabled())	
 				for(SignUp su : geniusSignUps.getSignUpList())
 				{
 					long time_diff = System.currentTimeMillis() - su.getLastImportTimeInMillis();
@@ -860,7 +906,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 					
 					if(su.getFrequency().compareTo(Frequency.ONE_TIME) > 0 && time_diff >= su.getFrequency().interval())
 					{
-						geniusIF.requestSignUpContent(su, SignUpReportType.all);
+						signUpVolunteerImporter.requestSignUpContent(su, SignUpReportType.all);
+//						geniusIF.requestSignUpContent(su, SignUpReportType.all);
 //						System.out.println(String.format("Importing %s signup", su.getTitle()));
 					}
 				}
