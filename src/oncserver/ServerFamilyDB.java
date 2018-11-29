@@ -1,8 +1,6 @@
 package oncserver;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -15,8 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-
-import javax.swing.JOptionPane;
 
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
@@ -37,8 +33,6 @@ import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.UserPermission;
 import ourneighborschild.WishStatus;
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -75,6 +69,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//3 school pyramids. The start and end range values are based on an analysis of number 
 		//of families referred from 2015 - 2018
 		//THIS IS A TEMPORARY HACK FOR 2018 - NEED TO HAVE ONC NUM RANGES GENERATED AUTOMATICALLY
+		//WHEN A NEW YEAR IS CREATED
 		oncnumRangeMap = new HashMap<String, ONCNumRange>();
 		oncnumRangeMap.put("A", new ONCNumRange(100, 250));
 		oncnumRangeMap.put("B", new ONCNumRange(251, 426));
@@ -479,12 +474,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 
 		if(maptype.equals("family"))
 		{
-			int dns = 0, unverified = 0, verified = 0, contacted = 0, confirmed = 0;
+			int dns = 0, unverified = 0, waitlist = 0, verified = 0, contacted = 0, confirmed = 0;
 			
 			for(ONCFamily f : familyDB.get(year-BASE_YEAR).getList())
 			{
 				if(!f.getDNSCode().isEmpty() || !isNumeric(f.getONCNum())) { dns++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Unverified) { served++; unverified++; }
+				else if(f.getFamilyStatus() == FamilyStatus.Waitlist) { served++; unverified++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Verified) { served++; verified++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Contacted) {  served++; contacted++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Confirmed) {served++; confirmed++; }
@@ -493,6 +489,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			metricList.add(new Metric("DNS", dns));
 			metricList.add(new Metric("Served", served));
 			metricList.add(new Metric("Unverified", unverified));
+			metricList.add(new Metric("Waitlist", waitlist));
 			metricList.add(new Metric("Verfied", verified));
 			metricList.add(new Metric("Contacted", contacted));
 			metricList.add(new Metric("Confirmed", confirmed));
@@ -1717,7 +1714,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     	
     	return delCount;
     }
-  
+/*  
     void convertFamilyDBForStatusChanges(int year)
     {
     	String[] header, nextLine;
@@ -1797,13 +1794,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		    	System.err.format("IO Exception: %s%n", x);
 		    }	
     }
-    
+*/    
     /***
      * Used to convert ServerFamilyDB from old family status & gift status to new
      * @param ofs
      * @param ogs
      * @return
      */
+/*    
     NewFamStatus getNewFamStatus(String ofs, String ogs)
     {
     	int oldFamStatus = Integer.parseInt(ofs);
@@ -1920,9 +1918,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     	else
     		return null;
     }
-    
-   
-    
+*/
     private static class ONCFamilyONCNumComparator implements Comparator<ONCFamily>
 	{
 		@Override
@@ -1950,7 +1946,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return o1.getHOHLastName().toLowerCase().compareTo(o2.getHOHLastName().toLowerCase());
 		}
 	}
-    
+/*    
     private class NewFamStatus
     {
     		private int famStatus;
@@ -1965,7 +1961,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		String getNewFamStatus() { return Integer.toString(famStatus); }
     		String getNewGiftStatus() { return Integer.toString(giftStatus); }
     }
-    
+*/    
     private class ONCNumRange
     {
     		int start;
