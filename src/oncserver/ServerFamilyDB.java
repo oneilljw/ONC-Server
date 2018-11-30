@@ -480,7 +480,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				if(!f.getDNSCode().isEmpty() || !isNumeric(f.getONCNum())) { dns++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Unverified) { served++; unverified++; }
-				else if(f.getFamilyStatus() == FamilyStatus.Waitlist) { served++; unverified++; }
+				else if(f.getFamilyStatus() == FamilyStatus.Waitlist) { served++; waitlist++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Verified) { served++; verified++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Contacted) {  served++; contacted++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Confirmed) {served++; confirmed++; }
