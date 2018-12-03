@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 6.15f;
+	private static final float MINIMUM_CLIENT_VERSION = 6.16f;
 	
 	private int id;
 	private String version;
@@ -64,6 +64,7 @@ public class DesktopClient extends Thread
     private ClientManager clientMgr;
     private ServerMealDB mealDB;
     private ServerAdultDB adultDB;
+    private ServerBatteryDB batteryDB;
     private ServerInventoryDB inventoryDB;
     private ServerChatManager chatMgr;
     private ONCUser clientUser;
@@ -113,6 +114,7 @@ public class DesktopClient extends Thread
 	        prioryearDB = PriorYearDB.getInstance();
 	        mealDB = ServerMealDB.getInstance();
 	        adultDB = ServerAdultDB.getInstance();
+	        batteryDB = ServerBatteryDB.getInstance();
 	        inventoryDB = ServerInventoryDB.getInstance();
 		  
 	        clientUser = null;
@@ -326,6 +328,12 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		String response = mealDB.getMeals(year);
+                		output.println(response);		
+                }
+                else if(command.startsWith("GET<batteries>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = batteryDB.getBatteries(year);
                 		output.println(response);		
                 }
                 else if(command.startsWith("GET<pychild>"))
@@ -835,6 +843,30 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		String response = mealDB.add(year, command.substring(14));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<add_battery>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = batteryDB.add(year, command.substring(17));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<update_battery>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = batteryDB.update(year, command.substring(20));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<delete_battery>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = batteryDB.delete(year, command.substring(20));
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);

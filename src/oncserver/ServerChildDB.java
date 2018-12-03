@@ -479,18 +479,18 @@ public class ServerChildDB extends ServerSeasonalDB
 	
 	private class ChildDBYear extends ServerDBYear
     {
-    	private List<ONCChild> cList;
+    		private List<ONCChild> cList;
     	
-    	ChildDBYear(int year)
-    	{
-    		super();
-    		cList = new ArrayList<ONCChild>();
-    	}
+    		ChildDBYear(int year)
+    		{
+    			super();
+    			cList = new ArrayList<ONCChild>();
+    		}
     	
-    	//getters
-    	List<ONCChild> getList() { return cList; }
+    		//getters
+    		List<ONCChild> getList() { return cList; }
     	
-    	void add(ONCChild addedChild) { cList.add(addedChild); }
+    		void add(ONCChild addedChild) { cList.add(addedChild); }
     }
 
 	@Override
