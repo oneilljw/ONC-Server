@@ -73,9 +73,8 @@ public class DesktopClient extends Thread
     private String lastcommand;
 
     /**
-     * Constructs a handler thread for a given socket and mark
-     * initializes the stream fields, displays the first two
-     * welcoming messages.
+     * Constructs a handler thread for a given socket and mark initializes the stream fields,
+     * displays the first two welcoming messages.
      */
     public DesktopClient(Socket socket, int id)
     {
