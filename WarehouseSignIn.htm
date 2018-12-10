@@ -240,6 +240,10 @@
 		var errorElement = document.getElementById('errormessage');
 		var groupSelectElement = document.getElementById('groupselect');
 		
+		console.log('value= ' + groupSelectElement.value);
+		console.log('data-visible= ' + groupSelectElement.getAttribute('data-visible'));
+		console.log(groupSelectElement.options[groupSelectElement.selectedIndex].getAttribute('data-visible'));
+		
 		if(groupSelectElement.value === '-3')
 		{
 			if(verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
@@ -250,14 +254,14 @@
 				submitSignIn();
 			}
 		}
-		else if(groupSelectElement.getAttribute("data-visible") === 'false' && !bDeliveryDay)
+		else if(groupSelectElement.options[groupSelectElement.selectedIndex].getAttribute('data-visible') === 'false' && !bDeliveryDay)
 		{
 			if(verifyRequiredFields(verifyNameElements, errorElement))
 			{
 				submitSignIn();
 			}
 		}
-		else if(groupSelectElement.getAttribute("data-visible") === 'false' && bDeliveryDay)
+		else if(groupSelectElement.options[groupSelectElement.selectedIndex].getAttribute('data-visible') === 'false' && bDeliveryDay)
 		{
 			if(verifyRequiredFields(verifyNameAndAddressElements, errorElement) &&
 					verifyZipCodes(zipElements, errorElement) &&
