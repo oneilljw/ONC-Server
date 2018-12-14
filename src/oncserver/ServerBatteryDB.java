@@ -151,6 +151,12 @@ public class ServerBatteryDB extends ServerSeasonalDB
 			
 			String path = String.format("%s/%dDB/BatteryDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(batteryDBYear.getList(),  header, path);
+			
+//			for(Battery b : batteryDBYear.getList())
+//				System.out.println(String.format("ServBattDB.save: saving %d, %d, %s, %s, %d", b.args));
+
+			
+			
 			batteryDBYear.setChanged(false);
 		}
 	}
