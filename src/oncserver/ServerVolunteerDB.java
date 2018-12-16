@@ -315,7 +315,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		{
 			//Didn't find the volunteer, create and add a new one, including the activity that
 			//matches from the Activity DB.
-			ONCVolunteer addedVol = new ONCVolunteer(-1, "N/A", fn, ln, volParams.get("delemail"), 
+			ONCVolunteer addedVol = new ONCVolunteer(-1, "", fn, ln, volParams.get("delemail"), 
 					volParams.get("delhousenum"), volParams.get("delstreet"), volParams.get("delunit"),
 					volParams.get("delcity"), volParams.get("delzipcode"),
 					volParams.get("primaryphone"), volParams.get("primaryphone"),
