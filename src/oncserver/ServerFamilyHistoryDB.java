@@ -113,21 +113,26 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		//notify the corresponding family that delivery has changed and
 		//check to see if new delivery assigned or removed a delivery from a driver
 		ServerFamilyDB serverFamilyDB = null;
-		ServerVolunteerDB driverDB = null;
-		try {
+		ServerVolunteerDB volunteerDB = null;
+		try 
+		{
 			serverFamilyDB = ServerFamilyDB.getInstance();
-			driverDB = ServerVolunteerDB.getInstance();
-		} catch (FileNotFoundException e) {
+			volunteerDB = ServerVolunteerDB.getInstance();
+			
+			
+		} catch (FileNotFoundException e) 
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (IOException e) 
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		//get prior delivery for this family
 		ONCFamily fam = serverFamilyDB.getFamily(year, addedHistoryObj.getFamID());
-		ONCFamilyHistory priorHistoryObj = getHistory(year, fam.getDeliveryID());
+		ONCFamilyHistory priorHistoryObj = getHistoryObject(year, fam.getDeliveryID());
 		
 		//if there was a prior history and the gift status was associated with a delivery, update the 
 		//status and counts
@@ -140,27 +145,28 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			if(priorHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0 && 
 					addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned)
 			{
-				driverDB.updateDriverDeliveryCounts(year, null, addedHistoryObj.getdDelBy());
+				volunteerDB.updateVolunteerDriverDeliveryCounts(year, null, addedHistoryObj.getdDelBy());
 			}
 			else if(priorHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0 && 
 					 addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned && 
 					  !priorHistoryObj.getdDelBy().equals(addedHistoryObj.getdDelBy()))
 			{
-				driverDB.updateDriverDeliveryCounts(year, priorHistoryObj.getdDelBy(), addedHistoryObj.getdDelBy());
+				volunteerDB.updateVolunteerDriverDeliveryCounts(year, priorHistoryObj.getdDelBy(), addedHistoryObj.getdDelBy());
 			}
 			else if(priorHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned && 
 					 addedHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0)
 			{
-				driverDB.updateDriverDeliveryCounts(year, priorHistoryObj.getdDelBy(), null);
+				volunteerDB.updateVolunteerDriverDeliveryCounts(year, priorHistoryObj.getdDelBy(), null);
 			}
 		}
+		
 		//Update the family object with new delivery
 		if(serverFamilyDB != null)
 			serverFamilyDB.updateFamilyHistory(year, addedHistoryObj);
 					
 		return "ADDED_DELIVERY" + gson.toJson(addedHistoryObj, ONCFamilyHistory.class);
 	}
-	
+/*	
 	//used when adding processing automated call results
 	String add(int year, ONCFamilyHistory addedHisoryObj)
 	{
@@ -187,7 +193,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		
 		//get prior delivery for this family
 		ONCFamily fam = serverFamilyDB.getFamily(year, addedHisoryObj.getFamID());
-		ONCFamilyHistory priorDelivery = getHistory(year, fam.getDeliveryID());
+		ONCFamilyHistory priorDelivery = getHistoryObject(year, fam.getDeliveryID());
 		
 		//if there was a prior delivery, then update the status and counts
 		if(priorDelivery != null)
@@ -199,28 +205,29 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			if(priorDelivery.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0 && 
 					addedHisoryObj.getGiftStatus() == FamilyGiftStatus.Assigned)
 			{
-				driverDB.updateDriverDeliveryCounts(year, null, addedHisoryObj.getdDelBy());
+				driverDB.updateVolunteerDriverDeliveryCounts(year, null, addedHisoryObj.getdDelBy());
 			}
 			else if(priorDelivery.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0 && 
 					 addedHisoryObj.getGiftStatus() == FamilyGiftStatus.Assigned && 
 					  !priorDelivery.getdDelBy().equals(addedHisoryObj.getdDelBy()))
 			{
-				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedHisoryObj.getdDelBy());
+				driverDB.updateVolunteerDriverDeliveryCounts(year, priorDelivery.getdDelBy(), addedHisoryObj.getdDelBy());
 			}
 			else if(priorDelivery.getGiftStatus() == FamilyGiftStatus.Assigned && 
 					 addedHisoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0)
 			{
-				driverDB.updateDriverDeliveryCounts(year, priorDelivery.getdDelBy(), null);
+				driverDB.updateVolunteerDriverDeliveryCounts(year, priorDelivery.getdDelBy(), null);
 			}
 		}
 		
-		//Update the family object with new delivery
+		//Update the family object with new family history object reference
 		if(serverFamilyDB != null)
 			serverFamilyDB.updateFamilyHistory(year, addedHisoryObj);
 
 		Gson gson = new Gson();
 		return "ADDED_DELIVERY" + gson.toJson(addedHisoryObj, ONCFamilyHistory.class);
 	}
+*/	
 /*	
 	String addFamilyHistoryList(int year, String historyGroupJson)
 	{
@@ -274,7 +281,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		return addedFamHistObj;
 	}
 	
-	ONCFamilyHistory getHistory(int year, int histID)
+	ONCFamilyHistory getHistoryObject(int year, int histID)
 	{
 		List<ONCFamilyHistory> histAL = famHistDB.get(year-BASE_YEAR).getList();
 		int index = 0;	

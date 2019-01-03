@@ -8,5 +8,6 @@
 	<classpathentry kind="lib" path="lib/commons-codec-1.7.jar"/>
 	<classpathentry kind="lib" path="lib/javax.mail.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/Home"/>
+	<classpathentry kind="lib" path="/Users/johnoneil/git/ONC-Server/lib/mysql-connector-java-8.0.13.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

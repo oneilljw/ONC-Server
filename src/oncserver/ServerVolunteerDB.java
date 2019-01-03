@@ -625,33 +625,48 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		return newVolList;
 	}
 	
-	void updateDriverDeliveryCounts(int year, String drvNum1, String drvNum2)
+	void updateVolunteerDriverDeliveryCounts(int year, String drvNum1, String drvNum2)
 	{
-		ONCVolunteer driver;
 		Gson gson = new Gson();
-		String change;
+		List<ONCVolunteer> volList = volDB.get(year-BASE_YEAR).getList();
+		
+		List<String> volChangeList = new ArrayList<String>();
 		
 		if(drvNum1 != null)
 		{
-			driver = getDriverByDriverNumber(year, drvNum1);
-			if(driver != null)
+			//find drvNum1 and decrement their assigned delivery count
+			int index = 0;	
+			while(index < volList.size() && !volList.get(index).getDrvNum().equals(drvNum1))
+				index++;
+				
+			if(index < volList.size())
 			{
-				driver.incrementDeliveryCount(-1);
-				change = "UPDATED_DRIVER" + gson.toJson(driver, ONCVolunteer.class);
-				clientMgr.notifyAllInYearClients(year, change);	
+				volList.get(index).incrementDeliveryCount(-1);
+				volChangeList.add("UPDATED_DRIVER" + gson.toJson(volList.get(index), ONCVolunteer.class));
 			}
 		}
 		
 		if(drvNum2 != null)
 		{
-			driver = getDriverByDriverNumber(year, drvNum2);
-			if(driver != null)
+			//find drvNum1 and increment their assigned delivery count
+			int index = 0;	
+			while(index < volList.size() && !volList.get(index).getDrvNum().equals(drvNum1))
+				index++;
+			
+			if(index < volList.size())
 			{
-				driver.incrementDeliveryCount(1);
-				change = "UPDATED_DRIVER" + gson.toJson(driver, ONCVolunteer.class);
-				clientMgr.notifyAllInYearClients(year, change);
+				volList.get(index).incrementDeliveryCount(1);
+				volChangeList.add("UPDATED_DRIVER" + gson.toJson(volList.get(index), ONCVolunteer.class));
 			}
-		}	
+		}
+		
+		if(!volChangeList.isEmpty())
+		{
+			//at least one driver delivery count was updated. Mark the db for saving and 
+			//notify all in year clients
+			volDB.get(year-BASE_YEAR).setChanged(true);
+			clientMgr.notifyAllInYearClients(year, volChangeList);
+		}
 	}
 	
 	static void createAndSendVolunteerEmail(int emailType, List<ONCVolunteer> volList)

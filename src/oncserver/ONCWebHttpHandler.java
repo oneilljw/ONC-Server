@@ -2,6 +2,7 @@ package oncserver;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		serverUI.addUIAndLogMessage(mssg);
 		
 		WebClient wc;
-		HtmlResponse htmlResponse;
+		HtmlResponse htmlResponse = null;
 		
 		if(requestURI.contains("/startpage"))
     		{
@@ -315,8 +316,16 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     			{
     				int year = Integer.parseInt((String) params.get("year"));
     				int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
-    		
     				htmlResponse = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
+//    				try
+//					{
+//						htmlResponse = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
+//					}
+//					catch (SQLException e)
+//					{
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
     			}
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));

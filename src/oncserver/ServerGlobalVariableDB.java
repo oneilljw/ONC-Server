@@ -22,10 +22,11 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerGlobalVariableDB extends ServerSeasonalDB
 {
-	private static final int GV_HEADER_LENGTH = 8;
+	private static final int GV_HEADER_LENGTH = 11;
 	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	private static final int DEFAULT_GIFT = -1;
+	private static final int DEFAULT_GIFTCARD_ID = -1;
 	
 	private static ServerGlobalVariableDB instance = null;
 	private static List<GlobalVariableDBYear> globalDB;
@@ -60,11 +61,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		String gvjson = null;
 		Gson gson = new Gson();
 		
-//		gvjson = gson.toJson(gvAL.get(year - BASE_YEAR), ServerGVs.class);
-//		ServerGVs sgvs = globalDB.get(year - BASE_YEAR).getServerGVs();
 		gvjson = gson.toJson(globalDB.get(year - BASE_YEAR).getServerGVs(), ServerGVs.class);
-		
-//		System.out.println(String.format("ServGlobVarDB.getGVs: gvs.getDefaultGiftID= %d", sgvs.getDefaultGiftID() ));
 		
 		if(gvjson != null)
 			return "GLOBALS" + gvjson;
@@ -78,17 +75,13 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	
 		ServerGVs serverGVs = globalDB.get(year-BASE_YEAR).getServerGVs();
 		String response = gson.toJson(serverGVs, ServerGVs.class);
+		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	Date getSeasonStartDate(int year) { return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartDate(); }
 	Calendar getSeasonStartCal(int year) { return globalDB.get(year - BASE_YEAR).getServerGVs().getSeasonStartCal(); }
-	
-//	Date getDateGiftsRecivedBy(int year)
-//	{
-//		return globalDB.get(year - BASE_YEAR).getServerGVs().getGiftsReceivedDate();
-//	}
 	
 	Calendar getDateGiftsRecivedDealdine(int year)
 	{
@@ -100,10 +93,14 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		//check if year is in database. If it's not, return null
 		if(year - BASE_YEAR < globalDB.size())
 		{
-			if(deadline.equals("Thanksgiving"))
-				return globalDB.get(year - BASE_YEAR).getServerGVs().getThanksgivingDeadline();
-			else if(deadline.equals("December"))
-				return globalDB.get(year - BASE_YEAR).getServerGVs().getDecemberDeadline();
+			if(deadline.equals("Thanksgiving Meal"))
+				return globalDB.get(year - BASE_YEAR).getServerGVs().getThanksgivingMealDeadline();
+			else if(deadline.equals("December Meal"))
+				return globalDB.get(year - BASE_YEAR).getServerGVs().getDecemberMealDeadline();
+			else if(deadline.equals("December Gift"))
+				return globalDB.get(year - BASE_YEAR).getServerGVs().getDecemberGiftDeadline();
+			else if(deadline.equals("Waitlist Gift"))
+				return globalDB.get(year - BASE_YEAR).getServerGVs().getWaitListGiftDeadline();
 			else if(deadline.equals("Edit"))
 				return globalDB.get(year - BASE_YEAR).getServerGVs().getFamilyEditDeadline();
 			else
@@ -127,39 +124,50 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	{
 		return globalDB.get(year - BASE_YEAR).getServerGVs().getDeliveryDateCal();
 	}
-/*	
-	Date getDecemberDeadline(int year)
-	{
-		return globalDB.get(year - BASE_YEAR).getServerGVs().getDecemberDeadline();
-	}
-	
-	Date getFamilyEditDeadline(int year)
-	{
-		return globalDB.get(year - BASE_YEAR).getServerGVs().getFamilyEditDeadline();
-	}
-*/	
-	private ServerGVs readGVs(String file) throws FileNotFoundException, IOException
+
+	/***
+	 * @param year - used to create a default date for the year if the file is empty
+	 * @param file
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	private ServerGVs readGVs(int year, String file) throws FileNotFoundException, IOException
 	{
 		ServerGVs gvs = null;
 		
-    	CSVReader reader = new CSVReader(new FileReader(file));
-    	String[] nextLine, header;
+		CSVReader reader = new CSVReader(new FileReader(file));
+		String[] nextLine, header;
     	
-    	if((header = reader.readNext()) != null)	//Does file have records? 
-    	{
-    		//Read the User File
-    		if(header.length == GV_HEADER_LENGTH || 
+		if((header = reader.readNext()) != null)	//Does file have records? 
+		{
+    			//Read the User File
+    			if(header.length == GV_HEADER_LENGTH || 
     				header.length == GV_ALTERNATE_HEADER_LENGTH)	//Does the record have the right # of fields? 
-    		{
-    			if((nextLine = reader.readNext()) != null)
     			{
-    				//Read first line, it's the gv's
-    				gvs = new ServerGVs(Long.parseLong(nextLine[0]),
-    								Long.parseLong(nextLine[1]),
-    								nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
-    								Long.parseLong(nextLine[3]), Long.parseLong(nextLine[4]),
-    								Long.parseLong(nextLine[5]), Long.parseLong(nextLine[6]),
-    								nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]));
+    				if((nextLine = reader.readNext()) != null)
+    				{
+    					Calendar xmasDay = Calendar.getInstance();
+    					xmasDay.set(year, Calendar.DECEMBER, 25, 0, 0, 0);
+    					xmasDay.set(Calendar.MILLISECOND, 0);
+    					
+    					Calendar seasonStart = Calendar.getInstance();
+    					seasonStart.set(year, Calendar.SEPTEMBER, 1, 0, 0, 0);
+    					seasonStart.set(Calendar.MILLISECOND, 0);
+    					
+    					//Read first line, it's the gv's
+    					gvs = new ServerGVs(
+    							nextLine[0].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[0]),
+    							nextLine[1].isEmpty() ? seasonStart.getTimeInMillis() : Long.parseLong(nextLine[1]),
+    							nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
+    							nextLine[3].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[3]),
+    							nextLine[4].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[4]),
+    							nextLine[5].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[5]),
+    							nextLine[6].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[6]),
+    							nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]),
+    							nextLine[8].isEmpty() ? DEFAULT_GIFTCARD_ID : Integer.parseInt(nextLine[8]),
+    							nextLine[9].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[9]),
+    							nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[10]));
     				
     				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
@@ -195,7 +203,6 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		
 		gvDBYear.setServerGVs(reqObj);
 		gvDBYear.setChanged(true);
-//		save(year);		//Server GV's are persistently stored immediately when changed -- NOT Anymore 1-7-15
 		
 		return "UPDATED_GLOBALS" + json;
 	}
@@ -237,23 +244,23 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		giftsreceivedDate.set(Calendar.SECOND, 0);
 		giftsreceivedDate.set(Calendar.MILLISECOND, 0);
 		
-		Calendar thanksgivingDeadline = Calendar.getInstance();
-		thanksgivingDeadline.set(Calendar.YEAR, newYear);
-		thanksgivingDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
-		thanksgivingDeadline.set(Calendar.DAY_OF_MONTH, 25);
-		thanksgivingDeadline.set(Calendar.HOUR_OF_DAY, 0);
-		thanksgivingDeadline.set(Calendar.MINUTE, 0);
-		thanksgivingDeadline.set(Calendar.SECOND, 0);
-		thanksgivingDeadline.set(Calendar.MILLISECOND, 0);
+		Calendar thanksgivingMealDeadline = Calendar.getInstance();
+		thanksgivingMealDeadline.set(Calendar.YEAR, newYear);
+		thanksgivingMealDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
+		thanksgivingMealDeadline.set(Calendar.DAY_OF_MONTH, 25);
+		thanksgivingMealDeadline.set(Calendar.HOUR_OF_DAY, 0);
+		thanksgivingMealDeadline.set(Calendar.MINUTE, 0);
+		thanksgivingMealDeadline.set(Calendar.SECOND, 0);
+		thanksgivingMealDeadline.set(Calendar.MILLISECOND, 0);
 		
-		Calendar decemberDeadline = Calendar.getInstance();
-		decemberDeadline.set(Calendar.YEAR, newYear);
-		decemberDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
-		decemberDeadline.set(Calendar.DAY_OF_MONTH, 25);
-		decemberDeadline.set(Calendar.HOUR_OF_DAY, 0);
-		decemberDeadline.set(Calendar.MINUTE, 0);
-		decemberDeadline.set(Calendar.SECOND, 0);
-		decemberDeadline.set(Calendar.MILLISECOND, 0);
+		Calendar decemberGiftDeadline = Calendar.getInstance();
+		decemberGiftDeadline.set(Calendar.YEAR, newYear);
+		decemberGiftDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
+		decemberGiftDeadline.set(Calendar.DAY_OF_MONTH, 25);
+		decemberGiftDeadline.set(Calendar.HOUR_OF_DAY, 0);
+		decemberGiftDeadline.set(Calendar.MINUTE, 0);
+		decemberGiftDeadline.set(Calendar.SECOND, 0);
+		decemberGiftDeadline.set(Calendar.MILLISECOND, 0);
 		
 		Calendar familyEditDeadline = Calendar.getInstance();
 		familyEditDeadline.set(Calendar.YEAR, newYear);
@@ -263,12 +270,33 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		familyEditDeadline.set(Calendar.MINUTE, 0);
 		familyEditDeadline.set(Calendar.SECOND, 0);
 		familyEditDeadline.set(Calendar.MILLISECOND, 0);
+		
+		Calendar decemberMealDeadline = Calendar.getInstance();
+		decemberMealDeadline.set(Calendar.YEAR, newYear);
+		decemberMealDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
+		decemberMealDeadline.set(Calendar.DAY_OF_MONTH, 25);
+		decemberMealDeadline.set(Calendar.HOUR_OF_DAY, 0);
+		decemberMealDeadline.set(Calendar.MINUTE, 0);
+		decemberMealDeadline.set(Calendar.SECOND, 0);
+		decemberMealDeadline.set(Calendar.MILLISECOND, 0);
+		
+		Calendar waitlistGiftDeadline = Calendar.getInstance();
+		waitlistGiftDeadline.set(Calendar.YEAR, newYear);
+		waitlistGiftDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
+		waitlistGiftDeadline.set(Calendar.DAY_OF_MONTH, 25);
+		waitlistGiftDeadline.set(Calendar.HOUR_OF_DAY, 0);
+		waitlistGiftDeadline.set(Calendar.MINUTE, 0);
+		waitlistGiftDeadline.set(Calendar.SECOND, 0);
+		waitlistGiftDeadline.set(Calendar.MILLISECOND, 0);
 
 		
 		ServerGVs newYearServerGVs = new ServerGVs(deliveryDate.getTime(), seasonStartDate.getTime(),
 													DEFAULT_ADDRESS, giftsreceivedDate.getTime(),
-													thanksgivingDeadline.getTime(), decemberDeadline.getTime(),
-													familyEditDeadline.getTime(), -1);
+													thanksgivingMealDeadline.getTime(),
+													decemberGiftDeadline.getTime(),
+													familyEditDeadline.getTime(), -1, -1,
+													decemberMealDeadline.getTime(),
+													waitlistGiftDeadline.getTime());
 		
 		GlobalVariableDBYear newGVDBYear = new GlobalVariableDBYear(newYear, newYearServerGVs);
 		globalDB.add(newGVDBYear);
@@ -286,7 +314,8 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Deadline",
-							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Default Gift"};
+							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Default Gift",
+							"Defalut Gift Card", "December Meal Deadline", "WaitList Gift Deadline"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_YEAR);
 		if(gvDBYear.isUnsaved())
@@ -295,18 +324,18 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 			File oncwritefile = new File(path);
 			
 			try 
-	    	{
-	    		CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
-	    	    writer.writeNext(header);
-	    	    writer.writeNext(gvDBYear.getServerGVs().getExportRow());	//Write server gv row
-	    	    writer.close();
+	    		{
+	    			CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
+	    			writer.writeNext(header);
+	    			writer.writeNext(gvDBYear.getServerGVs().getExportRow());	//Write server gv row
+	    			writer.close();
 	    	    
-	    	    gvDBYear.setChanged(false);
-	    	} 
-	    	catch (IOException x)
-	    	{
-	    		System.err.format("IO Exception: %s%n", x);
-	    	}
+	    			gvDBYear.setChanged(false);
+	    		} 
+			catch (IOException x)
+			{
+	    			System.err.format("IO Exception: %s%n", x);
+			}
 		}
 	}
 	
@@ -316,8 +345,8 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	    	
 		GlobalVariableDBYear(int year, String file) throws FileNotFoundException, IOException
 	    {
-	    	super();
-	    	this.serverGVs = readGVs(file);
+			super();
+			this.serverGVs = readGVs(year, file);
 	    }
 		
 		GlobalVariableDBYear(int year, ServerGVs serverGVs)

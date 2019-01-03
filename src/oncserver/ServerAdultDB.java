@@ -3,12 +3,18 @@ package oncserver;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import ourneighborschild.AdultGender;
 import ourneighborschild.ONCAdult;
 
 public class ServerAdultDB extends ServerSeasonalDB
@@ -18,6 +24,8 @@ public class ServerAdultDB extends ServerSeasonalDB
 	
 	private static ServerAdultDB instance = null;
 	private static List<AdultDBYear> adultDB;
+	
+//	private static Connection dbConnection;	//for mysql database
 	
 	private ServerAdultDB() throws FileNotFoundException, IOException
 	{
@@ -36,11 +44,27 @@ public class ServerAdultDB extends ServerSeasonalDB
 			//import the adults from persistent store
 			importDB(year, String.format("%s/%dDB/AdultDB.csv",
 					System.getProperty("user.dir"),
-						year), "Meal DB", ADULT_DB_HEADER_LENGTH);
+						year), "Adult DB", ADULT_DB_HEADER_LENGTH);
 			
 			//set the next id
 			adultDBYear.setNextID(getNextID(adultDBYear.getList()));
 		}
+/*		
+		//set up the mysql connection
+		dbConnection = null;
+	
+		try 
+		{
+		    dbConnection = DriverManager.getConnection("jdbc:mysql://localhost:3306/onc_2018DB?"
+	                             + "user=root&password=oncdatabase");
+		} 
+		catch (SQLException ex) {
+		    // handle any errors
+		    System.out.println("SQLException: " + ex.getMessage());
+		    System.out.println("SQLState: " + ex.getSQLState());
+		    System.out.println("VendorError: " + ex.getErrorCode());
+		}
+*/		
 	}
 	
 	public static ServerAdultDB getInstance() throws FileNotFoundException, IOException
@@ -50,7 +74,41 @@ public class ServerAdultDB extends ServerSeasonalDB
 		
 		return instance;
 	}
-	
+/*	
+	static HtmlResponse getAdultsInFamilyJSONP(int year, int famID, String callbackFunction) throws SQLException 
+	{
+		Gson gson = new Gson();
+		Type listOfAdults = new TypeToken<ArrayList<ONCAdult>>(){}.getType();
+		List<ONCAdult> responseList = new ArrayList<ONCAdult>();
+		
+		PreparedStatement preparedStatement = null;
+		String selectAdultByFamIDSQL = String.format("SELECT * FROM Adults WHERE FamID=%d", famID);
+
+		try 
+		{
+			preparedStatement = dbConnection.prepareStatement(selectAdultByFamIDSQL);
+
+			// execute select SQL statement
+			ResultSet rs = preparedStatement.executeQuery();
+
+			while (rs.next()) 
+				responseList.add(new ONCAdult(rs.getInt(1), rs.getInt(2), rs.getString(3), AdultGender.valueOf(rs.getString(4))));
+			
+			//wrap the json in the callback function per the JSONP protocol
+			return new HtmlResponse(callbackFunction +"(" + gson.toJson(responseList, listOfAdults) +")", HttpCode.Ok);		
+
+		}
+		catch (SQLException e) 
+		{
+			return new HtmlResponse(callbackFunction +"(" + gson.toJson(responseList, listOfAdults) +")", HttpCode.Ok);	
+		} 
+		finally 
+		{
+			if (preparedStatement != null) 
+				preparedStatement.close();
+		}
+	}
+*/
 	String getAdults(int year)
 	{
 		Gson gson = new Gson();
@@ -76,7 +134,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
-	}
+	}	
 	
 	List<ONCAdult>getAdultsInFamily(int year, int famID)
 	{

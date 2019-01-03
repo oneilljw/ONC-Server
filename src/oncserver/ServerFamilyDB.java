@@ -1706,7 +1706,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		if(f.getDeliveryID() > -1 && f.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0)
     		{
     			//get delivery for family
-    			ONCFamilyHistory del = deliveryDB.getHistory(year, f.getDeliveryID());
+    			ONCFamilyHistory del = deliveryDB.getHistoryObject(year, f.getDeliveryID());
     			if(del != null && del.getdDelBy().equals(drvNum))
     				delCount++;
     		}
