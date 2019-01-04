@@ -232,8 +232,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		String response = webpageMap.get("familystatus");
 		response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
 		response = response.replace("USER_MESSAGE", message);
-		response = response.replace("THANKSGIVING_CUTOFF", enableReferralButton("Thanksgiving"));
-		response = response.replace("DECEMBER_CUTOFF", enableReferralButton("December"));
+		response = response.replace("THANKSGIVING_MEAL_CUTOFF", enableReferralButton("Thanksgiving Meal"));
+		response = response.replace("DECEMBER_MEAL_CUTOFF", enableReferralButton("December Meal"));
+		response = response.replace("WAITLIST_GIFT_CUTOFF", enableReferralButton("Waitlist Gift"));
 		response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
 		response = response.replace("DELIVERY_DATE", sdf.format(deliveryDay.getTime()));
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));

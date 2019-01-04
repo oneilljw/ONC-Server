@@ -11,8 +11,9 @@
 	var cyFamJson = [];
 	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;
 	
-	sessionStorage.setItem('thanksgivingCutoff', "THANKSGIVING_CUTOFF");
-	sessionStorage.setItem('decemberCutoff', "DECEMBER_CUTOFF");
+	sessionStorage.setItem('thanksgivingMealCutoff', "THANKSGIVING_MEAL_CUTOFF");
+	sessionStorage.setItem('decemberMealCutoff', "DECEMBER_MEAL_CUTOFF");
+	sessionStorage.setItem('waitlistGiftCutoff', "WAITLIST_GIFT_CUTOFF");
 	sessionStorage.setItem('editCutoff', "EDIT_CUTOFF");
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
@@ -31,10 +32,12 @@
     		}
     		
     		// Write on keyup event of keyword prior year seach input element
-        $("#pysearch").keyup(function(){
+        $("#pysearch").keyup(function()
+        	{
                 _this = this;
                 // Show only matching TR, hide rest of them
-                $.each($("#pyTable tbody tr"), function() {
+                $.each($("#pyTable tbody tr"), function()
+                	{
                     if($(this).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
                        $(this).hide();
                     else
@@ -43,10 +46,12 @@
         });
         	
         // Write on keyup event of keyword current year seach input element
-        $("#cysearch").keyup(function(){
+        $("#cysearch").keyup(function()
+        	{
                 _this = this;
                 // Show only matching TR, hide rest of them
-                $.each($("#cyTable tbody tr"), function() {
+                $.each($("#cyTable tbody tr"), function()
+                	{
                     if($(this).find('td').eq(2).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
                        $(this).hide();
                     else
@@ -71,40 +76,23 @@
     		
     			//determine the color and enabling of the Refer New Family button
     			var btnRNF = document.getElementById('new');
-    			if(sessionStorage.getItem('decemberCutoff') === 'disabled')
+    			if(sessionStorage.getItem('waitlistGiftCutoff') === 'disabled')
     			{
     				btnRNF.style.backgroundColor='Gray';
     	       		btnRNF.disabled = true;
     			}
     			
     			getPYandCYIntialGroupsAgentsAndFamlies();
-    			
-//    			//get the current year groups, agents & families
-//    			var groupcb = document.getElementById('currgroups');
-//    			var agentcb = document.getElementById('curragents');
-//    			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('curryear'), groupcb, agentcb);
-//    		
-//    			//get the prior year groups, agents & families
-//    			var groupcb = document.getElementById('pygroups');
-//    			var agentcb = document.getElementById('pyagents');
-//    			getGroupsAgentsAndFamiliesFromServer(sessionStorage.getItem('prioryear'), groupcb, agentcb);
-//    			
-//    			//show the success dialog if this page loaded due to a successful referral or update
-//    		  	if(bShowSuccessDialog)
-//    	  			window.location=document.getElementById('successanchor').href;
     		});
-    	
-    	
-    		
-     
-//        $.getJSON('getstatus', dbyearsparams, function(status)
-//        {
-//        		if(status.userstatus === 'Update_Profile')
-//            {
-//        			showEditProfileDialog();
-//        			window.location=document.getElementById('editprofileanchor').href;
-//            }
-//    		}); 	
+
+//      $.getJSON('getstatus', dbyearsparams, function(status)
+//      {
+//      		if(status.userstatus === 'Update_Profile')
+//          {
+//      			showEditProfileDialog();
+//      			window.location=document.getElementById('editprofileanchor').href;
+//          }
+//    	}); 	
     });
     
     //this function gets current year agents and families before prior year beacuse we use the
@@ -490,7 +478,7 @@
             		btn.style.backgroundColor='Red';
             		btn.disabled = true;
             }
-            else if(sessionStorage.getItem('decemberCutoff') === 'disabled')
+            else if(sessionStorage.getItem('waitlistGiftCutoff') === 'disabled')
             {
             		btn.style.backgroundColor='Gray';
             		btn.disabled = true;

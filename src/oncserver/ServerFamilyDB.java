@@ -42,12 +42,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static final int FAMILYDB_HEADER_LENGTH = 44;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
-	
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final String GIFT_CARD_WISH_NAME = "Gift Card";
-	
 	private static final String ODB_FAMILY_MEMBER_COLUMN_SEPARATOR = " - ";
-	
 	private static final int DEFAULT_GROUP_ID = 62;
 	
 	private static List<FamilyDBYear> familyDB;
@@ -60,6 +56,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerChildDB childDB;
 	private static ServerAdultDB adultDB;
 	private static ServerMealDB mealDB;
+	private static ServerGlobalVariableDB globalDB;
 	
 	private static ClientManager clientMgr;
 	
@@ -122,6 +119,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		adultDB = ServerAdultDB.getInstance();
 		userDB = ServerUserDB.getInstance();
 		mealDB = ServerMealDB.getInstance();
+		globalDB = ServerGlobalVariableDB.getInstance();
 
 		clientMgr = ClientManager.getInstance();
 	}
@@ -873,13 +871,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				targetID = generateReferenceNumber();
 				addedFam.setReferenceNum(targetID);
 			}
-/*			
-			//add the family history 
-			ONCFamilyHistory histItem = addHistoryItem(year, addedFam.getID(), addedFam.getFamilyStatus(), addedFam.getGiftStatus(),
-										"", "Family Referred", addedFam.getChangedBy(), false);
 			
-			addedFam.setDeliveryID(histItem.getID());
-*/			
 			//add to the family data base
 			fDBYear.add(addedFam);
 			fDBYear.setChanged(true);
@@ -1169,7 +1161,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		
 		//first, determine if gift cards are even in the catalog. If they aren't, return false as
 		//it can't be a gift card only family
-		int giftCardID = ServerWishCatalog.findWishIDByName(year, GIFT_CARD_WISH_NAME);
+//		int giftCardID = ServerWishCatalog.findWishIDByName(year, GIFT_CARD_WISH_NAME);
+		int giftCardID = globalDB.getGiftCardID(year);
 		if(giftCardID == -1)
 			bGiftCardOnlyFamily = false;
 		else

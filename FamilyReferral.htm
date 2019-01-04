@@ -131,6 +131,7 @@
 	function addWishTableRow(cnum, child)
     {
 		var childinfo= [child.firstname, getAge(child.sDOB) + " " + child.gender.toLowerCase()];
+		var titleinfo= ['First name of child', 'Age as of 12/25/' + sessionStorage.getItem('curryear')];
 		var childfieldsize= [15, 14];
 		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
         
@@ -143,6 +144,7 @@
     	    		content= document.createElement("input");
  	    		content.type="text";
         		content.value = childinfo[index];
+        		content.title = titleinfo[index];
         		content.readOnly = true;
         		content.setAttribute("size", childfieldsize[index]);
         		cell.appendChild(content);
@@ -171,33 +173,67 @@
 	
 	function addChild()
 	{
-		var childfnElement = document.getElementById('childfn');
-		var childlnElement = document.getElementById('childln');
-		var childschoolElement = document.getElementById('childschool');
-		
+		var child = {};
+	
 		var age = calculateAge(document.getElementById('childdob').value);
 		
-		if(childfnElement.value === "")
-			childfnElement.style.background = errorColor;
-		else if(childlnElement.value === "")
-			childlnElement.style.background = errorColor;
-		else if(age > 5 && childschoolElement.value === "")
-			childschoolElement.style.background = errorColor;
+		if(document.getElementById('childfn').value === "")
+			document.getElementById('childfn').style.background = errorColor;
+		else if(document.getElementById('childln').value === "")
+			document.getElementById('childln').style.background = errorColor;
+		else if(age > 5 && document.getElementById('childschool').value === "")
+			document.getElementById('childschool').style.background = errorColor;
 		else
 		{
-       		var child = {};
-        		child["firstname"] = childfnElement.value;
-        		child["lastname"] = childlnElement.value;
+        		child["firstname"] = document.getElementById('childfn').value;
+        		child["lastname"] = document.getElementById('childln').value;
         		child["sDOB"] =	document.getElementById('childdob').value;
         		child["gender"] = document.getElementById('childgender').value;
         		child["school"] = document.getElementById('childschool').value;
-        		childrenJson.push(child);
-        
-        		updateChildTable(true);
+        		
+        		if(checkForAddChildWarnings(child))
+        		{
+        			childrenJson.push(child);
+        			updateChildTable(true);
+            		updateWishTable();
+            		clearAddChild();
+        		}
+		}
+	}
+	
+	function checkForAddChildWarnings(child)
+	{
+		var age = calculateAge(child.sDOB);
+		if(age === 0 || child.gender === 'Unknown')
+		{
+			//show pop-up asking to verify birthdate and gender
+			document.getElementById('childwarningmssg').textContent = "Is " + child.sDOB + " the correct" +
+			" DoB and " + child.gender + " the correct gender for the child you're adding?";
+			
+			window.location=document.getElementById('childwarninganchor').href;
+			
+			return false;	//in case the user simply clicks to close the warning dialog
+		}
+		else
+			return true;
+	}
+	
+	function onVerifyChild(bCorrect)
+	{
+		if(bCorrect)
+		{
+			var child = {};
+			child["firstname"] = document.getElementById('childfn').value;
+    			child["lastname"] = document.getElementById('childln').value;
+    			child["sDOB"] =	document.getElementById('childdob').value;
+    			child["gender"] = document.getElementById('childgender').value;
+    			child["school"] = document.getElementById('childschool').value;
+    			childrenJson.push(child);
+    			updateChildTable(true);
         		updateWishTable();
-        
         		clearAddChild();
 		}
+		window.location=document.getElementById('closepopup').href;
 	}
 	
 	function clearAddChild()
@@ -209,7 +245,7 @@
 		childfnElement.value="";
         childlnElement.value="";
         document.getElementById('childdob').value="";
-        document.getElementById('childgender').value="Boy";
+        document.getElementById('childgender').value="Unknown";
         document.getElementById('childschool').value="";
         
         childfnElement.style.background = '#FFFFFF';
@@ -234,13 +270,13 @@
 		else
 		{	
        		var adult = {};
-        	adult["name"] = adultnameElement.value;
-        	adult["gender"] = document.getElementById('adultgender').value;
-        	adultsJson.push(adult);
+        		adult["name"] = adultnameElement.value;
+        		adult["gender"] = document.getElementById('adultgender').value;
+        		adultsJson.push(adult);
         
-        	updateAdultTable(true);
+        		updateAdultTable(true);
         
-        	clearAddAdult();
+        		clearAddAdult();
 		}
 	}
 	
@@ -262,7 +298,8 @@
 	
 	function calculateAge(birthday)
 	{	
-		var curryear = new Date().getFullYear();
+//		var curryear = new Date().getFullYear();
+		var curryear = sessionStorage.getItem('curryear');
 		var xmasday = new Date(curryear,11,25,0,0,0,0);
 		var birthdate= new Date(birthday);
 		
@@ -297,36 +334,38 @@
 	
 	function getAge(birthday)
 	{
-		var curryear = new Date().getFullYear();
+//		var curryear = new Date().getFullYear();
+		var curryear = sessionStorage.getItem('curryear');
 		var xmasday = new Date(curryear,11,25,0,0,0,0);
 		var birthdate= new Date(birthday);
 		
 		var age= [];
-		
 		if(birthdate >= xmasday)
-		{
 			age.push('Newborn');
-		}
 		else
 		{
-	    	var y= [xmasday.getFullYear(), birthdate.getFullYear()],
-	    	ydiff= y[0]-y[1],
-	    	m= [xmasday.getMonth(), birthdate.getMonth()],
-	    	mdiff= m[0]-m[1],
-	    	d= [xmasday.getDate(), birthdate.getDate()],
-	    	ddiff= d[0]-d[1];
+	    		var y= [xmasday.getFullYear(), birthdate.getFullYear()],
+	    		ydiff= y[0]-y[1],
+	    		m= [xmasday.getMonth(), birthdate.getMonth()],
+	    		mdiff= m[0]-m[1],
+	    		d= [xmasday.getDate(), birthdate.getDate()],
+	    		ddiff= d[0]-d[1];
 
-	    	if(mdiff < 0 || (mdiff=== 0 && ddiff<0))--ydiff;
-	    	if(mdiff<0) mdiff+= 12;
-	    	if(ddiff<0)
-	    	{
-	        	birthdate.setMonth(m[1]+1, 0);
-	        	ddiff= birthdate.getDate()-d[1]+d[0];
-	        	--mdiff;
-	    	}
-	    	
-	    	if(ydiff> 0) age.push(ydiff+ ' yr. old');
-	    	else if(mdiff>= 0) age.push(mdiff+ ' mos. old');
+	    		if(mdiff < 0 || (mdiff=== 0 && ddiff<0))--ydiff;
+	    		if(mdiff<0) mdiff+= 12;
+	    		if(ddiff<0)
+	    		{
+	        		birthdate.setMonth(m[1]+1, 0);
+	        		ddiff= birthdate.getDate()-d[1]+d[0];
+	        		--mdiff;
+	    		}
+	    		  	
+	    		if(ydiff> 0)
+	    			age.push(ydiff+ ' yr. old');
+	    		else if(mdiff>= 0) 
+	    			age.push(mdiff+ ' mos. old');
+	    		else if(mdiff=== -1)
+	    			age.push('1 yr. old');	//case when dob after xmas of prior year
 		}
 	    	return age.join('');
 	}
@@ -367,12 +406,19 @@
 		
 		if(cb.checked == false)
 		{
-			var choices = ["No Assistance Rqrd"];
+			var choices = {'No Assistance Rqrd':'No Assistance Rqrd'};
 			mealCombo.disabled = true;
 			dietres.value="";
 			dietres.disabled = true;
 		}
-		else if(sessionStorage.getItem('thanksgivingCutoff') === 'disabled')
+		else if(sessionStorage.getItem('decemberMealCutoff') === 'disabled')
+		{
+			var choices = {'Unavailable - Past Deadline' : 'Unavailable'};
+			mealCombo.disabled = true;
+			dietres.value="";
+			dietres.disabled = true;
+		}
+		else if(sessionStorage.getItem('thanksgivingMealCutoff') === 'disabled')
 		{
 			var choices = {"December":"December"};
 			mealCombo.disabled = false;
@@ -471,11 +517,18 @@
 		margin-top: 0px;
 		white-space: pre;
 	}
+	#warningbuttonbar
+	{
+		margin-top: 10px;
+		display: flex;
+ 		justify-content: center;
+	}
 	
   </style>
 </head>
 <body>
   <a href="#badfamdlg" id="badfamanchor" style="visibility: hidden">Bad Family Referral</a>
+  <a href="#childwarningdlg" id="childwarninganchor" style="visibility: hidden">Child Info Verification</a>
   <a href="#giftcarddlg" id="giftcardanchor" style="visibility: hidden">Gift Card Warning</a>
   <a href="#verifdlg" id="verifanchor" style="visibility: hidden">Address Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
@@ -637,9 +690,9 @@
     <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
     <input id="childdob" title="Date of birth for child to be added" type="text" size="14" placeholder="DoB">
     <select id="childgender" title="Gender of child to be added">
+      	<option value="Unknown">Unknown</option>
 		<option value="Boy">Boy</option>
 		<option value="Girl">Girl</option>
-		<option value="Unknown">Unknown</option>
 	</select>
 	<input id="childschool" class='schoolname' title="School attended, if none, enter Pre-K" type="text" size="20" placeholder="School">
 	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
@@ -741,6 +794,22 @@
 		<span id='badfammssg'></span>
 	</div>
   </div>
+  <!-- Child Warning Dialog -->
+  <div id="childwarningdlg" class="modalDialog">
+	<div class='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class="logospan">Verify Child Info</span>
+		</div>
+		<span class='verifspan'><img class='errorimg' src="erroricon"></span>
+		<span id='childwarningmssg'></span>
+		<div id='warningbuttonbar'>
+      	  <button id="correct" onclick="onVerifyChild(true)">Yes, As Best I Know</button>
+      	  <button id="fixit" onclick="onVerifyChild(false)">No, I'll Fix Them</button>
+    	</div>
+	</div>
+  </div>
   <!-- Address Verification Dialog -->
   <div id="verifdlg" class="modalDialog">
 	<div class='inner'>
@@ -774,7 +843,7 @@
 		  <span id='dialogmssg'>Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>
-    	<div id='buttonbar'>
+    	<div>
       	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
     	</div> 
 	</div>

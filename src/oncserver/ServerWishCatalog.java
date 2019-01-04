@@ -13,22 +13,17 @@ import ourneighborschild.ONCWish;
 
 public class ServerWishCatalog extends ServerSeasonalDB
 {
-//	private static final int WISH_CATALOG_HEADER_LENGTH = 7;
 	private static final int DB_RECORD_LENGTH = 7;
 	private static final String DB_FILENAME = "WishCatalog.csv";
 	private static List<WishCatalogDBYear> catalogDB;
-//	private static List<ONCWish> catalogDB;
-//	private int nextID;
-//	private boolean bSaveRequired;
 	private static ServerWishCatalog instance = null;
 	
 	private ServerWishCatalog() throws FileNotFoundException, IOException
 	{
 		//create the wish catalog data bases for TOTAL_YEARS number of years
 		catalogDB = new ArrayList<WishCatalogDBYear>();
-//		catalogDB = new ArrayList<ONCWish>();
 	
-//		//populate each year in the db
+		//populate each year in the db
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
 		{
 			//create the wish catalog list for year
@@ -43,10 +38,6 @@ public class ServerWishCatalog extends ServerSeasonalDB
 													
 			catalogDBYear.setNextID(getNextID(catalogDBYear.getList()));
 		}
-		
-//		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), CATALOG_FILENAME), "Wish Catalog", CATALOG_RECORD_LENGTH);
-//		nextID = getNextID(catalogDB);
-//		bSaveRequired = false;
 	}
 	
 	public static ServerWishCatalog getInstance() throws FileNotFoundException, IOException
@@ -93,7 +84,6 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		{
 			catAL.set(index, reqWish);
 			catalogDBYear.setChanged(true);
-//			bSaveRequired = true;
 			return "UPDATED_CATALOG_WISH" + json;
 		}
 	}
@@ -112,11 +102,7 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		//add the new wish
 		catalogDBYear.add(addWishReq);
 		catalogDBYear.setChanged(true);
-		
-//		addWishReq.setID(nextID++);
-//		catalogDB.add(addWishReq);
-//		bSaveRequired = true;
-		
+
 		return "ADDED_CATALOG_WISH" + gson.toJson(addWishReq, ONCWish.class);
 	}
 	
@@ -138,7 +124,6 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		if(index < catAL.size())
 		{
 			catAL.remove(index);
-//			bSaveRequired = true;
 			catalogDBYear.setChanged(true);
 			return "DELETED_CATALOG_WISH" + json;
 		}
@@ -161,22 +146,6 @@ public class ServerWishCatalog extends ServerSeasonalDB
 			return wishList.get(index).getName();
 		else
 			return "No Wish Found";
-	}
-	
-	static int findWishIDByName(int year, String wishname)
-	{
-		//get list for year
-		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCWish> wishList = catalogDBYear.getList();
-				
-		int index=0;
-		while(index < wishList.size() &&!wishList.get(index).getName().equals(wishname))
-			index++;
-				
-		if(index < wishList.size())
-			return wishList.get(index).getID();
-		else
-			return -1;
 	}
 	
 	static String getGiftCatalogJSONP(int year, String callbackFunction)
@@ -252,51 +221,7 @@ public class ServerWishCatalog extends ServerSeasonalDB
 			catDBYear.setChanged(false);
 		}
 	}
-/*
-	@Override
-	void save()
-	{
-		if(bSaveRequired)
-		{
-			String[] header = {"Wish ID", "Name", "List Index", "Wish Detail 1 ID", 
-		 			"Wish Detail 2 ID", "Wish Detail 3 ID", "Wish Detail 4 ID"};
-			
-			String path = System.getProperty("user.dir") + "/WishCatalog.csv";
-			File oncwritefile = new File(path);
-			
-			try 
-			{
-				CSVWriter writer = new CSVWriter(new FileWriter(oncwritefile.getAbsoluteFile()));
-				writer.writeNext(header);
-	    	
-				for(ONCWish w: catalogDB)
-					writer.writeNext(w.getExportRow());	//Write server Apartment row
-	    	
-				writer.close();
-				
-				bSaveRequired = false;
-			} 
-			catch (IOException x)
-			{
-				System.err.format("IO Exception: %s%n", x);
-			}
-		}
-	}
 
-/*	
-	@Override
-	String[] getExportHeader()
-	{
-		return new String[] {"Wish ID", "Name", "List Index", "Wish Detail 1 ID", 
-	 						"Wish Detail 2 ID", "Wish Detail 3 ID", "Wish Detail 4 ID"};
-	}
-	
-	@Override
-	String getFileName() { return CATALOG_FILENAME; }
-	
-	@Override
-	List<? extends ONCObject> getONCObjectList() { return catalogDB; }
-*/	
 	private class WishCatalogDBYear extends ServerDBYear
 	{
 		private List<ONCWish> catList;

@@ -34,6 +34,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	private static final String GIFTS_REQUESTED_KEY = "giftreq";
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
+	private static final String DNS_CODE_WAITLIST = "WL";
 	
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	
@@ -170,7 +171,8 @@ public class FamilyHandler extends ONCWebpageHandler
     				//process referral and send family status web page back to client
     				logParameters(params, requestURI);
     				ResponseCode frc = processFamilyReferral(wc, params);
-    				response = getFamilyStatusWebpage(wc, frc.getMessage(), frc.getSuccessMessage(), "Successful Wait List Referral",true);
+    			    				
+    				response = getFamilyStatusWebpage(wc, frc.getMessage(), frc.getSuccessMessage(), frc.getTitle(), true);
     			}
     			else
     				response = invalidTokenReceived();
@@ -234,7 +236,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	
 	ResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
 	{
-		//get the agent/user
+		//get the year
 		int year = Integer.parseInt((String) params.get("year"));
 		
 		//get database references
@@ -243,6 +245,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		ServerChildDB childDB = null;
 		ServerAdultDB adultDB = null;
 		ServerFamilyHistoryDB famHistDB = null;
+		ServerGlobalVariableDB globalDB = null;
 		
 		try
 		{
@@ -251,6 +254,7 @@ public class FamilyHandler extends ONCWebpageHandler
 			childDB = ServerChildDB.getInstance();
 			adultDB = ServerAdultDB.getInstance();
 			famHistDB = ServerFamilyHistoryDB.getInstance();
+			globalDB = ServerGlobalVariableDB.getInstance();
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -260,6 +264,9 @@ public class FamilyHandler extends ONCWebpageHandler
 		{
 			return new ResponseCode("Family Referral Failed: Server Database I/O Error");
 		}
+		
+		//determine if the referral was after the home delivery service deadline
+		boolean bWaitlistFamily = new Date().after(globalDB.getDeadline(year, "December Gift"));
 		
 		//create the family map
 		String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
@@ -279,12 +286,13 @@ public class FamilyHandler extends ONCWebpageHandler
 		ONCMeal mealReq = null, addedMeal = null;
 		String[] mealKeys = {"mealtype", "dietres"};
 		
-		if(params.containsKey("mealtype"))
+		if(!bWaitlistFamily && params.containsKey("mealtype"))
 		{
 			Map<String, String> mealMap = createMap(params, mealKeys);
 			String dietRestrictions = "";
 
-			if(!mealMap.get("mealtype").equals("No Assistance Rqrd"))
+			if(!mealMap.get("mealtype").equals("No Assistance Rqrd") || 
+				!mealMap.get("mealtype").equals("Unavailable"))
 			{
 				if(mealMap.containsKey("dietres"))
 					dietRestrictions = mealMap.get("dietres");
@@ -316,7 +324,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 		
 		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
-					familyMap.get("targetid"), "B-DI", 
+					familyMap.get("targetid"), "B-DI", bWaitlistFamily ? DNS_CODE_WAITLIST : "",
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohFN"), familyMap.get("hohLN"), familyMap.get("housenum"),
 					ensureUpperCaseStreetName(familyMap.get("street")),
@@ -384,14 +392,7 @@ public class FamilyHandler extends ONCWebpageHandler
 			}
 			
 			//now that we have added children, we can check for duplicate family in this year.
-			ONCFamily dupFamily = serverFamilyDB.getDuplicateFamily(year, addedFamily, addedChildList);
-			
-//			if(dupFamily != null)
-//				System.out.println(String.format("HttpHandler.processFamilyReferral: "
-//						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
-//						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
-//						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
-//			
+			ONCFamily dupFamily = serverFamilyDB.getDuplicateFamily(year, addedFamily, addedChildList);	
 			if(dupFamily == null)	//if not a dup, then for new families, check for prior year
 			{
 				//added family not in current year, check if in prior years
@@ -520,19 +521,31 @@ public class FamilyHandler extends ONCWebpageHandler
 				
 			clientMgr.notifyAllInYearClients(year, mssgList);
 			
-//			String mssg = String.format("%s Family Referral Accepted, ONC# %s",
-//					addedFamily.getLastName(), addedFamily.getONCNum());
-			
-			String mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
+			String mssg, successMssg, title;
+			if(!bWaitlistFamily)
+			{
+				mssg = String.format("%s Family Referral Accepted, ONC# %s",
 						addedFamily.getLastName(), addedFamily.getONCNum());
-			String successMssg = String.format("%s Family Referral received for ONC's Wait List, ONC# %s. "
+				
+				successMssg = mssg;
+				title = "Referral Received";
+			}
+			else
+			{
+				mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
+						addedFamily.getLastName(), addedFamily.getONCNum());
+				
+				successMssg = String.format("%s Family Referral received and is on our Waitlist, ONC# %s. "
 					+ "Once Family Status is marked \"Verified\" please notify the family that gift pickup will "
 					+ "take place on 12/22 from 10am-noon at the Centreville Regional Library. Photo ID "
 					+ "matching HOH required. This is for wait list GIFTS only. Please contact WFCM for "
 					+ "post-deadline food requests.",
 					addedFamily.getLastName(), addedFamily.getONCNum());
+				
+				title = "Waitlist Referral Received";
+			}
 
-			return new ResponseCode(mssg, successMssg, addedFamily.getONCNum());
+			return new ResponseCode(mssg, successMssg, title, addedFamily.getONCNum());
 		}
 		else
 			return new ResponseCode("Family Referral Failure: Unable to Process Referral");
