@@ -84,6 +84,7 @@ function addAdultTableRow(anum, adult, bAction)
     cell= document.createElement("td");
     adultname= document.createElement("input");
     adultname.type="text";
+    adultname.id="adultname" + anum;
     adultname.name="adultname" + anum;
     adultname.value = adult.name;
     adultname.readOnly = !bAction;
@@ -94,6 +95,7 @@ function addAdultTableRow(anum, adult, bAction)
     cell= document.createElement("td");
     var adultgender= document.createElement("input");
     adultgender.type="text";
+    adultgender.id="adultgender" + anum;
     adultgender.name="adultgender" + anum;
     adultgender.value = adult.gender;
     adultgender.setAttribute("size", 11);
@@ -102,12 +104,12 @@ function addAdultTableRow(anum, adult, bAction)
     
     if(bAction === true)
     {	
-    	var btn = document.createElement("button");
-    	btn.value= anum;
-    	btn.type="button";
-    	btn.innerHTML = "Remove";
-    	btn.onclick=function() {removeAdult(anum);};
-    	row.appendChild(btn);
+    		var btn = document.createElement("button");
+    		btn.value= anum;
+    		btn.type="button";
+    		btn.innerHTML = "Remove";
+    		btn.onclick=function() {removeAdult(anum);};
+    		row.appendChild(btn);
 	}
     
     tabBody.appendChild(row);
@@ -156,8 +158,6 @@ function copyAddressToDeliveryAddress()
 		delInputElements[i].readOnly = true;
 		addrInputElements[i].readOnly = true;
 	}
-	
-//	verifyDeliveryAddress();
 }
   	
 function clearDeliveryAddress()
@@ -498,7 +498,13 @@ function onSubmit(bReferral)
 	      			}
 	      			else if(addresponse.returnCode === 0)
 	      			{
-	      				document.getElementById("familyform").submit();
+//	      				document.getElementById("familyform").submit();
+	      				//determine if its a referral or an update
+	      				var urlmode = window.location.href;
+	      				if(urlmode.indexOf('referral') >= 0 || urlmode.indexOf('newfamily') >= 0)
+	      					post('referfamily', createReferralParams(true));
+	      				else if(urlmode.indexOf('familyupdate') >= 0)
+	      					post('updatefamily', createReferralParams(false));
 	      			}
 	      			else
 	      				processAddressError(addresponse, delAddrElement, delUnitElement, 
@@ -772,6 +778,57 @@ function verifyAddress(element)
 	}
 }
 
+function createReferralParams(bReferral)
+{	
+	var params = {};
+	
+	//create the year parameter
+	params["year"] = sessionStorage.getItem("curryear");
+	
+	//create the common parameters
+	var commonelementname = ['targetid','language','hohfn','hohln','housenum','street','unit','city',
+							 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
+							 'email','homephone','cellphone', 'altphone','detail'];
+	for(cen=0; cen < commonelementname.length; cen++)
+		params[commonelementname[cen]] = document.getElementById(commonelementname[cen]).value;
+	
+	
+	if(bReferral)	//is this a referral or just an update? Create the unique parameters
+	{	
+		//create transportation and gift required parameters
+		if(document.getElementById('transYes').checked)
+			params['transportation'] = 'Yes';
+		else
+			params['transportation'] = 'No';
+	
+		if(document.getElementById('giftreq').checked)
+			params['giftreq'] = 'on';
+		else
+			params['giftreq'] = 'off';
+		
+		var uniqueementname = ['mealtype','dietres','groupcb','uuid'];
+		for(uen=0; uen < uniqueementname.length; uen++)
+			params[uniqueementname[uen]] = document.getElementById(uniqueementname[uen]).value;
+		
+		//create the child and wish parameters
+		var childelementname = ['childfn', 'childln', 'childdob', 'childgender', 'childschool'];
+		for(cn=0; cn < childrenJson.length; cn++)	
+		{
+			for(cfn=0; cfn<childelementname.length; cfn++)
+				params[childelementname[cfn]+cn] = document.getElementById(childelementname[cfn]+cn).value;
+			for(wn=0; wn < 4; wn++) 
+				params['wish'+cn+wn] = document.getElementById('wish'+cn+wn).value;
+		}
+	
+		//create the adult parameters
+		var adultelementname = ['adultname','adultgender'];
+		for(an=0; an < adultsJson.length; an++)
+			for(afn=0; afn<adultelementname.length; afn++)
+				params[adultelementname[afn]+an] = document.getElementById(adultelementname[afn]+an).value;	    			
+	}	
+	return params;
+}
+
 function onLogoutLink()
 {
 	var params = {};
@@ -786,8 +843,6 @@ function post(path, params, method)
 {
     method = method || "post"; // Set method to post by default if not specified.
 
-    // The rest of this code assumes you are not using a library.
-    // It can be made less wordy if you use one.
     var form = document.createElement("form");
     form.setAttribute("method", method);
     form.setAttribute("action", path);

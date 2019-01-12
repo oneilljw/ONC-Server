@@ -106,7 +106,7 @@ public abstract class ONCServerDB
 	 * @param list
 	 * @return
 	 *********************************************************************************/
-	public int getNextID(List<? extends ONCObject> list)
+	int getNextID(List<? extends ONCObject> list)
 	{
 		int hID = 0;
 		for(int i=0; i< list.size(); i++)
@@ -116,7 +116,7 @@ public abstract class ONCServerDB
 		return hID+1;
 	}
 	
-	protected static boolean isNumeric(String str)
+	static boolean isNumeric(String str)
 	{
 		if(str == null || str.isEmpty())
 			return false;
@@ -124,7 +124,16 @@ public abstract class ONCServerDB
 			return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
 	}
 	
-	protected String toTitleCase(String inputString)
+	Long parseSciNotationToLong(String input)
+	{
+		//determine if the input string is in scientific notation or not
+		if(input.indexOf('E') > -1)
+			return Long.parseLong(String.format("%.0f", Double.parseDouble(input)));
+		else
+			return Long.parseLong(input);
+	}
+	
+	String toTitleCase(String inputString)
 	{
 	    String[] arr = inputString.trim().toLowerCase().split(" ");
 	    StringBuffer sb = new StringBuffer();

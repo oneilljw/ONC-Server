@@ -44,8 +44,7 @@
   		//clear the group combobox
 		groupcb.options.length = 0;
   		
-  		var urlmode = window.location.href;
-  		if(urlmode.indexOf("referral") > -1)
+  		if(window.location.href.indexOf("referral") > -1)
   		{
   			//is a re-referral. Get info for the family
   			familyparams = "year=" + sessionStorage.getItem("prioryear") + "&" +
@@ -55,7 +54,6 @@
 
 			$.getJSON('getfamily', familyparams, function(family)
 			{
-//				console.log(family);
 				document.getElementById('hohfn').value= family.HOHFirstName;
 				document.getElementById('hohln').value= family.HOHLastName;
 				
@@ -68,7 +66,7 @@
   		     	
   		     	//update the family group select
   		     	addComboBoxOption(groupcb, family.groupName, family.groupID);
-//  		     	document.getElementById('groupfs').style.visibility='hidden';
+  		     	document.getElementById('groupfs').style.visibility='hidden';
 			});
   		}
   		else
@@ -83,11 +81,11 @@
     				for (var i=0; i < data.length; i++)
     					addComboBoxOption(groupcb, data[i].name, data[i].id);
 	    			
-//    			var groupfselem = document.getElementById('groupfs');
-//	    			if(data.length > 1)
-//	    				groupfselem.style.visibility='visible';
-//	    			else	
-//	  				groupfselem.style.visibility='hidden';
+	    			var groupfselem = document.getElementById('groupfs');
+	    			if(data.length > 1)
+	    				groupfselem.style.visibility='visible';
+	    			else	
+	  				groupfselem.style.visibility='hidden';
     			});    	
   		}
   		
@@ -298,7 +296,6 @@
 	
 	function calculateAge(birthday)
 	{	
-//		var curryear = new Date().getFullYear();
 		var curryear = sessionStorage.getItem('curryear');
 		var xmasday = new Date(curryear,11,25,0,0,0,0);
 		var birthdate= new Date(birthday);
@@ -334,7 +331,6 @@
 	
 	function getAge(birthday)
 	{
-//		var curryear = new Date().getFullYear();
 		var curryear = sessionStorage.getItem('curryear');
 		var xmasday = new Date(curryear,11,25,0,0,0,0);
 		var birthdate= new Date(birthday);
@@ -548,15 +544,16 @@
   <form id="familyform" action="referfamily" method="post">
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
+  <input id='uuid' type="hidden" name="uuid" value= 'SERVER_GENERATED_UUID'>
   <br>
   <fieldset>
   <legend class="legend-major">Head of Household (HOH) Information</legend>
-    <input id='hohfn' title="First Name" name="hohFN" type="text" size="20" placeholder="First Name" required>
-    <input id='hohln' title="Last Name" name="hohLN" type="text" size="20" placeholder="Last Name" required>
+    <input id='hohfn' title="First Name" name="hohfn" type="text" size="20" placeholder="First Name" required>
+    <input id='hohln' title="Last Name" name="hohln" type="text" size="20" placeholder="Last Name" required>
     <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
     <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
     <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onchange="verifyPhoneNumber(2)">
-  	<select title="Primary language" name="language">
+  	<select id='language' title='Primary language' name='language'>
 		<option value="English">English</option>
 		<option value="Spanish">Spanish</option>
 		<option value="Arabic">Arabic</option>
@@ -617,7 +614,7 @@
 		<option value="20121">20121</option>
 		<option value="20122">20122</option>
 	</select>
-	<input title="Email address" name="email" type="email" size="30" placeholder="email address">
+	<input id='email' title="Email address" name="email" type="email" size="30" placeholder="email address">
 	<button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
   </fieldset>
   <br>
@@ -767,11 +764,11 @@
   <br>
   <fieldset>
    <legend class="legend-major">Family Details: Provide any additional details that may assist in serving this family</legend>
-	<input type="text" name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
+	<input type="text" id='detail' name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <fieldset id='groupfs'>
    <legend class="legend-major">Family Group: Select this referral's originating school/organization</legend>
-    <select id="groupcb" name='group' title="Family Group"></select>
+    <select id="groupcb" name='groupcb' title="Family Group"></select>
   </fieldset>
   <br>
   <div>

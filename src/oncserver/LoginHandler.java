@@ -310,7 +310,6 @@ public class LoginHandler extends ONCWebpageHandler
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
 	    		//get the old data before updating
-	    		long nLogins = serverUser.getNSessions();
 	    		Calendar lastLogin = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 	    		lastLogin.setTimeInMillis(serverUser.getLastLogin());
 	    		
@@ -348,7 +347,7 @@ public class LoginHandler extends ONCWebpageHandler
 	    			
 	    			//determine if user never visited or last login date
 	    			String userMssg;
-	    			if(nLogins == 0)
+	    			if(serverUser.getNSessions() == 1)
 	    				userMssg = "This is your first visit!";
 	    			else
 	    			{

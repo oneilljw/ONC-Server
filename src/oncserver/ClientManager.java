@@ -5,8 +5,9 @@ import java.awt.event.ActionListener;
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.swing.ImageIcon;
@@ -471,7 +472,7 @@ public class ClientManager extends ClientEventGenerator
 		for(int index = webClientAL.size()-1; index >= 0; index--)
 		{
 			WebClient wc = webClientAL.get(index);
-			long currentTime = new Date().getTime();
+			long currentTime = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
 			if(currentTime - wc.getLastTimeStamp() > WEB_CLIENT_TERMINAL_LIMIT)
 			{
 				webClientAL.remove(index);

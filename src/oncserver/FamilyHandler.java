@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
@@ -39,6 +40,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	
 	private ONCFamily lastFamilyAdded = null;
+	private String lastReferralUUIDAccepted = "";
 
 	@Override
 	public void handle(HttpExchange te) throws IOException
@@ -130,8 +132,11 @@ public class FamilyHandler extends ONCWebpageHandler
 		{
     			String response;
     		
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{	
     				response = webpageMap.get("referral");
+    				response = response.replace("SERVER_GENERATED_UUID", UUID.randomUUID().toString());
+    			}
     			else
     				response = invalidTokenReceived();
     		
@@ -154,7 +159,10 @@ public class FamilyHandler extends ONCWebpageHandler
     			String response;
     			
     			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    				response = webpageMap.get("referral");	
+    			{	
+    				response = webpageMap.get("referral");
+    				response = response.replace("SERVER_GENERATED_UUID", UUID.randomUUID().toString());
+    			}
     			else
     				response = invalidTokenReceived();
     		
@@ -164,10 +172,11 @@ public class FamilyHandler extends ONCWebpageHandler
     		{
     			String response;
     			WebClient wc;
-    		
+
     			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("year") &&
     					((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)) 
     			{
+    				
     				//process referral and send family status web page back to client
     				logParameters(params, requestURI);
     				ResponseCode frc = processFamilyReferral(wc, params);
@@ -269,64 +278,59 @@ public class FamilyHandler extends ONCWebpageHandler
 		boolean bWaitlistFamily = new Date().after(globalDB.getDeadline(year, "December Gift"));
 		
 		//create the family map
-		String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
+		String[] familyKeys = {"targetid", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
 						   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
-						   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation"};
+						   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation", "uuid"};
 				
 		Map<String, String> familyMap = createMap(params, familyKeys);
-		
-		//check to see if this family was added within the last second. If so, don't do a thing.
-//		if(wasThisFamilyAlreadyAddedWithinASecond(wc, familyMap))
-//		{
-//			new ResponseCode(String.format("%s Family Referral Accepted, ONC# %s",
-//					lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum()));
-//		}
-		
-		//create a meal request, if meal was requested
-		ONCMeal mealReq = null, addedMeal = null;
-		String[] mealKeys = {"mealtype", "dietres"};
-		
-		if(!bWaitlistFamily && params.containsKey("mealtype"))
-		{
-			Map<String, String> mealMap = createMap(params, mealKeys);
-			String dietRestrictions = "";
 
-			if(!mealMap.get("mealtype").equals("No Assistance Rqrd") || 
-				!mealMap.get("mealtype").equals("Unavailable"))
+		//check to see if this family was the last family added. If so, don't do a thing other then
+		//return the appropriate success message. If it's not the last family, process it.
+		if(!lastReferralUUIDAccepted.equals(familyMap.get("uuid")))
+		{
+			//create a meal request, if meal was requested
+			ONCMeal mealReq = null, addedMeal = null;
+			String[] mealKeys = {"mealtype", "dietres"};
+		
+			if(!bWaitlistFamily && params.containsKey("mealtype"))
 			{
-				if(mealMap.containsKey("dietres"))
-					dietRestrictions = mealMap.get("dietres");
+				Map<String, String> mealMap = createMap(params, mealKeys);
+				String dietRestrictions = "";
+
+				if(!mealMap.get("mealtype").equals("No Assistance Rqrd") || 
+					!mealMap.get("mealtype").equals("Unavailable"))
+				{
+					if(mealMap.containsKey("dietres"))
+						dietRestrictions = mealMap.get("dietres");
 				
-				mealReq = new ONCMeal(-1, -1, MealStatus.Requested, MealType.valueOf(mealMap.get("mealtype")),
+					mealReq = new ONCMeal(-1, -1, MealStatus.Requested, MealType.valueOf(mealMap.get("mealtype")),
 								dietRestrictions, -1, wc.getWebUser().getLNFI(), new Date(), 3,
 								"Family Referred", wc.getWebUser().getLNFI());
 			
-				addedMeal = mealDB.add(year, mealReq);
+					addedMeal = mealDB.add(year, mealReq);
+				}
 			}
-		}
 		
-		//check to see if this is a new family or a re-referral. Need to know this to determine 
-		//whether to perform a prior year check after the family and children objects are created
-		boolean bNewFamily = familyMap.get("targetid").contains("NNA") || familyMap.get("targetid").equals("");
+			//check to see if this is a new family or a re-referral. Need to know this to determine 
+			//whether to perform a prior year check after the family and children objects are created
+			boolean bNewFamily = familyMap.get("targetid").contains("NNA") || familyMap.get("targetid").equals("");
 		
-		//make sure we got a group from the rest call. if not, figure out the group by the agent
-		int group = -1;
-		ONCServerUser agent = wc.getWebUser();
-		if(params.containsKey("group") && isNumeric((String) params.get("group")))
-		{
-			group = Integer.parseInt((String) params.get("group"));
-		}
-		else
-		{
-			List<Integer> groupIDList = agent.getGroupList();
-			if(!groupIDList.isEmpty())
-				group = groupIDList.get(0);
-		}
+			//make sure we got a group from the rest call. if not, figure out the group by the agent
+			int group = -1;
+			ONCServerUser agent = wc.getWebUser();
+			if(params.containsKey("groupcb") && isNumeric((String) params.get("groupcb")))
+				group = Integer.parseInt((String) params.get("groupcb"));
+			else
+			{
+				List<Integer> groupIDList = agent.getGroupList();
+				if(!groupIDList.isEmpty())
+					group = groupIDList.get(0);
+			}
 		
-		ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
+			ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
 					familyMap.get("targetid"), "B-DI", bWaitlistFamily ? DNS_CODE_WAITLIST : "",
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
-					familyMap.get("hohFN"), familyMap.get("hohLN"), familyMap.get("housenum"),
+					familyMap.get("hohfn"), familyMap.get("hohln"), familyMap.get("housenum"),
 					ensureUpperCaseStreetName(familyMap.get("street")),
 					familyMap.get("unit"), familyMap.get("city"),
 					familyMap.get("zipcode"), familyMap.get("delhousenum"),
@@ -340,135 +344,110 @@ public class FamilyHandler extends ONCWebpageHandler
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
 					Transportation.valueOf(familyMap.get("transportation")));
 		
-		//add the family and family history to the data base
-		ONCFamily addedFamily = serverFamilyDB.add(year, fam);
-		if(addedFamily != null)
-		{
-			//add the family history object and update the family history object id
-			ONCFamilyHistory famHistory = new ONCFamilyHistory(-1, addedFamily.getID(), 
+			//add the family and family history to the data base
+			ONCFamily addedFamily = serverFamilyDB.add(year, fam);
+			if(addedFamily != null)
+			{
+				lastFamilyAdded = addedFamily;
+				lastReferralUUIDAccepted = familyMap.get("uuid");
+				
+				//add the family history object and update the family history object id
+				ONCFamilyHistory famHistory = new ONCFamilyHistory(-1, addedFamily.getID(), 
 															addedFamily.getFamilyStatus(),
 															addedFamily.getGiftStatus(),
 															"", "Family Referred", 
 															addedFamily.getChangedBy(), 
 															Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 		
-			ONCFamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, false);
-			if(addedFamHistory != null)
-				addedFamily.setDeliveryID(addedFamHistory.getID());
+				ONCFamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, false);
+				if(addedFamHistory != null)
+					addedFamily.setDeliveryID(addedFamHistory.getID());
 		
-			List<ONCChild> addedChildList = new ArrayList<ONCChild>();
-			List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
+				List<ONCChild> addedChildList = new ArrayList<ONCChild>();
+				List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
 		
-			//update the family id for the meal, if a meal was requested
-			if(addedMeal != null)
-			{
-				addedMeal.setFamilyID(addedFamily.getID());
-				mealDB.update(year, addedMeal);
-			}
-			
-			//create the children for the family
-			String childfn, childln, childDoB, childGender, childSchool;
-			int cn = 0;
-			String key = "childln0";
-			
-			//using child last name as the iterator, create a db entry for each
-			//child in the family. Protect against null or missing keys.
-			while(params.containsKey(key))
-			{
-				childln = params.get(key) != null ? (String) params.get(key) : "";
-				childfn = params.get("childfn" + Integer.toString(cn)) != null ? (String) params.get("childfn" + Integer.toString(cn)) : "";
-				childDoB = params.get("childdob" + Integer.toString(cn)) != null ? (String) params.get("childdob" + Integer.toString(cn)) : "";
-				childGender = params.get("childgender" + Integer.toString(cn)) != null ? (String) params.get("childgender" + Integer.toString(cn)) : "";
-				childSchool = params.get("childschool" + Integer.toString(cn)) != null ? (String) params.get("childschool" + Integer.toString(cn)) : "";
-
-				if(!childln.isEmpty())	//only add a child if the last name is provided
+				//update the family id for the meal, if a meal was requested
+				if(addedMeal != null)
 				{
-					ONCChild child = new ONCChild(-1, addedFamily.getID(), childfn.trim(), childln.trim(), childGender, 
+					addedMeal.setFamilyID(addedFamily.getID());
+					mealDB.update(year, addedMeal);
+				}
+			
+				//create the children for the family
+				String childfn, childln, childDoB, childGender, childSchool;
+				int cn = 0;
+				String key = "childln0";
+			
+				//using child last name as the iterator, create a db entry for each
+				//child in the family. Protect against null or missing keys.
+				while(params.containsKey(key))
+				{
+					childln = params.get(key) != null ? (String) params.get(key) : "";
+					childfn = params.get("childfn" + Integer.toString(cn)) != null ? (String) params.get("childfn" + Integer.toString(cn)) : "";
+					childDoB = params.get("childdob" + Integer.toString(cn)) != null ? (String) params.get("childdob" + Integer.toString(cn)) : "";
+					childGender = params.get("childgender" + Integer.toString(cn)) != null ? (String) params.get("childgender" + Integer.toString(cn)) : "";
+					childSchool = params.get("childschool" + Integer.toString(cn)) != null ? (String) params.get("childschool" + Integer.toString(cn)) : "";
+
+					if(!childln.isEmpty())	//only add a child if the last name is provided
+					{
+						ONCChild child = new ONCChild(-1, addedFamily.getID(), childfn.trim(), childln.trim(), childGender, 
 													createChildDOB(childDoB), childSchool.trim(), year);
 				
-					addedChildList.add(childDB.add(year,child));
+						addedChildList.add(childDB.add(year,child));
+					}
+					key = "childln" + Integer.toString(++cn);	//get next child key
 				}
-				key = "childln" + Integer.toString(++cn);	//get next child key
-			}
 			
-			//now that we have added children, we can check for duplicate family in this year.
-			ONCFamily dupFamily = serverFamilyDB.getDuplicateFamily(year, addedFamily, addedChildList);	
-			if(dupFamily == null)	//if not a dup, then for new families, check for prior year
-			{
-				//added family not in current year, check if in prior years
-				//only check new families for prior year existence. If a re-referral,
-				//we already know the reference id was from prior year
-				ONCFamily pyFamily = null;
-				if(bNewFamily)	
+				//now that we have added children, we can check for duplicate family in this year.
+				ONCFamily dupFamily = serverFamilyDB.getDuplicateFamily(year, addedFamily, addedChildList);	
+				if(dupFamily == null)	//if not a dup, then for new families, check for prior year
 				{
-					pyFamily = serverFamilyDB.isPriorYearFamily(year, addedFamily, addedChildList);
-					if(pyFamily != null)
-					{				
-						//added new family was in prior year, keep the prior year reference # 
-						//and reset the newly assigned target id index
-						addedFamily.setReferenceNum(pyFamily.getReferenceNum());
-						serverFamilyDB.decrementReferenceNumber();
+					//added family not in current year, check if in prior years
+					//only check new families for prior year existence. If a re-referral,
+					//we already know the reference id was from prior year
+					ONCFamily pyFamily = null;
+					if(bNewFamily)	
+					{
+						pyFamily = serverFamilyDB.isPriorYearFamily(year, addedFamily, addedChildList);
+						if(pyFamily != null)
+						{				
+							//added new family was in prior year, keep the prior year reference # 
+							//and reset the newly assigned target id index
+							addedFamily.setReferenceNum(pyFamily.getReferenceNum());
+							serverFamilyDB.decrementReferenceNumber();
+						}
 					}
 				}
-			}
-			//else if family was a dup, determine which family has the best reference number to
-			//use. The family with the best reference number is retained and the family with 
-			//the worst reference number is marked as duplicate
-			else if(!dupFamily.getReferenceNum().startsWith("C") && 
+				//else if family was a dup, determine which family has the best reference number to
+				//use. The family with the best reference number is retained and the family with 
+				//the worst reference number is marked as duplicate
+				else if(!dupFamily.getReferenceNum().startsWith("C") && 
 						addedFamily.getReferenceNum().startsWith("C"))
-			{
-//				System.out.println(String.format("HttpHandler.processFamilyReferral, dupFamily no C: "
-//						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
-//						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
-//						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
-				
-				//family is in current year already with an ODB referred target ID
-				addedFamily.setONCNum("DEL");
-				addedFamily.setDNSCode("DUP");
-				addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
-				addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
-				addedFamily.setReferenceNum(dupFamily.getReferenceNum());
-				serverFamilyDB.decrementReferenceNumber();
-			}	
-			else if(dupFamily.getReferenceNum().startsWith("C") && 
-					!addedFamily.getReferenceNum().startsWith("C"))
-			{
-//				System.out.println(String.format("HttpHandler.processFamilyReferral: dupFamily with C "
-//						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
-//						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
-//						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
-				
-				//family is already in current year with an ONC referred target ID and added family 
-				//does not have an ONC target id. In this situation, we can't decrement the assigned
-				//ONC based target id and will just have to burn one.
-				dupFamily.setONCNum("DEL");
-				dupFamily.setDNSCode("DUP");
-				dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
-				dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
-				dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
-				dupFamily.setReferenceNum(addedFamily.getReferenceNum());
-			}
-			else if(dupFamily.getReferenceNum().startsWith("C") && 
-					addedFamily.getReferenceNum().startsWith("C"))
-			{
-				//which one was first?
-				int dupNumber = Integer.parseInt(dupFamily.getReferenceNum().substring(1));
-				int addedNumber = Integer.parseInt(addedFamily.getReferenceNum().substring(1));
-				
-				if(dupNumber < addedNumber)
 				{
-					//dup family has the correct ref #, so added family is duplicate
+//					System.out.println(String.format("HttpHandler.processFamilyReferral, dupFamily no C: "
+//						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
+//						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+				
+					//family is in current year already with an ODB referred target ID
 					addedFamily.setONCNum("DEL");
 					addedFamily.setDNSCode("DUP");
 					addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
-					addedFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
 					addedFamily.setReferenceNum(dupFamily.getReferenceNum());
 					serverFamilyDB.decrementReferenceNumber();
-				}
-				else
+				}	
+				else if(dupFamily.getReferenceNum().startsWith("C") && 
+					!addedFamily.getReferenceNum().startsWith("C"))
 				{
-					//added family has the correct ref #, so dup family is the duplicate
+//					System.out.println(String.format("HttpHandler.processFamilyReferral: dupFamily with C "
+//						+ "dupFamily HOHLastName= %s, dupRef#= %s, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
+//						dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
+//						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
+				
+					//family is already in current year with an ONC referred target ID and added family 
+					//does not have an ONC target id. In this situation, we can't decrement the assigned
+					//ONC based target id and will just have to burn one.
 					dupFamily.setONCNum("DEL");
 					dupFamily.setDNSCode("DUP");
 					dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
@@ -476,86 +455,143 @@ public class FamilyHandler extends ONCWebpageHandler
 					dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
 					dupFamily.setReferenceNum(addedFamily.getReferenceNum());
 				}
-			}
-			
-			//create the other adults in the family
-			String adultName;
-			AdultGender adultGender;
-			int an = 0;
-			key = "adultname0";
-			
-			//using adult name as the iterator, create a db entry for each
-			//adult in the family
-			while(params.containsKey(key))
-			{
-				adultName = params.get(key) != null ? (String) params.get(key) : "";
-				adultGender = params.get("adultgender" + Integer.toString(an)) != null ?
-					AdultGender.valueOf((String) params.get("adultgender" + Integer.toString(an))) : AdultGender.Unknown;
-				
-				if(!adultName.isEmpty())
+				else if(dupFamily.getReferenceNum().startsWith("C") && 
+					addedFamily.getReferenceNum().startsWith("C"))
 				{
-					ONCAdult adult = new ONCAdult(-1, addedFamily.getID(), adultName, adultGender); 
+					//which one was first?
+					int dupNumber = Integer.parseInt(dupFamily.getReferenceNum().substring(1));
+					int addedNumber = Integer.parseInt(addedFamily.getReferenceNum().substring(1));
 				
-					addedAdultList.add(adultDB.add(year, adult));
+					if(dupNumber < addedNumber)
+					{
+						//dup family has the correct ref #, so added family is duplicate
+						addedFamily.setONCNum("DEL");
+						addedFamily.setDNSCode("DUP");
+						addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
+						addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
+						addedFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
+						addedFamily.setReferenceNum(dupFamily.getReferenceNum());
+						serverFamilyDB.decrementReferenceNumber();
+					}
+					else
+					{
+						//added family has the correct ref #, so dup family is the duplicate
+						dupFamily.setONCNum("DEL");
+						dupFamily.setDNSCode("DUP");
+						dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
+						dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
+						dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
+						dupFamily.setReferenceNum(addedFamily.getReferenceNum());
+					}
 				}
-				key = "adultname" + Integer.toString(++an);	//get next adult key
-			}
-		
-			//successfully process meals, family, history, children and adults. Notify the desktop
-			//clients so they refresh
-			Gson gson = new Gson();
-
-			List<String> mssgList = new ArrayList<String>();
-			mssgList.add("ADDED_FAMILY" + gson.toJson(addedFamily, ONCFamily.class));
-			for(ONCChild addedChild:addedChildList)
-				mssgList.add("ADDED_CHILD" + gson.toJson(addedChild, ONCChild.class));
-				
-			for(ONCAdult addedAdult:addedAdultList)
-				mssgList.add("ADDED_ADULT" + gson.toJson(addedAdult, ONCAdult.class));
-		
-			if(addedFamHistory != null)
-				mssgList.add("ADDED_DELIVERY" + gson.toJson(addedFamHistory, ONCFamilyHistory.class));
-				
-			if(addedMeal != null)
-				mssgList.add("ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class));
-				
-			clientMgr.notifyAllInYearClients(year, mssgList);
 			
-			String mssg, successMssg, title;
-			if(!bWaitlistFamily)
-			{
-				mssg = String.format("%s Family Referral Accepted, ONC# %s",
+				//create the other adults in the family
+				String adultName;
+				AdultGender adultGender;
+				int an = 0;
+				key = "adultname0";
+			
+				//using adult name as the iterator, create a db entry for each
+				//adult in the family
+				while(params.containsKey(key))
+				{
+					adultName = params.get(key) != null ? (String) params.get(key) : "";
+					adultGender = params.get("adultgender" + Integer.toString(an)) != null ?
+							AdultGender.valueOf((String) params.get("adultgender" + Integer.toString(an))) : AdultGender.Unknown;
+				
+						if(!adultName.isEmpty())
+						{
+							ONCAdult adult = new ONCAdult(-1, addedFamily.getID(), adultName, adultGender); 
+							addedAdultList.add(adultDB.add(year, adult));
+						}
+						key = "adultname" + Integer.toString(++an);	//get next adult key
+					}
+		
+				//successfully process meals, family, history, children and adults. Notify the desktop
+				//clients so they refresh
+				Gson gson = new Gson();
+
+				List<String> mssgList = new ArrayList<String>();
+				mssgList.add("ADDED_FAMILY" + gson.toJson(addedFamily, ONCFamily.class));
+				for(ONCChild addedChild:addedChildList)
+					mssgList.add("ADDED_CHILD" + gson.toJson(addedChild, ONCChild.class));
+				
+				for(ONCAdult addedAdult:addedAdultList)
+					mssgList.add("ADDED_ADULT" + gson.toJson(addedAdult, ONCAdult.class));
+		
+				if(addedFamHistory != null)
+					mssgList.add("ADDED_DELIVERY" + gson.toJson(addedFamHistory, ONCFamilyHistory.class));
+				
+				if(addedMeal != null)
+					mssgList.add("ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class));
+				
+				clientMgr.notifyAllInYearClients(year, mssgList);
+			
+				String mssg, successMssg, title;
+				if(!bWaitlistFamily)
+				{
+					mssg = String.format("%s Family Referral Accepted, ONC# %s",
 						addedFamily.getLastName(), addedFamily.getONCNum());
 				
-				successMssg = mssg;
-				title = "Referral Received";
-			}
-			else
-			{
-				mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
+					successMssg = mssg;
+					title = "Referral Received";
+				}
+				else
+				{
+					mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
 						addedFamily.getLastName(), addedFamily.getONCNum());
 				
-				successMssg = String.format("%s Family Referral received and is on our Waitlist, ONC# %s. "
+					successMssg = String.format("%s Family Referral received and is on our Waitlist, ONC# %s. "
 					+ "Once Family Status is marked \"Verified\" please notify the family that gift pickup will "
 					+ "take place on 12/22 from 10am-noon at the Centreville Regional Library. Photo ID "
 					+ "matching HOH required. This is for wait list GIFTS only. Please contact WFCM for "
 					+ "post-deadline food requests.",
 					addedFamily.getLastName(), addedFamily.getONCNum());
 				
+					title = "Waitlist Referral Received";
+				}
+
+				return new ResponseCode(mssg, successMssg, title, addedFamily.getONCNum());
+			}
+			else
+				return new ResponseCode("Family Referral Failure: Unable to Process Referral");
+		}
+		else
+		{
+			//family was the last one received, no processing occurred
+			String mssg, successMssg, title;
+			if(!bWaitlistFamily)
+			{
+				mssg = String.format("%s Family Referral Accepted, ONC# %s",
+					lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum());
+			
+				successMssg = mssg;
+				title = "Referral Received";
+			}
+			else
+			{
+				mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
+						lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum());
+			
+				successMssg = String.format("%s Family Referral received and is on our Waitlist, ONC# %s. "
+				+ "Once Family Status is marked \"Verified\" please notify the family that gift pickup will "
+				+ "take place on 12/22 from 10am-noon at the Centreville Regional Library. Photo ID "
+				+ "matching HOH required. This is for wait list GIFTS only. Please contact WFCM for "
+				+ "post-deadline food requests.",
+				lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum());
+			
 				title = "Waitlist Referral Received";
 			}
 
-			return new ResponseCode(mssg, successMssg, title, addedFamily.getONCNum());
+			return new ResponseCode(mssg, successMssg, title, lastFamilyAdded.getONCNum());
 		}
-		else
-			return new ResponseCode("Family Referral Failure: Unable to Process Referral");
 	}
 	
 	boolean wasThisFamilyAlreadyAddedWithinASecond(WebClient wc, Map<String,String> familyMap)
 	{
 		return lastFamilyAdded != null &&
-				familyMap.get("hohFN").equals(lastFamilyAdded.getFirstName()) &&
-				familyMap.get("hohLN").equals(lastFamilyAdded.getLastName()) &&
+				familyMap.get("hohfn").equals(lastFamilyAdded.getFirstName()) &&
+				familyMap.get("hohln").equals(lastFamilyAdded.getLastName()) &&
 				wc.getWebUser().getID() == lastFamilyAdded.getAgentID() &&
 				familyMap.get("housenum").equals(lastFamilyAdded.getHouseNum()) &&
 				ensureUpperCaseStreetName(familyMap.get("street")).equals(lastFamilyAdded.getStreet()) &&
@@ -652,7 +688,7 @@ public class FamilyHandler extends ONCWebpageHandler
 			ONCFamily updateFam  = new ONCFamily(editedFam);
 		
 			//family was found, continue processing to see if any data was changed
-			String[] familyKeys = {"targetid", "language", "hohFN", "hohLN", "housenum", "street", "unit", "city",
+			String[] familyKeys = {"targetid", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
 								"zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
 								"delstreet","detail", "delunit", "delcity", "delzipcode"};
 			
@@ -662,8 +698,8 @@ public class FamilyHandler extends ONCWebpageHandler
 			int cc = 0;
 			
 			if(!updateFam.getLanguage().equals(familyMap.get("language"))) { updateFam.setLanguage(familyMap.get("language")); cc = cc | 1;}
-			if(!updateFam.getFirstName().equals(familyMap.get("hohFN"))) {updateFam.setHOHFirstName(familyMap.get("hohFN")); cc = cc | 2;}
-			if(!updateFam.getLastName().equals(familyMap.get("hohLN"))) {updateFam.setHOHFirstName(familyMap.get("hohLN")); cc = cc | 4;} 
+			if(!updateFam.getFirstName().equals(familyMap.get("hohfn"))) {updateFam.setHOHFirstName(familyMap.get("hohfn")); cc = cc | 2;}
+			if(!updateFam.getLastName().equals(familyMap.get("hohln"))) {updateFam.setHOHFirstName(familyMap.get("hohln")); cc = cc | 4;} 
 			if(!updateFam.getHouseNum().equals(familyMap.get("housenum"))) {updateFam.setHouseNum(familyMap.get("housenum")); cc = cc | 8;}
 			if(!updateFam.getStreet().equals(streetname)) {updateFam.setStreet(streetname); cc = cc | 16;}
 			if(!updateFam.getUnit().equals(familyMap.get("unit"))) {updateFam.setUnitNum(familyMap.get("unit")); cc = cc | 32;}

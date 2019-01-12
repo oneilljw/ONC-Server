@@ -22,11 +22,12 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerGlobalVariableDB extends ServerSeasonalDB
 {
-	private static final int GV_HEADER_LENGTH = 11;
+	private static final int GV_HEADER_LENGTH = 12;
 	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	private static final int DEFAULT_GIFT = -1;
 	private static final int DEFAULT_GIFTCARD_ID = -1;
+	private static final int DEFAULT_DELIVERY_ACTIVITY_ID = -1;
 	
 	private static ServerGlobalVariableDB instance = null;
 	private static List<GlobalVariableDBYear> globalDB;
@@ -157,18 +158,32 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     					seasonStart.set(Calendar.MILLISECOND, 0);
     					
     					//Read first line, it's the gv's
+//    					gvs = new ServerGVs(
+// 							nextLine[0].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[0]),
+//    						nextLine[1].isEmpty() ? seasonStart.getTimeInMillis() : Long.parseLong(nextLine[1]),
+//    						nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
+//    						nextLine[3].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[3]),
+//    						nextLine[4].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[4]),
+//    						nextLine[5].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[5]),
+//    						nextLine[6].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[6]),
+//    						nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]),
+//    						nextLine[8].isEmpty() ? DEFAULT_GIFTCARD_ID : Integer.parseInt(nextLine[8]),
+//    						nextLine[9].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[9]),
+//    						nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[10]));
+    					
     					gvs = new ServerGVs(
-    							nextLine[0].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[0]),
-    							nextLine[1].isEmpty() ? seasonStart.getTimeInMillis() : Long.parseLong(nextLine[1]),
+    							nextLine[0].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[0]),
+    							nextLine[1].isEmpty() ? seasonStart.getTimeInMillis() : parseSciNotationToLong(nextLine[1]),
     							nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
-    							nextLine[3].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[3]),
-    							nextLine[4].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[4]),
-    							nextLine[5].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[5]),
-    							nextLine[6].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[6]),
+    							nextLine[3].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[3]),
+    							nextLine[4].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[4]),
+    							nextLine[5].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[5]),
+    							nextLine[6].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[6]),
     							nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]),
     							nextLine[8].isEmpty() ? DEFAULT_GIFTCARD_ID : Integer.parseInt(nextLine[8]),
-    							nextLine[9].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[9]),
-    							nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[10]));
+    							nextLine[9].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[9]),
+    							nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[10]),
+    							nextLine[11].isEmpty() ? DEFAULT_DELIVERY_ACTIVITY_ID : Integer.parseInt(nextLine[11]));
     				
     				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
@@ -297,7 +312,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 													decemberGiftDeadline.getTime(),
 													familyEditDeadline.getTime(), -1, -1,
 													decemberMealDeadline.getTime(),
-													waitlistGiftDeadline.getTime());
+													waitlistGiftDeadline.getTime(), -1);
 		
 		GlobalVariableDBYear newGVDBYear = new GlobalVariableDBYear(newYear, newYearServerGVs);
 		globalDB.add(newGVDBYear);
@@ -316,7 +331,8 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	{
 		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Deadline",
 							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Default Gift",
-							"Defalut Gift Card", "December Meal Deadline", "WaitList Gift Deadline"};
+							"Defalut Gift Card", "December Meal Deadline", "WaitList Gift Deadline",
+							"Del Act ID"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_YEAR);
 		if(gvDBYear.isUnsaved())

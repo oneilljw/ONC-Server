@@ -1,6 +1,7 @@
 package oncserver;
 
-import java.util.Date;
+import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import ourneighborschild.ONCServerUser;
@@ -17,7 +18,7 @@ public class WebClient
 	{
 		this.state = ClientState.Connected;
 		this.sessionID = sessionID;
-		this.loginTimestamp = new Date().getTime();
+		this.loginTimestamp = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
 		this.lastTimestamp = loginTimestamp;
 		this.webUser = webUser;
 	}
@@ -31,5 +32,5 @@ public class WebClient
 	
 	//setters
 	void setClientState(ClientState state) {this.state = state; }
-	void updateTimestamp() {this.lastTimestamp = new Date().getTime(); }
+	void updateTimestamp() {this.lastTimestamp = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis(); }
 }
