@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -433,22 +434,25 @@ public class ServerUserDB extends ServerPermanentDB
 		return gson.toJson(agentList, listtype);
 	}
 	
-	List<Integer> getUserIDsInGroup(int groupID)
+	List<ONCServerUser> getUsersInGroup(int groupID, EnumSet<UserStatus> usEnumSet)
 	{
-		List<Integer> agentIDList = new ArrayList<Integer>();
+		List<ONCServerUser> groupMemberList = new ArrayList<ONCServerUser>();
 		for(ONCServerUser su : userAL)
 		{
-			List<Integer> groupList = su.getGroupList();
+			if(usEnumSet.contains(su.getStatus()))
+			{		
+				List<Integer> groupList = su.getGroupList();
 			
-			int index = 0;
-			while(index < groupList.size() && groupList.get(index) != groupID)
-				index++;
+				int index = 0;
+				while(index < groupList.size() && groupList.get(index) != groupID)
+					index++;
 			
-			if(index < groupList.size())
-				agentIDList.add(su.getID());	
+				if(index < groupList.size())
+					groupMemberList.add(su);
+			}
 		}
 		
-		return agentIDList;
+		return groupMemberList;
 	}
 	
 	/***

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,13 +19,15 @@ import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.UserPermission;
+import ourneighborschild.UserStatus;
 
 public class ServerGroupDB extends ServerPermanentDB 
 {
 	private static final String GROUP_DB_FILENAME = "GroupDB.csv";
-	private static final int GROUP_RECORD_LENGTH = 11;
+	private static final int GROUP_RECORD_LENGTH = 12;
 	
 	private static ServerGroupDB instance = null;
+	private static ServerUserDB userDB;
 	
 	private static List<ONCGroup> groupList;
 	
@@ -34,6 +37,8 @@ public class ServerGroupDB extends ServerPermanentDB
 		importDB(String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), GROUP_DB_FILENAME), "Group DB", GROUP_RECORD_LENGTH);
 		nextID = getNextID(groupList);
 		bSaveRequired = false;
+		
+		userDB = ServerUserDB.getInstance();
 	}
 	
 	public static ServerGroupDB getInstance() throws FileNotFoundException, IOException
@@ -55,7 +60,7 @@ public class ServerGroupDB extends ServerPermanentDB
 	}
 	
 	/********
-	 * returns a json list of non-Volunteer groups based on the users permission
+	 * returns a json list of active, non-Volunteer groups based on the users permission
 	 * @param loggedInUser
 	 * @param agentID
 	 * @param callbackFunction
@@ -70,9 +75,9 @@ public class ServerGroupDB extends ServerPermanentDB
 		
 		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
 		{
-			//admin or sys admin users return all non-volunteer groups
+			//admin or sys admin users return all groups that have at least one member
 			for(ONCGroup g : groupList)
-				if(g.getType().compareTo(GroupType.Volunteer) < 0)
+				if(g.memberRefer() && userDB.getUsersInGroup(g.getID(), EnumSet.allOf(UserStatus.class)).size() > 0)
 					returnList.add(g);
 			
 			Collections.sort(returnList, new ONCGroupNameComparator());
@@ -81,47 +86,32 @@ public class ServerGroupDB extends ServerPermanentDB
 			if(bDefault)
 			{
 				ONCGroup allGroup = new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
-									loggedInUser.getLNFI(), "Any", GroupType.Community, 1, false, false);
+									loggedInUser.getLNFI(), "Any", GroupType.Community, false, false, false, false);
 				returnList.add(0, allGroup);
 			}
 		}
 		else //user with permission AGENT logged in
 		{	
-//			if(agentID < 0 || loggedInUser.getID() == agentID)
-//			{
-				for(Integer groupID : loggedInUser.getGroupList())
-				{
-					int index = 0;
-					while(index < groupList.size() && groupList.get(index).getID() != groupID)
-						index++;
+			for(Integer groupID : loggedInUser.getGroupList())
+			{
+				int index = 0;
+				while(index < groupList.size() && groupList.get(index).getID() != groupID)
+					index++;
 				
-					if(index < groupList.size())
-						returnList.add(groupList.get(index));
-				}
+				if(index < groupList.size())
+					returnList.add(groupList.get(index));
+			}
 				
-				Collections.sort(returnList, new ONCGroupNameComparator());
+			Collections.sort(returnList, new ONCGroupNameComparator());
 				
-				if(returnList.isEmpty())
-					returnList.add(0, new ONCGroup(-2, new Date(), loggedInUser.getLNFI(), 3, "", 
-									loggedInUser.getLNFI(), "None", GroupType.Community, 1, false, false));
-				else if(bDefault && returnList.size() > 1)
-					returnList.add(0, new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
-									loggedInUser.getLNFI(), "Any", GroupType.Community, 1, false, false));
+			if(returnList.isEmpty())
+				returnList.add(0, new ONCGroup(-2, new Date(), loggedInUser.getLNFI(), 3, "", 
+								loggedInUser.getLNFI(), "None", GroupType.Community, true, false, false, false));
+			else if(bDefault && returnList.size() > 1)
+				returnList.add(0, new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
+								loggedInUser.getLNFI(), "Any", GroupType.Community, true, false, false, false));
 				
-				Collections.sort(returnList, new ONCGroupNameComparator());
-//			}
-//			else
-//			{
-//				//return a group list that is the intersection of the logged in agents groups and the
-//				//selected agents groups
-//				ONCServerUser selectedAgent = ServerUserDB.getServerUser(agentID);
-//				for(Integer groupID : loggedInUser.getGroupList())
-//					for(Integer selAgentGroupID :selectedAgent.getGroupList())
-//						if(selAgentGroupID == groupID)
-//							returnList.add(groupList.get(groupID));
-//							
-//				Collections.sort(returnList, new ONCGroupNameComparator());
-//			}
+			Collections.sort(returnList, new ONCGroupNameComparator());
 		}
 		
 		String response = gson.toJson(returnList, listtype);
@@ -152,12 +142,12 @@ public class ServerGroupDB extends ServerPermanentDB
 		
 		//add an artificial "Self" group to the top of the list
 		returnList.add(0, new ONCGroup(-2, new Date(), "", 3, "", 
-				"", "Self", GroupType.Volunteer, 1, true, true));
+				"", "Self", GroupType.Volunteer, true, true, true, true));
 		
 		//add an artificial "Other" group to the bottom of the list. ID = -3 tells the web page
 		//to display a text field requiring the user to specify the actual group their with
 		returnList.add(new ONCGroup(-3, new Date(), "", 3, "", 
-				"", "Other", GroupType.Volunteer, 1, true, true));
+				"", "Other", GroupType.Volunteer, true, true, true, true));
 		
 		String response = gson.toJson(returnList, listtype);
 		
@@ -178,12 +168,12 @@ public class ServerGroupDB extends ServerPermanentDB
 		
 		//add an artificial "Self" group to the top of the list
 		preprocessGroupList.add(0, new ONCGroup(-2, new Date(), "", 3, "", 
-				"", "Self", GroupType.Volunteer, 1, true, true));
+				"", "Self", GroupType.Volunteer, true, true, true, true));
 		
 		//add an artificial "Other" group to the bottom of the list. ID = -3 tells the web page
 		//to display a text field requiring the user to specify the actual group their with
 		preprocessGroupList.add(new ONCGroup(-3, new Date(), "", 3, "", 
-				"", "Other", GroupType.Volunteer, 1, true, true));
+				"", "Other", GroupType.Volunteer, true, true, true, true));
 		
 		StringBuffer buff = new StringBuffer();
 		
@@ -276,7 +266,8 @@ public class ServerGroupDB extends ServerPermanentDB
 	String[] getExportHeader()
 	{
 		return new String[] {"ID", "Date Changed", "Changed By", "SL Position", "SL Message", 
-							 "SL Changed By","Name", "Type", "Permission", "Website?", "Contact Info?"};
+							 "SL Changed By","Name", "Type", "Sharing?", "Website?", "Contact Info?",
+							 "Members Refer?"};
 	}
 
 	@Override

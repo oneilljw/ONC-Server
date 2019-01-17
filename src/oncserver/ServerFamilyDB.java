@@ -219,7 +219,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//if logged in user is a member of the requested group and the group is sharing, 
 			//return all families referred in the group
 			ONCGroup group = ServerGroupDB.getGroup(reqGroupID);
-			if(loggedInUser.isInGroup(reqGroupID) && group.getPermission() == ONCGroup.SHARING)
+			if(loggedInUser.isInGroup(reqGroupID) && group.groupSharesInfo())
 			{
 				for(ONCFamily f : searchList)
 					if(f.getGroupID() == reqGroupID)
@@ -253,7 +253,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 						responseList.add(new ONCWebsiteFamily(f));
 			}
 			else if(reqAgentID != loggedInUser.getID() && reqAgent.isInGroup(reqGroupID) && 
-					reqGroup.getPermission() == ONCGroup.SHARING)
+					reqGroup.groupSharesInfo())
 			{	
 				for(ONCFamily f : searchList)
 					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
@@ -352,7 +352,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
 		}
 		else if(loggedInAgent.getPermission() == UserPermission.Agent && groupID > -1 &&
-				ServerGroupDB.getGroup(groupID).getPermission() == ONCGroup.SHARING)
+				ServerGroupDB.getGroup(groupID).groupSharesInfo())
 		{
 			//Agent user, specific group selected and group is sharing
 			for(ONCFamily f : searchList)
