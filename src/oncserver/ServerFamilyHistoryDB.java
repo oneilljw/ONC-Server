@@ -18,7 +18,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerFamilyHistoryDB extends ServerSeasonalDB
 {
-	private static final int FAMILY_HISTORY_DB_HEADER_LENGTH = 8;
+	private static final int FAMILY_HISTORY_DB_HEADER_LENGTH = 9;
 
 	private static List<FamilyHistoryDBYear> famHistDB;
 	private static ServerFamilyHistoryDB instance = null;
@@ -380,7 +380,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"History ID", "Family ID", "Family Status", "Gift Status", "Del By", 
-	 			"Notes", "Changed By", "Time Stamp"};
+	 			"Notes", "Changed By", "Time Stamp", "DNS Code"};
 		
 		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_YEAR);
 		if(histDBYear.isUnsaved())

@@ -357,7 +357,8 @@ public class FamilyHandler extends ONCWebpageHandler
 															addedFamily.getGiftStatus(),
 															"", "Family Referred", 
 															addedFamily.getChangedBy(), 
-															Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+															Calendar.getInstance(TimeZone.getTimeZone("UTC")),
+															addedFamily.getDNSCode());
 		
 				ONCFamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, false);
 				if(addedFamHistory != null)

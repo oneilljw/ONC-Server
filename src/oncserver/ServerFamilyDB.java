@@ -627,12 +627,15 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getSchoolCode()));
 			}
 			
-			//check to see if either status is changing, if so, add a history item
+			//check to see if either status or DNS code is changing, if so, add a history item
 			if(currFam != null && 
-				(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || currFam.getGiftStatus() != updatedFamily.getGiftStatus()))
+				(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
+				 currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
+				 currFam.getDNSCode() != updatedFamily.getDNSCode()))
 			{
 				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-						updatedFamily.getGiftStatus(), "", "Status Changed", updatedFamily.getChangedBy(), true);
+						updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(), "Status Changed", updatedFamily.getChangedBy(), true);
+				
 				updatedFamily.setDeliveryID(histItem.getID());
 			}
 			
@@ -682,7 +685,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			if(currFam != null) 
 			{
 				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-								updatedFamily.getGiftStatus(), "", updateNote, wc.getWebUser().getLNFI(), true);
+								updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(), updateNote, wc.getWebUser().getLNFI(), true);
 				updatedFamily.setDeliveryID(histItem.getID());
 			}
 			
@@ -723,10 +726,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//check to see if the reference number is provided, if not, generate one
 			if(addedFam.getReferenceNum().equals("NNA"))
 				addedFam.setReferenceNum(generateReferenceNumber());
-			
-			//check to see if family is already in the data base, if so, mark it as
-			//a duplicate family. 
-			
 			
 			//set region and school code for family
 			updateRegionAndSchoolCode(addedFam);
@@ -790,7 +789,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 																addedFam.getGiftStatus(),
 																"", "Family Referred thru Britepaths", 
 																addedFam.getChangedBy(), 
-																Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+																Calendar.getInstance(TimeZone.getTimeZone("UTC")),
+																addedFam.getDNSCode());
 			
 				ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, famHistory, false);
 				if(addedFamHistory != null)
@@ -1106,7 +1106,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    			//create a family history change
 	    			fam.setGiftStatus(newGiftStatus);
 	    			ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
-						"", "Gift Status Change", fam.getChangedBy(), true);
+						"", fam.getDNSCode(), "Gift Status Change", fam.getChangedBy(), true);
 	    			fam.setDeliveryID(addedHistItem.getID());
 	    		}
 	    	
@@ -1122,10 +1122,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	}
 	
 	ONCFamilyHistory addHistoryItem(int year, int famID, FamilyStatus fs, FamilyGiftStatus fgs, String driverID,
-						String reason, String changedBy, boolean bNotify)
+						String dnsCode, String reason, String changedBy, boolean bNotify)
 	{
 		ONCFamilyHistory reqFamHistObj = new ONCFamilyHistory(-1, famID, fs, fgs, driverID, reason,
-				 changedBy, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				 changedBy, Calendar.getInstance(TimeZone.getTimeZone("UTC")), dnsCode);
 		
 		ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, reqFamHistObj, bNotify);
 		
