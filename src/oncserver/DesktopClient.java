@@ -986,6 +986,7 @@ public class DesktopClient extends Thread
     
     void closeClientSocket()
     {
+/*    	
     		try 
     		{
     			socket.close();
@@ -994,6 +995,45 @@ public class DesktopClient extends Thread
     		{
     			String logMssg = String.format("Client %d: Close Socket IOException: %s", id, e.getMessage());
     			clientMgr.addLogMessage(logMssg);
+    		}
+*/    		
+    		try 
+    		{
+    			clientMgr.addLogMessage(String.format("Client %d: Closing Socket", id));
+    		}
+    		finally 
+    		{
+    		    try
+    		    {
+    		    		output.close();
+    		    }
+    		    finally 
+    		    {
+    		    		try 
+    		    		{
+    		    			try
+					{
+						input.close();
+					}
+					catch (IOException e)
+					{
+						String logMssg = String.format("Client %d: Close Input IOException: %s", id, e.getMessage());
+		    				clientMgr.addLogMessage(logMssg);
+					}
+    		    		}
+    		    		finally
+    		    		{
+    		    			try
+					{
+						socket.close();
+					}
+					catch (IOException e)
+					{
+						String logMssg = String.format("Client %d: Close Socket IOException: %s", id, e.getMessage());
+		    				clientMgr.addLogMessage(logMssg);
+					}
+    		    		}
+    		    }
     		}
     	}
     

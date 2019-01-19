@@ -15,6 +15,7 @@ import ourneighborschild.ONCEmail;
 import ourneighborschild.ONCEmailAttachment;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.ServerCredentials;
+import ourneighborschild.ServerGVs;
 import ourneighborschild.SignUpActivity;
 import ourneighborschild.VolAct;
 import ourneighborschild.Activity;
@@ -35,6 +36,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	private static ServerWarehouseDB warehouseDB;
 	private static ServerActivityDB activityDB;
 	private static ServerVolunteerActivityDB volActDB;
+	private static ServerGlobalVariableDB sGVDB;
 //	private static SignUpGeniusIF geniusIF;
 
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
@@ -49,6 +51,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		warehouseDB = ServerWarehouseDB.getInstance();
 		activityDB = ServerActivityDB.getInstance();
 		volActDB = ServerVolunteerActivityDB.getInstance();
+		sGVDB = ServerGlobalVariableDB.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
@@ -499,10 +502,44 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		{
 			dAL.set(index, updatedDriver);
 			volunteerDBYear.setChanged(true);
+			
+			//if a driver number is present, check to see if the driver volunteer has
+			//the activity for delivery. If they don't add it. First step is to find the
+			//delivery activity, it it exists. If it does, proceed to check to see if
+			//if the volunteer has a VolunterActivity for delivery. If they don't, add it.
+			if(!updatedDriver.getDrvNum().isEmpty() && isNumeric(updatedDriver.getDrvNum()))
+			{
+				int deliveryActivityID = sGVDB.getDeliveryActivityID(year);
+				if(deliveryActivityID > -1)
+				{
+					Activity deliveryActivity = activityDB.findActivity(year, deliveryActivityID);
+					if(deliveryActivity != null)
+					{
+						String addedVolActResult = checkForActivityAndAddIfMissing(year, updatedDriver, deliveryActivity);
+						if(addedVolActResult.startsWith("ADDED_VOLUNTEER_ACTIVITY"))
+							clientMgr.notifyAllInYearClients(year, addedVolActResult);
+					}
+				}
+			}
+			
 			return "UPDATED_DRIVER" + gson.toJson(updatedDriver, ONCVolunteer.class);
 		}
 		else
 			return "UPDATE_FAILED";
+	}
+	
+	String checkForActivityAndAddIfMissing(int year, ONCVolunteer v, Activity a)
+	{
+		String result = null;
+		List<VolAct> volActList = volActDB.getVolunteerActivities(year, v);
+		int index = 0;
+		while(index < volActList.size() && volActList.get(index).getActID() != a.getID())
+			index++;
+		
+		if(index == volActList.size())	//activity wasn't found, add it.
+			result = volActDB.add(year,new VolAct(-1, v.getID(), a.getID(), a.getGeniusID(), 1, ""));
+		
+		return result;
 	}
 	
 	ONCVolunteer update(int year, ONCVolunteer updatedVolunteer)
