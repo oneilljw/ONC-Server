@@ -1,7 +1,7 @@
  <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>ONC Family Referral</title>
+  <title>ONC Family Referral Status</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
@@ -63,7 +63,7 @@
     		var dbyearsparams = "callback=?";
     		$.getJSON('dbStatus', dbyearsparams, function(data)
     		{	
-			sessionStorage.setItem("curryear", data[data.length-1].id);
+			sessionStorage.setItem('curryear', data[data.length-1].id);
 			sessionStorage.setItem('prioryear', data[data.length-1].id - 1);
     		
     			document.getElementById('curragtenslbl').innerHTML = data[data.length-1].id.toString() + ' Families Referred By:';
@@ -445,12 +445,12 @@
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
       					  fstatus, dstatus, mealstatus];
         
-        var cellwidth = ['54px', '170px', '170px', '86px', '136px', '136px', '136px', '54px'];
+        var cellwidth = ['54px', '170px', '170px', '56px', '136px', '136px', '136px', '54px'];
         
 	    var tabBody = table.getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
          
-        for(index=0; index < familyinfo.length; index++)	//create the family info cells
+        for(index=0; index < 3; index++)	//create the first 3 family info cells
         {
         		cell = document.createElement("td");
         		cell.appendChild(document.createTextNode(familyinfo[index]));
@@ -458,11 +458,38 @@
         		row.appendChild(cell);
         }
         
+        //create a dns button, if necessary
+        if(family.DNSCode.length !== 0)
+        {	
+        		var dnsbtn = document.createElement("button");
+        		dnsbtn.innerHTML = family.DNSCode;
+        		dnsbtn.style.width = cellwidth[index];
+        		dnsbtn.classList.add("noteButton");
+	        	dnsbtn.onclick=function() {familyNotes(table, family.id);};
+        		row.appendChild(dnsbtn);
+    		}
+        else
+        	{
+        		var dnscell = document.createElement("td");
+    			dnscell.appendChild(document.createTextNode(""));
+    			dnscell.style.width = cellwidth[index];
+    			row.appendChild(dnscell)
+        	}
+        	
+        //create the last three family info cells
+        for(index=4; index < familyinfo.length; index++)	//create the first 3 family info cells
+        {
+        		cell = document.createElement("td");
+        		cell.appendChild(document.createTextNode(familyinfo[index]));
+        		cell.style.width = cellwidth[index];
+        		row.appendChild(cell);
+        }
+        
+        //add the refer or edit button
         btn = document.createElement("button");
         btn.innerHTML = buttontext;
         btn.style.width = cellwidth[index];
         btn.onclick=function() {familyAction(table, family.targetID);};
-        
 		setButtonStatus(family, table, btn);
         row.appendChild(btn);
         
@@ -501,6 +528,23 @@
 			post('referral', params);
 		else
 			post('familyupdate', params);
+    }
+    
+    function familyNotes(table, famID)
+    {
+		var year;
+		if(table=== document.getElementById('pyTable'))
+			year = sessionStorage.getItem('prioryear');
+		else
+			year =  sessionStorage.getItem('curryear');
+		
+		var noteparams = "year=" + year + "&famid=" + famID + "&callback=?";
+		$.getJSON('familynotes', noteparams, function(data)
+		{	
+			document.getElementById("notesfamheader").textContent = data.title;
+			document.getElementById("notesfammssg").textContent = data.agentNote;
+			window.location=document.getElementById('notesanchor').href;
+		});
     }
     
     function newFamily()
@@ -681,7 +725,7 @@
 	}
     </script>
     <style type="text/css">         
-    	.constrainer 
+    		.constrainer 
         {
          	width: 90%;
 			margin-left: auto;
@@ -700,7 +744,7 @@
 
         .onccol { width: 54px; }
         .namecol { width: 170px; }
-        .dnscol { width: 86px; }
+        .dnscol { width: 56px; }
         .statcol { width: 136px; }
         
         /* only styling below here */
@@ -770,7 +814,7 @@
 		dt:before
 		{
 			content: '\A';
-    		white-space: pre;
+    			white-space: pre;
 		}
 		dd
 		{
@@ -779,6 +823,7 @@
     </style>  
 </head>
 <body>
+  <a href="#notesdlg" id="notesanchor" style="visibility: hidden">Notes</a>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <a href="#successdlg" id="successanchor" style="visibility: hidden">Success</a>
@@ -833,7 +878,7 @@
        	<th class='onccol'>ONC #</th>
        	<th class='namecol'>First Name</th>
        	<th class='namecol'>Last Name</th>
-       	<th class='dnscol'>DNS Code</th>
+       	<th class='dnscol'>Notes</th>
         	<th class='statcol'>Family Status</th>
         	<th class='statcol'>Gift Status</th>
         	<th class='statcol'>Meal Status</th>
@@ -866,7 +911,7 @@
        	<th class='onccol'>ONC #</th>
        	<th class='namecol'>First Name</th>
        	<th class='namecol'>Last Name</th>
-       	<th class='dnscol'>DNS Code</th>
+       	<th class='dnscol'>Notes</th>
         	<th class='statcol'>Family Status</th>
         	<th class='statcol'>Gift Status</th>
         	<th class='statcol'>Meal Status</th>
@@ -876,6 +921,19 @@
       <tbody id='cytbody'>
       </tbody>
 	</table>
+  </div>
+<!-- Notes Dialog -->
+  <div id="notesdlg" class="modalDialog">
+	<div class='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class=logospan id="notesfamheader"></span>
+		</div>
+		<div>
+		  <span id='notesfammssg'></span>
+		</div>
+	</div>
   </div>
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">

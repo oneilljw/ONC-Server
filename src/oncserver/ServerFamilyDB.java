@@ -22,7 +22,7 @@ import ourneighborschild.FamilyStatus;
 import ourneighborschild.MealStatus;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
-import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCFamily;
@@ -32,14 +32,14 @@ import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
 import ourneighborschild.UserPermission;
-import ourneighborschild.WishStatus;
+import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 44;
+	private static final int FAMILYDB_HEADER_LENGTH = 45;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
@@ -50,6 +50,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerFamilyDB instance = null;
 	private static int highestRefNum;
 	private static Map<String, ONCNumRange> oncnumRangeMap;
+	private static Map<String, DNSCode> dnsCodeMap;
 	
 	private static ServerFamilyHistoryDB familyHistoryDB;
 	private static ServerUserDB userDB;
@@ -89,6 +90,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		oncnumRangeMap.put("S", new ONCNumRange(1293, 1299));
 		oncnumRangeMap.put("Y", new ONCNumRange(1300, 1399));
 		oncnumRangeMap.put("Z", new ONCNumRange(1400, 1499));
+		
+		dnsCodeMap = new HashMap<String, DNSCode>();
+		loadDNSCodeMap();
 	
 		familyDB = new ArrayList<FamilyDBYear>();
 		
@@ -329,6 +333,46 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
+	
+	static HtmlResponse getFamilyNotesJSONP(int year, int famID, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		FamilyNotes fn;
+		
+		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
+		
+		int index = 0;
+		while(index < searchList.size() && searchList.get(index).getID() != famID)
+			index++;
+  
+		if(index < searchList.size())
+		{
+			ONCFamily f = searchList.get(index);
+//			System.out.println(String.format("ServFamDB.getFamNotesJSONP: dns=%s", f.getDNSCode()));	
+			StringBuffer buff = new StringBuffer();
+			
+			if(!f.getDNSCode().isEmpty())
+			{
+//				DNSCode dnsCode = dnsCodeMap.get(f.getDNSCode());
+//				System.out.println(String.format("ServFamDB.getFamNotesJSONP: dns=%s, "
+//						+ "dnsCode.title=%s, dnsCode.definition=%s", f.getDNSCode(),
+//						dnsCode.getTitle(), dnsCode.getDefinition()));
+				
+				buff.append(dnsCodeMap.get(f.getDNSCode()).getDefinition() + "\n");
+			}
+			buff.append(f.getAgentNote());
+			
+			fn = new FamilyNotes(String.format("Notes: %s Family", f.getLastName()), buff.toString());
+		}
+		else
+			fn = new FamilyNotes("", "");
+		
+		String response = gson.toJson(fn, FamilyNotes.class);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+	
 	static HtmlResponse getAgentsWhoReferredJSONP(int year, ONCServerUser loggedInAgent, int groupID, String callbackFunction)
 	{
 		Gson gson = new Gson();
@@ -608,15 +652,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					highestRefNum = updatedFamilyRefNum;
 			}
 			
-			//check if the address has changed and a region update check is required
-			if(!currFam.getHouseNum().equals(updatedFamily.getHouseNum()) ||
-				!currFam.getStreet().equals(updatedFamily.getStreet()) ||
-				 !currFam.getCity().equals(updatedFamily.getCity()) ||
-				  !currFam.getZipCode().equals(updatedFamily.getZipCode()))
-			{
-//				System.out.println(String.format("FamilyDB - update: region change, old region is %d", currFam.getRegion()));
-				updateRegionAndSchoolCode(updatedFamily);	
-			}
+			updateRegionAndSchoolCode(updatedFamily);	
 			
 			//check if the update is requesting automatic assignment of an ONC family number
 			//can only auto assign if ONC Number is not number and is not "DEL" and the
@@ -631,8 +667,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			if(currFam != null && 
 				(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
 				 currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
-				 currFam.getDNSCode() != updatedFamily.getDNSCode()))
+				 !currFam.getDNSCode().equals(updatedFamily.getDNSCode())))
 			{
+				System.out.println(String.format("ServFamDB.update: currFamDNS= %s, updatedFamDNS=%s",
+						currFam.getDNSCode(), updatedFamily.getDNSCode()));
+				
 				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
 						updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(), "Status Changed", updatedFamily.getChangedBy(), true);
 				
@@ -660,17 +699,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//if address has changed, update the region. 
 		if(index < fAL.size())
 		{
-			ONCFamily currFam = fAL.get(index);
-			
-			//check if the address has changed and a region update check is required
-			if(!currFam.getHouseNum().equals(updatedFamily.getHouseNum()) ||
-				!currFam.getStreet().equals(updatedFamily.getStreet()) ||
-				 !currFam.getCity().equals(updatedFamily.getCity()) ||
-				  !currFam.getZipCode().equals(updatedFamily.getZipCode()))
-			{
-//				System.out.println(String.format("FamilyDB - update: region change, old region is %d", currFam.getRegion()));
-				updateRegionAndSchoolCode(updatedFamily);	
-			}
+			updateRegionAndSchoolCode(updatedFamily);	
 			
 			//check if the update is requesting automatic assignment of an ONC family number
 			//can only auto assign if ONC Number is not number and is not "DEL" and the
@@ -682,12 +711,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			}
 			
 			//add a history item so change can be tracked. Changed by is the web user who made the change
-			if(currFam != null) 
-			{
-				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+			ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
 								updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(), updateNote, wc.getWebUser().getLNFI(), true);
-				updatedFamily.setDeliveryID(histItem.getID());
-			}
+			updatedFamily.setDeliveryID(histItem.getID());
 			
 			fAL.set(index, updatedFamily);
 			fDBYear.setChanged(true);
@@ -698,18 +724,24 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	}
 	
 	RegionAndSchoolCode updateRegionAndSchoolCode(ONCFamily updatedFamily)
-	{		
-		//address is new or has changed, set or update the region and school code
-		RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(new Address(updatedFamily.getHouseNum(),
+	{
+		//if family has a delivery address, use it, else use home address.
+		Address address;
+		if(updatedFamily.getSubstituteDeliveryAddress().isEmpty())
+			address = new Address(updatedFamily.getHouseNum(),
 					updatedFamily.getStreet(), updatedFamily.getUnit(),
-					  updatedFamily.getCity(), updatedFamily.getZipCode()));
+					  updatedFamily.getCity(), updatedFamily.getZipCode());
+		else
+			address = new Address(updatedFamily.getSubstituteDeliveryAddress());
+		
+		//address is new or has changed, set or update the region and school code
+		RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(address);
 
 		updatedFamily.setRegion(rSC.getRegion());
 		updatedFamily.setSchoolCode(rSC.getSchoolCode());
 			
 		return rSC;
-	}
-		
+	}		
 	
 	@Override
 	String add(int year, String json)
@@ -1186,8 +1218,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				int giftindex = 0;
 				while(giftindex < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
 				{
-					ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildGiftID(giftindex++));
-					if(cw.getWishID() != giftCardID)	//gift card?
+					ONCChildGift cw = ServerChildWishDB.getWish(year, c.getChildGiftID(giftindex++));
+					if(cw.getGiftID() != giftCardID)	//gift card?
 						bGiftCardOnlyFamily = false;
 				}	
 			}
@@ -1226,13 +1258,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		{
 			for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
 			{
-				ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildGiftID(wn));
+				ONCChildGift cw = ServerChildWishDB.getWish(year, c.getChildGiftID(wn));
 				
 				//if cw is null, it means that the wish doesn't exist yet. If that's the case, 
 				//set the status to the lowest status possible as if the wish existed
-				WishStatus childwishstatus = WishStatus.Not_Selected;	//Lowest possible child wish status
+				GiftStatus childwishstatus = GiftStatus.Not_Selected;	//Lowest possible child wish status
 				if(cw != null)
-					childwishstatus = ServerChildWishDB.getWish(year, c.getChildGiftID(wn)).getChildWishStatus();
+					childwishstatus = ServerChildWishDB.getWish(year, c.getChildGiftID(wn)).getGiftStatus();
 					
 				if(wishstatusmatrix[childwishstatus.statusIndex()].compareTo(lowestfamstatus) < 0)
 					lowestfamstatus = wishstatusmatrix[childwishstatus.statusIndex()];
@@ -1306,7 +1338,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
 				"ODB Details", "Children Names", "Schools", "ODB WishList", "Adopted For",
 				"Agent ID", "GroupID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
-				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only"};
+				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only",
+				"Agent Note"};
 		
 		FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 		if(fDBYear.isUnsaved())
@@ -1470,27 +1503,27 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //				+ "year= %d, addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
 //				year, addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
     	
-    	ONCFamily dupFamily = null;
-    	boolean bFamilyDuplicate = false;
-    	//check to see if family exists in year. 
-    	List<ONCFamily> famList = familyDB.get(year-BASE_YEAR).getList();
+    		ONCFamily dupFamily = null;
+    		boolean bFamilyDuplicate = false;
+    		//check to see if family exists in year. 
+    		List<ONCFamily> famList = familyDB.get(year-BASE_YEAR).getList();
     	
 //    	System.out.println("getDuplicateFamiiy: got famList, size= " + famList.size());
     	
-    	int dupFamilyIndex = 0;
+    		int dupFamilyIndex = 0;
     	
-    	while(dupFamilyIndex < famList.size() && 
+    		while(dupFamilyIndex < famList.size() && 
     		   addedFamily.getID() != famList.get(dupFamilyIndex).getID() &&
     			!bFamilyDuplicate)
-    	{
-    		dupFamily = famList.get(dupFamilyIndex++);
+    		{
+    			dupFamily = famList.get(dupFamilyIndex++);
     		
 //    		System.out.println(String.format("FamiyDB.getDuplicateFamily: Checking dupFamily id= %d "
 //					+ "dupFamily HOHLastName= %s, dupRef#= %s, against addedFamily HOHLastName = %s, addedFamily Ref#= %s", 
 //					dupFamily.getID(), dupFamily.getHOHLastName(), dupFamily.getODBFamilyNum(), 
 //					addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
     		
-    		List<ONCChild> dupChildList = childDB.getChildList(year, dupFamily.getID());
+    			List<ONCChild> dupChildList = childDB.getChildList(year, dupFamily.getID());
     		
 //    		if(dupChildList == null)
 //   			System.out.println("FamilyDB.getDuplicateFamily: dupChildList is null");
@@ -1498,8 +1531,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //    			System.out.println(String.format("FamiyDB.getDuplicateFamily: #children in %s family = %d ",
 //					dupFamily.getHOHLastName(), dupChildList.size()));
     	
-    		bFamilyDuplicate = areFamiliesTheSame(dupFamily, dupChildList, addedFamily, addedChildList);
-    	}
+    			bFamilyDuplicate = areFamiliesTheSame(dupFamily, dupChildList, addedFamily, addedChildList);
+    		}
     	
 //    	if(dupFamily != null)
 //    		System.out.println(String.format("FamiyDB.getDuplicateFamily: "
@@ -1510,7 +1543,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //    	else
 //    		System.out.println("FamiyDB.getDuplicateFamily: dupFamiy is null");
     	
-    	return bFamilyDuplicate ? dupFamily : null;	
+    		return bFamilyDuplicate ? dupFamily : null;	
     }
     
     /****
@@ -1524,30 +1557,29 @@ public class ServerFamilyDB extends ServerSeasonalDB
      */
     ONCFamily isPriorYearFamily(int year, ONCFamily addedFamily, List<ONCChild> addedChildList)
     {
-    	boolean bFamilyIsInPriorYear = false;
-    	ONCFamily pyFamily = null;
-    	int yearIndex = year-1;
+    		boolean bFamilyIsInPriorYear = false;
+    		ONCFamily pyFamily = null;
+    		int yearIndex = year-1;
     	
-    	//check each prior year for a match
-    	while(yearIndex >= BASE_YEAR && !bFamilyIsInPriorYear)
-    	{
-    		List<ONCFamily> pyFamilyList = familyDB.get(yearIndex-BASE_YEAR).getList();
-    		
-    		//check each family in year for a match
-    		int pyFamilyIndex = 0;
-    		while(pyFamilyIndex < pyFamilyList.size() && !bFamilyIsInPriorYear)
+    		//check each prior year for a match
+    		while(yearIndex >= BASE_YEAR && !bFamilyIsInPriorYear)
     		{
-    			pyFamily = pyFamilyList.get(pyFamilyIndex++);
-    			List<ONCChild> pyChildList = childDB.getChildList(yearIndex, pyFamily.getID());
-    			
-    			bFamilyIsInPriorYear = areFamiliesTheSame(pyFamily, pyChildList, addedFamily, addedChildList);	
-    		}
+    			List<ONCFamily> pyFamilyList = familyDB.get(yearIndex-BASE_YEAR).getList();
     		
-    		yearIndex--;
-    	}
+    			//check each family in year for a match
+    			int pyFamilyIndex = 0;
+    			while(pyFamilyIndex < pyFamilyList.size() && !bFamilyIsInPriorYear)
+    			{
+    				pyFamily = pyFamilyList.get(pyFamilyIndex++);
+    				List<ONCChild> pyChildList = childDB.getChildList(yearIndex, pyFamily.getID());
+    			
+    				bFamilyIsInPriorYear = areFamiliesTheSame(pyFamily, pyChildList, addedFamily, addedChildList);	
+    			}
+    		
+    			yearIndex--;
+    		}
     	
-    	return bFamilyIsInPriorYear ? pyFamily : null;
-    	
+    		return bFamilyIsInPriorYear ? pyFamily : null;
     }
     
     boolean areFamiliesTheSame(ONCFamily checkFamily, List<ONCChild> checkChildList, 
@@ -1559,47 +1591,47 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //				checkFamily.getHOHLastName(), checkFamily.getODBFamilyNum(), 
 //				addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
     	
-    	return checkFamily.getFirstName().equalsIgnoreCase(addedFamily.getFirstName()) &&
+    		return checkFamily.getFirstName().equalsIgnoreCase(addedFamily.getFirstName()) &&
     			checkFamily.getLastName().equalsIgnoreCase(addedFamily.getLastName()) &&
     			areChildrenTheSame(checkChildList, addedChildList);
     }
     
     boolean areChildrenTheSame(List<ONCChild> checkChildList, List<ONCChild> addedChildList)
     {
-    	boolean bChildrenAreTheSame = true;
+    		boolean bChildrenAreTheSame = true;
     	
-    	int checkChildIndex = 0;
-    	while(checkChildIndex < checkChildList.size() && bChildrenAreTheSame)
-    	{
-    		ONCChild checkChild = checkChildList.get(checkChildIndex);
-    		if(!isChildInList(checkChild, addedChildList))
-    			bChildrenAreTheSame = false;
-    		else
-    			checkChildIndex++;
-    	}
+    		int checkChildIndex = 0;
+    		while(checkChildIndex < checkChildList.size() && bChildrenAreTheSame)
+    		{
+    			ONCChild checkChild = checkChildList.get(checkChildIndex);
+    			if(!isChildInList(checkChild, addedChildList))
+    				bChildrenAreTheSame = false;
+    			else
+    				checkChildIndex++;
+    		}
     	
-    	return bChildrenAreTheSame;
+    		return bChildrenAreTheSame;
     }
     
     
     boolean isChildInList(ONCChild checkChild, List<ONCChild> addedChildList)
     {
-    	boolean bChildIsInList = false;
-    	int addedChildIndex = 0;
+    		boolean bChildIsInList = false;
+    		int addedChildIndex = 0;
         	
-    	while(addedChildIndex < addedChildList.size()  && !bChildIsInList)
-    	{
-    		ONCChild addedChild = addedChildList.get(addedChildIndex);
+    		while(addedChildIndex < addedChildList.size()  && !bChildIsInList)
+    		{
+    			ONCChild addedChild = addedChildList.get(addedChildIndex);
     		
-    		if(checkChild.getChildLastName().equalsIgnoreCase(addedChild.getChildLastName()) &&
+    			if(checkChild.getChildLastName().equalsIgnoreCase(addedChild.getChildLastName()) &&
     				checkChild.getChildDOB().equals(addedChild.getChildDOB()) &&
     					checkChild.getChildGender().equalsIgnoreCase(addedChild.getChildGender()))
-    			bChildIsInList = true;
-    		else
-    			addedChildIndex++;
-    	}	
+    				bChildIsInList = true;
+    			else
+    				addedChildIndex++;
+    		}	
     			
-    	return bChildIsInList;
+    		return bChildIsInList;
     }
     
     
@@ -1609,20 +1641,20 @@ public class ServerFamilyDB extends ServerSeasonalDB
      ******************************************************************************************************/
     String generateReferenceNumber()
     {
-    	//increment the last reference number used and format it to a five digit string
-    	//that starts with the letter 'C'
-    	highestRefNum++;
+    		//increment the last reference number used and format it to a five digit string
+    		//that starts with the letter 'C'
+    		highestRefNum++;
     	
-    	if(highestRefNum < 10)
-    		return "C0000" + Integer.toString(highestRefNum);
-    	else if(highestRefNum >= 10 && highestRefNum < 100)
-    		return "C000" + Integer.toString(highestRefNum);
-    	else if(highestRefNum >= 100 && highestRefNum < 1000)
-    		return "C00" + Integer.toString(highestRefNum);
-    	else if(highestRefNum >= 1000 && highestRefNum < 10000)
-    		return "C0" + Integer.toString(highestRefNum);
-    	else
-    		return "C" + Integer.toString(highestRefNum);
+    		if(highestRefNum < 10)
+    			return "C0000" + Integer.toString(highestRefNum);
+    		else if(highestRefNum >= 10 && highestRefNum < 100)
+    			return "C000" + Integer.toString(highestRefNum);
+    		else if(highestRefNum >= 100 && highestRefNum < 1000)
+    			return "C00" + Integer.toString(highestRefNum);
+    		else if(highestRefNum >= 1000 && highestRefNum < 10000)
+    			return "C0" + Integer.toString(highestRefNum);
+    		else
+    			return "C" + Integer.toString(highestRefNum);
     }
     
     void decrementReferenceNumber() { highestRefNum--; }
@@ -1634,78 +1666,107 @@ public class ServerFamilyDB extends ServerSeasonalDB
      ******************/
     int initializeHighestReferenceNumber()
     {
-    	int highestRefNum = 0;
-    	for(FamilyDBYear dbYear: familyDB)
-    	{
-    		List<ONCFamily> yearListOfFamilies = dbYear.getList();
-    		for(ONCFamily f: yearListOfFamilies)
+    		int highestRefNum = 0;
+    		for(FamilyDBYear dbYear: familyDB)
     		{
-    			if(f.getReferenceNum().startsWith("C"))
+    			List<ONCFamily> yearListOfFamilies = dbYear.getList();
+    			for(ONCFamily f: yearListOfFamilies)
     			{
-    				int refNum = Integer.parseInt(f.getReferenceNum().substring(1));
-    				if(refNum > highestRefNum)
-    					highestRefNum = refNum;
+    				if(f.getReferenceNum().startsWith("C"))
+    				{
+    					int refNum = Integer.parseInt(f.getReferenceNum().substring(1));
+    					if(refNum > highestRefNum)
+    						highestRefNum = refNum;
+    				}
     			}
     		}
-    	}
     	
-    	return highestRefNum;
+    		return highestRefNum;
     }
 
     int searchForONCNumber(int year, String oncnum)
     {
-    	List<ONCFamily> oncFamAL = familyDB.get(year-BASE_YEAR).getList();
+    		List<ONCFamily> oncFamAL = familyDB.get(year-BASE_YEAR).getList();
     	
-    	int index = 0;
-    	while(index < oncFamAL.size() && !oncnum.equals(oncFamAL.get(index).getONCNum()))
-    		index++;
+    		int index = 0;
+    		while(index < oncFamAL.size() && !oncnum.equals(oncFamAL.get(index).getONCNum()))
+    			index++;
     	
-    	return index == oncFamAL.size() ? -1 : index;   		
+    		return index == oncFamAL.size() ? -1 : index;   		
+    }
+    
+    void loadDNSCodeMap()
+    {
+    		dnsCodeMap.put("DUP", new DNSCode("Duplicate Family", "Duplicate referral: Two or more referrals were received for this family. "
+    				+ "ONC will serve the family through the first referral and this referral will not be "
+    				+ "processed"));
+    		
+    		dnsCodeMap.put("WL", new DNSCode("Waitlist", "Waitlist referral: indicates the family is on ONC's wait list."));
+    		
+    		dnsCodeMap.put("FO", new DNSCode("Food Only", "Referrals marked FO are only requesting holiday food assistance and not requesting "
+		      	+ "gift assistance. ONC forwards food assistance requests to Western Fairfax Christian "
+		      	+ "Ministries (WFCM). Contact jbush@wfcmva.org with food assistance questions."));
+    		
+    		dnsCodeMap.put("NISA", new DNSCode("Not In Serving Area", "Indicates this family is not located in ONC's serving area."));
+    		
+    		dnsCodeMap.put("OPT-OUT", new DNSCode("Opt-Out", "Indicates the family requested holiday gift "
+    				+ "assistance, however, when ONC contacted the family to confirm delivery, the family "
+    				+ "withdrew it's gift assistance request. This may not apply to food assistance. "
+    				+ "Contact jbush@wfcmva.org for food assistance information."));
+    		
+    		dnsCodeMap.put("SA", new DNSCode("Salvation Army", "Indicates that the family is being served by the Salvation Army and "
+    				+ "will not be receiving an ONC gift delivery."));
+    		
+    		dnsCodeMap.put("SBO", new DNSCode("Served By Others", "Indicates the family is being served by "
+    				+ "another organization in our area. See Gift Status - Referred."));
     }
     
     private class FamilyDBYear extends ServerDBYear
     {
-    	private List<ONCFamily> fList;
+    		private List<ONCFamily> fList;
     	
-    	FamilyDBYear(int year)
-    	{
-    		super();
-    		fList = new ArrayList<ONCFamily>();
-    	}
+    		FamilyDBYear(int year)
+    		{
+    			super();
+    			fList = new ArrayList<ONCFamily>();
+    		}
     	
-    	//getters
-    	List<ONCFamily> getList() { return fList; }
+    		//getters
+    		List<ONCFamily> getList() { return fList; }
     	
-    	void add(ONCFamily addedFamily) { fList.add(addedFamily); }
+    		void add(ONCFamily addedFamily) { fList.add(addedFamily); }
     }
     
     int getDelAttemptedCounts(int year, String drvNum)
     {
-    	//get family data base for the year
-    			ServerFamilyHistoryDB deliveryDB = null;
-    			try {
-    				deliveryDB = ServerFamilyHistoryDB.getInstance();
-    			} catch (FileNotFoundException e1) {
-    				// TODO Auto-generated catch block
-    				e1.printStackTrace();
-    			} catch (IOException e1) {
-    				// TODO Auto-generated catch block
-    				e1.printStackTrace();
-    			}
-    			
-    	int delCount = 0;
-    	for(ONCFamily f:familyDB.get(year-BASE_YEAR).getList())
-    	{
-    		if(f.getDeliveryID() > -1 && f.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0)
+    		//get family data base for the year
+    		ServerFamilyHistoryDB deliveryDB = null;
+    		try
     		{
-    			//get delivery for family
-    			ONCFamilyHistory del = deliveryDB.getHistoryObject(year, f.getDeliveryID());
-    			if(del != null && del.getdDelBy().equals(drvNum))
-    				delCount++;
+    			deliveryDB = ServerFamilyHistoryDB.getInstance();
+    		} 
+    		catch (FileNotFoundException e1)
+    		{
+    			e1.printStackTrace();
+    		} 
+    		catch (IOException e1)
+    		{
+    			e1.printStackTrace();
     		}
-    	}
-    	
-    	return delCount;
+    			
+    		int delCount = 0;
+    		for(ONCFamily f:familyDB.get(year-BASE_YEAR).getList())
+    		{
+    			if(f.getDeliveryID() > -1 && f.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0)
+    			{
+    				//get delivery for family
+    				ONCFamilyHistory del = deliveryDB.getHistoryObject(year, f.getDeliveryID());
+    				if(del != null && del.getdDelBy().equals(drvNum))
+    					delCount++;
+    			}
+    		}
+    
+    		return delCount;
     }
 /*  
     void convertFamilyDBForStatusChanges(int year)
@@ -1969,5 +2030,21 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		//getters
     		int getStart() { return start; }
     		int getEnd() { return end; }
+    }
+    
+    private class DNSCode
+    {
+    		String title;
+    		String definition;
+    		
+    		DNSCode(String title, String definition)
+    		{
+    			this.title = title;
+    			this.definition = definition;
+    		}
+    		
+    		//getters
+    		String getTitle() { return title; }
+    		String getDefinition() { return definition; }
     }
 }

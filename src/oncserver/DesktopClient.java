@@ -18,7 +18,7 @@ import java.util.TimeZone;
 
 import ourneighborschild.Login;
 import ourneighborschild.ONCChild;
-import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserAccess;
@@ -64,6 +64,7 @@ public class DesktopClient extends Thread
     private ClientManager clientMgr;
     private ServerMealDB mealDB;
     private ServerAdultDB adultDB;
+    private ServerNoteDB noteDB;
     private ServerBatteryDB batteryDB;
     private ServerInventoryDB inventoryDB;
     private ServerChatManager chatMgr;
@@ -113,6 +114,7 @@ public class DesktopClient extends Thread
 	        prioryearDB = PriorYearDB.getInstance();
 	        mealDB = ServerMealDB.getInstance();
 	        adultDB = ServerAdultDB.getInstance();
+	        noteDB = ServerNoteDB.getInstance();
 	        batteryDB = ServerBatteryDB.getInstance();
 	        inventoryDB = ServerInventoryDB.getInstance();
 		  
@@ -321,6 +323,12 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		String response = adultDB.getAdults(year);
+                		output.println(response);		
+                }
+                else if(command.startsWith("GET<notes>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = noteDB.getNotes(year);
                 		output.println(response);		
                 }
                 else if(command.startsWith("GET<meals>"))
@@ -838,6 +846,30 @@ public class DesktopClient extends Thread
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
+                else if(command.startsWith("POST<add_note>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = noteDB.add(year, command.substring(14));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<update_note>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = noteDB.update(year, command.substring(17));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<delete_notet>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = noteDB.delete(year, command.substring(17));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
                 else if(command.startsWith("POST<add_meal>"))
                 {
                 		clientMgr.addLogMessage(command);
@@ -1173,7 +1205,7 @@ public class DesktopClient extends Thread
     String getChildWishes(int year)
     {
     		//Build the array list of current ONCChildWish's for each child
-    		ArrayList<ONCChildWish> childwishAL = new ArrayList<ONCChildWish>();
+    		ArrayList<ONCChildGift> childwishAL = new ArrayList<ONCChildGift>();
   
     		for(ONCChild c:childDB.getList(year))  
     			for(int wn=0; wn < NUMBER_OF_WISHES_PER_CHILD; wn++)		
@@ -1182,7 +1214,7 @@ public class DesktopClient extends Thread
     	
     		//Convert the array list to a json and return it
     		Gson gson = new Gson();
-    		Type listtype = new TypeToken<ArrayList<ONCChildWish>>(){}.getType();
+    		Type listtype = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();
    
     		return gson.toJson(childwishAL, listtype);
     }

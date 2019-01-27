@@ -6,7 +6,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import ourneighborschild.WishDetail;
+import ourneighborschild.GiftDetail;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -63,11 +63,11 @@ public class ServerWishDetailDB extends ServerSeasonalDB
 	{
 		//Create a wish detail object for the request wish detail update
 		Gson gson = new Gson();
-		WishDetail reqWishDetail = gson.fromJson(json, WishDetail.class);
+		GiftDetail reqWishDetail = gson.fromJson(json, GiftDetail.class);
 		
 		//Find the position for the current wish detail being updated
 		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		List<WishDetail> wishdetailAL = detailDBYear.getList();
+		List<GiftDetail> wishdetailAL = detailDBYear.getList();
 		int index = 0;
 		while(index < wishdetailAL.size() && wishdetailAL.get(index).getID() != reqWishDetail.getID())
 			index++;
@@ -75,8 +75,8 @@ public class ServerWishDetailDB extends ServerSeasonalDB
 		//If wish detail is located, replace the current wish detail with the update.
 		if(index == wishdetailAL.size()) 
 		{
-			WishDetail currWishDetail = wishdetailAL.get(index);
-			return "UPDATE_FAILED" + gson.toJson(currWishDetail , WishDetail.class);
+			GiftDetail currWishDetail = wishdetailAL.get(index);
+			return "UPDATE_FAILED" + gson.toJson(currWishDetail , GiftDetail.class);
 		}
 		else
 		{
@@ -91,29 +91,29 @@ public class ServerWishDetailDB extends ServerSeasonalDB
 	{
 		//Create a wish detail object
 		Gson gson = new Gson();
-		WishDetail addedWishDetail = gson.fromJson(json, WishDetail.class);
+		GiftDetail addedWishDetail = gson.fromJson(json, GiftDetail.class);
 	
 		//set the new id for the detail and add to the year data base
 		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		List<WishDetail> wishdetailAL = detailDBYear.getList();
+		List<GiftDetail> wishdetailAL = detailDBYear.getList();
 		
 		addedWishDetail.setID(detailDBYear.getNextID());
 		wishdetailAL.add(addedWishDetail);
 //		bSaveRequired = true;
 		detailDBYear.setChanged(true);
 		
-		return "ADDED_WISH_DETAIL" + gson.toJson(addedWishDetail, WishDetail.class);
+		return "ADDED_WISH_DETAIL" + gson.toJson(addedWishDetail, GiftDetail.class);
 	}
 
 	String delete(int year, String json)
 	{
 		//Create a wish detail object for the deleted wish detail request
 		Gson gson = new Gson();
-		WishDetail reqDelWishDetail = gson.fromJson(json, WishDetail.class);
+		GiftDetail reqDelWishDetail = gson.fromJson(json, GiftDetail.class);
 		
 		//find the detail in the db
 		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		List<WishDetail> wishdetailAL = detailDBYear.getList();
+		List<GiftDetail> wishdetailAL = detailDBYear.getList();
 	
 		int index = 0;
 		while(index < wishdetailAL.size() && wishdetailAL.get(index).getID() != reqDelWishDetail.getID())
@@ -135,11 +135,11 @@ public class ServerWishDetailDB extends ServerSeasonalDB
 	String getWishDetail(int year)
 	{
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<WishDetail>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<GiftDetail>>(){}.getType();
 		
 		//find the detail year in the db
 		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		List<WishDetail> wishdetailAL = detailDBYear.getList();
+		List<GiftDetail> wishdetailAL = detailDBYear.getList();
 			
 		String response = gson.toJson(wishdetailAL, listtype);
 		
@@ -150,24 +150,24 @@ public class ServerWishDetailDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine) 
 	{
 		WishDetailDBYear detailDBYear = wdDB.get(year - BASE_YEAR);
-		detailDBYear.add(new WishDetail(nextLine));
+		detailDBYear.add(new GiftDetail(nextLine));
 //		wdDB.add(new WishDetail(nextLine));
 	}
 	
 	private class WishDetailDBYear extends ServerDBYear
 	{
-		private List<WishDetail> wdList;
+		private List<GiftDetail> wdList;
 	    	
 	    WishDetailDBYear(int year)
 	    {
 	    		super();
-	    		wdList = new ArrayList<WishDetail>();
+	    		wdList = new ArrayList<GiftDetail>();
 	    }
 	    	
 	    //getters
-	    List<WishDetail> getList() { return wdList; }
+	    List<GiftDetail> getList() { return wdList; }
 	
-	    void add(WishDetail addedDetail) { wdList.add(addedDetail); }
+	    void add(GiftDetail addedDetail) { wdList.add(addedDetail); }
 	}
 
 	@Override
@@ -196,9 +196,9 @@ public class ServerWishDetailDB extends ServerSeasonalDB
 		wdDB.add(wdDBYear);
 						
 		//add a deep copy of each wish detail from last year the new season wish detail list
-		List<WishDetail> lyDetailList = wdDB.get(wdDB.size()-1).getList();
-		for(WishDetail lyWD : lyDetailList)
-			wdDBYear.add(new WishDetail(lyWD));	//makes a deep copy of last year
+		List<GiftDetail> lyDetailList = wdDB.get(wdDB.size()-1).getList();
+		for(GiftDetail lyWD : lyDetailList)
+			wdDBYear.add(new GiftDetail(lyWD));	//makes a deep copy of last year
 					
 		wdDBYear.setChanged(true);	//mark this db for persistent saving on the next save event	
 	}

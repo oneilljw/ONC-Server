@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ourneighborschild.ONCChild;
-import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCPriorYearChild;
 
@@ -240,21 +240,21 @@ public class PriorYearDB extends ServerSeasonalDB
 			ONCFamily lyfam = serverFamilyDB.getFamily(newYear-1, lyc.getFamID());
 			if(isNumeric(lyfam.getONCNum()) && Integer.parseInt(lyfam.getONCNum()) >= 100)
 			{
-				ONCChildWish lyChildWish1 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(0));
-				ONCChildWish lyChildWish2 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(1));
-				ONCChildWish lyChildWish3 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(2));
+				ONCChildGift lyChildWish1 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(0));
+				ONCChildGift lyChildWish2 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(1));
+				ONCChildGift lyChildWish3 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(2));
 				
 				//determine the wishes from last year. Check to ensure the child wish existed. If it didn't, 
 				//set the wish blank
 				String lyWish1 = "", lyWish2 = "", lyWish3 = "";
 				if(lyChildWish1 != null)
-					 lyWish1 = cat.findWishNameByID(newYear-1, lyChildWish1.getWishID()) + "- " + lyChildWish1.getChildWishDetail();
+					 lyWish1 = cat.findWishNameByID(newYear-1, lyChildWish1.getGiftID()) + "- " + lyChildWish1.getDetail();
 				
 				if(lyChildWish2 != null)
-					lyWish2 = cat.findWishNameByID(newYear-1, lyChildWish2.getWishID()) + "- " + lyChildWish2.getChildWishDetail();
+					lyWish2 = cat.findWishNameByID(newYear-1, lyChildWish2.getGiftID()) + "- " + lyChildWish2.getDetail();
 				
 				if(lyChildWish3 != null)
-					lyWish3 = cat.findWishNameByID(newYear-1, lyChildWish3.getWishID()) + "- " + lyChildWish3.getChildWishDetail();
+					lyWish3 = cat.findWishNameByID(newYear-1, lyChildWish3.getGiftID()) + "- " + lyChildWish3.getDetail();
 	    		
 				//last year child was in a served family, have they already been added to the
 	    		//new years prior year child list?

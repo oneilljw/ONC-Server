@@ -176,7 +176,7 @@ public class ONCSecureWebServer
 		//set up the family handler
 		String[] familyContexts = {"/referral","/referfamily","/familyupdate","/updatefamily","/familyview",
 				 					"/families","/familystatus","/commonfamily.js","/familysearch",
-				 					"/getfamily","/references","/newfamily"};
+				 					"/getfamily","/references","/newfamily", "/familynotes"};
 		
 		FamilyHandler familyHandler = new FamilyHandler();
 		for(String contextname: familyContexts)

@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ourneighborschild.ONCChild;
-import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.WebChildWish;
-import ourneighborschild.WishStatus;
+import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -125,28 +125,28 @@ public class ServerChildDB extends ServerSeasonalDB
 					}
 					else		
 					{
-						ONCChildWish cw = ServerChildWishDB.getWish(year, c.getChildGiftID(wn));
-						int wishRestriction = cw.getChildWishIndicator();
+						ONCChildGift cw = ServerChildWishDB.getWish(year, c.getChildGiftID(wn));
+						int wishRestriction = cw.getIndicator();
 						String[] restrictions = {" ", "*", "#"};
 						String partner;
 						int partnerID;
-						if(cw.getChildWishAssigneeID() < 1)
+						if(cw.getPartnerID() < 1)
 						{
 							partner = "";
 							partnerID = -1;
 						}
 						else
 						{
-							ONCPartner org = serverPartnerDB.getPartner(year,cw.getChildWishAssigneeID());
+							ONCPartner org = serverPartnerDB.getPartner(year,cw.getPartnerID());
 							partner = org.getLastName();
 							partnerID = org.getID();
 						}
 						
-						responseList.add(new WebChildWish(wishCatalog.findWishNameByID(year, cw.getWishID()),
-															cw.getWishID(),
-															cw.getChildWishDetail(), 
+						responseList.add(new WebChildWish(wishCatalog.findWishNameByID(year, cw.getGiftID()),
+															cw.getGiftID(),
+															cw.getDetail(), 
 															restrictions[wishRestriction], 
-															partner, partnerID, cw.getChildWishStatus()));
+															partner, partnerID, cw.getGiftStatus()));
 					}
 				}
 			}
@@ -279,13 +279,13 @@ public class ServerChildDB extends ServerSeasonalDB
 				
 				if(childWishID != -1)	//does the wish exist?
 				{
-					ONCChildWish cw = ServerChildWishDB.getWish(year, childWishID);
+					ONCChildGift cw = ServerChildWishDB.getWish(year, childWishID);
 
 					//if wish has been assigned, then we have to decrement the partner assignee count
 					if(serverPartnerDB != null && cw != null && 
-							cw.getChildWishStatus().compareTo(WishStatus.Assigned) >= 0)
+							cw.getGiftStatus().compareTo(GiftStatus.Assigned) >= 0)
 					{
-						int wishPartnerID = cw.getChildWishAssigneeID();
+						int wishPartnerID = cw.getPartnerID();
 						serverPartnerDB.decrementGiftsAssignedCount(year, wishPartnerID);
 					}
 				}
@@ -362,7 +362,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	 * @param year - which year's data base is being changed
 	 * @param addedWish - the child wish object that was changed
 	 ************************************************************************************/
-	void updateChildsWishID(int year, ONCChildWish addedWish)
+	void updateChildsWishID(int year, ONCChildGift addedWish)
 	{
 		//Find the child using the added wish child ID
 		ChildDBYear childDBYear = childDB.get(year-BASE_YEAR);
@@ -375,7 +375,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		if(index < cAL.size())
 		{
 			ONCChild c = cAL.get(index);
-			c.setChildGiftID(addedWish.getID(), addedWish.getWishNumber());
+			c.setChildGiftID(addedWish.getID(), addedWish.getGiftNumber());
 			childDBYear.setChanged(true);
 		}
 	}

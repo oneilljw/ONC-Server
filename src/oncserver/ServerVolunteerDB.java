@@ -687,7 +687,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		{
 			//find drvNum1 and increment their assigned delivery count
 			int index = 0;	
-			while(index < volList.size() && !volList.get(index).getDrvNum().equals(drvNum1))
+			while(index < volList.size() && !volList.get(index).getDrvNum().equals(drvNum2))
 				index++;
 			
 			if(index < volList.size())

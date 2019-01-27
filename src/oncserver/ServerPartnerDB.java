@@ -10,9 +10,9 @@ import java.util.List;
 
 import ourneighborschild.Address;
 import ourneighborschild.GiftCollection;
-import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;
-import ourneighborschild.WishStatus;
+import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -474,27 +474,27 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		}	
 	}
 	
-	void incrementGiftActionCount(int year, ONCChildWish addedWish)
+	void incrementGiftActionCount(int year, ONCChildGift addedWish)
 	{	
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		List<ONCPartner> partnerList = partnerDBYear.getList();
 		
 		//Find the the current partner being decremented
 		int index = 0;
-		while(index < partnerList.size() && partnerList.get(index).getID() != addedWish.getChildWishAssigneeID())
+		while(index < partnerList.size() && partnerList.get(index).getID() != addedWish.getPartnerID())
 			index++;
 		
 		//increment the gift received count for the partner being replaced
 		if(index < partnerList.size())
 		{  
 			//found the partner, now determine which field to increment
-			if(addedWish.getChildWishStatus() == WishStatus.Received)
+			if(addedWish.getGiftStatus() == GiftStatus.Received)
 			{
 				ServerGlobalVariableDB gvDB = null;
 				try 
 				{
 					gvDB = ServerGlobalVariableDB.getInstance();
-					boolean bReceviedBeforeDeadline = addedWish.getChildWishDateChanged().before(gvDB.getDateGiftsRecivedDealdine(year));
+					boolean bReceviedBeforeDeadline = addedWish.getDateChanged().before(gvDB.getDateGiftsRecivedDealdine(year));
 					partnerList.get(index).incrementOrnReceived(bReceviedBeforeDeadline);
 				} 
 				catch (FileNotFoundException e) 
@@ -507,7 +507,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 				}
 				
 			}
-			else if(addedWish.getChildWishStatus() == WishStatus.Delivered)
+			else if(addedWish.getGiftStatus() == GiftStatus.Delivered)
 				partnerList.get(index).incrementOrnDelivered();
 			
 			partnerDBYear.setChanged(true);

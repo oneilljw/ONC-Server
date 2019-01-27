@@ -48,11 +48,12 @@ fieldset
   	background-color: #E5FFCC;
   	font-size:80%;
   	text-align:left;
- }
+}
 button
 {
     background-color: #336699;
     color: #ffffff;
+    border-radius: 12px;
 }      
 nav 
 {

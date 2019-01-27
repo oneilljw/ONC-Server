@@ -11,10 +11,10 @@ import java.util.List;
 
 import ourneighborschild.HistoryRequest;
 import ourneighborschild.ONCChild;
-import ourneighborschild.ONCChildWish;
+import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCUser;
-import ourneighborschild.WishStatus;
+import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -72,7 +72,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		return instance;
 	}
 	
-	List<ONCChildWish> getChildWishList(int year)
+	List<ONCChildGift> getChildWishList(int year)
 	{
 		return childwishDB.get(year - BASE_YEAR).getList();
 	}
@@ -130,7 +130,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	{
 		//Create a child wish object for the added wish
 		Gson gson = new Gson();
-		ONCChildWish addedWish = gson.fromJson(wishjson, ONCChildWish.class);
+		ONCChildGift addedWish = gson.fromJson(wishjson, ONCChildGift.class);
 		
 		//retrieve the child wish data base for the year
 		ChildWishDBYear cwDBYear = childwishDB.get(year - BASE_YEAR);
@@ -139,7 +139,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		addedWish.setID(cwDBYear.getNextID());
 				
 		//retrieve the old wish being replaced
-		ONCChildWish oldWish = getWish(year, addedWish.getChildID(), addedWish.getWishNumber());
+		ONCChildGift oldWish = getWish(year, addedWish.getChildID(), addedWish.getGiftNumber());
 		
 		//Add the new wish to the proper data base
 		cwDBYear.add(addedWish);
@@ -152,7 +152,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		//status has caused a family status change or if a partner assignment has changed
 		processWishAdded(year, oldWish, addedWish);
 		
-		return "WISH_ADDED" + gson.toJson(addedWish, ONCChildWish.class);
+		return "WISH_ADDED" + gson.toJson(addedWish, ONCChildGift.class);
 	}
 /*	
 	String add(int year, String wishjson, ONCUser user)
@@ -263,14 +263,14 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	 * a wish was selected from the catalog and is reset to empty, the wish status is set to
 	 * CHILD_WISH_EMPTY.
 	 ************************************************************************************************************/
-	WishStatus checkForStatusChange(ONCChildWish addedWish, ONCPartner reqPartner, ONCChildWish oldWish)
+	GiftStatus checkForStatusChange(ONCChildGift addedWish, ONCPartner reqPartner, ONCChildGift oldWish)
 	{
-		WishStatus currStatus, newStatus;
+		GiftStatus currStatus, newStatus;
 		
 		if(oldWish == null)	//Creating first wish
-			currStatus = WishStatus.Not_Selected;
+			currStatus = GiftStatus.Not_Selected;
 		else	
-			currStatus = oldWish.getChildWishStatus();
+			currStatus = oldWish.getGiftStatus();
 		
 		//set new status = current status for default return
 		newStatus = currStatus;
@@ -278,90 +278,90 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		switch(currStatus)
 		{
 			case Not_Selected:
-				if(addedWish.getWishID() > -1 && reqPartner != null && reqPartner.getID() != -1)
-					newStatus = WishStatus.Assigned;	//wish assigned from inventory
-				else if(addedWish.getWishID() > -1)
-					newStatus = WishStatus.Selected;
+				if(addedWish.getGiftID() > -1 && reqPartner != null && reqPartner.getID() != -1)
+					newStatus = GiftStatus.Assigned;	//wish assigned from inventory
+				else if(addedWish.getGiftID() > -1)
+					newStatus = GiftStatus.Selected;
 				break;
 				
 			case Selected:
-				if(addedWish.getWishID() == -1)
-					newStatus = WishStatus.Not_Selected;
+				if(addedWish.getGiftID() == -1)
+					newStatus = GiftStatus.Not_Selected;
 				else if(reqPartner != null && reqPartner.getID() != -1)
-					newStatus = WishStatus.Assigned;
+					newStatus = GiftStatus.Assigned;
 				break;
 				
 			case Assigned:
-				if(addedWish.getWishID() == -1)
-					newStatus = WishStatus.Not_Selected;
-				else if(oldWish.getWishID() != addedWish.getWishID())
-					newStatus = WishStatus.Selected;
+				if(addedWish.getGiftID() == -1)
+					newStatus = GiftStatus.Not_Selected;
+				else if(oldWish.getGiftID() != addedWish.getGiftID())
+					newStatus = GiftStatus.Selected;
 				else if(reqPartner == null || reqPartner != null && reqPartner.getID() == -1)
-					newStatus = WishStatus.Selected;
-				else if(addedWish.getChildWishStatus() == WishStatus.Delivered)
-					newStatus = WishStatus.Delivered;
+					newStatus = GiftStatus.Selected;
+				else if(addedWish.getGiftStatus() == GiftStatus.Delivered)
+					newStatus = GiftStatus.Delivered;
 				break;
 				
 			case Delivered:
-				if(addedWish.getChildWishStatus() == WishStatus.Returned)
-					newStatus = WishStatus.Returned;
-				else if(addedWish.getChildWishStatus() == WishStatus.Delivered && reqPartner != null && 
+				if(addedWish.getGiftStatus() == GiftStatus.Returned)
+					newStatus = GiftStatus.Returned;
+				else if(addedWish.getGiftStatus() == GiftStatus.Delivered && reqPartner != null && 
 							reqPartner.getID() > -1 && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
-					newStatus = WishStatus.Shopping;
-				else if(addedWish.getChildWishStatus() == WishStatus.Delivered && reqPartner != null && reqPartner.getID() > -1)
-					newStatus = WishStatus.Assigned;
-				else if(addedWish.getChildWishStatus() == WishStatus.Shopping)
-					newStatus = WishStatus.Shopping;
-				else if(addedWish.getChildWishStatus() == WishStatus.Received)
-					newStatus = WishStatus.Received;
+					newStatus = GiftStatus.Shopping;
+				else if(addedWish.getGiftStatus() == GiftStatus.Delivered && reqPartner != null && reqPartner.getID() > -1)
+					newStatus = GiftStatus.Assigned;
+				else if(addedWish.getGiftStatus() == GiftStatus.Shopping)
+					newStatus = GiftStatus.Shopping;
+				else if(addedWish.getGiftStatus() == GiftStatus.Received)
+					newStatus = GiftStatus.Received;
 				break;
 				
 			case Returned:
-				if(addedWish.getWishID() == -1)
-					newStatus = WishStatus.Not_Selected;
+				if(addedWish.getGiftID() == -1)
+					newStatus = GiftStatus.Not_Selected;
 				else if(reqPartner != null && reqPartner.getID() == -1)
-					newStatus = WishStatus.Selected;
+					newStatus = GiftStatus.Selected;
 				else if(reqPartner != null && reqPartner.getType() != PARTNER_TYPE_ONC_SHOPPER)
-					newStatus = WishStatus.Assigned;
+					newStatus = GiftStatus.Assigned;
 				else if(reqPartner != null && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
-					newStatus = WishStatus.Shopping;
+					newStatus = GiftStatus.Shopping;
 				break;
 				
 			case Shopping:
-				if(addedWish.getChildWishStatus() == WishStatus.Returned)
-					newStatus = WishStatus.Returned;
-				else if(addedWish.getChildWishStatus() == WishStatus.Received)
-					newStatus = WishStatus.Received;
+				if(addedWish.getGiftStatus() == GiftStatus.Returned)
+					newStatus = GiftStatus.Returned;
+				else if(addedWish.getGiftStatus() == GiftStatus.Received)
+					newStatus = GiftStatus.Received;
 				break;
 				
 			case Received:
-				if(addedWish.getChildWishStatus() == WishStatus.Missing)
-					newStatus = WishStatus.Missing;
-				else if(addedWish.getChildWishStatus() == WishStatus.Distributed)
-					newStatus = WishStatus.Distributed;
-				else if(addedWish.getChildWishStatus() == WishStatus.Delivered)
-					newStatus = WishStatus.Delivered;
+				if(addedWish.getGiftStatus() == GiftStatus.Missing)
+					newStatus = GiftStatus.Missing;
+				else if(addedWish.getGiftStatus() == GiftStatus.Distributed)
+					newStatus = GiftStatus.Distributed;
+				else if(addedWish.getGiftStatus() == GiftStatus.Delivered)
+					newStatus = GiftStatus.Delivered;
 				break;
 				
 			case Distributed:
-				if(addedWish.getChildWishStatus() == WishStatus.Missing)
-					newStatus = WishStatus.Missing;
-				else if(addedWish.getChildWishStatus() == WishStatus.Verified)
-					newStatus = WishStatus.Verified;
+				if(addedWish.getGiftStatus() == GiftStatus.Missing)
+					newStatus = GiftStatus.Missing;
+				else if(addedWish.getGiftStatus() == GiftStatus.Verified)
+					newStatus = GiftStatus.Verified;
 				break;
 			
 			case Missing:
-				if(addedWish.getChildWishStatus() == WishStatus.Received)
-					newStatus = WishStatus.Received;
+				if(addedWish.getGiftStatus() == GiftStatus.Received)
+					newStatus = GiftStatus.Received;
 				else if(reqPartner != null && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
-					newStatus = WishStatus.Shopping;
-				else if(addedWish.getChildWishStatus() == WishStatus.Assigned && reqPartner != null && reqPartner.getID() > -1)
-					newStatus = WishStatus.Assigned;
+					newStatus = GiftStatus.Shopping;
+				else if(addedWish.getGiftStatus() == GiftStatus.Assigned && reqPartner != null && reqPartner.getID() > -1)
+					newStatus = GiftStatus.Assigned;
 				break;
 				
 			case Verified:
-				if(addedWish.getChildWishStatus() == WishStatus.Missing)
-					newStatus = WishStatus.Missing;
+				if(addedWish.getGiftStatus() == GiftStatus.Missing)
+					newStatus = GiftStatus.Missing;
 				break;
 				
 			default:
@@ -375,7 +375,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	 * the replaced wish is of status Delivered and requested parter is of type ONC Shopper
 	 * and the requested wish indicator is #. 
 	 */
-	String checkForDetailChange(ONCChildWish addedWish, ONCPartner reqPartner, ONCChildWish replWish)
+	String checkForDetailChange(ONCChildGift addedWish, ONCPartner reqPartner, ONCChildGift replWish)
 	{
 //		if(replWish != null && reqPartner != null)
 //			System.out.println(String.format("ChildWishDB.checkforDetailChange: replWishStatus= %s, reqWishInd= %d, reqPartnerType = %d, reqDetail= %s",
@@ -383,17 +383,17 @@ public class ServerChildWishDB extends ServerSeasonalDB
 //				reqWishDetail));
 		
 		if(replWish != null && reqPartner != null && 
-			replWish.getChildWishStatus() == WishStatus.Delivered && 
+			replWish.getGiftStatus() == GiftStatus.Delivered && 
 			 reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER && 
-			  addedWish.getChildWishIndicator() == WISH_INDICATOR_ALLOW_SUBSTITUE)
+			  addedWish.getIndicator() == WISH_INDICATOR_ALLOW_SUBSTITUE)
 		{
 			return CHILD_WISH_DEFAULT_DETAIL;
 		}
 		else
-			return addedWish.getChildWishDetail();
+			return addedWish.getDetail();
 	}
 	
-	void processWishAdded(int year, ONCChildWish oldWish, ONCChildWish addedWish)
+	void processWishAdded(int year, ONCChildGift oldWish, ONCChildGift addedWish)
 	{
 		//test to see if the family status needs to change
 		ServerFamilyDB serverFamilyDB = null;
@@ -410,11 +410,11 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		serverFamilyDB.checkFamilyGiftStatusAndGiftCardOnlyOnWishAdded(year, addedWish.getChildID());
 		
 		//test to see if assignee are changing, if the old wish exists	
-		if(oldWish != null && oldWish.getChildWishAssigneeID() != addedWish.getChildWishAssigneeID())
+		if(oldWish != null && oldWish.getPartnerID() != addedWish.getPartnerID())
 		{
 			//assignee change -- need to adjust partner gift assignment counts in partner DB
-			serverPartnerDB.updateGiftAssignees(year, oldWish.getChildWishAssigneeID(), 
-												addedWish.getChildWishAssigneeID());
+			serverPartnerDB.updateGiftAssignees(year, oldWish.getPartnerID(), 
+												addedWish.getPartnerID());
 		}
 
 		//test to see if wish status is changing to Received from Delivered or Shopping, or from Assigned to
@@ -427,12 +427,12 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		//once a gift is received it goes missing, we are unable to find it, and have to shop for a replacement.
 		//If this occurs, the total partner count of gifts received will be greater than the number of gifts
 		//delivered to families. Refer to the ONC Child Wish Status Life Cycle for additional detail
-		if(oldWish != null && addedWish.getChildWishStatus() == WishStatus.Received && 
-		   (oldWish.getChildWishStatus() == WishStatus.Delivered || oldWish.getChildWishStatus() == WishStatus.Shopping))
+		if(oldWish != null && addedWish.getGiftStatus() == GiftStatus.Received && 
+		   (oldWish.getGiftStatus() == GiftStatus.Delivered || oldWish.getGiftStatus() == GiftStatus.Shopping))
 		{
 			serverPartnerDB.incrementGiftActionCount(year, addedWish);
 		}
-		else if(oldWish != null && addedWish.getChildWishStatus() == WishStatus.Delivered && oldWish.getChildWishStatus() == WishStatus.Assigned)
+		else if(oldWish != null && addedWish.getGiftStatus() == GiftStatus.Delivered && oldWish.getGiftStatus() == GiftStatus.Assigned)
 		{
 			serverPartnerDB.incrementGiftActionCount(year, addedWish);
 		}
@@ -441,7 +441,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	void deleteChildWishes(int year, int childID)
 	{
 		ChildWishDBYear cwDBYear = childwishDB.get(year - BASE_YEAR);
-		List<ONCChildWish> cwAL = cwDBYear.getList();
+		List<ONCChildGift> cwAL = cwDBYear.getList();
 		for(int index = cwAL.size()-1; index >= 0; index--) 
 			if(cwAL.get(index).getChildID() == childID)
 			{
@@ -458,31 +458,31 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		HistoryRequest whRequest = gson.fromJson(reqjson, HistoryRequest.class);
 		
-		List<ONCChildWish> cwHistory = new ArrayList<ONCChildWish>();
-		List<ONCChildWish> cwAL = childwishDB.get(year - BASE_YEAR).getList();
+		List<ONCChildGift> cwHistory = new ArrayList<ONCChildGift>();
+		List<ONCChildGift> cwAL = childwishDB.get(year - BASE_YEAR).getList();
 		
 		//Search for child wishes that match the child id
-		for(ONCChildWish cw: cwAL)
-			if(cw.getChildID() == whRequest.getID() && cw.getWishNumber() == whRequest.getNumber())
+		for(ONCChildGift cw: cwAL)
+			if(cw.getChildID() == whRequest.getID() && cw.getGiftNumber() == whRequest.getNumber())
 				cwHistory.add(cw);
 			
 		//Convert list to json and return it
-		Type listtype = new TypeToken<ArrayList<ONCChildWish>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();
 		
 		String response = gson.toJson(cwHistory, listtype);
 		return response;
 	}
 	
-	List<ONCChildWish> getChildWishHistory(int year, int childID, int wn)
+	List<ONCChildGift> getChildWishHistory(int year, int childID, int wn)
 	{
 		//create the return list
-		List<ONCChildWish> cwHistory = new ArrayList<ONCChildWish>();
-		List<ONCChildWish> cwAL = childwishDB.get(year - BASE_YEAR).getList();
+		List<ONCChildGift> cwHistory = new ArrayList<ONCChildGift>();
+		List<ONCChildGift> cwAL = childwishDB.get(year - BASE_YEAR).getList();
 		
 		//Search for child wishes that match the child id and wish number. For each 
 		//wish that matches the child id and wish number, add it to the wish history list
-		for(ONCChildWish cw: cwAL)
-			if(cw.getChildID() == childID && cw.getWishNumber() == wn)
+		for(ONCChildGift cw: cwAL)
+			if(cw.getChildID() == childID && cw.getGiftNumber() == wn)
 				cwHistory.add(cw);
 		
 		//sort the wish chronologically, most recent wish first in the list
@@ -498,9 +498,9 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	 * @param wishID
 	 * @return
 	 */
-	static ONCChildWish getWish(int year, int wishID)
+	static ONCChildGift getWish(int year, int wishID)
 	{
-		List<ONCChildWish> cwAL = childwishDB.get(year - BASE_YEAR).getList();	//Get the child wish AL for the year
+		List<ONCChildGift> cwAL = childwishDB.get(year - BASE_YEAR).getList();	//Get the child wish AL for the year
 		
 		int index = cwAL.size() -1;	//Set the element to the last child wish in the array
 		
@@ -514,15 +514,15 @@ public class ServerChildWishDB extends ServerSeasonalDB
 			return cwAL.get(index);		
 	}
 	
-	ONCChildWish getWish(int year, int childid, int wishnum)
+	ONCChildGift getWish(int year, int childid, int wishnum)
 	{
-		List<ONCChildWish> cwAL = childwishDB.get(year - BASE_YEAR).getList();	//Get the child wish AL for the year
+		List<ONCChildGift> cwAL = childwishDB.get(year - BASE_YEAR).getList();	//Get the child wish AL for the year
 		
 		int index = cwAL.size() -1;	//Set the element to the last child wish in the array
 		
 		//Search from the bottom of the data base for speed. New wishes are added to the bottom
 		while (index >= 0 && (cwAL.get(index).getChildID() != childid || 
-				cwAL.get(index).getWishNumber() != wishnum))
+				cwAL.get(index).getGiftNumber() != wishnum))
 			index--;
 		
 		if(index == -1)
@@ -569,7 +569,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 				pyPartnerAssignedID = -1;
 				
 				//get the prior year wish history for the child and wish number
-				List<ONCChildWish> pycWH = getChildWishHistory(newYear-1, pyc.getID(), wn);
+				List<ONCChildGift> pycWH = getChildWishHistory(newYear-1, pyc.getID(), wn);
 				
 				//work down the list from earliest wishes to most recent. For all wishes that were
 				//created prior to the gifts received deadline, record the ID's of the partner who
@@ -578,20 +578,20 @@ public class ServerChildWishDB extends ServerSeasonalDB
 				int index = 0;
 				while(index < pycWH.size())
 				{
-					if(pycWH.get(index).getChildWishStatus() == WishStatus.Assigned)
+					if(pycWH.get(index).getGiftStatus() == GiftStatus.Assigned)
 					{
-						pyPartnerAssignedID = pycWH.get(index).getChildWishAssigneeID();
+						pyPartnerAssignedID = pycWH.get(index).getPartnerID();
 					}
-					else if(pycWH.get(index).getChildWishStatus() == WishStatus.Delivered)
+					else if(pycWH.get(index).getGiftStatus() == GiftStatus.Delivered)
 					{
-						pyPartnerDeliveredID = pycWH.get(index).getChildWishAssigneeID();
+						pyPartnerDeliveredID = pycWH.get(index).getPartnerID();
 					}
-					else if(pycWH.get(index).getChildWishStatus() == WishStatus.Received)
+					else if(pycWH.get(index).getGiftStatus() == GiftStatus.Received)
 					{
-						if(pycWH.get(index).getChildWishDateChanged().compareTo(gvDB.getDateGiftsRecivedDealdine(newYear-1)) <= 0)
-							pyPartnerReceivedBeforeID = pycWH.get(index).getChildWishAssigneeID();
+						if(pycWH.get(index).getDateChanged().compareTo(gvDB.getDateGiftsRecivedDealdine(newYear-1)) <= 0)
+							pyPartnerReceivedBeforeID = pycWH.get(index).getPartnerID();
 						else
-							pyPartnerReceivedAfterID = pycWH.get(index).getChildWishAssigneeID();
+							pyPartnerReceivedAfterID = pycWH.get(index).getPartnerID();
 					}
 				
 					index++;
@@ -621,7 +621,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	{
 		//Get the child wish AL for the year and add the object
 		ChildWishDBYear cwDBYear = childwishDB.get(year - BASE_YEAR);
-		cwDBYear.add(new ONCChildWish(nextLine));
+		cwDBYear.add(new ONCChildGift(nextLine));
 	}
 
 	@Override
@@ -635,29 +635,29 @@ public class ServerChildWishDB extends ServerSeasonalDB
 		childwishDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 	
-	private class ChildWishDateChangedComparator implements Comparator<ONCChildWish>
+	private class ChildWishDateChangedComparator implements Comparator<ONCChildGift>
 	{
 		@Override
-		public int compare(ONCChildWish cw1, ONCChildWish cw2)
+		public int compare(ONCChildGift cw1, ONCChildGift cw2)
 		{
-			return cw1.getChildWishDateChanged().compareTo(cw2.getChildWishDateChanged());
+			return cw1.getDateChanged().compareTo(cw2.getDateChanged());
 		}
 	}
 	
 	private class ChildWishDBYear extends ServerDBYear
     {
-    	private List<ONCChildWish> cwList;
+    	private List<ONCChildGift> cwList;
     	
     	ChildWishDBYear(int year)
     	{
     		super();
-    		cwList = new ArrayList<ONCChildWish>();
+    		cwList = new ArrayList<ONCChildGift>();
     	}
     	
     	//getters
-    	List<ONCChildWish> getList() { return cwList; }
+    	List<ONCChildGift> getList() { return cwList; }
     	
-    	void add(ONCChildWish addedWish) { cwList.add(addedWish); }
+    	void add(ONCChildGift addedWish) { cwList.add(addedWish); }
     }
 
 	@Override

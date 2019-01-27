@@ -241,6 +241,22 @@ public class FamilyHandler extends ONCWebpageHandler
     		
     			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     		}
+		else if(requestURI.contains("/familynotes"))
+		{
+    			HtmlResponse htmlResponse;
+    		
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{
+    				//get the JSON of family reference list
+    				int year = Integer.parseInt((String) params.get("year"));
+    				int famID = Integer.parseInt((String) params.get("famid"));
+    				htmlResponse = ServerFamilyDB.getFamilyNotesJSONP(year, famID, (String) params.get("callback"));
+    			}
+    			else
+    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+    			
+    			sendHTMLResponse(t, htmlResponse);
+		}
 	}
 	
 	ResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
