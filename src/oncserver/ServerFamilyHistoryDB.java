@@ -11,6 +11,7 @@ import java.util.TimeZone;
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.HistoryRequest;
 import ourneighborschild.ONCFamilyHistory;
+import ourneighborschild.ONCUser;
 import ourneighborschild.ONCFamily;
 
 import com.google.gson.Gson;
@@ -86,7 +87,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	}
 
 	@Override
-	String add(int year, String json)
+	String add(int year, String json, ONCUser client)
 	{
 		//Create a history object for the new delivery
 		Gson gson = new Gson();

@@ -26,6 +26,7 @@ import ourneighborschild.SignUp;
 import ourneighborschild.SignUpType;
 import ourneighborschild.VolAct;
 import ourneighborschild.GeniusSignUps;
+import ourneighborschild.ONCUser;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.Activity;
 import ourneighborschild.Frequency;
@@ -333,7 +334,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	}
 */
 	@Override
-	String add(int year, String json) 
+	String add(int year, String json, ONCUser client) 
 	{
 		//Need to change this to add a check to see if the activity already exists, 
 		//similar to what we do for agents.
@@ -347,6 +348,8 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		
 		addedActivity.setID(activityDBYear.getNextID());
 		addedActivity.setDateChanged(new Date());
+		addedActivity.setChangedBy(client.getLNFI());
+		addedActivity.setStoplightChangedBy(client.getLNFI());
 		
 		activityDBYear.add(addedActivity);
 		activityDBYear.setChanged(true);

@@ -27,6 +27,7 @@ import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
+import ourneighborschild.ONCNote;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
@@ -39,7 +40,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 45;
+	private static final int FAMILYDB_HEADER_LENGTH = 44;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
@@ -57,6 +58,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerChildDB childDB;
 	private static ServerAdultDB adultDB;
 	private static ServerMealDB mealDB;
+	private static ServerNoteDB noteDB;
 	private static ServerGlobalVariableDB globalDB;
 	
 	private static ClientManager clientMgr;
@@ -123,6 +125,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		adultDB = ServerAdultDB.getInstance();
 		userDB = ServerUserDB.getInstance();
 		mealDB = ServerMealDB.getInstance();
+		noteDB = ServerNoteDB.getInstance();
 		globalDB = ServerGlobalVariableDB.getInstance();
 
 		clientMgr = ClientManager.getInstance();
@@ -155,7 +158,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		
 		for(int i=0; i<searchList.size(); i++)
 		{
-			ONCWebsiteFamily webFam = new ONCWebsiteFamily(searchList.get(i));
+			ONCWebsiteFamily webFam = new ONCWebsiteFamily(searchList.get(i), ServerNoteDB.hasNote(year, searchList.get(i).getID()));
 			responseList.add(webFam);
 		}
 		
@@ -187,7 +190,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//can only happen if loggedInUser permission > AGENT. If the requested agent is
 			//the logged-in user and their permissions are higher then Agent return all families
 			for(ONCFamily f : searchList)
-				responseList.add(new ONCWebsiteFamily(f));
+				responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
 				reqAgentID >= 0 && reqGroupID < 0)
@@ -196,7 +199,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the agent.
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == reqAgentID)
-					responseList.add(new ONCWebsiteFamily(f));
+					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
 				reqAgentID < 0 && reqGroupID >= 0)
@@ -205,7 +208,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the group.
 			for(ONCFamily f : searchList)
 				if(f.getGroupID() == reqGroupID)
-					responseList.add(new ONCWebsiteFamily(f));
+					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+			
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
 				reqAgentID >= 0 && reqGroupID >= 0)
@@ -214,7 +218,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the group.
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-					responseList.add(new ONCWebsiteFamily(f));
+					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
 				reqAgentID < 0 && reqGroupID >= 0)
@@ -224,11 +228,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all families referred in the group
 			ONCGroup group = ServerGroupDB.getGroup(reqGroupID);
 			if(loggedInUser.isInGroup(reqGroupID) && group.groupSharesInfo())
-			{
 				for(ONCFamily f : searchList)
+				{
 					if(f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f));
-			}
+						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+				}
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
 				 reqAgentID >= 0 && reqGroupID < 0)
@@ -238,7 +242,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//regardless of group. 
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f));
+					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
 				 reqAgentID >= 0 && reqGroupID >=0)
@@ -254,14 +258,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{	
 				for(ONCFamily f : searchList)
 					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f));
+						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
 			}
 			else if(reqAgentID != loggedInUser.getID() && reqAgent.isInGroup(reqGroupID) && 
 					reqGroup.groupSharesInfo())
 			{	
 				for(ONCFamily f : searchList)
 					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f));
+						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
 			}
 		}
 /*		
@@ -329,45 +333,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			responseList.add(new FamilyReference(searchList.get(i).getReferenceNum()));
 		
 		String response = gson.toJson(responseList, listOfFamilyReferences);
-
-		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
-	}
-	
-	static HtmlResponse getFamilyNotesJSONP(int year, int famID, String callbackFunction)
-	{		
-		Gson gson = new Gson();
-		FamilyNotes fn;
-		
-		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
-		
-		int index = 0;
-		while(index < searchList.size() && searchList.get(index).getID() != famID)
-			index++;
-  
-		if(index < searchList.size())
-		{
-			ONCFamily f = searchList.get(index);
-//			System.out.println(String.format("ServFamDB.getFamNotesJSONP: dns=%s", f.getDNSCode()));	
-			StringBuffer buff = new StringBuffer();
-			
-			if(!f.getDNSCode().isEmpty())
-			{
-//				DNSCode dnsCode = dnsCodeMap.get(f.getDNSCode());
-//				System.out.println(String.format("ServFamDB.getFamNotesJSONP: dns=%s, "
-//						+ "dnsCode.title=%s, dnsCode.definition=%s", f.getDNSCode(),
-//						dnsCode.getTitle(), dnsCode.getDefinition()));
-				
-				buff.append(dnsCodeMap.get(f.getDNSCode()).getDefinition() + "\n");
-			}
-			buff.append(f.getAgentNote());
-			
-			fn = new FamilyNotes(String.format("Notes: %s Family", f.getLastName()), buff.toString());
-		}
-		else
-			fn = new FamilyNotes("", "");
-		
-		String response = gson.toJson(fn, FamilyNotes.class);
 
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
@@ -744,7 +709,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	}		
 	
 	@Override
-	String add(int year, String json)
+	String add(int year, String json, ONCUser client)
 	{
 		//Create a family object for the add family request
 		Gson gson = new Gson();
@@ -767,6 +732,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			//set the new ID for the added family
 			addedFam.setID(fDBYear.getNextID());
+			addedFam.setDateChanged(new Date());
+			addedFam.setChangedBy(client.getLNFI());
+			addedFam.setStoplightChangedBy(client.getLNFI());
 			
 			//add to the family data base
 			fDBYear.add(addedFam);
@@ -1338,8 +1306,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
 				"ODB Details", "Children Names", "Schools", "ODB WishList", "Adopted For",
 				"Agent ID", "GroupID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
-				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only",
-				"Agent Note"};
+				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only"};
 		
 		FamilyDBYear fDBYear = familyDB.get(year - BASE_YEAR);
 		if(fDBYear.isUnsaved())

@@ -10,6 +10,7 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCPartner;
+import ourneighborschild.ONCUser;
 import ourneighborschild.WebChildWish;
 import ourneighborschild.GiftStatus;
 
@@ -158,7 +159,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
-	String add(int year, String childjson)
+	String add(int year, String childjson, ONCUser client)
 	{
 		//Create a child object for the updated child
 		Gson gson = new Gson();

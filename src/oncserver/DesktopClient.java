@@ -478,7 +478,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_family>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = serverFamilyDB.add(year, command.substring(16));
+                		String response = serverFamilyDB.add(year, command.substring(16), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -530,7 +530,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_child>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = childDB.add(year, command.substring(15));
+                		String response = childDB.add(year, command.substring(15), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -606,7 +606,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_partner>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = serverPartnerDB.add(year, command.substring(17));
+                		String response = serverPartnerDB.add(year, command.substring(17), clientUser);
                 		output.println(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
@@ -653,7 +653,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_catwish>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = wishCatalog.add(year, command.substring(17));
+                		String response = wishCatalog.add(year, command.substring(17), clientUser);
                 		output.println(response);
 //                	clientMgr.dataChanged(this, response);
                 		clientMgr.notifyAllOtherClients(this, response);
@@ -677,7 +677,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_wishdetail>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = wishDetailDB.add(year, command.substring(20));
+                		String response = wishDetailDB.add(year, command.substring(20), clientUser);
                 		output.println(response);
 //                	clientMgr.dataChanged(this, response);
                 		clientMgr.notifyAllOtherClients(this, response);
@@ -695,7 +695,7 @@ public class DesktopClient extends Thread
                 		//Add the wish to the child wish data base and update the 
                 		//child wish ID in the child data base for the added wish
                 		clientMgr.addLogMessage(command);
-                		String response = childwishDB.add(year, command.substring(15));
+                		String response = childwishDB.add(year, command.substring(15), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -711,7 +711,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_delivery>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = famHistoryDB.add(year, command.substring(18));
+                		String response = famHistoryDB.add(year, command.substring(18), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -743,7 +743,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_activity>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = activityDB.add(year, command.substring(18));
+                		String response = activityDB.add(year, command.substring(18), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -767,7 +767,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_driver>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = volunteerDB.add(year, command.substring(16));
+                		String response = volunteerDB.add(year, command.substring(16), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -791,7 +791,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_volunteer_activity>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = volunteerActivityDB.add(year, command.substring(28));
+                		String response = volunteerActivityDB.add(year, command.substring(28), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -825,7 +825,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_adult>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = adultDB.add(year, command.substring(15));
+                		String response = adultDB.add(year, command.substring(15), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -849,7 +849,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_note>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = noteDB.add(year, command.substring(14));
+                		String response = noteDB.add(year, command.substring(14), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -873,7 +873,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_meal>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = mealDB.add(year, command.substring(14));
+                		String response = mealDB.add(year, command.substring(14), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -881,7 +881,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_battery>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = batteryDB.add(year, command.substring(17));
+                		String response = batteryDB.add(year, command.substring(17), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);

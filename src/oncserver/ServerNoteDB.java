@@ -4,20 +4,25 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.ONCNote;
+import ourneighborschild.ONCUser;
 
 
 public class ServerNoteDB extends ServerSeasonalDB
 {
-	private static final int NOTE_DB_HEADER_LENGTH = 13;
+	private static final int NOTE_DB_HEADER_LENGTH = 14;
 
 	private static List<NoteDBYear> noteDB;
 	private static ServerNoteDB instance = null;
+	
+	private static ClientManager clientMgr;
 	
 	private ServerNoteDB() throws FileNotFoundException, IOException
 	{
@@ -38,6 +43,8 @@ public class ServerNoteDB extends ServerSeasonalDB
 			//set the next id
 			noteDBYear.setNextID(getNextID(noteDBYear.getList()));	
 		}
+		
+		clientMgr = ClientManager.getInstance();
 	}
 	
 	public static ServerNoteDB getInstance() throws FileNotFoundException, IOException
@@ -58,7 +65,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	}
 
 	@Override
-	String add(int year, String json)
+	String add(int year, String json, ONCUser client)
 	{
 		//Create an ONCAdult object for the added adult
 		Gson gson = new Gson();
@@ -67,15 +74,19 @@ public class ServerNoteDB extends ServerSeasonalDB
 		//retrieve the note data base for the year
 		NoteDBYear noteDBYear =noteDB.get(year - BASE_YEAR);
 								
-		//set the new ID for the added ONCNote
+		//set the new ID and time stamps for the added ONCNote
 		addedNote.setID(noteDBYear.getNextID());
+		addedNote.setDateChanged(new Date());
+		addedNote.setChangedBy(client.getLNFI());
+		addedNote.setStoplightChangedBy(client.getLNFI());
 		
-		//add the new noteto the data base
+		//add the new note to the data base
 		noteDBYear.add(addedNote);
 		noteDBYear.setChanged(true);
 							
 		return "ADDED_NOTE" + gson.toJson(addedNote, ONCNote.class);
 	}
+	
 	String update(int year, String json)
 	{
 		//Create a ONCNote object for the updated note
@@ -89,7 +100,8 @@ public class ServerNoteDB extends ServerSeasonalDB
 		while(index < noteList.size() && noteList.get(index).getID() != updatedNote.getID())
 			index++;
 		
-		//Replace the current adult object with the update
+		//Replace the current note object with the update. Check for a state change and
+		//update the status accordingly
 		if(index < noteList.size())
 		{
 			noteList.set(index, updatedNote);
@@ -146,7 +158,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Note ID", "Owner ID", "Status", "Note", "Changed By",
+		String[] header = {"Note ID", "Owner ID", "Status", "Title", "Note", "Changed By",
 				"Response", "Response By", "Time Created", "Time Viewed",
 				"Time Responded", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B"};
 		
@@ -158,6 +170,87 @@ public class ServerNoteDB extends ServerSeasonalDB
 			noteDBYear.setChanged(false);
 		}
 	}
+	
+	static List<ONCNote> getNotesForFamily(int year, int ownerID)
+	{
+		List<ONCNote> famNoteList = new ArrayList<ONCNote>();
+		for(ONCNote n : noteDB.get(year-BASE_YEAR).getList())
+			if(n.getOwnerID() == ownerID)
+				famNoteList.add(n);
+				
+		return famNoteList;		 
+	}
+	
+	static boolean hasNote(int year, int ownerID)
+	{
+		List<ONCNote> noteList = noteDB.get(year-BASE_YEAR).getList();
+		int index = 0;
+		while(index < noteList.size() && noteList.get(index).getOwnerID() != ownerID)
+			index++;
+		
+		return index < noteList.size();
+	}
+	
+	//take advantage of the fact the list of notes if saved in time order. Search 
+	//from the bottom for the first note for the family. If no note, return a dummy note
+	static ONCNote getLastNoteForFamily(int year, int ownerID, WebClient wc)
+	{
+		NoteDBYear noteDBYear = noteDB.get(year-BASE_YEAR);
+		List<ONCNote> noteList = noteDBYear.getList();
+		int index = noteList.size()-1;
+		while(index >= 0 && noteList.get(index).getOwnerID() != ownerID)
+			index--;
+		
+		if(index >= 0 && noteList.get(index).getStatus() < ONCNote.RESPONDED)
+		{
+			ONCNote updatedNote = noteList.get(index);
+			updatedNote.noteViewed(wc.getWebUser().getLNFI());
+			noteDBYear.setChanged(true);
+			
+			//notify in year clients of the updated note
+			Gson gson = new Gson();
+			clientMgr.notifyAllInYearClients(year, "UPDATED_NOTE" + gson.toJson(updatedNote, ONCNote.class));
+			return updatedNote; 
+		}
+		else
+			return new ONCNote();
+	}
+	
+	static HtmlResponse getLastNoteForFamilyJSONP(int year, int famID, WebClient wc, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		String response = gson.toJson(getLastNoteForFamily(year, famID, wc), ONCNote.class);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+	
+	static HtmlResponse processNoteResponseJSONP(int year, int noteID, WebClient wc, String submittedResponse, 
+														String callbackFunction)
+	{
+		String response = "";
+		//find and update the note with the agents response
+		NoteDBYear noteDBYear = noteDB.get(year-BASE_YEAR);
+		List<ONCNote> noteList = noteDBYear.getList();
+		int index=0;
+		while(index < noteList.size() && noteList.get(index).getID() != noteID)
+			index++;
+		
+		if(index < noteList.size())
+		{
+			ONCNote updatedNote = noteList.get(index);
+			updatedNote.setResponse(submittedResponse, wc.getWebUser().getLNFI());
+			noteDBYear.setChanged(true);
+			
+			//notify in year clients of the updated note
+			Gson gson = new Gson();
+			clientMgr.notifyAllInYearClients(year, "UPDATED_NOTE" + gson.toJson(updatedNote, ONCNote.class));
+			response = gson.toJson(updatedNote, ONCNote.class);
+		}
+		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+	}
+	
 	private class NoteDBYear extends ServerDBYear
 	{
 		private List<ONCNote> list;

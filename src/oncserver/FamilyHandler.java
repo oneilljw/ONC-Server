@@ -243,19 +243,37 @@ public class FamilyHandler extends ONCWebpageHandler
     		}
 		else if(requestURI.contains("/familynotes"))
 		{
+			WebClient wc;
     			HtmlResponse htmlResponse;
     		
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			if((wc = clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
     				//get the JSON of family reference list
     				int year = Integer.parseInt((String) params.get("year"));
     				int famID = Integer.parseInt((String) params.get("famid"));
-    				htmlResponse = ServerFamilyDB.getFamilyNotesJSONP(year, famID, (String) params.get("callback"));
+    				htmlResponse = ServerNoteDB.getLastNoteForFamilyJSONP(year, famID, wc, (String) params.get("callback"));
     			}
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
     			
     			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/noteresponse"))
+		{
+			WebClient wc;
+			HtmlResponse htmlResponse;
+			if((wc = clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				//get the JSON for response to response submission
+				int year = Integer.parseInt((String) params.get("year"));
+				int noteID = Integer.parseInt((String) params.get("noteID"));
+				htmlResponse = ServerNoteDB.processNoteResponseJSONP(year, noteID, wc, 
+								(String) params.get("response"), (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
 		}
 	}
 	

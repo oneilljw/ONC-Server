@@ -380,7 +380,7 @@
 			{
     				if(agentID == -1 || agentID == cyFamJson[i].agentID)
     				{
-    					addTableRow(cyFamJson[i], cyTable, "Edit");	//add row to table
+    					addTableRow(cyFamJson[i], document.getElementById('cyTable'), "Edit");
     					count++;
     				}
 			}
@@ -413,7 +413,7 @@
     function addTableRow(family, table, buttontext)
     {
         if (!document.getElementsByTagName) return;
-        
+       
         var fstatus;
         if(family.fstatus === 'Confirmed')
         		fstatus = 'Confirmed \u2713';
@@ -459,13 +459,27 @@
         }
         
         //create a dns button, if necessary
-        if(family.DNSCode.length !== 0)
+        if(family.DNSCode.length !== 0 || family.bHasNote)
         {	
         		var dnsbtn = document.createElement("button");
-        		dnsbtn.innerHTML = family.DNSCode;
+        		
+    
+        		if(family.bHasNote)
+        		{
+        			dnsbtn.innerHTML = 'Note';
+        			if(table=== document.getElementById('cyTable'))
+        				row.style.backgroundColor = "Yellow";
+        		}
+        		else
+        		{
+        			dnsbtn.innerHTML = family.DNSCode;
+        			if(table=== document.getElementById('cyTable'))
+            			row.style.backgroundColor = "Red";
+        		}
+        		
         		dnsbtn.style.width = cellwidth[index];
         		dnsbtn.classList.add("noteButton");
-	        	dnsbtn.onclick=function() {familyNotes(table, family.id);};
+	        	dnsbtn.onclick=function() {familyNote(table, family.id);};
         		row.appendChild(dnsbtn);
     		}
         else
@@ -530,7 +544,7 @@
 			post('familyupdate', params);
     }
     
-    function familyNotes(table, famID)
+    function familyNote(table, famID)
     {
 		var year;
 		if(table=== document.getElementById('pyTable'))
@@ -539,12 +553,50 @@
 			year =  sessionStorage.getItem('curryear');
 		
 		var noteparams = "year=" + year + "&famid=" + famID + "&callback=?";
-		$.getJSON('familynotes', noteparams, function(data)
-		{	
-			document.getElementById("notesfamheader").textContent = data.title;
-			document.getElementById("notesfammssg").textContent = data.agentNote;
+		$.getJSON('familynotes', noteparams, function(famNote)
+		{
+			var legend = 'Note from ONC: ' + formatDate(famNote.dateChanged);
+			document.getElementById('noteslegend').textContent = legend;
+			document.getElementById("notesfamheader").textContent = famNote.title;
+			document.getElementById("notesfammssg").textContent = famNote.note;
+			document.getElementById("notesresponse").textContent = famNote.response;
+			document.getElementById("responsesubmit").value = famNote.id;
+			
+			if(famNote.status == 2)	//responded
+				document.getElementById("responsesubmit").disabled;
+			else
+				document.getElementById("responsesubmit").enabled;
+			
 			window.location=document.getElementById('notesanchor').href;
 		});
+    }
+    
+    function formatDate(date)
+    {
+    		var out = date.month+1 + "/" + date.dayOfMonth + "/" + date.year + " " + date.hourOfDay + ":" + date.minute;
+    		return out;
+    }
+    
+    function submitNoteResponse(button)
+    {
+    		var year =  sessionStorage.getItem('curryear');
+    		var response = document.getElementById('notesresponse').value;
+    		if(response.length > 0)
+    		{
+    			var responseparams = "year=" + year + "&noteID=" + button.value + "&response=" + response + "&callback=?";
+    			$.getJSON('noteresponse', responseparams, function(noteResponse)
+    			{
+    				console.log(noteResponse);
+    				if(noteResponse.status === 2);	//note status == RESPONDED
+    				{
+    					var legend = 'On ' + formatDate(noteResponse.timeResponse) 
+    								+ ' ' + noteResponse.respondedBy + '. responded';
+    					console.log(legend);
+    								
+    					document.getElementById('responselegend').textContent = legend;
+    				}
+    			});
+    		}
     }
     
     function newFamily()
@@ -820,6 +872,19 @@
 		{
 			font-style: italic;
 		}
+		#notedlgbodydiv
+		{
+  			background-color: #3CB371;
+		}
+		.fieldset-auto-width
+		{
+        		 display: inline-block;
+        	}
+        #responsesubmit
+        {
+   			float:right;
+		}
+    }
     </style>  
 </head>
 <body>
@@ -832,7 +897,6 @@
       <img src="onclogo" height="55" width="75"/>
 	  <p><span id="banner">USER_NAME, welcome to Our Neighbor's Child's Family Referral System</span><br>
 	<span id="message">USER_MESSAGE</span></p>
-	
     </div>
   </header>
   <nav>
@@ -930,8 +994,17 @@
 		  <img class='logoimg' src="onclogo">
 		  <span class=logospan id="notesfamheader"></span>
 		</div>
-		<div>
-		  <span id='notesfammssg'></span>
+		<div id='notedlgbodydiv'>
+		<!-- This is the body of the dialog. -->
+		    <fieldset class="fieldset-auto-width">
+		      <legend id='noteslegend' class="legend-major">Note From ONC</legend>
+		      <textarea id='notesfammssg' rows="4" cols="40" disabled></textarea>
+		    </fieldset>
+		    <fieldset class="fieldset-auto-width">
+		      <legend id='responselegend' class="legend-major">Response</legend>
+		      <textarea id='notesresponse' rows="4" cols="40"></textarea>
+		      <button id="responsesubmit" onclick='submitNoteResponse(this)'>Submit</button>
+		    </fieldset>
 		</div>
 	</div>
   </div>

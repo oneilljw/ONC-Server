@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.Activity;
+import ourneighborschild.ONCUser;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.VolAct;
 
@@ -157,7 +158,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	}
 
 	@Override
-	String add(int year, String json) 
+	String add(int year, String json, ONCUser client) 
 	{
 		//Create a volunteer activity object for the new activity
 		Gson gson = new Gson();

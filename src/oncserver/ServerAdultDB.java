@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -16,6 +17,7 @@ import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.AdultGender;
 import ourneighborschild.ONCAdult;
+import ourneighborschild.ONCUser;
 
 public class ServerAdultDB extends ServerSeasonalDB
 {
@@ -148,7 +150,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 	}
 
 	@Override
-	String add(int year, String adultjson)
+	String add(int year, String adultjson, ONCUser client )
 	{
 		//Create an ONCAdult object for the added adult
 		Gson gson = new Gson();

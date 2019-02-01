@@ -9,6 +9,7 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCPriorYearChild;
+import ourneighborschild.ONCUser;
 
 import com.google.gson.Gson;
 
@@ -134,7 +135,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	}
 
 	@Override
-	String add(int year, String userjson) 
+	String add(int year, String userjson, ONCUser client) 
 	{
 		//This method is unused. Prior year children are only created by the
 		//server. 

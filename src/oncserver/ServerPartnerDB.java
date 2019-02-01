@@ -6,12 +6,14 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import ourneighborschild.Address;
-import ourneighborschild.GiftCollection;
+import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;
+import ourneighborschild.ONCUser;
 import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
@@ -104,12 +106,12 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			//confirmed partners to the temporary list
 			for(ONCPartner p: partnerDB.get(year - BASE_YEAR).getList())
 			{
-				if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollection.Ornament
+				if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollectionType.Ornament
 						&& p.getType() < ORG_TYPE_CLOTHING)
 				{
 					confirmedWebPartnerList.add(new ONCWebPartner(p));
 				}
-				else if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollection.Ornament)
+				else if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollectionType.Ornament)
 					confirmedWebPartnerOtherList.add(new ONCWebPartner(p));		
 			}
 			
@@ -333,7 +335,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	}
 	
 	@Override
-	String add(int year, String json)
+	String add(int year, String json, ONCUser client)
 	{
 		//Create a organization object for the updated partner
 		Gson gson = new Gson();
@@ -342,6 +344,9 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		//set the new ID for the catalog wish
 		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
 		addedPartner.setID(partnerDBYear.getNextID());
+		addedPartner.setDateChanged(new Date());
+		addedPartner.setChangedBy(client.getLNFI());
+		addedPartner.setStoplightChangedBy(client.getLNFI());
 		
 		//set the region for the new partner
 		ServerRegionDB serverRegionDB = null;

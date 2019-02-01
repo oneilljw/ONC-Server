@@ -1,13 +1,13 @@
 package oncserver;
 
-import ourneighborschild.GiftCollection;
+import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCPartner;
 
 public class ONCWebPartnerExtended extends ONCWebPartner
 {
 	private String status;
 	private String type;
-	private GiftCollection collection;
+	private GiftCollectionType collection;
 	private String orn_req;
 	private String orn_assigned;
 	private String orn_delivered;
@@ -32,7 +32,7 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 	//getters
 	String getStatus() { return status; }
 	String getType() { return type; }
-	GiftCollection getCollectionType() { return collection; }
+	GiftCollectionType getCollectionType() { return collection; }
 	String getNumberOfOrnamentsRequested()	{ return orn_req; }
 	String getNumberOfOrnamentsAssigned() { return orn_assigned; }
 	String getNumberOfOrnamentsDelivered() { return orn_delivered; }

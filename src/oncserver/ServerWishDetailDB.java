@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ourneighborschild.GiftDetail;
+import ourneighborschild.ONCUser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -87,7 +88,7 @@ public class ServerWishDetailDB extends ServerSeasonalDB
 	}
 	
 	@Override
-	String add(int year, String json)
+	String add(int year, String json, ONCUser client)
 	{
 		//Create a wish detail object
 		Gson gson = new Gson();

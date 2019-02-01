@@ -13,6 +13,7 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import ourneighborschild.ONCObject;
+import ourneighborschild.ONCUser;
 import ourneighborschild.ServerGVs;
 
 import com.google.gson.Gson;
@@ -225,7 +226,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	}
 
 	@Override
-	String add(int year, String userjson) {
+	String add(int year, String userjson, ONCUser client) {
 		// TODO Auto-generated method stub
 		return null;
 	}

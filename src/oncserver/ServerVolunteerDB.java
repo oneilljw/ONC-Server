@@ -13,9 +13,9 @@ import java.util.Map;
 import ourneighborschild.EmailAddress;
 import ourneighborschild.ONCEmail;
 import ourneighborschild.ONCEmailAttachment;
+import ourneighborschild.ONCUser;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.ServerCredentials;
-import ourneighborschild.ServerGVs;
 import ourneighborschild.SignUpActivity;
 import ourneighborschild.VolAct;
 import ourneighborschild.Activity;
@@ -141,7 +141,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	}
 
 	@Override
-	String add(int year, String json) 
+	String add(int year, String json, ONCUser client) 
 	{
 		//Need to change this to add a check to see if the driver already exists, 
 		//similar to what we do for agents.
@@ -153,6 +153,10 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		//set the new ID for the new driver
 		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
 		addedDriver.setID(volunteerDBYear.getNextID());
+		addedDriver.setDateChanged(new Date());
+		addedDriver.setChangedBy(client.getLNFI());
+		addedDriver.setStoplightChangedBy(client.getLNFI());
+		
 		volunteerDBYear.add(addedDriver);
 		volunteerDBYear.setChanged(true);
 				

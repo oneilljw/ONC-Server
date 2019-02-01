@@ -17,7 +17,7 @@ public abstract class ServerSeasonalDB extends ONCServerDB
 	protected static final int AGENT_UPDATED = 1;
 	protected static final int AGENT_ADDED = 2;
 	
-	abstract String add(int year, String addjson);
+	abstract String add(int year, String addjson, ONCUser client);
 	
 	abstract void createNewYear(int year);	//used to create a new year from the authorized client
 	

@@ -9,6 +9,7 @@ import java.util.List;
 
 import ourneighborschild.MealStatus;
 import ourneighborschild.ONCMeal;
+import ourneighborschild.ONCUser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -97,7 +98,7 @@ public class ServerMealDB extends ServerSeasonalDB
 	
 	//add used by desktop client to add a meal
 	@Override
-	String add(int year, String mealjson)
+	String add(int year, String mealjson, ONCUser client)
 	{
 		//Create an ONCMeal object for the added meal
 		Gson gson = new Gson();
@@ -112,6 +113,8 @@ public class ServerMealDB extends ServerSeasonalDB
 		//set the new ID and time stamp for the added ONCMeal
 		addedMeal.setID(mealDBYear.getNextID());
 		addedMeal.setDateChanged(new Date());
+		addedMeal.setChangedBy(client.getLNFI());
+		addedMeal.setStoplightChangedBy(client.getLNFI());
 		
 		//set the status of the added meal relative to a parter change.
 		//This is the rules engine that governs meal status

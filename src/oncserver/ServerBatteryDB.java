@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.Battery;
+import ourneighborschild.ONCUser;
 
 public class ServerBatteryDB extends ServerSeasonalDB
 {
@@ -57,7 +58,7 @@ public class ServerBatteryDB extends ServerSeasonalDB
 		return response;	
 	}
 
-	String add(int year, String batteryjson)
+	String add(int year, String batteryjson, ONCUser client)
 	{
 		//Create a battery object
 		Gson gson = new Gson();

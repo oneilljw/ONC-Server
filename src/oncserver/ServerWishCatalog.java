@@ -9,7 +9,8 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import ourneighborschild.ONCWish;
+import ourneighborschild.ONCGift;
+import ourneighborschild.ONCUser;
 
 public class ServerWishCatalog extends ServerSeasonalDB
 {
@@ -52,10 +53,10 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	String getWishCatalog(int year)
 	{
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<ONCWish>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCGift>>(){}.getType();
 		
 		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCWish> catAL = catalogDBYear.getList();
+		List<ONCGift> catAL = catalogDBYear.getList();
 			
 		String response = gson.toJson(catAL, listtype);
 		return response;	
@@ -65,11 +66,11 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	{
 		//Create a wish detail object for the request wish detail update
 		Gson gson = new Gson();
-		ONCWish reqWish = gson.fromJson(json, ONCWish.class);
+		ONCGift reqWish = gson.fromJson(json, ONCGift.class);
 		
 		//Find the position for the current family being replaced
 		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCWish> catAL = catalogDBYear.getList();
+		List<ONCGift> catAL = catalogDBYear.getList();
 		int index = 0;
 		while(index < catAL.size() && catAL.get(index).getID() != reqWish.getID())
 			index++;
@@ -77,8 +78,8 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		//If catalog wish is located, replace the wish with the update.
 		if(index == catAL.size()) 
 		{
-			ONCWish currWish = catAL.get(index);
-			return "UPDATE_FAILED" + gson.toJson(currWish , ONCWish.class);
+			ONCGift currWish = catAL.get(index);
+			return "UPDATE_FAILED" + gson.toJson(currWish , ONCGift.class);
 		}
 		else
 		{
@@ -89,11 +90,11 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	}
 	
 	@Override
-	String add(int year, String json)
+	String add(int year, String json, ONCUser client)
 	{
 		//Create a wish object to add to the catalog
 		Gson gson = new Gson();
-		ONCWish addWishReq = gson.fromJson(json, ONCWish.class);
+		ONCGift addWishReq = gson.fromJson(json, ONCGift.class);
 	
 		//set the new ID for the catalog wish
 		WishCatalogDBYear catalogDBYear = catalogDB.get(year-BASE_YEAR);
@@ -103,18 +104,18 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		catalogDBYear.add(addWishReq);
 		catalogDBYear.setChanged(true);
 
-		return "ADDED_CATALOG_WISH" + gson.toJson(addWishReq, ONCWish.class);
+		return "ADDED_CATALOG_WISH" + gson.toJson(addWishReq, ONCGift.class);
 	}
 	
 	String delete(int year, String json)
 	{
 		//Create a catalog wish  object for the deleted catalog wish request
 		Gson gson = new Gson();
-		ONCWish reqDelWish = gson.fromJson(json, ONCWish.class);
+		ONCGift reqDelWish = gson.fromJson(json, ONCGift.class);
 	
 		//find the wish in the catalog
 		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCWish> catAL = catalogDBYear.getList();
+		List<ONCGift> catAL = catalogDBYear.getList();
 		
 		int index = 0;
 		while(index < catAL.size() && catAL.get(index).getID() != reqDelWish.getID())
@@ -135,7 +136,7 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	{
 		//get list for year
 		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCWish> wishList = catalogDBYear.getList();
+		List<ONCGift> wishList = catalogDBYear.getList();
 		
 		//find the ONCWish by ID
 		int index = 0;
@@ -150,18 +151,18 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	
 	static String getGiftCatalogJSONP(int year, String callbackFunction)
 	{
-		List<ONCWish> websiteGiftList = new ArrayList<ONCWish>();
+		List<ONCGift> websiteGiftList = new ArrayList<ONCGift>();
 		
 		//get list for year
 		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCWish> wishList = catalogDBYear.getList();
+		List<ONCGift> wishList = catalogDBYear.getList();
 		
-		for(ONCWish w : wishList)
+		for(ONCGift w : wishList)
 			if(w.getListindex() > 0)
 				websiteGiftList.add(w);
 		
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<ONCWish>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCGift>>(){}.getType();
 		String json = gson.toJson(websiteGiftList, listtype);
 		return json;
 	}
@@ -172,10 +173,10 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		
 		//get list for year
 		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCWish> wishList = catalogDBYear.getList();
+		List<ONCGift> wishList = catalogDBYear.getList();
 		
-		for(ONCWish w : wishList)
-			if(w.canBeWish(wn))
+		for(ONCGift w : wishList)
+			if(w.canBeGift(wn))
 				buff.append(String.format("<option value=%d>%s</option>", w.getID(), w.getName()));
 		
 		return buff.toString();
@@ -193,9 +194,9 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		catalogDB.add(catDBYear);
 						
 		//add a deep copy of each wish detail from last year the new season wish detail list
-		List<ONCWish> lyCatList = catalogDB.get(catalogDB.size()-1).getList();
-		for(ONCWish lyWish : lyCatList)
-			catDBYear.add(new ONCWish(lyWish));	//makes a deep copy of last year
+		List<ONCGift> lyCatList = catalogDB.get(catalogDB.size()-1).getList();
+		for(ONCGift lyWish : lyCatList)
+			catDBYear.add(new ONCGift(lyWish));	//makes a deep copy of last year
 					
 		catDBYear.setChanged(true);	//mark this db for persistent saving on the next save event	
 	}
@@ -204,7 +205,7 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine) 
 	{
 		WishCatalogDBYear catDBYear = catalogDB.get(year - BASE_YEAR);
-		catDBYear.add(new ONCWish(nextLine));
+		catDBYear.add(new ONCGift(nextLine));
 	}
 	
 	@Override
@@ -224,17 +225,17 @@ public class ServerWishCatalog extends ServerSeasonalDB
 
 	private class WishCatalogDBYear extends ServerDBYear
 	{
-		private List<ONCWish> catList;
+		private List<ONCGift> catList;
 	    	
 	    WishCatalogDBYear(int year)
 	    {
 	    		super();
-	    		catList = new ArrayList<ONCWish>();
+	    		catList = new ArrayList<ONCGift>();
 	    }
 	    	
 	    //getters
-	    List<ONCWish> getList() { return catList; }
+	    List<ONCGift> getList() { return catList; }
 	
-	    void add(ONCWish addedWish) { catList.add(addedWish); }
+	    void add(ONCGift addedWish) { catList.add(addedWish); }
 	}
 }

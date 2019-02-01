@@ -10,6 +10,7 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import ourneighborschild.ONCUser;
 import ourneighborschild.ONCVolunteer;
 import ourneighborschild.ONCWarehouseVolunteer;
 
@@ -92,7 +93,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 	}
 
 	@Override
-	String add(int year, String userjson) {
+	String add(int year, String userjson, ONCUser client) {
 		// TODO Auto-generated method stub
 		return null;
 	}

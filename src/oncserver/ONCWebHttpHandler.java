@@ -9,7 +9,7 @@ import java.util.Map;
 
 import ourneighborschild.Address;
 import ourneighborschild.AddressValidation;
-import ourneighborschild.GiftCollection;
+import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
@@ -805,7 +805,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 					"New partner", wc.getWebUser().getLNFI(), 
 					ONCWebPartnerExtended.getStatus(partnerMap.get("status")),
 					ONCWebPartnerExtended.getType(partnerMap.get("type")),
-					GiftCollection.valueOf(partnerMap.get("collection")), partName,
+					GiftCollectionType.valueOf(partnerMap.get("collection")), partName,
 					partnerMap.get("housenum"), partnerMap.get("street"), partnerMap.get("unit"),
 					partnerMap.get("city"), partnerMap.get("zipcode"), partnerMap.get("phone"),
 					orn_req, partnerMap.get("genTA"), partnerMap.get("delTA"), partnerMap.get("cyTA"), 
@@ -838,7 +838,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				updatePartner.setStoplightMssg("Update Partner via website");
 				updatePartner.setStoplightMssg(wc.getWebUser().getLNFI());
 				updatePartner.setType(ONCWebPartnerExtended.getType(partnerMap.get("type")));
-				updatePartner.setGiftCollectionType(GiftCollection.valueOf(partnerMap.get("collection")));
+				updatePartner.setGiftCollectionType(GiftCollectionType.valueOf(partnerMap.get("collection")));
 				updatePartner.setLastName(partName);
 				updatePartner.setHouseNum(partnerMap.get("housenum"));
 				updatePartner.setStreet(partnerMap.get("street"));

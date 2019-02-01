@@ -126,7 +126,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	}
 */	
 	@Override
-	String add(int year, String wishjson)
+	String add(int year, String wishjson, ONCUser client)
 	{
 		//Create a child wish object for the added wish
 		Gson gson = new Gson();
