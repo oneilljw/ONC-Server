@@ -4,9 +4,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -22,6 +23,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	private static List<NoteDBYear> noteDB;
 	private static ServerNoteDB instance = null;
 	
+	private static Map<String, DNSCode> dnsCodeMap;
 	private static ClientManager clientMgr;
 	
 	private ServerNoteDB() throws FileNotFoundException, IOException
@@ -45,6 +47,9 @@ public class ServerNoteDB extends ServerSeasonalDB
 		}
 		
 		clientMgr = ClientManager.getInstance();
+		
+		dnsCodeMap = new HashMap<String, DNSCode>();
+		loadDNSCodeMap();
 	}
 	
 	public static ServerNoteDB getInstance() throws FileNotFoundException, IOException
@@ -181,14 +186,14 @@ public class ServerNoteDB extends ServerSeasonalDB
 		return famNoteList;		 
 	}
 	
-	static boolean hasNote(int year, int ownerID)
+	static int lastNoteStatus(int year, int ownerID)
 	{
 		List<ONCNote> noteList = noteDB.get(year-BASE_YEAR).getList();
-		int index = 0;
-		while(index < noteList.size() && noteList.get(index).getOwnerID() != ownerID)
-			index++;
+		int index = noteList.size() -1;
+		while(index >= 0 && noteList.get(index).getOwnerID() != ownerID)
+			index--;
 		
-		return index < noteList.size();
+		return index >= 0 ? noteList.get(index).getStatus() : -1;
 	}
 	
 	//take advantage of the fact the list of notes if saved in time order. Search 
@@ -201,15 +206,20 @@ public class ServerNoteDB extends ServerSeasonalDB
 		while(index >= 0 && noteList.get(index).getOwnerID() != ownerID)
 			index--;
 		
-		if(index >= 0 && noteList.get(index).getStatus() < ONCNote.RESPONDED)
+		if(index >= 0)
 		{
 			ONCNote updatedNote = noteList.get(index);
-			updatedNote.noteViewed(wc.getWebUser().getLNFI());
-			noteDBYear.setChanged(true);
 			
-			//notify in year clients of the updated note
-			Gson gson = new Gson();
-			clientMgr.notifyAllInYearClients(year, "UPDATED_NOTE" + gson.toJson(updatedNote, ONCNote.class));
+			//update user who viewed if not already responded
+			if(updatedNote.getStatus() < ONCNote.RESPONDED)
+			{
+				updatedNote.noteViewed(wc.getWebUser().getLNFI());
+				noteDBYear.setChanged(true);
+			
+				//notify in year clients of the updated note
+				Gson gson = new Gson();
+				clientMgr.notifyAllInYearClients(year, "UPDATED_NOTE" + gson.toJson(updatedNote, ONCNote.class));
+			}
 			return updatedNote; 
 		}
 		else
@@ -220,6 +230,15 @@ public class ServerNoteDB extends ServerSeasonalDB
 	{		
 		Gson gson = new Gson();
 		String response = gson.toJson(getLastNoteForFamily(year, famID, wc), ONCNote.class);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+	
+	static HtmlResponse getDNSCodeJSONP(String code, String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		String response = gson.toJson(dnsCodeMap.get(code), DNSCode.class);
 
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
@@ -250,7 +269,32 @@ public class ServerNoteDB extends ServerSeasonalDB
 		
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
-	
+	void loadDNSCodeMap()
+	{
+	    	dnsCodeMap.put("DUP", new DNSCode("Duplicate Family", "Duplicate referral: Two or more referrals were received for this family. "
+	    				+ "ONC will serve the family through the first referral and this referral will not be "
+	    				+ "processed"));
+	    		
+	    	dnsCodeMap.put("WL", new DNSCode("Waitlist", "Waitlist referral: indicates the family is on ONC's wait list."));
+	    		
+	    	dnsCodeMap.put("FO", new DNSCode("Food Only", "Referrals marked FO are only requesting holiday food assistance and not requesting "
+			      	+ "gift assistance. ONC forwards food assistance requests to Western Fairfax Christian "
+			      	+ "Ministries (WFCM). Contact jbush@wfcmva.org with food assistance questions."));
+	    		
+	    	dnsCodeMap.put("NISA", new DNSCode("Not In Serving Area", "Indicates this family is not located in ONC's serving area."));
+	    		
+	    	dnsCodeMap.put("OPT-OUT", new DNSCode("Opt-Out", "Indicates the family requested holiday gift "
+	    				+ "assistance, however, when ONC contacted the family to confirm delivery, the family "
+	    				+ "withdrew it's gift assistance request. This may not apply to food assistance. "
+	    				+ "Contact jbush@wfcmva.org for food assistance information."));
+	    		
+	    	dnsCodeMap.put("SA", new DNSCode("Salvation Army", "Indicates that the family is being served by the Salvation Army and "
+	    				+ "will not be receiving an ONC gift delivery."));
+	    		
+	    	dnsCodeMap.put("SBO", new DNSCode("Served By Others", "Indicates the family is being served by "
+	    				+ "another organization in our area. See Gift Status - Referred."));
+	    }
+	    	
 	private class NoteDBYear extends ServerDBYear
 	{
 		private List<ONCNote> list;
@@ -266,4 +310,21 @@ public class ServerNoteDB extends ServerSeasonalDB
 	    	
 	    	void add(ONCNote addedNote) { list.add(addedNote); }
 	}
+	private class DNSCode
+    {
+    		String title;
+    		String definition;
+    		
+    		DNSCode(String title, String definition)
+    		{
+    			this.title = title;
+    			this.definition = definition;
+    		}
+    		
+    		//getters
+    		@SuppressWarnings("unused")
+			String getTitle() { return title; }
+    		@SuppressWarnings("unused")
+			String getDefinition() { return definition; }
+    }	
 }

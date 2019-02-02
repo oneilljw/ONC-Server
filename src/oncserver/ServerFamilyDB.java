@@ -51,7 +51,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerFamilyDB instance = null;
 	private static int highestRefNum;
 	private static Map<String, ONCNumRange> oncnumRangeMap;
-	private static Map<String, DNSCode> dnsCodeMap;
 	
 	private static ServerFamilyHistoryDB familyHistoryDB;
 	private static ServerUserDB userDB;
@@ -92,9 +91,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		oncnumRangeMap.put("S", new ONCNumRange(1293, 1299));
 		oncnumRangeMap.put("Y", new ONCNumRange(1300, 1399));
 		oncnumRangeMap.put("Z", new ONCNumRange(1400, 1499));
-		
-		dnsCodeMap = new HashMap<String, DNSCode>();
-		loadDNSCodeMap();
 	
 		familyDB = new ArrayList<FamilyDBYear>();
 		
@@ -147,7 +143,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson(familyDB.get(year-BASE_YEAR).getList(), listOfFamilies);
 		return response;	
 	}
-	
+/*	
 	static HtmlResponse getFamiliesJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
@@ -158,7 +154,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		
 		for(int i=0; i<searchList.size(); i++)
 		{
-			ONCWebsiteFamily webFam = new ONCWebsiteFamily(searchList.get(i), ServerNoteDB.hasNote(year, searchList.get(i).getID()));
+			ONCWebsiteFamily webFam = new ONCWebsiteFamily(searchList.get(i), ServerNoteDB.lastNoteStatus(year, searchList.get(i).getID()));
 			responseList.add(webFam);
 		}
 		
@@ -170,7 +166,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
-	
+*/	
 	static HtmlResponse getFamiliesJSONP(int year, Integer reqAgentID, ONCServerUser loggedInUser, Integer reqGroupID, String callbackFunction)
 	{	
 		Gson gson = new Gson();
@@ -190,7 +186,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//can only happen if loggedInUser permission > AGENT. If the requested agent is
 			//the logged-in user and their permissions are higher then Agent return all families
 			for(ONCFamily f : searchList)
-				responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+				responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
 				reqAgentID >= 0 && reqGroupID < 0)
@@ -199,7 +195,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the agent.
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == reqAgentID)
-					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
 				reqAgentID < 0 && reqGroupID >= 0)
@@ -208,7 +204,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the group.
 			for(ONCFamily f : searchList)
 				if(f.getGroupID() == reqGroupID)
-					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
 			
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
@@ -218,7 +214,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the group.
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
 				reqAgentID < 0 && reqGroupID >= 0)
@@ -231,7 +227,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				for(ONCFamily f : searchList)
 				{
 					if(f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
 				}
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
@@ -242,7 +238,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//regardless of group. 
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
 				 reqAgentID >= 0 && reqGroupID >=0)
@@ -258,14 +254,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{	
 				for(ONCFamily f : searchList)
 					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
 			}
 			else if(reqAgentID != loggedInUser.getID() && reqAgent.isInGroup(reqGroupID) && 
 					reqGroup.groupSharesInfo())
 			{	
 				for(ONCFamily f : searchList)
 					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.hasNote(year, f.getID())));
+						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
 			}
 		}
 /*		
@@ -1662,32 +1658,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		return index == oncFamAL.size() ? -1 : index;   		
     }
     
-    void loadDNSCodeMap()
-    {
-    		dnsCodeMap.put("DUP", new DNSCode("Duplicate Family", "Duplicate referral: Two or more referrals were received for this family. "
-    				+ "ONC will serve the family through the first referral and this referral will not be "
-    				+ "processed"));
-    		
-    		dnsCodeMap.put("WL", new DNSCode("Waitlist", "Waitlist referral: indicates the family is on ONC's wait list."));
-    		
-    		dnsCodeMap.put("FO", new DNSCode("Food Only", "Referrals marked FO are only requesting holiday food assistance and not requesting "
-		      	+ "gift assistance. ONC forwards food assistance requests to Western Fairfax Christian "
-		      	+ "Ministries (WFCM). Contact jbush@wfcmva.org with food assistance questions."));
-    		
-    		dnsCodeMap.put("NISA", new DNSCode("Not In Serving Area", "Indicates this family is not located in ONC's serving area."));
-    		
-    		dnsCodeMap.put("OPT-OUT", new DNSCode("Opt-Out", "Indicates the family requested holiday gift "
-    				+ "assistance, however, when ONC contacted the family to confirm delivery, the family "
-    				+ "withdrew it's gift assistance request. This may not apply to food assistance. "
-    				+ "Contact jbush@wfcmva.org for food assistance information."));
-    		
-    		dnsCodeMap.put("SA", new DNSCode("Salvation Army", "Indicates that the family is being served by the Salvation Army and "
-    				+ "will not be receiving an ONC gift delivery."));
-    		
-    		dnsCodeMap.put("SBO", new DNSCode("Served By Others", "Indicates the family is being served by "
-    				+ "another organization in our area. See Gift Status - Referred."));
-    }
-    
     private class FamilyDBYear extends ServerDBYear
     {
     		private List<ONCFamily> fList;
@@ -1997,21 +1967,5 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		//getters
     		int getStart() { return start; }
     		int getEnd() { return end; }
-    }
-    
-    private class DNSCode
-    {
-    		String title;
-    		String definition;
-    		
-    		DNSCode(String title, String definition)
-    		{
-    			this.title = title;
-    			this.definition = definition;
-    		}
-    		
-    		//getters
-    		String getTitle() { return title; }
-    		String getDefinition() { return definition; }
     }
 }

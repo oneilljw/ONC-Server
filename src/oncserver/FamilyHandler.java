@@ -275,6 +275,20 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
+		else if(requestURI.contains("/dnscode"))
+		{
+			HtmlResponse htmlResponse;
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				//get the JSON for response to response submission
+				String code = (String) params.get("code");
+				htmlResponse = ServerNoteDB.getDNSCodeJSONP(code, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
 	}
 	
 	ResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
