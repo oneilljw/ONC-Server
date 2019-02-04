@@ -627,8 +627,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				 currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
 				 !currFam.getDNSCode().equals(updatedFamily.getDNSCode())))
 			{
-				System.out.println(String.format("ServFamDB.update: currFamDNS= %s, updatedFamDNS=%s",
-						currFam.getDNSCode(), updatedFamily.getDNSCode()));
 				
 				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
 						updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(), "Status Changed", updatedFamily.getChangedBy(), true);
@@ -1703,8 +1701,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		return delCount;
     }
     
-    int getMinONCNum() { return oncnumRangeMap.get("A").getStart(); }
-    int getMaxONCNum() { return oncnumRangeMap.get("A").getStart(); }
+    int getMinONCNum() { return oncnumRangeMap.get("A") != null ? oncnumRangeMap.get("A").getStart() : 10000; }
+    int getMaxONCNum() { return oncnumRangeMap.get("Z") != null ? oncnumRangeMap.get("Z").getEnd() : -1; }
     
     private static class ONCFamilyONCNumComparator implements Comparator<ONCFamily>
 	{

@@ -186,7 +186,6 @@ public class PriorYearDB extends ServerSeasonalDB
 		
 		//retain all prior year children from last year who only had last year wishes.
 		//do not retain those with only prior year wishes
-		int count = 0;
 		for(ONCPriorYearChild lypyc : lypycList)
 		{
 			if(lypyc.hasLastYearWishes())
@@ -195,7 +194,6 @@ public class PriorYearDB extends ServerSeasonalDB
 				//This overloaded add method uses a PriorYearChild constructor that converts 
 				//last year wishes to prior year wishes and leaves last year wishes blank
 				add(newYear, lypyc);
-				count++;
 		    }
 		}
 		
@@ -219,32 +217,55 @@ public class PriorYearDB extends ServerSeasonalDB
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-/*		
+		
 		//get last years list of ONCChild objects
 		List<ONCChild> lycList = serverChildDB.getList(newYear-1);
 		
 		//for each child from last year, if they were in an eligible family determine if the 
 		//child's prior year history was retained already. If it was, add last years wishes. 
 		//If not, add a new prior year child.
-		
 		int minONCNum = serverFamilyDB.getMinONCNum();
-		int maxONCNum = serverFamilyDB.getMinONCNum();
+		int maxONCNum = serverFamilyDB.getMaxONCNum();
 		
 		for(ONCChild lyc:lycList)
 		{
 			ONCFamily lyfam = serverFamilyDB.getFamily(newYear-1, lyc.getFamID());
-			int lyONCFamONCNum = isNumeric(lyfam.getONCNum()) ? Integer.parseInt(lyfam.getONCNum()) : -1;
-			if(lyONCFamONCNum >= minONCNum && lyONCFamONCNum <= maxONCNum && lyfam.getDNSCode().isEmpty())
+			int lyONCFamONCNum;
+			
+			int bCD = 0;
+			if(lyfam == null)
+				bCD = bCD | 1;
+			else
 			{
-				System.out.println(String.format("lyONCFamONCNum meeting criteria= %d, lycID= %d",
-						lyONCFamONCNum, lyc.getID()));
-				
+				if(!isNumeric(lyfam.getONCNum()))
+						bCD = bCD | 2;
+				else
+				{
+					lyONCFamONCNum = Integer.parseInt(lyfam.getONCNum());
+					if(lyONCFamONCNum < minONCNum) { bCD = bCD | 4; }
+					if(lyONCFamONCNum > maxONCNum) { bCD = bCD | 8; }
+					if(!lyfam.getDNSCode().isEmpty()) { bCD = bCD | 16; }
+				}
+			}
+			
+			if((bCD & 1) > 0)
+				System.out.println(String.format("PriorYearDB.createNewYear: Family for childID %d is null", lyc.getID(), bCD));
+			if((bCD & 2) > 0)
+				System.out.println(String.format("PriorYearDB.createNewYear: Family for childID %d ONC# %s not numeric", lyc.getID(), lyfam.getONCNum()));
+			if((bCD & 4) > 0)
+				System.out.println(String.format("PriorYearDB.createNewYear: Family for childID %d ONC# %s < min", lyc.getID(), lyfam.getONCNum()));
+			if((bCD & 8) > 0)
+				System.out.println(String.format("PriorYearDB.createNewYear: Family for childID %d ONC# %s > max", lyc.getID(), lyfam.getONCNum()));
+			if((bCD & 16) > 0)
+				System.out.println(String.format("PriorYearDB.createNewYear: Family for childID %d ONC# %s has DNS Code %s", lyc.getID(), lyfam.getONCNum(), lyfam.getDNSCode()));
+			
+			if(lyfam != null && isNumeric(lyfam.getONCNum()) && 
+				(lyONCFamONCNum = Integer.parseInt(lyfam.getONCNum())) >= minONCNum &&
+				 lyONCFamONCNum <= maxONCNum && lyfam.getDNSCode().isEmpty())	
+			{
 				ONCChildGift lyChildWish1 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(0));
 				ONCChildGift lyChildWish2 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(1));
 				ONCChildGift lyChildWish3 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(2));
-				
-				System.out.println(String.format("lyc %d gift1ID= %d, gift2ID= %d, gift3ID= %d",
-						lyc.getID(), lyChildWish1.getID(), lyChildWish2.getID(), lyChildWish3.getID()));
 				
 				//determine the wishes from last year. Check to ensure the child wish existed. If it didn't, 
 				//set the wish blank
@@ -258,9 +279,6 @@ public class PriorYearDB extends ServerSeasonalDB
 				if(lyChildWish3 != null)
 					lyWish3 = cat.findWishNameByID(newYear-1, lyChildWish3.getGiftID()) + "- " + lyChildWish3.getDetail();
 	    		
-				System.out.println(String.format("PY gift1= %s, gift2= %s, gift3= %s",
-						lyWish1, lyWish2, lyWish3));
-				
 				//last year child was in a served family, have they already been added to the
 	    			//new years prior year child list?
 	    			int id;
@@ -270,17 +288,15 @@ public class PriorYearDB extends ServerSeasonalDB
 					//add their last year wishes to the prior year child object
 					ONCPriorYearChild pyc = getPriorYearChild(newYear, id);
 					pyc.addChildWishes(lyWish1, lyWish2, lyWish3);
-					System.out.println(String.format("LastYearChild PY Match id= %d", pyc.getID()));
 				}
 				else //if id == -1 or search returned null, the child wasn't retained,
 				{
-					System.out.println(String.format("LastYearChild PY Match id= %d", id));
 					//they don't have a history, so create a new history entry for them and add it
 					add(newYear, lyc, lyWish1, lyWish2, lyWish3);
 				}
 			}
 		}
-*/		
+		
 		newPYCDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 		
