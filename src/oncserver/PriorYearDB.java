@@ -232,6 +232,7 @@ public class PriorYearDB extends ServerSeasonalDB
 			ONCFamily lyfam = serverFamilyDB.getFamily(newYear-1, lyc.getFamID());
 			int lyONCFamONCNum;
 			
+/* DEBUG CODE *****************			
 			int bCD = 0;
 			if(lyfam == null)
 				bCD = bCD | 1;
@@ -257,7 +258,8 @@ public class PriorYearDB extends ServerSeasonalDB
 			if((bCD & 8) > 0)
 				System.out.println(String.format("PriorYearDB.createNewYear: Family for childID %d ONC# %s > max", lyc.getID(), lyfam.getONCNum()));
 			if((bCD & 16) > 0)
-				System.out.println(String.format("PriorYearDB.createNewYear: Family for childID %d ONC# %s has DNS Code %s", lyc.getID(), lyfam.getONCNum(), lyfam.getDNSCode()));
+				System.out.println(String.format("PriorYearDB.createNewYear: Family for childID %d ONC# %s has DNS Code %s", lyc.getID(), lyfam.getONCNum(), lyfam.getDNSCode()));				
+****************/
 			
 			if(lyfam != null && isNumeric(lyfam.getONCNum()) && 
 				(lyONCFamONCNum = Integer.parseInt(lyfam.getONCNum())) >= minONCNum &&
