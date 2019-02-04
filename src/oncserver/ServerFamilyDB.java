@@ -27,7 +27,6 @@ import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
-import ourneighborschild.ONCNote;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
@@ -57,7 +56,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerChildDB childDB;
 	private static ServerAdultDB adultDB;
 	private static ServerMealDB mealDB;
-	private static ServerNoteDB noteDB;
 	private static ServerGlobalVariableDB globalDB;
 	
 	private static ClientManager clientMgr;
@@ -121,7 +119,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		adultDB = ServerAdultDB.getInstance();
 		userDB = ServerUserDB.getInstance();
 		mealDB = ServerMealDB.getInstance();
-		noteDB = ServerNoteDB.getInstance();
 		globalDB = ServerGlobalVariableDB.getInstance();
 
 		clientMgr = ClientManager.getInstance();
@@ -1705,211 +1702,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
     
     		return delCount;
     }
-/*  
-    void convertFamilyDBForStatusChanges(int year)
-    {
-    	String[] header, nextLine;
-    	List<String[]> outputList = new ArrayList<String[]>();
-    	
-    	//open the current year file
-    	String path = String.format("%s/%dDB/FamilyDB.csv", System.getProperty("user.dir"), year);
-    	CSVReader reader;
-		try 
-		{
-			reader = new CSVReader(new FileReader(path));
-			if((header = reader.readNext()) != null)	//Does file have records? 
-	    	{
-	    		//Read the User File
-	    		if(header.length == FAMILYDB_HEADER_LENGTH)	//Does the record have the right # of fields? 
-	    		{
-	    			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
-	    			{
-	    				NewFamStatus nfs = getNewFamStatus(nextLine[6], nextLine[7]);
-	    				nextLine[6] = nfs.getNewFamStatus();
-	    				nextLine[7] = nfs.getNewGiftStatus();
-	    				outputList.add(nextLine);
-	    			}
-	    		}
-	    		else
-	    		{
-	    			String error = String.format("%s file corrupted, header length = %d", path, header.length);
-	    	       	JOptionPane.showMessageDialog(null, error,  path + "Corrupted", JOptionPane.ERROR_MESSAGE);
-	    		}		   			
-	    	}
-	    	else
-	    	{
-	    		String error = String.format("%s file is empty", path);
-	    		JOptionPane.showMessageDialog(null, error,  path + " Empty", JOptionPane.ERROR_MESSAGE);
-	    	}
-	    	
-	    	reader.close();
-	    	
-		} 
-		catch (FileNotFoundException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		//now that we should have an output list of converted String[] for each family, write it
-		
-		String[] outHeader = {"ONC ID", "ONCNum", "Region", "ODB Family #", "Batch #", "DNS Code", "Family Status", "Delivery Status",
-				"Speak English?","Language if No", "Caller", "Notes", "Delivery Instructions",
-				"Client Family", "First Name", "Last Name", "House #", "Street", "Unit #", "City", "Zip Code",
-				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
-				"ODB Details", "Children Names", "Schools", "ODB WishList",
-				"Adopted For", "Agent ID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
-				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only"};
-		
-	//	System.out.println(String.format("FamilyDB saveDB - Saving %d New Family DB", year));
-		String outPath = String.format("%s/%dDB/NewFamilyDB.csv", System.getProperty("user.dir"), year);
-		
-		 try 
-		    {
-		    	CSVWriter writer = new CSVWriter(new FileWriter(outPath));
-		    	writer.writeNext(outHeader);
-		    	 
-		    	for(int index=0; index < outputList.size(); index++)
-		    		writer.writeNext(outputList.get(index));
-		    	
-		    	writer.close();
-		    	       	    
-		    } 
-		    catch (IOException x)
-		    {
-		    	System.err.format("IO Exception: %s%n", x);
-		    }	
-    }
-*/    
-    /***
-     * Used to convert ServerFamilyDB from old family status & gift status to new
-     * @param ofs
-     * @param ogs
-     * @return
-     */
-/*    
-    NewFamStatus getNewFamStatus(String ofs, String ogs)
-    {
-    	int oldFamStatus = Integer.parseInt(ofs);
-    	int oldGiftStatus = Integer.parseInt(ogs);
-    	
-    	if(oldFamStatus == 0 && oldGiftStatus == 0)
-    		return new NewFamStatus(0,1);
-    	else if(oldFamStatus == 0 && oldGiftStatus == 1)
-    		return new NewFamStatus(0,1);
-    	else if(oldFamStatus == 0 && oldGiftStatus == 2)
-    		return new NewFamStatus(0,1);
-    	else if(oldFamStatus == 0 && oldGiftStatus == 3)
-    		return new NewFamStatus(0,1);
-    	else if(oldFamStatus == 0 && oldGiftStatus == 4)
-    		return new NewFamStatus(0,1);
-    	else if(oldFamStatus == 0 && oldGiftStatus == 5)
-    		return new NewFamStatus(0,1);
-    	else if(oldFamStatus == 0 && oldGiftStatus == 6)
-    		return new NewFamStatus(0,1);
-    	else if(oldFamStatus == 0 && oldGiftStatus == 7)
-    		return new NewFamStatus(0,1);
-    	else if(oldFamStatus == 0 && oldGiftStatus == 8)
-    		return new NewFamStatus(0,0);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 0)
-    		return new NewFamStatus(1,1);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 1)
-    		return new NewFamStatus(1,1);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 2)
-    		return new NewFamStatus(1,1);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 3)
-    		return new NewFamStatus(1,1);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 4)
-    		return new NewFamStatus(1,1);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 5)
-    		return new NewFamStatus(1,1);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 6)
-    		return new NewFamStatus(1,1);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 7)
-    		return new NewFamStatus(1,1);
-    	else if(oldFamStatus == 1 && oldGiftStatus == 8)
-    		return new NewFamStatus(1,0);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 0)
-    		return new NewFamStatus(1,2);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 1)
-    		return new NewFamStatus(2,2);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 2)
-    		return new NewFamStatus(3,2);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 3)
-    		return new NewFamStatus(3,6);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 4)
-    		return new NewFamStatus(3,8);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 5)
-    		return new NewFamStatus(3,9);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 6)
-    		return new NewFamStatus(3,7);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 7)
-    		return new NewFamStatus(3,10);
-    	else if(oldFamStatus == 2 && oldGiftStatus == 8)
-    		return new NewFamStatus(1,0);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 0)
-    		return new NewFamStatus(1,3);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 1)
-    		return new NewFamStatus(2,3);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 2)
-    		return new NewFamStatus(3,3);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 3)
-    		return new NewFamStatus(3,6);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 4)
-    		return new NewFamStatus(3,8);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 5)
-    		return new NewFamStatus(3,0);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 6)
-    		return new NewFamStatus(3,7);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 7)
-    		return new NewFamStatus(3,10);
-    	else if(oldFamStatus == 3 && oldGiftStatus == 8)
-    		return new NewFamStatus(1,0);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 0)
-    		return new NewFamStatus(1,4);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 1)
-    		return new NewFamStatus(2,4);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 2)
-    		return new NewFamStatus(3,4);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 3)
-    		return new NewFamStatus(3,6);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 4)
-    		return new NewFamStatus(3,8);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 5)
-    		return new NewFamStatus(3,9);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 6)
-    		return new NewFamStatus(3,7);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 7)
-    		return new NewFamStatus(3,10);
-    	else if(oldFamStatus == 4 && oldGiftStatus == 8)
-    		return new NewFamStatus(1,0);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 0)
-    		return new NewFamStatus(1,5);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 1)
-    		return new NewFamStatus(2,5);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 2)
-    		return new NewFamStatus(3,5);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 3)
-    		return new NewFamStatus(3,6);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 4)
-    		return new NewFamStatus(3,8);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 5)
-    		return new NewFamStatus(3,9);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 6)
-    		return new NewFamStatus(3,7);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 7)
-    		return new NewFamStatus(3,10);
-    	else if(oldFamStatus == 5 && oldGiftStatus == 8)
-    		return new NewFamStatus(1,0); 
-    	else
-    		return null;
-    }
-*/
+    
+    int getMinONCNum() { return oncnumRangeMap.get("A").getStart(); }
+    int getMaxONCNum() { return oncnumRangeMap.get("A").getStart(); }
+    
     private static class ONCFamilyONCNumComparator implements Comparator<ONCFamily>
 	{
 		@Override

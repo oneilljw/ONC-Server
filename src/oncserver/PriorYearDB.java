@@ -171,13 +171,6 @@ public class PriorYearDB extends ServerSeasonalDB
 		pycDBYear.add(new ONCPriorYearChild(nextLine));
 	}
 	
-//	String createNewSeason(int year)
-//	{
-//		createNewYear(year);
-//		System.out.println(String.format("Created New Year"));
-//		return "ADDED_NEW_YEAR";
-//	}
-
 	@Override
 	void createNewYear(int newYear) 
 	{
@@ -186,64 +179,72 @@ public class PriorYearDB extends ServerSeasonalDB
 		//the method to begin to populate the new prior year children list for the new year
 		List<ONCPriorYearChild> lypycList = pycDB.get(pycDB.size()-1).getList();
 		
-		//create a new PriorYearChildDBYear object and add it to the data base. It will have
-		//an empty ONCPriorYearChild list. Subsequent add method calls will add ONCPriorYearChild
-		//objects to the list
+		//create a new PriorYearChildDBYear object and add it to the data base. It will have an empty
+		//ONCPriorYearChild list. Subsequent add calls will add ONCPriorYearChild objects to the list
 		PriorYearChildDBYear newPYCDBYear = new PriorYearChildDBYear(newYear);
 		pycDB.add(newPYCDBYear);
 		
-//		System.out.println(String.format("Starting size of 2013 Prior Year Child list: %d", lypycAL.size()));
-		
 		//retain all prior year children from last year who only had last year wishes.
 		//do not retain those with only prior year wishes
-//		int nRetained = 0;
-//		for(int i=lypycAL.size()-1; i>=0; i--)
+		int count = 0;
 		for(ONCPriorYearChild lypyc : lypycList)
+		{
 			if(lypyc.hasLastYearWishes())
 		    {
 				//add last years prior year child to the this years PriorYearChildDBYear list.
 				//This overloaded add method uses a PriorYearChild constructor that converts 
 				//last year wishes to prior year wishes and leaves last year wishes blank
 				add(newYear, lypyc);
-//		    	nRetained++;
+				count++;
 		    }
-//		System.out.println("Number of 2014 Prior Year Children retained: " + nRetained);
-//		System.out.println(String.format("Resultant size of 2015 Prior Year Child list: %d", pycAL.size()));
+		}
 		
 		//get references to last years family, child, child wish and wish catalog data bases
 		ServerFamilyDB serverFamilyDB = null;
 		ServerChildDB serverChildDB = null;
 //		ServerChildWishDB childwishDB = null;
 		ServerWishCatalog cat = null;
-		try {
+		try 
+		{
 			serverFamilyDB = ServerFamilyDB.getInstance();
 			serverChildDB = ServerChildDB.getInstance();
 //			childwishDB = ServerChildWishDB.getInstance();
 			cat = ServerWishCatalog.getInstance();
-		} catch (FileNotFoundException e) {
+		} 
+		catch (FileNotFoundException e) 
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+/*		
 		//get last years list of ONCChild objects
 		List<ONCChild> lycList = serverChildDB.getList(newYear-1);
 		
-		//for each child from last year, if they were in an eligible family
-		//determine if the child's prior year history was retained already.
-		//If it was, add last years wishes. If not, add a new prior year child.
-//		nRetained = 0;
-//		int nNew = 0;
+		//for each child from last year, if they were in an eligible family determine if the 
+		//child's prior year history was retained already. If it was, add last years wishes. 
+		//If not, add a new prior year child.
+		
+		int minONCNum = serverFamilyDB.getMinONCNum();
+		int maxONCNum = serverFamilyDB.getMinONCNum();
+		
 		for(ONCChild lyc:lycList)
 		{
 			ONCFamily lyfam = serverFamilyDB.getFamily(newYear-1, lyc.getFamID());
-			if(isNumeric(lyfam.getONCNum()) && Integer.parseInt(lyfam.getONCNum()) >= 100)
+			int lyONCFamONCNum = isNumeric(lyfam.getONCNum()) ? Integer.parseInt(lyfam.getONCNum()) : -1;
+			if(lyONCFamONCNum >= minONCNum && lyONCFamONCNum <= maxONCNum && lyfam.getDNSCode().isEmpty())
 			{
+				System.out.println(String.format("lyONCFamONCNum meeting criteria= %d, lycID= %d",
+						lyONCFamONCNum, lyc.getID()));
+				
 				ONCChildGift lyChildWish1 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(0));
 				ONCChildGift lyChildWish2 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(1));
 				ONCChildGift lyChildWish3 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(2));
+				
+				System.out.println(String.format("lyc %d gift1ID= %d, gift2ID= %d, gift3ID= %d",
+						lyc.getID(), lyChildWish1.getID(), lyChildWish2.getID(), lyChildWish3.getID()));
 				
 				//determine the wishes from last year. Check to ensure the child wish existed. If it didn't, 
 				//set the wish blank
@@ -257,77 +258,32 @@ public class PriorYearDB extends ServerSeasonalDB
 				if(lyChildWish3 != null)
 					lyWish3 = cat.findWishNameByID(newYear-1, lyChildWish3.getGiftID()) + "- " + lyChildWish3.getDetail();
 	    		
+				System.out.println(String.format("PY gift1= %s, gift2= %s, gift3= %s",
+						lyWish1, lyWish2, lyWish3));
+				
 				//last year child was in a served family, have they already been added to the
-	    		//new years prior year child list?
-	    		int id;
+	    			//new years prior year child list?
+	    			int id;
 				if((id = searchForMatch(newYear, lyc)) > -1)
 				{
 					//last years child is already in this years prior year child list, simply
 					//add their last year wishes to the prior year child object
 					ONCPriorYearChild pyc = getPriorYearChild(newYear, id);
 					pyc.addChildWishes(lyWish1, lyWish2, lyWish3);
-					
-//					nRetained++;
+					System.out.println(String.format("LastYearChild PY Match id= %d", pyc.getID()));
 				}
 				else //if id == -1 or search returned null, the child wasn't retained,
 				{
+					System.out.println(String.format("LastYearChild PY Match id= %d", id));
 					//they don't have a history, so create a new history entry for them and add it
 					add(newYear, lyc, lyWish1, lyWish2, lyWish3);
-//					nNew++;
 				}
 			}
 		}
-		
-//		System.out.println(String.format("Number of %d children retained: %d", 2014, nRetained));
-//		System.out.println(String.format("Number of %d children new to prior year: %d", 2014, nNew));
-		
+*/		
 		newPYCDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
-			
 	}
 		
-	 /******************************************************************************************
-     * This method takes the current prior year child array list and creates 23 separate array
-     * lists by sorting each prior year child object by year of birth into the respective year
-     * of birth array list. These 23 array lists are then used to determine if a current year
-     * child has a prior year ONC history. They are also used in the creation of the prior year
-     * history at the onset of a season. SPlitting the integrated prior year child array into
-     * 23 different arrays greatly improves search speed. The number 23 was selected since
-     * it is unusual for ONC to serve a child older than 21 and with two year history, years of
-     * birth more than 23 years ago from the current year shouldn't be in data. However, the 
-     * method checks for this and if a birth year greater than 23 years ago is found, it lumps
-     * that prior year child into the oldest prior year array list.
-     * @return - an Array List of Array Lists containing prior year children by age
-     ******************************************************************************************
-    List<List<ONCPriorYearChild>> buildPriorYearByAgeArrayList(int year)
-    {
-    	//get a reference to the new year db being added
-    	List<ONCPriorYearChild> pycAL = pycDB.get(year-BASE_YEAR).getList();
-    	
-    	//Break prior year database into separate databases based on age to make the sort faster
-    	//The number of separate age data bases is provided by a static final variable 
-	    List<List<ONCPriorYearChild>> pycbyAgeAL = new ArrayList<List<ONCPriorYearChild>>();
-	    
-	    //Create an array list for the current year and the past ONC_MAX_CHILD_AGE years
-	    for(int age=0; age < ONC_MAX_CHILD_AGE; age++)
-	    	pycbyAgeAL.add(new ArrayList<ONCPriorYearChild>());
-	    
-	    for(ONCPriorYearChild pyc:pycAL)
-	    {
-	    	//Determine the prior year child's birth year, a number between 0 and 22
-	    	int ageindex = year - pyc.getYearOfBirth();
-	    	if(ageindex > ONC_MAX_CHILD_AGE - 1)
-	    	{
-//	    		System.out.println("Age too old");
-//	    		System.out.println(pyc.getYearOfBirth());
-	    		ageindex = ONC_MAX_CHILD_AGE - 1;
-	    	}
-	    	
-	    	pycbyAgeAL.get(ageindex).add(pyc);
-	    }
-
-	    return pycbyAgeAL;
-    }
-*/    
     private class PriorYearChildDBYear extends ServerDBYear
     {
     	private List<ONCPriorYearChild> pycList;

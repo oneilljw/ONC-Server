@@ -171,6 +171,7 @@ public class DBManager
 	{
 		
 	}
+	
 	String createNewYear()
 	{
 		String response;
