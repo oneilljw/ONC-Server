@@ -11,7 +11,7 @@ import ourneighborschild.ONCUser;
 
 public abstract class ServerSeasonalDB extends ONCServerDB
 {
-	protected static final int BASE_YEAR = 2012;
+	protected static final int BASE_SEASON = 2012;
 	
 	protected static final int AGENT_UNCHANGED = 0;
 	protected static final int AGENT_UPDATED = 1;
@@ -19,7 +19,7 @@ public abstract class ServerSeasonalDB extends ONCServerDB
 	
 	abstract String add(int year, String addjson, ONCUser client);
 	
-	abstract void createNewYear(int year);	//used to create a new year from the authorized client
+	abstract void createNewSeason(int year);	//used to create a new season from the authorized client
 	
 	void importDB(int year, String path, String name, int length) throws FileNotFoundException, IOException
 	{

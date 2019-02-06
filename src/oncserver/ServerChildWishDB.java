@@ -625,7 +625,7 @@ public class ServerChildWishDB extends ServerSeasonalDB
 	}
 
 	@Override
-	void createNewYear(int newYear) 
+	void createNewSeason(int newYear) 
 	{
 		//create a new child wish data base year for the year provided in the newYear parameter
 		//The child wish db year list is initially empty prior to the selection of child wishes,

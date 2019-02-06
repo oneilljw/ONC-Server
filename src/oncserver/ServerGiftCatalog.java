@@ -12,23 +12,23 @@ import com.google.gson.reflect.TypeToken;
 import ourneighborschild.ONCGift;
 import ourneighborschild.ONCUser;
 
-public class ServerWishCatalog extends ServerSeasonalDB
+public class ServerGiftCatalog extends ServerSeasonalDB
 {
 	private static final int DB_RECORD_LENGTH = 7;
 	private static final String DB_FILENAME = "WishCatalog.csv";
-	private static List<WishCatalogDBYear> catalogDB;
-	private static ServerWishCatalog instance = null;
+	private static List<GiftCatalogDBYear> catalogDB;
+	private static ServerGiftCatalog instance = null;
 	
-	private ServerWishCatalog() throws FileNotFoundException, IOException
+	private ServerGiftCatalog() throws FileNotFoundException, IOException
 	{
-		//create the wish catalog data bases for TOTAL_YEARS number of years
-		catalogDB = new ArrayList<WishCatalogDBYear>();
+		//create the catalog data bases for TOTAL_YEARS number of years
+		catalogDB = new ArrayList<GiftCatalogDBYear>();
 	
 		//populate each year in the db
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
 		{
-			//create the wish catalog list for year
-			WishCatalogDBYear catalogDBYear = new WishCatalogDBYear(year);
+			//create the gift catalog list for year
+			GiftCatalogDBYear catalogDBYear = new GiftCatalogDBYear(year);
 			
 			//add the list for the year to the db
 			catalogDB.add(catalogDBYear);
@@ -41,21 +41,21 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		}
 	}
 	
-	public static ServerWishCatalog getInstance() throws FileNotFoundException, IOException
+	public static ServerGiftCatalog getInstance() throws FileNotFoundException, IOException
 	{
 		if(instance == null)
-			instance = new ServerWishCatalog();
+			instance = new ServerGiftCatalog();
 		
 		return instance;
 	}
 	
 	//return the catalog list as a json
-	String getWishCatalog(int year)
+	String getGiftCatalog(int year)
 	{
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCGift>>(){}.getType();
 		
-		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
 		List<ONCGift> catAL = catalogDBYear.getList();
 			
 		String response = gson.toJson(catAL, listtype);
@@ -64,18 +64,18 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	
 	String update(int year, String json)
 	{
-		//Create a wish detail object for the request wish detail update
+		//Create an object for the request ONCGift update
 		Gson gson = new Gson();
 		ONCGift reqWish = gson.fromJson(json, ONCGift.class);
 		
-		//Find the position for the current family being replaced
-		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
+		//Find the position for the current gift being replaced
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
 		List<ONCGift> catAL = catalogDBYear.getList();
 		int index = 0;
 		while(index < catAL.size() && catAL.get(index).getID() != reqWish.getID())
 			index++;
 		
-		//If catalog wish is located, replace the wish with the update.
+		//If catalog gift is located, replace with the update.
 		if(index == catAL.size()) 
 		{
 			ONCGift currWish = catAL.get(index);
@@ -92,36 +92,36 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	@Override
 	String add(int year, String json, ONCUser client)
 	{
-		//Create a wish object to add to the catalog
+		//Create an ONCGift object to add to the catalog
 		Gson gson = new Gson();
-		ONCGift addWishReq = gson.fromJson(json, ONCGift.class);
+		ONCGift addGiftReq = gson.fromJson(json, ONCGift.class);
 	
-		//set the new ID for the catalog wish
-		WishCatalogDBYear catalogDBYear = catalogDB.get(year-BASE_YEAR);
-		addWishReq.setID(catalogDBYear.getNextID());
+		//set the new ID for the catalog gift
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(year-BASE_SEASON);
+		addGiftReq.setID(catalogDBYear.getNextID());
 		
-		//add the new wish
-		catalogDBYear.add(addWishReq);
+		//add the new gift
+		catalogDBYear.add(addGiftReq);
 		catalogDBYear.setChanged(true);
 
-		return "ADDED_CATALOG_WISH" + gson.toJson(addWishReq, ONCGift.class);
+		return "ADDED_CATALOG_WISH" + gson.toJson(addGiftReq, ONCGift.class);
 	}
 	
 	String delete(int year, String json)
 	{
-		//Create a catalog wish  object for the deleted catalog wish request
+		//Create a catalog ONCGift object for the delete catalog gift request
 		Gson gson = new Gson();
-		ONCGift reqDelWish = gson.fromJson(json, ONCGift.class);
+		ONCGift reqDelGift = gson.fromJson(json, ONCGift.class);
 	
-		//find the wish in the catalog
-		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
+		//find the gift in the catalog
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
 		List<ONCGift> catAL = catalogDBYear.getList();
 		
 		int index = 0;
-		while(index < catAL.size() && catAL.get(index).getID() != reqDelWish.getID())
+		while(index < catAL.size() && catAL.get(index).getID() != reqDelGift.getID())
 			index++;
 		
-		//wish must be present in catalog to be deleted
+		//gift must be present in catalog to be deleted
 		if(index < catAL.size())
 		{
 			catAL.remove(index);
@@ -132,19 +132,19 @@ public class ServerWishCatalog extends ServerSeasonalDB
 			return "DELETE_CATALOG_WISH_FAILED" + json;
 	}
 	
-	String findWishNameByID(int year, int wishID)
+	String findGiftNameByID(int year, int wishID)
 	{
 		//get list for year
-		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCGift> wishList = catalogDBYear.getList();
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
+		List<ONCGift> giftList = catalogDBYear.getList();
 		
-		//find the ONCWish by ID
+		//find the ONCGift by ID
 		int index = 0;
-		while(index < wishList.size() && wishList.get(index).getID() != wishID)
+		while(index < giftList.size() && giftList.get(index).getID() != wishID)
 			index++;
 		
-		if(index < wishList.size())
-			return wishList.get(index).getName();
+		if(index < giftList.size())
+			return giftList.get(index).getName();
 		else
 			return "No Wish Found";
 	}
@@ -154,7 +154,7 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		List<ONCGift> websiteGiftList = new ArrayList<ONCGift>();
 		
 		//get list for year
-		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
 		List<ONCGift> wishList = catalogDBYear.getList();
 		
 		for(ONCGift w : wishList)
@@ -167,15 +167,15 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		return json;
 	}
 	
-	static String getWishHTMLOptions(int year, int wn)
+	static String getGiftHTMLOptions(int year, int wn)
 	{
 		StringBuffer buff = new StringBuffer();
 		
 		//get list for year
-		WishCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_YEAR);
-		List<ONCGift> wishList = catalogDBYear.getList();
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
+		List<ONCGift> giftList = catalogDBYear.getList();
 		
-		for(ONCGift w : wishList)
+		for(ONCGift w : giftList)
 			if(w.canBeGift(wn))
 				buff.append(String.format("<option value=%d>%s</option>", w.getID(), w.getName()));
 		
@@ -183,20 +183,22 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	}
 	
 	@Override
-	void createNewYear(int newYear)
+	void createNewSeason(int newYear)
 	{
-		//create a new wish catalob data base year for the year provided in the newYear parameter
-		//The wish catalog db year list is copy of the prior year, so get the list from the prior 
+		//create a new gift catalog data base year for the year provided in the newYear parameter
+		//The catalog db year list is copy of the prior year, so get the list from the prior 
 		//year and make a deep copy, then save it as the new year
-					
-		//create the new WishCatalogDBYear
-		WishCatalogDBYear catDBYear = new WishCatalogDBYear(newYear);
+		
+		//get a reference to last seasons gift catalog before adding a new season
+		List<ONCGift> lyCatList = catalogDB.get(catalogDB.size()-1).getList();
+		
+		//create the new GiftCatalogDBYear
+		GiftCatalogDBYear catDBYear = new GiftCatalogDBYear(newYear);
 		catalogDB.add(catDBYear);
 						
-		//add a deep copy of each wish detail from last year the new season wish detail list
-		List<ONCGift> lyCatList = catalogDB.get(catalogDB.size()-1).getList();
-		for(ONCGift lyWish : lyCatList)
-			catDBYear.add(new ONCGift(lyWish));	//makes a deep copy of last year
+		//create a deep copy of last seasons gifts and add it to the new season gift list
+		for(ONCGift lyGift : lyCatList)
+			catDBYear.add(new ONCGift(lyGift));	
 					
 		catDBYear.setChanged(true);	//mark this db for persistent saving on the next save event	
 	}
@@ -204,17 +206,17 @@ public class ServerWishCatalog extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine) 
 	{
-		WishCatalogDBYear catDBYear = catalogDB.get(year - BASE_YEAR);
+		GiftCatalogDBYear catDBYear = catalogDB.get(year - BASE_SEASON);
 		catDBYear.add(new ONCGift(nextLine));
 	}
 	
 	@Override
 	void save(int year)
 	{
-		String[] header = {"Wish Detail ID", "Name", "List Index", "Wish Detail 1 ID",
-				"Wish Detail 2 ID", "Wish Detail 3 ID", "Wish Detail 4 ID"};
+		String[] header = {"Gift Detail ID", "Name", "List Index", "Gift Detail 1 ID",
+				"Gift Detail 2 ID", "Gift Detail 3 ID", "Gift Detail 4 ID"};
 		
-		WishCatalogDBYear catDBYear = catalogDB.get(year - BASE_YEAR);
+		GiftCatalogDBYear catDBYear = catalogDB.get(year - BASE_SEASON);
 		if(catDBYear.isUnsaved())
 		{
 			String path = String.format("%s/%dDB/%s", System.getProperty("user.dir"), year, DB_FILENAME);
@@ -223,11 +225,11 @@ public class ServerWishCatalog extends ServerSeasonalDB
 		}
 	}
 
-	private class WishCatalogDBYear extends ServerDBYear
+	private class GiftCatalogDBYear extends ServerDBYear
 	{
 		private List<ONCGift> catList;
 	    	
-	    WishCatalogDBYear(int year)
+	    GiftCatalogDBYear(int year)
 	    {
 	    		super();
 	    		catList = new ArrayList<ONCGift>();

@@ -276,7 +276,7 @@ public class SignUpGeniusIF
 					//not all sign up activities have an end date. If they don't, set the end date to Christmas Day
 					//for the current season. Note: SignUpActivity times are in seconds not milliseconds
 					Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-					xmasDay.set(DBManager.getCurrentYear(),11,25,5,0,0);
+					xmasDay.set(DBManager.getCurrentSeason(),11,25,5,0,0);
 					for(SignUpActivity sua : signUpActList)
 						if(sua.getEnddate() == 0)
 							sua.setEnddate(xmasDay.getTimeInMillis()/1000);	//milliseconds to seconds
@@ -392,7 +392,7 @@ public class SignUpGeniusIF
 			//not all sign up activities have an end date. If they don't, set the end date to Christmas Day
 			//for the current season.
 			Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-			xmasDay.set(DBManager.getCurrentYear(),11,25,5,0,0);
+			xmasDay.set(DBManager.getCurrentSeason(),11,25,5,0,0);
 			for(SignUpActivity sua : signUpActList)
 				if(sua.getEnddate() == 0)
 					sua.setEnddate(xmasDay.getTimeInMillis()/1000);	//note: SignUpActivity times are in secs not millis
@@ -483,8 +483,8 @@ public class SignUpGeniusIF
 			{
 				activityDB = ServerActivityDB.getInstance();
 				volActDB = ServerVolunteerActivityDB.getInstance();
-				List<Activity> cloneActList = activityDB.clone(DBManager.getCurrentYear());
-				List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentYear());
+				List<Activity> cloneActList = activityDB.clone(DBManager.getCurrentSeason());
+				List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentSeason());
 				
 				//compare the clone list to the imported activity list. Identify previously imported
 				//sign up genius activities that are no longer in the signup. They can only be deleted
@@ -561,7 +561,7 @@ public class SignUpGeniusIF
 			try
 			{
 				volDB = ServerVolunteerDB.getInstance();
-				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentYear());
+				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentSeason());
 				
 				//compare the unique volunteer list to the cloned list. If a volunteer is not in 
 				//the current list or if the volunteer name or contact info has been modified, add
@@ -770,13 +770,13 @@ public class SignUpGeniusIF
 				//updated post import. We'll use them to align the volunteer activities 
 				//imported
 				actDB = ServerActivityDB.getInstance();
-				List<Activity> cloneActList = actDB.clone(DBManager.getCurrentYear());
+				List<Activity> cloneActList = actDB.clone(DBManager.getCurrentSeason());
 
 				volDB = ServerVolunteerDB.getInstance();
-				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentYear());
+				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentSeason());
 				
 				volActDB = ServerVolunteerActivityDB.getInstance();
-				List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentYear());
+				List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentSeason());
 				
 				//for each imported sua, find the activity and volunteer. They will be in the
 				//cloned DB's. Create a new VA and add it to a new VA list
@@ -920,13 +920,13 @@ public class SignUpGeniusIF
     				
 				ServerVolunteerActivityDB vaDB = ServerVolunteerActivityDB.getInstance();
 				if(!modVAList.isEmpty())
-					vaDB.processUpdatedSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), modVAList);
+					vaDB.processUpdatedSignUpGeniusVolunteerActivities(DBManager.getCurrentSeason(), modVAList);
 				
 				if(!newVAList.isEmpty())
-					vaDB.processNewSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), newVAList);
+					vaDB.processNewSignUpGeniusVolunteerActivities(DBManager.getCurrentSeason(), newVAList);
 				
 				if(!delVAList.isEmpty())
-					vaDB.processDeletedSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), delVAList);
+					vaDB.processDeletedSignUpGeniusVolunteerActivities(DBManager.getCurrentSeason(), delVAList);
 			}
 			catch (FileNotFoundException e)
 			{

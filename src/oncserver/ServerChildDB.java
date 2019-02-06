@@ -30,18 +30,17 @@ public class ServerChildDB extends ServerSeasonalDB
 		childDB = new ArrayList<ChildDBYear>();
 				
 		//populate the family data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
 		{
-			//create the child list for each year
+			//create the child dbYear for each year
 			ChildDBYear cDBYear = new ChildDBYear(year);
 					
-			//add the list of children for the year to the db
+			//add the list of children for the year to the dbYear object
 			childDB.add(cDBYear);
 					
-			//import the children from persistent store
-			importDB(year, String.format("%s/%dDB/ChildDB.csv",
-					System.getProperty("user.dir"),
-						year), "Child DB", CHILD_DB_HEADER_LENGTH);
+			//import the children for the year from persistent store
+			importDB(year, String.format("%s/%dDB/ChildDB.csv", System.getProperty("user.dir"), year),
+											"Child DB", CHILD_DB_HEADER_LENGTH);
 					
 			//set the next id
 			cDBYear.setNextID(getNextID(cDBYear.getList()));
@@ -62,7 +61,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCChild>>(){}.getType();
 			
-		String response = gson.toJson(childDB.get(year - BASE_YEAR).getList(), listtype);
+		String response = gson.toJson(childDB.get(year - BASE_SEASON).getList(), listtype);
 		
 		return response;	
 	}
@@ -72,7 +71,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listOfChildren = new TypeToken<ArrayList<ONCWebChild>>(){}.getType();
 		
-		List<ONCChild> searchList = childDB.get(year-BASE_YEAR).getList();
+		List<ONCChild> searchList = childDB.get(year-BASE_SEASON).getList();
 		ArrayList<ONCWebChild> responseList = new ArrayList<ONCWebChild>();
 		
 		for(ONCChild c: searchList)
@@ -88,11 +87,11 @@ public class ServerChildDB extends ServerSeasonalDB
 	static HtmlResponse getChildWishesJSONP(int year, int childID, String callbackFunction)
 	{	
 		//get references to wish catalog, partner data base
-		ServerWishCatalog wishCatalog = null;
+		ServerGiftCatalog wishCatalog = null;
 		ServerPartnerDB serverPartnerDB = null;
 		try 
 		{
-			wishCatalog = ServerWishCatalog.getInstance();
+			wishCatalog = ServerGiftCatalog.getInstance();
 			serverPartnerDB = ServerPartnerDB.getInstance();
 		} 
 		catch (FileNotFoundException e) 
@@ -110,7 +109,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		Type listOfWishes = new TypeToken<ArrayList<WebChildWish>>(){}.getType();
 		
 		//get the child
-		List<ONCChild> searchList = childDB.get(year-BASE_YEAR).getList();
+		List<ONCChild> searchList = childDB.get(year-BASE_SEASON).getList();
 		ArrayList<WebChildWish> responseList = new ArrayList<WebChildWish>();
 		
 		for(ONCChild c: searchList)
@@ -143,7 +142,7 @@ public class ServerChildDB extends ServerSeasonalDB
 							partnerID = org.getID();
 						}
 						
-						responseList.add(new WebChildWish(wishCatalog.findWishNameByID(year, cw.getGiftID()),
+						responseList.add(new WebChildWish(wishCatalog.findGiftNameByID(year, cw.getGiftID()),
 															cw.getGiftID(),
 															cw.getDetail(), 
 															restrictions[wishRestriction], 
@@ -166,7 +165,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		ONCChild addedChild = gson.fromJson(childjson, ONCChild.class);
 		
 		//get the child data base for the year
-		ChildDBYear cDBYear = childDB.get(year - BASE_YEAR);
+		ChildDBYear cDBYear = childDB.get(year - BASE_SEASON);
 		
 		//set the new ID for the added child
 		addedChild.setID(cDBYear.getNextID());
@@ -185,7 +184,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	ONCChild add(int year, ONCChild addedChild)
 	{
 		//get the child data base for the year
-		ChildDBYear cDBYear = childDB.get(year - BASE_YEAR);
+		ChildDBYear cDBYear = childDB.get(year - BASE_SEASON);
 		
 		//set the new ID for the added child
 		int childID = cDBYear.getNextID();
@@ -204,7 +203,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	void searchForLastName(int year, String s, List<FamilyReference> resultAL)
     {	
 		//create the child list for the year
-		ChildDBYear childDBYear = childDB.get(year-BASE_YEAR);
+		ChildDBYear childDBYear = childDB.get(year-BASE_SEASON);
 		List<ONCChild> childAL = childDBYear.getList();
 
 		int lastFamIDAdded = -1;	//prevent searching for same family id twice in a row
@@ -297,7 +296,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		}
 		
 		//find and remove the deleted child from the data base
-		ChildDBYear childDBYear = childDB.get(year-BASE_YEAR);
+		ChildDBYear childDBYear = childDB.get(year-BASE_SEASON);
 		List<ONCChild> cAL = childDBYear.getList();
 		
 		int index = 0;
@@ -321,7 +320,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		ONCChild updatedChild = gson.fromJson(childjson, ONCChild.class);
 		
 		//Find the position for the current child being replaced
-		ChildDBYear childDBYear = childDB.get(year-BASE_YEAR);
+		ChildDBYear childDBYear = childDB.get(year-BASE_SEASON);
 		List<ONCChild> cAL = childDBYear.getList();
 		int index = 0;
 		while(index < cAL.size() && cAL.get(index).getID() != updatedChild.getID())
@@ -366,7 +365,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	void updateChildsWishID(int year, ONCChildGift addedWish)
 	{
 		//Find the child using the added wish child ID
-		ChildDBYear childDBYear = childDB.get(year-BASE_YEAR);
+		ChildDBYear childDBYear = childDB.get(year-BASE_SEASON);
 		List<ONCChild> cAL = childDBYear.getList();
 		int index = 0;
 		while(index < cAL.size() && cAL.get(index).getID() != addedWish.getChildID())
@@ -383,7 +382,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	
 	List<ONCChild> getChildList(int year, int famid)
 	{
-		List<ONCChild> cAL = childDB.get(year-BASE_YEAR).getList();
+		List<ONCChild> cAL = childDB.get(year-BASE_SEASON).getList();
 		ArrayList<ONCChild> fChildrenAL = new ArrayList<ONCChild>();
 		
 		for(ONCChild c:cAL)
@@ -395,7 +394,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	
 	ONCChild getChild(int year, int childID)
 	{
-		List<ONCChild> cAL = childDB.get(year-BASE_YEAR).getList();
+		List<ONCChild> cAL = childDB.get(year-BASE_SEASON).getList();
 		
 		int index = 0;
 		while(index < cAL.size() && cAL.get(index).getID() != childID)
@@ -408,7 +407,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	{
 		ArrayList<ONCWebChild> fChildrenAL = new ArrayList<ONCWebChild>();
 		
-		for(ONCChild c:childDB.get(year-BASE_YEAR).getList())
+		for(ONCChild c:childDB.get(year-BASE_SEASON).getList())
 			if(c.getFamID() == famid)
 				fChildrenAL.add(new ONCWebChild(c, bIncludeSchool));
 		
@@ -417,7 +416,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	
 	int getChildsFamilyID(int year, int childid)
 	{
-		List<ONCChild> cAL = childDB.get(year-BASE_YEAR).getList();
+		List<ONCChild> cAL = childDB.get(year-BASE_SEASON).getList();
 		
 		int index = 0;
 		while(index < cAL.size() && cAL.get(index).getID() != childid)
@@ -429,11 +428,11 @@ public class ServerChildDB extends ServerSeasonalDB
 			return -1;	
 	}
 
-	int getNumChildren(int year) { return childDB.get(year - BASE_YEAR).getList().size(); }
+	int getNumChildren(int year) { return childDB.get(year - BASE_SEASON).getList().size(); }
 	
 	List<ONCChild> getList(int year)
 	{
-		return childDB.get(year - BASE_YEAR).getList();
+		return childDB.get(year - BASE_SEASON).getList();
 	}
 /*	
 	void exportFamilyDBToCSV(ArrayList<ONCChild>eAL, String path)
@@ -463,12 +462,12 @@ public class ServerChildDB extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		ChildDBYear childDBYear = childDB.get(year-BASE_YEAR);
+		ChildDBYear childDBYear = childDB.get(year-BASE_SEASON);
 		childDBYear.add(new ONCChild(year, nextLine));	
 	}
 
 	@Override
-	void createNewYear(int newYear)
+	void createNewSeason(int newYear)
 	{
 		//create a new child data base year for the year provided in the newYear parameter
 		//The child db year list is initially empty prior to the import of families, so all we
@@ -497,7 +496,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	@Override
 	void save(int year)
 	{
-		ChildDBYear cDBYear = childDB.get(year - BASE_YEAR);
+		ChildDBYear cDBYear = childDB.get(year - BASE_SEASON);
 		if(cDBYear.isUnsaved())
 		{
 			String[] header = {"Child ID", "Family ID", "Child #", "First Name", "Last Name",

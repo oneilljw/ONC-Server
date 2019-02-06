@@ -348,8 +348,8 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
         		{
         			activityDB = ServerActivityDB.getInstance();
         			volActDB = ServerVolunteerActivityDB.getInstance();
-        			List<Activity> cloneActList = activityDB.clone(DBManager.getCurrentYear());
-        			List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentYear());
+        			List<Activity> cloneActList = activityDB.clone(DBManager.getCurrentSeason());
+        			List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentSeason());
         				
         			//compare the clone list to the imported activity list. Identify previously imported
         			//sign up genius activities that are no longer in the signup. They can only be deleted
@@ -426,7 +426,7 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
         		try
         		{
         			volDB = ServerVolunteerDB.getInstance();
-        			List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentYear());
+        			List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentSeason());
         				
         			//compare the unique volunteer list to the cloned list. If a volunteer is not in 
         			//the current list or if the volunteer name or contact info has been modified, add
@@ -574,13 +574,13 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
 				//updated post import. We'll use them to align the volunteer activities 
 				//imported
 				actDB = ServerActivityDB.getInstance();
-				List<Activity> cloneActList = actDB.clone(DBManager.getCurrentYear());
+				List<Activity> cloneActList = actDB.clone(DBManager.getCurrentSeason());
 
 				volDB = ServerVolunteerDB.getInstance();
-				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentYear());
+				List<ONCVolunteer> cloneVolList = volDB.clone(DBManager.getCurrentSeason());
 				
 				volActDB = ServerVolunteerActivityDB.getInstance();
-				List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentYear());
+				List<VolAct> cloneVolActList = volActDB.clone(DBManager.getCurrentSeason());
 				
 				//for each imported sua, find the activity and volunteer. They will be in the
 				//cloned DB's. Create a new VA and add it to a new VA list
@@ -722,13 +722,13 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
     				
 				ServerVolunteerActivityDB vaDB = ServerVolunteerActivityDB.getInstance();
 				if(!modVAList.isEmpty())
-					vaDB.processUpdatedSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), modVAList);
+					vaDB.processUpdatedSignUpGeniusVolunteerActivities(DBManager.getCurrentSeason(), modVAList);
 				
 				if(!newVAList.isEmpty())
-					vaDB.processNewSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), newVAList);
+					vaDB.processNewSignUpGeniusVolunteerActivities(DBManager.getCurrentSeason(), newVAList);
 				
 				if(!delVAList.isEmpty())
-					vaDB.processDeletedSignUpGeniusVolunteerActivities(DBManager.getCurrentYear(), delVAList);
+					vaDB.processDeletedSignUpGeniusVolunteerActivities(DBManager.getCurrentSeason(), delVAList);
 			}
 			catch (FileNotFoundException e)
 			{

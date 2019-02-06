@@ -226,7 +226,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	String getFamilyStatusWebpage(WebClient wc, String message, String successMssg, 
 			String successDlgTitle, boolean bShowSuccessDialog)
 	{
-		Calendar deliveryDay = ServerGlobalVariableDB.getDeliveryDay(DBManager.getCurrentYear());
+		Calendar deliveryDay = ServerGlobalVariableDB.getDeliveryDay(DBManager.getCurrentSeason());
 		SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy");
 		
 		String response = webpageMap.get("familystatus");
@@ -273,7 +273,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			gDB = ServerGlobalVariableDB.getInstance();
 			
 			//get current season
-			int currSeason = DBManager.getCurrentYear();
+			int currSeason = DBManager.getCurrentSeason();
 			Calendar today = Calendar.getInstance();
 			Date seasonStartDate = gDB.getSeasonStartDate(currSeason);
 			Date compareDate = gDB.getDeadline(currSeason, day);

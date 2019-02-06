@@ -258,7 +258,7 @@ public class ServerMealDB extends ServerSeasonalDB
 	}
 
 	@Override
-	void createNewYear(int newYear)
+	void createNewSeason(int newYear)
 	{
 		//create a new ONCMeal data base year for the year provided in the newYear parameter
 		//The meal db year list is initially empty prior to the input of meals,

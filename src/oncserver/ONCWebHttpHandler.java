@@ -540,7 +540,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     					params.containsKey("year") && params.containsKey("callback"))
     			{	
     				int year = Integer.parseInt((String) params.get("year"));
-    				response = ServerWishCatalog.getGiftCatalogJSONP(year, (String) params.get("callback"));
+    				response = ServerGiftCatalog.getGiftCatalogJSONP(year, (String) params.get("callback"));
     			}
     			else
         			response = invalidTokenReceived();

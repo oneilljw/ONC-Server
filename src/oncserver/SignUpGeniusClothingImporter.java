@@ -249,7 +249,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
         		try
         		{
         			partnerDB = ServerPartnerDB.getInstance();
-        			List<ONCPartner> clonePartnerList = partnerDB.clone(DBManager.getCurrentYear());
+        			List<ONCPartner> clonePartnerList = partnerDB.clone(DBManager.getCurrentSeason());
         				
         			//compare the unique partner list to the cloned list. If an imported unique partner is not in 
         			//the clone list or if the imported unique partner name or contact info has been modified, add

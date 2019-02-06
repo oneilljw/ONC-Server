@@ -30,7 +30,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		famHistDB = new ArrayList<FamilyHistoryDBYear>();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
 		{
 			//create the family history list for each year
 			FamilyHistoryDBYear delDBYear = new FamilyHistoryDBYear(year);
@@ -62,7 +62,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCFamilyHistory>>(){}.getType();
 			
-		String response = gson.toJson(famHistDB.get(year - BASE_YEAR).getList(), listtype);
+		String response = gson.toJson(famHistDB.get(year - BASE_SEASON).getList(), listtype);
 		return response;	
 	}
 	
@@ -70,7 +70,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	{
 		ONCFamilyHistory latestFamilyHistoryObj = null;
 		
-		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_YEAR);
+		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_SEASON);
 		for(ONCFamilyHistory fhObj : histDBYear.getList())
 		{
 			if(fhObj.getFamID() == famID)
@@ -94,7 +94,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		ONCFamilyHistory addedHistoryObj = gson.fromJson(json, ONCFamilyHistory.class);
 		
 		//add the new object to the data base
-		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_YEAR);
+		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_SEASON);
 		addedHistoryObj.setID(histDBYear.getNextID());
 		addedHistoryObj.setDateChanged(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 		
@@ -257,7 +257,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	{
 		ClientManager clientMgr = ClientManager.getInstance();
 		//add the new object to the data base
-		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_YEAR);
+		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_SEASON);
 		
 		addedFamHistObj.setID(histDBYear.getNextID());
 		addedFamHistObj.setDateChanged(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
@@ -284,7 +284,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	
 	ONCFamilyHistory getHistoryObject(int year, int histID)
 	{
-		List<ONCFamilyHistory> histAL = famHistDB.get(year-BASE_YEAR).getList();
+		List<ONCFamilyHistory> histAL = famHistDB.get(year-BASE_SEASON).getList();
 		int index = 0;	
 		while(index < histAL.size() && histAL.get(index).getID() != histID)
 			index++;
@@ -302,7 +302,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		ONCFamilyHistory updatedHistory = gson.fromJson(json, ONCFamilyHistory.class);
 		
 		//Find the position for the current object being replaced
-		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_YEAR);
+		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_SEASON);
 		List<ONCFamilyHistory> histAL = histDBYear.getList();
 		int index = 0;
 		while(index < histAL.size() && histAL.get(index).getID() != updatedHistory.getID())
@@ -327,7 +327,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		HistoryRequest histReq = gson.fromJson(reqjson, HistoryRequest.class);
 			
 		List<ONCFamilyHistory> famHistory = new ArrayList<ONCFamilyHistory>();
-		List<ONCFamilyHistory> famHistAL = famHistDB.get(year - BASE_YEAR).getList();
+		List<ONCFamilyHistory> famHistAL = famHistDB.get(year - BASE_SEASON).getList();
 			
 		//Search for deliveries that match the delivery Family ID
 		for(ONCFamilyHistory fh:famHistAL)
@@ -345,13 +345,13 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_YEAR);
+		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_SEASON);
 		histDBYear.add(new ONCFamilyHistory(nextLine));	
 	}
 	
 	
 	@Override
-	void createNewYear(int newYear)
+	void createNewSeason(int newYear)
 	{
 		//create a new family history data base year for the year provided in the newYear parameter
 		//The history db year list is initially empty prior to the import of families, so all we
@@ -383,7 +383,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		String[] header = {"History ID", "Family ID", "Family Status", "Gift Status", "Del By", 
 	 			"Notes", "Changed By", "Time Stamp", "DNS Code"};
 		
-		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_YEAR);
+		FamilyHistoryDBYear histDBYear = famHistDB.get(year - BASE_SEASON);
 		if(histDBYear.isUnsaved())
 		{
 //			System.out.println(String.format("DeliveryDB save() - Saving Delivery DB"));

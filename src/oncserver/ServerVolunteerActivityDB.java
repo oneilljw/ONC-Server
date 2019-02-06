@@ -37,7 +37,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		signUpVolunteerImporter.addSignUpListener(this);
 		
 		//populate the data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
 		{
 			//create the volunteer activity list for each year
 			VolunteerActivityDBYear volunteerActivityDBYear = new VolunteerActivityDBYear();
@@ -64,7 +64,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	
 	List<VolAct> clone(int year)
 	{
-		List<VolAct> volActList = volunteerActivityDB.get(year - BASE_YEAR).getList();
+		List<VolAct> volActList = volunteerActivityDB.get(year - BASE_SEASON).getList();
 		List<VolAct> cloneList = new ArrayList<VolAct>();
 		
 		for(VolAct va: volActList)
@@ -78,7 +78,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<VolAct>>(){}.getType();
 			
-		String response = gson.toJson(volunteerActivityDB.get(year - BASE_YEAR).getList(), listtype);
+		String response = gson.toJson(volunteerActivityDB.get(year - BASE_SEASON).getList(), listtype);
 		return response;	
 	}
 	
@@ -86,7 +86,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	{
 		List<VolAct> volList = new ArrayList<VolAct>();
 		
-		for(VolAct va : volunteerActivityDB.get(year - BASE_YEAR).getList())
+		for(VolAct va : volunteerActivityDB.get(year - BASE_SEASON).getList())
 			if(va.getVolID() == v.getID())
 				volList.add(va);
 		
@@ -97,7 +97,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	int getVolunteerCount(int year, Activity a)
 	{
 		int volCount = 0;
-		for(VolAct va : volunteerActivityDB.get(year - BASE_YEAR).getList())
+		for(VolAct va : volunteerActivityDB.get(year - BASE_SEASON).getList())
 			if(va.getActID() == a.getID())
 				volCount += va.getQty();
 				
@@ -111,7 +111,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	{
 		List<String> clientNotificationList = new LinkedList<String>();
 			
-		List<VolAct> vaList = volunteerActivityDB.get(year - BASE_YEAR).getList();
+		List<VolAct> vaList = volunteerActivityDB.get(year - BASE_SEASON).getList();
 		for(VolAct va : inputVAList)
 		{
 			int index = 0;
@@ -153,7 +153,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		{
 			//there were new volunteer activities, send list of new json's to clients
 			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), addedVAJsonMssgList);
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), addedVAJsonMssgList);
 		}
 	}
 
@@ -165,7 +165,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		VolAct addedActivity = gson.fromJson(json, VolAct.class);
 				
 		//set the new ID and time stamp for the new activity
-		VolunteerActivityDBYear activityDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		VolunteerActivityDBYear activityDBYear = volunteerActivityDB.get(year - BASE_SEASON);
 		
 		addedActivity.setID(activityDBYear.getNextID());
 		
@@ -178,7 +178,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	String add(int year, VolAct addedActivity) 
 	{	
 		//set the new ID for the VolAct
-		VolunteerActivityDBYear activityDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		VolunteerActivityDBYear activityDBYear = volunteerActivityDB.get(year - BASE_SEASON);
 		addedActivity.setID(activityDBYear.getNextID());
 		
 		activityDBYear.add(addedActivity);
@@ -205,7 +205,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 			for(VolAct va : vaList)
 				returnMssgList.add(add(year, va));
 			
-			volunteerActivityDB.get(year - BASE_YEAR).setChanged(true);
+			volunteerActivityDB.get(year - BASE_SEASON).setChanged(true);
 					
 			//if update was successful, need to q the change to all in-year clients
 			//notify in year clients of change
@@ -221,7 +221,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		VolAct updatedVA = gson.fromJson(json, VolAct.class);
 		
 		//Find the position for the current driver being updated
-		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_SEASON);
 		List<VolAct> vaList = volActDBYear.getList();
 		int index = 0;
 		while(index < vaList.size() && vaList.get(index).getID() != updatedVA.getID())
@@ -241,7 +241,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	String update(int year, VolAct updatedActivity)
 	{
 		//Find the position for the current activity being updated
-		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_SEASON);
 		List<VolAct> volActList = volActDBYear.getList();
 		int index = 0;
 		while(index < volActList.size() && volActList.get(index).getID() != updatedActivity.getID())
@@ -267,7 +267,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		VolAct deletedVA = gson.fromJson(json, VolAct.class);
 		
 		//find and remove the deleted volunteer activity from the data base
-		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_SEASON);
 		List<VolAct> vaList = volActDBYear.getList();
 		
 		int index = 0;
@@ -289,7 +289,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		Gson gson = new Gson();
 		
 		//find and remove the deleted volunteer activity from the data base
-		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		VolunteerActivityDBYear volActDBYear = volunteerActivityDB.get(year - BASE_SEASON);
 		List<VolAct> vaList = volActDBYear.getList();
 		
 		int index = 0;
@@ -322,7 +322,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		{
 			//there were new activities, send list of new json's to clients
 			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
 		}
 	}
 	
@@ -348,7 +348,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		{
 			//there were updated activities, send list of new json's to clients
 			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
 		}
 		
 //		System.out.println(String.format("ServVADB.processUpdatedVA's: clientJsonMssgList size=%d", clientJsonMssgList.size()));
@@ -370,12 +370,12 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 		{
 			//there were deleted activities, send list of new json's to clients
 			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
 		}
 	}
 	
 	@Override
-	void createNewYear(int newYear)
+	void createNewSeason(int newYear)
 	{
 		//create a new VolunteerActivity data base year for the year provided in the newYear parameter
 		//The activity db year list is copied from the prior year, assuming it exists. All start
@@ -389,7 +389,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		VolunteerActivityDBYear volunteerActivityDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		VolunteerActivityDBYear volunteerActivityDBYear = volunteerActivityDB.get(year - BASE_SEASON);
 		volunteerActivityDBYear.add(new VolAct(nextLine));	
 	}
 /*	
@@ -442,7 +442,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 			//add the updated volunteers to the database
 			for(VolAct va : updatedVolActList)
 			{
-				String response = update(DBManager.getCurrentYear(), va);
+				String response = update(DBManager.getCurrentSeason(), va);
 				if(response != null)
 					clientJsonMssgList.add(response);
 //				System.out.println(String.format("ServVolDB.newAndMod: updateVol: %s %s, id= %d",
@@ -453,7 +453,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 			{
 				//there were updates, send list of updated json's to clients
 				ClientManager clientMgr = ClientManager.getInstance();
-				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
 			}
 		}
 		else if(event.type() == SignUpEventType.NEW_VOLUNTEER_ACTIVITIES)
@@ -466,7 +466,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 			//add the updated volunteers to the database
 			for(VolAct va : newVolActList)
 			{
-				String response = add(DBManager.getCurrentYear(), va);
+				String response = add(DBManager.getCurrentSeason(), va);
 				if(response != null)
 					clientJsonMssgList.add(response);
 				
@@ -478,7 +478,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 			{
 				//there were new activities, send list of new json's to clients
 				ClientManager clientMgr = ClientManager.getInstance();
-				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
 			}
 		}
 	}
@@ -486,7 +486,7 @@ public class ServerVolunteerActivityDB extends ServerSeasonalDB implements SignU
 	@Override
 	void save(int year)
 	{
-		 VolunteerActivityDBYear volunteerActivityDBYear = volunteerActivityDB.get(year - BASE_YEAR);
+		 VolunteerActivityDBYear volunteerActivityDBYear = volunteerActivityDB.get(year - BASE_SEASON);
 		 
 		 if(volunteerActivityDBYear.isUnsaved())
 		 {

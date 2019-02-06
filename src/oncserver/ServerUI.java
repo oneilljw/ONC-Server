@@ -524,7 +524,7 @@ public class ServerUI extends JPanel implements ClientListener
         	else if (col == CLIENT_HB_COL)
         		return "O";
         	else if (col == CLIENT_YEAR_COL)
-            	return Integer.toString(DBManager.getCurrentYear());
+            	return Integer.toString(DBManager.getCurrentSeason());
         	else if (col == CLIENT_VER_COL)
         		return "Web";
         	else if (col == CLIENT_TIMESTAMP_COL)

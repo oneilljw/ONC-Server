@@ -210,7 +210,7 @@ public class ONCSecureWebServer
 		ServerGlobalVariableDB gvDB = ServerGlobalVariableDB.getInstance();
 		Calendar now = Calendar.getInstance();
 		Calendar yearEndCal = Calendar.getInstance();
-		yearEndCal.set(Calendar.YEAR, DBManager.getCurrentYear());
+		yearEndCal.set(Calendar.YEAR, DBManager.getCurrentSeason());
 		yearEndCal.set(Calendar.MONTH, Calendar.DECEMBER);
 		yearEndCal.set(Calendar.DAY_OF_MONTH, 31);
 		yearEndCal.set(Calendar.HOUR, 11);
@@ -218,7 +218,7 @@ public class ONCSecureWebServer
 		yearEndCal.set(Calendar.SECOND, 59);
 		yearEndCal.set(Calendar.MILLISECOND, 999);
 				
-		if(now.after(gvDB.getSeasonStartCal(DBManager.getCurrentYear())) && now.before(yearEndCal))
+		if(now.after(gvDB.getSeasonStartCal(DBManager.getCurrentSeason())) && now.before(yearEndCal))
 			websiteStatus = new WebsiteStatus(true, true, "Online");
 		else
 		{

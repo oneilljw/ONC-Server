@@ -58,8 +58,8 @@ public class DesktopClient extends Thread
     private ServerVolunteerActivityDB volunteerActivityDB;
     private ServerWarehouseDB warehouseDB;
     private ServerFamilyHistoryDB famHistoryDB;
-    private ServerWishCatalog wishCatalog;
-    private ServerWishDetailDB wishDetailDB;
+    private ServerGiftCatalog wishCatalog;
+    private ServerGiftDetailDB wishDetailDB;
     private PriorYearDB prioryearDB;
     private ClientManager clientMgr;
     private ServerMealDB mealDB;
@@ -109,8 +109,8 @@ public class DesktopClient extends Thread
 	        volunteerActivityDB = ServerVolunteerActivityDB.getInstance();
 	        warehouseDB = ServerWarehouseDB.getInstance();
 	        famHistoryDB = ServerFamilyHistoryDB.getInstance();
-	        wishCatalog = ServerWishCatalog.getInstance();
-	        wishDetailDB = ServerWishDetailDB.getInstance();
+	        wishCatalog = ServerGiftCatalog.getInstance();
+	        wishDetailDB = ServerGiftDetailDB.getInstance();
 	        prioryearDB = PriorYearDB.getInstance();
 	        mealDB = ServerMealDB.getInstance();
 	        adultDB = ServerAdultDB.getInstance();
@@ -307,7 +307,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<catalog>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = wishCatalog.getWishCatalog(year);
+                		String response = wishCatalog.getGiftCatalog(year);
                 		output.println(response);
                 }
                 else if(command.startsWith("GET<wishdetail>"))

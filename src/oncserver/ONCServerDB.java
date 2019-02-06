@@ -12,24 +12,7 @@ public abstract class ONCServerDB
 	protected static final int USER_UNCHANGED = 0;
 	protected static final int USER_UPDATED = 1;
 	protected static final int USER_ADDED = 2;
-//	protected static final int BASE_YEAR = 2012;
-	
-//	abstract String add(int year, String userjson);
-	
-//	abstract void createNewYear(int year);	//used to create a new year from the authorized client
-/*	
-	public <T extends ONCObject> T find(ArrayList<? extends ONCObject> list, int id, Class<T> type)
-	{
-		int index = 0;
-		while(index < list.size() && list.get(index).getID() != id);
-			index++;
-		
-		if(index < list.size())
-			return type.cast(list.get(index));
-		else 
-			return null;		
-	}
-*/	
+
 	ONCObject find(List<? extends ONCObject> list, int id)
 	{
 		int index = 0;
@@ -41,36 +24,6 @@ public abstract class ONCServerDB
 		else
 			return list.get(index);		
 	}
-/*	
-	void importDB(int year, String path, String name, int length) throws FileNotFoundException, IOException
-	{
-		CSVReader reader = new CSVReader(new FileReader(path));
-    	String[] nextLine, header;  		
-    		
-    	if((header = reader.readNext()) != null)	//Does file have records? 
-    	{
-    		//Read the User File
-    		if(header.length == length)	//Does the record have the right # of fields? 
-    		{
-    			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
-    				addObject(year, nextLine);
-    		}
-    		else
-    		{
-    			String error = String.format("%s file corrupted, header length = %d", name, header.length);
-    	       	JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
-    		}		   			
-    	}
-    	else
-    	{
-    		String error = String.format("%s file is empty", name);
-    		JOptionPane.showMessageDialog(null, error,  name + " Empty", JOptionPane.ERROR_MESSAGE);
-    	}
-    	
-    	reader.close();
-	}
-*/	
-//	abstract void addObject(int year, String[] nextLine);
 	
 	boolean exportDBToCSV(List<? extends ONCObject> list, String[] header, String path)
     {	
@@ -96,8 +49,6 @@ public abstract class ONCServerDB
 	    		return false;
 	    }
     }
-	
-//	abstract void save(int year);
 	
 	/**********************************************************************************
 	 * This method searches the list for the highest ID and returns the next highest

@@ -54,7 +54,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		sGVDB = ServerGlobalVariableDB.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason();  year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the child list for each year
 			VolunteerDBYear volunteerDBYear = new VolunteerDBYear(year);
@@ -86,7 +86,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	
 	List<ONCVolunteer> clone(int year)
 	{
-		List<ONCVolunteer> volList = volDB.get(year - BASE_YEAR).getList();
+		List<ONCVolunteer> volList = volDB.get(year - BASE_SEASON).getList();
 		List<ONCVolunteer> cloneList = new ArrayList<ONCVolunteer>();
 		
 		for(ONCVolunteer v : volList)
@@ -100,14 +100,14 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCVolunteer>>(){}.getType();
 			
-		String response = gson.toJson(volDB.get(year - BASE_YEAR).getList(), listtype);
+		String response = gson.toJson(volDB.get(year - BASE_SEASON).getList(), listtype);
 		return response;	
 	}
 	
 	static HtmlResponse getVolunteerJSONP(int year, String fn, String ln, String cell, String callbackFunction)
 	{		
 		Gson gson = new Gson();
-		List<ONCVolunteer> searchList = volDB.get(year - BASE_YEAR).getList();
+		List<ONCVolunteer> searchList = volDB.get(year - BASE_SEASON).getList();
 		
 		String response;
 		int index=0;
@@ -151,7 +151,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		ONCVolunteer addedDriver = gson.fromJson(json, ONCVolunteer.class);
 				
 		//set the new ID for the new driver
-		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_SEASON);
 		addedDriver.setID(volunteerDBYear.getNextID());
 		addedDriver.setDateChanged(new Date());
 		addedDriver.setChangedBy(client.getLNFI());
@@ -166,7 +166,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	ONCVolunteer add(int year, ONCVolunteer addedVol) 
 	{		
 		//set the new ID for the new driver
-		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_SEASON);
 		addedVol.setID(volunteerDBYear.getNextID());
 		volunteerDBYear.add(addedVol);
 		volunteerDBYear.setChanged(true);
@@ -177,7 +177,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	String addVolunteerGroup(int year, String volunteerGroupJson, DesktopClient currClient)
 	{
 		//get the current year volunteer list for the proper year
-		List<ONCVolunteer> cyVolList = volDB.get(year - BASE_YEAR).getList();
+		List<ONCVolunteer> cyVolList = volDB.get(year - BASE_SEASON).getList();
 		
 		//create the response list of jsons
 		List<String> jsonResponseList = new ArrayList<String>();
@@ -258,7 +258,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		String fn = volParams.get("delFN");
 		String ln = volParams.get("delLN");
 		
-		VolunteerDBYear volDBYear = volDB.get(year - BASE_YEAR);
+		VolunteerDBYear volDBYear = volDB.get(year - BASE_SEASON);
 		List<ONCVolunteer>volList = volDBYear.getList();
 		
 		int index=0;
@@ -387,7 +387,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		String fn = volParams.get("delFN");
 		String ln = volParams.get("delLN");
 		
-		VolunteerDBYear volDBYear = volDB.get(year - BASE_YEAR);
+		VolunteerDBYear volDBYear = volDB.get(year - BASE_SEASON);
 		List<ONCVolunteer>volList = volDBYear.getList();
 		
 		int index=0;
@@ -495,7 +495,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		ONCVolunteer updatedDriver = gson.fromJson(json, ONCVolunteer.class);
 		
 		//Find the position for the current driver being updated
-		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_SEASON);
 		List<ONCVolunteer> dAL = volunteerDBYear.getList();
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != updatedDriver.getID())
@@ -551,7 +551,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 //		Gson gson = new Gson();
 		
 		//Find the position for the current volunteer being updated
-		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_SEASON);
 		List<ONCVolunteer> dAL = volunteerDBYear.getList();
 		int index = 0;
 		while(index < dAL.size() && dAL.get(index).getID() != updatedVolunteer.getID())
@@ -577,7 +577,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		ONCVolunteer deletedDriver = gson.fromJson(json, ONCVolunteer.class);
 		
 		//find and remove the deleted child from the data base
-		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_SEASON);
 		List<ONCVolunteer> dAL = volunteerDBYear.getList();
 		
 		int index = 0;
@@ -596,7 +596,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	
 	ONCVolunteer getDriverByDriverNumber(int year, String drvNum)
 	{
-		List<ONCVolunteer> dAL = volDB.get(year-BASE_YEAR).getList();
+		List<ONCVolunteer> dAL = volDB.get(year-BASE_SEASON).getList();
 		
 		//find the driver
 		int index = 0;	
@@ -618,7 +618,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		//add the updated volunteers to the database
 		for(ONCVolunteer v : sugVolList)
 		{
-			ONCVolunteer updatedVol = update(DBManager.getCurrentYear(), v);
+			ONCVolunteer updatedVol = update(DBManager.getCurrentSeason(), v);
 			if(updatedVol != null)
 			{
 				updatedVolList.add(updatedVol);
@@ -630,7 +630,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		{
 			//there were updated volunteers, send list of new json's to clients
 			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
 		}
 		
 		return updatedVolList;
@@ -645,7 +645,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		//add the new volunteers to the database
 		for(ONCVolunteer v : sugVolList)
 		{
-			ONCVolunteer addedVol = add(DBManager.getCurrentYear(), v);
+			ONCVolunteer addedVol = add(DBManager.getCurrentSeason(), v);
 			if(addedVol != null)
 			{
 				newVolList.add(addedVol);
@@ -660,7 +660,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		{
 			//there were new activities, send list of new json's to clients
 			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+			clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
 		}
 		
 		return newVolList;
@@ -669,7 +669,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	void updateVolunteerDriverDeliveryCounts(int year, String drvNum1, String drvNum2)
 	{
 		Gson gson = new Gson();
-		List<ONCVolunteer> volList = volDB.get(year-BASE_YEAR).getList();
+		List<ONCVolunteer> volList = volDB.get(year-BASE_SEASON).getList();
 		
 		List<String> volChangeList = new ArrayList<String>();
 		
@@ -705,7 +705,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		{
 			//at least one driver delivery count was updated. Mark the db for saving and 
 			//notify all in year clients
-			volDB.get(year-BASE_YEAR).setChanged(true);
+			volDB.get(year-BASE_SEASON).setChanged(true);
 			clientMgr.notifyAllInYearClients(year, volChangeList);
 		}
 	}
@@ -825,11 +825,11 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			ServerVolunteerActivityDB volActDB = ServerVolunteerActivityDB.getInstance();
 			ServerActivityDB servActDB = ServerActivityDB.getInstance();
 			
-			List<VolAct> vaList = volActDB.getVolunteerActivities(DBManager.getCurrentYear(), v);
+			List<VolAct> vaList = volActDB.getVolunteerActivities(DBManager.getCurrentSeason(), v);
 			List<Activity> activities = new ArrayList<Activity>();
 			
 			for(VolAct va : vaList)
-				activities.add(servActDB.findActivity(DBManager.getCurrentYear(), va.getActID()));
+				activities.add(servActDB.findActivity(DBManager.getCurrentSeason(), va.getActID()));
 			
 			//sort the search list by Start date
 			Collections.sort(activities, new VolunteerActivityDateComparator());
@@ -863,12 +863,12 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
+		VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_SEASON);
 		volunteerDBYear.add(new ONCVolunteer(nextLine));	
 	}
 
 	@Override
-	void createNewYear(int newYear)
+	void createNewSeason(int newYear)
 	{
 		//create a new ONCVolunteer data base year for the year provided in the newYear parameter
 		//The ONCVolunteer db year list is initially empty prior to the import of volunteers, so all we
@@ -881,7 +881,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	@Override
 	void save(int year)
 	{
-		 VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_YEAR);
+		 VolunteerDBYear volunteerDBYear = volDB.get(year - BASE_SEASON);
 		 
 		 if(volunteerDBYear.isUnsaved())
 		 {

@@ -234,7 +234,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 	}
 
 	@Override
-	void createNewYear(int year)
+	void createNewSeason(int year)
 	{
 		//create a new ONCAdult data base year for the year provided in the year parameter
 		//The adult db year list is initially empty prior to the intake of families,

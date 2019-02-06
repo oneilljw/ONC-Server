@@ -31,7 +31,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		clientMgr = ClientManager.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
 		{
 			//create the child list for each year
 			WarehouseDBYear warehouseDBYear = new WarehouseDBYear(year);
@@ -60,7 +60,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 	//Search the database for the volunteer. Return a sign-in list if the volunteer is found. 
 	String getWarehouseSignInHistory(int year, String volunteerID)
 	{
-		List<ONCWarehouseVolunteer> volList = warehouseDB.get(year - BASE_YEAR).getList();
+		List<ONCWarehouseVolunteer> volList = warehouseDB.get(year - BASE_SEASON).getList();
 		List<ONCWarehouseVolunteer> histList = new ArrayList<ONCWarehouseVolunteer>();
 		
 		int searchVolID = Integer.parseInt(volunteerID);
@@ -78,7 +78,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 	
 	void add(int year, ONCVolunteer addedVol)
 	{
-		WarehouseDBYear whDBYear = warehouseDB.get(year - BASE_YEAR);
+		WarehouseDBYear whDBYear = warehouseDB.get(year - BASE_SEASON);
 		
 		ONCWarehouseVolunteer addedWHVol = new ONCWarehouseVolunteer(whDBYear.getNextID(), 
 															addedVol.getID(), addedVol.getOrganization(),
@@ -99,7 +99,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 	}
 
 	@Override
-	void createNewYear(int newYear)
+	void createNewSeason(int newYear)
 	{
 		//create a new  Warehouse data base year for the year provided in the newYear parameter
 		//The warhouse db year list is initially empty prior to the import of volunteers, so all we
@@ -112,14 +112,14 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		WarehouseDBYear warehouseDBYear = warehouseDB.get(year - BASE_YEAR);
+		WarehouseDBYear warehouseDBYear = warehouseDB.get(year - BASE_SEASON);
 		warehouseDBYear.add(new ONCWarehouseVolunteer(nextLine));	
 	}
 
 	@Override
 	void save(int year)
 	{
-		 WarehouseDBYear warehouseDBYear = warehouseDB.get(year - BASE_YEAR);
+		 WarehouseDBYear warehouseDBYear = warehouseDB.get(year - BASE_SEASON);
 		 
 		 if(warehouseDBYear.isUnsaved())
 		 {

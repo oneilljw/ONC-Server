@@ -16,18 +16,20 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
-import ourneighborschild.DBYear;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import ourneighborschild.DBYear;
 
 public class DBManager 
 {	
 	private static final boolean DATABASE_AUTOSAVE_ENABLED = true;
 	private static final int DBYEARSDB_NUM_OF_FIELDS = 2;
+	
+	public static final int BASE_YEAR = 0;
+	public static final int CURRENT_YEAR = 1;
 	
 	private static final int DATABASE_SAVE_TIMER_RATE = 1000 * 60 * 5; //Five minutes
 	
@@ -90,8 +92,8 @@ public class DBManager
 			dbSeasonalAutosaveList.add(ServerVolunteerActivityDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerWarehouseDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerFamilyHistoryDB.getInstance());
-			dbSeasonalAutosaveList.add(ServerWishCatalog.getInstance());
-			dbSeasonalAutosaveList.add(ServerWishDetailDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerGiftCatalog.getInstance());
+			dbSeasonalAutosaveList.add(ServerGiftDetailDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerMealDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerAdultDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerNoteDB.getInstance());
@@ -209,7 +211,7 @@ public class DBManager
 				
 				//for each seasonal component database, ask it to create the new year
 				for(ServerSeasonalDB componentDB: dbSeasonalAutosaveList)
-					componentDB.createNewYear(newYear);
+					componentDB.createNewSeason(newYear);
 			
 				//return the new DBYear json
 				Gson gson = new Gson();
@@ -227,22 +229,35 @@ public class DBManager
 	
 	static int getNumberOfYears() { return dbYearList.size(); }
 	
-	static int getCurrentYear()
+//	static int getBaseOrCurrentYear()
+//	{
+//		return dbYearList.isEmpty() ? -1 : dbYearList.get(dbYearList.size()-1).getYear(); 
+//	}
+	
+	static int getCurrentSeason()
 	{
-		if(dbYearList.isEmpty())
-			return -1;
-		else
-			return dbYearList.get(dbYearList.size()-1).getYear();
+		return dbYearList.isEmpty() ? -1 : dbYearList.get(dbYearList.size()-1).getYear();
+	}
+	
+	static int getBaseSeason()
+	{
+		return dbYearList.isEmpty() ? -1 : dbYearList.get(0).getYear();
+	}
+	
+	//returns the offset index from the base year in the database
+	static Integer offset(int year)
+	{
+		return dbYearList.isEmpty() ? null : dbYearList.get(0).getYear() - year;
 	}
 	
 	static String getMostCurrentYear()
 	{
-		return getCurrentYear() > -1 ? Integer.toString(dbYearList.get(dbYearList.size()-1).getYear()) : "No Years";
+		return getCurrentSeason() > -1 ? Integer.toString(dbYearList.get(dbYearList.size()-1).getYear()) : "No Years";
 	}
 	
 	static HtmlResponse getMostCurrentYearJSONP(String callbackFunction)
 	{		
-		String response = String.format("%s({\"curryear\":%d})", callbackFunction, getCurrentYear());
+		String response = String.format("%s({\"curryear\":%s})", callbackFunction, getMostCurrentYear());
 		return new HtmlResponse(response, HttpCode.Ok);		
 	}
 	
@@ -250,58 +265,51 @@ public class DBManager
 	{
 		String[] header = {"Year", "Locked?"};
 		String path = String.format("%s/PermanentDB/dbyears.csv", System.getProperty("user.dir"));
-		 try 
-		    {
-		    	CSVWriter writer = new CSVWriter(new FileWriter(path));
-		    	writer.writeNext(header);
+		try
+		{
+			CSVWriter writer = new CSVWriter(new FileWriter(path));
+			writer.writeNext(header);
 		    	
-		    	String[] exportRow = new String[header.length];
 		    	for(DBYear dbYear:dbYearList)
-		    	{
-		    		exportRow[0] = Integer.toString(dbYear.getYear());
-		    		exportRow[1] = dbYear.isLocked() ? "yes" : "no";
-		    		writer.writeNext(exportRow);	//Get family object row
-		    	}
-		    	
+		    		writer.writeNext(dbYear.getExportRow());	//Get dbYear export row		    		
 		    	writer.close();
-		    	       	    
-		    } 
-		    catch (IOException x)
-		    {
+		} 
+		catch (IOException x)
+	    {
 		    	System.err.format("IO Exception: %s%n", x);
-		    }
+	    }
 	}
 	
 	void importDBYears(String path, String name) throws FileNotFoundException, IOException
 	{
-    	CSVReader reader = new CSVReader(new FileReader(path));
-    	String[] nextLine, header;  		
+		CSVReader reader = new CSVReader(new FileReader(path));
+		String[] nextLine, header;  		
     		
-    	if((header = reader.readNext()) != null)	//Does file have records? 
-    	{
-    		//Read the data base years file
-    		if(header.length == DBYEARSDB_NUM_OF_FIELDS)	//Does the header have the right # of fields? 
+		if((header = reader.readNext()) != null)	//Does file have records? 
     		{
-    			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
+    			//Read the data base years file
+    			if(header.length == DBYEARSDB_NUM_OF_FIELDS)	//Does the header have the right # of fields? 
     			{
-    				int year = (!nextLine[0].isEmpty() && nextLine[0].matches("-?\\d+(\\.\\d+)?")) ? Integer.parseInt(nextLine[0]) : 0;
-    				boolean bLocked = nextLine[1].equals("yes");
-    				dbYearList.add(new DBYear(year, bLocked));
-    			}	
+    				while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
+    				{
+    					int year = (!nextLine[0].isEmpty() && nextLine[0].matches("-?\\d+(\\.\\d+)?")) ? Integer.parseInt(nextLine[0]) : 0;
+    					boolean bLocked = nextLine[1].equals("yes");
+    					dbYearList.add(new DBYear(year, bLocked));
+    				}	
+    			}
+    			else
+    			{
+    				String error = String.format("%s file corrupted, header lentgth = %d", name, header.length);
+    				JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
+    			}		   			
     		}
-    		else
-    		{
-    			String error = String.format("%s file corrupted, header lentgth = %d", name, header.length);
-    	       	JOptionPane.showMessageDialog(null, error,  name + "Corrupted", JOptionPane.ERROR_MESSAGE);
-    		}		   			
-    	}
-    	else
-    	{
-    		String error = String.format("%s file is empty", name);
-    		JOptionPane.showMessageDialog(null, error,  name + " Empty", JOptionPane.ERROR_MESSAGE);
-    	}
+		else
+		{
+    			String error = String.format("%s file is empty", name);
+    			JOptionPane.showMessageDialog(null, error,  name + " Empty", JOptionPane.ERROR_MESSAGE);
+		}
     	
-    	reader.close();
+    		reader.close();
 	}
 	
 	private class SaveTimerListener implements ActionListener

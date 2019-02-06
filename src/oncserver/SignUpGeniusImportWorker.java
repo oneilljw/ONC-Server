@@ -80,7 +80,7 @@ public abstract class SignUpGeniusImportWorker extends SwingWorker <Void, Void>
 	long getChristmasDayTimeInSeconds()
 	{
 		Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-		xmasDay.set(DBManager.getCurrentYear(),11,25,5,0,0);
+		xmasDay.set(DBManager.getCurrentSeason(),11,25,5,0,0);
 		return xmasDay.getTimeInMillis()/1000;	//milliseconds to seconds
 	}
 	

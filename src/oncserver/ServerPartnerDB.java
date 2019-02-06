@@ -39,7 +39,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		signUpClothingImporter = SignUpGeniusClothingImporter.getInstance();
 		signUpClothingImporter.addSignUpListener(this);
 				
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
 		{
 			//create the partner list for year
 			PartnerDBYear partnerDBYear = new PartnerDBYear(year);
@@ -75,13 +75,13 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		Gson gson = new Gson();
 		Type listOfPartners = new TypeToken<ArrayList<ONCPartner>>(){}.getType();
 		
-		String response = gson.toJson(partnerDB.get(year - BASE_YEAR).getList(), listOfPartners);
+		String response = gson.toJson(partnerDB.get(year - BASE_SEASON).getList(), listOfPartners);
 		return response;	
 	}
 	
 	List<ONCPartner> clone(int year)
 	{
-		List<ONCPartner> partnerList = partnerDB.get(year - BASE_YEAR).getList();
+		List<ONCPartner> partnerList = partnerDB.get(year - BASE_SEASON).getList();
 		List<ONCPartner> cloneList = new ArrayList<ONCPartner>();
 		
 		for(ONCPartner p :partnerList)
@@ -104,7 +104,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			
 			//Add the confirmed business, church and schools to the returned list and add all other 
 			//confirmed partners to the temporary list
-			for(ONCPartner p: partnerDB.get(year - BASE_YEAR).getList())
+			for(ONCPartner p: partnerDB.get(year - BASE_SEASON).getList())
 			{
 				if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollectionType.Ornament
 						&& p.getType() < ORG_TYPE_CLOTHING)
@@ -129,7 +129,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		{
 			Type listOfWebPartnersExtended = new TypeToken<ArrayList<ONCWebPartnerExtended>>(){}.getType();
 			ArrayList<ONCWebPartnerExtended> webPartnerExtendedList = new ArrayList<ONCWebPartnerExtended>();
-			for(ONCPartner p :  partnerDB.get(year-BASE_YEAR).getList())
+			for(ONCPartner p :  partnerDB.get(year-BASE_SEASON).getList())
 			{
 				webPartnerExtendedList.add(new ONCWebPartnerExtended(p));
 				Collections.sort(webPartnerExtendedList, new PartnerNameComparator());
@@ -146,7 +146,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		Gson gson = new Gson();
 		String response;
 	
-		List<ONCPartner> pAL = partnerDB.get(year-BASE_YEAR).getList();
+		List<ONCPartner> pAL = partnerDB.get(year-BASE_SEASON).getList();
 		
 		int index=0;
 		while(index<pAL.size() && pAL.get(index).getID() != (Integer.parseInt(partnerID)))
@@ -169,7 +169,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		int id = Integer.parseInt(zID);
 		int index = 0;
 		
-		List<ONCPartner> orgAL = partnerDB.get(year-BASE_YEAR).getList();
+		List<ONCPartner> orgAL = partnerDB.get(year-BASE_SEASON).getList();
 		
 		while(index < orgAL.size() && orgAL.get(index).getID() != id)
 			index++;
@@ -187,7 +187,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	
 	ONCPartner getPartner(int year, int partID)
 	{
-		List<ONCPartner> oAL = partnerDB.get(year - BASE_YEAR).getList();
+		List<ONCPartner> oAL = partnerDB.get(year - BASE_SEASON).getList();
 		
 		int index = 0;
 		while(index < oAL.size() && oAL.get(index).getID() != partID)
@@ -208,7 +208,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		ONCPartner reqOrg = gson.fromJson(json, ONCPartner.class);
 		
 		//Find the position for the current family being replaced
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		List<ONCPartner> oAL = partnerDBYear.getList();
 		int index = 0;
 		while(index < oAL.size() && oAL.get(index).getID() != reqOrg.getID())
@@ -243,7 +243,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	{	
 		//Find the position for the current partner being replaced
 		ONCPartner currPartner = null;
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		List<ONCPartner> oAL = partnerDBYear.getList();
 		int index = 0;
 		while(index < oAL.size() && oAL.get(index).getID() != updatedPartner.getID())
@@ -342,7 +342,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		ONCPartner addedPartner = gson.fromJson(json, ONCPartner.class);
 	
 		//set the new ID for the catalog wish
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		addedPartner.setID(partnerDBYear.getNextID());
 		addedPartner.setDateChanged(new Date());
 		addedPartner.setChangedBy(client.getLNFI());
@@ -381,7 +381,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	ONCPartner add(int year, ONCPartner addedPartner)
 	{
 		//set the new ID for the catalog wish
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		addedPartner.setID(partnerDBYear.getNextID());
 		
 		//set the region for the new partner
@@ -421,7 +421,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		ONCPartner reqDelPartner = gson.fromJson(json, ONCPartner.class);
 	
 		//find the partner in the db
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		List<ONCPartner> oAL = partnerDBYear.getList();
 		int index = 0;
 		while(index < oAL.size() && oAL.get(index).getID() != reqDelPartner.getID())
@@ -441,7 +441,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	
 	static int getOrnamentsRequested(int year)
 	{
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		List<ONCPartner> pAL = partnerDBYear.getList();
 		
 		int ornReq = 0;
@@ -454,7 +454,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 
 	void updateGiftAssignees(int year, int oldPartnerID, int newPartnerID)
 	{
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		
 		//Find the the current partner &  decrement gift count if found
 		if(oldPartnerID > 0)
@@ -481,7 +481,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	
 	void incrementGiftActionCount(int year, ONCChildGift addedWish)
 	{	
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		List<ONCPartner> partnerList = partnerDBYear.getList();
 		
 		//Find the the current partner being decremented
@@ -521,7 +521,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	
 	void decrementGiftsAssignedCount(int year, int partnerID)
 	{
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		List<ONCPartner> oAL = partnerDBYear.getList();
 		int index=0;
 		while(index < oAL.size() && oAL.get(index).getID() != partnerID)
@@ -538,12 +538,12 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		partnerDBYear.add(new ONCPartner(nextLine));
 	}
 
 	@Override
-	void createNewYear(int newYear)
+	void createNewSeason(int newYear)
 	{
 		//create a new partner data base year for the year provided in the newYear parameter
 		//Then copy the prior years partners to the newly created partner db year list.
@@ -617,7 +617,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		List<ONCPartner> pyPerfPartnerList = new ArrayList<ONCPartner>();
 		
 		//populate the current partner list
-		for(ONCPartner p: partnerDB.get(year - BASE_YEAR).getList())
+		for(ONCPartner p: partnerDB.get(year - BASE_SEASON).getList())
 		{
 			//make a copy of the partner and set their assigned, delivered and received counts to zero
 			ONCPartner pyPerfPartner = new ONCPartner(p);
@@ -726,7 +726,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
     				
 				for(ONCPartner p : changedPartnerList)
 				{
-					ONCPartner updatedPartner = update(DBManager.getCurrentYear(), p);
+					ONCPartner updatedPartner = update(DBManager.getCurrentSeason(), p);
 					if(updatedPartner != null)
 						clientJsonMssgList.add("UPDATED_PARTNER" + gson.toJson(updatedPartner, ONCPartner.class));
 				}
@@ -742,7 +742,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
     				
 				for(ONCPartner p : changedPartnerList)
 				{
-					ONCPartner addedPartner = add(DBManager.getCurrentYear(), p);
+					ONCPartner addedPartner = add(DBManager.getCurrentSeason(), p);
 					if(addedPartner != null)
 						clientJsonMssgList.add("ADDED_PARTNER" + gson.toJson(addedPartner, ONCPartner.class));
 				}
@@ -752,7 +752,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			{
 				//there were updates, send list of updated json's to clients
 				ClientManager clientMgr = ClientManager.getInstance();
-				clientMgr.notifyAllInYearClients(DBManager.getCurrentYear(), clientJsonMssgList);
+				clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
 			}
 		}
 	}
@@ -770,7 +770,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	 			"PY Requested",	"PY Assigned", "PY Delivered",
 	 			"PY Received Before", "PY Received After"};
 		
-		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_YEAR);
+		PartnerDBYear partnerDBYear = partnerDB.get(year - BASE_SEASON);
 		if(partnerDBYear.isUnsaved())
 		{
 //			System.out.println(String.format("PartnerDB save() - Saving Partner DB"));

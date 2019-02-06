@@ -27,7 +27,7 @@ public class PriorYearDB extends ServerSeasonalDB
 		pycDB = new ArrayList<PriorYearChildDBYear>();
 								
 		//populate the data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
 		{
 			//create the prior year child list for each year
 			PriorYearChildDBYear pycDBYear = new PriorYearChildDBYear(year);
@@ -55,7 +55,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	
 	String getPriorYearChild(int year, String zID)
 	{
-		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_YEAR).getList();
+		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_SEASON).getList();
 		int id = Integer.parseInt(zID);
 		int index = 0;
 		
@@ -79,7 +79,7 @@ public class PriorYearDB extends ServerSeasonalDB
 		ONCPriorYearChild targetPYC = gson.fromJson(pycJson, ONCPriorYearChild.class);
 	
 		
-		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_YEAR).getList();
+		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_SEASON).getList();
 		
 		int index = 0;
 		while(index < pycAL.size())
@@ -105,7 +105,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	
 	ONCPriorYearChild getPriorYearChild(int year, int id)
 	{
-		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_YEAR).getList();
+		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_SEASON).getList();
 		
 		int index = 0;
 		while(index < pycAL.size() && pycAL.get(index).getID() != id)
@@ -119,7 +119,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	
 	int searchForMatch(int year, ONCChild c)
 	{
-		List<ONCPriorYearChild> pycList = pycDB.get(year - BASE_YEAR).getList();
+		List<ONCPriorYearChild> pycList = pycDB.get(year - BASE_SEASON).getList();
 		int index = 0;
 		
 		while(index < pycList.size() && !pycList.get(index).isMatch(c.getChildFirstName(),
@@ -145,7 +145,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	//overloaded add method used when creating a new prior year child
 	void add(int year, ONCChild lyc, String lyw0, String lyw1, String lyw2)
 	{
-		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_YEAR);
+		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_SEASON);
 				
 		//set the new ID for the new prior year child and add the new prior year child
 		ONCPriorYearChild newpyChild = new ONCPriorYearChild(pycDBYear.getNextID(), lyc, lyw0, lyw1, lyw2);
@@ -156,7 +156,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	//overloaded add method used when retaining a prior year child
 	void add(int year, ONCPriorYearChild pyc)
 	{
-		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_YEAR);
+		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_SEASON);
 				
 		//set the new ID for the new prior year child and add the new prior year child
 		ONCPriorYearChild newpyChild = new ONCPriorYearChild(pycDBYear.getNextID(), pyc);
@@ -167,12 +167,12 @@ public class PriorYearDB extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine) 
 	{
-		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_YEAR);
+		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_SEASON);
 		pycDBYear.add(new ONCPriorYearChild(nextLine));
 	}
 	
 	@Override
-	void createNewYear(int newYear) 
+	void createNewSeason(int newYear) 
 	{
 		//before creating and adding a new PriorYearChildDBYear to the data base, get last years
 		//prior year child data base list. It will be the last in the list. It is used later in
@@ -201,13 +201,13 @@ public class PriorYearDB extends ServerSeasonalDB
 		ServerFamilyDB serverFamilyDB = null;
 		ServerChildDB serverChildDB = null;
 //		ServerChildWishDB childwishDB = null;
-		ServerWishCatalog cat = null;
+		ServerGiftCatalog cat = null;
 		try 
 		{
 			serverFamilyDB = ServerFamilyDB.getInstance();
 			serverChildDB = ServerChildDB.getInstance();
 //			childwishDB = ServerChildWishDB.getInstance();
-			cat = ServerWishCatalog.getInstance();
+			cat = ServerGiftCatalog.getInstance();
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -273,13 +273,13 @@ public class PriorYearDB extends ServerSeasonalDB
 				//set the wish blank
 				String lyWish1 = "", lyWish2 = "", lyWish3 = "";
 				if(lyChildWish1 != null)
-					 lyWish1 = cat.findWishNameByID(newYear-1, lyChildWish1.getGiftID()) + "- " + lyChildWish1.getDetail();
+					 lyWish1 = cat.findGiftNameByID(newYear-1, lyChildWish1.getGiftID()) + "- " + lyChildWish1.getDetail();
 				
 				if(lyChildWish2 != null)
-					lyWish2 = cat.findWishNameByID(newYear-1, lyChildWish2.getGiftID()) + "- " + lyChildWish2.getDetail();
+					lyWish2 = cat.findGiftNameByID(newYear-1, lyChildWish2.getGiftID()) + "- " + lyChildWish2.getDetail();
 				
 				if(lyChildWish3 != null)
-					lyWish3 = cat.findWishNameByID(newYear-1, lyChildWish3.getGiftID()) + "- " + lyChildWish3.getDetail();
+					lyWish3 = cat.findGiftNameByID(newYear-1, lyChildWish3.getGiftID()) + "- " + lyChildWish3.getDetail();
 	    		
 				//last year child was in a served family, have they already been added to the
 	    			//new years prior year child list?
@@ -325,7 +325,7 @@ public class PriorYearDB extends ServerSeasonalDB
 							"Last Year Wish 1", "Last Year Wish 2", "Last Year Wish 3",
 							"Previous Year Wish 1", "Previous Year Wish 2", "Previous Year Wish 3"};
 		
-		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_YEAR);
+		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_SEASON);
 		
 		if(pycDBYear.isUnsaved())
 		{
