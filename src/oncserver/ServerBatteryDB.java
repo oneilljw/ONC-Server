@@ -24,7 +24,7 @@ public class ServerBatteryDB extends ServerSeasonalDB
 		batteryDB = new ArrayList<BatteryDBYear>();
 				
 		//populate the battery data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the battery list for each year
 			BatteryDBYear batteryDBYear = new BatteryDBYear(year);
@@ -54,7 +54,7 @@ public class ServerBatteryDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listOfBatteriess = new TypeToken<ArrayList<Battery>>(){}.getType();
 		
-		String response = gson.toJson(batteryDB.get(year-BASE_SEASON).getList(), listOfBatteriess);
+		String response = gson.toJson(batteryDB.get(DBManager.offset(year)).getList(), listOfBatteriess);
 		return response;	
 	}
 
@@ -65,7 +65,7 @@ public class ServerBatteryDB extends ServerSeasonalDB
 		Battery addedBattery = gson.fromJson(batteryjson, Battery.class);
 		
 		//get the battery data base for the year
-		BatteryDBYear batteryDBYear = batteryDB.get(year - BASE_SEASON);
+		BatteryDBYear batteryDBYear = batteryDB.get(DBManager.offset(year));
 		
 		//set the new ID for the added battery
 		addedBattery.setID(batteryDBYear.getNextID());
@@ -84,7 +84,7 @@ public class ServerBatteryDB extends ServerSeasonalDB
 		Battery updatedBattery = gson.fromJson(adultjson, Battery.class);
 		
 		//Find the position for the current battery being updated
-		BatteryDBYear batteryDBYear = batteryDB.get(year-BASE_SEASON);
+		BatteryDBYear batteryDBYear = batteryDB.get(DBManager.offset(year));
 		List<Battery> batteryList = batteryDBYear.getList();
 		int index = 0;
 		while(index < batteryList.size() && batteryList.get(index).getID() != updatedBattery.getID())
@@ -108,7 +108,7 @@ public class ServerBatteryDB extends ServerSeasonalDB
 		Battery deletedBattery = gson.fromJson(batteryjson, Battery.class);
 		
 		//find and remove the deleted battery from the data base
-		BatteryDBYear batteryDBYear = batteryDB.get(year-BASE_SEASON);
+		BatteryDBYear batteryDBYear = batteryDB.get(DBManager.offset(year));
 		List<Battery> batteryList = batteryDBYear.getList();
 		
 		int index = 0;
@@ -138,17 +138,17 @@ public class ServerBatteryDB extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
-		BatteryDBYear batteryDBYear = batteryDB.get(year-BASE_SEASON);
+		BatteryDBYear batteryDBYear = batteryDB.get(DBManager.offset(year));
 		batteryDBYear.add(new Battery(nextLine));	
 	}
 
 	@Override
 	void save(int year)
 	{
-		BatteryDBYear batteryDBYear = batteryDB.get(year - BASE_SEASON);
+		BatteryDBYear batteryDBYear = batteryDB.get(DBManager.offset(year));
 		if(batteryDBYear.isUnsaved())
 		{
-			String[] header = {"Battery ID", "Child ID", "Wish #", "Size", "Quantity"};
+			String[] header = {"Battery ID", "Child ID", "Gift", "Size", "Quantity"};
 			
 			String path = String.format("%s/%dDB/BatteryDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(batteryDBYear.getList(),  header, path);

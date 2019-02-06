@@ -17,7 +17,6 @@ import com.google.gson.reflect.TypeToken;
 public class ServerMealDB extends ServerSeasonalDB
 {
 	private static final int MEAL_DB_HEADER_LENGTH = 11;
-	private static final int BASE_YEAR = 2012;
 	private static ServerMealDB instance = null;
 
 	private static List<MealDBYear> mealDB;
@@ -28,7 +27,7 @@ public class ServerMealDB extends ServerSeasonalDB
 		mealDB = new ArrayList<MealDBYear>();
 						
 		//populate the child wish data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the meal list for each year
 			MealDBYear mealDBYear = new MealDBYear(year);
@@ -59,7 +58,7 @@ public class ServerMealDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listOfMeals = new TypeToken<ArrayList<ONCMeal>>(){}.getType();
 		
-		String response = gson.toJson(mealDB.get(year-BASE_YEAR).getList(), listOfMeals);
+		String response = gson.toJson(mealDB.get(DBManager.offset(year)).getList(), listOfMeals);
 		return response;	
 	}
 	
@@ -68,7 +67,7 @@ public class ServerMealDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		String response;
 		
-		List<ONCMeal> mAL = mealDB.get(year-BASE_YEAR).getList();
+		List<ONCMeal> mAL = mealDB.get(DBManager.offset(year)).getList();
 		int mID = Integer.parseInt(mealID);
 		
 		int index=0;
@@ -87,7 +86,7 @@ public class ServerMealDB extends ServerSeasonalDB
 	ONCMeal getMeal(int year, int mID)
 	{		
 	
-		List<ONCMeal> mAL = mealDB.get(year-BASE_YEAR).getList();
+		List<ONCMeal> mAL = mealDB.get(DBManager.offset(year)).getList();
 		
 		int index=0;
 		while(index<mAL.size() && mAL.get(index).getID() != mID)
@@ -105,7 +104,7 @@ public class ServerMealDB extends ServerSeasonalDB
 		ONCMeal addedMeal = gson.fromJson(mealjson, ONCMeal.class);
 				
 		//retrieve the meal data base for the year
-		MealDBYear mealDBYear = mealDB.get(year - BASE_YEAR);
+		MealDBYear mealDBYear = mealDB.get(DBManager.offset(year));
 		
 		//retrieve the current meal for family, if any
 		ONCMeal currMeal = findCurrentMealForFamily(year, addedMeal.getFamilyID());
@@ -155,7 +154,7 @@ public class ServerMealDB extends ServerSeasonalDB
 	ONCMeal add(int year, ONCMeal addedMeal)
 	{
 		//retrieve the meal data base for the year
-		MealDBYear mealDBYear = mealDB.get(year - BASE_YEAR);
+		MealDBYear mealDBYear = mealDB.get(DBManager.offset(year));
 						
 		//set the new ID for the added ONCMeal
 		int mealID = mealDBYear.getNextID();
@@ -198,7 +197,7 @@ public class ServerMealDB extends ServerSeasonalDB
 	boolean update(int year, ONCMeal updatedMeal)
 	{
 		//Find the position for the current meal being updated
-		MealDBYear mealDBYear = mealDB.get(year-BASE_YEAR);
+		MealDBYear mealDBYear = mealDB.get(DBManager.offset(year));
 		List<ONCMeal> mealAL = mealDBYear.getList();
 		int index = 0;
 		while(index < mealAL.size() && mealAL.get(index).getID() != updatedMeal.getID())
@@ -222,7 +221,7 @@ public class ServerMealDB extends ServerSeasonalDB
 		ONCMeal deletedMeal= gson.fromJson(mealjson, ONCMeal.class);
 		
 		//find and remove the deleted meal from the data base
-		MealDBYear mealDBYear = mealDB.get(year-BASE_YEAR);
+		MealDBYear mealDBYear = mealDB.get(DBManager.offset(year));
 		List<ONCMeal> mealAL = mealDBYear.getList();
 		
 		int index = 0;
@@ -243,7 +242,7 @@ public class ServerMealDB extends ServerSeasonalDB
 	{
 		ONCMeal currMeal = null;
 		
-		MealDBYear mealDBYear = mealDB.get(year-BASE_YEAR);
+		MealDBYear mealDBYear = mealDB.get(DBManager.offset(year));
 		List<ONCMeal> mealAL = mealDBYear.getList();
 		
 		//go thru each meal in the db to determine the most current meal for family
@@ -272,7 +271,7 @@ public class ServerMealDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine)
 	{
 		//Get the meal list for the year and add create and add the meal
-		MealDBYear mealDBYear = mealDB.get(year - BASE_YEAR);
+		MealDBYear mealDBYear = mealDB.get(DBManager.offset(year));
 		mealDBYear.add(new ONCMeal(nextLine));
 	}
 
@@ -283,7 +282,7 @@ public class ServerMealDB extends ServerSeasonalDB
 	 			"Restrictions", "Changed By", "Time Stamp", "SL Pos",
 	 			"SL Mssg", "SL Changed By"};
 		
-		MealDBYear mealDBYear = mealDB.get(year - BASE_YEAR);
+		MealDBYear mealDBYear = mealDB.get(DBManager.offset(year));
 		if(mealDBYear.isUnsaved())
 		{
 //			System.out.println(String.format("ServerMealDB save() - Saving Meal DB"));

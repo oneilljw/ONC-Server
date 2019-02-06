@@ -22,7 +22,6 @@ import ourneighborschild.ONCUser;
 public class ServerAdultDB extends ServerSeasonalDB
 {
 	private static final int ADULT_DB_HEADER_LENGTH = 4;
-	private static final int BASE_YEAR = 2012;
 	
 	private static ServerAdultDB instance = null;
 	private static List<AdultDBYear> adultDB;
@@ -35,7 +34,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 		adultDB = new ArrayList<AdultDBYear>();
 						
 		//populate the adult data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_YEAR; year < BASE_YEAR + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the meal list for each year
 			AdultDBYear adultDBYear = new AdultDBYear(year);
@@ -116,7 +115,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listOfAdults = new TypeToken<ArrayList<ONCAdult>>(){}.getType();
 		
-		String response = gson.toJson(adultDB.get(year-BASE_YEAR).getList(), listOfAdults);
+		String response = gson.toJson(adultDB.get(DBManager.offset(year)).getList(), listOfAdults);
 		return response;	
 	}
 	
@@ -125,7 +124,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listOfAdults = new TypeToken<ArrayList<ONCAdult>>(){}.getType();
 		
-		List<ONCAdult> searchList = adultDB.get(year-BASE_YEAR).getList();
+		List<ONCAdult> searchList = adultDB.get(DBManager.offset(year)).getList();
 		ArrayList<ONCAdult> responseList = new ArrayList<ONCAdult>();
 		
 		for(ONCAdult a: searchList)
@@ -142,7 +141,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 	{
 		ArrayList<ONCAdult> responseList = new ArrayList<ONCAdult>();
 		
-		for(ONCAdult a: adultDB.get(year-BASE_YEAR).getList())
+		for(ONCAdult a: adultDB.get(DBManager.offset(year)).getList())
 			if(a.getFamID() == famID)
 				responseList.add(a);
 		
@@ -157,7 +156,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 		ONCAdult addedAdult = gson.fromJson(adultjson, ONCAdult.class);
 						
 		//retrieve the adult data base for the year
-		AdultDBYear adultDBYear = adultDB.get(year - BASE_YEAR);
+		AdultDBYear adultDBYear = adultDB.get(DBManager.offset(year));
 								
 		//set the new ID for the added ONCAdult
 		addedAdult.setID(adultDBYear.getNextID());
@@ -172,7 +171,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 	ONCAdult add(int year, ONCAdult addedAdult)
 	{			
 		//retrieve the adult data base for the year
-		AdultDBYear adultDBYear = adultDB.get(year - BASE_YEAR);
+		AdultDBYear adultDBYear = adultDB.get(DBManager.offset(year));
 								
 		//set the new ID for the added ONCAdult
 		int adultID = adultDBYear.getNextID();
@@ -192,7 +191,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 		ONCAdult updatedAdult = gson.fromJson(adultjson, ONCAdult.class);
 		
 		//Find the position for the current adult being updated
-		AdultDBYear adultDBYear = adultDB.get(year-BASE_YEAR);
+		AdultDBYear adultDBYear = adultDB.get(DBManager.offset(year));
 		List<ONCAdult> adultAL = adultDBYear.getList();
 		int index = 0;
 		while(index < adultAL.size() && adultAL.get(index).getID() != updatedAdult.getID())
@@ -216,7 +215,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 		ONCAdult deletedAdult = gson.fromJson(adultjson, ONCAdult.class);
 		
 		//find and remove the deleted adult from the data base
-		AdultDBYear adultDBYear = adultDB.get(year-BASE_YEAR);
+		AdultDBYear adultDBYear = adultDB.get(DBManager.offset(year));
 		List<ONCAdult> adultAL = adultDBYear.getList();
 		
 		int index = 0;
@@ -248,7 +247,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine)
 	{
 		//Get the adult list for the year and add create and add the adult
-		AdultDBYear adultDBYear = adultDB.get(year - BASE_YEAR);
+		AdultDBYear adultDBYear = adultDB.get(DBManager.offset(year));
 		adultDBYear.add(new ONCAdult(nextLine));
 	}
 
@@ -257,7 +256,7 @@ public class ServerAdultDB extends ServerSeasonalDB
 	{
 		String[] header = {"ID", "Fam ID", "Name", "Gender"};
 		
-		AdultDBYear adultDBYear = adultDB.get(year - BASE_YEAR);
+		AdultDBYear adultDBYear = adultDB.get(DBManager.offset(year));
 		if(adultDBYear.isUnsaved())
 		{
 //			System.out.println(String.format("ServerAdultDB save() - Saving Adult DB, size= %d", adultDBYear.getList().size()));

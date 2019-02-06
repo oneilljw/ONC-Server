@@ -27,7 +27,7 @@ public class PriorYearDB extends ServerSeasonalDB
 		pycDB = new ArrayList<PriorYearChildDBYear>();
 								
 		//populate the data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the prior year child list for each year
 			PriorYearChildDBYear pycDBYear = new PriorYearChildDBYear(year);
@@ -55,7 +55,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	
 	String getPriorYearChild(int year, String zID)
 	{
-		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_SEASON).getList();
+		List<ONCPriorYearChild> pycAL = pycDB.get(DBManager.offset(year)).getList();
 		int id = Integer.parseInt(zID);
 		int index = 0;
 		
@@ -79,7 +79,7 @@ public class PriorYearDB extends ServerSeasonalDB
 		ONCPriorYearChild targetPYC = gson.fromJson(pycJson, ONCPriorYearChild.class);
 	
 		
-		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_SEASON).getList();
+		List<ONCPriorYearChild> pycAL = pycDB.get(DBManager.offset(year)).getList();
 		
 		int index = 0;
 		while(index < pycAL.size())
@@ -105,7 +105,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	
 	ONCPriorYearChild getPriorYearChild(int year, int id)
 	{
-		List<ONCPriorYearChild> pycAL = pycDB.get(year - BASE_SEASON).getList();
+		List<ONCPriorYearChild> pycAL = pycDB.get(DBManager.offset(year)).getList();
 		
 		int index = 0;
 		while(index < pycAL.size() && pycAL.get(index).getID() != id)
@@ -119,7 +119,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	
 	int searchForMatch(int year, ONCChild c)
 	{
-		List<ONCPriorYearChild> pycList = pycDB.get(year - BASE_SEASON).getList();
+		List<ONCPriorYearChild> pycList = pycDB.get(DBManager.offset(year)).getList();
 		int index = 0;
 		
 		while(index < pycList.size() && !pycList.get(index).isMatch(c.getChildFirstName(),
@@ -145,7 +145,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	//overloaded add method used when creating a new prior year child
 	void add(int year, ONCChild lyc, String lyw0, String lyw1, String lyw2)
 	{
-		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_SEASON);
+		PriorYearChildDBYear pycDBYear = pycDB.get(DBManager.offset(year));
 				
 		//set the new ID for the new prior year child and add the new prior year child
 		ONCPriorYearChild newpyChild = new ONCPriorYearChild(pycDBYear.getNextID(), lyc, lyw0, lyw1, lyw2);
@@ -156,7 +156,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	//overloaded add method used when retaining a prior year child
 	void add(int year, ONCPriorYearChild pyc)
 	{
-		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_SEASON);
+		PriorYearChildDBYear pycDBYear = pycDB.get(DBManager.offset(year));
 				
 		//set the new ID for the new prior year child and add the new prior year child
 		ONCPriorYearChild newpyChild = new ONCPriorYearChild(pycDBYear.getNextID(), pyc);
@@ -167,7 +167,7 @@ public class PriorYearDB extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine) 
 	{
-		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_SEASON);
+		PriorYearChildDBYear pycDBYear = pycDB.get(DBManager.offset(year));
 		pycDBYear.add(new ONCPriorYearChild(nextLine));
 	}
 	
@@ -265,9 +265,9 @@ public class PriorYearDB extends ServerSeasonalDB
 				(lyONCFamONCNum = Integer.parseInt(lyfam.getONCNum())) >= minONCNum &&
 				 lyONCFamONCNum <= maxONCNum && lyfam.getDNSCode().isEmpty())	
 			{
-				ONCChildGift lyChildWish1 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(0));
-				ONCChildGift lyChildWish2 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(1));
-				ONCChildGift lyChildWish3 = ServerChildWishDB.getWish(newYear-1, lyc.getChildGiftID(2));
+				ONCChildGift lyChildWish1 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(0));
+				ONCChildGift lyChildWish2 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(1));
+				ONCChildGift lyChildWish3 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(2));
 				
 				//determine the wishes from last year. Check to ensure the child wish existed. If it didn't, 
 				//set the wish blank
@@ -322,10 +322,10 @@ public class PriorYearDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"PY Child ID", "Last Name", "Gender", "DoB",
-							"Last Year Wish 1", "Last Year Wish 2", "Last Year Wish 3",
-							"Previous Year Wish 1", "Previous Year Wish 2", "Previous Year Wish 3"};
+							"Last Year Gift 1", "Last Year Gift 2", "Last Year Gift 3",
+							"Previous Year Gift 1", "Previous Year Gift 2", "Previous Year Gift 3"};
 		
-		PriorYearChildDBYear pycDBYear = pycDB.get(year - BASE_SEASON);
+		PriorYearChildDBYear pycDBYear = pycDB.get(DBManager.offset(year));
 		
 		if(pycDBYear.isUnsaved())
 		{

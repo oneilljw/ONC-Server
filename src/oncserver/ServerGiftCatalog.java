@@ -25,7 +25,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 		catalogDB = new ArrayList<GiftCatalogDBYear>();
 	
 		//populate each year in the db
-		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the gift catalog list for year
 			GiftCatalogDBYear catalogDBYear = new GiftCatalogDBYear(year);
@@ -55,7 +55,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCGift>>(){}.getType();
 		
-		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));
 		List<ONCGift> catAL = catalogDBYear.getList();
 			
 		String response = gson.toJson(catAL, listtype);
@@ -69,7 +69,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 		ONCGift reqWish = gson.fromJson(json, ONCGift.class);
 		
 		//Find the position for the current gift being replaced
-		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));
 		List<ONCGift> catAL = catalogDBYear.getList();
 		int index = 0;
 		while(index < catAL.size() && catAL.get(index).getID() != reqWish.getID())
@@ -97,7 +97,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 		ONCGift addGiftReq = gson.fromJson(json, ONCGift.class);
 	
 		//set the new ID for the catalog gift
-		GiftCatalogDBYear catalogDBYear = catalogDB.get(year-BASE_SEASON);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));
 		addGiftReq.setID(catalogDBYear.getNextID());
 		
 		//add the new gift
@@ -114,7 +114,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 		ONCGift reqDelGift = gson.fromJson(json, ONCGift.class);
 	
 		//find the gift in the catalog
-		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));
 		List<ONCGift> catAL = catalogDBYear.getList();
 		
 		int index = 0;
@@ -135,7 +135,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 	String findGiftNameByID(int year, int wishID)
 	{
 		//get list for year
-		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));
 		List<ONCGift> giftList = catalogDBYear.getList();
 		
 		//find the ONCGift by ID
@@ -154,7 +154,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 		List<ONCGift> websiteGiftList = new ArrayList<ONCGift>();
 		
 		//get list for year
-		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));
 		List<ONCGift> wishList = catalogDBYear.getList();
 		
 		for(ONCGift w : wishList)
@@ -172,7 +172,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 		StringBuffer buff = new StringBuffer();
 		
 		//get list for year
-		GiftCatalogDBYear catalogDBYear = catalogDB.get(year - BASE_SEASON);
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));
 		List<ONCGift> giftList = catalogDBYear.getList();
 		
 		for(ONCGift w : giftList)
@@ -206,7 +206,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine) 
 	{
-		GiftCatalogDBYear catDBYear = catalogDB.get(year - BASE_SEASON);
+		GiftCatalogDBYear catDBYear = catalogDB.get(DBManager.offset(year));
 		catDBYear.add(new ONCGift(nextLine));
 	}
 	
@@ -216,7 +216,7 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 		String[] header = {"Gift Detail ID", "Name", "List Index", "Gift Detail 1 ID",
 				"Gift Detail 2 ID", "Gift Detail 3 ID", "Gift Detail 4 ID"};
 		
-		GiftCatalogDBYear catDBYear = catalogDB.get(year - BASE_SEASON);
+		GiftCatalogDBYear catDBYear = catalogDB.get(DBManager.offset(year));
 		if(catDBYear.isUnsaved())
 		{
 			String path = String.format("%s/%dDB/%s", System.getProperty("user.dir"), year, DB_FILENAME);

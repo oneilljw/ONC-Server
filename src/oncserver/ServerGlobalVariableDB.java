@@ -39,7 +39,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		globalDB = new ArrayList<GlobalVariableDBYear>();
 		
 		//populate the global variable data base for the last TOTAL_YEARS from persistent store
-		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the global variable object for each year
 			String gvFile = String.format("%s/%dDB/GlobalVariables.csv", System.getProperty("user.dir"), year);
@@ -63,7 +63,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		String gvjson = null;
 		Gson gson = new Gson();
 		
-		gvjson = gson.toJson(globalDB.get(year - BASE_SEASON).getServerGVs(), ServerGVs.class);
+		gvjson = gson.toJson(globalDB.get(DBManager.offset(year)).getServerGVs(), ServerGVs.class);
 		
 		if(gvjson != null)
 			return "GLOBALS" + gvjson;
@@ -75,38 +75,38 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	{		
 		Gson gson = new Gson();
 	
-		ServerGVs serverGVs = globalDB.get(year-BASE_SEASON).getServerGVs();
+		ServerGVs serverGVs = globalDB.get(DBManager.offset(year)).getServerGVs();
 		String response = gson.toJson(serverGVs, ServerGVs.class);
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
-	Date getSeasonStartDate(int year) { return globalDB.get(year - BASE_SEASON).getServerGVs().getSeasonStartDate(); }
-	Calendar getSeasonStartCal(int year) { return globalDB.get(year - BASE_SEASON).getServerGVs().getSeasonStartCal(); }
-	int getGiftCardID(int year) { return globalDB.get(year - BASE_SEASON).getServerGVs().getDefaultGiftCardID(); }
-	int getDeliveryActivityID(int year) { return globalDB.get(year - BASE_SEASON).getServerGVs().getDeliveryActivityID(); }
+	Date getSeasonStartDate(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDate(); }
+	Calendar getSeasonStartCal(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartCal(); }
+	int getGiftCardID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDefaultGiftCardID(); }
+	int getDeliveryActivityID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryActivityID(); }
 	
 	Calendar getDateGiftsRecivedDealdine(int year)
 	{
-		return globalDB.get(year - BASE_SEASON).getServerGVs().getGiftsReceivedDeadline();
+		return globalDB.get(DBManager.offset(year)).getServerGVs().getGiftsReceivedDeadline();
 	}
 	
 	Date getDeadline(int year, String deadline)
 	{
 		//check if year is in database. If it's not, return null
-		if(year - BASE_SEASON < globalDB.size())
+		if(DBManager.offset(year) < globalDB.size())
 		{
 			if(deadline.equals("Thanksgiving Meal"))
-				return globalDB.get(year - BASE_SEASON).getServerGVs().getThanksgivingMealDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getThanksgivingMealDeadline();
 			else if(deadline.equals("December Meal"))
-				return globalDB.get(year - BASE_SEASON).getServerGVs().getDecemberMealDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getDecemberMealDeadline();
 			else if(deadline.equals("December Gift"))
-				return globalDB.get(year - BASE_SEASON).getServerGVs().getDecemberGiftDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getDecemberGiftDeadline();
 			else if(deadline.equals("Waitlist Gift"))
-				return globalDB.get(year - BASE_SEASON).getServerGVs().getWaitListGiftDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getWaitListGiftDeadline();
 			else if(deadline.equals("Edit"))
-				return globalDB.get(year - BASE_SEASON).getServerGVs().getFamilyEditDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getFamilyEditDeadline();
 			else
 				return Calendar.getInstance().getTime();
 		}
@@ -117,7 +117,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	static boolean isDeliveryDay(int year)
 	{
 		//check if today is delivery day
-		Calendar delDayCal = globalDB.get(year - BASE_SEASON).getServerGVs().getDeliveryDateCal();
+		Calendar delDayCal = globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
 		Calendar today = Calendar.getInstance();
 
 		return delDayCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
@@ -126,7 +126,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	
 	static Calendar getDeliveryDay(int year)
 	{
-		return globalDB.get(year - BASE_SEASON).getServerGVs().getDeliveryDateCal();
+		return globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
 	}
 
 	/***
@@ -217,7 +217,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		ServerGVs reqObj = gson.fromJson(json, ServerGVs.class);
 		
 		//Find the  requested object being replaced
-		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_SEASON);
+		GlobalVariableDBYear gvDBYear = globalDB.get(DBManager.offset(year));
 		
 		gvDBYear.setServerGVs(reqObj);
 		gvDBYear.setChanged(true);
@@ -336,7 +336,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 							"Defalut Gift Card", "December Meal Deadline", "WaitList Gift Deadline",
 							"Del Act ID"};
 		
-		GlobalVariableDBYear gvDBYear = globalDB.get(year - BASE_SEASON);
+		GlobalVariableDBYear gvDBYear = globalDB.get(DBManager.offset(year));
 		if(gvDBYear.isUnsaved())
 		{
 			String path = String.format("%s/%dDB/GlobalVariables.csv", System.getProperty("user.dir"), year);

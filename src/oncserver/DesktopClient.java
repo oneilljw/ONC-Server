@@ -51,7 +51,7 @@ public class DesktopClient extends Thread
     private ServerFamilyDB serverFamilyDB;
     private ServerGroupDB serverGroupDB;
     private ServerChildDB childDB;
-    private ServerChildWishDB childwishDB;
+    private ServerChildGiftDB childwishDB;
     private ServerPartnerDB serverPartnerDB;
     private ServerActivityDB activityDB;
     private ServerVolunteerDB volunteerDB;
@@ -102,7 +102,7 @@ public class DesktopClient extends Thread
 	        serverFamilyDB = ServerFamilyDB.getInstance();
 	        serverGroupDB = ServerGroupDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
-	        childwishDB = ServerChildWishDB.getInstance();
+	        childwishDB = ServerChildGiftDB.getInstance();
 	        serverPartnerDB = ServerPartnerDB.getInstance();
 	        activityDB = ServerActivityDB.getInstance();
 	        volunteerDB = ServerVolunteerDB.getInstance();
@@ -363,7 +363,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<wishhistory>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		output.println(childwishDB.getChildWishHistory(year, command.substring(16)));
+                		output.println(childwishDB.getChildGiftHistory(year, command.substring(16)));
                 }
                 else if(command.startsWith("GET<warehousehistory>"))
                 {
@@ -1210,7 +1210,7 @@ public class DesktopClient extends Thread
     		for(ONCChild c:childDB.getList(year))  
     			for(int wn=0; wn < NUMBER_OF_WISHES_PER_CHILD; wn++)		
     				if(c.getChildGiftID(wn) > -1) //Wish must have a valid ID
-    					childwishAL.add(ServerChildWishDB.getWish(year, c.getChildGiftID(wn)));
+    					childwishAL.add(ServerChildGiftDB.getGift(year, c.getChildGiftID(wn)));
     	
     		//Convert the array list to a json and return it
     		Gson gson = new Gson();

@@ -31,7 +31,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 		//create the note data bases for TOTAL_YEARS number of years
 		noteDB = new ArrayList<NoteDBYear>();
 					
-		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the note list for year
 			NoteDBYear noteDBYear = new NoteDBYear(year);
@@ -65,7 +65,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		Type listOfNotes = new TypeToken<ArrayList<ONCNote>>(){}.getType();
 		
-		String response = gson.toJson(noteDB.get(year-BASE_SEASON).getList(), listOfNotes);
+		String response = gson.toJson(noteDB.get(DBManager.offset(year)).getList(), listOfNotes);
 		return response;	
 	}
 
@@ -77,7 +77,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 		ONCNote addedNote = gson.fromJson(json, ONCNote.class);
 						
 		//retrieve the note data base for the year
-		NoteDBYear noteDBYear =noteDB.get(year - BASE_SEASON);
+		NoteDBYear noteDBYear =noteDB.get(DBManager.offset(year));
 								
 		//set the new ID and time stamps for the added ONCNote
 		addedNote.setID(noteDBYear.getNextID());
@@ -99,7 +99,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 		ONCNote updatedNote = gson.fromJson(json, ONCNote.class);
 		
 		//Find the position for the current note being updated
-		NoteDBYear noteDBYear = noteDB.get(year-BASE_SEASON);
+		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		List<ONCNote> noteList = noteDBYear.getList();
 		int index = 0;
 		while(index < noteList.size() && noteList.get(index).getID() != updatedNote.getID())
@@ -124,7 +124,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 		ONCNote deletedNote = gson.fromJson(json, ONCNote.class);
 		
 		//find and remove the deleted note from the data base
-		NoteDBYear noteDBYear = noteDB.get(year-BASE_SEASON);
+		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		List<ONCNote> noteList = noteDBYear.getList();
 		
 		int index = 0;
@@ -156,7 +156,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine)
 	{
 		//Get the note list for the year and add the note
-		NoteDBYear noteDBYear = noteDB.get(year - BASE_SEASON);
+		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		noteDBYear.add(new ONCNote(nextLine));
 	}
 
@@ -167,7 +167,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 				"Response", "Response By", "Time Created", "Time Viewed",
 				"Time Responded", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B"};
 		
-		NoteDBYear noteDBYear = noteDB.get(year - BASE_SEASON);
+		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		if(noteDBYear.isUnsaved())
 		{
 			String path = String.format("%s/%dDB/NoteDB.csv", System.getProperty("user.dir"), year);
@@ -179,7 +179,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	static List<ONCNote> getNotesForFamily(int year, int ownerID)
 	{
 		List<ONCNote> famNoteList = new ArrayList<ONCNote>();
-		for(ONCNote n : noteDB.get(year-BASE_SEASON).getList())
+		for(ONCNote n : noteDB.get(DBManager.offset(year)).getList())
 			if(n.getOwnerID() == ownerID)
 				famNoteList.add(n);
 				
@@ -188,7 +188,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	
 	static int lastNoteStatus(int year, int ownerID)
 	{
-		List<ONCNote> noteList = noteDB.get(year-BASE_SEASON).getList();
+		List<ONCNote> noteList = noteDB.get(DBManager.offset(year)).getList();
 		int index = noteList.size() -1;
 		while(index >= 0 && noteList.get(index).getOwnerID() != ownerID)
 			index--;
@@ -200,7 +200,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	//from the bottom for the first note for the family. If no note, return a dummy note
 	static ONCNote getLastNoteForFamily(int year, int ownerID, WebClient wc)
 	{
-		NoteDBYear noteDBYear = noteDB.get(year-BASE_SEASON);
+		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		List<ONCNote> noteList = noteDBYear.getList();
 		int index = noteList.size()-1;
 		while(index >= 0 && noteList.get(index).getOwnerID() != ownerID)
@@ -249,7 +249,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	{
 		String response = "";
 		//find and update the note with the agents response
-		NoteDBYear noteDBYear = noteDB.get(year-BASE_SEASON);
+		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		List<ONCNote> noteList = noteDBYear.getList();
 		int index=0;
 		while(index < noteList.size() && noteList.get(index).getID() != noteID)

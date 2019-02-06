@@ -25,7 +25,7 @@ public class ServerGiftDetailDB extends ServerSeasonalDB
 		//create the wish gift data bases for total # number of years in the DB
 		gdDB = new ArrayList<GiftDetailDBYear>();
 														
-		for(int year = BASE_SEASON; year < BASE_SEASON + DBManager.getNumberOfYears(); year++)
+		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the gift detail list for year
 			GiftDetailDBYear detailDBYear = new GiftDetailDBYear(year);
@@ -57,7 +57,7 @@ public class ServerGiftDetailDB extends ServerSeasonalDB
 		GiftDetail reqGiftDetail = gson.fromJson(json, GiftDetail.class);
 		
 		//Find the position for the current gift detail being updated
-		GiftDetailDBYear detailDBYear = gdDB.get(year - BASE_SEASON);
+		GiftDetailDBYear detailDBYear = gdDB.get(DBManager.offset(year));
 		List<GiftDetail> giftDetailAL = detailDBYear.getList();
 		int index = 0;
 		while(index < giftDetailAL.size() && giftDetailAL.get(index).getID() != reqGiftDetail.getID())
@@ -85,7 +85,7 @@ public class ServerGiftDetailDB extends ServerSeasonalDB
 		GiftDetail addedGiftDetail = gson.fromJson(json, GiftDetail.class);
 	
 		//set the new id for the detail and add to the year data base
-		GiftDetailDBYear detailDBYear = gdDB.get(year - BASE_SEASON);
+		GiftDetailDBYear detailDBYear = gdDB.get(DBManager.offset(year));
 		List<GiftDetail> giftDetailAL = detailDBYear.getList();
 		
 		addedGiftDetail.setID(detailDBYear.getNextID());
@@ -103,7 +103,7 @@ public class ServerGiftDetailDB extends ServerSeasonalDB
 		GiftDetail reqDelWishDetail = gson.fromJson(json, GiftDetail.class);
 		
 		//find the detail in the db
-		GiftDetailDBYear detailDBYear = gdDB.get(year - BASE_SEASON);
+		GiftDetailDBYear detailDBYear = gdDB.get(DBManager.offset(year));
 		List<GiftDetail> giftDetailAL = detailDBYear.getList();
 	
 		int index = 0;
@@ -129,7 +129,7 @@ public class ServerGiftDetailDB extends ServerSeasonalDB
 		Type listtype = new TypeToken<ArrayList<GiftDetail>>(){}.getType();
 		
 		//find the detail year in the db
-		GiftDetailDBYear detailDBYear = gdDB.get(year - BASE_SEASON);
+		GiftDetailDBYear detailDBYear = gdDB.get(DBManager.offset(year));
 		List<GiftDetail> giftDetailAL = detailDBYear.getList();
 			
 		String response = gson.toJson(giftDetailAL, listtype);
@@ -140,7 +140,7 @@ public class ServerGiftDetailDB extends ServerSeasonalDB
 	@Override
 	void addObject(int year, String[] nextLine) 
 	{
-		GiftDetailDBYear detailDBYear = gdDB.get(year - BASE_SEASON);
+		GiftDetailDBYear detailDBYear = gdDB.get(DBManager.offset(year));
 		detailDBYear.add(new GiftDetail(nextLine));
 	}
 	
@@ -165,7 +165,7 @@ public class ServerGiftDetailDB extends ServerSeasonalDB
 	{
 		String[] header = {"Gift Detail ID", "Name", "Choices"};
 		
-		GiftDetailDBYear detailDBYear = gdDB.get(year - BASE_SEASON);
+		GiftDetailDBYear detailDBYear = gdDB.get(DBManager.offset(year));
 		if(detailDBYear.isUnsaved())
 		{
 			String path = String.format("%s/%dDB/WishDetailDB.csv", System.getProperty("user.dir"), year);

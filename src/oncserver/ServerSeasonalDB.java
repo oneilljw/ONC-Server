@@ -11,7 +11,7 @@ import ourneighborschild.ONCUser;
 
 public abstract class ServerSeasonalDB extends ONCServerDB
 {
-	protected static final int BASE_SEASON = 2012;
+//	protected static final int BASE_SEASON = 2012;
 	
 	protected static final int AGENT_UNCHANGED = 0;
 	protected static final int AGENT_UPDATED = 1;

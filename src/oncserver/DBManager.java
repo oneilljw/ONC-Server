@@ -28,9 +28,6 @@ public class DBManager
 	private static final boolean DATABASE_AUTOSAVE_ENABLED = true;
 	private static final int DBYEARSDB_NUM_OF_FIELDS = 2;
 	
-	public static final int BASE_YEAR = 0;
-	public static final int CURRENT_YEAR = 1;
-	
 	private static final int DATABASE_SAVE_TIMER_RATE = 1000 * 60 * 5; //Five minutes
 	
 	private static DBManager instance = null;
@@ -83,7 +80,7 @@ public class DBManager
 			dbSeasonalAutosaveList.add(ServerGlobalVariableDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerPartnerDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerChildDB.getInstance());
-			dbSeasonalAutosaveList.add(ServerChildWishDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerChildGiftDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerFamilyDB.getInstance());
 //			dbPermanentAutosaveList.add(ServerAgentDB.getInstance());
 			dbPermanentAutosaveList.add(ServerGroupDB.getInstance());
@@ -139,16 +136,7 @@ public class DBManager
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + gson.toJson(dbYearList, listOfDBs) +")", HttpCode.Ok);		
 	}
-/*	
-	static String getDatabaseStatusJSON()
-	{		
-		Gson gson = new Gson();
-		Type listOfDBs = new TypeToken<ArrayList<DBYear>>(){}.getType();
-			
-		String response = gson.toJson(dbYearList, listOfDBs);
-		return response;		
-	}
-*/	
+	
 	String updateDBYear(int year, String json)
 	{
 		Gson gson = new Gson();
@@ -168,12 +156,7 @@ public class DBManager
 		else
 			return "UPDATE_FAILED";
 	}
-	
-	void processUpdatedDBYear()
-	{
-		
-	}
-	
+
 	String createNewYear()
 	{
 		String response;
@@ -229,11 +212,6 @@ public class DBManager
 	
 	static int getNumberOfYears() { return dbYearList.size(); }
 	
-//	static int getBaseOrCurrentYear()
-//	{
-//		return dbYearList.isEmpty() ? -1 : dbYearList.get(dbYearList.size()-1).getYear(); 
-//	}
-	
 	static int getCurrentSeason()
 	{
 		return dbYearList.isEmpty() ? -1 : dbYearList.get(dbYearList.size()-1).getYear();
@@ -247,7 +225,7 @@ public class DBManager
 	//returns the offset index from the base year in the database
 	static Integer offset(int year)
 	{
-		return dbYearList.isEmpty() ? null : dbYearList.get(0).getYear() - year;
+		return dbYearList.isEmpty() ? null : year - dbYearList.get(0).getYear();
 	}
 	
 	static String getMostCurrentYear()
