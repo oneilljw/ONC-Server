@@ -25,7 +25,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 	
 	private ServerWarehouseDB() throws FileNotFoundException, IOException
 	{
-		//create the driver data bases for TOTAL_YEARS number of years
+		//create the warehouse data bases for TOTAL_YEARS number of years
 		warehouseDB = new ArrayList<WarehouseDBYear>();
 		
 		clientMgr = ClientManager.getInstance();
@@ -83,7 +83,6 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 		ONCWarehouseVolunteer addedWHVol = new ONCWarehouseVolunteer(whDBYear.getNextID(), 
 															addedVol.getID(), addedVol.getOrganization(),
 															"", new Date());
-		
 		whDBYear.add(addedWHVol);
 		whDBYear.setChanged(true);
 		
@@ -102,7 +101,7 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 	void createNewSeason(int newYear)
 	{
 		//create a new  Warehouse data base year for the year provided in the newYear parameter
-		//The warhouse db year list is initially empty prior to the import of volunteers, so all we
+		//The warehouse db year list is initially empty prior to the import of volunteers, so all we
 		//do here is create a new WarehouseDBYear for the newYear and save it.
 		WarehouseDBYear warehouseDBYear = new WarehouseDBYear(newYear);
 		warehouseDB.add(warehouseDBYear);
@@ -137,8 +136,8 @@ public class ServerWarehouseDB extends ServerSeasonalDB
 	    	
 	    WarehouseDBYear(int year)
 	    {
-	    	super();
-	    	volList = new ArrayList<ONCWarehouseVolunteer>();
+	    		super();
+	    		volList = new ArrayList<ONCWarehouseVolunteer>();
 	    }
 	    
 	    //getters

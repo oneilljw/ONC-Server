@@ -442,29 +442,34 @@ public class ServerUI extends JPanel implements ClientListener
  
         public Object getValueAt(int row, int col)
         {
-        	DesktopClient dc = clientMgr.getDesktopClientList().get(row);
-        	ONCUser u = dc.getClientUser();
+        		if(clientMgr.getDesktopClientList().isEmpty())
+        		{	
+        			DesktopClient dc = clientMgr.getDesktopClientList().get(row);
+        			ONCUser u = dc.getClientUser();
         	
-        	if(col == CLIENT_ID_COL)  
-        		return dc.getClientID();
-        	else if(col == CLIENT_FN_COL)
-        		return u != null ? u.getFirstName() : "Anonymous";
-        	else if(col == CLIENT_LN_COL)
-        		return u != null ? u.getLastName() : "Anonymous";
-        	else if(col == CLIENT_PERM_COL)
-        		return u != null ? u.getPermission().toString() : "U";
-        	else if(col == CLIENT_STATE_COL)
-        		return dc.getClientState();
-        	else if (col == CLIENT_HB_COL)
-        		return dc.getClientHeartbeat().toString().substring(0,1);
-        	else if (col == CLIENT_YEAR_COL)
-        		return dc.getClientState() == ClientState.DB_Selected ? Integer.toString(dc.getYear()) : "None";
-        	else if (col == CLIENT_VER_COL)
-        		return dc.getClientVersion();
-        	else if (col == CLIENT_TIMESTAMP_COL)
-        		return sdf.format(dc.getClientTimestamp());
-        	else
-        		return "Error";
+        			if(col == CLIENT_ID_COL)  
+        				return dc.getClientID();
+        			else if(col == CLIENT_FN_COL)
+        				return u != null ? u.getFirstName() : "Anonymous";
+        			else if(col == CLIENT_LN_COL)
+        				return u != null ? u.getLastName() : "Anonymous";
+        			else if(col == CLIENT_PERM_COL)
+        				return u != null ? u.getPermission().toString() : "U";
+        			else if(col == CLIENT_STATE_COL)
+        				return dc.getClientState();
+        			else if (col == CLIENT_HB_COL)
+        				return dc.getClientHeartbeat().toString().substring(0,1);
+        			else if (col == CLIENT_YEAR_COL)
+        				return dc.getClientState() == ClientState.DB_Selected ? Integer.toString(dc.getYear()) : "None";
+        			else if (col == CLIENT_VER_COL)
+        				return dc.getClientVersion();
+        			else if (col == CLIENT_TIMESTAMP_COL)
+        				return sdf.format(dc.getClientTimestamp());
+        			else
+        				return "Error";
+        		}
+        		else
+        			return "";
         }
         
         //JTable uses this method to determine the default renderer/editor for each cell.
