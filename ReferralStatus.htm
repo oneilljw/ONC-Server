@@ -11,6 +11,8 @@
 	var cyFamJson = [];
 	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;
 	
+	var NoteStatus = {NONE: -1,SENT: 1,READ: 2,RESPONDED: 3,LATE: 4};
+	
 	sessionStorage.setItem('thanksgivingMealCutoff', "THANKSGIVING_MEAL_CUTOFF");
 	sessionStorage.setItem('decemberMealCutoff', "DECEMBER_MEAL_CUTOFF");
 	sessionStorage.setItem('waitlistGiftCutoff', "WAITLIST_GIFT_CUTOFF");
@@ -459,27 +461,33 @@
         }
         
         //create a dns or note button, if necessary
-        if(family.DNSCode.length !== 0 || family.lastNoteStatus > -1)
+        if(family.DNSCode.length !== 0 || family.lastNoteStatus > NoteStatus.NONE)
         {	
-        	
         		var dnsbtn = document.createElement("button");
         		dnsbtn.style.width = cellwidth[index];
         		dnsbtn.classList.add("noteButton");
         		
-        		if(family.lastNoteStatus > -1)
+        		//set button text
+        		if(family.lastNoteStatus > NoteStatus.NONE)
         		{
         			dnsbtn.innerHTML = 'Note';
-        			if(table=== document.getElementById('cyTable') && family.lastNoteStatus < 2)
-        				row.style.backgroundColor = "Yellow";
         			dnsbtn.onclick=function() {familyNote(table, family);};
         		}
         		else
         		{
         			dnsbtn.innerHTML = family.DNSCode;
-        			if(table=== document.getElementById('cyTable'))
-            			row.style.backgroundColor = "Red";
         			dnsbtn.onclick=function() {dnsCode(family);};
         		}
+        		
+        		//set row color
+        		if(table=== document.getElementById('cyTable') && 
+        				family.lastNoteStatus > NoteStatus.NONE && 
+        					family.lastNoteStatus !== NoteStatus.RESPONDED)
+        		{
+        			row.style.backgroundColor = "Yellow";
+        		}
+        		else if(table=== document.getElementById('cyTable') && family.DNSCode.length !== 0)
+        			row.style.backgroundColor = "Red";
         		
         		row.appendChild(dnsbtn);
     		}
@@ -564,7 +572,7 @@
 			document.getElementById("notesresponse").textContent = famNote.response;
 			document.getElementById("responsesubmit").value = famNote.id;
 			
-			if(famNote.status === 2)	//responded
+			if(famNote.status === NoteStatus.RESPONDED)
 			{
 				legend = 'On ' + formatDate(famNote.timeResponse) + ' ' + famNote.respondedBy + '. responded';
 				document.getElementById('responselegend').textContent = legend;
@@ -602,7 +610,7 @@
     			var responseparams = "year=" + year + "&noteID=" + button.value + "&response=" + response + "&callback=?";
     			$.getJSON('noteresponse', responseparams, function(noteResponse)
     			{
-    				if(noteResponse.status === 2);	//note status == RESPONDED
+    				if(noteResponse.status === NoteStatus.RESPONDED);
     				{
     					var legend = 'On ' + formatDate(noteResponse.timeResponse) 
     								+ ' ' + noteResponse.respondedBy + '. responded';
@@ -622,7 +630,7 @@
     			i++;
     		
     		if(i< cyFamJson.length)
-    			cyFamJson[i].lastNoteStatus = 2;
+    			cyFamJson[i].lastNoteStatus = NoteStatus.RESPONDED;
     }
     
     function dnsCode(family)
@@ -758,7 +766,7 @@
         
         if(currpwEl.value == "")
         {
-        	//alert("current password field empty");
+        		//alert("current password field empty");
             currpwEl.style.borderColor = "#E34234";
             
             mssgEl.style.color = "Red";
