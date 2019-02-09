@@ -1,5 +1,6 @@
 package oncserver;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -15,6 +16,8 @@ import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.EmailAddress;
 import ourneighborschild.ONCEmail;
 import ourneighborschild.ONCEmailAttachment;
+import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCNote;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
@@ -34,8 +37,8 @@ public class ServerUserDB extends ServerPermanentDB
 	private static final String USERDB_FILENAME = "newuser.csv";
 	private static final int RECOVERY_ID_LENGTH = 16;
 	
-	private static final String RECOVERY_EMAIL_ADDRESS = "schoolcontact@ourneighborschild.org";
-	private static final String RECOVERY_EMAIL_PASSWORD = "crazyelf";
+	private static final String AGENT_EMAIL_ADDRESS = "schoolcontact@ourneighborschild.org";
+	private static final String AGENT_EMAIL_PASSWORD = "crazyelf";
 	
 	private static ServerUserDB instance  = null;
 	
@@ -727,19 +730,57 @@ public class ServerUserDB extends ServerPermanentDB
 		
 		return count;
 	}
-	
 	void createAndSendRecoveryEmail(ONCServerUser recUser)
+	{
+		String subject = "Account Recovery - Our Neighbor's Child";
+		String emailBody = createRecoveryEmail(recUser);
+		createAndSendUserEmail(subject, emailBody, recUser.getUserFromServerUser());
+	}
+	
+	boolean createAndSendNoteNotificationEmail(int year, ONCNote note)
+	{
+		//find the agent and send the email
+		try
+		{
+			ServerFamilyDB famDB = ServerFamilyDB.getInstance();
+			ONCFamily fam = famDB.getFamily(year,  note.getOwnerID());
+			
+			if(fam != null)
+			{	
+				int index=0;
+				while(index < userAL.size() && userAL.get(index).getID() != fam.getAgentID())
+					index++;
+			
+				if(index < userAL.size())
+				{
+					ONCServerUser recUser = userAL.get(index);
+					String subject = "New Referral Notes - Our Neighbor's Child";
+					String emailBody = createNoteNotificationEmail(recUser);
+					createAndSendUserEmail(subject, emailBody, recUser);
+					return true;
+				}
+				else
+					return false;
+			}
+			else
+				return false;
+		}
+		catch (FileNotFoundException e)
+		{
+			return false;
+		}
+		catch (IOException e)
+		{
+			return false;
+		}
+	}
+	
+	private void createAndSendUserEmail(String subject, String emailBody, ONCUser recUser)
 	{
 		//build the email
 		ArrayList<ONCEmail> emailAL = new ArrayList<ONCEmail>();
 		ArrayList<ONCEmailAttachment> attachmentAL = new ArrayList<ONCEmailAttachment>();
-		String subject = "Account Recovery - Our Neighbor's Child";
 		
-		//create the email body and recipient information in an
-		//ONCEmail object and add it to the email array list
-		//Create the email body if the user exists
-		String emailBody = createRecoveryEmail(recUser);
-			
 		//Create recipient list for email.
 		ArrayList<EmailAddress> recipientAddressList = new ArrayList<EmailAddress>();
 		
@@ -752,23 +793,23 @@ public class ServerUserDB extends ServerPermanentDB
 			recipientAddressList.add(toAddress);    	
         }
 	        
-	    //If the recovery email isn't valid, the message will not be sent.
-	    if(emailBody != null && !recipientAddressList.isEmpty())
+	    //If the email isn't valid, the message will not be sent.
+	    if(subject != null && emailBody != null && !recipientAddressList.isEmpty())
 	        	emailAL.add(new ONCEmail(subject, emailBody, recipientAddressList));     	
 		
 		//Create the from address string array
-		EmailAddress fromAddress = new EmailAddress(RECOVERY_EMAIL_ADDRESS, "Our Neighbor's Child");
+		EmailAddress fromAddress = new EmailAddress(AGENT_EMAIL_ADDRESS, "Our Neighbor's Child");
 //		EmailAddress fromAddress = new EmailAddress(TEST_AGENT_EMAIL_SENDER_ADDRESS, "Our Neighbor's Child");
 		
 		//Create the blind carbon copy list 
 		ArrayList<EmailAddress> bccList = new ArrayList<EmailAddress>();
-		bccList.add(new EmailAddress(RECOVERY_EMAIL_ADDRESS, "School Coordinator"));
+		bccList.add(new EmailAddress(AGENT_EMAIL_ADDRESS, "School Coordinator"));
 //		bccList.add(new EmailAddress("kellylavin1@gmail.com", "Kelly Lavin"));
 //		bccList.add(new EmailAddress("mnrogers123@msn.com", "Nicole Rogers"));
 //		bccList.add(new EmailAddress("johnwoneill@cox.net", "John O'Neill"));
 		
 		//Google Mail
-		ServerCredentials creds = new ServerCredentials("smtp.gmail.com", RECOVERY_EMAIL_ADDRESS, RECOVERY_EMAIL_PASSWORD);
+		ServerCredentials creds = new ServerCredentials("smtp.gmail.com", AGENT_EMAIL_ADDRESS, AGENT_EMAIL_PASSWORD);
 		
 	    ServerEmailer oncEmailer = new ServerEmailer(fromAddress, bccList, emailAL, attachmentAL, creds);
 	    oncEmailer.execute();
@@ -802,14 +843,28 @@ public class ServerUserDB extends ServerPermanentDB
 		    
         return msg;
 	}
-/*	
-	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>
+	
+	String createNoteNotificationEmail(ONCUser user)
 	{
-		@Override
-		public int compare(ONCWebAgent o1, ONCWebAgent o2)
-		{
-			return o1.getLastname().compareTo(o2.getLastname());
-		}
-	}
-*/		
+        //Create the text part of the note notification email using html
+		String link = String.format("\"https://oncdms.org:%d/welcome\">Our Neighbor's Child Login", 8902);
+		String currYear = DBManager.getMostCurrentYear();
+		
+		String msg = "<html><body><div>" +
+			"<p>Dear " + user.getFirstName() + ",</p>"
+			+ "<p>As we process one or more of your " + currYear + " referrals, we have "
+			+ "some questions or comments for you and created a note for you to view. You can access and "
+			+ "respond to notes for your referrals by logging in to our referral website.</p>"
+			+ "<p>Families with new notes will be highlighed in yellow in the " + currYear + " table found "
+			+ "at the bottom of our referral status webpage. Clicking the \"Notes\" button displays referral "
+			+ "notes. Please take a moment to view and respond.</p>"
+			+ "<p>This link <b><a href=" + link + "</a></b> will take you to our login webpage.</p>"
+			+ "<p>Thank You!</p>"
+		    +"<p>Our Neighbor's Child<br>"
+		    +"P.O. Box 276<br>"
+		    +"Centreville, VA 20120<br>"
+		    +"<a href=\"http://www.ourneighborschild.org\">www.ourneighborschild.org</a></p></div>";
+
+        return msg;
+	}	
 }

@@ -18,13 +18,14 @@ import ourneighborschild.ONCUser;
 
 public class ServerNoteDB extends ServerSeasonalDB
 {
-	private static final int NOTE_DB_HEADER_LENGTH = 14;
+	private static final int NOTE_DB_HEADER_LENGTH = 15;
 
 	private static List<NoteDBYear> noteDB;
 	private static ServerNoteDB instance = null;
 	
 	private static Map<String, DNSCode> dnsCodeMap;
 	private static ClientManager clientMgr;
+	private static ServerUserDB userDB;
 	
 	private ServerNoteDB() throws FileNotFoundException, IOException
 	{
@@ -47,6 +48,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 		}
 		
 		clientMgr = ClientManager.getInstance();
+		userDB = ServerUserDB.getInstance();
 		
 		dnsCodeMap = new HashMap<String, DNSCode>();
 		loadDNSCodeMap();
@@ -77,7 +79,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 		ONCNote addedNote = gson.fromJson(json, ONCNote.class);
 						
 		//retrieve the note data base for the year
-		NoteDBYear noteDBYear =noteDB.get(DBManager.offset(year));
+		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 								
 		//set the new ID and time stamps for the added ONCNote
 		addedNote.setID(noteDBYear.getNextID());
@@ -85,9 +87,13 @@ public class ServerNoteDB extends ServerSeasonalDB
 		addedNote.setChangedBy(client.getLNFI());
 		addedNote.setStoplightChangedBy(client.getLNFI());
 		
-		//add the new note to the data base
+		//add the new note to the data base.
 		noteDBYear.add(addedNote);
 		noteDBYear.setChanged(true);
+		
+		//if the note includes a request to sent the agent an email, do so
+		if(addedNote.sendEmail())
+			userDB.createAndSendNoteNotificationEmail(year, addedNote);
 							
 		return "ADDED_NOTE" + gson.toJson(addedNote, ONCNote.class);
 	}
@@ -164,8 +170,8 @@ public class ServerNoteDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"Note ID", "Owner ID", "Status", "Title", "Note", "Changed By",
-				"Response", "Response By", "Time Created", "Time Viewed",
-				"Time Responded", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B"};
+				"Response", "Response By", "Time Created", "Time Viewed","Time Responded",
+				"Email","Stoplight Pos", "Stoplight Mssg", "Stoplight C/B"};
 		
 		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		if(noteDBYear.isUnsaved())
