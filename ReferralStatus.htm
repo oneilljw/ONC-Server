@@ -85,16 +85,7 @@
     			}
     			
     			getPYandCYIntialGroupsAgentsAndFamlies();
-    		});
-
-//      $.getJSON('getstatus', dbyearsparams, function(status)
-//      {
-//      		if(status.userstatus === 'Update_Profile')
-//          {
-//      			showEditProfileDialog();
-//      			window.location=document.getElementById('editprofileanchor').href;
-//          }
-//    	}); 	
+    		}); 	
     });
     
     //this function gets current year agents and families before prior year beacuse we use the
@@ -413,7 +404,7 @@
     }
     
     function addTableRow(family, table, buttontext)
-    {
+    {    		
         if (!document.getElementsByTagName) return;
        
         var fstatus;
@@ -444,77 +435,82 @@
         else
         		mealstatus = family.mealStatus;
         	
-        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.DNSCode,
-      					  fstatus, dstatus, mealstatus];
+        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.lastNoteStatus,
+        						family.DNSCode, fstatus, dstatus, mealstatus];
         
-        var cellwidth = ['54px', '170px', '170px', '56px', '136px', '136px', '136px', '54px'];
+        var cellwidth = ['54px', '152px', '160px', '56px', '56px','128px', '128px', '128px', '54px'];
         
 	    var tabBody = table.getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
-         
-        for(index=0; index < 3; index++)	//create the first 3 family info cells
+        
+        var col = 0;
+        while(col< 3)	//create the first 3 family info cells
         {
-        		cell = document.createElement("td");
-        		cell.appendChild(document.createTextNode(familyinfo[index]));
-        		cell.style.width = cellwidth[index];
+        		var cell = document.createElement("td");
+        		cell.appendChild(document.createTextNode(familyinfo[col]));
+        		cell.style.width = cellwidth[col++];
         		row.appendChild(cell);
         }
         
-        //create a dns or note button, if necessary
-        if(family.DNSCode.length !== 0 || family.lastNoteStatus > NoteStatus.NONE)
+        //create a note button, if necessary in column 4
+        var cell = document.createElement("td");
+        if(family.lastNoteStatus > NoteStatus.NONE)
+        {	
+        		var notebtn = document.createElement("button");
+     		notebtn.style.width = cellwidth[col++];
+        		notebtn.innerHTML = 'Note';
+        		notebtn.onclick=function() {familyNote(table, family);};
+        		cell.appendChild(notebtn);	
+   		}
+        else
+        	{
+        		cell.appendChild(document.createTextNode(""));
+      		cell.style.width = cellwidth[col++];
+        	}
+        row.appendChild(cell);
+        
+        //create a dns button, if necessary in column 5
+        var cell = document.createElement("td");
+        if(family.DNSCode.length !== 0)
         {	
         		var dnsbtn = document.createElement("button");
-        		dnsbtn.style.width = cellwidth[index];
-        		dnsbtn.classList.add("noteButton");
-        		
-        		//set button text
-        		if(family.lastNoteStatus > NoteStatus.NONE)
-        		{
-        			dnsbtn.innerHTML = 'Note';
-        			dnsbtn.onclick=function() {familyNote(table, family);};
-        		}
-        		else
-        		{
-        			dnsbtn.innerHTML = family.DNSCode;
-        			dnsbtn.onclick=function() {dnsCode(family);};
-        		}
-        		
-        		//set row color
-        		if(table=== document.getElementById('cyTable') && 
-        				family.lastNoteStatus > NoteStatus.NONE && 
-        					family.lastNoteStatus !== NoteStatus.RESPONDED)
-        		{
-        			row.style.backgroundColor = "Yellow";
-        		}
-        		else if(table=== document.getElementById('cyTable') && family.DNSCode.length !== 0)
-        			row.style.backgroundColor = "Red";
-        		
-        		row.appendChild(dnsbtn);
+        		dnsbtn.style.width = cellwidth[col++];
+        		dnsbtn.innerHTML = family.DNSCode;
+        		dnsbtn.onclick=function() {dnsCode(family);};
+        		cell.appendChild(dnsbtn);
     		}
         else
         	{
-        		var dnscell = document.createElement("td");
-    			dnscell.appendChild(document.createTextNode(""));
-    			dnscell.style.width = cellwidth[index];
-    			row.appendChild(dnscell)
+    			cell.appendChild(document.createTextNode(""));
+    			cell.style.width = cellwidth[col++];
         	}
-        	
+        row.appendChild(cell);
+
         //create the last three family info cells
-        for(index=4; index < familyinfo.length; index++)	//create the first 3 family info cells
+        while(col < familyinfo.length)	//create the three status cells
         {
         		cell = document.createElement("td");
-        		cell.appendChild(document.createTextNode(familyinfo[index]));
-        		cell.style.width = cellwidth[index];
+        		cell.appendChild(document.createTextNode(familyinfo[col]));
+        		cell.style.width = cellwidth[col++];
         		row.appendChild(cell);
         }
         
         //add the refer or edit button
         btn = document.createElement("button");
         btn.innerHTML = buttontext;
-        btn.style.width = cellwidth[index];
+        btn.style.width = cellwidth[col];
         btn.onclick=function() {familyAction(table, family.targetID);};
 		setButtonStatus(family, table, btn);
         row.appendChild(btn);
+        
+        //set row color
+		if(table=== document.getElementById('cyTable') && family.lastNoteStatus > NoteStatus.NONE && 
+				family.lastNoteStatus !== NoteStatus.RESPONDED)
+		{
+			row.style.backgroundColor = "Yellow";
+		}
+		else if(table=== document.getElementById('cyTable') && family.DNSCode.length !== 0)
+			row.style.backgroundColor = "Red";
         
         tabBody.appendChild(row);
     }
@@ -844,9 +840,10 @@
         }
 
         .onccol { width: 54px; }
-        .namecol { width: 170px; }
-        .dnscol { width: 56px; }
-        .statcol { width: 136px; }
+        .fncol { width: 152px; }
+        .lncol { width: 160px; }
+        .btncol { width: 56px; }
+        .statcol { width: 128px; }
         
         /* only styling below here */
         table { border-collapse: collapse; }       
@@ -940,14 +937,18 @@
 			height: auto;
 			position: relative;
 			margin: 10% auto;
-			padding: 5px 10px 5px 10px;
+			padding: 5px 10px 15px 10px;
 			border-radius: 10px;
 			background: #fff;
 			background: -moz-linear-gradient(#fff, #999);
 			background: -webkit-linear-gradient(#fff, #999);
 			background: -o-linear-gradient(#fff, #999);
 		}
-    }
+		textarea 
+		{
+			width: 316px;
+			height: 64px;
+		}
     </style>  
 </head>
 <body>
@@ -1004,9 +1005,10 @@
       <thead>
         <tr>
        	<th class='onccol'>ONC #</th>
-       	<th class='namecol'>First Name</th>
-       	<th class='namecol'>Last Name</th>
-       	<th class='dnscol'>Notes</th>
+       	<th class='fncol'>First Name</th>
+       	<th class='lncol'>Last Name</th>
+       	<th class='btncol'>Notes</th>
+       	<th class='btncol'>Codes</th>
         	<th class='statcol'>Family Status</th>
         	<th class='statcol'>Gift Status</th>
         	<th class='statcol'>Meal Status</th>
@@ -1037,9 +1039,10 @@
       <thead>
         <tr>
        	<th class='onccol'>ONC #</th>
-       	<th class='namecol'>First Name</th>
-       	<th class='namecol'>Last Name</th>
-       	<th class='dnscol'>Notes</th>
+       	<th class='fncol'>First Name</th>
+       	<th class='lncol'>Last Name</th>
+       	<th class='btncol'>Notes</th>
+       	<th class='btncol'>Codes</th>
         	<th class='statcol'>Family Status</th>
         	<th class='statcol'>Gift Status</th>
         	<th class='statcol'>Meal Status</th>
@@ -1062,11 +1065,11 @@
 		<!-- This is the body of the dialog. -->
 		    <fieldset class="fieldset-auto-width">
 		      <legend id='noteslegend' class="legend-major">Note From ONC</legend>
-		      <textarea id='notesfammssg' rows="4" cols="48" disabled></textarea>
+		      <textarea id='notesfammssg' disabled></textarea>
 		    </fieldset>
 		    <fieldset class="fieldset-auto-width">
 		      <legend id='responselegend' class="legend-major">Response</legend>
-		      <textarea id='notesresponse' rows="4" cols="48"></textarea>
+		      <textarea id='notesresponse'></textarea>
 		      <button id="responsesubmit" onclick='submitNoteResponse(this)'>Submit</button>
 		    </fieldset>
 		</div>
@@ -1084,7 +1087,7 @@
 		<!-- This is the body of the dialog. -->
 		    <fieldset class="fieldset-auto-width">
 		      <legend id='dnslegend' class="legend-major">DNS Code</legend>
-		      <textarea id='dnscode' rows="4" cols="48" disabled></textarea>
+		      <textarea id='dnscode' disabled></textarea>
 		    </fieldset>
 		</div>
 	</div>
@@ -1158,10 +1161,10 @@
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
 		<div id='dialogtopbar'>
 		  <img src="onclogo" height="45" width="65">
-		  <span id='dialogmssg'>DNS Codes And Status Definitions (scroll to see all):</span>
+		  <span id='dialogmssg'>Codes And Status Definitions (scroll to see all):</span>
 		</div>
     	<dl>
-		  <dt>DNS Codes</dt>
+		  <dt>Codes - Indicate why a family is not being served</dt>
 		  <dd>
 		    <dl>
 		      <dt>DUP - Duplicate Family</dt>
