@@ -637,7 +637,7 @@
 		var codeparams = "code=" + family.DNSCode + "&callback=?";
 		$.getJSON('dnscode', codeparams, function(dnsCode)
 		{
-			document.getElementById('dnslegend').textContent = dnsCode.title;
+			document.getElementById('dnslegend').textContent = dnsCode.acronym + ' - ' + dnsCode.name;
 			document.getElementById("dnscode").textContent = dnsCode.definition;
 			
 			window.location=document.getElementById('dnscodeanchor').href;
@@ -1165,38 +1165,7 @@
 		</div>
     	<dl>
 		  <dt>Codes - Indicate why a family is not being served</dt>
-		  <dd>
-		    <dl>
-		      <dt>DUP - Duplicate Family</dt>
-		      <dd>Indicates that more than one referral for this family was received by
-		      		ONC. The family will be served through the first referral and the referral
-		      		marked DUP will not be processed.
-		      </dd>
-		      <dt>FO - Food Only</dt>
-		      <dd>Referrals marked FO are only requesting holiday food assistance and not requesting
-		      		gift assistance. ONC forwards food assistance requests to Western Fairfax Christian
-		      		Ministries (WFCM). Contact jbush@wfcmva.org with food assistance questions.
-		      </dd>
-		      <dt>NISA - Not In Serving Area</dt>
-		      <dd>Indicates this family is not located in ONC's serving area.</dd>
-		      <dt>OPT-OUT</dt>
-		      <dd>Indicates the family requested holiday gift assistance, however, when ONC
-		      		contacted the family to confirm delivery, the family withdrew it's
-		      		gift assistance request. This may not apply to food assistance.
-		      		Contact jbush@wfcmva.org for food assistance information. 
-		      </dd>
-		       <dt>SA - Salvation Army</dt>
-		      <dd>Indicates that the family is being served by the Salvation Army and 
-		      		will not be receiving an ONC gift delivery.
-		      </dd>
-		       <dt>SBO - Served By Other</dt>
-		      <dd>Indicates the family is being served by another organization in our area.
-		      		See Gift Status - Referred.
-		      </dd>
-		      <dt>WL- Waitlist</dt>
-		      <dd>Indicates the family is on ONC's wait list.</dd>			
-		    </dl>
-		  </dd>
+		  <dd>DNS_CODE_HINTS</dd>
 	      <dt>Family Status</dt>
 		  <dd>
 		    <dl>

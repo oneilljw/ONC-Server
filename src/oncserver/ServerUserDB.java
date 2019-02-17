@@ -96,7 +96,7 @@ public class ServerUserDB extends ServerPermanentDB
 	}
 	
 	@Override
-	String add(String json)
+	String add(String json, ONCUser client)
 	{
 		Gson gson = new Gson();
 		ONCServerUser su = gson.fromJson(json, ONCServerUser.class);
@@ -104,6 +104,8 @@ public class ServerUserDB extends ServerPermanentDB
 		su.setID(nextID++);	//Set id for new user
 		su.setUserPW(USER_PASSWORD_PREFIX + su.getPermission().toString());
 		su.setStatus(UserStatus.Change_PW);
+		su.setDateChanged(new Date());
+		su.setChangedBy(client.getLNFI());
 		
 		userAL.add(su); //Add new user to data base
 		bSaveRequired = true;

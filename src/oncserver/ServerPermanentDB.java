@@ -10,6 +10,7 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import ourneighborschild.ONCObject;
+import ourneighborschild.ONCUser;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -18,7 +19,7 @@ public abstract class ServerPermanentDB extends ONCServerDB
 	protected int nextID;
 	protected boolean bSaveRequired;
 	
-	abstract String add(String userjson);
+	abstract String add(String addjson, ONCUser clientUser);
 	
 	void importDB(String path, String name, int length) throws FileNotFoundException, IOException
 	{

@@ -26,6 +26,7 @@ import com.google.gson.reflect.TypeToken;
 
 import au.com.bytecode.opencsv.CSVReader;
 import ourneighborschild.GoogleGeocode;
+import ourneighborschild.ONCUser;
 
 public class ServerRegionDB extends ServerPermanentDB
 {
@@ -791,7 +792,7 @@ public class ServerRegionDB extends ServerPermanentDB
 	}
 
 	@Override
-	String add(String userjson) {
+	String add(String userjson, ONCUser client) {
 		// TODO Auto-generated method stub
 		return null;
 	}

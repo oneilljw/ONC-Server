@@ -1731,20 +1731,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return o1.getHOHLastName().toLowerCase().compareTo(o2.getHOHLastName().toLowerCase());
 		}
 	}
-/*    
-    private class NewFamStatus
+/*
+    private void convertDNSCodes()
     {
-    		private int famStatus;
-    		private int giftStatus;
-    	
-    		NewFamStatus(int famStatus, int giftStatus)
-    		{
-    			this.famStatus = famStatus;
-    			this.giftStatus = giftStatus;
-    		}
-    	
-    		String getNewFamStatus() { return Integer.toString(famStatus); }
-    		String getNewGiftStatus() { return Integer.toString(giftStatus); }
+    		//for each year in the datbaase, convert the DNS code from a string to an int
     }
 */    
     private class ONCNumRange

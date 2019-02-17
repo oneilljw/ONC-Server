@@ -240,8 +240,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
 		response = response.replace("SHOW_SUCCESS_DIALOG", bShowSuccessDialog ? "true" : "false");
 		response = response.replace("SUCCESS_DIALOG_HEADER", successDlgTitle);
-//		String successMssg = String.format("%s", message);
 		response = response.replace("SUCCESS_DIALOG_MESSAGE", bShowSuccessDialog ? successMssg : "");
+		response = response.replace("DNS_CODE_HINTS", ServerDNSCodeDB.getDNSCodeHTML());
 		
 		return response;
 	}

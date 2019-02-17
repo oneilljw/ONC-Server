@@ -282,7 +282,7 @@ public class FamilyHandler extends ONCWebpageHandler
 			{
 				//get the JSON for response to response submission
 				String code = (String) params.get("code");
-				htmlResponse = ServerNoteDB.getDNSCodeJSONP(code, (String) params.get("callback"));
+				htmlResponse = ServerDNSCodeDB.getDNSCodeJSONP(code, (String) params.get("callback"));
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));

@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 6.24f;
+	private static final float MINIMUM_CLIENT_VERSION = 6.25f;
 	
 	private int id;
 	private String version;
@@ -49,6 +49,7 @@ public class DesktopClient extends Thread
     private ServerRegionDB serverRegionDB;
     private ServerGlobalVariableDB globalvariableDB;
     private ServerFamilyDB serverFamilyDB;
+    private ServerDNSCodeDB serverDNSCodeDB;
     private ServerGroupDB serverGroupDB;
     private ServerChildDB childDB;
     private ServerChildGiftDB childwishDB;
@@ -99,6 +100,7 @@ public class DesktopClient extends Thread
 			userDB = ServerUserDB.getInstance();
 			serverRegionDB = ServerRegionDB.getInstance();
 	        globalvariableDB = ServerGlobalVariableDB.getInstance();
+	        serverDNSCodeDB = ServerDNSCodeDB.getInstance();
 	        serverFamilyDB = ServerFamilyDB.getInstance();
 	        serverGroupDB = ServerGroupDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
@@ -205,7 +207,12 @@ public class DesktopClient extends Thread
                 		clientMgr.addLogMessage(command);
                 		String response = serverRegionDB.getRegions();
                 		output.println(response);
-                		clientMgr.addLogMessage(response);
+                }
+                else if(command.startsWith("GET<dnscodes>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = serverDNSCodeDB.getDNSCodes();
+                		output.println(response);
                 }
                 else if(command.startsWith("GET<served_schools>"))
                 {
@@ -435,7 +442,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_user>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = userDB.add(command.substring(14));
+                		String response = userDB.add(command.substring(14), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
  //               	clientMgr.dataChanged(this, response);
@@ -554,7 +561,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_group>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = serverGroupDB.add(command.substring(15));
+                		String response = serverGroupDB.add(command.substring(15), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
@@ -571,7 +578,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<add_inventory>"))
                 {
                 		clientMgr.addLogMessage(command);
-                		String response = inventoryDB.add(command.substring(19));
+                		String response = inventoryDB.add(command.substring(19), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
  //               	clientMgr.dataChanged(this, response);
@@ -858,6 +865,22 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		String response = noteDB.update(year, command.substring(17));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<add_dnscode>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = serverDNSCodeDB.add(command.substring(17), clientUser);
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<update_dnscode>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = serverDNSCodeDB.update(command.substring(20), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);

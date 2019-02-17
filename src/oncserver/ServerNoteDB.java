@@ -12,7 +12,9 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import ourneighborschild.ONCEntity;
 import ourneighborschild.ONCNote;
+import ourneighborschild.ONCObject;
 import ourneighborschild.ONCUser;
 
 
@@ -23,7 +25,6 @@ public class ServerNoteDB extends ServerSeasonalDB
 	private static List<NoteDBYear> noteDB;
 	private static ServerNoteDB instance = null;
 	
-	private static Map<String, DNSCode> dnsCodeMap;
 	private static ClientManager clientMgr;
 	private static ServerUserDB userDB;
 	
@@ -49,9 +50,6 @@ public class ServerNoteDB extends ServerSeasonalDB
 		
 		clientMgr = ClientManager.getInstance();
 		userDB = ServerUserDB.getInstance();
-		
-		dnsCodeMap = new HashMap<String, DNSCode>();
-		loadDNSCodeMap();
 	}
 	
 	public static ServerNoteDB getInstance() throws FileNotFoundException, IOException
@@ -85,7 +83,6 @@ public class ServerNoteDB extends ServerSeasonalDB
 		addedNote.setID(noteDBYear.getNextID());
 		addedNote.setDateChanged(new Date());
 		addedNote.setChangedBy(client.getLNFI());
-		addedNote.setStoplightChangedBy(client.getLNFI());
 		
 		//add the new note to the data base.
 		noteDBYear.add(addedNote);
@@ -241,15 +238,6 @@ public class ServerNoteDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
-	static HtmlResponse getDNSCodeJSONP(String code, String callbackFunction)
-	{		
-		Gson gson = new Gson();
-		String response = gson.toJson(dnsCodeMap.get(code), DNSCode.class);
-
-		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
-	}
-	
 	static HtmlResponse processNoteResponseJSONP(int year, int noteID, WebClient wc, String submittedResponse, 
 														String callbackFunction)
 	{
@@ -275,32 +263,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 		
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
-	void loadDNSCodeMap()
-	{
-	    	dnsCodeMap.put("DUP", new DNSCode("Duplicate Family", "Duplicate referral: Two or more referrals were received for this family. "
-	    				+ "ONC will serve the family through the first referral and this referral will not be "
-	    				+ "processed"));
-	    		
-	    	dnsCodeMap.put("WL", new DNSCode("Waitlist", "Waitlist referral: indicates the family is on ONC's wait list."));
-	    		
-	    	dnsCodeMap.put("FO", new DNSCode("Food Only", "Referrals marked FO are only requesting holiday food assistance and not requesting "
-			      	+ "gift assistance. ONC forwards food assistance requests to Western Fairfax Christian "
-			      	+ "Ministries (WFCM). Contact jbush@wfcmva.org with food assistance questions."));
-	    		
-	    	dnsCodeMap.put("NISA", new DNSCode("Not In Serving Area", "Indicates this family is not located in ONC's serving area."));
-	    		
-	    	dnsCodeMap.put("OPT-OUT", new DNSCode("Opt-Out", "Indicates the family requested holiday gift "
-	    				+ "assistance, however, when ONC contacted the family to confirm delivery, the family "
-	    				+ "withdrew it's gift assistance request. This may not apply to food assistance. "
-	    				+ "Contact jbush@wfcmva.org for food assistance information."));
-	    		
-	    	dnsCodeMap.put("SA", new DNSCode("Salvation Army", "Indicates that the family is being served by the Salvation Army and "
-	    				+ "will not be receiving an ONC gift delivery."));
-	    		
-	    	dnsCodeMap.put("SBO", new DNSCode("Served By Others", "Indicates the family is being served by "
-	    				+ "another organization in our area. See Gift Status - Referred."));
-	    }
-	    	
+	
 	private class NoteDBYear extends ServerDBYear
 	{
 		private List<ONCNote> list;
@@ -316,21 +279,4 @@ public class ServerNoteDB extends ServerSeasonalDB
 	    	
 	    	void add(ONCNote addedNote) { list.add(addedNote); }
 	}
-	private class DNSCode
-    {
-    		String title;
-    		String definition;
-    		
-    		DNSCode(String title, String definition)
-    		{
-    			this.title = title;
-    			this.definition = definition;
-    		}
-    		
-    		//getters
-    		@SuppressWarnings("unused")
-			String getTitle() { return title; }
-    		@SuppressWarnings("unused")
-			String getDefinition() { return definition; }
-    }	
 }

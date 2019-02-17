@@ -18,6 +18,7 @@ import ourneighborschild.GroupType;
 import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
+import ourneighborschild.ONCUser;
 import ourneighborschild.UserPermission;
 import ourneighborschild.UserStatus;
 
@@ -196,13 +197,15 @@ public class ServerGroupDB extends ServerPermanentDB
 	}
 	
 	@Override
-	String add(String json)
+	String add(String json, ONCUser client)
 	{
 		//Create a group object to add to the catalog from the json
 		Gson gson = new Gson();
 		ONCGroup addGroupReq = gson.fromJson(json, ONCGroup.class);
 		
 		addGroupReq.setID(nextID++);
+		addGroupReq.setDateChanged(new Date());
+		addGroupReq.setChangedBy(client.getLNFI());
 		groupList.add(addGroupReq);
 		bSaveRequired = true;
 		

@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -20,6 +21,7 @@ import ourneighborschild.InventoryChange;
 import ourneighborschild.InventoryItem;
 import ourneighborschild.InventoryRequest;
 import ourneighborschild.ONCObject;
+import ourneighborschild.ONCUser;
 import ourneighborschild.UPCFailure;
 
 public class ServerInventoryDB extends ServerPermanentDB
@@ -198,7 +200,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 	}
 	
 	@Override
-	String add(String json)
+	String add(String json, ONCUser client)
 	{
 		//it's a manual add request using InventoryItem object. Add it to the db and
 		//return it.
