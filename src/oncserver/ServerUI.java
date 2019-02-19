@@ -2,6 +2,7 @@ package oncserver;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -32,6 +33,7 @@ import javax.swing.Timer;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -120,6 +122,23 @@ public class ServerUI extends JPanel implements ClientListener
     		//check if the user has selected a row. 
     		desktopClientTable.setModel(desktopClientTM);
     		desktopClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    		
+    		//set up a cell renderer for the TIMESTAMP column to display the date 
+        TableCellRenderer tableCellRenderer = new DefaultTableCellRenderer()
+        {
+          	private static final long serialVersionUID = 1L;
+          	SimpleDateFormat f = new SimpleDateFormat("MM/dd H:mm:ss");
+
+          	public Component getTableCellRendererComponent(JTable table, Object value,
+          		            boolean isSelected, boolean hasFocus, int row, int column)
+          	{ 
+          		if(value instanceof java.util.Date)
+          		    value = f.format(value);
+          		        
+          		return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+          	}
+        };
+        desktopClientTable.getColumnModel().getColumn(CLIENT_TIMESTAMP_COL).setCellRenderer(tableCellRenderer);
 
     		//Set table column widths
     		int tablewidth = 0;
@@ -336,7 +355,7 @@ public class ServerUI extends JPanel implements ClientListener
 			else if(ce.getEventType() == ClientEventType.ACTIVE)
 			{
 				long timeSinceLastHeartbeat = System.currentTimeMillis() - c.getTimeLastActiveInMillis();
-				String mssg = String.format("Client %d heart beat recovered, detected in %d seconds",
+				String mssg = String.format("Client %d Active, last hearbeat was %d seconds ago",
 												c.getClientID(), timeSinceLastHeartbeat/1000);
 				addUIAndLogMessage(mssg);
 			}
@@ -420,14 +439,12 @@ public class ServerUI extends JPanel implements ClientListener
         /**
 		 * Implements the table model for the Online UserDialog
 		 */
-		private SimpleDateFormat sdf;
-		private ClientManager clientMgr;
+//		private ClientManager clientMgr;
 		
-		public DesktopClientTableModel()
-		{
-			sdf = new SimpleDateFormat("MM/dd H:mm:ss");
-			clientMgr = ClientManager.getInstance();
-		}
+//		public DesktopClientTableModel()
+//		{
+//			clientMgr = ClientManager.getInstance();
+//		}
 		
 		private static final long serialVersionUID = 1L;
 		
@@ -436,47 +453,47 @@ public class ServerUI extends JPanel implements ClientListener
  
         public int getColumnCount() { return columnNames.length; }
  
-        public int getRowCount() { return clientMgr.getDesktopClientList().size(); }
+        public int getRowCount() { return clientMgr == null ? 0 : clientMgr.getDesktopClientList().size(); }
  
         public String getColumnName(int col) { return columnNames[col]; }
  
         public Object getValueAt(int row, int col)
         {
-        		if(clientMgr.getDesktopClientList().isEmpty())
-        		{	
-        			DesktopClient dc = clientMgr.getDesktopClientList().get(row);
-        			ONCUser u = dc.getClientUser();
+        		DesktopClient dc = clientMgr.getDesktopClientList().get(row);
+        		ONCUser u = dc.getClientUser();
         	
-        			if(col == CLIENT_ID_COL)  
-        				return dc.getClientID();
-        			else if(col == CLIENT_FN_COL)
-        				return u != null ? u.getFirstName() : "Anonymous";
-        			else if(col == CLIENT_LN_COL)
-        				return u != null ? u.getLastName() : "Anonymous";
-        			else if(col == CLIENT_PERM_COL)
-        				return u != null ? u.getPermission().toString() : "U";
-        			else if(col == CLIENT_STATE_COL)
-        				return dc.getClientState();
-        			else if (col == CLIENT_HB_COL)
-        				return dc.getClientHeartbeat().toString().substring(0,1);
-        			else if (col == CLIENT_YEAR_COL)
-        				return dc.getClientState() == ClientState.DB_Selected ? Integer.toString(dc.getYear()) : "None";
-        			else if (col == CLIENT_VER_COL)
-        				return dc.getClientVersion();
-        			else if (col == CLIENT_TIMESTAMP_COL)
-        				return sdf.format(dc.getClientTimestamp());
-        			else
-        				return "Error";
-        		}
+        		if(col == CLIENT_ID_COL)  
+        			return dc.getClientID();
+        		else if(col == CLIENT_FN_COL)
+        			return u != null ? u.getFirstName() : "Anonymous";
+        		else if(col == CLIENT_LN_COL)
+        			return u != null ? u.getLastName() : "Anonymous";
+        		else if(col == CLIENT_PERM_COL)
+        			return u != null ? u.getPermission().toString() : "U";
+        		else if(col == CLIENT_STATE_COL)
+        			return dc.getClientState().toString();
+        		else if (col == CLIENT_HB_COL)
+        			return dc.getClientHeartbeat().toString().substring(0,1);
+        		else if (col == CLIENT_YEAR_COL)
+        			return dc.getClientState() == ClientState.DB_Selected ? Integer.toString(dc.getYear()) : "None";
+        		else if (col == CLIENT_VER_COL)
+        			return dc.getClientVersion();
+        		else if (col == CLIENT_TIMESTAMP_COL)
+        			return dc.getClientTimestamp();
         		else
-        			return "";
+        			return "Error";
         }
         
         //JTable uses this method to determine the default renderer/editor for each cell.
         @Override
         public Class<?> getColumnClass(int column)
         {
-        	return String.class;
+        		if(column == CLIENT_ID_COL)
+        			return Integer.class;
+        		else if(column == CLIENT_TIMESTAMP_COL)
+        			return Date.class;
+        		else
+        			return String.class;
         }
  
         public boolean isCellEditable(int row, int col)

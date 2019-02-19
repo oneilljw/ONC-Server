@@ -322,9 +322,6 @@ public class DesktopClient extends Thread
                 		clientMgr.addLogMessage(command);
                 		String response = wishDetailDB.getWishDetail(year);
                 		output.println(response);
-                		state = ClientState.DB_Selected;
-//                	clientMgr.clientStateChanged();
-                		clientMgr.clientStateChanged(ClientType.DESKTOP, ClientEventType.ACTIVE, this); 
                 }
                 else if(command.startsWith("GET<adults>"))
                 {
@@ -348,7 +345,9 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		String response = batteryDB.getBatteries(year);
-                		output.println(response);		
+                		output.println(response);
+                		state = ClientState.DB_Selected;
+                    	clientMgr.clientStateChanged(ClientType.DESKTOP, ClientEventType.ACTIVE, this); 
                 }
                 else if(command.startsWith("GET<pychild>"))
                 {
