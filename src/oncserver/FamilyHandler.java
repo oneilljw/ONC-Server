@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
+import ourneighborschild.DNSCode;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
@@ -35,7 +36,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	private static final String GIFTS_REQUESTED_KEY = "giftreq";
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
-	private static final String DNS_CODE_WAITLIST = "WL";
+	private static final int DNS_CODE_WAITLIST = 7;
 	
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	
@@ -278,11 +279,10 @@ public class FamilyHandler extends ONCWebpageHandler
 		else if(requestURI.contains("/dnscode"))
 		{
 			HtmlResponse htmlResponse;
-			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null && params.containsKey("code"))
 			{
 				//get the JSON for response to response submission
-				String code = (String) params.get("code");
-				htmlResponse = ServerDNSCodeDB.getDNSCodeJSONP(code, (String) params.get("callback"));
+				htmlResponse = ServerDNSCodeDB.getDNSCodeJSONP((String) params.get("code"), (String) params.get("callback"));
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
@@ -303,6 +303,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		ServerAdultDB adultDB = null;
 		ServerFamilyHistoryDB famHistDB = null;
 		ServerGlobalVariableDB globalDB = null;
+		ServerDNSCodeDB dnsCodeDB = null;
 		
 		try
 		{
@@ -312,6 +313,7 @@ public class FamilyHandler extends ONCWebpageHandler
 			adultDB = ServerAdultDB.getInstance();
 			famHistDB = ServerFamilyHistoryDB.getInstance();
 			globalDB = ServerGlobalVariableDB.getInstance();
+			dnsCodeDB = ServerDNSCodeDB.getInstance();
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -376,7 +378,7 @@ public class FamilyHandler extends ONCWebpageHandler
 			}
 		
 			ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
-					familyMap.get("targetid"), "B-DI", bWaitlistFamily ? DNS_CODE_WAITLIST : "",
+					familyMap.get("targetid"), "B-DI", bWaitlistFamily ? DNS_CODE_WAITLIST : -1,
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohfn"), familyMap.get("hohln"), familyMap.get("housenum"),
 					ensureUpperCaseStreetName(familyMap.get("street")),
@@ -400,13 +402,14 @@ public class FamilyHandler extends ONCWebpageHandler
 				lastReferralUUIDAccepted = familyMap.get("uuid");
 				
 				//add the family history object and update the family history object id
+				DNSCode famDNSCode = dnsCodeDB.getDNSCode(addedFamily.getDNSCode());
 				ONCFamilyHistory famHistory = new ONCFamilyHistory(-1, addedFamily.getID(), 
 															addedFamily.getFamilyStatus(),
 															addedFamily.getGiftStatus(),
 															"", "Family Referred", 
 															addedFamily.getChangedBy(), 
 															Calendar.getInstance(TimeZone.getTimeZone("UTC")),
-															addedFamily.getDNSCode());
+															famDNSCode.getAcronym());
 		
 				ONCFamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, false);
 				if(addedFamHistory != null)
@@ -480,7 +483,7 @@ public class FamilyHandler extends ONCWebpageHandler
 				
 					//family is in current year already with an ODB referred target ID
 					addedFamily.setONCNum("DEL");
-					addedFamily.setDNSCode("DUP");
+					addedFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 					addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
 					addedFamily.setReferenceNum(dupFamily.getReferenceNum());
@@ -498,7 +501,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					//does not have an ONC target id. In this situation, we can't decrement the assigned
 					//ONC based target id and will just have to burn one.
 					dupFamily.setONCNum("DEL");
-					dupFamily.setDNSCode("DUP");
+					dupFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 					dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
 					dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
@@ -515,7 +518,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					{
 						//dup family has the correct ref #, so added family is duplicate
 						addedFamily.setONCNum("DEL");
-						addedFamily.setDNSCode("DUP");
+						addedFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 						addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 						addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
 						addedFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
@@ -526,7 +529,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					{
 						//added family has the correct ref #, so dup family is the duplicate
 						dupFamily.setONCNum("DEL");
-						dupFamily.setDNSCode("DUP");
+						dupFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 						dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 						dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
 						dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());

@@ -157,7 +157,7 @@ public class ServerUserDB extends ServerPermanentDB
 			UserPreferences newPrefs = updatedUser.getPreferences();
 			currPrefs.setFontSize(newPrefs.getFontSize());
 			currPrefs.setWishAssigneeFilter(newPrefs.getWishAssigneeFilter());
-			currPrefs.setFamilyDNSFilter(newPrefs.getFamilyDNSFilter());
+			currPrefs.setFamilyDNSFilterCode(newPrefs.getFamilyDNSFilterCode());
 			
 			bSaveRequired = true;
 			

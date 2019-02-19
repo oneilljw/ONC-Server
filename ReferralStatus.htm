@@ -404,7 +404,9 @@
     }
     
     function addTableRow(family, table, buttontext)
-    {    		
+    {   
+    		console.log(family);
+    		
         if (!document.getElementsByTagName) return;
        
         var fstatus;
@@ -436,7 +438,7 @@
         		mealstatus = family.mealStatus;
         	
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.lastNoteStatus,
-        						family.DNSCode, fstatus, dstatus, mealstatus];
+        						family.dnsCodeAcronym, fstatus, dstatus, mealstatus];
         
         var cellwidth = ['54px', '152px', '160px', '56px', '56px','128px', '128px', '128px', '54px'];
         
@@ -471,11 +473,11 @@
         
         //create a dns button, if necessary in column 5
         var cell = document.createElement("td");
-        if(family.DNSCode.length !== 0)
+        if(family.dnsCodeID > -1)
         {	
         		var dnsbtn = document.createElement("button");
         		dnsbtn.style.width = cellwidth[col++];
-        		dnsbtn.innerHTML = family.DNSCode;
+        		dnsbtn.innerHTML = family.dnsCodeAcronym;
         		dnsbtn.onclick=function() {dnsCode(family);};
         		cell.appendChild(dnsbtn);
     		}
@@ -509,7 +511,7 @@
 		{
 			row.style.backgroundColor = "Yellow";
 		}
-		else if(table=== document.getElementById('cyTable') && family.DNSCode.length !== 0)
+		else if(table=== document.getElementById('cyTable') && family.dnsCodeID > -1)
 			row.style.backgroundColor = "Red";
         
         tabBody.appendChild(row);
@@ -634,7 +636,7 @@
 		
 		document.getElementById("dnsheader").textContent = 'DNS Code for ' + family.HOHLastName + ' family';
 		
-		var codeparams = "code=" + family.DNSCode + "&callback=?";
+		var codeparams = "code=" + family.dnsCodeID + "&callback=?";
 		$.getJSON('dnscode', codeparams, function(dnsCode)
 		{
 			document.getElementById('dnslegend').textContent = dnsCode.acronym + ' - ' + dnsCode.name;
@@ -1007,8 +1009,8 @@
        	<th class='onccol'>ONC #</th>
        	<th class='fncol'>First Name</th>
        	<th class='lncol'>Last Name</th>
-       	<th class='btncol'>Notes</th>
-       	<th class='btncol'>Codes</th>
+       	<th class='btncol'>Note</th>
+       	<th class='btncol'>Code</th>
         	<th class='statcol'>Family Status</th>
         	<th class='statcol'>Gift Status</th>
         	<th class='statcol'>Meal Status</th>
@@ -1041,8 +1043,8 @@
        	<th class='onccol'>ONC #</th>
        	<th class='fncol'>First Name</th>
        	<th class='lncol'>Last Name</th>
-       	<th class='btncol'>Notes</th>
-       	<th class='btncol'>Codes</th>
+       	<th class='btncol'>Note</th>
+       	<th class='btncol'>Code</th>
         	<th class='statcol'>Family Status</th>
         	<th class='statcol'>Gift Status</th>
         	<th class='statcol'>Meal Status</th>

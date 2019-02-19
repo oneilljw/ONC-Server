@@ -17,6 +17,7 @@ import java.util.TimeZone;
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
+import ourneighborschild.DNSCode;
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.FamilyStatus;
 import ourneighborschild.MealStatus;
@@ -57,6 +58,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerAdultDB adultDB;
 	private static ServerMealDB mealDB;
 	private static ServerGlobalVariableDB globalDB;
+	private static ServerDNSCodeDB dnsCodeDB;
 	
 	private static ClientManager clientMgr;
 	
@@ -120,6 +122,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		userDB = ServerUserDB.getInstance();
 		mealDB = ServerMealDB.getInstance();
 		globalDB = ServerGlobalVariableDB.getInstance();
+		dnsCodeDB = ServerDNSCodeDB.getInstance();
 
 		clientMgr = ClientManager.getInstance();
 	}
@@ -183,7 +186,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//can only happen if loggedInUser permission > AGENT. If the requested agent is
 			//the logged-in user and their permissions are higher then Agent return all families
 			for(ONCFamily f : searchList)
-				responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
+				responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
+									ServerNoteDB.lastNoteStatus(year, f.getID())));
+			
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
 				reqAgentID >= 0 && reqGroupID < 0)
@@ -192,7 +197,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the agent.
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == reqAgentID)
-					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f,dnsCodeDB.getDNSCode(f.getDNSCode()), 
+							ServerNoteDB.lastNoteStatus(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
 				reqAgentID < 0 && reqGroupID >= 0)
@@ -201,7 +207,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the group.
 			for(ONCFamily f : searchList)
 				if(f.getGroupID() == reqGroupID)
-					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
+											ServerNoteDB.lastNoteStatus(year, f.getID())));
 			
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
@@ -211,7 +218,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//return all referrals from the group.
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
+										ServerNoteDB.lastNoteStatus(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
 				reqAgentID < 0 && reqGroupID >= 0)
@@ -224,7 +232,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				for(ONCFamily f : searchList)
 				{
 					if(f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
+						responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
+												ServerNoteDB.lastNoteStatus(year, f.getID())));
 				}
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
@@ -235,7 +244,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//regardless of group. 
 			for(ONCFamily f : searchList)
 				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
+											ServerNoteDB.lastNoteStatus(year, f.getID())));
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
 				 reqAgentID >= 0 && reqGroupID >=0)
@@ -251,14 +261,16 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{	
 				for(ONCFamily f : searchList)
 					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
+						responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
+												ServerNoteDB.lastNoteStatus(year, f.getID())));
 			}
 			else if(reqAgentID != loggedInUser.getID() && reqAgent.isInGroup(reqGroupID) && 
 					reqGroup.groupSharesInfo())
 			{	
 				for(ONCFamily f : searchList)
 					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, ServerNoteDB.lastNoteStatus(year, f.getID())));
+						responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
+												ServerNoteDB.lastNoteStatus(year, f.getID())));
 			}
 		}
 /*		
@@ -478,7 +490,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
 			{
-				if(!f.getDNSCode().isEmpty() || !isNumeric(f.getONCNum())) { dns++; }
+				if(f.getDNSCode() > -1 || !isNumeric(f.getONCNum())) { dns++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Unverified) { served++; unverified++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Waitlist) { served++; waitlist++; }
 				else if(f.getFamilyStatus() == FamilyStatus.Verified) { served++; verified++; }
@@ -500,7 +512,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
 			{
-				if(f.getDNSCode().isEmpty() && isNumeric(f.getONCNum()))
+				if(f.getDNSCode() == -1 && isNumeric(f.getONCNum()))
 				{
 					//served families only
 					if(f.getGiftStatus() == FamilyGiftStatus.NotRequested) { notreq++; }
@@ -533,7 +545,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
 			{
-				if(f.getDNSCode().isEmpty() && isNumeric(f.getONCNum()))
+				if(f.getDNSCode() == -1 && isNumeric(f.getONCNum()))
 				{
 					//served families only
 					if(f.getMealStatus() == MealStatus.None) { notreq++; }
@@ -554,7 +566,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
 			{
-				if(f.getDNSCode().isEmpty() && isNumeric(f.getONCNum()))
+				if(f.getDNSCode() == -1 && isNumeric(f.getONCNum()))
 				{
 					//served families only
 					served++;
@@ -625,11 +637,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			if(currFam != null && 
 				(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
 				 currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
-				 !currFam.getDNSCode().equals(updatedFamily.getDNSCode())))
+				  currFam.getDNSCode() != updatedFamily.getDNSCode()))
 			{
-				
+				DNSCode updatedFamCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
 				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-						updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(), "Status Changed", updatedFamily.getChangedBy(), true);
+						updatedFamily.getGiftStatus(), "", updatedFamCode.getAcronym(), "Status Changed", updatedFamily.getChangedBy(), true);
 				
 				updatedFamily.setDeliveryID(histItem.getID());
 			}
@@ -667,8 +679,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			}
 			
 			//add a history item so change can be tracked. Changed by is the web user who made the change
+			DNSCode famDNSCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
 			ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-								updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(), updateNote, wc.getWebUser().getLNFI(), true);
+								updatedFamily.getGiftStatus(), "", famDNSCode.getAcronym(), updateNote, wc.getWebUser().getLNFI(), true);
 			updatedFamily.setDeliveryID(histItem.getID());
 			
 			fAL.set(index, updatedFamily);
@@ -775,13 +788,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				//if family was added successfully, add the family history object 
 				//and update the family history object id
+				DNSCode famDNSCode = dnsCodeDB.getDNSCode(addedFam.getDNSCode());
 				ONCFamilyHistory famHistory = new ONCFamilyHistory(-1, addedFam.getID(), 
 																addedFam.getFamilyStatus(),
 																addedFam.getGiftStatus(),
 																"", "Family Referred thru Britepaths", 
 																addedFam.getChangedBy(), 
 																Calendar.getInstance(TimeZone.getTimeZone("UTC")),
-																addedFam.getDNSCode());
+																famDNSCode.getAcronym());
 			
 				ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, famHistory, false);
 				if(addedFamHistory != null)
@@ -946,7 +960,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				//family to check is a duplicate, mark them as such and notify clients
 				//update the other. Use reference # to determine
 				famToCheck.setONCNum("DEL");
-				famToCheck.setDNSCode("DUP");
+				famToCheck.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 				famToCheck.setStoplightPos(FAMILY_STOPLIGHT_RED);
 				famToCheck.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
 				famToCheck.setStoplightChangedBy(user.getLNFI());
@@ -1004,11 +1018,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			List<ONCAdult> adultList = adultDB.getAdultsInFamily(year, fam.getID());
 			ONCWebAgent famAgent = userDB.getWebAgent(fam.getAgentID());
 			ONCMeal famMeal = fam.getMealID() > -1 ? mealDB.getMeal(year,  fam.getMealID()) : null;
+			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fam.getDNSCode());
 			
 			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,
 													ServerRegionDB.getRegion(fam.getRegion()),
 													ServerGroupDB.getGroup(fam.getGroupID()).getName(),
-													childList, adultList, famAgent, famMeal);
+													childList, adultList, famAgent, famMeal, famDNSCode);
 			
 			response = gson.toJson(webFam, ONCWebsiteFamilyExtended.class);
 		}
@@ -1096,8 +1111,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    		{
 	    			//create a family history change
 	    			fam.setGiftStatus(newGiftStatus);
+	    			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fam.getDNSCode());
 	    			ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
-						"", fam.getDNSCode(), "Gift Status Change", fam.getChangedBy(), true);
+						"", famDNSCode.getAcronym(), "Gift Status Change", fam.getChangedBy(), true);
 	    			fam.setDeliveryID(addedHistItem.getID());
 	    		}
 	    	

@@ -263,7 +263,7 @@ public class PriorYearDB extends ServerSeasonalDB
 			
 			if(lyfam != null && isNumeric(lyfam.getONCNum()) && 
 				(lyONCFamONCNum = Integer.parseInt(lyfam.getONCNum())) >= minONCNum &&
-				 lyONCFamONCNum <= maxONCNum && lyfam.getDNSCode().isEmpty())	
+				 lyONCFamONCNum <= maxONCNum && lyfam.getDNSCode() == -1)	
 			{
 				ONCChildGift lyChildWish1 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(0));
 				ONCChildGift lyChildWish2 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(1));

@@ -278,7 +278,7 @@
     				document.getElementById('onc').value= famJson.oncNum;
 				document.getElementById('ref').value= famJson.targetID;
 				document.getElementById('batch').value= famJson.BatchNum;
-				document.getElementById('dns').value= famJson.DNSCode;
+				document.getElementById('dns').value= famJson.dnsCodeAcronym;
     				document.getElementById('hohfn').value= famJson.HOHFirstName;
 				document.getElementById('hohln').value= famJson.HOHLastName;
 				document.getElementById('famstat').value= famJson.fstatus;
@@ -347,7 +347,7 @@
 					updateWishTable(wishJson);
 				});
 						
-				if(famJson.DNSCode !== '')
+				if(famJson.dnsCodeID > -1)
 					document.getElementById('faminfofs').style.backgroundColor = "#FF3333";
 				else if(famJson.bGiftCardOnly === true)
 					document.getElementById('faminfofs').style.backgroundColor = "#00FF00";

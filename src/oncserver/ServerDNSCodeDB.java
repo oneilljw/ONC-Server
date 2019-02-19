@@ -49,21 +49,47 @@ public class ServerDNSCodeDB extends ServerPermanentDB
 		return response;	
 	}
 	
+	DNSCode getDNSCode(int id)
+	{
+		int index = 0;
+		while(index < dnsCodeList.size() && dnsCodeList.get(index).getID() != id)
+			index++;
+		
+		return index < dnsCodeList.size() ? dnsCodeList.get(index) : new DNSCode();
+	}
+	
+	DNSCode getDNSCode(String acronym)
+	{
+		int index = 0;
+		while(index < dnsCodeList.size() && !dnsCodeList.get(index).getAcronym().equals(acronym))
+			index++;
+		
+		return index < dnsCodeList.size() ? dnsCodeList.get(index) : new DNSCode();
+	}
+	
 	static HtmlResponse getDNSCodeJSONP(String code, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		
-		int index = 0;
-		while(index < dnsCodeList.size() && !dnsCodeList.get(index).getAcronym().equals(code))
-			index++;
-		
 		String response;
-		if(index < dnsCodeList.size())
-			response = gson.toJson(dnsCodeList.get(index), DNSCode.class);
-		else
-			response = gson.toJson(new DNSCode(), DNSCode.class);
+		if(isNumeric(code))
+		{
+			int codeID = Integer.parseInt(code);
+			int index = 0;
+			while(index < dnsCodeList.size() && dnsCodeList.get(index).getID() != codeID)
+				index++;
 		
-
+			if(index < dnsCodeList.size())
+				response = gson.toJson(dnsCodeList.get(index), DNSCode.class);
+			else
+				response = gson.toJson(new DNSCode(), DNSCode.class);
+		}
+		else
+		{
+			DNSCode badCodeReq = new DNSCode(-1, "BAD", "Invalid DNS Code Request", "Non Numeric DNS Code Request cannnot be processed");
+			response = gson.toJson(badCodeReq, DNSCode.class);
+		}
+		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
