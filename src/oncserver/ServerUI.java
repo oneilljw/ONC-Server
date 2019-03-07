@@ -178,6 +178,8 @@ public class ServerUI extends JPanel implements ClientListener
    		websiteClientTable.setModel(webClientTM);
     	
    		websiteClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+   
+        websiteClientTable.getColumnModel().getColumn(CLIENT_TIMESTAMP_COL).setCellRenderer(tableCellRenderer);
 
    		for(int i=0; i < colWidths.length; i++)
    		{
@@ -475,7 +477,7 @@ public class ServerUI extends JPanel implements ClientListener
         		else if (col == CLIENT_HB_COL)
         			return dc.getClientHeartbeat().toString().substring(0,1);
         		else if (col == CLIENT_YEAR_COL)
-        			return dc.getClientState() == ClientState.DB_Selected ? Integer.toString(dc.getYear()) : "None";
+        			return dc.getClientState() == ClientState.DB_Selected ? dc.getYear() : -1;
         		else if (col == CLIENT_VER_COL)
         			return dc.getClientVersion();
         		else if (col == CLIENT_TIMESTAMP_COL)
@@ -488,7 +490,7 @@ public class ServerUI extends JPanel implements ClientListener
         @Override
         public Class<?> getColumnClass(int column)
         {
-        		if(column == CLIENT_ID_COL)
+        		if(column == CLIENT_ID_COL || column == CLIENT_YEAR_COL)
         			return Integer.class;
         		else if(column == CLIENT_TIMESTAMP_COL)
         			return Date.class;
@@ -529,27 +531,27 @@ public class ServerUI extends JPanel implements ClientListener
  
         public Object getValueAt(int row, int col)
         {
-        	WebClient wc = clientMgr.getWebClientList().get(row);
-        	ONCUser u = wc.getWebUser();
-        	Calendar timestamp = Calendar.getInstance();
+        		WebClient wc = clientMgr.getWebClientList().get(row);
+        		ONCUser u = wc.getWebUser();
+        		Calendar timestamp = Calendar.getInstance();
         	
-        	if(col == CLIENT_ID_COL)  
-        		return "0";
-        	else if(col == CLIENT_FN_COL)
-        		return u != null ? u.getFirstName() : "Anonymous";
-        	else if(col == CLIENT_LN_COL)
-        		return u != null ? u.getLastName() : "Anonymous";
-        	else if(col == CLIENT_PERM_COL)
-        		return u != null ? u.getPermission().toString() : "U";
-        	else if(col == CLIENT_STATE_COL)
-        		return wc.getClientState();
-        	else if (col == CLIENT_HB_COL)
-        		return "O";
-        	else if (col == CLIENT_YEAR_COL)
-            	return Integer.toString(DBManager.getCurrentSeason());
-        	else if (col == CLIENT_VER_COL)
-        		return "Web";
-        	else if (col == CLIENT_TIMESTAMP_COL)
+        		if(col == CLIENT_ID_COL)  
+        			return "0";
+        		else if(col == CLIENT_FN_COL)
+        			return u != null ? u.getFirstName() : "Anonymous";
+        		else if(col == CLIENT_LN_COL)
+        			return u != null ? u.getLastName() : "Anonymous";
+        		else if(col == CLIENT_PERM_COL)
+        			return u != null ? u.getPermission().toString() : "U";
+        		else if(col == CLIENT_STATE_COL)
+        			return wc.getClientState().toString();
+        		else if (col == CLIENT_HB_COL)
+        			return "O";
+        		else if (col == CLIENT_YEAR_COL)
+        			return u != null ?  u.getClientYear() : -1;
+        		else if (col == CLIENT_VER_COL)
+        			return "Web";
+        		else if (col == CLIENT_TIMESTAMP_COL)
         	{
         		timestamp.setTimeInMillis(wc.getloginTimeStamp());
             	return sdf.format(timestamp.getTime());
@@ -562,7 +564,12 @@ public class ServerUI extends JPanel implements ClientListener
         @Override
         public Class<?> getColumnClass(int column)
         {
-        	return String.class;
+        		if(column == CLIENT_ID_COL || column == CLIENT_YEAR_COL)
+        			return Integer.class;
+        		else if(column == CLIENT_TIMESTAMP_COL)
+        			return Date.class;
+        		else
+        			return String.class;
         }
  
         public boolean isCellEditable(int row, int col)

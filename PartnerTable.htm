@@ -4,6 +4,7 @@
   <title>ONC Gift Partners</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <script src="editprofile.js"></script>
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script>
 	var currYear;
@@ -78,22 +79,7 @@
     			}
     		});    	
     }
-    
-    function addComboBoxOption(combobox, text, value)
-	{
-		var option = document.createElement("option");
-		option.text = text;
-    		option.value = value;
-    		try 
-    		{
-        		combobox.add(option, null); //Standard 
-    		}
-    		catch(error)
-    		{
-        		combobox.add(option); // IE only
-    		}
-	}
-	
+   
     function updateForYearSelection()
     {
     		//get selected year and update session store
@@ -200,29 +186,6 @@
         updatePartnerTable();
     }
     
-    function showEditProfileDialog() 
-    {
-    		var params =	 "callback=?";
-			
-    		$.getJSON('getuser', params, function(user)
-    		{
-    			userJson = user;
-    			if(userJson.hasOwnProperty('error'))
-      		{
-				window.location=document.getElementById('timeoutanchor').href;
-      		}
-    			else if(userJson.lastname !== '')
-    			{
-    				document.getElementById('userfirstname').value = user.firstname;
-    	    			document.getElementById('userlastname').value = user.lastname;
-    	    			document.getElementById('userorg').value = user.org;
-    	    			document.getElementById('usertitle').value = user.title;
-    	    			document.getElementById('useremail').value = user.email;
-    	    			document.getElementById('userphone').value = user.phone;
-    			}
-    		});
-    }
-    
     function onChangePW() 
     {
     		if(validate())
@@ -244,55 +207,7 @@
     			window.location=document.getElementById('closepopup').href;
     		}
     }
-    
-    function onUpdateProfile()
-    {
-    		if(document.getElementById('userfirstname').value !== userJson.firstname ||
-    			document.getElementById('userlastname').value !== userJson.lastname ||
-    		 	document.getElementById('userorg').value !== userJson.org ||
-    		  	document.getElementById('usertitle').value !== userJson.title ||
-    		   	document.getElementById('useremail').value !== userJson.email ||
-    		    document.getElementById('userphone').value !== userJson.phone)
-    	{
-    		var params = "firstname=" + document.getElementById('userfirstname').value
-			+ "&" + "lastname=" + document.getElementById('userlastname').value
-			+ "&" + "org=" + document.getElementById('userorg').value
-			+ "&" + "title=" + document.getElementById('usertitle').value
-			+ "&" + "email=" + document.getElementById('useremail').value
-			+ "&" + "phone=" + document.getElementById('userphone').value
-			+ "&" + "callback=?"
-		
-			$.getJSON('updateuser', params, function(mssgJson)
-			{
-				if(mssgJson.hasOwnProperty('error'))
-					window.location=document.getElementById('timeoutanchor').href;
-				else
-					document.getElementById('message').textContent= mssgJson.message;
-			});
-		    		
-		    window.location=document.getElementById('closepopup').href;
-		}
-		else
-		{
-		    onProfileNotChanged();
-		}
-    }
-    
-    function onProfileNotChanged()
-    {
-		var params = {}	
-		$.post('profileunchanged', params, function(response)
-		{
-			if(data.hasOwnProperty('error'))
-				window.location=document.getElementById('timeoutanchor').href;
-			else
-				document.getElementById('message').textContent= response.message;
-			
-		}, "jsonp");
-		
-		window.location=document.getElementById('closepopup').href;
-    }
-    
+
     function onCancel()
     {
 		window.location=document.getElementById('closepopup').href;
@@ -393,18 +308,6 @@
         .countcol { width: 32px; }
         .actcol { width: 56px; }
         
-        /* only styling below here */
-        table { border-collapse: collapse; }       
-        th, td { border: 1px solid gray; }
-        th 
-        {
-            background-color: lightgrey;
-            border-width: 1px;
-        }
-        td { border-width: 1px; }
-        tr:first-child td { border-top-width: 0; }
-        tr:nth-child(odd) { background-color: #ffffff; }
-        tr:nth-child(even) { background-color: lightgrey; } 
         .controlbar
 		{
 			width:90%;
@@ -568,28 +471,42 @@
   </div>
   <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
-	<div class='inner'>
+	  <div class='innerextended'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
 		  <img class='logoimg' src="onclogo">
 		  <span class='logospan'>Update ONC Profile</span>
-		</div>
-    	<p><label class='lbl_ep' for="userfirstname">First Name:</label>
-    	<input class='inp_ep' type="text" id="userfirstname" name="firstname" autofocus></p>
-    	<p><label class='lbl_ep' for="userlastname">Last Name:</label>
-    	<input class='inp_ep' type="text" id="userlastname" name="lastname"><br></p>
-    	<p><label class='lbl_ep' for="userorg" >Organization:</label>
-    	<input class='inp_ep' type="text" id="userorg" name="org"></p>
-    	<p><label class='lbl_ep' for="usertitle">Title:</label>
-    	<input class='inp_ep' type="text" id="usertitle" name="title"><br></p>
-    	<p><label class='lbl_ep' for="useremail">E-Mail:</label>
-    	<input class='inp_ep' type="text" id="useremail" name="email"></p>
-    	<p><label class='lbl_ep' for="userphone">Phone:</label>
-    	<input class='inp_ep' type="text" id="userphone" name="phone"><br></p>
-    	<div id='buttonbar'>
-    	  <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
-      <button id="update" onclick="onUpdateProfile()">Update</button>
-    	</div> 
+	  </div>
+	  <div class='greenbackground'>
+	  <fieldset class="fieldset-auto-width">
+  		<legend class="legend-major">Contact Information</legend>
+  		<div class= 'profilediv'>
+    	  		<label for="userfirstname">Name:</label>
+    	  		<input id='userfirstname' type="text" size="16" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="16" placeholder="Last Name" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="userorg" >Organization:</label>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="usertitle" >Title:</label>
+    	  		<input id='usertitle' type="text" size="33" placeholder="Title" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="useremail" >Email:</label>
+    	  		<input id='useremail' type="text" size="35" placeholder="Email address" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="userphone" >Phone:</label>
+    	  		<input id='userphone' type="text" size="22" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  </fieldset>
+    	  </div>
+    	  <div id='buttonbar'>
+    	    <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" value='unchanged' style="background-color:Grey" onclick="onUpdateProfile(this)" disabled>Update</button>
+    	  </div> 
 	</div>
   </div>
 <!-- Change Password Dialog -->

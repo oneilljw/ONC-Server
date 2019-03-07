@@ -318,6 +318,9 @@ public class LoginHandler extends ONCWebpageHandler
 	    		
 	    		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 	    		serverUser.setLastLogin(calendar.getTimeInMillis());
+	    		
+	    		serverUser.setClientYear(DBManager.getCurrentSeason());
+	    		
 	    		userDB.requestSave();
 	    		
 	    		ONCUser webUser = serverUser.getUserFromServerUser();

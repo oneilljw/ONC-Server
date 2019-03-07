@@ -20,7 +20,7 @@ import com.google.gson.reflect.TypeToken;
 public class ServerChildDB extends ServerSeasonalDB
 {
 	private static final int CHILD_DB_HEADER_LENGTH = 12;
-	private static final int NUMBER_WISHES_PER_CHILD = 3;
+	private static final int NUMBER_GIFTS_PER_CHILD = 3;
 	
 	private static List<ChildDBYear> childDB;
 	private static ServerChildDB instance = null;
@@ -254,47 +254,6 @@ public class ServerChildDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		ONCChild deletedChild = gson.fromJson(childjson, ONCChild.class);
 		
-		
-		//check for and decrement partner wish assignment counts
-		//and remove wishes for the deleted child
-		ServerChildGiftDB cwDB = null;
-		ServerPartnerDB serverPartnerDB = null;
-		try {
-			cwDB = ServerChildGiftDB.getInstance();
-			serverPartnerDB = ServerPartnerDB.getInstance();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		if(cwDB != null)
-		{
-			//decrement partner wish assignment counts
-			for(int wn= 0; wn < NUMBER_WISHES_PER_CHILD; wn++)
-			{
-				int childWishID = deletedChild.getChildGiftID(wn);
-				
-				if(childWishID != -1)	//does the wish exist?
-				{
-					ONCChildGift cw = ServerChildGiftDB.getGift(year, childWishID);
-
-					//if wish has been assigned, then we have to decrement the partner assignee count
-					if(serverPartnerDB != null && cw != null && 
-							cw.getGiftStatus().compareTo(GiftStatus.Assigned) >= 0)
-					{
-						int wishPartnerID = cw.getPartnerID();
-						serverPartnerDB.decrementGiftsAssignedCount(year, wishPartnerID);
-					}
-				}
-			}
-			
-			//remove the child's wishes from the child wish data base
-			cwDB.deleteChildGifts(year, deletedChild.getID());
-		}
-		
 		//find and remove the deleted child from the data base
 		ChildDBYear childDBYear = childDB.get(DBManager.offset(year));
 		List<ONCChild> cAL = childDBYear.getList();
@@ -305,6 +264,42 @@ public class ServerChildDB extends ServerSeasonalDB
 		
 		if(index < cAL.size())
 		{
+			//child found in data base. Check for and decrement partner wish assignment counts
+			//and remove wishes for the about to be deleted child
+			ServerChildGiftDB cwDB = null;
+			ServerPartnerDB serverPartnerDB = null;
+			try 
+			{
+				cwDB = ServerChildGiftDB.getInstance();
+				serverPartnerDB = ServerPartnerDB.getInstance();
+				
+				//decrement partner gift assignment counts
+				for(int gn= 0; gn < NUMBER_GIFTS_PER_CHILD; gn++)
+				{
+					if(deletedChild.getChildGiftID(gn) != -1)	//does the gift exist?
+					{
+						ONCChildGift cg = ServerChildGiftDB.getGift(year, deletedChild.getChildGiftID(gn));
+
+						//if gift has been assigned, but not yet delivered or any subsequent status,
+						//decrement the partner assignee count
+						if(cg != null && cg.getGiftStatus() == GiftStatus.Assigned)
+							serverPartnerDB.decrementGiftsAssignedCount(year, cg.getPartnerID());
+					}
+				}
+				
+				//remove the child's gifts from the child gift data base
+				cwDB.deleteChildGifts(year, deletedChild.getID());
+			} 
+			catch (FileNotFoundException e) 
+			{
+				
+			} 
+			catch (IOException e) 
+			{
+				
+			}
+			
+			//now that we've handled assignment counts, remove the child from the database
 			cAL.remove(index);
 			childDBYear.setChanged(true);
 			return "DELETED_CHILD" + childjson;

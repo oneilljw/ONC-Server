@@ -70,6 +70,10 @@
 {
 	width: 180px;
 }
+.inp_profile
+{
+	width: 100px;
+}
 .lbl_pw
 {
     width: 10em;
@@ -122,3 +126,46 @@
 	display: block;
 	margin: 0px 10px 0px 0px;
 }
+.innerextended 
+{
+	width: 350px;
+	min-height: 100px;
+	height: auto;
+	position: relative;
+	margin: 10% auto;
+	padding: 5px 10px 15px 10px;
+	border-radius: 10px;
+	background: #fff;
+	background: -moz-linear-gradient(#fff, #999);
+	background: -webkit-linear-gradient(#fff, #999);
+	background: -o-linear-gradient(#fff, #999);
+}
+.fieldset-auto-width
+{
+    display: inline-block;
+}
+.profilediv
+{
+	margin-bottom: 6px;
+}
+.greenbackground
+{
+  	background-color: #3CB371;
+  	padding-bottom: 10px;
+}
+/* only styling below here */
+table { border-collapse: collapse; }       
+th 
+{
+	background-color: lightgrey;
+	border: 1px solid gray;
+    border-width: 1px;
+}
+td
+{
+	border: 1px solid gray;
+	border-width: 1px; 
+}
+tr:first-child td { border-top-width: 0; }
+tr:nth-child(odd) { background-color: #ffffff; }
+tr:nth-child(even) { background-color: lightgrey; } 

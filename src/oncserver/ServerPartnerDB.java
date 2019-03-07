@@ -29,6 +29,8 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	
 	private static ServerPartnerDB instance = null;
 	
+	private ClientManager clientMgr;
+	private ServerGlobalVariableDB globalDB;
 	private static SignUpGeniusClothingImporter signUpClothingImporter;
 	
 	private ServerPartnerDB() throws FileNotFoundException, IOException
@@ -60,6 +62,9 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			else
 				partnerDBYear.setNextID(nextID);
 		}
+		
+		clientMgr = ClientManager.getInstance();
+		globalDB = ServerGlobalVariableDB.getInstance();
 	}
 	
 	public static ServerPartnerDB getInstance() throws FileNotFoundException, IOException
@@ -250,17 +255,25 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			index++;
 		
 		//If partner is located and the updated partner has been changed, replace the current 
-		//partner with the update. Do not update the ornament request field if the current
-		//partners status is CONFIRMED
+		//partner with the update. A partner's status can only be changed from confirmed to a lesser
+		//status if their assigned count is zero. And, the request count can never be less then the
+		//assigned count
 		if(index < oAL.size() && !doPartnersMatch((currPartner = oAL.get(index)), updatedPartner))
 		{
-			//check if a change to the number of requested ornaments is allowed
-			if(currPartner.getStatus() == STATUS_CONFIRMED && 
-				currPartner.getNumberOfOrnamentsRequested() > 0)
+			//check if a change to the partner status is allowed
+			int currNumOrn = currPartner.getNumberOfOrnamentsAssigned() + currPartner.getNumberOfOrnamentsDelivered();
+			if(currPartner.getStatus() == STATUS_CONFIRMED && updatedPartner.getStatus() != STATUS_CONFIRMED &&
+				currNumOrn > 0)	
 			{
-				updatedPartner.setStatus(currPartner.getStatus());
-				updatedPartner.setNumberOfOrnamentsRequested(currPartner.getNumberOfOrnamentsRequested());	
+				updatedPartner.setStatus(currPartner.getStatus());	
 			}
+			
+			//check to see if a reduction to the number of ornaments requested must be modified to
+			//be no less then the sum of ornaments already assigned and delivered to the partner
+			if(currNumOrn > updatedPartner.getNumberOfOrnamentsRequested())
+				updatedPartner.setNumberOfOrnamentsRequested(currNumOrn);
+			else
+				updatedPartner.setNumberOfOrnamentsRequested(currPartner.getNumberOfOrnamentsRequested());
 			
 			//check if partner address has changed and a region update check is required
 			if(currPartner.getHouseNum() != updatedPartner.getHouseNum() ||
@@ -270,6 +283,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			{
 				updateRegion(updatedPartner);	
 			}
+			
 			oAL.set(index, updatedPartner);
 			partnerDBYear.setChanged(true);
 			return updatedPartner;
@@ -307,31 +321,12 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		return c == 0;
 	}
 	
-	int updateRegion(ONCPartner updatedOrg)
+	void updateRegion(ONCPartner updatedOrg)
 	{
-		int reg = 0; //initialize return value to no region found
-		
 		//address is new or has changed, update the region
-		ServerRegionDB serverRegionDB = null;
-		try {
-			serverRegionDB = ServerRegionDB.getInstance();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		if(serverRegionDB != null)
-		{
-			RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(new Address(updatedOrg.getHouseNum(),
-											updatedOrg.getStreet(), "",  updatedOrg.getCity(),
-											 updatedOrg.getZipCode()));
-			updatedOrg.setRegion(rSC.getRegion());
-		}
-		
-		return reg;
+		RegionAndSchoolCode rSC = ServerRegionDB.searchForRegionMatch(new Address(updatedOrg.getHouseNum(),
+					updatedOrg.getStreet(), "",  updatedOrg.getCity(), updatedOrg.getZipCode()));
+		updatedOrg.setRegion(rSC.getRegion());
 	}
 	
 	@Override
@@ -479,40 +474,26 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		}	
 	}
 	
-	void incrementGiftActionCount(int year, ONCChildGift addedWish)
+	void incrementGiftActionCount(int year, ONCChildGift addedGift)
 	{	
 		PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
 		List<ONCPartner> partnerList = partnerDBYear.getList();
 		
-		//Find the the current partner being decremented
+		//Find the the current partner being incremented
 		int index = 0;
-		while(index < partnerList.size() && partnerList.get(index).getID() != addedWish.getPartnerID())
+		while(index < partnerList.size() && partnerList.get(index).getID() != addedGift.getPartnerID())
 			index++;
 		
 		//increment the gift received count for the partner being replaced
 		if(index < partnerList.size())
 		{  
 			//found the partner, now determine which field to increment
-			if(addedWish.getGiftStatus() == GiftStatus.Received)
+			if(addedGift.getGiftStatus() == GiftStatus.Received)
 			{
-				ServerGlobalVariableDB gvDB = null;
-				try 
-				{
-					gvDB = ServerGlobalVariableDB.getInstance();
-					boolean bReceviedBeforeDeadline = addedWish.getDateChanged().before(gvDB.getDateGiftsRecivedDealdine(year));
-					partnerList.get(index).incrementOrnReceived(bReceviedBeforeDeadline);
-				} 
-				catch (FileNotFoundException e) 
-				{
-					// TODO Auto-generated catch block
-				} 
-				catch (IOException e) 
-				{
-					// TODO Auto-generated catch block
-				}
-				
+				boolean bReceviedBeforeDeadline = addedGift.getDateChanged().before(globalDB.getDateGiftsRecivedDealdine(year));
+				partnerList.get(index).incrementOrnReceived(bReceviedBeforeDeadline);
 			}
-			else if(addedWish.getGiftStatus() == GiftStatus.Delivered)
+			else if(addedGift.getGiftStatus() == GiftStatus.Delivered)
 				partnerList.get(index).incrementOrnDelivered();
 			
 			partnerDBYear.setChanged(true);
@@ -522,16 +503,20 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	void decrementGiftsAssignedCount(int year, int partnerID)
 	{
 		PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
-		List<ONCPartner> oAL = partnerDBYear.getList();
+		List<ONCPartner> partnerList = partnerDBYear.getList();
 		int index=0;
-		while(index < oAL.size() && oAL.get(index).getID() != partnerID)
+		while(index < partnerList.size() && partnerList.get(index).getID() != partnerID)
 			index ++;
 		
-		//if partner was found, decrment the count. If not found, ignore the request
-		if(index < oAL.size())
+		//if partner was found, decrement the count. If not found, ignore the request. 
+		if(index < partnerList.size())
 		{
-			oAL.get(index).decrementOrnAssigned();
+			partnerList.get(index).decrementOrnAssigned();
 			partnerDBYear.setChanged(true);
+			
+			Gson gson = new Gson();
+			String response =  "UPDATED_PARTNER" + gson.toJson(partnerList.get(index), ONCPartner.class);
+			clientMgr.notifyAllInYearClients(year, response);
 		}
 	}
 

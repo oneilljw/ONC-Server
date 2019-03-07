@@ -4,11 +4,15 @@
   <title>ONC Family Referral Status</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <script src="editprofile.js"></script>
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script type="text/javascript"></script>
   <script>
 	var pyFamJson = [];
 	var cyFamJson = [];
+//	var userJson = {};
+//	var profileCBGroups = [];
+//	var profileTableGroups = [];
 	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;
 	
 	var NoteStatus = {NONE: -1,SENT: 1,READ: 2,RESPONDED: 3,LATE: 4};
@@ -94,6 +98,7 @@
     {
     		var pyGroupCBElem = document.getElementById('pygroups');
     		var cyGroupCBElem = document.getElementById('currgroups');
+    		var profileGroupCB = document.getElementById('groupselect');
     		
    	 	//get groups from server and place into the group comboboxes. agentid =-1 defaults
 		//to the logged in user
@@ -405,8 +410,6 @@
     
     function addTableRow(family, table, buttontext)
     {   
-    		console.log(family);
-    		
         if (!document.getElementsByTagName) return;
        
         var fstatus;
@@ -574,12 +577,14 @@
 			{
 				legend = 'On ' + formatDate(famNote.timeResponse) + ' ' + famNote.respondedBy + '. responded';
 				document.getElementById('responselegend').textContent = legend;
-				document.getElementById("responsesubmit").hidden = true;
+				document.getElementById("responsesubmit").style.backgroundColor='Gray';
+				document.getElementById("responsesubmit").disabled = true;
 				document.getElementById("notesresponse").disabled = true;
 			}
 			else
 			{
-				document.getElementById("responsesubmit").hidden = false;
+				document.getElementById("responsesubmit").style.backgroundColor='#336699';
+				document.getElementById("responsesubmit").disabled = false;
 				document.getElementById("notesresponse").disabled = false;
 			}
 			
@@ -613,7 +618,8 @@
     					var legend = 'On ' + formatDate(noteResponse.timeResponse) 
     								+ ' ' + noteResponse.respondedBy + '. responded';
     					document.getElementById('responselegend').textContent = legend;
-    					document.getElementById('responsesubmit').hidden = true;
+    					document.getElementById("responsesubmit").style.backgroundColor='Gray';
+    					document.getElementById("responsesubmit").disabled = true;
     					setLastNoteStatusResponded(noteResponse.ownerID);
 	    				updateCYTable();
     				}
@@ -665,30 +671,7 @@
     		else
     	   	 return false;
     }
-    
-    function showEditProfileDialog() 
-    {
-    		var params = "callback=?";
-			
-    		$.getJSON('getuser', params, function(user)
-    		{
-    			userJson = user;
-    			if(userJson.hasOwnProperty('error'))
-      		{
-				window.location=document.getElementById('timeoutanchor').href;
-      		}
-    			else if(userJson.lastname !== '')
-    			{
-    				document.getElementById('userfirstname').value = user.firstname;
-    	   		 	document.getElementById('userlastname').value = user.lastname;
-    	    			document.getElementById('userorg').value = user.org;
-    	    			document.getElementById('usertitle').value = user.title;
-    	    			document.getElementById('useremail').value = user.email;
-    	    			document.getElementById('userphone').value = user.phone;
-    			}
-   	 	});
-    }
-    
+     
     function onChangePW() 
     {
     		if(validate())
@@ -706,47 +689,6 @@
 	    		document.getElementById('verifypw').value = "";
     			window.location=document.getElementById('closepopup').href;
     		}
-    }
-    
-    function onUpdateProfile()
-    {
-    		if(document.getElementById('userfirstname').value !== userJson.firstname ||
-    			document.getElementById('userlastname').value !== userJson.lastname ||
-    		 	document.getElementById('userorg').value !== userJson.org ||
-    		  	document.getElementById('usertitle').value !== userJson.title ||
-    		   	document.getElementById('useremail').value !== userJson.email ||
-    		    document.getElementById('userphone').value !== userJson.phone)
-   	 	{
-    			var params = "firstname=" + document.getElementById('userfirstname').value
-			+ "&" + "lastname=" + document.getElementById('userlastname').value
-			+ "&" + "org=" + document.getElementById('userorg').value
-			+ "&" + "title=" + document.getElementById('usertitle').value
-			+ "&" + "email=" + document.getElementById('useremail').value
-			+ "&" + "phone=" + document.getElementById('userphone').value
-			+ "&" + "callback=?"
-		
-			$.getJSON('updateuser', params, function(mssgJson)
-			{
-				document.getElementById('message').textContent= mssgJson.message;
-			});
-		    		
-		    window.location=document.getElementById('closepopup').href;
-		}
-		else
-		{
-		    onProfileNotChanged();
-		}
-    }
-    
-    function onProfileNotChanged()
-    {
-		var params = {}	
-		$.post('profileunchanged', params, function(response)
-		{
-			document.getElementById('message').textContent= response.message;
-		}, "jsonp");
-		
-		window.location=document.getElementById('closepopup').href;
     }
     
     function onCancel()
@@ -846,19 +788,6 @@
         .lncol { width: 160px; }
         .btncol { width: 68px; }
         .statcol { width: 128px; }
-        
-        /* only styling below here */
-        table { border-collapse: collapse; }       
-        th, td { border: 1px solid gray; }
-        th 
-        {
-            background-color: lightgrey;
-            border-width: 1px;
-        }
-        td { border-width: 1px; }
-        tr:first-child td { border-top-width: 0; }
-        tr:nth-child(odd) { background-color: #ffffff; }
-        tr:nth-child(even) { background-color: lightgrey; } 
 		#newbar { text-align: right; }
 		.textDialog 
 		{
@@ -920,31 +849,9 @@
 		{
 			font-style: italic;
 		}
-		#notedlgbodydiv
-		{
-  			background-color: #3CB371;
-		}
-		.fieldset-auto-width
-		{
-        		 display: inline-block;
-        	}
         #responsesubmit
         {
    			float:right;
-		}
-		.innerextended 
-		{
-			width: 350px;
-			min-height: 100px;
-			height: auto;
-			position: relative;
-			margin: 10% auto;
-			padding: 5px 10px 15px 10px;
-			border-radius: 10px;
-			background: #fff;
-			background: -moz-linear-gradient(#fff, #999);
-			background: -webkit-linear-gradient(#fff, #999);
-			background: -o-linear-gradient(#fff, #999);
 		}
 		textarea 
 		{
@@ -1063,7 +970,7 @@
 		  <img class='logoimg' src="onclogo">
 		  <span class=logospan id="notesfamheader"></span>
 		</div>
-		<div id='notedlgbodydiv'>
+		<div class='greenbackground'>
 		<!-- This is the body of the dialog. -->
 		    <fieldset class="fieldset-auto-width">
 		      <legend id='noteslegend' class="legend-major">Note From ONC</legend>
@@ -1085,7 +992,7 @@
 		  <img class='logoimg' src="onclogo">
 		  <span class=logospan id="dnsheader"></span>
 		</div>
-		<div id='dnsdlgbodydiv'>
+		<div class='greenbackground'>
 		<!-- This is the body of the dialog. -->
 		    <fieldset class="fieldset-auto-width">
 		      <legend id='dnslegend' class="legend-major">DNS Code</legend>
@@ -1096,28 +1003,61 @@
   </div>  
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
-	<div class='inner'>
+	  <div class='innerextended'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
 		  <img class='logoimg' src="onclogo">
 		  <span class='logospan'>Update ONC Profile</span>
-		</div>
-    	<p><label class='lbl_ep' for="userfirstname">First Name:</label>
-    	<input class='inp_ep' type="text" id="userfirstname" name="firstname" autofocus></p>
-    	<p><label class='lbl_ep' for="userlastname">Last Name:</label>
-    	<input class='inp_ep' type="text" id="userlastname" name="lastname"><br></p>
-    	<p><label class='lbl_ep' for="userorg" >Organization:</label>
-    	<input class='inp_ep' type="text" id="userorg" name="org"></p>
-    	<p><label class='lbl_ep' for="usertitle">Title:</label>
-    	<input class='inp_ep' type="text" id="usertitle" name="title"><br></p>
-    	<p><label class='lbl_ep' for="useremail">E-Mail:</label>
-    	<input class='inp_ep' type="text" id="useremail" name="email"></p>
-    	<p><label class='lbl_ep' for="userphone">Phone:</label>
-    	<input class='inp_ep' type="text" id="userphone" name="phone"><br></p>
-    	<div id='buttonbar'>
-    	  <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
-      <button id="update" onclick="onUpdateProfile()">Update</button>
-    	</div> 
+	  </div>
+	  <div class='greenbackground'>
+	  <fieldset class="fieldset-auto-width">
+  		<legend class="legend-major">Contact Information</legend>
+  		<div class= 'profilediv'>
+    	  		<label for="userfirstname">Name:</label>
+    	  		<input id='userfirstname' type="text" size="16" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="16" placeholder="Last Name" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="userorg" >Organization:</label>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="usertitle" >Title:</label>
+    	  		<input id='usertitle' type="text" size="33" placeholder="Title" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="useremail" >Email:</label>
+    	  		<input id='useremail' type="text" size="35" placeholder="Email address" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="userphone" >Phone:</label>
+    	  		<input id='userphone' type="text" size="22" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  </fieldset>
+    	  </div>
+    	  <div class='greenbackground'>
+    	  <fieldset class="fieldset-auto-width">
+    	  <legend class="legend-major">School or Organization You Refer Families From</legend>
+    	    <div class='profilediv'> 
+  		  <select id="groupselect" title="School or Organization Name"></select>
+  		  <button type="button" onclick="addGroup()" title="Click to add school or organization">Add School/Org.</button>
+  		</div>
+  	<table id="grouptable" border="1">
+  		<thead>
+    			<tr>
+        			<th width='320px' >School or Organization</th>
+        			<th class='onccol'>Action</th>
+    			</tr>
+    		</thead>
+    		<tbody id="grouptbody">
+    		</tbody>
+	</table>
+  </fieldset>
+  </div>
+    	  <div id='buttonbar'>
+    	    <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" value='unchanged' style="background-color:Grey" onclick="onUpdateProfile(this)" disabled>Update</button>
+    	  </div> 
 	</div>
   </div>
 <!-- FAQ Dialog -->

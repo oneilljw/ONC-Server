@@ -28,6 +28,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	private static ServerChildGiftDB instance = null;
 
 	private static List<ChildGiftDBYear> childGiftDB;
+	private ServerFamilyDB familyDB;
 	private ServerChildDB childDB; //Reference used to update ChildGiftID's 
 	private ServerPartnerDB serverPartnerDB;
 	
@@ -54,6 +55,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			cwDBYear.setNextID(getNextID(cwDBYear.getList()));
 		}
 
+		familyDB = ServerFamilyDB.getInstance();
 		childDB = ServerChildDB.getInstance();
 		serverPartnerDB = ServerPartnerDB.getInstance();
 	}
@@ -85,7 +87,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		addedWish.setID(cwDBYear.getNextID());
 				
 		//retrieve the old wish being replaced
-		ONCChildGift oldWish = getGift(year, addedWish.getChildID(), addedWish.getGiftNumber());
+		ONCChildGift oldWish = getChildGift(year, addedWish.getChildID(), addedWish.getGiftNumber());
 		
 		//Add the new wish to the proper data base
 		cwDBYear.add(addedWish);
@@ -238,21 +240,11 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	
 	void processGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)
 	{
-		//test to see if the family status needs to change
-		ServerFamilyDB serverFamilyDB = null;
-		try {
-			serverFamilyDB = ServerFamilyDB.getInstance();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	
-		serverFamilyDB.checkFamilyGiftStatusAndGiftCardOnlyOnWishAdded(year, addedGift.getChildID());
+		//ask the family data base to check to see if the new gift changes either the family gift status or
+		//now qualifies the family as a gift card only family
+		familyDB.checkFamilyGiftStatusAndGiftCardOnlyOnGiftAdded(year, priorGift, addedGift);
 		
-		//test to see if assignee are changing, if the old wish exists	
+		//test to see if gift assignee is changing, if the prior gift exists	
 		if(priorGift != null && priorGift.getPartnerID() != addedGift.getPartnerID())
 		{
 			//assignee change -- need to adjust partner gift assignment counts in partner DB
@@ -356,21 +348,26 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			return cgAL.get(index);		
 	}
 	
-	ONCChildGift getGift(int year, int childid, int giftnum)
+	ONCChildGift getChildGift(int year, int childid, int giftnum)
 	{
 		List<ONCChildGift> cgAL = childGiftDB.get(DBManager.offset(year)).getList();	//Get the child gift list for the year
 		
-		int index = cgAL.size() -1;	//Set the element to the last child wish in the array
-		
-		//Search from the bottom of the data base for speed. New gifts are added to the bottom
-		while (index >= 0 && (cgAL.get(index).getChildID() != childid || 
-				cgAL.get(index).getGiftNumber() != giftnum))
+		//get the gift id from the Child data base
+		ONCChild child = childDB.getChild(year, childid);
+		if(child != null)
+		{	
+			//Search from the bottom of the data base for speed. New gifts are added to the bottom
+			int index = cgAL.size() -1;	//Set the element to the last child wish in the array
+			while(index >= 0 && cgAL.get(index).getID() != child.getChildGiftID(giftnum))
+//			while (index >= 0 && (cgAL.get(index).getChildID() != childid || 
+//				cgAL.get(index).getGiftNumber() != giftnum))
 			index--;
 		
-		if(index == -1)
-			return null;	//Gift wasn't found in data base
+			return index == -1 ? null : cgAL.get(index);
+
+		}
 		else
-			return cgAL.get(index);		
+			return null;
 	}
 	
 	List<PriorYearPartnerPerformance> getPriorYearPartnerPerformanceList(int newYear)

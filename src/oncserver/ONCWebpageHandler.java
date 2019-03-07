@@ -31,6 +31,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String UPDATE_HTML = "Edit.htm";
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
+	private static final String EDIT_PROFILE_JS_FILE = "EditProfile.js";
 	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
 	private static final String REGION_TABLE_HTML = "RegionTable.htm";
 	private static final String REGION_UPDATE_HTML = "Region.htm";
@@ -121,6 +122,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("oncstylesheet", readFileToByteArray(ONC_STYLE_SHEET_CSS));
 			webfileMap.put("oncdialogstylesheet", readFileToByteArray(ONC_DIALOG__STYLE_SHEET_CSS));
 			webfileMap.put("oncloginstylesheet", readFileToByteArray(ONC_LOGIN__STYLE_SHEET_CSS));
+			webfileMap.put("editprofile", readFileToByteArray(EDIT_PROFILE_JS_FILE));
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
 			
 			return "UPDATED_WEBPAGES";

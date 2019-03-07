@@ -1087,9 +1087,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	void checkFamilyGiftStatusAndGiftCardOnlyOnWishAdded(int year, int childid)
+	void checkFamilyGiftStatusAndGiftCardOnlyOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)
 	{
-		int famID = childDB.getChildsFamilyID(year, childid);
+		int famID = childDB.getChildsFamilyID(year, addedGift.getChildID());
 		
 		ONCFamily fam = getFamily(year, famID);
 		
@@ -1097,15 +1097,20 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//family gifts have already been packaged, then don't perform the test
 	    FamilyGiftStatus newGiftStatus;
 	    if(fam.getGiftStatus().compareTo(FamilyGiftStatus.Packaged) < 0)
-	    	newGiftStatus = getLowestGiftStatus(year, famID);
+	    		newGiftStatus = getLowestGiftStatus(year, famID);
 	    else
-	    	newGiftStatus = fam.getGiftStatus();
+	    		newGiftStatus = fam.getGiftStatus();
 	    
-	    //determine if the families gift card only status after adding the wish
-	    boolean bNewGiftCardOnlyFamily = isGiftCardOnlyFamily(year, famID);
-	   
-	    //if gift status has changed, update the data base and notify clients
-	    if(newGiftStatus != fam.getGiftStatus() || bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
+	    //determine if the families gift card only status could change after adding the wish.
+	    int giftCardGiftID = globalDB.getGiftCardID(year);
+	    boolean bGCStatusCouldChange = giftCardGiftID > -1 && 
+	    									((priorGift != null && priorGift.getGiftID() == giftCardGiftID) ^ 
+	    									(addedGift.getGiftID() == giftCardGiftID));
+	    
+	    //if gift status has changed or the gift card only status has changed update the data base
+	    //and notify clients
+	    if(newGiftStatus != fam.getGiftStatus() || 
+	    		(bGCStatusCouldChange && isGiftCardOnlyFamily(year, famID) != fam.isGiftCardOnly()))
 	    {
 	    		if(newGiftStatus != fam.getGiftStatus())
 	    		{
@@ -1117,8 +1122,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    			fam.setDeliveryID(addedHistItem.getID());
 	    		}
 	    	
-	    		if(bNewGiftCardOnlyFamily != fam.isGiftCardOnly())
-	    			fam.setGiftCardOnly(bNewGiftCardOnlyFamily);
+	    		if(bGCStatusCouldChange)
+	    			fam.setGiftCardOnly(isGiftCardOnlyFamily(year, famID));
 	    	
 	    		familyDB.get(DBManager.offset(year)).setChanged(true);
 	    	

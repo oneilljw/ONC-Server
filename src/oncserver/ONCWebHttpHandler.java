@@ -97,13 +97,19 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     				int agentID = Integer.parseInt((String) params.get("agentid"));
     	    		
         			//test to see if a default value should be added to the top of the group list
-        			boolean bDefault = false;
+        			boolean bDefault = false, bProfile = false;
         			if(params.containsKey("default"))
         			{
         				String includeDefault = (String) params.get("default");
         				bDefault = includeDefault.equalsIgnoreCase("on") ? true : false;
         			}
-    				htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, bDefault, (String) params.get("callback"));
+        			if(params.containsKey("profile"))
+        			{
+        				String includeProfile = (String) params.get("profile");
+        				bProfile = includeProfile.equalsIgnoreCase("yes") ? true : false;
+        			}
+    				htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, bDefault,
+    																bProfile, (String) params.get("callback"));
     			}
     			else
     				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
@@ -189,17 +195,14 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
     				ServerUserDB userDB = ServerUserDB.getInstance();
-    				ONCServerUser updatedUser = userDB.updateProfile(wc.getWebUser(), params);
+    				ONCUser updatedUser = userDB.updateProfile(wc.getWebUser(), params);
     			
     				if(updatedUser != null)	//test to see if the update was required and successful
     				{
     					//if successful, notify all Clients of update and return a message to the web user
     					Gson gson = new Gson();
-    					clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
-    											ONCUser.class));
-    				
-    					//return response
-    					responseJson =  "{\"message\":\"User Profile Review/Update Sucessful\"}";
+    					responseJson = gson.toJson(new ONCUser(updatedUser), ONCUser.class);
+    					clientMgr.notifyAllClients("UPDATED_USER" + responseJson);
     				}
     				else	//no change detected 
     					responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
@@ -845,14 +848,8 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				updatePartner.setCity(partnerMap.get("city"));
 				updatePartner.setZipCode(partnerMap.get("zipcode"));	
 				updatePartner.setHomePhone(partnerMap.get("phone"));
-				
-				if(!(currPartner.getStatus() == STATUS_CONFIRMED && 
-					currPartner.getNumberOfOrnamentsRequested() > 0))
-				{
-					updatePartner.setStatus(ONCWebPartnerExtended.getStatus(partnerMap.get("status")));
-					updatePartner.setNumberOfOrnamentsRequested(orn_req);
-				}
-				
+				updatePartner.setStatus(ONCWebPartnerExtended.getStatus(partnerMap.get("status")));
+				updatePartner.setNumberOfOrnamentsRequested(orn_req);				
 				updatePartner.setOther(partnerMap.get("genTA"));
 				updatePartner.setDeliverTo(partnerMap.get("delTA"));
 				updatePartner.setSpecialNotes(partnerMap.get("cyTA"));

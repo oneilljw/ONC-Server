@@ -3,6 +3,7 @@ package oncserver;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import ourneighborschild.ONCObject;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -93,5 +94,13 @@ public abstract class ONCServerDB
 	        sb.append(Character.toUpperCase(arr[i].charAt(0))).append(arr[i].substring(1)).append(" ");
 	             
 	    return sb.toString().trim();
-	}  
+	}
+	
+	String getStringParam(Map<String, Object> params, String key)
+	{
+		if(params.containsKey(key) && params.get(key) instanceof String && (String) params.get(key) != null)
+			return (String) params.get(key);
+		else
+			return "";
+	}
 }

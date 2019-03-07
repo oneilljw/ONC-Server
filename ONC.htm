@@ -17,7 +17,6 @@
 	var famIndex = 0;
 	var searchIndex = 0;
 	var adultsJson= [];
-	var userJson= {};
 	
 	sessionStorage.setItem('famref', "REPLACE_FAM_REF");
 	
@@ -86,82 +85,6 @@
     		return v?'addClass':'removeClass';
     }
 
-    function showEditProfileDialog() 
-    {
-    		var params = "callback=?";
-			
-    		$.getJSON('getuser', params, function(user)
-    		{
-    			userJson = user;
-    			if(user.hasOwnProperty('error'))
-      		{
-				window.location=document.getElementById('timeoutanchor').href;
-      		}
-    			else if(userJson.lastname !== '')
-    			{
-    				document.getElementById('userfirstname').value = user.firstname;
-    	    			document.getElementById('userlastname').value = user.lastname;
-    	    			document.getElementById('userorg').value = user.org;
-    	    			document.getElementById('usertitle').value = user.title;
-    	    			document.getElementById('useremail').value = user.email;
-    	    			document.getElementById('userphone').value = user.phone;
-    			}
-    		});
-    }
-    
-    function onChangePW() 
-    {
-    		if(validate())
-    		{
-			var params = {}	
-			params["field1"] = document.getElementById('currpw').value;
-			params["field2"] = document.getElementById('newpw').value;
-			
-    			$.post('reqchangepw', params, function(response)
-    			{
-    				document.getElementById('message').textContent= response;
-    			});
-    		
-    			document.getElementById('currpw').value = "";
-	    		document.getElementById('newpw').value = "";
-	    		document.getElementById('verifypw').value = "";
-    			window.location=document.getElementById('closepopup').href;
-    		}
-    }
-    
-    function onUpdateProfile()
-    {
-    		if(document.getElementById('userfirstname').value !== userJson.firstname ||
-    			document.getElementById('userlastname').value !== userJson.lastname ||
-    		 	document.getElementById('userorg').value !== userJson.org ||
-    		  	document.getElementById('usertitle').value !== userJson.title ||
-    		   	document.getElementById('useremail').value !== userJson.email ||
-    		    document.getElementById('userphone').value !== userJson.phone)
-    		{
-    			var params = "firstname=" + document.getElementById('userfirstname').value
-			+ "&" + "lastname=" + document.getElementById('userlastname').value
-			+ "&" + "org=" + document.getElementById('userorg').value
-			+ "&" + "title=" + document.getElementById('usertitle').value
-			+ "&" + "email=" + document.getElementById('useremail').value
-			+ "&" + "phone=" + document.getElementById('userphone').value
-			+ "&" + "callback=?"
-		
-			$.getJSON('updateuser', params, function(mssgJson)
-			{
-				if(mssgJson.hasOwnProperty('error'))
-					window.location=document.getElementById('timeoutanchor').href;
-				else
-					document.getElementById('message').textContent= mssgJson.message;
-			});
-    		
-    			window.location=document.getElementById('closepopup').href;
-    		}
-    		else
-    		{
-    			onProfileNotChanged();
-    		}
-    }
-    
     function getCatalogPartnersFamilyReferencesFromServer(year)
     {
     		var params = "year=" + year + "&callback=?";
@@ -753,18 +676,7 @@
 	        selectbox.remove(i);
 	    }
 	}
-	
-	function onProfileNotChanged()
-    {
-		var params = {};	
-		$.post('profileunchanged', params, function(response)
-		{
-			document.getElementById('message').textContent= response.message;
-		}, "jsonp");
-		
-		window.location=document.getElementById('closepopup').href;
-    }
-	
+
 	function onCancel()
     {
 		window.location=document.getElementById('closepopup').href;
@@ -882,7 +794,6 @@
   </style>
 </head>
 <body>
-  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div id='topbar' class="topbar">
     <img src="onclogo" height="55" width="75"/>
@@ -914,15 +825,7 @@
 		  </div>
 	    </li>
 	</ul>
-	<ul class='floatright'>
-	  <li id='profileli'><a href="#">Profile <span class="caret"></span></a>
-		  <div>
-		    <ul>
-			  <li><a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a></li>
-			  <li><a href="#chgpwdlg">Change Password</a></li>
-		    </ul>
-		  </div>
-	  </li>	    
+	<ul class='floatright'>   
 	  <li id="logoutli"><a  href='javascript:onLogoutLink()'>Logout</a></li>
 	</ul>
   </nav>
@@ -1121,54 +1024,7 @@
   </fieldset>
   <br>
 </form>
-<!-- Edit Profile Dialog -->
-  <div id="editProfile" class="modalDialog">
-	<div class='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
-		  <span class='logospan'>Update ONC Profile</span>
-		</div>
-    	<p><label class='lbl_ep' for="userfirstname">First Name:</label>
-    	<input class='inp_ep' type="text" id="userfirstname" name="firstname" autofocus></p>
-    	<p><label class='lbl_ep' for="userlastname">Last Name:</label>
-    	<input class='inp_ep' type="text" id="userlastname" name="lastname"><br></p>
-    	<p><label class='lbl_ep' for="userorg" >Organization:</label>
-    	<input class='inp_ep' type="text" id="userorg" name="org"></p>
-    	<p><label class='lbl_ep' for="usertitle">Title:</label>
-    	<input class='inp_ep' type="text" id="usertitle" name="title"><br></p>
-    	<p><label class='lbl_ep' for="useremail">E-Mail:</label>
-    	<input class='inp_ep' type="text" id="useremail" name="email"></p>
-    	<p><label class='lbl_ep' for="userphone">Phone:</label>
-    	<input class='inp_ep' type="text" id="userphone" name="phone"><br></p>
-    	<div id='buttonbar'>
-    	  <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
-      <button id="update" onclick="onUpdateProfile()">Update</button>
-    	</div> 
-	</div>
-  </div>
-<!-- Change Password Dialog -->
-  <div id="chgpwdlg" class="modalDialog">
-	<div class='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
-		  <span class='logospan'>Change Password</span>
-		</div>
-		<p id='pw_mssg'>Enter current and new password:</p>
-    	<p><label class='lbl_pw' for="currpw">Current Password:</label>
-    	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
-    	<p><label class='lbl_pw' for="newpw">New Password:</label>
-    	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
-    	<p><label class='lbl_pw' for="verifypw" >Verify Password:</label>
-    	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
-    	<div id='buttonbar'>
-      	  <button id="cancel" onclick="onCancel()">Cancel</button>
-      	  <button id="submit" onclick="onChangePW()">Change Password</button>
-    	</div> 
-	</div>
-  </div>
-  <!-- Timeout Dialog -->
+<!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
 	<div id='inner'>
 		<div class='dialogtopbar'>

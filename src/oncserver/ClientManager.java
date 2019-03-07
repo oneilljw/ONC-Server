@@ -13,8 +13,10 @@ import java.util.UUID;
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
 
+import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.UserPermission;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -195,7 +197,7 @@ public class ClientManager extends ClientEventGenerator
 		
 		return wc;
 	}
-	
+/*	
 	static HtmlResponse getClientJSONP(WebClient wc, String callbackFunction)
 	{		
 		String response = "{"
@@ -209,6 +211,19 @@ public class ClientManager extends ClientEventGenerator
 			
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+*/	
+	static HtmlResponse getClientJSONP(WebClient wc, String callbackFunction)
+	{	
+		String response;
+		
+		WebUser webUser = new WebUser(wc.getWebUser(), ServerGroupDB.getGroupList(wc.getWebUser()));
+			
+		Gson gson = new Gson();
+		response = gson.toJson(webUser, WebUser.class);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
 	
 	/***
