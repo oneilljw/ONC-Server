@@ -706,6 +706,15 @@ public class DesktopClient extends Thread
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
+                else if(command.startsWith("POST<add_giftlist>"))
+                {                	
+                		//Add the list of gifts to the child gift data base
+                		clientMgr.addLogMessage(command);
+                		String response = childwishDB.addListOfGifts(year, command.substring(18), clientUser);
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
                 else if(command.startsWith("POST<update_delivery>"))
                 {
                 		clientMgr.addLogMessage(command);

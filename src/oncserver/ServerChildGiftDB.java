@@ -103,6 +103,43 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		return "WISH_ADDED" + gson.toJson(addedWish, ONCChildGift.class);
 	}
 	
+	String addListOfGifts(int year, String giftListJson, ONCUser client)
+	{
+		//Create a child gift list for the added gift
+		Gson gson = new Gson();
+		Type listOfChildGifts = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();		
+		List<ONCChildGift> addedChildGiftList = gson.fromJson(giftListJson, listOfChildGifts);
+		List<String> responseJsonList = new ArrayList<String>();
+
+		//retrieve the child wish data base for the year
+		ChildGiftDBYear cwDBYear = childGiftDB.get(DBManager.offset(year));
+		
+		for(ONCChildGift addedGift : addedChildGiftList)
+		{
+			//set the new ID for the added child gift
+			addedGift.setID(cwDBYear.getNextID());
+				
+			//retrieve the old gift being replaced
+			ONCChildGift oldGift = getChildGift(year, addedGift.getChildID(), addedGift.getGiftNumber());
+		
+			//Add the new wish to the proper data base
+			cwDBYear.add(addedGift);
+			
+			//Update the child object with new gift
+			childDB.updateChildsWishID(year, addedGift);
+		
+			//process added gift to see if other data bases require update. They do if the gift
+			//status has caused a family status change or if a partner assignment has changed
+			processGiftAdded(year, oldGift, addedGift);
+			responseJsonList.add("WISH_ADDED" + gson.toJson(addedGift, ONCChildGift.class));
+		}
+		
+		cwDBYear.setChanged(true);
+		
+		Type responseListType = new TypeToken<ArrayList<String>>(){}.getType();
+		return "ADDED_GIFT_LIST" + gson.toJson(responseJsonList, responseListType);
+	}
+	
 	/*******************************************************************************************
 	 * This method implements a rules engine governing the relationship between a wish type and
 	 * wish status and wish assignment and wish status. It is called when a child's wish or
