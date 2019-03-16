@@ -17,6 +17,7 @@ import ourneighborschild.EmailAddress;
 import ourneighborschild.ONCEmail;
 import ourneighborschild.ONCEmailAttachment;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCNote;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
@@ -36,6 +37,7 @@ public class ServerUserDB extends ServerPermanentDB
 	private static final String USER_PASSWORD_PREFIX = "onc";
 	private static final String USERDB_FILENAME = "newuser.csv";
 	private static final int RECOVERY_ID_LENGTH = 16;
+	private static final int FIRST_ONC_YEAR = 1991;
 	
 	private static final String AGENT_EMAIL_ADDRESS = "schoolcontact@ourneighborschild.org";
 	private static final String AGENT_EMAIL_PASSWORD = "crazyelf";
@@ -776,6 +778,67 @@ public class ServerUserDB extends ServerPermanentDB
 		
 		return count;
 	}
+	
+	String createAndSendSeasonWelcomeEmail(int year, String userListJson)
+	{
+		if(DBManager.isYearAvailable(year-1))
+		{
+			List<String> clientMssgList = new ArrayList<String>();
+			
+			//turn the json into a list of  users
+			Gson gson = new Gson();
+			EmailUserIDs emailUserIDs = gson.fromJson(userListJson, EmailUserIDs.class);
+			int[] emailUserID = emailUserIDs.getEmailUserIDArray();
+			
+			List<ONCUser> emailList = new ArrayList<ONCUser>();
+			for(int i=0; i< emailUserID.length; i++)
+			{
+				ONCServerUser su = ServerUserDB.getServerUser(emailUserID[i]);
+				su.setStatus(UserStatus.Update_Profile);
+				su.setDateChanged(new Date());
+				
+				ONCUser emailedUser = ServerUserDB.getServerUser(emailUserID[i]).getUserFromServerUser();
+				emailList.add(ServerUserDB.getServerUser(emailUserID[i]).getUserFromServerUser());
+				clientMssgList.add("UPDATED_USER" + gson.toJson(emailedUser, ONCUser.class));
+			}
+			
+			if(!emailList.isEmpty())
+			{
+				//now that we have a list of users, send each the welcome email
+				String subject = String.format("Welcome to Our Neighbor's Child %d! ", year);
+				int count = 0;
+				for(ONCUser u : emailList)
+				{
+					String emailBody = createSeasonWelcomeEmail(year, u);
+					createAndSendUserEmail(subject, emailBody, u);
+					count++;
+					
+				}
+				
+				
+				//notify all clients of updated user status
+				bSaveRequired = true;
+				clientMgr.notifyAllClients(clientMssgList);
+				
+				return String.format("USER_EMAIL_SENT%d Email(s) queued for delivery", count);
+			}
+			else
+				return "USER_EMAIL_FAILEDRequest Error: No users in request";
+		}
+		else
+			return String.format("USER_EMAIL_FAILEDRequest Error: %d season unavailabe in database", year-1);
+		
+		
+	}
+	
+	private class EmailUserIDs
+	{
+		int[] emailUserIDs;
+		
+		//getters
+		int[] getEmailUserIDArray() { return emailUserIDs; };
+	}
+	
 	void createAndSendRecoveryEmail(ONCServerUser recUser)
 	{
 		String subject = "Account Recovery - Our Neighbor's Child";
@@ -822,7 +885,7 @@ public class ServerUserDB extends ServerPermanentDB
 	}
 	
 	private void createAndSendUserEmail(String subject, String emailBody, ONCUser recUser)
-	{
+	{	
 		//build the email
 		ArrayList<ONCEmail> emailAL = new ArrayList<ONCEmail>();
 		ArrayList<ONCEmailAttachment> attachmentAL = new ArrayList<ONCEmailAttachment>();
@@ -835,7 +898,8 @@ public class ServerUserDB extends ServerPermanentDB
 				recUser.getLastName() != null && recUser.getLastName().trim().length() > 2)
         {
 			//LIVE EMAIL ADDRESS
-			EmailAddress toAddress = new EmailAddress(recUser.getEmail(), recUser.getLastName());	//live
+			EmailAddress toAddress = new EmailAddress(recUser.getEmail(), 
+										recUser.getFirstName() + " " + recUser.getLastName());	//live
 			recipientAddressList.add(toAddress);    	
         }
 	        
@@ -845,22 +909,21 @@ public class ServerUserDB extends ServerPermanentDB
 		
 		//Create the from address string array
 		EmailAddress fromAddress = new EmailAddress(AGENT_EMAIL_ADDRESS, "Our Neighbor's Child");
-//		EmailAddress fromAddress = new EmailAddress(TEST_AGENT_EMAIL_SENDER_ADDRESS, "Our Neighbor's Child");
-		
+
 		//Create the blind carbon copy list 
 		ArrayList<EmailAddress> bccList = new ArrayList<EmailAddress>();
 		bccList.add(new EmailAddress(AGENT_EMAIL_ADDRESS, "School Coordinator"));
-//		bccList.add(new EmailAddress("kellylavin1@gmail.com", "Kelly Lavin"));
-//		bccList.add(new EmailAddress("mnrogers123@msn.com", "Nicole Rogers"));
-//		bccList.add(new EmailAddress("johnwoneill@cox.net", "John O'Neill"));
 		
 		//Google Mail
 		ServerCredentials creds = new ServerCredentials("smtp.gmail.com", AGENT_EMAIL_ADDRESS, AGENT_EMAIL_PASSWORD);
 		
 	    ServerEmailer oncEmailer = new ServerEmailer(fromAddress, bccList, emailAL, attachmentAL, creds);
-	    oncEmailer.execute();
 	    
-	    //now that an email has been scheduled, update the user acoount 
+	    for(EmailAddress ea : recipientAddressList)
+	    		System.out.println(ea.getEmailAddress());
+	    System.out.println(emailBody);
+	    
+	    oncEmailer.execute();  
 	}
 	
 	String createRecoveryEmail(ONCServerUser su)
@@ -912,5 +975,79 @@ public class ServerUserDB extends ServerPermanentDB
 		    +"<a href=\"http://www.ourneighborschild.org\">www.ourneighborschild.org</a></p></div>";
 
         return msg;
+	}
+	
+	String createSeasonWelcomeEmail(int year, ONCUser u)
+	{
+        //Create the text part of the email using html
+//		String link = String.format("\"https://oncdms.org:%d/welcome", 8902);
+		String link = String.format("\"https://oncdms.org:%d/welcome\">ONC Data Management System Website", 8902);
+		int seasonNumber = year - FIRST_ONC_YEAR;
+		
+		String msg = String.format("<html><body><div>" +
+			"<p>Dear %s,</p>"
+			+ "<p>Welcome to Our Neighbor's Child's %s season providing holiday assistance for "
+			+ "families in need in Western Fairfax County. We can't thank you enough for your participation "
+			+ "and the critical role you play in ONC's pursuit of our mission. The time and energy you've spent "
+			+ "connecting families to ONC is a testament to your commitment to our community. ONC simply "
+			+ "would not be able to perform our mission without you. Thank You!!</p>"
+			+ "<p>As we kick-off the %d season, we want to verify your information in our records. "
+			+ "First, we'd like to verify your contact information. Our records show:</p>"
+			+ "&emsp;<b>Name:</b>  %s<br>"
+    			+ "&emsp;<b>Organization:</b>  %s<br>"
+    			+ "&emsp;<b>Title:</b>  %s<br>"
+    			+ "&emsp;<b>Email:</b>  %s<br>"
+    			+ "&emsp;<b>Phone:</b>  %s<br>"
+			+ "<p>Second, we'd like to verify the schools or organizations you submit holiday assitance "
+			+ "requests from. As you're likely aware, ONC groups families by the schools or organizations that "
+			+ "submit holiday assistance requests. The following table summarizes assistance requests you "
+			+ "submitted in %d by the schools or organizations associated with the reqests.</p>"
+			+ "%s" //add school or organization table
+			+ "<p>The next time you login to our Data Management System, you'll be asked to review and update "
+			+ "your contact information and the schools or organizations assocaited with subsequent assistance "
+			+ "requests you submit. Clicking this link  will take you directly to ONC's Data Management System "
+			+ "website: <b><a href=%s</a></b></p>"
+		    +"<p>Our Neighbor's Child<br>"
+		    +"P.O. Box 276<br>"
+		    +"Centreville, VA 20120<br>"
+		    +"<a href=\"http://www.ourneighborschild.org\">www.ourneighborschild.org</a></p></div>",
+		    u.getFirstName(), addSeasonSuffix(seasonNumber), year, u.getFirstName() + " " + u.getLastName(),
+		    u.getOrganization(), u.getTitle(), u.getEmail(), u.getCellPhone(), year-1, 
+		    createServedFamiliesReferredTableHTML(year-1, u), link);
+		    
+        return msg;
+	}
+	
+	//takes an integer and returns a string with a suffix associated with the integer
+	String addSeasonSuffix(final int n)
+	{
+	    if (n >= 11 && n <= 13)
+	        return String.format("%dth", n);
+	    
+	    switch (n % 10)
+	    {
+	        case 1:  return String.format("%dst", n);
+	        case 2:  return String.format("%dnd", n);
+	        case 3:  return String.format("%drd", n);
+	        default: return String.format("%dth", n);
+	    }
+	}
+	
+	String createServedFamiliesReferredTableHTML(int year, ONCUser u)
+	{
+		
+		StringBuilder familyTableHTML = new StringBuilder("<table style=\"width:50%\">");
+		familyTableHTML.append("<th align=\"left\">School or Organization</th>");
+		familyTableHTML.append(String.format("<th align=\"left\"># Referrals in %d</th>", year));
+		
+		for(ONCGroup g : ServerGroupDB.getGroupList(u))
+		{
+			familyTableHTML.append("<tr><td>" + g.getName() + "</td>");
+			familyTableHTML.append("<td align=\"center\">" + ServerFamilyDB.getNumReferralsByUserAndGroup(year, u, g) + "</td></tr>");
+		}
+			
+		familyTableHTML.append("</table>");
+				
+		return familyTableHTML.toString();
 	}	
 }

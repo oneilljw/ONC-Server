@@ -35,19 +35,19 @@
     			setFamilyViewLink(yearCombo.value);
     			
     			google.charts.load('current', {packages: ['corechart', 'bar']});
-            google.charts.setOnLoadCallback(drawFamStatusChart);		
-    		
+            google.charts.setOnLoadCallback(drawFamStatusChart);
+            
+            $.getJSON('getstatus', dbyearsparams, function(status)
+            	{
+            		console.log(status);
+            		if(status.userstatus === 'Update_Profile')
+            		{
+        				showEditProfileDialog();
+        				window.location=document.getElementById('editprofileanchor').href;
+            		}
+            	});
     		});
-    	
-    		$.getJSON('getstatus', dbyearsparams, function(status)
-    		{
-    			if(status.userstatus === 'Update_Profile')
-    			{
-				showEditProfileDialog();
-				window.location=document.getElementById('editprofileanchor').href;
-    			}
-    		});
-    	
+    	  	
     		window.setInterval(drawFamStatusChart, 300000);	//five minutes
     	});
     

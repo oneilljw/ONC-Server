@@ -223,6 +223,12 @@ public class DBManager
 		return dbYearList.isEmpty() ? -1 : dbYearList.get(0).getYear();
 	}
 	
+	static boolean isYearAvailable(int year)
+	{
+		return !dbYearList.isEmpty() && year >= dbYearList.get(0).getYear() && 
+				year <= dbYearList.get(dbYearList.size()-1).getYear();
+	}
+	
 	//returns the offset index from the base year in the database
 	static Integer offset(int year)
 	{

@@ -1722,6 +1722,23 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		return delCount;
     }
     
+    //calculate the number of families referred by the agent from a specific group
+    //for a particular year
+    static int getNumReferralsByUserAndGroup(int year, ONCUser u, ONCGroup g)
+    {
+    		if(DBManager.isYearAvailable(year))
+    		{
+    			int count = 0;
+    			for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
+    				if(f.getAgentID() == u.getID() && f.getGroupID() == g.getID())
+    					count++;
+    			
+    			return count;
+    		}
+    		else
+    			return 0;
+    }
+    
     int getMinONCNum() { return oncnumRangeMap.get("A") != null ? oncnumRangeMap.get("A").getStart() : 10000; }
     int getMaxONCNum() { return oncnumRangeMap.get("Z") != null ? oncnumRangeMap.get("Z").getEnd() : -1; }
     

@@ -61,7 +61,7 @@ public class ServerGroupDB extends ServerPermanentDB
 	}
 	
 	//return the group list that a user belongs to
-	static List<ONCGroup> getGroupList(ONCServerUser user)
+	static List<ONCGroup> getGroupList(ONCUser user)
 	{
 		List<ONCGroup> userGroupList = new ArrayList<ONCGroup>();
 		for(Integer userGroupID : user.getGroupList())

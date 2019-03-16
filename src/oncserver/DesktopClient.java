@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 6.26f;
+	private static final float MINIMUM_CLIENT_VERSION = 6.27f;
 	
 	private int id;
 	private String version;
@@ -1005,6 +1005,13 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		String response = ONCWebpageHandler.reloadWebpagesAndWebfiles();
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                }
+                else if(command.startsWith("POST<send_user_email>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = userDB.createAndSendSeasonWelcomeEmail(year, command.substring(21));
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 }

@@ -13,10 +13,8 @@ import java.util.UUID;
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
 
-import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
-import ourneighborschild.UserPermission;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -366,6 +364,17 @@ public class ClientManager extends ClientEventGenerator
 		{
 			//Add change to the change queue's of every other client
 			c.addChange(mssg);
+		}
+	}
+	
+	void notifyAllClients(List<String> mssgList)
+	{
+		//send message to all clients connected in a particular year. 
+		for(DesktopClient c:dtClientAL )
+		{
+			//Add change list to the change queue's of every in year client
+			for(String mssg : mssgList)
+				c.addChange(mssg);
 		}
 	}
 	
