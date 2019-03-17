@@ -918,11 +918,6 @@ public class ServerUserDB extends ServerPermanentDB
 		ServerCredentials creds = new ServerCredentials("smtp.gmail.com", AGENT_EMAIL_ADDRESS, AGENT_EMAIL_PASSWORD);
 		
 	    ServerEmailer oncEmailer = new ServerEmailer(fromAddress, bccList, emailAL, attachmentAL, creds);
-	    
-	    for(EmailAddress ea : recipientAddressList)
-	    		System.out.println(ea.getEmailAddress());
-	    System.out.println(emailBody);
-	    
 	    oncEmailer.execute();  
 	}
 	
