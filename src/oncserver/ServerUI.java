@@ -15,7 +15,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -65,6 +68,7 @@ public class ServerUI extends JPanel implements ClientListener
 	private static ServerUI instance = null;	//Only one UI
 	private transient ImageIcon imageIcons[];
 	public JButton btnStartServer, btnStopServer;
+	private JButton btnGetSchool;
 	private static JTextArea logTA;
 	private static List<String> logList;
 	private ServerStoplight stoplight;
@@ -228,11 +232,27 @@ public class ServerUI extends JPanel implements ClientListener
         //Set up the control panel
         JPanel cntlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
+        btnGetSchool = new JButton("Get School");
+        	btnGetSchool.addActionListener(new ActionListener()
+        	{
+        		public void actionPerformed(ActionEvent e)
+        		{
+        			FCPSSchoolBoundaryLocator loc = new FCPSSchoolBoundaryLocator();
+        			Map<String,String> resultMap = loc.lookupSchoolInfo("9307A", "ARGENT");
+        			Iterator<Entry<String, String>> it = resultMap.entrySet().iterator();
+        			while (it.hasNext()) 
+        			{
+        				Map.Entry<String,String> pair = (Map.Entry<String,String>)it.next();
+        				System.out.println(pair.getKey() + " = " + pair.getValue());
+        			}
+        		}
+        	});
         btnStartServer = new JButton("Start Server");
         btnStartServer.setVisible(false);
         
         btnStopServer = new JButton("Stop Server");
         
+        cntlPanel.add(btnGetSchool);
         cntlPanel.add(btnStopServer);
         cntlPanel.add(btnStartServer);
         

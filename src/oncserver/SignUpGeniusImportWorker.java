@@ -15,8 +15,6 @@ import java.util.TimeZone;
 
 import javax.swing.SwingWorker;
 
-import ourneighborschild.SignUpActivity;
-
 /***
  * Base class for importing a json from Our Neighbor's Child SignUp Genius account. Two basic imports
  * are supported:

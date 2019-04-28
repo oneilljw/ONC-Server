@@ -1,14 +1,19 @@
 package oncserver;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,8 +52,7 @@ public class ServerRegionDB extends ServerPermanentDB
 	
 	private static final String GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
 	private static final String MNR_URL = "http://www.fairfaxcounty.gov/FFXGISAPI/v1/report?location=%s&format=json";
-	
-	
+
 	private static ServerRegionDB instance = null;
 	private static List<Region> regionAL;
 	private static List<String> zipcodeList;	//list of unique zip codes in region db
@@ -385,120 +389,7 @@ public class ServerRegionDB extends ServerPermanentDB
 		else
 			return null;
 	}	
-/*	
-	int getRegionMatch(Address matchAddress)
-	{
-		return searchForRegionMatch(matchAddress);
-	}
-	
-	static String[] createSearchAddress(String streetnum, String streetname, String zipcode)
-	{
-		String[] searchAddress = new String[5];
-		String[] step1 = new String[2];
-		
-		//Break the street name into its five parts using a three step process. If only the street name
-		//or street number are empty, take different paths. 
-		if(streetname.length() < 2)
-			step1 = separateLeadingDigits(streetnum);
-		else
-			step1 = separateLeadingDigits(streetname);
-		
-		String[] step2 = separateStreetDirection(step1[1]);
-		String[] step3 = separateStreetSuffix(step2[1]);
-		
-		searchAddress[0] = step1[0];	//Street Number
-		searchAddress[1] = step2[0];	//Street Direction
-		searchAddress[2] = step3[0];	//Street Name
-		searchAddress[3] = step3[1];	//Street Type
-		searchAddress[4] = zipcode;		//zip code
-		
-		if(searchAddress[0].isEmpty())	//Street number may not be contained in street name
-		{
-			String[] stnum = separateLeadingDigits(streetnum);
-			searchAddress[0] = stnum[0];
-		}
-		
-		return searchAddress;
-	}
-	
-	/*********************************************************************************
-	 * This method takes a string and separates the leading digits. If there are characters
-	 * after the leading digits without a blank space, it will throw those away. It will
-	 * return a two element string array with the leading digits as element 1 and the remainder
-	 * of the string past the blank space as element 2. If there are no leading digits, element 1
-	 ***********************************************************************************/
-/*	
-	static String[] separateLeadingDigits(String src)
-	{
-		String[] output = {"",""};
-		
-		if(!src.isEmpty())
-		{	
-			StringBuffer buff = new StringBuffer("");
-		
-			//IF there are leading digits, separate them and if the first character is a digit
-			//and a non digit character is found before a black space, throw the non digit characters away.
-			int ci = 0;
-			if(Character.isDigit(src.charAt(ci)))
-			{	
-				while(ci < src.length() && Character.isDigit(src.charAt(ci)))	//Get leading digits
-					buff.append(src.charAt(ci++));
-		
-				while(ci < src.length() && src.charAt(ci++) != ' '); //Throw away end of digit string if necessary	
-				
-			}
-	
-			output[0] = buff.toString();
-			output[1] = src.substring(ci).trim();
-		}
 
-		return output;		
-	}
-*/	
-	/*********************************************************************************
-	 * This method takes a string and separates the street direction. If the first character
-	 * is a N or a S and and the second character is a period or a blank space, a direction
-	 * is present. The method will return a two element string array with the direction
-	 * character as element 0 and the remainder of the string as element 1. If a street
-	 * direction is not present, element 0 will be empty and element 1 will contain the 
-	 * original street parameter
-
-	 ***********************************************************************************/
-/*	
-	static String[] separateStreetDirection(String street)
-	{
-		String[] output = new String[2];
-		
-		if(!street.isEmpty() && (street.charAt(0) == 'N' || street.charAt(0) == 'S') &&
-			 (street.charAt(1) == '.' || street.charAt(1) == ' '))
-		{
-			output[0] = Character.toString(street.charAt(0));
-			output[1] = street.substring(2);
-		}
-		else
-		{
-			output[0] ="";
-			output[1] = street;
-		}
-	
-		return output;
-	}
-*/	
-/*	
-	static String[] separateStreetSuffix(String streetname)
-	{
-		StringBuffer buf = new StringBuffer("");
-		
-		String[] stnameparts = streetname.split(" ");
-		
-		int index = 0;
-		while(index < stnameparts.length-1)
-			buf.append(stnameparts[index++] + " ");
-		
-		String[] output = {buf.toString().trim(), stnameparts[index].trim()};
-		return output;
-	}
-*/	
 	/***
 	 * Searches the region DB for a match to the search address. Possible outcomes are:
 	 * If the address is found, therefore it's a valid Fairfax County address for ONC. In that case 
@@ -603,7 +494,7 @@ public class ServerRegionDB extends ServerPermanentDB
 	int getNumberOfRegions() { return regions.length; }
 	boolean isRegionValid(int region) { return region >=0 && region < regions.length; }
 	
-	//Get a geocode location from Google Maps 
+	//Get a geo code location from Google Maps 
 	GoogleGeocode getGoogleGeocode(String address)
 	{
 		//Turn the string into a valid URL
@@ -736,6 +627,30 @@ public class ServerRegionDB extends ServerPermanentDB
 	
 	@Override
 	List<Region> getONCObjectList() { return regionAL; }
+		
+	public static void WriteStringToFile(String string)
+	{	
+		String pathname = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), "FCPSBoundaryLocatorHTML.txt");
+		try 
+		{
+			File file = new File(pathname);
+			FileWriter fileWriter = new FileWriter(file);
+			fileWriter.write(string);
+			fileWriter.flush();
+			fileWriter.close();
+		} 
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	static String readFile() throws IOException 
+	{
+		String pathname = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), "FCPSBoundaryLocatorHTML.txt");
+		byte[] encoded = Files.readAllBytes(Paths.get(pathname));
+		return new String(encoded, Charset.defaultCharset());
+	}
 	
 	private static class RegionStreetNameComparator implements Comparator<Region>
 	{
