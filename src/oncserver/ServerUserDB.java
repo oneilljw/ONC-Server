@@ -975,7 +975,6 @@ public class ServerUserDB extends ServerPermanentDB
 	String createSeasonWelcomeEmail(int year, ONCUser u)
 	{
         //Create the text part of the email using html
-//		String link = String.format("\"https://oncdms.org:%d/welcome", 8902);
 		String link = String.format("\"https://oncdms.org:%d/welcome\">ONC Data Management System Website", 8902);
 		int seasonNumber = year - FIRST_ONC_YEAR;
 		
@@ -999,7 +998,7 @@ public class ServerUserDB extends ServerPermanentDB
 			+ "submitted in %d by the schools or organizations associated with the reqests.</p>"
 			+ "%s" //add school or organization table
 			+ "<p>The next time you login to our Data Management System, you'll be asked to review and update "
-			+ "your contact information and the schools or organizations assocaited with subsequent assistance "
+			+ "your contact information and the schools/organizations associated with subsequent assistance "
 			+ "requests you submit. Clicking this link  will take you directly to ONC's Data Management System "
 			+ "website: <b><a href=%s</a></b></p>"
 		    +"<p>Our Neighbor's Child<br>"

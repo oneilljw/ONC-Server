@@ -36,7 +36,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	private static final String GIFTS_REQUESTED_KEY = "giftreq";
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
-	private static final int DNS_CODE_WAITLIST = 7;
+	private static final int DNS_CODE_WAITLIST = 1;
 	
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	
@@ -957,6 +957,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		
 		return bAddressGood;
 	}
+	
 /*	
 	String verifyAddress(Map<String, Object> params)
 	{

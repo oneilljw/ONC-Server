@@ -189,24 +189,23 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     				
     				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
-    			}	
+    				}	
+    			}
+    			else
+    			{
+    				String error = String.format("GlobalVariablesDB file corrupted, header lentgth = %d", header.length);
+    				JOptionPane.showMessageDialog(null, error,  "Global Variables Corrupted",
+    	       								JOptionPane.ERROR_MESSAGE);
+    			}		   			
     		}
     		else
     		{
-    			String error = String.format("GlobalVariablesDB file corrupted, header lentgth = %d", header.length);
-    	       	JOptionPane.showMessageDialog(null, error,  "Global Variables Corrupted",
-    	       								JOptionPane.ERROR_MESSAGE);
-    		}		   			
-    	}
-    	else
-    	{
-    		String error = String.format("GlobalVariablesDB file is empty");
-    		JOptionPane.showMessageDialog(null, error,  "Global Variables DB Empty",
+    			String error = String.format("GlobalVariablesDB file is empty");
+    			JOptionPane.showMessageDialog(null, error,  "Global Variables DB Empty",
        								JOptionPane.ERROR_MESSAGE);
-    	}
+    		}
     	
-    	reader.close();
-    	
+		reader.close();
 		return gvs;
 	}
 	
