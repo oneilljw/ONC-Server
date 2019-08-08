@@ -37,6 +37,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
 	private static final int DNS_CODE_WAITLIST = 1;
+	private static final int DNS_CODE_FOOD_ONLY = 2;
 	
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	
@@ -346,21 +347,34 @@ public class FamilyHandler extends ONCWebpageHandler
 			{
 				Map<String, String> mealMap = createMap(params, mealKeys);
 				String dietRestrictions = "";
-
-				if(!mealMap.get("mealtype").equals("No Assistance Rqrd") || 
+				
+				if(!mealMap.get("mealtype").equals("No Assistance Rqrd") && 
 					!mealMap.get("mealtype").equals("Unavailable"))
 				{
 					if(mealMap.containsKey("dietres"))
 						dietRestrictions = mealMap.get("dietres");
-				
-					mealReq = new ONCMeal(-1, -1, MealStatus.Requested, MealType.valueOf(mealMap.get("mealtype")),
+					
+					//check to see that we have a valid meal type
+					try
+					{
+						MealType reqMealType = MealType.valueOf(mealMap.get("mealtype"));
+						mealReq = new ONCMeal(-1, -1, MealStatus.Requested, reqMealType,
 								dietRestrictions, -1, wc.getWebUser().getLNFI(), new Date(), 3,
 								"Family Referred", wc.getWebUser().getLNFI());
 			
-					addedMeal = mealDB.add(year, mealReq);
+						addedMeal = mealDB.add(year, mealReq);
+					}
+					catch (IllegalArgumentException iae)
+					{
+						ServerUI.addLogMessage("Invalid MealType referred");
+					}
+					catch (NullPointerException npe)
+					{
+						ServerUI.addLogMessage("Invalid MealType: MealType or name is null");
+					}
 				}
 			}
-		
+			
 			//check to see if this is a new family or a re-referral. Need to know this to determine 
 			//whether to perform a prior year check after the family and children objects are created
 			boolean bNewFamily = familyMap.get("targetid").contains("NNA") || familyMap.get("targetid").equals("");
@@ -376,9 +390,22 @@ public class FamilyHandler extends ONCWebpageHandler
 				if(!groupIDList.isEmpty())
 					group = groupIDList.get(0);
 			}
-		
+			
+			//determine if this is a food only request
+			boolean bFoodOnly = new Date().before(globalDB.getDeadline(year, "December Meal")) && 
+					 addedMeal != null && 
+					  (!params.containsKey(GIFTS_REQUESTED_KEY) ||
+					  params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("off"));
+			
+			//determine if a wait list or food only DNS code should be assigned
+			int dnsCode = -1;	//no DNS code
+			if(bWaitlistFamily)
+				dnsCode = DNS_CODE_WAITLIST;
+			else if(bFoodOnly)
+				dnsCode = DNS_CODE_FOOD_ONLY;
+			
 			ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
-					familyMap.get("targetid"), "B-DI", bWaitlistFamily ? DNS_CODE_WAITLIST : -1,
+					familyMap.get("targetid"), "B-DI", dnsCode,
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohfn"), familyMap.get("hohln"), familyMap.get("housenum"),
 					ensureUpperCaseStreetName(familyMap.get("street")),
