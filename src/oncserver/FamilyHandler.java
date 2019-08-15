@@ -325,9 +325,6 @@ public class FamilyHandler extends ONCWebpageHandler
 			return new ResponseCode("Family Referral Failed: Server Database I/O Error");
 		}
 		
-		//determine if the referral was after the home delivery service deadline
-		boolean bWaitlistFamily = new Date().after(globalDB.getDeadline(year, "December Gift"));
-		
 		//create the family map
 		String[] familyKeys = {"targetid", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
 						   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
@@ -343,11 +340,13 @@ public class FamilyHandler extends ONCWebpageHandler
 			ONCMeal mealReq = null, addedMeal = null;
 			String[] mealKeys = {"mealtype", "dietres"};
 		
-			if(!bWaitlistFamily && params.containsKey("mealtype"))
+			if(params.containsKey("mealtype"))
 			{
 				Map<String, String> mealMap = createMap(params, mealKeys);
 				String dietRestrictions = "";
 				
+				//check to see that the meal was a valid request. If no meal is requested, the mealtype is
+				//"No Assistance Rqrd". If past a deadline, the mealtype is "Unavailable"
 				if(!mealMap.get("mealtype").equals("No Assistance Rqrd") && 
 					!mealMap.get("mealtype").equals("Unavailable"))
 				{
@@ -390,6 +389,14 @@ public class FamilyHandler extends ONCWebpageHandler
 				if(!groupIDList.isEmpty())
 					group = groupIDList.get(0);
 			}
+			
+			//determine if this is a wait list gift request. A wait list gift referral is a referral that
+			//requests gifts, is received after the gift deadline but before the wait list deadline
+			Date timeNow = new Date();
+			boolean bWaitlistFamily = params.containsKey(GIFTS_REQUESTED_KEY) &&
+									  params.get(GIFTS_REQUESTED_KEY).equals("on") &&
+									   timeNow.after(globalDB.getDeadline(year, "December Gift")) &&
+									    timeNow.before(globalDB.getDeadline(year, "Waitlist Gift"));
 			
 			//determine if this is a food only request
 			boolean bFoodOnly = new Date().before(globalDB.getDeadline(year, "December Meal")) && 
@@ -639,6 +646,11 @@ public class FamilyHandler extends ONCWebpageHandler
 		{
 			//family was the last one received, no processing occurred
 			String mssg, successMssg, title;
+			Date timeNow = new Date();
+			boolean bWaitlistFamily = params.containsKey(GIFTS_REQUESTED_KEY) &&
+					  params.get(GIFTS_REQUESTED_KEY).equals("on") &&
+					   timeNow.after(globalDB.getDeadline(year, "December Gift")) &&
+					    timeNow.before(globalDB.getDeadline(year, "Waitlist Gift"));
 			if(!bWaitlistFamily)
 			{
 				mssg = String.format("%s Family Referral Accepted, ONC# %s",
