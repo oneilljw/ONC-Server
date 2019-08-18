@@ -39,7 +39,6 @@
             
             $.getJSON('getstatus', dbyearsparams, function(status)
             	{
-            		console.log(status);
             		if(status.userstatus === 'Update_Profile')
             		{
         				showEditProfileDialog();

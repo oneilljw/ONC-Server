@@ -12,6 +12,7 @@
   <script> 
   	var childrenJson= [];
   	var adultsJson= [];
+  	var wishJson = {};
   	var errorColor = '#FF9999';
   	
   	$( function() {
@@ -23,11 +24,13 @@
   	
   	//set the date picker to go back 19 years. Max age of a child ONC serves
   	$(function() {
-  	    $( "#childdob" ).datepicker({
+  	    $( "#childdob" ).datepicker(
+  	    	{
   	      yearRange: '-19:+0',
   	      dayNamesMin: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ],
   	      changeMonth: true,
-  	      changeYear: true
+  	      changeYear: true,
+  	    	  showMonthAfterYear: true
   	    });
   	  });
   	
@@ -149,6 +152,8 @@
         		row.appendChild(cell);
         }
 
+        var giftassistancereqCkBox = document.getElementById('giftreq');
+        
         for(wn=0; wn<wishplaceholder.length; wn++)
         {
         		var wlcell= document.createElement("td");
@@ -156,12 +161,38 @@
         		wish.type="text";
         		wish.name="wish" + cnum + wn;
         		wish.id="wish" + cnum + wn;
-        		wish.title="Request gift assistace to edit";
-        		wish.readOnly = true;
         		wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
         		wish.setAttribute("size", 22);
         		wish.setAttribute('data-age', calculateAge(child.sDOB));
-        		wish.onchange = function(wish) { onWishInputChanged(wish); };
+        		wish.setAttribute('data-cnum', cnum);
+        		wish.setAttribute('data-wnum', wn);
+        		wish.onchange = function(wish) { onWishInputChanged(wish); }
+        		
+        		if(giftassistancereqCkBox.checked)
+        		{
+        			wish.title="";
+        			if(wn === 2)	//Wish #3 automatically is "Age Appropriate Gift" for 2019 season
+        			{
+        				wish.value = "Age Appropriate Gift";
+        				wish.readOnly = true;
+        			}
+        			else
+        			{
+        				if(child.hasOwnProperty('wish' + wn))
+        					wish.value = child['wish' + wn];
+        				else
+        					wish.value = "";
+        				
+        				wish.ReadOnly = false;
+        			}	
+        		}		
+        		else
+        		{
+        			wish.title="Request gift assistace to edit";
+        			wish.ReadOnly = true;
+        			wish.value = "";
+        		}
+        			
         		wlcell.appendChild(wish);
         		row.appendChild(wlcell);
         }
@@ -367,7 +398,7 @@
 	}
 	
 	function onGiftAssistanceClicked(cb)
-	{
+	{		
 		for(var cnum=0; cnum<childrenJson.length; cnum++)
 		{
 			for(var wn=0; wn<4; wn++)
@@ -375,20 +406,30 @@
 				var wishElement = document.getElementById('wish' + cnum + wn);
 				
 				if(cb.checked)
+				{
 					wishElement.title="";
+					if(wn === 2)	//Wish #3 automatically is "Age Appropriate Gift" for 2019 season
+        				{
+        					wishElement.value = "Age Appropriate Gift";
+        					wishElement.readOnly = true;
+        				}
+					else
+					{
+						var childJson = childrenJson[cnum];
+        					if(childJson.hasOwnProperty("wish" + wn))
+        						wishElement.value = childJson["wish" + wn];
+        					else
+        						wishElement.value = '';
+        				
+						wishElement.readOnly = false;
+					}	
+				}	
 				else
+				{	
 					wishElement.title="Request gift assistace to edit";
-
-        			if(wn === 2 && cb.checked)	//Wish #3 automatically is "Age Appropriate Gift" for 2018 season
-        			{
-        				wishElement.value = "Age Appropriate Gift";
-        				wishElement.readOnly = true;
-        			}
-        			else
-        			{
-        				wishElement.value = '';
-					wishElement.readOnly = !cb.checked;
-        			}
+					wishElement.value = '';
+					wishElement.readOnly = true;
+				}
 			}	
 		}
 	}
@@ -461,6 +502,12 @@
 	}
 	function onWishInputChanged(wishevent)
 	{
+		var cnum = wishevent.target.getAttribute("data-cnum");
+		var wnum = wishevent.target.getAttribute("data-wnum");
+		
+		var childJson = childrenJson[cnum];
+		childJson["wish" + wnum] = wishevent.target.value;
+		
 		var childage = document.getElementById(event.target.id).getAttribute('data-age');
 		if(childage < 13)
 		{	
@@ -685,7 +732,7 @@
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
   	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
     <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
-    <input id="childdob" title="Date of birth for child to be added" type="text" size="14" placeholder="DoB">
+    <input id="childdob" title="Date of birth for child to be added" type="text" size="14" placeholder="DoB: mm/dd/yyyy">
     <select id="childgender" title="Gender of child to be added">
       	<option value="Unknown">Unknown</option>
 		<option value="Boy">Boy</option>

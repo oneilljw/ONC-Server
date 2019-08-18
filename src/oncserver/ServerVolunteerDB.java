@@ -519,10 +519,13 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 					Activity deliveryActivity = activityDB.findActivity(year, deliveryActivityID);
 					if(deliveryActivity != null)
 					{
+						//if volunteer already has the activity, the check returns null
 						String addedVolActResult = checkForActivityAndAddIfMissing(year, updatedDriver, deliveryActivity);
-						if(addedVolActResult.startsWith("ADDED_VOLUNTEER_ACTIVITY"))
+						if(addedVolActResult != null && addedVolActResult.startsWith("ADDED_VOLUNTEER_ACTIVITY"))
 							clientMgr.notifyAllInYearClients(year, addedVolActResult);
 					}
+					else
+						System.out.println("ServVolDB.update: delAct is null");
 				}
 			}
 			
