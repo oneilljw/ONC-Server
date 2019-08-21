@@ -22,17 +22,17 @@
   	  });
   	$('ul.ui-autocomplete.ui-menu').css({fontSize: '12px', width: '300px'});
   	
-  	//set the date picker to go back 19 years. Max age of a child ONC serves
-  	$(function() {
-  	    $( "#childdob" ).datepicker(
-  	    	{
-  	      yearRange: '-19:+0',
-  	      dayNamesMin: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ],
-  	      changeMonth: true,
-  	      changeYear: true,
-  	    	  showMonthAfterYear: true
-  	    });
-  	  });
+//  	//set the date picker to go back 19 years. Max age of a child ONC serves
+//  	$(function() {
+//  	    $( "#childdob" ).datepicker(
+//  	    	{
+//  	      yearRange: '-19:+0',
+//  	      dayNamesMin: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ],
+//  	      changeMonth: true,
+//  	      changeYear: true,
+//  	    	  showMonthAfterYear: true
+//  	    });
+//  	  });
   	
   	$( document ).ready(function()
 	{
@@ -46,6 +46,17 @@
   		
   		//clear the group combobox
 		groupcb.options.length = 0;
+  		
+  		//setup the add child DoB year parameters with a 20 year window
+  		var dobYearSelect = document.getElementById('dobyear');
+  		var currentyear = sessionStorage.getItem("curryear");
+  		for(year = currentyear; year > currentyear-20; year-- )
+  		{
+  			var option = document.createElement("option");
+  			option.text = year;
+  			option.value = year;
+  			dobYearSelect.add(option);
+  		}	
   		
   		if(window.location.href.indexOf("referral") > -1)
   		{
@@ -204,7 +215,12 @@
 	{
 		var child = {};
 	
-		var age = calculateAge(document.getElementById('childdob').value);
+		var sDoB = document.getElementById('dobmonth').value + '/' +
+					document.getElementById('dobday').value + '/' +
+					 document.getElementById('dobyear').value;
+		
+//		var age = calculateAge(document.getElementById('childdob').value);
+		var age = calculateAge(sDoB);
 		
 		if(document.getElementById('childfn').value === "")
 			document.getElementById('childfn').style.background = errorColor;
@@ -216,7 +232,8 @@
 		{
         		child["firstname"] = document.getElementById('childfn').value;
         		child["lastname"] = document.getElementById('childln').value;
-        		child["sDOB"] =	document.getElementById('childdob').value;
+//        	child["sDOB"] =	document.getElementById('childdob').value;
+        		child["sDOB"] =sDoB;
         		child["gender"] = document.getElementById('childgender').value;
         		child["school"] = document.getElementById('childschool').value;
         		
@@ -227,6 +244,30 @@
             		updateWishTable();
             		clearAddChild();
         		}
+		}
+	}
+	
+	function onDoBChange(element)
+	{
+		//clear existing day of month options
+		var select = document.getElementById("dobday");
+		select.options.length = 0;
+		
+		var year = document.getElementById('dobyear').value;
+		var month = document.getElementById('dobmonth').value;
+		var daysInMonth = [31,28,31,30,31,30,31,31,30,31,30,31];
+		var lastDayOfMonth = daysInMonth[month-1];
+		
+		if(month == 2 && ((year % 100 === 0) ? (year % 400 === 0) : (year % 4 === 0)))
+			lastDayOfMonth++;
+
+		//add proper # of days to days in month select
+		for (i=1; i<=lastDayOfMonth; i++)
+		{
+			var option = document.createElement("option");
+			option.text = i;
+			option.value = i;
+			select.add(option);
 		}
 	}
 	
@@ -254,7 +295,10 @@
 			var child = {};
 			child["firstname"] = document.getElementById('childfn').value;
     			child["lastname"] = document.getElementById('childln').value;
-    			child["sDOB"] =	document.getElementById('childdob').value;
+//    		child["sDOB"] =	document.getElementById('childdob').value;
+    			child["sDOB"]= document.getElementById('dobmonth').value + '/' +
+							document.getElementById('dobday').value + '/' +
+							 document.getElementById('dobyear').value;
     			child["gender"] = document.getElementById('childgender').value;
     			child["school"] = document.getElementById('childschool').value;
     			childrenJson.push(child);
@@ -273,7 +317,11 @@
 		
 		childfnElement.value="";
         childlnElement.value="";
-        document.getElementById('childdob').value="";
+//      document.getElementById('childdob').value="";
+        document.getElementById('dobmonth').selectedIndex = 0;
+        document.getElementById('dobday').selectedIndex = 0;
+        document.getElementById('dobyear').selectedIndex = 0;
+        
         document.getElementById('childgender').value="Unknown";
         document.getElementById('childschool').value="";
         
@@ -661,7 +709,7 @@
 		<option value="20121">20121</option>
 		<option value="20122">20122</option>
 	</select>
-	<input id='email' title="Email address" name="email" type="email" size="30" placeholder="email address">
+	<input id='email' title="Email address" name="email" type="email" size="30" onchange='verifyEmail()' placeholder="email address">
 	<button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
   </fieldset>
   <br>
@@ -732,7 +780,55 @@
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
   	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
     <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
-    <input id="childdob" title="Date of birth for child to be added" type="text" size="14" placeholder="DoB: mm/dd/yyyy">
+    <select id='dobmonth' title='Month child was born' onchange='onDoBChange(this)'>
+    		<option value=1>Jan</option>
+    		<option value=2>Feb</option>
+    		<option value=3>Mar</option>
+    		<option value=4>Apr</option>
+    		<option value=5>May</option>
+    		<option value=6>Jun</option>
+    		<option value=7>Jul</option>
+    		<option value=8>Aug</option>
+    		<option value=9>Sep</option>
+    		<option value=10>Oct</option>
+    		<option value=11>Nov</option>
+    		<option value=12>Dec</option>
+    	</select>
+    	<select id='dobday' title='Day child was born'>
+    		<option value=1>1</option>
+    		<option value=2>2</option>
+    		<option value=3>3</option>
+    		<option value=4>4</option>
+    		<option value=5>5</option>
+    		<option value=6>6</option>
+    		<option value=7>7</option>
+    		<option value=8>8</option>
+    		<option value=9>9</option>
+    		<option value=10>10</option>
+    		<option value=11>11</option>
+    		<option value=12>12</option>
+    		<option value=13>13</option>
+    		<option value=14>14</option>
+    		<option value=15>15</option>
+    		<option value=16>16</option>
+    		<option value=17>17</option>
+    		<option value=18>18</option>
+    		<option value=19>19</option>
+    		<option value=20>20</option>
+    		<option value=21>21</option>
+    		<option value=22>22</option>
+    		<option value=23>23</option>
+    		<option value=24>24</option>
+    		<option value=25>25</option>
+    		<option value=26>26</option>
+    		<option value=27>27</option>
+    		<option value=28>28</option>
+    		<option value=29>29</option>
+    		<option value=30>30</option>
+    		<option value=31>31</option>
+    	</select>
+    	<select id='dobyear' title='Year child was born' onchange='onDoBChange(this)'>	</select>
+<!--    <input id="childdob" title="Date of birth for child to be added" type="text" size="14" placeholder="DoB: mm/dd/yyyy"> -->
     <select id="childgender" title="Gender of child to be added">
       	<option value="Unknown">Unknown</option>
 		<option value="Boy">Boy</option>

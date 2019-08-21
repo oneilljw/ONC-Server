@@ -430,14 +430,20 @@ function onSubmit(bReferral)
 {
 	var errorElement = document.getElementById('errormessage');
 	
-	//check phone numbers
+	//check
 	var phoneMssg= verifyPhoneNumbers();
 	var schoolsMssg = verifySchools();
 	var giftsmealsMssg = '';
 	if(bReferral === true)	//only check if it's a referral submission
 		giftsmealsMssg = verifyGiftsAndMeals();		
-		
-	if(phoneMssg != '')
+	
+	if(!verifyEmail())
+	{
+		errorElement.textContent="Error: Improperly formatted email address";
+		document.getElementById('badfammssg').textContent = "Error: Improperly formatted email address";
+		window.location=document.getElementById('badfamanchor').href;		
+	}
+	else if(phoneMssg != '')
 	{
 		//one or more phone #'s are bad
 		errorElement.textContent=phoneMssg;
@@ -720,6 +726,29 @@ function isNumericPhoneNumber(phonenumber, separator)
 
 //	console.log('phonenumber= ' + phonenumber + ', testnumberC= ' + testNumberC);
 	return !isNaN(testNumber);	
+}
+
+function verifyEmail()
+{
+	var emailElement= document.getElementById('email');
+	var emailAddr = emailElement.value;
+	
+	var emailGood = isEmailValid(emailAddr);
+	
+	
+	if(emailAddr == '')	
+		emailElement.style.backgroundColor = '#FFFFFF';
+	else if(emailGood)
+		emailElement.style.backgroundColor = '#FFFFFF';
+	else
+		emailElement.style.backgroundColor = errorColor;
+	
+	return emailGood;
+}
+
+function isEmailValid (email)
+{
+	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function verifyAddress(element)

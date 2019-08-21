@@ -624,14 +624,13 @@ public class FamilyHandler extends ONCWebpageHandler
 				}
 				else
 				{
-					mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
+					mssg = String.format("%s Family Referral Added to ONC's Waitlist, ONC# %s.",
 						addedFamily.getLastName(), addedFamily.getONCNum());
 				
-					successMssg = String.format("%s Family Referral received and is on our Waitlist, ONC# %s. "
-					+ "Once Family Status is marked \"Verified\" please notify the family that gift pickup will "
-					+ "take place on 12/22 from 10am-noon at the Centreville Regional Library. Photo ID "
-					+ "matching HOH required. This is for wait list GIFTS only. Please contact WFCM for "
-					+ "post-deadline food requests.",
+					successMssg = String.format("%s family referral has been added to the ONC Waitlist, ONC# %s. "
+					+ "If resources becmome available and ONC is able to serve the family, their status "
+					+ "will change to \"verified\". Delivery date and/or pick-up instructions will be sent "
+					+ "to the appropriate agent.",
 					addedFamily.getLastName(), addedFamily.getONCNum());
 				
 					title = "Waitlist Referral Received";
@@ -664,11 +663,10 @@ public class FamilyHandler extends ONCWebpageHandler
 				mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
 						lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum());
 			
-				successMssg = String.format("%s Family Referral received and is on our Waitlist, ONC# %s. "
-				+ "Once Family Status is marked \"Verified\" please notify the family that gift pickup will "
-				+ "take place on 12/22 from 10am-noon at the Centreville Regional Library. Photo ID "
-				+ "matching HOH required. This is for wait list GIFTS only. Please contact WFCM for "
-				+ "post-deadline food requests.",
+				successMssg = String.format("%s family has been added to the ONC Waitlist, ONC# %s. "
+				+ "If resources become available and ONC is able to serve the family, their status "
+				+ "will change to \"verified\". Delivery data or pick-up instructions will be sent "
+				+ "to the appropriate referring agent.",
 				lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum());
 			
 				title = "Waitlist Referral Received";
