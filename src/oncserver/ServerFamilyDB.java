@@ -46,6 +46,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
 	private static final String ODB_FAMILY_MEMBER_COLUMN_SEPARATOR = " - ";
 	private static final int DEFAULT_GROUP_ID = 62;
+	private static final int DNS_WAITLIST_CODE = 1;
 	
 	private static List<FamilyDBYear> familyDB;
 	private static ServerFamilyDB instance = null;
@@ -486,22 +487,34 @@ public class ServerFamilyDB extends ServerSeasonalDB
 
 		if(maptype.equals("family"))
 		{
-			int dns = 0, unverified = 0, waitlist = 0, verified = 0, contacted = 0, confirmed = 0;
+			int dns = 0, unverified = 0, dnswaitlist = 0, servwaitlist = 0, verified = 0, 
+					contacted = 0, confirmed = 0;
 			
 			for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
 			{
-				if(f.getDNSCode() > -1 || !isNumeric(f.getONCNum())) { dns++; }
-				else if(f.getFamilyStatus() == FamilyStatus.Unverified) { served++; unverified++; }
-				else if(f.getFamilyStatus() == FamilyStatus.Waitlist) { served++; waitlist++; }
-				else if(f.getFamilyStatus() == FamilyStatus.Verified) { served++; verified++; }
-				else if(f.getFamilyStatus() == FamilyStatus.Contacted) {  served++; contacted++; }
-				else if(f.getFamilyStatus() == FamilyStatus.Confirmed) {served++; confirmed++; }
+				//unserved families
+				if(f.getDNSCode() > -1 || !isNumeric(f.getONCNum()))
+				{
+					if(isNumeric(f.getONCNum()) && f.getDNSCode() == DNS_WAITLIST_CODE)
+						dnswaitlist++;
+					dns++;
+				}
+				else
+				{
+					if(f.getFamilyStatus() == FamilyStatus.Unverified) {unverified++; }
+					else if(f.getFamilyStatus() == FamilyStatus.Waitlist) { servwaitlist++; }
+					else if(f.getFamilyStatus() == FamilyStatus.Verified) { verified++; }
+					else if(f.getFamilyStatus() == FamilyStatus.Contacted) { contacted++; }
+					else if(f.getFamilyStatus() == FamilyStatus.Confirmed) { confirmed++; }
+					served++;
+				}
 			}
 			
 			metricList.add(new Metric("DNS", dns));
+			metricList.add(new Metric("DNS WL", dnswaitlist));
 			metricList.add(new Metric("Served", served));
 			metricList.add(new Metric("Unverified", unverified));
-			metricList.add(new Metric("Waitlist", waitlist));
+			metricList.add(new Metric("Served WL", servwaitlist));
 			metricList.add(new Metric("Verfied", verified));
 			metricList.add(new Metric("Contacted", contacted));
 			metricList.add(new Metric("Confirmed", confirmed));
