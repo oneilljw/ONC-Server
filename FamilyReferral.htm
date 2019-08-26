@@ -583,12 +583,14 @@
   		color: rgb(255, 77, 85) !important;
   		font-size: 11px;
 	}
+	.addtable  { border: none; border-collapse: collapse;}
+	.addtable td { border: none; }
 	.namecol { width: 202px; }
-	.fncol { width: 120px; }
-	.lncol { width: 122px; }
-    .dobcol { width: 178px; }
-    .gendercol { width: 88px; }
-    .schoolcol { width: 148px; } 
+	.fncol { width: 108px; }
+	.lncol { width: 110px; }
+    .dobcol { width: 177px; }
+    .gendercol { width: 86px; }
+    .schoolcol { width: 149px; } 
     .actcol { width: 68px; } 
 	#giftcardmssg 
 	{
@@ -764,9 +766,10 @@
   <legend class="legend-major">Family Members</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
-  	<input id="childfn" title="First name of child to be added" type="text" size="16" placeholder="First Name">
-    <input id="childln" title="Last name of child to be added" type="text" size="16" placeholder="Last Name">
-    <select id='dobmonth' title='Month child was born' onchange='onDoBChange(this)'>
+  	<table class='addtable'><tr>
+  	<td class='fncol'><input id="childfn" title="First name of child to be added" type="text" size="14" placeholder="First Name"></td>
+  	<td class='lncol'><input id="childln" title="Last name of child to be added" type="text" size="15" placeholder="Last Name"></td>
+    <td class='dbcol'><select id='dobmonth' title='Month child was born' onchange='onDoBChange(this)'>
     		<option value=1>Jan</option>
     		<option value=2>Feb</option>
     		<option value=3>Mar</option>
@@ -779,7 +782,7 @@
     		<option value=10>Oct</option>
     		<option value=11>Nov</option>
     		<option value=12>Dec</option>
-    	</select>
+     </select>
     	<select id='dobday' title='Day child was born'>
     		<option value=1>1</option>
     		<option value=2>2</option>
@@ -813,16 +816,19 @@
     		<option value=30>30</option>
     		<option value=31>31</option>
     	</select>
-    	<select id='dobyear' title='Year child was born' onchange='onDoBChange(this)'>	</select>
+    	<select id='dobyear' title='Year child was born' onchange='onDoBChange(this)'></select>
+    	</td>
 <!--    <input id="childdob" title="Date of birth for child to be added" type="text" size="14" placeholder="DoB: mm/dd/yyyy"> -->
-    <select id="childgender" title="Gender of child to be added">
+	
+    <td class='gendercol'><select id="childgender" title="Gender of child to be added">
       	<option value="Unknown">Unknown</option>
 		<option value="Boy">Boy</option>
 		<option value="Girl">Girl</option>
-	</select>
-	<input id="childschool" class='schoolname' title="School attended, if none, enter Pre-K" type="text" size="20" placeholder="School">
-	<button type="button" onclick="addChild()" title="Click to add child">Add Child</button>
-	<button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button>
+	</select></td>
+	<td class='schoolcol'><input id="childschool" class='schoolname' title="School attended, if none, enter Pre-K" type="text" size="20" placeholder="School"></td>
+	<td><button type="button" onclick="addChild()" title="Click to add child">Add Child</button></td>
+	<td><button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button></td>
+	</tr></table>
   <table id="childtable" border="1">
   	<thead>
     	<tr>
@@ -841,14 +847,16 @@
   <br>
   <fieldset>
   	<legend>Other adults in family (in addition to the head of household)</legend>
-  	<input id="adultname" title="Name" type="text" size="28" placeholder="First & Last Name">
-    <select id="adultgender" title="Gender">
+  	<table class='addtable'><tr>
+  	<td class='namecol'><input id="adultname" title="Name" type="text" size="28" placeholder="First & Last Name"></td>
+    <td class='gendercol'><select id="adultgender" title="Gender">
 		<option value="Male">Male</option>
 		<option value="Female">Female</option>
 		<option value="Unknown">Unknown</option>
-	</select>
-	<button type="button" onclick="addAdult()" title="Click to add adult to family">Add Adult</button>
-	<button type="button" onclick="clearAddAdult()" title="Click to clear adult fields">Clear</button>
+	</select></td>
+	<td><button type="button" onclick="addAdult()" title="Click to add adult to family">Add Adult</button></td>
+	<td><button type="button" onclick="clearAddAdult()" title="Click to clear adult fields">Clear</button></td>
+	</tr></table>
   <table id="adulttable" border="1">
   	<thead>
     	<tr>
