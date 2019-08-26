@@ -20,7 +20,7 @@ import ourneighborschild.ONCUser;
 
 public class ServerNoteDB extends ServerSeasonalDB
 {
-	private static final int NOTE_DB_HEADER_LENGTH = 15;
+	private static final int NOTE_DB_HEADER_LENGTH = 16;
 
 	private static List<NoteDBYear> noteDB;
 	private static ServerNoteDB instance = null;
@@ -168,7 +168,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 	{
 		String[] header = {"Note ID", "Owner ID", "Status", "Title", "Note", "Changed By",
 				"Response", "Response By", "Time Created", "Time Viewed","Time Responded",
-				"Email","Stoplight Pos", "Stoplight Mssg", "Stoplight C/B"};
+				"Email","Next Season", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B"};
 		
 		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		if(noteDBYear.isUnsaved())

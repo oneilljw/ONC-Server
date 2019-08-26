@@ -6,6 +6,7 @@
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="editprofile.js"></script>
   <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script src="sorttable.js"></script>
   <script type="text/javascript"></script>
   <script>
 	var pyFamJson = [];
@@ -352,7 +353,7 @@
 			{
     				if(agentID == -1 || agentID == pyFamJson[i].agentID)
     				{
-    					addTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
+    					addPYTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
     					count++;
     				}
 			}
@@ -378,7 +379,7 @@
 			{
     				if(agentID == -1 || agentID == cyFamJson[i].agentID)
     				{
-    					addTableRow(cyFamJson[i], document.getElementById('cyTable'), "Edit");
+    					addCYTableRow(cyFamJson[i], document.getElementById('cyTable'), "Edit");
     					count++;
     				}
 			}
@@ -408,42 +409,108 @@
    	 	return cbElement.value;
     }
     
-    function addTableRow(family, table, buttontext)
+    function addPYTableRow(family, table, buttontext)
+    {   
+        if (!document.getElementsByTagName) return;
+       
+        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.lastNoteStatus,
+        						family.dnsCodeAcronym];
+        
+        var cellwidth = ['68px','152px','160px','68px','68px','68px'];
+        
+	    var tabBody = table.getElementsByTagName('tbody').item(0);
+        row=document.createElement("tr");
+        
+        var col = 0;
+        while(col< 3)	//create the first 3 family info cells
+        {
+        		var cell = document.createElement("td");
+        		cell.appendChild(document.createTextNode(familyinfo[col]));
+        		cell.style.width = cellwidth[col++];
+        		row.appendChild(cell);
+        }
+        
+        //create a note button, if necessary in column 4
+        var cell = document.createElement("td");
+        if(family.lastNoteStatus > NoteStatus.NONE)
+        {	
+        		var notebtn = document.createElement("button");
+     		notebtn.style.width = cellwidth[col++];
+        		notebtn.innerHTML = 'Note';
+        		notebtn.onclick=function() {familyNote(table, family);};
+        		cell.appendChild(notebtn);	
+   		}
+        else
+        	{
+        		cell.appendChild(document.createTextNode(""));
+      		cell.style.width = cellwidth[col++];
+        	}
+        row.appendChild(cell);
+        
+        //create a dns button, if necessary in column 5
+        var cell = document.createElement("td");
+        if(family.dnsCodeID > -1)
+        {	
+        		var dnsbtn = document.createElement("button");
+        		dnsbtn.style.width = cellwidth[col++];
+        		dnsbtn.innerHTML = family.dnsCodeAcronym;
+        		dnsbtn.onclick=function() {dnsCode(family);};
+        		cell.appendChild(dnsbtn);
+    		}
+        else
+        	{
+    			cell.appendChild(document.createTextNode(""));
+    			cell.style.width = cellwidth[col++];
+        	}
+        row.appendChild(cell);
+
+        //add the refer or edit button
+        btn = document.createElement("button");
+        btn.innerHTML = buttontext;
+        btn.style.width = cellwidth[col];
+        btn.onclick=function() {familyAction(table, family.targetID);};
+		setButtonStatus(family, table, btn);
+        row.appendChild(btn);
+        
+        tabBody.appendChild(row);
+    }
+    
+    function addCYTableRow(family, table, buttontext)
     {   
         if (!document.getElementsByTagName) return;
        
         var fstatus;
-        if(family.fstatus === 'Confirmed')
+        	if(family.fstatus === 'Confirmed')
         		fstatus = 'Confirmed \u2713';
-        else
+        	else
         		fstatus = family.fstatus;
         
-        var dstatus;
-        if(family.giftStatus === 'Delivered')
+        	var dstatus;
+        	if(family.giftStatus === 'Delivered')
         		dstatus = 'Delivered \u2713';
-        else if(family.giftStatus === 'Referred')
+        	else if(family.giftStatus === 'Referred')
         		dstatus = 'Referred \u2713';
-        else
+        	else
         		dstatus = family.giftStatus;
         	
-        var mealstatus;
-        if(family.mealStatus === 'Thanksgiving_Confirmed')
+        	var mealstatus;
+        	if(family.mealStatus === 'Thanksgiving_Confirmed')
         		mealstatus = 'Thanksgiving \u2713';
-        else if(family.mealStatus === 'December_Confirmed')
+        	else if(family.mealStatus === 'December_Confirmed')
         		mealstatus = 'December \u2713';
-        else if(family.mealStatus === 'Both_Confirmed')
+        	else if(family.mealStatus === 'Both_Confirmed')
         		mealstatus = 'Both \u2713';
-        else if(family.mealStatus === 'None')
+        	else if(family.mealStatus === 'None')
         		mealstatus = "Not Requested";
-        else if(family.mealStatus === 'Referred')
+        	else if(family.mealStatus === 'Referred')
         		mealstatus = 'Referred \u2713'
-        else
+        	else
         		mealstatus = family.mealStatus;
-        	
+        
         var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.lastNoteStatus,
         						family.dnsCodeAcronym, fstatus, dstatus, mealstatus];
         
-        var cellwidth = ['54px', '152px', '160px', '68px', '68px','128px', '128px', '128px', '54px'];
+        var cellwidth = ['68px', '152px', '160px', '68px', '68px','128px', '128px', '128px', '68px'];
         
 	    var tabBody = table.getElementsByTagName('tbody').item(0);
         row=document.createElement("tr");
@@ -509,12 +576,12 @@
         row.appendChild(btn);
         
         //set row color
-		if(table=== document.getElementById('cyTable') && family.lastNoteStatus > NoteStatus.NONE && 
+		if(family.lastNoteStatus > NoteStatus.NONE && 
 				family.lastNoteStatus !== NoteStatus.RESPONDED)
 		{
 			row.style.backgroundColor = "Yellow";
 		}
-		else if(table=== document.getElementById('cyTable') && family.dnsCodeID > -1)
+		else if(family.dnsCodeID > -1)
 			row.style.backgroundColor = "Red";
         
         tabBody.appendChild(row);
@@ -671,10 +738,15 @@
     		else
     	   	 return false;
     }
+    
+    function onHeaderClicked()
+    {
+    		alert("Clicked");
+    }
      
     function onChangePW() 
     {
-    		if(validate())
+    		if(validatePW())
     		{
 			var params = {}	
 			params["field1"] = document.getElementById('currpw').value;
@@ -696,7 +768,7 @@
 		window.location=document.getElementById('closepopup').href;
     }
 	
-	function validate()
+	function validatePW()
     {
 		var mssgEl = document.getElementById("pw_mssg");
     		var currpwEl = document.getElementById("currpw");
@@ -783,11 +855,11 @@
             height: 208px;
         }
 
-        .onccol { width: 54px; }
-        .fncol { width: 152px; }
-        .lncol { width: 160px; }
-        .btncol { width: 68px; }
-        .statcol { width: 128px; }
+        .onccol { width: 68px; cursor: pointer; }
+        .fncol { width: 152px; cursor: pointer; }
+        .lncol { width: 160px; cursor: pointer; }
+        .btncol { width: 68px; cursor: pointer; }
+        .statcol { width: 128px; cursor: pointer;}
 		#newbar { text-align: right; }
 		.textDialog 
 		{
@@ -910,7 +982,7 @@
 		</span>
   </div>
   <div class="constrainer">
-	<table id="pyTable">
+	<table class='sortable' id="pyTable">
       <thead>
         <tr>
        	<th class='onccol'>ONC #</th>
@@ -918,9 +990,6 @@
        	<th class='lncol'>Last Name</th>
        	<th class='btncol'>Note</th>
        	<th class='btncol'>Code</th>
-        	<th class='statcol'>Family Status</th>
-        	<th class='statcol'>Gift Status</th>
-        	<th class='statcol'>Meal Status</th>
         	<th class='onccol'>Action</th>
         </tr>
       </thead>
@@ -944,7 +1013,7 @@
 	</span>
   </div>
   <div class="constrainer">
-    <table id= 'cyTable'>
+    <table class="sortable" id= 'cyTable'>
       <thead>
         <tr>
        	<th class='onccol'>ONC #</th>

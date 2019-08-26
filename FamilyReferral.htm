@@ -22,18 +22,6 @@
   	  });
   	$('ul.ui-autocomplete.ui-menu').css({fontSize: '12px', width: '300px'});
   	
-//  	//set the date picker to go back 19 years. Max age of a child ONC serves
-//  	$(function() {
-//  	    $( "#childdob" ).datepicker(
-//  	    	{
-//  	      yearRange: '-19:+0',
-//  	      dayNamesMin: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ],
-//  	      changeMonth: true,
-//  	      changeYear: true,
-//  	    	  showMonthAfterYear: true
-//  	    });
-//  	  });
-  	
   	$( document ).ready(function()
 	{
   		//set the hidden values
@@ -226,7 +214,7 @@
 			document.getElementById('childfn').style.background = errorColor;
 		else if(document.getElementById('childln').value === "")
 			document.getElementById('childln').style.background = errorColor;
-		else if(age > 5 && document.getElementById('childschool').value === "")
+		else if(document.getElementById('childschool').value === "")
 			document.getElementById('childschool').style.background = errorColor;
 		else
 		{
@@ -574,14 +562,6 @@
 	}
   </script>
   <style>
-	.ui-datepicker
-	{
-		width:480px;
-  		background-color: lightskyblue;
-  		font-size:13px;
-	}
-	.ui-datepicker-calendar .ui-state-active  { background: #fff000; }
-	.ui-datepicker thead { background-color: #f7f7f7; }
 	ul.ui-autocomplete.ui-menu
 	{
 		font-size:12px;
@@ -603,6 +583,13 @@
   		color: rgb(255, 77, 85) !important;
   		font-size: 11px;
 	}
+	.namecol { width: 202px; }
+	.fncol { width: 120px; }
+	.lncol { width: 122px; }
+    .dobcol { width: 178px; }
+    .gendercol { width: 88px; }
+    .schoolcol { width: 148px; } 
+    .actcol { width: 68px; } 
 	#giftcardmssg 
 	{
 		margin-top: 0px;
@@ -614,7 +601,6 @@
 		display: flex;
  		justify-content: center;
 	}
-	
   </style>
 </head>
 <body>
@@ -840,12 +826,12 @@
   <table id="childtable" border="1">
   	<thead>
     	<tr>
-        	<th>First Name</th>
-        	<th>Last Name</th>
-        	<th>DoB</th>
-        	<th>Gender</th>
-        	<th>School</th>
-        	<th>Action</th>
+        	<th class='fncol'>First Name</th>
+        	<th class='lncol'>Last Name</th>
+        	<th class='dobcol'>DoB</th>
+        	<th class='gendercol'>Gender</th>
+        	<th class='schoolcol'>School</th>
+        	<th class='actcol'>Action</th>
     	</tr>
       </thead>
       <tbody id="tchildbody">
@@ -866,9 +852,9 @@
   <table id="adulttable" border="1">
   	<thead>
     	<tr>
-        	<th>Name</th>
-        	<th>Gender</th>
-        	<th>Action</th>
+        	<th class='namecol'>Name</th>
+        	<th class='gendercol'>Gender</th>
+        	<th class='actcol'>Action</th>
     	</tr>
     </thead>
     <tbody id="tadultbody">

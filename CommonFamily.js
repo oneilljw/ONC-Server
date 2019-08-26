@@ -41,7 +41,7 @@ function addChildTableRow(cnum, child, bAction)
 {
     var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
     var fieldname = ["childfn", "childln", "childdob", "childgender", "childschool"];
-    var fieldsize = [15, 16, 11, 11, 20];
+    var fieldsize = [15, 16, 24, 11, 20];
     
     var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
     row=document.createElement("tr");

@@ -133,6 +133,12 @@
   		color: rgb(255, 77, 85) !important;
   		font-size: 11px;
 	}
+	.namecol { width: 202px; }
+	.fncol { width: 120px; }
+	.lncol { width: 122px; }
+    .dobcol { width: 178px; }
+    .gendercol { width: 88px; }
+    .schoolcol { width: 148px; } 
   </style>
 </head>
 <body>
@@ -293,11 +299,11 @@
 	  <table id='childtable'>
 	  	<thead>
     		<tr>
-        		<th>First Name</th>
-        		<th>Last Name</th>
-        		<th>DoB </th>
-        		<th>Gender </th>
-        		<th>School </th>
+        	<th class='fncol'>First Name</th>
+        	<th class='lncol'>Last Name</th>
+        	<th class='dobcol'>DoB</th>
+        	<th class='gendercol'>Gender</th>
+        	<th class='schoolcol'>School</th>
     		</tr>
         </thead>
       	<tbody id="tchildbody">
@@ -309,8 +315,8 @@
 	  <table id='adulttable'>
 	  	<thead>
     		<tr>
-        		<th>Name</th>
-        		<th>Gender </th>
+        	<th class='namecol'>Name</th>
+        	<th class='gendercol'>Gender</th>
     		</tr>
     	</thead>
     	<tbody id="tadultbody">
