@@ -5,16 +5,12 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import ourneighborschild.ONCEntity;
 import ourneighborschild.ONCNote;
-import ourneighborschild.ONCObject;
 import ourneighborschild.ONCUser;
 
 
@@ -25,8 +21,8 @@ public class ServerNoteDB extends ServerSeasonalDB
 	private static List<NoteDBYear> noteDB;
 	private static ServerNoteDB instance = null;
 	
+	
 	private static ClientManager clientMgr;
-	private static ServerUserDB userDB;
 	
 	private ServerNoteDB() throws FileNotFoundException, IOException
 	{
@@ -49,7 +45,6 @@ public class ServerNoteDB extends ServerSeasonalDB
 		}
 		
 		clientMgr = ClientManager.getInstance();
-		userDB = ServerUserDB.getInstance();
 	}
 	
 	public static ServerNoteDB getInstance() throws FileNotFoundException, IOException
@@ -84,13 +79,19 @@ public class ServerNoteDB extends ServerSeasonalDB
 		addedNote.setDateChanged(new Date());
 		addedNote.setChangedBy(client.getLNFI());
 		
+		//if the showNextSeason flag is set, clear the showNextSeason flag for all other family notes
+		if(addedNote.showNextSeason())
+			for(ONCNote n : noteDBYear.getList())
+				if(n.getOwnerID() == addedNote.getOwnerID())
+					n.setShowNextSeason(false);
+		
 		//add the new note to the data base.
 		noteDBYear.add(addedNote);
 		noteDBYear.setChanged(true);
 		
 		//if the note includes a request to sent the agent an email, do so
-		if(addedNote.sendEmail())
-			userDB.createAndSendNoteNotificationEmail(year, addedNote);
+//		if(addedNote.sendEmail())
+//			userDB.createAndSendNoteNotificationEmail(year, addedNote);
 							
 		return "ADDED_NOTE" + gson.toJson(addedNote, ONCNote.class);
 	}
@@ -112,6 +113,13 @@ public class ServerNoteDB extends ServerSeasonalDB
 		//update the status accordingly
 		if(index < noteList.size())
 		{
+			//if the change is setting the showNextSeason flags, clear all the showNextSeason flags
+			//in for the same family in the season
+			if(updatedNote.showNextSeason())
+				for(ONCNote n : noteDBYear.getList())
+					if(n.getOwnerID() == updatedNote.getOwnerID())
+						n.setShowNextSeason(false);
+			
 			noteList.set(index, updatedNote);
 			noteDBYear.setChanged(true);
 			return "UPDATED_NOTE" + gson.toJson(updatedNote, ONCNote.class);
@@ -188,31 +196,78 @@ public class ServerNoteDB extends ServerSeasonalDB
 				
 		return famNoteList;		 
 	}
-	
+	/******
+	 * Retrieves the status of the last note for a family if the year is the current season. 
+	 * Otherwise, it looks for the last note in a prior year and if the prior year last note 
+	 * has the showNextSeason flag set, it returns that status. If no note is found or if a prior 
+	 * year last note is found without the showNextSeason flag set, -1 is returned.  
+	 * @param year
+	 * @param ownerID
+	 * @return
+	 */
 	static int lastNoteStatus(int year, int ownerID)
-	{
+	{	
 		List<ONCNote> noteList = noteDB.get(DBManager.offset(year)).getList();
-		int index = noteList.size() -1;
-		while(index >= 0 && noteList.get(index).getOwnerID() != ownerID)
-			index--;
 		
-		return index >= 0 ? noteList.get(index).getStatus() : -1;
+		ONCNote note = null;
+		int index;
+		if(DBManager.getCurrentSeason() != year)
+		{
+			for(index = noteList.size() -1; index >=0; index--)
+			{
+				note = noteList.get(index);
+				if(note.getOwnerID() == ownerID && note.showNextSeason())
+					break;
+			}
+		}
+		else
+		{
+			for(index = noteList.size() -1; index >=0; index--)
+			{
+				note = noteList.get(index);
+				if(note.getOwnerID() == ownerID)
+					break;
+			}
+		}
+		
+		if(index >= 0 && note != null)
+			return note.getStatus();
+		else
+			return -1; 
 	}
 	
-	//take advantage of the fact the list of notes if saved in time order. Search 
+	//For current season families, we only let the referring agent view the most recent note. For prior season 
+	//families we provide the note, if one exists, that has been marked to show the next season.
+	//Take advantage of the fact the list of notes if saved in time order. Search 
 	//from the bottom for the first note for the family. If no note, return a dummy note
 	static ONCNote getLastNoteForFamily(int year, int ownerID, WebClient wc)
 	{
 		NoteDBYear noteDBYear = noteDB.get(DBManager.offset(year));
 		List<ONCNote> noteList = noteDBYear.getList();
-		int index = noteList.size()-1;
-		while(index >= 0 && noteList.get(index).getOwnerID() != ownerID)
-			index--;
+		ONCNote updatedNote = null;
+		int index;
 		
-		if(index >= 0)
+		if(DBManager.getCurrentSeason() != year)
 		{
-			ONCNote updatedNote = noteList.get(index);
-			
+			for(index = noteList.size() -1; index >=0; index--)
+			{
+				updatedNote = noteList.get(index);
+				if(updatedNote.getOwnerID() == ownerID && updatedNote.showNextSeason())
+					break;
+			}
+		}
+		else
+		{
+			for(index = noteList.size() -1; index >=0; index--)
+			{
+				updatedNote = noteList.get(index);
+				if(updatedNote.getOwnerID() == ownerID)
+					break;
+			}
+		}		
+		
+		if(index >= 0 && updatedNote != null)
+		{
 			//update user who viewed if not already responded
 			if(updatedNote.getStatus() < ONCNote.RESPONDED)
 			{

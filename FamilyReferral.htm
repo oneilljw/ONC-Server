@@ -585,10 +585,10 @@
 	}
 	.addtable  { border: none; border-collapse: collapse;}
 	.addtable td { border: none; }
-	.namecol { width: 202px; }
-	.fncol { width: 108px; }
+	.namecol { width: 198px; }
+	.fncol { width: 104px; }
 	.lncol { width: 110px; }
-    .dobcol { width: 177px; }
+    .dobcol { width: 178px; }
     .gendercol { width: 86px; }
     .schoolcol { width: 149px; } 
     .actcol { width: 68px; } 
@@ -767,9 +767,9 @@
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
   	<table class='addtable'><tr>
-  	<td class='fncol'><input id="childfn" title="First name of child to be added" type="text" size="14" placeholder="First Name"></td>
-  	<td class='lncol'><input id="childln" title="Last name of child to be added" type="text" size="15" placeholder="Last Name"></td>
-    <td class='dbcol'><select id='dobmonth' title='Month child was born' onchange='onDoBChange(this)'>
+  	<td class='fncol'><input id="childfn" title="First name of child to be added" type="text" size='14' placeholder="First Name"></td>
+  	<td class='lncol'><input id="childln" title="Last name of child to be added" type="text" size='15' placeholder="Last Name"></td>
+    <td class='dobcol'><select id='dobmonth' title='Month child was born' onchange='onDoBChange(this)'>
     		<option value=1>Jan</option>
     		<option value=2>Feb</option>
     		<option value=3>Mar</option>
@@ -818,9 +818,7 @@
     	</select>
     	<select id='dobyear' title='Year child was born' onchange='onDoBChange(this)'></select>
     	</td>
-<!--    <input id="childdob" title="Date of birth for child to be added" type="text" size="14" placeholder="DoB: mm/dd/yyyy"> -->
-	
-    <td class='gendercol'><select id="childgender" title="Gender of child to be added">
+	<td class='gendercol'><select id="childgender" title="Gender of child to be added">
       	<option value="Unknown">Unknown</option>
 		<option value="Boy">Boy</option>
 		<option value="Girl">Girl</option>
