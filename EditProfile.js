@@ -8,7 +8,6 @@ function showEditProfileDialog()
     	$.getJSON('getuser', params, function(user)
     	{
     		userJson = user;
-    		console.log(user);
     			
     		if(userJson.hasOwnProperty('error'))
       	{
@@ -39,8 +38,11 @@ function showEditProfileDialog()
     	    			$.getJSON('groups', groupparams, function(data)
     	    			{
     	    				profileCBGroups = data;
-    	    				//clear the group comboboxes
+    	    				//clear the group combo boxes
     	    	    			profileGroupCB.options.length = 0;
+    	    	    			
+    	    	    			//add a dummy option to the top of the group select
+    	    	    			addComboBoxOption(profileGroupCB, "--Select a School/Org To Add--", -1);
     	    			
     	    	    			//add the groups for the agent
     	    				for (var i=0; i < data.length; i++)
@@ -86,14 +88,45 @@ function addGroupTableRow(index, group)
         
     tabBody.appendChild(row);
 }
+
+function onGroupSelected(selElem)
+{
+	var addButton = document.getElementById('addgroup');
+	
+	//if a value of -1 is selected, disable the add button
+	if(selElem.selectedIndex > 0)
+	{	
+		addButton.value = 'changed';
+		addButton.style.backgroundColor='#336699';
+		addButton.disabled = false;
+	}
+	else
+	{
+		addButton.value = 'unchanged';
+		addButton.style.backgroundColor='Gray';
+		addButton.disabled = true;
+	}	
+}
    
 function addGroup()
 {
-    	var addedGroup = profileCBGroups[document.getElementById("groupselect").selectedIndex];
+	//check to see if change is allowed
+	var addButton = document.getElementById('addgroup');
+	if(addButton.value === 'changed')
+	{
+		var groupsel = document.getElementById("groupselect");
+    		var addedGroup = profileCBGroups[groupsel.selectedIndex];
 
-    	profileTableGroups.push(addedGroup);
-    	updateGroupTable();
-    	checkForProfileChange();
+    		profileTableGroups.push(addedGroup);
+    		updateGroupTable();
+    		checkForProfileChange();
+    		
+    		groupsel.selectedIndex = 0;
+    		
+    		addButton.value = 'unchanged';
+    		addButton.style.backgroundColor='Gray';
+    		addButton.disabled = true;
+	}
 }
     
 function removeGroup(groupid)

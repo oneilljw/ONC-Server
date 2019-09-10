@@ -168,4 +168,5 @@ td
 }
 tr:first-child td { border-top-width: 0; }
 tr:nth-child(odd) { background-color: #ffffff; }
-tr:nth-child(even) { background-color: lightgrey; } 
+tr:nth-child(even) { background-color: lightgrey; }
+#grouptable { border: 2px solid black}

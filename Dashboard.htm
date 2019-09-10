@@ -418,10 +418,9 @@
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
 	  <div class='innerextended'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
 		  <img class='logoimg' src="onclogo">
-		  <span class='logospan'>Update ONC Profile</span>
+		  <span class='logospan'>Verify/Update ONC Profile</span>
 	  </div>
 	  <div class='greenbackground'>
 	  <fieldset class="fieldset-auto-width">
@@ -451,21 +450,21 @@
     	  </div>
     	  <div class='greenbackground'>
     	  <fieldset class="fieldset-auto-width">
-    	  <legend class="legend-major">School or Organization You Refer Families From</legend>
-    	    <div class='profilediv'> 
-  		  <select id="groupselect" title="School or Organization Name"></select>
-  		  <button type="button" onclick="addGroup()" title="Click to add school or organization">Add School/Org.</button>
-  		</div>
-  	<table id="grouptable" border="1">
-  		<thead>
+    	  <legend class="legend-major">Your School(s) or Organization(s)</legend>
+  	    <table id="grouptable">
+  		  <thead>
     			<tr>
         			<th width='320px' >School or Organization</th>
         			<th class='onccol'>Action</th>
     			</tr>
-    		</thead>
-    		<tbody id="grouptbody">
-    		</tbody>
-	</table>
+    		  </thead>
+    		  <tbody id="grouptbody">
+    		  </tbody>
+	    </table>
+	    <div class='profilediv'> 
+  		  <select id="groupselect" title="School or Organization Name" oninput='onGroupSelected(this)'></select>
+  		  <button id='addgroup' value='unchanged' type="button" onclick="addGroup()" style="background-color:Grey" title="Click to add school or organization" disabled>Add School/Org.</button>
+  		</div>
   </fieldset>
   </div>
     	  <div id='buttonbar'>
