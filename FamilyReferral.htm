@@ -29,8 +29,8 @@
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   		
   		//update the nav bar links
-  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear') 
-  				+'&famref=' + sessionStorage.getItem('famref');
+//  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear') 
+//  				+'&famref=' + sessionStorage.getItem('famref');
   		
   		//clear the group combobox
 		groupcb.options.length = 0;
@@ -618,7 +618,8 @@
   </div>
   <nav>
     <ul>
-  	<li id="homeli"><a id='homelink'>Home</a></li>
+     <li id="homeli"><a id='homelink' href='startpage'>Home</a></li>
+<!--  <li id="homeli"><a id='homelink'>Home</a></li>	-->  	
 	</ul>
 	<ul class='floatright'>
 	    <li id="logoutli"><a href='javascript:onLogoutLink()'>Logout</a></li>
