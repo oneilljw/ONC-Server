@@ -240,7 +240,6 @@ public class ServerUserDB extends ServerPermanentDB
 			}
 		}
 		
-		System.out.println(String.format("ServUserDB.updatePro: bCD= %d", bCD));
 		if(bCD > 0)
 		{
 			//there was a change, so update the profile fields and save ONCServerUser object
