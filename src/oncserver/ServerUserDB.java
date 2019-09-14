@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.LinkedList;
@@ -200,13 +201,16 @@ public class ServerUserDB extends ServerPermanentDB
 		if(!su.getEmail().equals(getStringParam(params, "email"))) { bCD = bCD | 16; }
 		if(!su.getCellPhone().equals(getStringParam(params, "phone"))) { bCD = bCD | 32; }
 		
-		List<Integer> userGroupList = su.getGroupList();
-		List<Integer> websiteGroupList = su.getGroupList();
-		
+		List<Integer> websiteGroupList = new ArrayList<Integer>();
 		//if user belongs to groups, check for group change
 		if(su.getPermission().compareTo(UserPermission.Agent) >= 0)
 		{
-			websiteGroupList = new ArrayList<Integer>();
+			//make a deep copy of the user group list and sort it
+			List<Integer> userGroupListCopy = new ArrayList<Integer>();
+			for(Integer groupID : su.getGroupList())
+				userGroupListCopy.add(groupID);
+			Collections.sort(userGroupListCopy);
+			
 			int index = 0;
 			String groupParam = String.format("group%d", index);
 			while(params.containsKey(groupParam))
@@ -217,26 +221,26 @@ public class ServerUserDB extends ServerPermanentDB
 			
 				groupParam = String.format("group%d", ++index);
 			}
+			Collections.sort(websiteGroupList);
 		
-			if(userGroupList.size() != websiteGroupList.size())
+			if(userGroupListCopy.size() != websiteGroupList.size())
 			{
 				bCD = bCD | 64;
 			}
 			else
 			{
-				boolean bGroupChanged = false;
-				index = 0;
-				while(index < userGroupList.size() && !bGroupChanged)
+				for(int i=0; i< userGroupListCopy.size(); i++)
 				{
-					if(userGroupList.get(index) != websiteGroupList.get(index))
+					if(userGroupListCopy.get(i) != websiteGroupList.get(i))
 					{
 						bCD = bCD | 128;
-						bGroupChanged = true;
+						break;
 					}
 				}
 			}
 		}
 		
+		System.out.println(String.format("ServUserDB.updatePro: bCD= %d", bCD));
 		if(bCD > 0)
 		{
 			//there was a change, so update the profile fields and save ONCServerUser object
@@ -246,7 +250,8 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setTitle((String) getStringParam(params,"title"));
 			updateUserEmail(su, getStringParam(params,"email"));
 			su.setCellPhone(getStringParam(params,"phone"));
-			su.setGroupList(websiteGroupList);
+			if(bCD >= 64)
+				su.setGroupList(websiteGroupList);
 			
 			//determine if the user status was Update_Profile. If it was set it to Active.
 			if(su.getStatus() == UserStatus.Update_Profile)

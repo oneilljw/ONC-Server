@@ -115,7 +115,8 @@ function addGroup()
 	if(addButton.value === 'changed')
 	{
 		var groupsel = document.getElementById("groupselect");
-    		var addedGroup = profileCBGroups[groupsel.selectedIndex];
+    		var addedGroup = profileCBGroups[groupsel.selectedIndex-1];
+    		console.log(addedGroup);
 
     		profileTableGroups.push(addedGroup);
     		updateGroupTable();
