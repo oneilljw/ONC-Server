@@ -230,6 +230,16 @@
             mssgEl.textContent = "Current password not provided, please try again!";
             ok = false;
         }
+        else if(pass1El.value == '' || pass2El.value == '')
+		{
+			//alert("Either New or Verify Passwords are empty");
+    			pass1El.style.borderColor = "#E34234";
+    			pass2El.style.borderColor = "#E34234";
+    
+    			mssgEl.style.color = "Red";
+    			mssgEl.textContent = "Please fill out both New and Confirm, try again!";
+    			ok = false;
+		}        
         else if(pass1El.value !== pass2El.value)
         {
             //alert("New and Verify Passwords do not match");

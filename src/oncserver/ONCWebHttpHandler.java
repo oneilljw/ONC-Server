@@ -21,8 +21,6 @@ import com.google.gson.Gson;
 
 public class ONCWebHttpHandler extends ONCWebpageHandler
 {
-	private static final int STATUS_CONFIRMED = 5;
-	
 	private static final int RC_ADDRESS_IS_VALID = 0;
 	private static final int RC_ADDRESS_IS_SCHOOL = 1;
 	private static final int RC_ADDRESS_NOT_VALID = 2;

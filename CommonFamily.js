@@ -731,19 +731,22 @@ function isNumericPhoneNumber(phonenumber, separator)
 function verifyEmail()
 {
 	var emailElement= document.getElementById('email');
-	var emailAddr = emailElement.value;
 	
-	var emailGood = isEmailValid(emailAddr);
-	
-	
-	if(emailAddr == '')	
+	if(emailElement.value.length == 0)
+	{
 		emailElement.style.backgroundColor = '#FFFFFF';
-	else if(emailGood)
+		return true;
+	}
+	else if(isEmailValid(emailElement.value))
+	{
 		emailElement.style.backgroundColor = '#FFFFFF';
+		return true;
+	}
 	else
+	{	
 		emailElement.style.backgroundColor = errorColor;
-	
-	return emailGood;
+		return false;
+	}
 }
 
 function isEmailValid (email)

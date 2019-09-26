@@ -21,6 +21,17 @@
             mssg.innerHTML = "Current password not provided, please try again!";
             ok = false;
         }
+        else if(pass1.length == 0 || pass2.length == 0)
+        	{
+        		//alert("Pme of the passwords is blank");
+            document.getElementById("pass1").style.borderColor = "#E34234";
+            document.getElementById("pass2").style.borderColor = "#E34234";
+            
+            var mssg = document.getElementById("mssg");
+            mssg.style.color = "Red";
+            mssg.innerHTML = "Please fill out both New and Confirm, try again!";
+            ok = false;
+        	}
         else if(pass1 != pass2)
         {
             //alert("Passwords Do not match");

@@ -4,6 +4,61 @@
 <meta charset="UTF-8">
 <title>Our Neighbor's Child Login</title>
 <link rel="stylesheet" type="text/css" href="oncloginstylesheet.css">
+<script>
+	function onInputChange()
+	{
+		console.log('input change detected');
+		
+		loginButton = document.getElementById('submit');
+		
+		if(document.getElementById('username').value !== "" && document.getElementById('password').value !== '')
+		{	
+			loginButton.style.backgroundColor='#336699';
+			loginButton.disabled = false;
+		}
+		else
+		{
+			loginButton.style.backgroundColor='Gray';
+			loginButton.disabled = true;
+		}
+	}
+	
+	function onLogin()
+	{
+		var params = {}	
+		params["field1"] = document.getElementById('username').value;
+		params["field2"] = document.getElementById('password').value;
+		
+		post('login', params);
+	}
+	
+	function post(path, params, method) 
+	{
+	    method = method || "post"; // Set method to post by default if not specified.
+
+	    // The rest of this code assumes you are not using a library.
+	    // It can be made less wordy if you use one.
+	    var form = document.createElement("form");
+	    form.setAttribute("method", method);
+	    form.setAttribute("action", path);
+
+	    for(var key in params) 
+	    {
+	    		if(params.hasOwnProperty(key))
+	        {
+	            var hiddenField = document.createElement("input");
+	            hiddenField.setAttribute("type", "hidden");
+	            hiddenField.setAttribute("name", key);
+	            hiddenField.setAttribute("value", params[key]);
+
+	        		form.appendChild(hiddenField);
+	        }
+	    }
+
+	    document.body.appendChild(form);
+	    form.submit();
+	}
+</script>
 <style>
   a 
   { 
@@ -30,10 +85,12 @@
     		<legend class='legend-major'>LEGEND_MESSAGE</legend>
     		<p><font color="COLOR">WELCOME_MESSAGE</font></p>
     		<label for="username">User Name:</label>
-    		<input type="text" id="username" name="field1" autofocus/>
+    		<input type="text" id="username" name="field1" oninput='onInputChange()' autofocus/>
     		<label for="password" class='linetwo' >Password:</label>
-    		<input class='linetwo' type="password" id="password" name="field2">
-    		<input id="submit" type="submit" value="Login">
+    		<input class='linetwo' type="password" id="password" name="field2" oninput='onInputChange()'>
+    		<div>
+    			<button id="submit" type="button" onclick='onLogin()' disabled>Login</button>
+    		</div>
     		<div>
     		  <span id='attempts'>LOGIN_ATTEMPT</span>
       	  <span id='forgotpw'><a href='lostcredentials'>Forgot Password?</a></span>

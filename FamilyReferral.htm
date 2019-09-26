@@ -32,20 +32,22 @@
 //  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear') 
 //  				+'&famref=' + sessionStorage.getItem('famref');
   		
-  		//clear the group combobox
-		groupcb.options.length = 0;
-  		
   		//setup the add child DoB year parameters with a 20 year window
   		var dobYearSelect = document.getElementById('dobyear');
   		var currentyear = sessionStorage.getItem("curryear");
   		for(year = currentyear; year > currentyear-20; year-- )
   		{
-  			var option = document.createElement("option");
-  			option.text = year;
-  			option.value = year;
-  			dobYearSelect.add(option);
-  		}	
+  			addComboBoxOption(dobYearSelect, year, year);
+//  			var option = document.createElement("option");
+//  			option.text = year;
+//  			option.value = year;
+//  			dobYearSelect.add(option);
+  		}
   		
+  		//clear the group combobox
+  		var groupcb = document.getElementById('groupcb');
+		groupcb.options.length = 0;
+  	
   		if(window.location.href.indexOf("referral") > -1)
   		{
   			//is a re-referral. Get info for the family
@@ -252,10 +254,11 @@
 		//add proper # of days to days in month select
 		for (i=1; i<=lastDayOfMonth; i++)
 		{
-			var option = document.createElement("option");
-			option.text = i;
-			option.value = i;
-			select.add(option);
+			addComboBoxOption(select, i, i);
+//			var option = document.createElement("option");
+//			option.text = i;
+//			option.value = i;
+//			select.add(option);	
 		}
 	}
 	
@@ -817,7 +820,8 @@
     		<option value=30>30</option>
     		<option value=31>31</option>
     	</select>
-    	<select id='dobyear' title='Year child was born' onchange='onDoBChange(this)'></select>
+    	<select id='dobyear' title='Year child was born' onchange='onDoBChange(this)'>
+    	</select>
     	</td>
 	<td class='gendercol'><select id="childgender" title="Gender of child to be added">
       	<option value="Unknown">Unknown</option>
