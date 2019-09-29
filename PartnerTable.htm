@@ -12,7 +12,6 @@
 	var partnerJson = [];
 	
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
-	sessionStorage.setItem('curryear', new Date().getFullYear().toString());
 	
     $( document ).ready(function()
     {
@@ -36,9 +35,11 @@
         			for (var i = data.length-1; i >= 0; i--)
         				addComboBoxOption(combo, data[i].id, data[i].id);
         			
-			currYear = data[data.length-1].id;
-			sessionStorage.setItem('curryear', currYear);
-    			getPartnersFromServer(currYear);
+        		combo.selectedIndex = '0';
+        		
+			initializeFilters();
+				
+    			getPartnersFromServer(combo.value);
     		
     		});
     	
@@ -64,6 +65,48 @@
             }
     		});
     });
+    
+    function initializeFilters()
+    {
+    		if(sessionStorage.getItem('curryear') != null)	
+			document.getElementById('dbYears').value = sessionStorage.getItem('curryear');
+    	
+    		if(sessionStorage.getItem('partnertype') != null)	
+			document.getElementById('partnertype').value = sessionStorage.getItem('partnertype');
+		
+		if(sessionStorage.getItem('partnerstatus') != null)	
+			document.getElementById('partnerstatus').value = sessionStorage.getItem('partnerstatus');
+		
+		if(sessionStorage.getItem('partnercollection') != null)
+			document.getElementById('partnercollection').value = sessionStorage.getItem('partnercollection');
+		
+		//enable the listeners
+		document.getElementById('dbYears').setAttribute("onchange", "updateForYearSelection()");
+		document.getElementById('partnertype').setAttribute("onchange", "filterChanged(this)");
+		document.getElementById('partnerstatus').setAttribute("onchange", "filterChanged(this)");
+		document.getElementById('partnercollection').setAttribute("onchange", "filterChanged(this)");
+		document.getElementById('reset').addEventListener('click', function(){ onResetFilters(true); });
+		
+		checkReset();
+    }
+    
+    function checkReset()
+    {
+    		var resetButton = document.getElementById('reset');
+    		
+    		if(document.getElementById('partnertype').selectedIndex > 0 ||
+					 document.getElementById('partnerstatus').selectedIndex > 0 ||
+					  document.getElementById('partnercollection').selectedIndex > 0)
+    		{	
+    			resetButton.style.backgroundColor='#336699';
+			resetButton.disabled = false;
+    		}
+    		else
+    		{
+    			resetButton.style.backgroundColor='Gray';
+    			resetButton.disabled = true;
+    		}	
+    }
     
     function getPartnersFromServer(year)
     {  	
@@ -92,14 +135,14 @@
 		getPartnersFromServer(selYear);	
     }
 
-    
     function updatePartnerTable()
     {
    	 	$("#partnertbody").empty();
-    		var partnerType = document.getElementById('type').value;
-    		var partnerStatus = document.getElementById('status').value;
-    		var partnerCollection = document.getElementById('collection').value;
-    	
+   	 	
+   		var partnerType = document.getElementById('partnertype').value;
+   		var partnerStatus = document.getElementById('partnerstatus').value;
+   		var partnerCollection = document.getElementById('partnercollection').value;
+   	 	
     		var count = 0;
     		for(var i=0; i<partnerJson.length; i++)
 		{
@@ -117,7 +160,7 @@
     		searchbox.value = "";
     	
     		//set the quanity in the table
-    		document.getElementById('count').innerHTML = 'Partners: ' + count.toString();
+    		document.getElementById('count').innerHTML = 'Partners Shown: ' + count.toString();
     }
     
     function addTableRow(partner, partnertable, buttontext)
@@ -169,22 +212,38 @@
 		post('partnerupdate', params);
     }
     
-    function filterChanged()
+    function filterChanged(element)
     {
+    		sessionStorage.setItem(element.id, element.value);
+    		checkReset();
     		updatePartnerTable();
     }
     
-    function onResetFilters()
+    function onResetFilters(bUpdateTable)
     {
-    		var typeElement = document.getElementById('type');
-    		var statusElement = document.getElementById('status');
-    		var collectionElement = document.getElementById('collection');
+    		var typeElement = document.getElementById('partnertype');
+    		var statusElement = document.getElementById('partnerstatus');
+    		var collectionElement = document.getElementById('partnercollection');
     	
         	typeElement.value = 'Any';
         statusElement.value = 'Any';
         collectionElement.value = 'Any';
+        
+        sessionStorage.setItem(typeElement.id, typeElement.value);
+		sessionStorage.setItem(statusElement.id, statusElement.value);
+		sessionStorage.setItem(collectionElement.id, collectionElement.value);
 		
-        updatePartnerTable();
+		checkReset();
+		
+		if(bUpdateTable)
+			updatePartnerTable();
+    }
+    
+    function onResetYear()
+    {
+    		var yearCB = document.getElementById('dbYears');
+    		yearCB.selectedIndex = '0';	//reset to most current year
+    		sessionStorage.setItem('curryear', yearCB.value);
     }
     
     function onChangePW() 
@@ -257,13 +316,18 @@
 	
 	function onLogoutLink()
 	{
+		onResetYear();
+		onResetFilters();	//don't remember filer settings
+		
 		var params = {};
 		post('logout', params);
 	}
 	
 	function onSessionTimeout()
 	{
-		 window.location.assign('timeout');
+		onResetYear();
+		onResetFilters();	//don't remember filer settings
+		window.location.assign('timeout');
 	}
     
 	function post(path, params, method) 
@@ -419,11 +483,11 @@
 	</ul>
   </nav>
   <div class='controlbar'>
-  		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
-		<label id='count'>Partners: 0</label>
+  		<select id="dbYears" name="dbYear"></select>
+		<label id='count'>Partners Shown: 0</label>
 		<span id='filterspan'>
-		  <label for='type'>Type:</label>
-		  <select id="type" title="Type" name="type" onchange="filterChanged()">
+		  <label for='partnertype'>Type:</label>
+		  <select id="partnertype" title="Type" name="type">
 		    <option value="Any">Any</option>
     	    		<option value="Business">Business</option>
 		    <option value="Church">Church</option>
@@ -432,10 +496,10 @@
 		    <option value="Coat">Coat</option>
 		    <option value="ONC Shopper">ONC Shopper</option>
 		  </select>
-		  <label for='status'>Status:</label>
-		  <select id="status" title="status" name="status" onchange="filterChanged()">
+		  <label for='partnerstatus'>Status:</label>
+		  <select id="partnerstatus" title="status" name="status">
 		    <option value="Any">Any</option>
-    	    <option value="No Action Yet">No Action Yet</option>
+    	    		<option value="No Action Yet">No Action Yet</option>
 		    <option value="1st Email Sent">1st Email Sent</option>
 		    <option value="Responded">Responded</option>
 		    <option value="2nd Email Sent">2nd Email Sent</option>
@@ -443,15 +507,15 @@
 		    <option value="Confirmed">Confirmed</option>
 		    <option value="Not Participating">Not Participating</option>
 		  </select>
-		  <label for='collection'>Collection</label>
-		  <select id="collection" title="collection" name="collection" onchange="filterChanged()">
+		  <label for='partnercollection'>Collection</label>
+		  <select id="partnercollection" title="collection" name="collection">
 		    <option value="Any">Any</option>
 		    <option value="General">General</option>
 		    <option value="Ornament">Ornament</option>
 		    <option value="Meals">Meals</option>
 		    <option value="Unknown">Unknown</option>
 		  </select>
-		  <button id="reset" onclick="onResetFilters()">Reset</button>
+		  <button id="reset">Reset Filters</button>
 		</span>
 		<span class='floatright'>
 		  <label for="partnersearch">Search For:</label>
