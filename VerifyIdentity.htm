@@ -3,21 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <title>ONC Verify Identity</title>
+<script src="login.js"></script>
 <link rel="stylesheet" type="text/css" href="oncloginstylesheet.css">
 <style></style>
 </head>
 <body>
   <div id="inner">
 	<form action="verifyidentity" method="post">
-      <fieldset>
+    <fieldset>
     	<legend class='legend-major'>Verify User Identity</legend>
     	<p align="center"><b><i>Please enter the email and phone # associated with your account. We'll use it to verify your identity.</i></b></p>
     	<label for="email">Email:</label>
-    	<input type="text" id="email" name="field1" autofocus/>
+    	<input type="text" id="field1" name="field1" oninput='onInputChange()' autofocus/>
     	<label for="password" class='linetwo' >Phone #:</label>
-    	<input class='linetwo' type="text" id="phone" name="field2"><br>
-    	<input id="submit" type="submit" value="Verify Identity ">
-      </fieldset>
+    	<input class='linetwo' type="text" id="field2" name="field2" oninput='onInputChange()'>
+    	<div>
+    	  <button id="submit" type="submit" disabled>Verify Identity</button>
+    	</div>
+    </fieldset>
     </form>
   </div>  
 </body>

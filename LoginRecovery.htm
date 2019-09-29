@@ -4,20 +4,22 @@
 <meta charset="UTF-8">
 <title>Our Neighbor's Child Login</title>
 <link rel="stylesheet" type="text/css" href="oncloginstylesheet.css">
-<style></style>
+<script src="login.js"></script>
 </head>
 <body>
   <div id="inner">
 	<form action="login" method="post">
       <fieldset>
-    	<legend class='legend-major'>LEGEND_MESSAGE</legend>
-    	<p><font color="COLOR">WELCOME_MESSAGE</font></p>
-    	<label for="username">User Name:</label>
-    	<input type="text" id="username" name="field1" value="USERNAME">
-    	<label for="password" class='linetwo' >Password:</label>
-    	<input class='linetwo' type="password" id="password" name="field2" autofocus>
-    	<input id="submit" type="submit" value="Login">
-      </fieldset>
+    		<legend class='legend-major'>LEGEND_MESSAGE</legend>
+    		<p><font color="COLOR">WELCOME_MESSAGE</font></p>
+    		<label for="field1">User Name:</label>
+    		<input type="text" id="field1" name="field1" value="USERNAME">
+    		<label for="field2" class='linetwo' >Password:</label>
+    		<input class='linetwo' type="password" id="field2" name="field2" oninput='onInputChange()' autofocus>
+    		<div>
+    			<button id="submit" type="submit" disabled>Login</button>
+    		</div>
+    	  </fieldset>
     </form>
   </div>  
 </body>

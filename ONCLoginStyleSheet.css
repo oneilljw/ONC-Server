@@ -17,7 +17,7 @@ input
   	width: 200px;
   	line-height: 18px;
 }
-#submit
+button
 {
   	display: block;
   	margin: 0px auto;
@@ -26,6 +26,14 @@ input
   	color: #ffffff;
   	border: 4px outset white;
   	width: 104px;
+}
+#submit
+{
+  	background-color: gray;
+}
+#return
+{
+  	background-color: #336699;
 }
 fieldset
 {

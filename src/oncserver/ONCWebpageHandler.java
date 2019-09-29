@@ -60,7 +60,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String ONC_DIALOG__STYLE_SHEET_CSS = "ONCDialogStyleSheet.css";
 	private static final String ONC_LOGIN__STYLE_SHEET_CSS = "ONCLoginStyleSheet.css";
 	private static final String JQUERY_JS_FILE = "jquery-1.11.3.js";
-	private static final String SORTTABLE_JS_FILE = "sorttable.js";
+	private static final String LOGIN_JS_FILE = "login.js";
+	private static final String STATIC_CHARTS_JS_FILE = "staticcharts.js";
 	
 	protected static final String SESSION_ID_NAME = "SID=";
 	
@@ -124,8 +125,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("oncdialogstylesheet", readFileToByteArray(ONC_DIALOG__STYLE_SHEET_CSS));
 			webfileMap.put("oncloginstylesheet", readFileToByteArray(ONC_LOGIN__STYLE_SHEET_CSS));
 			webfileMap.put("editprofile", readFileToByteArray(EDIT_PROFILE_JS_FILE));
+			webfileMap.put("login", readFileToByteArray(LOGIN_JS_FILE));
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
-			webfileMap.put("sorttable", readFileToByteArray(SORTTABLE_JS_FILE));
+			webfileMap.put("staticcharts", readFileToByteArray(STATIC_CHARTS_JS_FILE));
 			
 			return "UPDATED_WEBPAGES";
 		} 

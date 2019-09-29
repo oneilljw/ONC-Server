@@ -3,7 +3,8 @@
 <head lang="en">
   <meta charset="UTF-8">
   <title>ONC Family Assistance Request</title>
-  <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+<!-- <script src="//code.jquery.com/jquery-1.12.4.js"></script> -->
+  <script src="jquery.js"></script>
   <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script src="commonfamily.js"></script>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
@@ -27,21 +28,13 @@
   		//set the hidden values
   		document.getElementById('year').value= sessionStorage.getItem("curryear");
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
-  		
-  		//update the nav bar links
-//  		document.getElementById('homelink').href='startpage?year=' + sessionStorage.getItem('curryear') 
-//  				+'&famref=' + sessionStorage.getItem('famref');
-  		
+  			
   		//setup the add child DoB year parameters with a 20 year window
   		var dobYearSelect = document.getElementById('dobyear');
   		var currentyear = sessionStorage.getItem("curryear");
-  		for(year = currentyear; year > currentyear-20; year-- )
+  		for(year = currentyear; year > currentyear-21; year-- )
   		{
   			addComboBoxOption(dobYearSelect, year, year);
-//  			var option = document.createElement("option");
-//  			option.text = year;
-//  			option.value = year;
-//  			dobYearSelect.add(option);
   		}
   		
   		//clear the group combobox
@@ -237,10 +230,11 @@
 		}
 	}
 	
-	function onDoBChange(element)
+	function onDoBChange()
 	{
-		//clear existing day of month options
+		//archive the existing day selection value and clear
 		var select = document.getElementById("dobday");
+		var curr_value = select.value;
 		select.options.length = 0;
 		
 		var year = document.getElementById('dobyear').value;
@@ -255,11 +249,13 @@
 		for (i=1; i<=lastDayOfMonth; i++)
 		{
 			addComboBoxOption(select, i, i);
-//			var option = document.createElement("option");
-//			option.text = i;
-//			option.value = i;
-//			select.add(option);	
 		}
+		
+		//reselect the value if its in the list
+		if(curr_value <= lastDayOfMonth)
+			select.value = curr_value;
+		else
+			select.value = 1;
 	}
 	
 	function checkForAddChildWarnings(child)
@@ -773,7 +769,7 @@
   	<table class='addtable'><tr>
   	<td class='fncol'><input id="childfn" title="First name of child to be added" type="text" size='14' placeholder="First Name"></td>
   	<td class='lncol'><input id="childln" title="Last name of child to be added" type="text" size='15' placeholder="Last Name"></td>
-    <td class='dobcol'><select id='dobmonth' title='Month child was born' onchange='onDoBChange(this)'>
+    <td class='dobcol'><select id='dobmonth' title='Month child was born' onchange='onDoBChange()'>
     		<option value=1>Jan</option>
     		<option value=2>Feb</option>
     		<option value=3>Mar</option>
@@ -820,7 +816,7 @@
     		<option value=30>30</option>
     		<option value=31>31</option>
     	</select>
-    	<select id='dobyear' title='Year child was born' onchange='onDoBChange(this)'>
+    	<select id='dobyear' title='Year child was born' onchange='onDoBChange()'>
     	</select>
     	</td>
 	<td class='gendercol'><select id="childgender" title="Gender of child to be added">

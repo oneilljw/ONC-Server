@@ -5,8 +5,7 @@
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="editprofile.js"></script>
-  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
-  <script type="text/javascript"></script>
+  <script src="jquery.js"></script>
   <script>
 	var pyFamJson = [];
 	var cyFamJson = [];
@@ -91,7 +90,23 @@
     			}
     			
     			getPYandCYIntialGroupsAgentsAndFamlies();
-    		}); 	
+    		});
+    		
+    		//if the page load was the result of a successful referral, show the dialog box
+	  	if(bShowSuccessDialog)
+  			window.location=document.getElementById('successanchor').href;
+	  	else
+	  	{
+	  		var dbyearsparams = "callback=?";
+	  		$.getJSON('getstatus', dbyearsparams, function(status)
+	  		{
+	  			if(status.userstatus === 'Update_Profile')
+	  			{
+	  			    	showEditProfileDialog();
+	  			    	window.location=document.getElementById('editprofileanchor').href;
+	  			}
+	  		}); 	
+	  	}
     });
     
     function onTableColClicked(headerElem)
@@ -235,22 +250,6 @@
     								pyFamJson = pyFamData;
     								updatePYTable();
     							}
-    							
-    							//if the page load was the result of a successful referral, show the dialog box
-    			    		  		if(bShowSuccessDialog)
-    			    	  				window.location=document.getElementById('successanchor').href;
-    			    		  		else
-    			    		  		{
-    			    		  			var dbyearsparams = "callback=?";
-    			    		  			$.getJSON('getstatus', dbyearsparams, function(status)
-    			    		  			{
-    			    		  				if(status.userstatus === 'Update_Profile')
-    			    		  			    {
-    			    		  			    		showEditProfileDialog();
-    			    		  			        	window.location=document.getElementById('editprofileanchor').href;
-    			    		  			    }
-    			    		  			}); 	
-    			    		  		}
     						});
     					});
     				});	    			

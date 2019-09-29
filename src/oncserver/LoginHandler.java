@@ -385,7 +385,7 @@ public class LoginHandler extends ONCWebpageHandler
 		String email = (String) params.get("field1");
 		String phone = (String) params.get("field2");
 	    	
-	    	//don't want a reference here, want a new object. A user can be logged in more than once.
+	    	//don't want a reference here, want a new object. A user can be logged in more then once.
 	    	//However, never can use this object to update a user's info
 		ONCServerUser serverUser = (ONCServerUser) userDB.findUserByEmailAndPhone(email, phone);
 		if(serverUser != null)
@@ -441,7 +441,7 @@ public class LoginHandler extends ONCWebpageHandler
 	    	}
 	    	else
 	    	{
-	    		//send a webpage that informs user that we can't find them
+	    		//send a web page that informs user that we can't find them
 	    		html = webpageMap.get("loginerror");
 	    		html = html.replace("COLOR", "red");
 	    		html = html.replace("LEGEND_MESSAGE", "Unable to Verify Identity");
