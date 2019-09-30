@@ -70,6 +70,8 @@
     {
     		if(sessionStorage.getItem('curryear') != null)	
 			document.getElementById('dbYears').value = sessionStorage.getItem('curryear');
+    		else
+    			sessionStorage.setItem('curryear', document.getElementById('dbYears').value);
     	
     		if(sessionStorage.getItem('partnertype') != null)	
 			document.getElementById('partnertype').value = sessionStorage.getItem('partnertype');
