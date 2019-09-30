@@ -10,6 +10,7 @@
   <script>
 	var currYear;
 	var partnerJson = [];
+	var partnertableColSortStatus = [1,1,1,1,1,1,1,1];
 	
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
@@ -246,6 +247,48 @@
     		var yearCB = document.getElementById('dbYears');
     		yearCB.selectedIndex = '0';	//reset to most current year
     		sessionStorage.setItem('curryear', yearCB.value);
+    }
+    
+    function onTableColClicked(headerElem)
+    {
+    		var table = $(headerElem).closest('table');
+    		var col = headerElem.getAttribute('data-col');
+    		
+    		partnertableColSortStatus[col] *= -1;
+    		var sortOrder = partnertableColSortStatus[col];
+    		
+    		sortTable(sortOrder,col,table[0].id);
+    }
+    
+    function sortTable(f,n,table)
+    {
+    		var rows = $('#partnertable tbody  tr').get();
+    		
+    		rows.sort(function(a, b) 
+    		{
+    			var A = getVal(a);
+    			var B = getVal(b);
+
+    			if(A < B)
+    				return -1*f;
+    			else if(A > B)
+    				return 1*f;
+    			else
+    				return 0;
+    		});
+
+    		function getVal(elm)
+    		{
+    			var v = $(elm).children('td').eq(n).text().toUpperCase();
+    			if($.isNumeric(v))
+    				v = parseInt(v,10);
+    			return v;
+    		}
+
+    		$.each(rows, function(index, row) 
+    		{
+    			$('#partnertable').children('tbody').append(row);
+    		});
     }
     
     function onChangePW() 
@@ -528,14 +571,14 @@
 	<table id="partnertable">
       <thead>
         <tr>
-       		<th class='onccol'>Partner ID</th>
-       		<th class='namecol'>Name</th>
-       		<th class='typecol'>Type</th>
-       		<th class='statcol'>Status</th>
-        		<th class='collcol'>Collection</th>
-        		<th class='countcol'>Req</th>
-        		<th class='countcol'>Del</th>
-        		<th class='countcol'>Rec</th>
+       		<th class='onccol' onclick='onTableColClicked(this)' data-col='0'>Partner ID</th>
+       		<th class='namecol' onclick='onTableColClicked(this)' data-col='1'>Name</th>
+       		<th class='typecol' onclick='onTableColClicked(this)' data-col='2'>Type</th>
+       		<th class='statcol' onclick='onTableColClicked(this)' data-col='3'>Status</th>
+        		<th class='collcol' onclick='onTableColClicked(this)' data-col='4'>Collection</th>
+        		<th class='countcol' onclick='onTableColClicked(this)' data-col='5'>Req</th>
+        		<th class='countcol' onclick='onTableColClicked(this)' data-col='6'>Del</th>
+        		<th class='countcol' onclick='onTableColClicked(this)' data-col='7'>Rec</th>
         		<th class='actcol'>Action</th>
         </tr>
       </thead>
