@@ -864,7 +864,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				{
 					rc = new ResponseCode(String.format("Partner %d, %s successfully updated", 
 									returnedPartner.getID(), returnedPartner.getLastName()));
-				
+					
 					mssg = "UPDATED_PARTNER" + gson.toJson(returnedPartner, ONCPartner.class);
 					clientMgr.notifyAllInYearClients(year, mssg);
 				}

@@ -261,19 +261,17 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		if(index < oAL.size() && !doPartnersMatch((currPartner = oAL.get(index)), updatedPartner))
 		{
 			//check if a change to the partner status is allowed
-			int currNumOrn = currPartner.getNumberOfOrnamentsAssigned() + currPartner.getNumberOfOrnamentsDelivered();
+			int currAssignedDeliveredCount = currPartner.getNumberOfOrnamentsAssigned() + currPartner.getNumberOfOrnamentsDelivered();
 			if(currPartner.getStatus() == STATUS_CONFIRMED && updatedPartner.getStatus() != STATUS_CONFIRMED &&
-				currNumOrn > 0)	
+				currAssignedDeliveredCount > 0)	
 			{
 				updatedPartner.setStatus(currPartner.getStatus());	
 			}
 			
 			//check to see if a reduction to the number of ornaments requested must be modified to
 			//be no less then the sum of ornaments already assigned and delivered to the partner
-			if(currNumOrn > updatedPartner.getNumberOfOrnamentsRequested())
-				updatedPartner.setNumberOfOrnamentsRequested(currNumOrn);
-			else
-				updatedPartner.setNumberOfOrnamentsRequested(currPartner.getNumberOfOrnamentsRequested());
+			if(currAssignedDeliveredCount > updatedPartner.getNumberOfOrnamentsRequested())
+				updatedPartner.setNumberOfOrnamentsRequested(currAssignedDeliveredCount);
 			
 			//check if partner address has changed and a region update check is required
 			if(currPartner.getHouseNum() != updatedPartner.getHouseNum() ||
