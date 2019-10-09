@@ -4,7 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -12,7 +11,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
@@ -807,7 +805,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 																addedFam.getGiftStatus(),
 																"", "Family Referred thru Britepaths", 
 																addedFam.getChangedBy(), 
-																Calendar.getInstance(TimeZone.getTimeZone("UTC")),
+																System.currentTimeMillis(),
 																famDNSCode.getAcronym());
 			
 				ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, famHistory, false);
@@ -1150,7 +1148,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 						String dnsCode, String reason, String changedBy, boolean bNotify)
 	{
 		ONCFamilyHistory reqFamHistObj = new ONCFamilyHistory(-1, famID, fs, fgs, driverID, reason,
-				 changedBy, Calendar.getInstance(TimeZone.getTimeZone("UTC")), dnsCode);
+				 changedBy, System.currentTimeMillis(), dnsCode);
 		
 		ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, reqFamHistObj, bNotify);
 		

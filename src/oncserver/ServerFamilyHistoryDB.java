@@ -4,9 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.TimeZone;
 
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.HistoryRequest;
@@ -76,7 +74,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			if(fhObj.getFamID() == famID)
 			{
 				if(latestFamilyHistoryObj == null ||
-				    fhObj.getdChanged().after(latestFamilyHistoryObj.getdChanged()))
+				    fhObj.getDateChanged().after(latestFamilyHistoryObj.getDateChanged()))
 				{
 					latestFamilyHistoryObj = fhObj;
 				}
@@ -96,7 +94,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		//add the new object to the data base
 		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
 		addedHistoryObj.setID(histDBYear.getNextID());
-		addedHistoryObj.setDateChanged(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+		addedHistoryObj.setDateChanged(System.currentTimeMillis());
 		
 		//if family gift status is greater than FamilyGiftStatus.Assigned, retain the assignee
 		if(addedHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) > 0)
@@ -260,7 +258,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
 		
 		addedFamHistObj.setID(histDBYear.getNextID());
-		addedFamHistObj.setDateChanged(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+		addedFamHistObj.setDateChanged(System.currentTimeMillis());
 		
 		if(addedFamHistObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) > 0)
 		{

@@ -77,30 +77,30 @@
 				window.location=document.getElementById('timeoutanchor').href;
     			else
     			{	
-    			// Create our data table out of JSON data loaded from server.
-    	    		var famtable = new google.visualization.DataTable(familyData);
-    	 		var famview = new google.visualization.DataView(famtable);
-        		famview.setColumns([0, 1,
+    				// Create our data table out of JSON data loaded from server.
+    	    			var famtable = new google.visualization.DataTable(familyData);
+    	 			var famview = new google.visualization.DataView(famtable);
+        			famview.setColumns([0, 1,
                           	{ calc: "stringify",
                               sourceColumn: 1,
                            	  type: "string",
                               role: "annotation" },
                             ]);
 
-    			var famoptions = 
-    			{
-    				width: 480,
-    				height: 240,
-    				title: sessionStorage.getItem('curryear') + ' Family Status',
-    				titleTextStyle: 
+    				var famoptions = 
     				{
-    		        		fontSize: 16, // 12, 18 whatever you want (don't specify px)
-    		        		bold: true,    // true or false
-    				},
-    	    			chartArea: {width: '70%'},
-    	    			hAxis: { minValue: 0 },
-    	    			legend: {position: 'none'},
-    	    			bars: 'horizontal' // Required for Material Bar Charts.
+    					width: 480,
+    					height: 240,
+    					title: sessionStorage.getItem('curryear') + ' Family Status',
+    					titleTextStyle: 
+    					{
+    						fontSize: 16, // 12, 18 whatever you want (don't specify px)
+    		        			bold: true,    // true or false
+    					},
+    	    				chartArea: {width: '70%'},
+    	    				hAxis: { minValue: 0 },
+    	    				legend: {position: 'none'},
+    	    				bars: 'horizontal' // Required for Material Bar Charts.
     			};
     	
     			var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
