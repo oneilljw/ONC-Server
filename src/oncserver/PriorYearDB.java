@@ -16,6 +16,7 @@ import com.google.gson.Gson;
 public class PriorYearDB extends ServerSeasonalDB
 {
 	private static final int PY_CHILD_DB_HEADER_LENGTH = 10;
+	private static final int WAITLIST_DNS_CODE = 1;
 //	private static final int ONC_MAX_CHILD_AGE = 24; //Used for sorting children into array lists
 	
 	private static PriorYearDB instance = null;
@@ -221,7 +222,7 @@ public class PriorYearDB extends ServerSeasonalDB
 		//get last years list of ONCChild objects
 		List<ONCChild> lycList = serverChildDB.getList(newYear-1);
 		
-		//for each child from last year, if they were in an eligible family determine if the 
+		//for each child from last year, if they were in an eligible family, determine if the 
 		//child's prior year history was retained already. If it was, add last years wishes. 
 		//If not, add a new prior year child.
 		int minONCNum = serverFamilyDB.getMinONCNum();
@@ -263,7 +264,7 @@ public class PriorYearDB extends ServerSeasonalDB
 			
 			if(lyfam != null && isNumeric(lyfam.getONCNum()) && 
 				(lyONCFamONCNum = Integer.parseInt(lyfam.getONCNum())) >= minONCNum &&
-				 lyONCFamONCNum <= maxONCNum && lyfam.getDNSCode() == -1)	
+				 lyONCFamONCNum <= maxONCNum && (lyfam.getDNSCode() == -1 || lyfam.getDNSCode() == WAITLIST_DNS_CODE))	
 			{
 				ONCChildGift lyChildWish1 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(0));
 				ONCChildGift lyChildWish2 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(1));
