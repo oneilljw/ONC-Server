@@ -29,8 +29,6 @@ public class SMSHandler extends ONCWebpageHandler
 		
 		if(requestURI.equals("/sms-receive"))
 		{
-			printParameters(t);	//DEBUG
-		
 			//create the twilio key map
 			String[] twilioParamKeys = {"MessageSid", "SmsSid", "AccountSid", "MessagingServiceSid",
 							"From", "To", "Body", "NumMedia", "FromCity", "FromState",
@@ -39,12 +37,24 @@ public class SMSHandler extends ONCWebpageHandler
 			Map<String, String> twilioParams = createMap(params, twilioParamKeys);
 			
 			//create response
-			StringBuffer buff = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
-			buff.append("<Response><Message>Thanks for your text</Message></Response>");
+			String name = "Anonymous", body = "Error";
+			if(twilioParams.containsKey("From"))
+			{
+				if(twilioParams.get("From").equals("+15713440902"))	
+					name = "John O'Neill";
+				else if(twilioParams.get("From").equals("+7039262396"))
+					name = "Kelly Lavin";
+				
+				body = twilioParams.get("Body");
+			}
 			
-			htmlResponse = new HtmlResponse(buff.toString(), HttpCode.Ok);
+			String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
+				"<Response><Message>%s, thank you for sending %s to Our Neighbor's Child</Message></Response>",
+				name, body );
+			
+			htmlResponse = new HtmlResponse(response, HttpCode.Ok);
 		
-			sendHTMLResponse(t, htmlResponse); 
+			sendXMLResponse(t, htmlResponse); 
 		}
 /*		
 		else if(requestURI.contains("/sms-identity"))

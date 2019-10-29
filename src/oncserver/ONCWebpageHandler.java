@@ -167,6 +167,27 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		t.close();
 	}
 	
+	void sendXMLResponse(HttpExchange t, HtmlResponse html) throws IOException
+	{
+		Headers header = t.getResponseHeaders();
+		if(html.getCookie() != null)
+		{
+    			ArrayList<String> headerList = new ArrayList<String>();
+    			headerList.add(html.getCookie().toString());
+    			header.put("Set-Cookie", headerList);
+		}
+		
+		ArrayList<String> contentTypeList = new ArrayList<String>();
+		contentTypeList.add("text/xml");
+		header.put("Content-Type", contentTypeList);
+		
+		t.sendResponseHeaders(html.getCode(), html.getResponse().getBytes().length);
+		OutputStream os = t.getResponseBody();
+		os.write(html.getResponse().getBytes());
+		os.close();
+		t.close();
+	}
+	
 	static String readFile(String file) throws IOException
 	{
 	    BufferedReader reader = new BufferedReader(new FileReader(file));
