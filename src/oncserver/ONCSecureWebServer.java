@@ -200,7 +200,7 @@ public class ONCSecureWebServer
 			context.getFilters().add(new ParameterFilter());
 			contextCount++;
 		}
-/*		
+		
 		//set up the SMS handler
 		String[] smsContexts = {"/sms-receive"};
 						
@@ -211,13 +211,12 @@ public class ONCSecureWebServer
 			context.getFilters().add(new ParameterFilter());
 			contextCount++;
 		}
-*/
+
 		//start the web server
 		ExecutorService pool = Executors.newFixedThreadPool(CONCURRENT_THREADS);
 		server.setExecutor(pool); // creates a default executor
 		server.start();
 			
-		
 		//determine if logging should be enabled. Logging is enabled if the server is started
 		//after the season start date and before the end of the data base current year
 		ServerGlobalVariableDB gvDB = ServerGlobalVariableDB.getInstance();

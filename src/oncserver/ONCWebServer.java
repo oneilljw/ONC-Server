@@ -27,7 +27,7 @@ public class ONCWebServer
 		HttpContext context;
 		
 		//set up the oncWebHttpHandler
-		String[] contexts = {"/", "/sms-receive"};
+		String[] contexts = {"/"};
 		
 		PublicWebsiteHandler handler = new PublicWebsiteHandler();
 		for(String contextname:contexts)
@@ -74,6 +74,7 @@ public class ONCWebServer
          		os.close();
          		t.close();
          	}
+ /*        	
          	else if(requestURI.equals("/sms-receive"))
          	{
          		Headers header = t.getResponseHeaders();
@@ -91,6 +92,7 @@ public class ONCWebServer
          		os.close();
          		t.close();
          	}
+*/         	
         }
     }	
 }
