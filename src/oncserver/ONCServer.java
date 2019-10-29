@@ -22,7 +22,7 @@ public class ONCServer
 	 * @throws IOException 
 	 */
 	
-	private static final String APPNAME = "Our Neighbor's Child Server v5.00";
+	private static final String APPNAME = "Our Neighbor's Child Server v7.00";
 	private static final String ONC_COPYRIGHT = "\u00A92018 John W. O'Neill";
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop

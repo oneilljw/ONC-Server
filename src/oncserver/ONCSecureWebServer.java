@@ -200,6 +200,17 @@ public class ONCSecureWebServer
 			context.getFilters().add(new ParameterFilter());
 			contextCount++;
 		}
+		
+		//set up the SMS handler
+		String[] smsContexts = {"/sms-receive"};
+						
+		SMSHandler smsHandler = new SMSHandler();
+		for(String contextname : smsContexts)
+		{
+			context = server.createContext(contextname, smsHandler);
+			context.getFilters().add(new ParameterFilter());
+			contextCount++;
+		}
 
 		//start the web server
 		ExecutorService pool = Executors.newFixedThreadPool(CONCURRENT_THREADS);
