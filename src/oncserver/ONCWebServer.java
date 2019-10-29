@@ -27,7 +27,7 @@ public class ONCWebServer
 		HttpContext context;
 		
 		//set up the oncWebHttpHandler
-		String[] contexts = {"/"};
+		String[] contexts = {"/", "/sms-receive"};
 		
 		PublicWebsiteHandler handler = new PublicWebsiteHandler();
 		for(String contextname:contexts)
@@ -68,6 +68,23 @@ public class ONCWebServer
          		header.put("Location", headerList);
 
          		String response = "Redirecting to secure website";
+         		t.sendResponseHeaders(HttpCode.Redirect.code(), response.length());
+         		OutputStream os = t.getResponseBody();
+         		os.write(response.getBytes());
+         		os.close();
+         		t.close();
+         	}
+         	else if(requestURI.equals("/sms-receive"))
+         	{
+         		Headers header = t.getResponseHeaders();
+         		ArrayList<String> headerList = new ArrayList<String>();
+         		headerList.add("text/xml");
+         		header.put("Content-Type", headerList);
+         		
+         		StringBuffer buff = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
+         		buff.append("<Response><Message>Thanks for your text</Message></Response>");
+         		String response = buff.toString();
+
          		t.sendResponseHeaders(HttpCode.Redirect.code(), response.length());
          		OutputStream os = t.getResponseBody();
          		os.write(response.getBytes());

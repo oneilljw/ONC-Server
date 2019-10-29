@@ -10,6 +10,7 @@ import java.util.Map;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 
+//handler for SMS
 public class SMSHandler extends ONCWebpageHandler
 {
 	public void handle(HttpExchange te) throws IOException 
