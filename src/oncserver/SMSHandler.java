@@ -39,6 +39,7 @@ public class SMSHandler extends ONCWebpageHandler
 			Map<String, String> twilioParams = createMap(params, twilioParamKeys);
 			TwilioSMSReceive rec_text = new TwilioSMSReceive(twilioParams);
 			
+			//add the received message to the database
 			ServerSMSDB smsDB = ServerSMSDB.getInstance();
 			smsDB.add(DBManager.getCurrentSeason(), rec_text);
 			
