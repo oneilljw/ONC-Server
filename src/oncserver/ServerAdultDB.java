@@ -261,17 +261,17 @@ public class ServerAdultDB extends ServerSeasonalDB
 	
 	private class AdultDBYear extends ServerDBYear
     {
-    	private List<ONCAdult> adultList;
+    		private List<ONCAdult> adultList;
     	
-    	AdultDBYear(int year)
-    	{
-    		super();
-    		adultList = new ArrayList<ONCAdult>();
-    	}
+    		AdultDBYear(int year)
+    		{
+    			super();
+    			adultList = new ArrayList<ONCAdult>();
+    		}
     	
-    	//getters
-    	List<ONCAdult> getList() { return adultList; }
+    		//getters
+    		List<ONCAdult> getList() { return adultList; }
     	
-    	void add(ONCAdult addedAdult) { adultList.add(addedAdult); }
+    		void add(ONCAdult addedAdult) { adultList.add(addedAdult); }
     }
 }

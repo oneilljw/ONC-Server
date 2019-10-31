@@ -94,6 +94,7 @@ public class DBManager
 			dbSeasonalAutosaveList.add(ServerMealDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerAdultDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerNoteDB.getInstance());
+			dbSeasonalAutosaveList.add(ServerSMSDB.getInstance());
 			dbPermanentAutosaveList.add(ServerDNSCodeDB.getInstance());
 			dbSeasonalAutosaveList.add(ServerBatteryDB.getInstance());
 			dbSeasonalAutosaveList.add(PriorYearDB.getInstance());	//never changed once created each season

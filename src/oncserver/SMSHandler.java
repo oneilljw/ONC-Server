@@ -30,11 +30,17 @@ public class SMSHandler extends ONCWebpageHandler
 		if(requestURI.equals("/sms-receive"))
 		{
 			//create the twilio key map
-			String[] twilioParamKeys = {"MessageSid", "SmsSid", "AccountSid", "MessagingServiceSid",
-							"From", "To", "Body", "NumMedia", "FromCity", "FromState",
-		    					"FromZip", "FromCountry"};
+			String[] twilioParamKeys = {"AccountSid","MessageSid","Body","ToZip","ToCity",
+							"FromState","ToState","SmsSid",  "To","ToCountry","FromCountry",
+		    					"SmsMessageSid", "ApiVersion", "FromCity", "SmsStatus",
+		    					"NumSegments", "NumMedia", "From", "FromZip" };
 			
+			//create the map and object
 			Map<String, String> twilioParams = createMap(params, twilioParamKeys);
+			TwilioSMSReceive rec_text = new TwilioSMSReceive(twilioParams);
+			
+			ServerSMSDB smsDB = ServerSMSDB.getInstance();
+			smsDB.add(DBManager.getCurrentSeason(), rec_text);
 			
 			//create response
 			String name = "Anonymous", body = "Error";
@@ -42,8 +48,10 @@ public class SMSHandler extends ONCWebpageHandler
 			{
 				if(twilioParams.get("From").equals("+15713440902"))	
 					name = "John O'Neill";
-				else if(twilioParams.get("From").equals("+7039262396"))
+				else if(twilioParams.get("From").equals("+17039262396"))
 					name = "Kelly Lavin";
+				else if(twilioParams.get("From").equals("+17037893871"))
+					name = "Kathy Sanders";
 				
 				body = twilioParams.get("Body");
 			}
