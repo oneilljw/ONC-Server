@@ -31,7 +31,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 			//import the adults from persistent store
 			importDB(year, String.format("%s/%dDB/SMSDB.csv",
 					System.getProperty("user.dir"),
-						year), "Adult DB",SMS_DB_HEADER_LENGTH);
+						year), "SMS DB",SMS_DB_HEADER_LENGTH);
 			
 			//set the next id
 			smsDBYear.setNextID(getNextID(smsDBYear.getList()));

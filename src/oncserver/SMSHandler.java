@@ -43,6 +43,15 @@ public class SMSHandler extends ONCWebpageHandler
 			ServerSMSDB smsDB = ServerSMSDB.getInstance();
 			smsDB.add(DBManager.getCurrentSeason(), rec_text);
 			
+			//create a debug string
+			StringBuffer buff = new StringBuffer(String.format("Mssg: id=%d", rec_text.getID()));
+			for(String key : twilioParamKeys)
+			{
+				buff.append(String.format(", %s= %s", key, twilioParams.get(key)));
+			}
+			buff.append(String.format(", timestamp= %d", rec_text.getTimestamp()));
+			ServerUI.addDebugMessage(buff.toString());
+			
 			//create response
 			String name = "Anonymous", body = "Error";
 			if(twilioParams.containsKey("From"))
