@@ -39,7 +39,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		
 		//initialize the Twilio IF
 		TwilioIF twilioIF = TwilioIF.getInstance();
-//		twilioIF.sendSMS("+17037893871", "Our Neighbor's Child SMS server started");
+		twilioIF.sendSMS("+15713440902", "Our Neighbor's Child SMS server started");
 	}
 	
 	public static ServerSMSDB getInstance() throws FileNotFoundException, IOException
