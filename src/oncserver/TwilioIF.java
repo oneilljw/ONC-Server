@@ -7,15 +7,13 @@ public class TwilioIF
 {
 	// Find your Account Sid and Token at twilio.com/console
     // DANGER! This is insecure. See http://twil.io/secure
-    public static final String ACCOUNT_SID = "AC146e471a06cd920fd91862d2965bebf8";
-    public static final String AUTH_TOKEN = "9ad1158e7d190c0a55146f6cd6162b89";
     private static final String ONC_TWILIO_NUMBER = "+15716654028";
 
     private static TwilioIF instance;
     
     private TwilioIF()
     {
-    		Twilio.init(ACCOUNT_SID,AUTH_TOKEN);
+    		Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
     }
     
     public static TwilioIF getInstance()
