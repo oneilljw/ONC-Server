@@ -628,9 +628,8 @@ public class FamilyHandler extends ONCWebpageHandler
 						addedFamily.getLastName(), addedFamily.getONCNum());
 				
 					successMssg = String.format("%s family referral has been added to the ONC Waitlist, ONC# %s. "
-					+ "If resources becmome available and ONC is able to serve the family, their status "
-					+ "will change to \"verified\". Delivery date and/or pick-up instructions will be sent "
-					+ "to the appropriate agent.",
+					+ "We will update their Family Status from \"Waitlist\" to \"Verified\" as we confirm "
+					+ "resources are available.",
 					addedFamily.getLastName(), addedFamily.getONCNum());
 				
 					title = "Waitlist Referral Received";
@@ -663,11 +662,10 @@ public class FamilyHandler extends ONCWebpageHandler
 				mssg = String.format("%s Family Referral Received to ONC's Wait List, ONC# %s.",
 						lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum());
 			
-				successMssg = String.format("%s family has been added to the ONC Waitlist, ONC# %s. "
-				+ "If resources become available and ONC is able to serve the family, their status "
-				+ "will change to \"verified\". Delivery data or pick-up instructions will be sent "
-				+ "to the appropriate referring agent.",
-				lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum());
+				successMssg = String.format("%s family referral has been added to the ONC Waitlist, ONC# %s. "
+						+ "We will update their Family Status from \"Waitlist\" to \"Verified\" as we confirm "
+						+ "resources are available.",
+						lastFamilyAdded.getLastName(), lastFamilyAdded.getONCNum());
 			
 				title = "Waitlist Referral Received";
 			}
