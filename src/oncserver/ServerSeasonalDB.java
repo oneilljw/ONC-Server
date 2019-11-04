@@ -28,6 +28,8 @@ public abstract class ServerSeasonalDB extends ONCServerDB
     		
     		if((header = reader.readNext()) != null)	//Does file have records? 
     		{
+//    		System.out.println(String.format("ServSeasonalDB.Importing %s", path));
+    			
     			//Read the User File
     			if(header.length == length)	//Does the record have the right # of fields? 
     			{
@@ -47,6 +49,13 @@ public abstract class ServerSeasonalDB extends ONCServerDB
     		}
     	
     		reader.close();
+	}
+	
+	String formatPhoneNumber(String num)
+	{
+		//remove all but digits of a phone number
+		String noNonDigits = num.replaceAll("[\\D]", "");
+		return noNonDigits.trim();
 	}
 	
 	abstract void addObject(int year, String[] nextLine);

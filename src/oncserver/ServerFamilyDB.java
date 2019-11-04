@@ -1083,6 +1083,23 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		else
 			return null;
 	}
+	
+	ONCFamily getFamilyByPhoneNumber(int year, String phoneNum)
+	{
+		String formatedPhoneNum = formatPhoneNumber(phoneNum);
+		
+		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
+		int i;
+		for(i=0; i<fAL.size(); i++)
+			if(formatPhoneNumber(fAL.get(i).getHomePhone()).equals(formatedPhoneNum) ||
+				formatPhoneNumber(fAL.get(i).getCellPhone()).equals(formatedPhoneNum))
+				break;
+		
+		if(i < fAL.size())
+			return fAL.get(i);
+		else
+			return null;
+	}
 
 	
 	ONCFamily getFamilyByTargetID(int year, String targetID)	//Persistent odb, wfcm or onc id number string

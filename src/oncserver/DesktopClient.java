@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 7.05f;
+	private static final float MINIMUM_CLIENT_VERSION = 7.06f;
 	
 	private int id;
 	private String version;
@@ -68,6 +68,7 @@ public class DesktopClient extends Thread
     private ServerNoteDB noteDB;
     private ServerBatteryDB batteryDB;
     private ServerInventoryDB inventoryDB;
+    private ServerSMSDB smsDB;
     private ServerChatManager chatMgr;
     private ONCUser clientUser;
     private Calendar timestamp;
@@ -119,6 +120,7 @@ public class DesktopClient extends Thread
 	        noteDB = ServerNoteDB.getInstance();
 	        batteryDB = ServerBatteryDB.getInstance();
 	        inventoryDB = ServerInventoryDB.getInstance();
+	        smsDB = ServerSMSDB.getInstance();
 		  
 	        clientUser = null;
 	        timestamp = Calendar.getInstance();
@@ -390,6 +392,11 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		output.println(activityDB.getSignUps());
+                }
+                else if(command.startsWith("GET<sms_messages>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		output.println(smsDB.getSMSMessages(year));
                 }
                 else if(command.equals("GET<request_signups>"))
                 {

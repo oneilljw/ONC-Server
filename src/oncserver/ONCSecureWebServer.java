@@ -202,9 +202,9 @@ public class ONCSecureWebServer
 		}
 		
 		//set up the SMS handler
+		SMSHandler smsHandler = new SMSHandler();
 		String[] smsContexts = {"/sms-receive"};
 						
-		SMSHandler smsHandler = new SMSHandler();
 		for(String contextname : smsContexts)
 		{
 			context = server.createContext(contextname, smsHandler);

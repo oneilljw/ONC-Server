@@ -12,6 +12,7 @@ import java.util.List;
 import ourneighborschild.Address;
 import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCChildGift;
+import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCUser;
 import ourneighborschild.GiftStatus;
@@ -202,6 +203,24 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		{	
 			return oAL.get(index);
 		}
+		else
+			return null;
+	}
+	
+	ONCPartner getPartnerByPhoneNumber(int year, String phoneNum)
+	{
+		String formatedPhoneNum = formatPhoneNumber(phoneNum);
+		
+		List<ONCPartner> pAL = partnerDB.get(DBManager.offset(year)).getList();
+		int i;
+		for(i=0; i<pAL.size(); i++)
+			if(formatPhoneNumber(pAL.get(i).getHomePhone()).equals(formatedPhoneNum) || 
+				formatPhoneNumber(pAL.get(i).getContact_phone()).equals(formatedPhoneNum) ||
+				 formatPhoneNumber( pAL.get(i).getContact2_phone()).equals(formatedPhoneNum) )
+				break;
+		
+		if(i < pAL.size())
+			return pAL.get(i);
 		else
 			return null;
 	}

@@ -9,37 +9,33 @@ import ourneighborschild.ONCUser;
 
 public class ServerInboundSMSDB extends ServerSeasonalDB
 {
-	private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 20;
+	private static final int SMS_INBOUND_DB_HEADER_LENGTH = 20;
 	
 	private static ServerInboundSMSDB instance = null;
-	private static List<SMSDBYear> smsDB;
+	private static List<SMSInboundDBYear> inboundSMSDB;
 	
 	private ServerInboundSMSDB() throws FileNotFoundException, IOException
 	{
 		//create the INBOUND SMS data base
-		smsDB = new ArrayList<SMSDBYear>();
+		inboundSMSDB = new ArrayList<SMSInboundDBYear>();
 						
-		//populate the adult data base for the last TOTAL_YEARS from persistent store
+		//populate the Inbound SMS data base for the last TOTAL_YEARS from persistent store
 		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
-			//create the meal list for each year
-			SMSDBYear smsDBYear = new SMSDBYear(year);
+			//create the list for each year
+			SMSInboundDBYear smsDBYear = new SMSInboundDBYear(year);
 							
-			//add the list of adults for the year to the db
-			smsDB.add(smsDBYear);
+			//add the list of inbound SMS for the year to the db
+			inboundSMSDB.add(smsDBYear);
 							
-			//import the adults from persistent store
-			importDB(year, String.format("%s/%dDB/SMSDB.csv",
+			//import the inbound sms from persistent store
+			importDB(year, String.format("%s/%dDB/InboundSMSDB.csv",
 					System.getProperty("user.dir"),
-						year), "SMS DB",SMS_RECEIVE_DB_HEADER_LENGTH);
+						year), "Inbound SMS DB",SMS_INBOUND_DB_HEADER_LENGTH);
 			
 			//set the next id
 			smsDBYear.setNextID(getNextID(smsDBYear.getList()));
 		}
-		
-		//initialize the Twilio IF
-		TwilioIF twilioIF = TwilioIF.getInstance();
-		twilioIF.sendSMS("+15713440902", "Our Neighbor's Child SMS server started");
 	}
 	
 	public static ServerInboundSMSDB getInstance() throws FileNotFoundException, IOException
@@ -52,14 +48,14 @@ public class ServerInboundSMSDB extends ServerSeasonalDB
 	
 	TwilioSMSReceive add(int year, TwilioSMSReceive addedSMS)
 	{			
-		//retrieve the adult data base for the year
-		SMSDBYear smsDBYear = smsDB.get(DBManager.offset(year));
+		//retrieve the data base for the year
+		SMSInboundDBYear smsDBYear = inboundSMSDB.get(DBManager.offset(year));
 								
-		//set the new ID for the added SMS
+		//set the new ID for the added inbound SMS
 		int smsID = smsDBYear.getNextID();
 		addedSMS.setID(smsID);
 		
-		//add the new adult to the data base
+		//add the new inbound sms to the data base
 		smsDBYear.add(addedSMS);
 		smsDBYear.setChanged(true);
 							
@@ -69,11 +65,11 @@ public class ServerInboundSMSDB extends ServerSeasonalDB
 	@Override
 	void createNewSeason(int year)
 	{
-		//create a new SMS data base year for the year provided in the year parameter
+		//create a new inboundSMS data base year for the year provided in the year parameter
 		//The sms db year list is initially empty prior to receipt of in-bound SMS messages,
 		//so all we do here is create a new SMSDBYear for the new year and save it.
-		SMSDBYear smsDBYear = new SMSDBYear(year);
-		smsDB.add(smsDBYear);
+		SMSInboundDBYear smsDBYear = new SMSInboundDBYear(year);
+		inboundSMSDB.add(smsDBYear);
 		smsDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 
@@ -81,7 +77,7 @@ public class ServerInboundSMSDB extends ServerSeasonalDB
 	void addObject(int year, String[] nextLine)
 	{
 		//Get the sms list for the year and add create and add the sms
-		SMSDBYear smsDBYear = smsDB.get(DBManager.offset(year));
+		SMSInboundDBYear smsDBYear = inboundSMSDB.get(DBManager.offset(year));
 		smsDBYear.add(new TwilioSMSReceive(nextLine));
 	}
 
@@ -94,7 +90,7 @@ public class ServerInboundSMSDB extends ServerSeasonalDB
 				"ApiVersion", "FromCity", "SmsStatus", "NumSegments", "NumMedia",
 				"From", "FromZip", "Timestamp"};
 		
-		SMSDBYear smsDBYear = smsDB.get(DBManager.offset(year));
+		SMSInboundDBYear smsDBYear = inboundSMSDB.get(DBManager.offset(year));
 		if(smsDBYear.isUnsaved())
 		{
 //			System.out.println(String.format("ServerAdultDB save() - Saving Adult DB, size= %d", adultDBYear.getList().size()));
@@ -104,20 +100,20 @@ public class ServerInboundSMSDB extends ServerSeasonalDB
 		}
 	}
 	
-	private class SMSDBYear extends ServerDBYear
+	private class SMSInboundDBYear extends ServerDBYear
     {
-    		private List<TwilioSMSReceive> smsList;
+    		private List<TwilioSMSReceive> inboundSMSList;
     	
-    		SMSDBYear(int year)
+    		SMSInboundDBYear(int year)
     		{
     			super();
-    			smsList = new ArrayList<TwilioSMSReceive>();
+    			inboundSMSList = new ArrayList<TwilioSMSReceive>();
     		}
     	
     		//getters
-    		List<TwilioSMSReceive> getList() { return smsList; }
+    		List<TwilioSMSReceive> getList() { return inboundSMSList; }
     	
-    		void add(TwilioSMSReceive addedSMS) { smsList.add(addedSMS); }
+    		void add(TwilioSMSReceive addedSMS) { inboundSMSList.add(addedSMS); }
     }
 
 	@Override
