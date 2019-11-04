@@ -7,16 +7,16 @@ import java.util.List;
 
 import ourneighborschild.ONCUser;
 
-public class ServerSMSDB extends ServerSeasonalDB
+public class ServerInboundSMSDB extends ServerSeasonalDB
 {
-	private static final int SMS_DB_HEADER_LENGTH = 20;
+	private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 20;
 	
-	private static ServerSMSDB instance = null;
+	private static ServerInboundSMSDB instance = null;
 	private static List<SMSDBYear> smsDB;
 	
-	private ServerSMSDB() throws FileNotFoundException, IOException
+	private ServerInboundSMSDB() throws FileNotFoundException, IOException
 	{
-		//create the adult data base
+		//create the INBOUND SMS data base
 		smsDB = new ArrayList<SMSDBYear>();
 						
 		//populate the adult data base for the last TOTAL_YEARS from persistent store
@@ -31,7 +31,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 			//import the adults from persistent store
 			importDB(year, String.format("%s/%dDB/SMSDB.csv",
 					System.getProperty("user.dir"),
-						year), "SMS DB",SMS_DB_HEADER_LENGTH);
+						year), "SMS DB",SMS_RECEIVE_DB_HEADER_LENGTH);
 			
 			//set the next id
 			smsDBYear.setNextID(getNextID(smsDBYear.getList()));
@@ -42,10 +42,10 @@ public class ServerSMSDB extends ServerSeasonalDB
 		twilioIF.sendSMS("+15713440902", "Our Neighbor's Child SMS server started");
 	}
 	
-	public static ServerSMSDB getInstance() throws FileNotFoundException, IOException
+	public static ServerInboundSMSDB getInstance() throws FileNotFoundException, IOException
 	{
 		if(instance == null)
-			instance = new ServerSMSDB();
+			instance = new ServerInboundSMSDB();
 		
 		return instance;
 	}
@@ -88,6 +88,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 	@Override
 	void save(int year)
 	{
+		//save the INBOUND sms
 		String[] header = {"ID", "AccountSid", "MessageSid", "Body", "ToZip", "ToCity",
 				"FromState", "SmsSid", "To", "ToCountry", "FromCountry", "SmsMessageSid",
 				"ApiVersion", "FromCity", "SmsStatus", "NumSegments", "NumMedia",
@@ -97,7 +98,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		if(smsDBYear.isUnsaved())
 		{
 //			System.out.println(String.format("ServerAdultDB save() - Saving Adult DB, size= %d", adultDBYear.getList().size()));
-			String path = String.format("%s/%dDB/SMSDB.csv", System.getProperty("user.dir"), year);
+			String path = String.format("%s/%dDB/InboundSMSDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(smsDBYear.getList(), header, path);
 			smsDBYear.setChanged(false);
 		}
