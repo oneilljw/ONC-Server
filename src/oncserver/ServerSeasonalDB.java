@@ -51,6 +51,11 @@ public abstract class ServerSeasonalDB extends ONCServerDB
     		reader.close();
 	}
 	
+	/***
+	 * returns a numeric string
+	 * @param num
+	 * @return
+	 */
 	String formatPhoneNumber(String num)
 	{
 		//remove all but digits of a phone number

@@ -12,7 +12,6 @@ import java.util.List;
 import ourneighborschild.Address;
 import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCChildGift;
-import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCUser;
 import ourneighborschild.GiftStatus;
@@ -464,14 +463,16 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		return ornReq;
 	}
 
-	void updateGiftAssignees(int year, int oldPartnerID, int newPartnerID)
+	void updateGiftAssignees(int year, ONCChildGift oldGift, ONCChildGift newGift)
 	{
 		PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
 		
-		//Find the the current partner &  decrement gift count if found
-		if(oldPartnerID > 0)
+		//Find the the current partner & decrement gift assigned count if gift ornament 
+		//hasn't already been delivered to the partner and the partner is found
+		if(oldGift != null && oldGift.getPartnerID() > 0 
+			&& oldGift.getGiftStatus().compareTo(GiftStatus.Delivered) >= 0)
 		{
-			ONCPartner oldPartner = getPartner(year, oldPartnerID);
+			ONCPartner oldPartner = getPartner(year, oldGift.getPartnerID());
 			if(oldPartner != null)
 			{
 				oldPartner.decrementOrnAssigned();
@@ -479,10 +480,10 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			}
 		}
 	
-		if(newPartnerID > 0)
+		//Find the the new partner & increment gift assigned count if the partner is found
+		if(newGift != null && newGift.getPartnerID() > 0)
 		{
-			//Find the the current partner &  increment gift count if found
-			ONCPartner newPartner = getPartner(year, newPartnerID);
+			ONCPartner newPartner = getPartner(year, newGift.getPartnerID());
 			if(newPartner != null)
 			{
 				newPartner.incrementOrnAssigned();

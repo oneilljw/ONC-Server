@@ -5,19 +5,27 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import ourneighborschild.EntityType;
 import ourneighborschild.ONCSMS;
 import ourneighborschild.ONCUser;
+import ourneighborschild.SMSDirection;
+import ourneighborschild.SMSRequest;
+import ourneighborschild.SMSStatus;
 
 public class ServerSMSDB extends ServerSeasonalDB
 {
-private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 7;
+private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 8;
 	
 	private static ServerSMSDB instance = null;
 	private static List<SMSDBYear> smsDB;
+	
+	private ServerFamilyDB familyDB;
+	private TwilioIF twilioIF;
 	
 	private ServerSMSDB() throws FileNotFoundException, IOException
 	{
@@ -42,8 +50,11 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 7;
 			smsDBYear.setNextID(getNextID(smsDBYear.getList()));
 		}
 		
+		//initialize the Family DB interface
+		familyDB = ServerFamilyDB.getInstance();
+		
 		//initialize the Twilio IF
-//		TwilioIF twilioIF = TwilioIF.getInstance();
+		twilioIF = TwilioIF.getInstance();
 //		twilioIF.sendSMS("+15713440902", "Our Neighbor's Child SMS server started");
 	}
 	
@@ -80,6 +91,76 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 7;
 		return addedSMS;
 	}
 	
+	private List<String> processSMSRequest(String json)
+	{
+		Gson gson = new Gson();
+		SMSRequest request = gson.fromJson(json, SMSRequest.class);
+		String body = twilioIF.getSMSMessage(request.getMessageID());
+		
+		List<String> addedSMSList = new ArrayList<String>();
+		
+		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
+		   
+		if(body != null && request.getEntityType() == EntityType.FAMILY)
+	    {
+			//for each family in the request, create a ONCSMS request 
+			for(Integer famID : request.getEntityIDList() )
+			{
+				String twilioFormattedPhoneNum = familyDB.getTwilioFormattedPhoneNumber(request.getYear(), famID, request.getPhoneChoice());
+				if(twilioFormattedPhoneNum != null)
+					smsRequestList.add(new ONCSMS(-1, EntityType.FAMILY, famID, twilioFormattedPhoneNum,
+							SMSDirection.UNKNOWN, body, SMSStatus.REQUESTED));
+				else
+					smsRequestList.add(new ONCSMS(-1, EntityType.FAMILY, famID, twilioFormattedPhoneNum,
+							SMSDirection.UNKNOWN, body, SMSStatus.ERR_NO_PHONE));
+			}
+	    }	
+		
+		//if the request list isn't empty, add the ONCSMS request list to the database, send the sms 
+		//requests in the background and notify the clients of the new requests.
+		if(!smsRequestList.isEmpty())
+		{
+			addedSMSList = addSMSRequestList(request.getYear(), smsRequestList);
+			TwilioIF twilioIF = TwilioIF.getInstance();
+			
+		}	
+			
+	    return addedSMSList;
+	}
+	
+	//callback from Twilio IF when backgound task completes
+	void TwilioRequestComplete(List<ONCSMS> sentSMSList)
+	{
+		
+	}
+	
+	List<String> addSMSRequestList(int year, List<ONCSMS> reqList)
+	{	
+		Gson gson = new Gson();
+		List<String> addedSMSList = new ArrayList<String>();
+	
+		if(!reqList.isEmpty())
+		{
+			//retrieve the sms data base for the year
+			SMSDBYear smsDBYear = smsDB.get(DBManager.offset(year));
+		
+			for(ONCSMS reqSMS : reqList)
+			{
+				//set the new ID for each requested SMS
+				int smsID = smsDBYear.getNextID();
+				reqSMS.setID(smsID);
+					
+				//add the new sms to the data base and add the json to the response list
+				smsDBYear.add(reqSMS);
+				addedSMSList.add(String.format("ADDED_SMS%s", gson.toJson(reqSMS, ONCSMS.class)));
+			}
+		
+			smsDBYear.setChanged(true);
+		}
+		
+		return addedSMSList;
+	}
+	
 	@Override
 	void createNewSeason(int year)
 	{
@@ -103,7 +184,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 7;
 	void save(int year)
 	{
 		//save the INBOUND sms
-		String[] header = {"ID", "Type", "Entity ID", "Phone Num", "Direction", "Body", "Timestamp"};
+		String[] header = {"ID", "Type", "Entity ID", "Phone Num", "Direction", "Body", "Status", "Timestamp"};
 		
 		SMSDBYear smsDBYear = smsDB.get(DBManager.offset(year));
 		if(smsDBYear.isUnsaved())

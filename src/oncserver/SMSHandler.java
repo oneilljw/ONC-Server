@@ -18,6 +18,7 @@ import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCSMS;
 import ourneighborschild.SMSDirection;
+import ourneighborschild.SMSStatus;
 
 //handler for SMS
 public class SMSHandler extends ONCWebpageHandler
@@ -102,7 +103,21 @@ public class SMSHandler extends ONCWebpageHandler
 			}
 			
 			//add the received message to the SMS DB
-			ONCSMS sms = new ONCSMS(-1,type, id, rec_text.getFrom(), SMSDirection.INBOUND, body);
+			SMSStatus status;
+			try
+			{
+				status = SMSStatus.valueOf(twilioParams.get("SmsStatus").toUpperCase());
+			}
+			catch (IllegalArgumentException iae)
+			{
+				status = SMSStatus.ERROR;
+			}
+			catch (NullPointerException npe)
+			{
+				status = SMSStatus.ERROR;
+			}
+			
+			ONCSMS sms = new ONCSMS(-1,type, id, rec_text.getFrom(), SMSDirection.INBOUND, body, status);
 			smsDB.add(DBManager.getCurrentSeason(), sms);					
 			
 			String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
@@ -170,7 +185,7 @@ public class SMSHandler extends ONCWebpageHandler
 		}
 		
 		//add the received message to the SMS DB
-		ONCSMS sms = new ONCSMS(-1,type, id, rec_text.getFrom(), SMSDirection.INBOUND, body);
+		ONCSMS sms = new ONCSMS(-1,type, id, rec_text.getFrom(), SMSDirection.INBOUND, body, SMSStatus.RECEIVED);
 		smsDB.add(DBManager.getCurrentSeason(), sms);					
 		
 		String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +

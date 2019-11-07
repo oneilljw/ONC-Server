@@ -16,6 +16,7 @@ import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.DNSCode;
+import ourneighborschild.EntityType;
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.FamilyStatus;
 import ourneighborschild.MealStatus;
@@ -26,10 +27,14 @@ import ourneighborschild.ONCFamilyHistory;
 import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
+import ourneighborschild.ONCSMS;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
+import ourneighborschild.SMSDirection;
+import ourneighborschild.SMSRequest;
+import ourneighborschild.SMSStatus;
 import ourneighborschild.UserPermission;
 import ourneighborschild.GiftStatus;
 
@@ -1439,6 +1444,95 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	List<ONCFamily> getList(int year)
 	{
 		return familyDB.get(DBManager.offset(year)).getList();
+	}
+	
+	String getTwilioFormattedPhoneNumber(int year, int famID, int phoneChoice)
+	{
+		List<ONCFamily> searchList = familyDB.get(DBManager.offset(year)).getList();
+		
+		String twilioFormattedPhoneNum = null;	//initialize returned number
+		
+		if(phoneChoice >= 0 && phoneChoice <= 1)	//validate the phone choice range
+		{	
+			int index = 0;
+			while(index < searchList.size() && searchList.get(index).getID() != famID)
+				index++;
+		
+			if(index < searchList.size())
+			{
+				ONCFamily f = searchList.get(index);
+				//we've found the family, now check to see if we have a phone number to use
+				//if the request is to use the primary phone, use it if it's valid
+				//if not add the alternate phone.
+			
+				if(phoneChoice == 0)	//home phone
+				{
+					if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
+						twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getHomePhone()));
+					else if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
+						twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getCellPhone()));
+				}
+			
+				//we've found the family, now check to see if we have a phone number to use
+				//if the request is to use the alternate phone, use it if it's valid
+				//if not add the primary phone.
+				if(phoneChoice == 1)	//cell phone
+				{
+					if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
+						twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getCellPhone()));
+					else if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
+						twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getHomePhone()));
+				}
+			}
+		}
+		
+		return twilioFormattedPhoneNum;
+	}
+	
+	List<ONCSMS> getSMSPhoneNumberList(SMSRequest request, String body)
+	{
+		//create the return list
+		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
+		
+		//create the list of ONC SMS objects
+		for(int i=0; i< request.getEntityIDList().size(); i++)
+		{
+			int famID = request.getEntityIDList().get(i);
+			for(ONCFamily f : familyDB.get(request.getYear()).getList())
+			{
+				if(f.getID() == famID)
+				{
+					//we've found the family, now check to see if we have a phone number to use
+					//if the request is to use the primary phone, use it if it's valid
+					//if not add the alternate phone.
+					String twilioFormattedPhoneNum = null;
+					if(request.getPhoneChoice() == 0)	//home phone
+					{
+						if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
+							twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getHomePhone()));
+						else if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
+							twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getCellPhone()));
+					}
+					
+					//we've found the family, now check to see if we have a phone number to use
+					//if the request is to use the alternate phone, use it if it's valid
+					//if not add the primary phone.
+					if(request.getPhoneChoice() == 1)	//cell phone
+					{
+						if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
+							twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getCellPhone()));
+						else if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
+							twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getHomePhone()));
+					}
+					
+					if(twilioFormattedPhoneNum != null)
+						smsRequestList.add(new ONCSMS(-1, EntityType.FAMILY, famID, twilioFormattedPhoneNum,
+										SMSDirection.UNKNOWN, body, SMSStatus.REQUESTED));
+				}
+			}
+		}
+		
+		return null;
 	}
 
 	@Override

@@ -16,11 +16,13 @@ import java.util.List;
 import java.util.Queue;
 import java.util.TimeZone;
 
+import ourneighborschild.EntityType;
 import ourneighborschild.Login;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.SMSRequest;
 import ourneighborschild.UserAccess;
 import ourneighborschild.UserStatus;
 
@@ -1000,6 +1002,13 @@ public class DesktopClient extends Thread
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 }
+                else if(command.startsWith("POST<sms_request>"))
+                {
+                		clientMgr.addLogMessage(command);
+//                	String response = chatMgr.requestChat(command.substring(18));
+//                		output.println(response);
+//                		clientMgr.addLogMessage(response);
+                }
                 else if(command.startsWith("POST<update_website_status>"))
                 {
                 		clientMgr.addLogMessage(command);
@@ -1265,28 +1274,4 @@ public class DesktopClient extends Thread
     }
     
     int getYear() { return year; }
-/*    
-    String verifyAddress(String jsonAddress)
-	{
-    		Gson gson = new Gson();
-    		Address address = gson.fromJson(jsonAddress, Address.class);
-
-		boolean bAddressValid  = RegionDB.isAddressValid(address);
-		int errorCode = bAddressValid ? 0 : 1;
-		
-		//check that a unit might be missing. If a unit is already provided, no need to perform the check.
-		boolean bUnitMissing = address.getUnit().trim().isEmpty() && 
-							ApartmentDB.isAddressAnApartment(address);
-		
-		if(bUnitMissing)
-			errorCode += 2;
-		
-//		System.out.println("HttpHandler.verifyAddress: ErrorCode: "+ errorCode);		
-		boolean bAddressGood = bAddressValid && !bUnitMissing;
-		
-		String jsonResult = gson.toJson(new AddressValidation(bAddressGood, errorCode), AddressValidation.class);
-		
-		return jsonResult;
-	}	
-*/		
 }

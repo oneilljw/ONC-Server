@@ -31,11 +31,17 @@ import ourneighborschild.Activity;
 
 public class SignUpGeniusIF
 {
-	private static final String API_KEY = "NGJMZlhzZm5SK3d4L002ODFyek9iQT09";
+//	private static final String API_KEY = "NGJMZlhzZm5SK3d4L002ODFyek9iQT09";
 	private static final String SIGNUPS_URL = "https://api.signupgenius.com/v2/k/signups/created/active/?user_key=%s";
 	private static final String SIGNUP_REPORT_URL = "https://api.signupgenius.com/v2/k/signups/report/%s/%d/?user_key=%s";
 	
 	private static SignUpGeniusIF instance;
+	private String api_key;
+	
+	private SignUpGeniusIF()
+	{
+		api_key = ServerEncryptionManager.getKey("key5");
+	}
 
 	public static SignUpGeniusIF getInstance()
 	{
@@ -225,7 +231,7 @@ public class SignUpGeniusIF
     		{
     			this.type = SignUpEventType.SIGNUP_LIST_IMPORT;
     			this.signup = null;
-    			this.url = String.format(SIGNUPS_URL, API_KEY);
+    			this.url = String.format(SIGNUPS_URL, api_key);
     		}
     		
     		//constructor for importing volunteers and activities from a specific sign-up in ONC account
@@ -233,7 +239,7 @@ public class SignUpGeniusIF
     		{
     			this.type = SignUpEventType.REPORT;
     			this.signup = signup;
-    			this.url = String.format(SIGNUP_REPORT_URL, reportType.toString(), signup.getSignupid(), API_KEY);
+    			this.url = String.format(SIGNUP_REPORT_URL, reportType.toString(), signup.getSignupid(), api_key);
     			
     			//initialize the lists
     			newActivitiesFoundList = new ArrayList<Activity>();

@@ -285,8 +285,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		if(priorGift != null && priorGift.getPartnerID() != addedGift.getPartnerID())
 		{
 			//assignee change -- need to adjust partner gift assignment counts in partner DB
-			serverPartnerDB.updateGiftAssignees(year, priorGift.getPartnerID(), 
-												addedGift.getPartnerID());
+			serverPartnerDB.updateGiftAssignees(year, priorGift, addedGift);
 		}
 
 		//test to see if gift status is changing to Received from Delivered or Shopping, or from Assigned to
