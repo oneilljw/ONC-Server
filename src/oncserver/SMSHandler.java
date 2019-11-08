@@ -120,9 +120,15 @@ public class SMSHandler extends ONCWebpageHandler
 			ONCSMS sms = new ONCSMS(-1,type, id, rec_text.getFrom(), SMSDirection.INBOUND, body, status);
 			smsDB.add(DBManager.getCurrentSeason(), sms);					
 			
+			String replyContent;
+			if(body.contains("C"))
+				replyContent ="thank you for confirming ONC gift delivery on 12/15 between 1-4pm";
+			else
+				replyContent ="sorry you were unable to confirm ONC gift delivery. Please contact "
+						+ "your school counselor for assistance";
+				
 			String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
-				"<Response><Message>%s, a great %s, thank you for sending %s to Our Neighbor's Child</Message></Response>",
-				name, type.toString().toLowerCase(), body );
+				"<Response><Message>%s, %s></Response>", name, replyContent );
 			
 			htmlResponse = new HtmlResponse(response, HttpCode.Ok);
 		
