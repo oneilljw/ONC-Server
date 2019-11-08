@@ -31,7 +31,6 @@ import ourneighborschild.Activity;
 
 public class SignUpGeniusIF
 {
-//	private static final String API_KEY = "NGJMZlhzZm5SK3d4L002ODFyek9iQT09";
 	private static final String SIGNUPS_URL = "https://api.signupgenius.com/v2/k/signups/created/active/?user_key=%s";
 	private static final String SIGNUP_REPORT_URL = "https://api.signupgenius.com/v2/k/signups/report/%s/%d/?user_key=%s";
 	

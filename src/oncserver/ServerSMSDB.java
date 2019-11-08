@@ -38,10 +38,10 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 8;
 			//create the meal list for each year
 			SMSDBYear smsDBYear = new SMSDBYear(year);
 							
-			//add the list of adults for the year to the db
+			//add the list of sms for the year to the db
 			smsDB.add(smsDBYear);
 							
-			//import the adults from persistent store
+			//import the sms messages from persistent store
 			importDB(year, String.format("%s/%dDB/SMSDB.csv",
 					System.getProperty("user.dir"),
 						year), "SMS DB",SMS_RECEIVE_DB_HEADER_LENGTH);
@@ -54,7 +54,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 8;
 		familyDB = ServerFamilyDB.getInstance();
 		
 		//initialize the Twilio IF
-		twilioIF = TwilioIF.getInstance();
+//		twilioIF = TwilioIF.getInstance();
 //		twilioIF.sendSMS("+15713440902", "Our Neighbor's Child SMS server started");
 	}
 	
@@ -91,17 +91,16 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 8;
 		return addedSMS;
 	}
 	
-	private List<String> processSMSRequest(String json)
+	String processSMSRequest(String json)
 	{
 		Gson gson = new Gson();
 		SMSRequest request = gson.fromJson(json, SMSRequest.class);
-		String body = twilioIF.getSMSMessage(request.getMessageID());
 		
 		List<String> addedSMSList = new ArrayList<String>();
 		
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
-		if(body != null && request.getEntityType() == EntityType.FAMILY)
+		if(request.getMessage() != null && request.getEntityType() == EntityType.FAMILY)
 	    {
 			//for each family in the request, create a ONCSMS request 
 			for(Integer famID : request.getEntityIDList() )
@@ -109,29 +108,58 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 8;
 				String twilioFormattedPhoneNum = familyDB.getTwilioFormattedPhoneNumber(request.getYear(), famID, request.getPhoneChoice());
 				if(twilioFormattedPhoneNum != null)
 					smsRequestList.add(new ONCSMS(-1, EntityType.FAMILY, famID, twilioFormattedPhoneNum,
-							SMSDirection.UNKNOWN, body, SMSStatus.REQUESTED));
+							SMSDirection.UNKNOWN, request.getMessage(), SMSStatus.REQUESTED));
 				else
 					smsRequestList.add(new ONCSMS(-1, EntityType.FAMILY, famID, twilioFormattedPhoneNum,
-							SMSDirection.UNKNOWN, body, SMSStatus.ERR_NO_PHONE));
+							SMSDirection.UNKNOWN, request.getMessage(), SMSStatus.ERR_NO_PHONE));
 			}
 	    }	
 		
 		//if the request list isn't empty, add the ONCSMS request list to the database, send the sms 
 		//requests in the background and notify the clients of the new requests.
+		String response = "SMS_REQUEST_FAILED";
 		if(!smsRequestList.isEmpty())
 		{
+			//create the list to strings to send to clients
 			addedSMSList = addSMSRequestList(request.getYear(), smsRequestList);
-			TwilioIF twilioIF = TwilioIF.getInstance();
 			
-		}	
+			//ask twilio to send the SMS's
+			TwilioIF twilioIF;
+			try
+			{
+				twilioIF = TwilioIF.getInstance();
+				response = twilioIF.sendSMSList(request, smsRequestList);
+				
+				//notify all in year clients
+				ClientManager clientMgr = ClientManager.getInstance();
+				clientMgr.notifyAllInYearClients(request.getYear(), addedSMSList);
+				
+			}
+			catch (IOException e)
+			{
+				response = "TWILIO IF Error " + e.getMessage();
+			}
+		}
 			
-	    return addedSMSList;
+	    return response;
 	}
 	
-	//callback from Twilio IF when backgound task completes
-	void TwilioRequestComplete(List<ONCSMS> sentSMSList)
+	//callback from Twilio IF when background task completes
+	void twilioRequestComplete(SMSRequest request, List<ONCSMS> sentSMSList)
 	{
+//		for(ONCSMS resultSMS : sentSMSList)
+//			System.out.println(resultSMS.toString());
 		
+		//create the updated string of client json messages
+		List<String> clientSMSUpdateList = new ArrayList<String>();
+		Gson gson = new Gson();
+		
+		for(ONCSMS completedSMS : sentSMSList)
+			clientSMSUpdateList.add("UPDATED_SMS" + gson.toJson(completedSMS, ONCSMS.class));
+		
+		//notify all in year clients of SMS updates
+		ClientManager clientMgr = ClientManager.getInstance();
+		clientMgr.notifyAllInYearClients(request.getYear(), clientSMSUpdateList);
 	}
 	
 	List<String> addSMSRequestList(int year, List<ONCSMS> reqList)

@@ -1468,9 +1468,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				if(phoneChoice == 0)	//home phone
 				{
 					if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
-						twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getHomePhone()));
+						twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
 					else if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
-						twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getCellPhone()));
+						twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getCellPhone()));
 				}
 			
 				//we've found the family, now check to see if we have a phone number to use
@@ -1479,9 +1479,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				if(phoneChoice == 1)	//cell phone
 				{
 					if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
-						twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getCellPhone()));
+						twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getCellPhone()));
 					else if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
-						twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getHomePhone()));
+						twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
 				}
 			}
 		}

@@ -1,5 +1,8 @@
 package oncserver;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +16,7 @@ import com.twilio.rest.lookups.v1.PhoneNumber;
 import ourneighborschild.EntityType;
 import ourneighborschild.ONCSMS;
 import ourneighborschild.SMSDirection;
-
+import ourneighborschild.SMSRequest;
 import ourneighborschild.SMSStatus;
 
 public class TwilioIF
@@ -23,17 +26,16 @@ public class TwilioIF
     private static final String ONC_TWILIO_NUMBER = "+15716654028";
 
     private static TwilioIF instance;
+    private ServerSMSDB smsDB;
     
-    private TwilioIF()
-    {		
-    		ONCSMS testSMS = new ONCSMS(-1, EntityType.FAMILY, -1, "+15713440902", SMSDirection.UNKNOWN, 
-    				getSMSMessage(1), SMSStatus.REQUESTED);
-//    	sendSMS(testSMS);
-    		
+    private TwilioIF() throws FileNotFoundException, IOException
+    {	
+    		smsDB = ServerSMSDB.getInstance();
+
  //   	lookupPhoneNumber("+15713440902");
     }
     
-    public static TwilioIF getInstance()
+    public static TwilioIF getInstance() throws FileNotFoundException, IOException
 	{
 		if(instance == null)
 			instance = new TwilioIF();
@@ -45,46 +47,27 @@ public class TwilioIF
      * Encapsulates background SMS worker
      * @param smsList
      */
-    private void sendSMSList(List<ONCSMS> smsList)
+    String sendSMSList(SMSRequest request, List<ONCSMS> smsList)
     {
-    		TwilioSMSMessageSender sender = new TwilioSMSMessageSender(smsList);
+    		//create a deep copy of the request list
+    		List<ONCSMS> twilioSMSRequestList = new ArrayList<ONCSMS>();
+    		for(ONCSMS smsReq : smsList)
+    			twilioSMSRequestList.add(smsReq);
+    		
+    		//initialize the background task
+    		TwilioSMSMessageSender sender = new TwilioSMSMessageSender(request, twilioSMSRequestList);
 		sender.execute();
+		
+		 return "SMS_REQUEST_PROCESSED";
     }
-/*    
-    public void sendSMS(ONCSMS requestedSMS) 
-    {
-    		Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
-        Message message = Message.creator(
-                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
-                new com.twilio.type.PhoneNumber(ONC_TWILIO_NUMBER),
-                requestedSMS.getBody())
-            .create();
-        
-        if(message.getErrorCode() == null)
-        {
-        		if(message.getDirection().toString().equals("outbound-api"))
-        			requestedSMS.setDirection(SMSDirection.OUTBOUND_API);
-        		
-        		requestedSMS.setStatus(SMSStatus.valueOf(message.getStatus().toString().toUpperCase()));
-        }
-        
-        System.out.println(message);
-        
-        System.out.println(String.format("TwilioIF: sendSMS: ONCSMS Status = %s, ONCSMS Direction = %s",
-        		requestedSMS.getStatus().toString(), requestedSMS.getDirection().toString()));
-
-        ServerUI.addDebugMessage(String.format("Mssg Sent %s %s", message.getSid(), message.getBody()));
-    }
-*/    
     
-   String getSMSMessage(int mssgID)
-   {
-	   if(mssgID == 1)
-		   return "This is another test of ONC Text Messaging";
-	   else 
-		   return null;
-   }
-
+    void twilioRequestComplete(SMSRequest request, List<ONCSMS> resultList)
+    {
+    		//notify the SMS DB that the request has been processed
+    		smsDB.twilioRequestComplete(request, resultList);
+    }
+ 
+    
    /***************************************************************************************************
     * This class communicates with Twilio thru it's api to send SMS. This executes as a background task
     * since we have to throttle sending of requested messages.
@@ -93,10 +76,13 @@ public class TwilioIF
     {
     		private static final int SMS_MESSAGE_RATE = 1000 * 5;		//one message every 5 seconds
     		
+    		private SMSRequest request;
     		private List<ONCSMS> smsRequestList;
     		
-    		TwilioSMSMessageSender(List<ONCSMS> requestList)
+    		TwilioSMSMessageSender(SMSRequest request, List<ONCSMS> requestList)
     		{
+    			this.request = request; 
+    			
     			Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
     			this.smsRequestList = requestList;
     		}
@@ -107,11 +93,18 @@ public class TwilioIF
     			//verify phone number accessibility -- entity DB is responsible for Twilio formatting
     			for(ONCSMS smsRequest : smsRequestList)
     			{
+    				//verify the phone type. If a mobile phone, set status to VALIDATED, else
+    				//set status to ERR_NOT_MOBILE
     				Map<String,String> lookupMap = lookupPhoneNumber(smsRequest.getPhoneNum());
     				if(lookupMap.containsKey("type") && lookupMap.get("type").equals("mobile"))
+    				{	
     					smsRequest.setStatus(SMSStatus.VALIDATED);
+    					
+    					//send sms
+    					sendSMS(smsRequest);
+    				}
     				else
-    					smsRequest.setStatus(SMSStatus.ERR_NOT_MOBILE);	   
+    					smsRequest.setStatus(SMSStatus.ERR_NOT_MOBILE);
     			}
     			
     			return null;
@@ -122,17 +115,37 @@ public class TwilioIF
     		    PhoneNumber phoneNumber = PhoneNumber.fetcher(new com.twilio.type.PhoneNumber(lookupNumber))
     		           .setType(Arrays.asList("carrier")).fetch();
     		       
-    		    Map<String,String> returnedMap = phoneNumber.getCarrier();
-    		       
-    		    for(String key : returnedMap.keySet())
-    		    	   	System.out.println(String.format("Twilio Lookup: key=%s, value=%s", key, returnedMap.get(key)));
+//    		Map<String,String> returnedMap = phoneNumber.getCarrier();    		       
+//    		for(String key : returnedMap.keySet())
+//    		    	System.out.println(String.format("Twilio Lookup: key=%s, value=%s", key, returnedMap.get(key)));
     		       
     		    return phoneNumber.getCarrier();
     		}
+    	    
+    	    public void sendSMS(ONCSMS requestedSMS) 
+    	    {
+    	    		Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
+    	        Message message = Message.creator(
+    	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
+    	                new com.twilio.type.PhoneNumber(ONC_TWILIO_NUMBER),
+    	                requestedSMS.getBody())
+    	            .create();
+    	        
+    	        if(message.getErrorCode() == null)
+    	        {
+    	        		if(message.getDirection().toString().equals("outbound-api"))
+    	        			requestedSMS.setDirection(SMSDirection.OUTBOUND_API);
+    	        		
+    	        		requestedSMS.setStatus(SMSStatus.valueOf(message.getStatus().toString().toUpperCase()));
+    	        }
+    	        
+    	        ServerUI.addDebugMessage(String.format("SMS Mssg Sent %s %s", message.getSid(), message.getBody()));
+    	    }      		
     		
     		@Override
     		protected void done()
     		{
+    			twilioRequestComplete(request, smsRequestList);
     		}
     }  
 }

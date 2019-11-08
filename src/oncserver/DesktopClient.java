@@ -1005,9 +1005,9 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<sms_request>"))
                 {
                 		clientMgr.addLogMessage(command);
-//                	String response = chatMgr.requestChat(command.substring(18));
-//                		output.println(response);
-//                		clientMgr.addLogMessage(response);
+                		String response = smsDB.processSMSRequest(command.substring(17));
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<update_website_status>"))
                 {
