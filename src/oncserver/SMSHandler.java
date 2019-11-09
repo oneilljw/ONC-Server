@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 //import com.twilio.twiml.messaging.Message;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -78,6 +77,89 @@ public class SMSHandler extends ONCWebpageHandler
 			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_text);
 			
 			int id = -1;
+			String messageID = twilioParams.get("MessageSid");
+			EntityType type = EntityType.UNKNOWN;
+			String name = "Anonymous";
+			String body = twilioParams.get("Body");
+			
+			//search the familyDB for the incoming phone number
+			ONCFamily fam = familyDB.getFamilyByPhoneNumber(DBManager.getCurrentSeason(), rec_text.getFrom().substring(2));
+			if(fam != null)
+			{
+				id = fam.getID();
+				type = EntityType.FAMILY;
+				name = fam.getFirstName() + " " + fam.getLastName();
+			}
+			else
+			{
+				//search partner DB
+				ONCPartner partner = partnerDB.getPartnerByPhoneNumber(DBManager.getCurrentSeason(), rec_text.getFrom().substring(2));
+				if(partner != null)
+				{
+					id = partner.getID();
+					type = EntityType.PARTNER;
+					name = partner.getLastName();
+				}
+			}
+			
+			//add the received message to the SMS DB
+			SMSStatus status;
+			try
+			{
+				status = SMSStatus.valueOf(twilioParams.get("SmsStatus").toUpperCase());
+			}
+			catch (IllegalArgumentException iae)
+			{
+				status = SMSStatus.ERROR;
+			}
+			catch (NullPointerException npe)
+			{
+				status = SMSStatus.ERROR;
+			}
+			
+			ONCSMS sms = new ONCSMS(-1,messageID, type, id, rec_text.getFrom(), SMSDirection.INBOUND, body, status);
+			smsDB.add(DBManager.getCurrentSeason(), sms);					
+			
+			String replyContent;
+			if(body.contains("C"))
+				replyContent =String.format("%s, thank you for confirming ONC gift delivery on 12/15 between 1-4pm", name);
+			else
+				replyContent =String.format("%s, sorry you were unable to confirm ONC gift delivery. Please contact "
+						+ "your school counselor for assistance",name);
+				
+			String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
+				"<Response><Message>%s</Message></Response>",replyContent );
+			
+			htmlResponse = new HtmlResponse(response, HttpCode.Ok);
+		
+			sendXMLResponse(t, htmlResponse); 
+		}
+		else if(requestURI.equals("/sms-update"))
+		{
+			//create the twilio key map
+			String[] twilioParamKeys = {"AccountSid","MessageSid","Body","ToZip","ToCity",
+							"FromState","ToState","SmsSid",  "To","ToCountry","FromCountry",
+		    					"SmsMessageSid", "ApiVersion", "FromCity", "SmsStatus",
+		    					"NumSegments", "NumMedia", "From", "FromZip" };
+			
+			//create the map and object
+			Map<String, String> twilioParams = createMap(params, twilioParamKeys);
+		
+			//create a debug string
+			StringBuffer buff = new StringBuffer();
+			for(String key : twilioParamKeys)
+			{
+				buff.append(String.format(", %s= %s", key, twilioParams.get(key)));
+			}
+			buff.append(String.format(", timestamp= %d", System.currentTimeMillis()));
+			ServerUI.addDebugMessage(buff.toString());
+			
+			TwilioSMSReceive rec_text = new TwilioSMSReceive(twilioParams);
+/*			
+			//add the received message to the Inbound SMS database
+			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_text);
+			
+			int id = -1;
 			EntityType type = EntityType.UNKNOWN;
 			String name = "Anonymous", body = "Error";
 			body = twilioParams.get("Body");
@@ -122,20 +204,21 @@ public class SMSHandler extends ONCWebpageHandler
 			
 			String replyContent;
 			if(body.contains("C"))
-				replyContent ="thank you for confirming ONC gift delivery on 12/15 between 1-4pm";
+				replyContent =String.format("%s, thank you for confirming ONC gift delivery on 12/15 between 1-4pm", name);
 			else
-				replyContent ="sorry you were unable to confirm ONC gift delivery. Please contact "
-						+ "your school counselor for assistance";
+				replyContent =String.format("%s, sorry you were unable to confirm ONC gift delivery. Please contact "
+						+ "your school counselor for assistance",name);
 				
 			String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
-				"<Response><Message>%s, %s></Response>", name, replyContent );
+				"<Response><Message>%s</Message></Response>",replyContent );
 			
 			htmlResponse = new HtmlResponse(response, HttpCode.Ok);
 		
 			sendXMLResponse(t, htmlResponse); 
-		}		
+*/			
+		}
     }
-	
+/*	
 	void simulateSMSReceive()
 	{
 		//debug map
@@ -167,8 +250,9 @@ public class SMSHandler extends ONCWebpageHandler
 		
 		int id = -1;
 		EntityType type = EntityType.UNKNOWN;
-		String name = "Anonymous", body = "Error";
-		body = twilioParams.get("Body");
+		String name = "Anonymous";
+		String body = twilioParams.get("Body");
+		String messageSID = twilioParams.get("MessageSID");
 		
 		//search the familyDB for the incoming phone number
 		ONCFamily fam = familyDB.getFamilyByPhoneNumber(DBManager.getCurrentSeason(), rec_text.getFrom().substring(2));
@@ -191,7 +275,7 @@ public class SMSHandler extends ONCWebpageHandler
 		}
 		
 		//add the received message to the SMS DB
-		ONCSMS sms = new ONCSMS(-1,type, id, rec_text.getFrom(), SMSDirection.INBOUND, body, SMSStatus.RECEIVED);
+		ONCSMS sms = new ONCSMS(-1,messageSID,type, id, rec_text.getFrom(), SMSDirection.INBOUND, body, SMSStatus.RECEIVED);
 		smsDB.add(DBManager.getCurrentSeason(), sms);					
 		
 		String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
@@ -200,4 +284,5 @@ public class SMSHandler extends ONCWebpageHandler
 		
 		System.out.println(String.format("SMSHandler.SimulateSMSReceive: response= %s", response));	
 	}
+*/	
 }

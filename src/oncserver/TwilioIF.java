@@ -2,6 +2,7 @@ package oncserver;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +14,6 @@ import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.rest.lookups.v1.PhoneNumber;
 
-import ourneighborschild.EntityType;
 import ourneighborschild.ONCSMS;
 import ourneighborschild.SMSDirection;
 import ourneighborschild.SMSRequest;
@@ -24,6 +24,7 @@ public class TwilioIF
 	// Find your Account Sid and Token at twilio.com/console
     // DANGER! This is insecure. See http://twil.io/secure
     private static final String ONC_TWILIO_NUMBER = "+15716654028";
+    private static final String SMS_STATUS_CALLBACK = "https://34.224.169.163:8902/sms-update";
 
     private static TwilioIF instance;
     private ServerSMSDB smsDB;
@@ -31,8 +32,6 @@ public class TwilioIF
     private TwilioIF() throws FileNotFoundException, IOException
     {	
     		smsDB = ServerSMSDB.getInstance();
-
- //   	lookupPhoneNumber("+15713440902");
     }
     
     public static TwilioIF getInstance() throws FileNotFoundException, IOException
@@ -58,7 +57,7 @@ public class TwilioIF
     		TwilioSMSMessageSender sender = new TwilioSMSMessageSender(request, twilioSMSRequestList);
 		sender.execute();
 		
-		 return "SMS_REQUEST_PROCESSED";
+		return "SMS_REQUEST_PROCESSED";
     }
     
     void twilioRequestComplete(SMSRequest request, List<ONCSMS> resultList)
@@ -125,10 +124,17 @@ public class TwilioIF
     	    public void sendSMS(ONCSMS requestedSMS) 
     	    {
     	    		Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
+//    	        Message message = Message.creator(
+//    	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
+//    	                new com.twilio.type.PhoneNumber(ONC_TWILIO_NUMBER),
+//    	                requestedSMS.getBody())
+//    	            .create();
+    	        
     	        Message message = Message.creator(
     	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
     	                new com.twilio.type.PhoneNumber(ONC_TWILIO_NUMBER),
     	                requestedSMS.getBody())
+    	            .setStatusCallback(URI.create(SMS_STATUS_CALLBACK))
     	            .create();
     	        
     	        if(message.getErrorCode() == null)

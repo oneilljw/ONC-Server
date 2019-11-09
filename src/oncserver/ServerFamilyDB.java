@@ -1489,52 +1489,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		return twilioFormattedPhoneNum;
 	}
 	
-	List<ONCSMS> getSMSPhoneNumberList(SMSRequest request, String body)
-	{
-		//create the return list
-		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
-		
-		//create the list of ONC SMS objects
-		for(int i=0; i< request.getEntityIDList().size(); i++)
-		{
-			int famID = request.getEntityIDList().get(i);
-			for(ONCFamily f : familyDB.get(request.getYear()).getList())
-			{
-				if(f.getID() == famID)
-				{
-					//we've found the family, now check to see if we have a phone number to use
-					//if the request is to use the primary phone, use it if it's valid
-					//if not add the alternate phone.
-					String twilioFormattedPhoneNum = null;
-					if(request.getPhoneChoice() == 0)	//home phone
-					{
-						if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
-							twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getHomePhone()));
-						else if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
-							twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getCellPhone()));
-					}
-					
-					//we've found the family, now check to see if we have a phone number to use
-					//if the request is to use the alternate phone, use it if it's valid
-					//if not add the primary phone.
-					if(request.getPhoneChoice() == 1)	//cell phone
-					{
-						if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
-							twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getCellPhone()));
-						else if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
-							twilioFormattedPhoneNum = String.format("+1%d", formatPhoneNumber(f.getHomePhone()));
-					}
-					
-					if(twilioFormattedPhoneNum != null)
-						smsRequestList.add(new ONCSMS(-1, EntityType.FAMILY, famID, twilioFormattedPhoneNum,
-										SMSDirection.UNKNOWN, body, SMSStatus.REQUESTED));
-				}
-			}
-		}
-		
-		return null;
-	}
-
 	@Override
 	void createNewSeason(int newYear)
 	{
