@@ -16,13 +16,11 @@ import java.util.List;
 import java.util.Queue;
 import java.util.TimeZone;
 
-import ourneighborschild.EntityType;
 import ourneighborschild.Login;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
-import ourneighborschild.SMSRequest;
 import ourneighborschild.UserAccess;
 import ourneighborschild.UserStatus;
 
