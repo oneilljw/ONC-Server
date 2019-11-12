@@ -470,7 +470,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		//Find the the current partner & decrement gift assigned count if gift ornament 
 		//hasn't already been delivered to the partner and the partner is found
 		if(oldGift != null && oldGift.getPartnerID() > 0 
-			&& oldGift.getGiftStatus().compareTo(GiftStatus.Delivered) >= 0)
+			&& oldGift.getGiftStatus().compareTo(GiftStatus.Delivered) < 0)
 		{
 			ONCPartner oldPartner = getPartner(year, oldGift.getPartnerID());
 			if(oldPartner != null)
