@@ -72,7 +72,7 @@ public class TwilioIF
      * ***************************************************************************************************/
      public class TwilioSMSMessageSender extends SwingWorker<Void, Void>
      {
-     		private static final int SMS_MESSAGE_RATE = 1000 * 5;		//one message every 5 seconds
+     		private static final int SMS_MESSAGE_RATE = 1000 * 1200;		//one message every 12 seconds
      		
      		private SMSRequest request;
      		private List<ONCSMS> smsRequestList;
@@ -89,6 +89,7 @@ public class TwilioIF
      		protected Void doInBackground() throws Exception
      		{
      			//verify phone number accessibility -- entity DB is responsible for Twilio formatting
+     			int numRequestsProcessed = 0;
      			for(ONCSMS smsRequest : smsRequestList)
      			{
      				//verify the phone type. If a mobile phone, set status to VALIDATED, else
@@ -100,9 +101,14 @@ public class TwilioIF
      					
      					//send sms
      					sendSMS(smsRequest);
+     					
+     					if(numRequestsProcessed < smsRequestList.size()-1)
+     						Thread.sleep(SMS_MESSAGE_RATE);
      				}
      				else
      					smsRequest.setStatus(SMSStatus.ERR_NOT_MOBILE);
+     				
+     				numRequestsProcessed++;
      			}
      			
      			return null;
@@ -122,7 +128,7 @@ public class TwilioIF
      	    
      	    public void sendSMS(ONCSMS requestedSMS) 
      	    {
-     	    		Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
+//     	    		Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
      	        
      	        Message message = Message.creator(
      	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),

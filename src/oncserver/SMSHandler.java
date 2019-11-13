@@ -2,10 +2,6 @@ package oncserver;
 
 import java.io.FileNotFoundException;
 
-//import com.twilio.twiml.MessagingResponse;
-//import com.twilio.twiml.messaging.Body;
-//import com.twilio.twiml.messaging.Message;
-
 import java.io.IOException;
 import java.util.Map;
 
@@ -53,37 +49,20 @@ public class SMSHandler extends ONCWebpageHandler
 		
 		if(requestURI.equals("/sms-receive"))
 		{
-			//create the twilio key map
-			String[] twilioParamKeys = {"AccountSid","MessageSid","Body","ToZip","ToCity",
-							"FromState","ToState","SmsSid",  "To","ToCountry","FromCountry",
-		    					"SmsMessageSid", "ApiVersion", "FromCity", "SmsStatus",
-		    					"NumSegments", "NumMedia", "From", "FromZip" };
+			TwilioSMSReceive rec_SMS = new TwilioSMSReceive(createMap(params, TwilioSMSReceive.keys()));
 			
-			//create the map and object
-			Map<String, String> twilioParams = createMap(params, twilioParamKeys);
-		
-			//create a debug string
-			StringBuffer buff = new StringBuffer();
-			for(String key : twilioParamKeys)
-			{
-				buff.append(String.format(", %s= %s", key, twilioParams.get(key)));
-			}
-			buff.append(String.format(", timestamp= %d", System.currentTimeMillis()));
-			ServerUI.addDebugMessage(buff.toString());
+			ServerUI.addDebugMessage(String.format("/sms-receive: %s", rec_SMS.toString()));
 			
-			TwilioSMSReceive rec_text = new TwilioSMSReceive(twilioParams);
-			
-			//add the received message to the Inbound SMS database
-			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_text);
+			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_SMS);
 			
 			int id = -1;
-			String messageID = twilioParams.get("MessageSid");
+			String messageID = rec_SMS.getMessageSid();
 			EntityType type = EntityType.UNKNOWN;
 			String name = "Anonymous";
-			String body = twilioParams.get("Body");
+			String body = rec_SMS.getBody();
 			
 			//search the familyDB for the incoming phone number
-			ONCFamily fam = familyDB.getFamilyByPhoneNumber(DBManager.getCurrentSeason(), rec_text.getFrom().substring(2));
+			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS);
 			if(fam != null)
 			{
 				id = fam.getID();
@@ -93,7 +72,7 @@ public class SMSHandler extends ONCWebpageHandler
 			else
 			{
 				//search partner DB
-				ONCPartner partner = partnerDB.getPartnerByPhoneNumber(DBManager.getCurrentSeason(), rec_text.getFrom().substring(2));
+				ONCPartner partner = partnerDB.getPartnerByPhoneNumber(DBManager.getCurrentSeason(), rec_SMS.getFrom().substring(2));
 				if(partner != null)
 				{
 					id = partner.getID();
@@ -106,7 +85,7 @@ public class SMSHandler extends ONCWebpageHandler
 			SMSStatus status;
 			try
 			{
-				status = SMSStatus.valueOf(twilioParams.get("SmsStatus").toUpperCase());
+				status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase());
 			}
 			catch (IllegalArgumentException iae)
 			{
@@ -117,7 +96,7 @@ public class SMSHandler extends ONCWebpageHandler
 				status = SMSStatus.ERROR;
 			}
 			
-			ONCSMS sms = new ONCSMS(-1,messageID, type, id, rec_text.getFrom(), SMSDirection.INBOUND, body, status);
+			ONCSMS sms = new ONCSMS(-1,messageID, type, id, rec_SMS.getFrom(), SMSDirection.INBOUND, body, status);
 			smsDB.add(DBManager.getCurrentSeason(), sms);					
 			
 			String replyContent;
@@ -125,10 +104,10 @@ public class SMSHandler extends ONCWebpageHandler
 				replyContent =String.format("%s, thank you for confirming ONC gift delivery on 12/15 between 1-4pm", name);
 			else
 				replyContent =String.format("%s, sorry you were unable to confirm ONC gift delivery. Please contact "
-						+ "your school counselor for assistance",name);
+						+ "your school counselor for assistance", name);
 				
 			String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
-				"<Response><Message>%s</Message></Response>",replyContent );
+				"<Response><Message>%s</Message></Response>", replyContent);
 			
 			htmlResponse = new HtmlResponse(response, HttpCode.Ok);
 		
@@ -136,30 +115,17 @@ public class SMSHandler extends ONCWebpageHandler
 		}
 		else if(requestURI.equals("/sms-update"))
 		{
-			//send a quick response back
-			sendNoContentResponseHeader(t);
-			
-			//create the twilio key map
-			String[] twilioParamKeys = {"AccountSid","MessageSid","Body","ToZip","ToCity",
-							"FromState","ToState","SmsSid",  "To","ToCountry","FromCountry",
-		    					"SmsMessageSid", "ApiVersion", "FromCity", "SmsStatus",
-		    					"NumSegments", "NumMedia", "From", "FromZip" };
-			
-			//create the map and object
-			Map<String, String> twilioParams = createMap(params, TwilioSMSReceive.keys());
-		
-			//create a debug string
-			StringBuffer buff = new StringBuffer();
-			for(String key : twilioParamKeys)
-				buff.append(String.format(", %s= %s", key, twilioParams.get(key)));
-			buff.append(String.format(", timestamp= %d", System.currentTimeMillis()));
-			ServerUI.addDebugMessage(buff.toString());
-			
-			TwilioSMSReceive rec_text = new TwilioSMSReceive(twilioParams);
-			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_text);
-			
+			//add a received Twilio object log message, add the object to the in-bound DB, and
 			//update the ONCSMS object that should have been previously added
-			smsDB.updateSMSMessage(DBManager.getCurrentSeason(), rec_text);
+			TwilioSMSReceive rec_SMS = new TwilioSMSReceive(createMap(params, TwilioSMSReceive.keys()));
+			
+			ServerUI.addDebugMessage(String.format("/sms-update: %s", rec_SMS.toString()));
+			
+			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_SMS);
+			smsDB.updateSMSMessage(DBManager.getCurrentSeason(), rec_SMS);
+			
+			//send a quick response back to the browser -- THIS MAY WANT TO MOVE TO THE TOP OF THE METHOD
+			sendNoContentResponseHeader(t);
 		}
     }
 /*	

@@ -16,7 +16,6 @@ import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.DNSCode;
-import ourneighborschild.EntityType;
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.FamilyStatus;
 import ourneighborschild.MealStatus;
@@ -32,8 +31,6 @@ import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
-import ourneighborschild.SMSDirection;
-import ourneighborschild.SMSRequest;
 import ourneighborschild.SMSStatus;
 import ourneighborschild.UserPermission;
 import ourneighborschild.GiftStatus;
@@ -1089,9 +1086,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	ONCFamily getFamilyByPhoneNumber(int year, String phoneNum)
+	ONCFamily smsMessageReceived(int year, TwilioSMSReceive receivedSMS)
 	{
-		String formatedPhoneNum = formatPhoneNumber(phoneNum);
+		String formatedPhoneNum = formatPhoneNumber(receivedSMS.getFrom().substring(2));
 		
 		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
 		int i;
@@ -1101,7 +1098,26 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				break;
 		
 		if(i < fAL.size())
+		{
+			//found the family. If the SMS Message is confirming delivery, check and potentially change
+			//the family's family status to Confirmed
+			ONCFamily fam = fAL.get(i);
+			boolean bDeliveryConfirmed = receivedSMS.getBody().equals("C") || 
+										  receivedSMS.getBody().toLowerCase().contains("confirmed");
+			
+			if(bDeliveryConfirmed && fam.getFamilyStatus() == FamilyStatus.Contacted)
+			{
+				fam.setFamilyStatus(FamilyStatus.Confirmed);
+				familyDB.get(DBManager.offset(year)).setChanged(true);
+				
+				//notify all in-year clients of the status change
+				Gson gson = new Gson();
+	    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+	    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+			}
+			
 			return fAL.get(i);
+		}
 		else
 			return null;
 	}
@@ -1118,6 +1134,22 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return fAL.get(index);
 		else
 			return null;
+	}
+	
+	void checkFamilyStatusOnReceivedSMS(int year, ONCSMS receivedSMS)
+	{
+		ONCFamily fam = getFamily(year, receivedSMS.getEntityID());
+		if(fam != null && receivedSMS.getStatus() == SMSStatus.DELIVERED && 
+				fam.getFamilyStatus() == FamilyStatus.Verified)
+		{
+			fam.setFamilyStatus(FamilyStatus.Contacted);
+			familyDB.get(DBManager.offset(year)).setChanged(true);
+			
+			//notify all in-year clients of the status change
+			Gson gson = new Gson();
+    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+		}
 	}
 	
 	void checkFamilyGiftStatusAndGiftCardOnlyOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)

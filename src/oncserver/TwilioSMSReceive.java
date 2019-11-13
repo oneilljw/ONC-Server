@@ -1,6 +1,7 @@
 package oncserver;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import ourneighborschild.ONCObject;
@@ -75,34 +76,13 @@ public class TwilioSMSReceive extends ONCObject
 		this.FromZip = nextLine[18];
 	}
 	
-	String getAccountSid()
-	{
-		return AccountSid;
-	}
-	String getMessageSid()
-	{
-		return MessageSid;
-	}
-	String getBody()
-	{
-		return Body;
-	}
-	String getToZip()
-	{
-		return ToZip;
-	}
-	String getToCity()
-	{
-		return ToCity;
-	}
-	String getFromState()
-	{
-		return FromState;
-	}
-	String getSmsSid()
-	{
-		return SmsSid;
-	}
+	String getAccountSid() { return AccountSid; }
+	String getMessageSid() { return MessageSid; }
+	String getBody() { return Body; }
+	String getToZip() { return ToZip; }
+	String getToCity() { return ToCity; }
+	String getFromState() { return FromState; }
+	String getSmsSid() { return SmsSid; }
 	String getTo() {return To; }
 	String getToCountry() { return ToCountry; }
 	String getFromCountry() { return FromCountry; }
@@ -219,5 +199,23 @@ public class TwilioSMSReceive extends ONCObject
 							"FromState","ToState","SmsSid",  "To","ToCountry","FromCountry",
 							"SmsMessageSid", "ApiVersion", "FromCity", "SmsStatus",
 							"NumSegments", "NumMedia", "From", "FromZip" };			
+	}
+	
+	@Override
+	public String toString()
+	{
+		String[] keys = keys();
+		String[] values = getExportRow();
+		
+		if(keys.length == values.length)
+		{
+			StringBuffer buff = new StringBuffer();
+			for(int i=0; i< keys.length; i++)
+				buff.append(String.format("%s= %s, ", keys[i], values[i]));
+			buff.append(String.format("timestamp= %d", timestamp));
+			return buff.toString();
+		}
+		else
+			return "Twilio SMS Receive ERROR";	
 	}
 }
