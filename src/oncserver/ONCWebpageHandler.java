@@ -190,7 +190,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	
 	void sendNoContentResponseHeader(HttpExchange t) throws IOException
 	{
-		t.sendResponseHeaders(HttpCode.No_Body.code(), 0);
+		t.sendResponseHeaders(HttpCode.No_Body.code(), -1);
 	}
 	
 	static String readFile(String file) throws IOException
