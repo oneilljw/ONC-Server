@@ -188,6 +188,11 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		t.close();
 	}
 	
+	void sendNoContentResponseHeader(HttpExchange t) throws IOException
+	{
+		t.sendResponseHeaders(HttpCode.No_Body.code(), 0);
+	}
+	
 	static String readFile(String file) throws IOException
 	{
 	    BufferedReader reader = new BufferedReader(new FileReader(file));

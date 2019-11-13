@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -91,7 +90,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		Gson gson = new Gson();
 		SMSRequest request = gson.fromJson(json, SMSRequest.class);
 		
-		List<String> addedSMSList = new ArrayList<String>();
+//		List<String> addedSMSList = new ArrayList<String>();
 		
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
@@ -115,8 +114,8 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		String response = "SMS_REQUEST_FAILED";
 		if(!smsRequestList.isEmpty())
 		{
-			//create the list to strings to send to clients
-			addedSMSList = addSMSRequestList(request.getYear(), smsRequestList);
+//			//create the list to strings to send to clients
+//			addedSMSList = addSMSRequestList(request.getYear(), smsRequestList);
 			
 			//ask twilio to send the SMS's
 			TwilioIF twilioIF;
@@ -125,9 +124,9 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 				twilioIF = TwilioIF.getInstance();
 				response = twilioIF.sendSMSList(request, smsRequestList);
 				
-				//notify all in year clients
-				ClientManager clientMgr = ClientManager.getInstance();
-				clientMgr.notifyAllInYearClients(request.getYear(), addedSMSList);
+//				//notify all in year clients
+//				ClientManager clientMgr = ClientManager.getInstance();
+//				clientMgr.notifyAllInYearClients(request.getYear(), addedSMSList);
 				
 			}
 			catch (IOException e)
@@ -142,19 +141,16 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 	//callback from Twilio IF when background task completes
 	void twilioRequestComplete(SMSRequest request, List<ONCSMS> sentSMSList)
 	{
-//		for(ONCSMS resultSMS : sentSMSList)
-//			System.out.println(resultSMS.toString());
 		
-		//create the updated string of client json messages
-		List<String> clientSMSUpdateList = new ArrayList<String>();
-		Gson gson = new Gson();
+		//add the sms objects to the data base and notify clients
+		List<String> addedSMSList = addSMSRequestList(request.getYear(), sentSMSList);
 		
-		for(ONCSMS completedSMS : sentSMSList)
-			clientSMSUpdateList.add("UPDATED_SMS" + gson.toJson(completedSMS, ONCSMS.class));
-		
-		//notify all in year clients of SMS updates
-		ClientManager clientMgr = ClientManager.getInstance();
-		clientMgr.notifyAllInYearClients(request.getYear(), clientSMSUpdateList);
+		//notify all in year clients of added SMS messages
+		if(addedSMSList != null && !addedSMSList.isEmpty())
+		{
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(request.getYear(), addedSMSList);
+		}
 	}
 	
 	List<String> addSMSRequestList(int year, List<ONCSMS> reqList)
@@ -182,6 +178,69 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		}
 		
 		return addedSMSList;
+	}
+	
+	ONCSMS getSMSMessageBySID(int year, String mssgSID)
+	{
+		//retrieve the sms data base for the year
+		List<ONCSMS> searchList = smsDB.get(DBManager.offset(year)).getList();
+		
+		int index = 0;
+		while(index < searchList.size() && !searchList.get(index).getMessageSID().equals(mssgSID))
+			index++;
+		
+		return index < searchList.size() ? searchList.get(index) : null;
+	}
+	
+	ONCSMS updateSMSMessage(int year, TwilioSMSReceive rec_text)
+	{
+		//retrieve the sms data base for the year
+		SMSDBYear smsDBYear = smsDB.get(DBManager.offset(year));
+		List<ONCSMS> searchList = smsDBYear.getList();
+		
+		int index = 0;
+		while(index < searchList.size() && !searchList.get(index).getMessageSID().equals(rec_text.getMessageSid()))
+			index++;
+		
+		if(index < searchList.size())
+		{
+			//update parameters and save
+			ONCSMS updateSMS = searchList.get(index);
+			
+			//update the ONCSMS object with new status
+			try
+			{
+				SMSStatus newStatus = SMSStatus.valueOf(rec_text.getSmsStatus().toUpperCase());
+				updateSMS.setStatus(newStatus);
+				updateSMS.setTimestamp(rec_text.getTimestamp());
+				
+				smsDBYear.setChanged(true);
+			}
+			catch(IllegalArgumentException iae)
+			{
+				//don't perform the update
+				ServerUI.addLogMessage(String.format("SMSHdlr: SMSStatus exception for received status %s",
+						rec_text.getSmsStatus()));
+			}
+			catch(NullPointerException ioe)
+			{
+				//don't perform the update
+				ServerUI.addLogMessage(String.format("SMSHdlr: SMSStatus exception for received status %s",
+						rec_text.getSmsStatus()));
+			}
+			
+			Gson gson = new Gson();
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(year, "UPDATED_SMS" + gson.toJson(updateSMS, ONCSMS.class));
+			
+			return updateSMS;
+		}
+		else
+		{
+			ServerUI.addLogMessage(String.format("ServSMSDB: unable to find ONCSMS object SID= %s",
+					rec_text.getMessageSid()));	
+			return null;
+		}
 	}
 	
 	@Override
@@ -226,8 +285,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
     		SMSDBYear(int year)
     		{
     			super();
-    			smsList = new ArrayList<ONCSMS
-    					>();
+    			smsList = new ArrayList<ONCSMS>();
     		}
     	
     		//getters

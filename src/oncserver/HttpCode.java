@@ -3,6 +3,7 @@ package oncserver;
 public enum HttpCode 
 {
 	Ok (200),
+	No_Body (204),
 	Redirect (301),
 	Forbidden (403),
 	Method_Not_Allowed (405);

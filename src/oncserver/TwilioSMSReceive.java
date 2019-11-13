@@ -211,5 +211,13 @@ public class TwilioSMSReceive extends ONCObject
 		row.add(Long.toString(timestamp));
 		
 		return row.toArray(new String[row.size()]);
-	}	
+	}
+	
+	static String[] keys()
+	{
+		return new String[] {"AccountSid","MessageSid","Body","ToZip","ToCity",
+							"FromState","ToState","SmsSid",  "To","ToCountry","FromCountry",
+							"SmsMessageSid", "ApiVersion", "FromCity", "SmsStatus",
+							"NumSegments", "NumMedia", "From", "FromZip" };			
+	}
 }
