@@ -236,7 +236,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 			//if the SMS Status has changed to "Delivered" notify the Family DB to check to see if
 			//the family status should change
 			if(updateSMS.getStatus() == SMSStatus.DELIVERED)
-				familyDB.checkFamilyStatusOnReceivedSMS(year, updateSMS);
+				familyDB.checkFamilyStatusOnSMSStatusCallback(year, updateSMS);
 			
 			return updateSMS;
 		}

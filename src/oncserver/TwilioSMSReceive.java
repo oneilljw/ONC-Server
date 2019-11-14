@@ -1,7 +1,6 @@
 package oncserver;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import ourneighborschild.ONCObject;
@@ -76,6 +75,7 @@ public class TwilioSMSReceive extends ONCObject
 		this.FromZip = nextLine[18];
 	}
 	
+	//getters
 	String getAccountSid() { return AccountSid; }
 	String getMessageSid() { return MessageSid; }
 	String getBody() { return Body; }
@@ -96,74 +96,24 @@ public class TwilioSMSReceive extends ONCObject
 	String getFromZip() { return FromZip; }
 	long getTimestamp() { return timestamp; }
 	
-	void setAccountSid(String accountSid)
-	{
-		AccountSid = accountSid;
-	}
-	void setMessageSid(String messageSid)
-	{
-		MessageSid = messageSid;
-	}
-	void setBody(String body)
-	{
-		Body = body;
-	}
-	void setToZip(String toZip)
-	{
-		ToZip = toZip;
-	}
-	void setFromState(String fromState)
-	{
-		FromState = fromState;
-	}
-	void setSmsSid(String smsSid)
-	{
-		SmsSid = smsSid;
-	}
-	void setTo(String to)
-	{
-		To = to;
-	}
-	void setToCountry(String toCountry)
-	{
-		ToCountry = toCountry;
-	}
-	void setFromCountry(String fromCountry)
-	{
-		FromCountry = fromCountry;
-	}
-	void setSmsMessageSid(String smsMessageSid)
-	{
-		SmsMessageSid = smsMessageSid;
-	}
-	void setApiVersion(String apiVersion)
-	{
-		ApiVersion = apiVersion;
-	}
-	void setFromCity(String fromCity)
-	{
-		FromCity = fromCity;
-	}
-	void setSmsStatus(String smsStatus)
-	{
-		SmsStatus = smsStatus;
-	}
-	void setNumSegments(String numSegments)
-	{
-		NumSegments = numSegments;
-	}
-	void setNumMedia(String numMedia)
-	{
-		NumMedia = numMedia;
-	}
-	void setFrom(String from)
-	{
-		From = from;
-	}
-	void setFromZip(String fromZip)
-	{
-		FromZip = fromZip;
-	}
+	//setters
+	void setAccountSid(String accountSid) { AccountSid = accountSid; }
+	void setMessageSid(String messageSid) { MessageSid = messageSid; }
+	void setBody(String body) { Body = body; }
+	void setToZip(String toZip) { ToZip = toZip; }
+	void setFromState(String fromState) { FromState = fromState; }
+	void setSmsSid(String smsSid) { SmsSid = smsSid; }
+	void setTo(String to) { To = to; }
+	void setToCountry(String toCountry) { ToCountry = toCountry; }
+	void setFromCountry(String fromCountry) { FromCountry = fromCountry; }
+	void setSmsMessageSid(String smsMessageSid) { SmsMessageSid = smsMessageSid; }
+	void setApiVersion(String apiVersion) { ApiVersion = apiVersion; }
+	void setFromCity(String fromCity) { FromCity = fromCity; }
+	void setSmsStatus(String smsStatus) { SmsStatus = smsStatus; }
+	void setNumSegments(String numSegments) { NumSegments = numSegments; }
+	void setNumMedia(String numMedia) { NumMedia = numMedia; }
+	void setFrom(String from) { From = from; }
+	void setFromZip(String fromZip) { FromZip = fromZip; }
 
 	@Override
 	public String[] getExportRow()

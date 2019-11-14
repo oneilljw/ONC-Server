@@ -127,9 +127,7 @@ public class TwilioIF
      		}
      	    
      	    public void sendSMS(ONCSMS requestedSMS) 
-     	    {
-//     	    		Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
-     	        
+     	    {	        
      	        Message message = Message.creator(
      	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
      	                new com.twilio.type.PhoneNumber(ONC_TWILIO_NUMBER),

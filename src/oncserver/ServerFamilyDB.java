@@ -1086,7 +1086,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	ONCFamily smsMessageReceived(int year, TwilioSMSReceive receivedSMS)
+	ONCFamily smsMessageReceived(int year, TwilioSMSReceive receivedSMS, boolean bDeliveryConfirmed)
 	{
 		String formatedPhoneNum = formatPhoneNumber(receivedSMS.getFrom().substring(2));
 		
@@ -1102,8 +1102,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//found the family. If the SMS Message is confirming delivery, check and potentially change
 			//the family's family status to Confirmed
 			ONCFamily fam = fAL.get(i);
-			boolean bDeliveryConfirmed = receivedSMS.getBody().equals("C") || 
-										  receivedSMS.getBody().toLowerCase().contains("confirmed");
 			
 			if(bDeliveryConfirmed && fam.getFamilyStatus() == FamilyStatus.Contacted)
 			{
@@ -1136,7 +1134,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	void checkFamilyStatusOnReceivedSMS(int year, ONCSMS receivedSMS)
+	void checkFamilyStatusOnSMSStatusCallback(int year, ONCSMS receivedSMS)
 	{
 		ONCFamily fam = getFamily(year, receivedSMS.getEntityID());
 		if(fam != null && receivedSMS.getStatus() == SMSStatus.DELIVERED && 

@@ -10,7 +10,6 @@ import com.sun.net.httpserver.HttpsExchange;
 
 import ourneighborschild.EntityType;
 import ourneighborschild.ONCFamily;
-import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCSMS;
 import ourneighborschild.SMSDirection;
 import ourneighborschild.SMSStatus;
@@ -21,14 +20,13 @@ public class SMSHandler extends ONCWebpageHandler
 	private ServerInboundSMSDB inboundSMSDB;
 	private ServerSMSDB smsDB;
 	private ServerFamilyDB familyDB;
-	private ServerPartnerDB partnerDB;
 	
 	public SMSHandler() throws FileNotFoundException, IOException
 	{
 		this.inboundSMSDB = ServerInboundSMSDB.getInstance();
 		this.smsDB = ServerSMSDB.getInstance();
 		this.familyDB = ServerFamilyDB.getInstance();
-		this.partnerDB = ServerPartnerDB.getInstance();
+//		this.partnerDB = ServerPartnerDB.getInstance();
 		
 //		simulateSMSReceive();
 	}
@@ -60,51 +58,45 @@ public class SMSHandler extends ONCWebpageHandler
 			EntityType type = EntityType.UNKNOWN;
 			String name = "Anonymous";
 			String body = rec_SMS.getBody();
+			boolean bDeliveryConfirmed = body.equals("C") || body.toLowerCase().contains("confirmed");
+			String replyContent = "We didn't not recognize the number you texted from and are unable to process your message.";
+			
+			SMSStatus status;
+			try { status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase()); }
+			catch (IllegalArgumentException iae) { status = SMSStatus.ERROR; }
+			catch (NullPointerException npe) { status = SMSStatus.ERROR; }
 			
 			//search the familyDB for the incoming phone number
-			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS);
+			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS, bDeliveryConfirmed);
 			if(fam != null)
 			{
 				id = fam.getID();
 				type = EntityType.FAMILY;
 				name = fam.getFirstName() + " " + fam.getLastName();
+				
+				if( bDeliveryConfirmed)
+					replyContent =String.format("%s, thank you for confirming ONC gift delivery on 12/15 "
+												+ "between 1-4pm", name);
+				else
+					replyContent =String.format("%s, sorry you were unable to confirm ONC gift delivery. "
+											+ "Please contact your school counselor for assistance", name);
 			}
-			else
-			{
-				//search partner DB
-				ONCPartner partner = partnerDB.getPartnerByPhoneNumber(DBManager.getCurrentSeason(), rec_SMS.getFrom().substring(2));
-				if(partner != null)
-				{
-					id = partner.getID();
-					type = EntityType.PARTNER;
-					name = partner.getLastName();
-				}
-			}
+//			else
+//			{
+//				//search partner DB
+//				ONCPartner partner = partnerDB.getPartnerByPhoneNumber(DBManager.getCurrentSeason(), rec_SMS.getFrom().substring(2));
+//				if(partner != null)
+//				{
+//					id = partner.getID();
+//					type = EntityType.PARTNER;
+//					name = partner.getLastName();
+//				}
+//			}
 			
+		
 			//add the received message to the SMS DB
-			SMSStatus status;
-			try
-			{
-				status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase());
-			}
-			catch (IllegalArgumentException iae)
-			{
-				status = SMSStatus.ERROR;
-			}
-			catch (NullPointerException npe)
-			{
-				status = SMSStatus.ERROR;
-			}
-			
 			ONCSMS sms = new ONCSMS(-1,messageID, type, id, rec_SMS.getFrom(), SMSDirection.INBOUND, body, status);
 			smsDB.add(DBManager.getCurrentSeason(), sms);					
-			
-			String replyContent;
-			if(body.contains("C"))
-				replyContent =String.format("%s, thank you for confirming ONC gift delivery on 12/15 between 1-4pm", name);
-			else
-				replyContent =String.format("%s, sorry you were unable to confirm ONC gift delivery. Please contact "
-						+ "your school counselor for assistance", name);
 				
 			String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
 				"<Response><Message>%s</Message></Response>", replyContent);
