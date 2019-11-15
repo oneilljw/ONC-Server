@@ -142,30 +142,4 @@ public class TwilioSMSReceive extends ONCObject
 		
 		return row.toArray(new String[row.size()]);
 	}
-	
-	static String[] keys()
-	{
-		return new String[] {"AccountSid","MessageSid","Body","ToZip","ToCity",
-							"FromState","ToState","SmsSid",  "To","ToCountry","FromCountry",
-							"SmsMessageSid", "ApiVersion", "FromCity", "SmsStatus",
-							"NumSegments", "NumMedia", "From", "FromZip" };			
-	}
-	
-	@Override
-	public String toString()
-	{
-		String[] keys = keys();
-		String[] values = getExportRow();
-		
-		if(keys.length == values.length)
-		{
-			StringBuffer buff = new StringBuffer();
-			for(int i=0; i< keys.length; i++)
-				buff.append(String.format("%s= %s, ", keys[i], values[i]));
-			buff.append(String.format("timestamp= %d", timestamp));
-			return buff.toString();
-		}
-		else
-			return "Twilio SMS Receive ERROR";	
-	}
 }

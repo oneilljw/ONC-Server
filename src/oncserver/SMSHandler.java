@@ -3,6 +3,8 @@ package oncserver;
 import java.io.FileNotFoundException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -47,9 +49,17 @@ public class SMSHandler extends ONCWebpageHandler
 		
 		if(requestURI.equals("/sms-receive"))
 		{
-			TwilioSMSReceive rec_SMS = new TwilioSMSReceive(createMap(params, TwilioSMSReceive.keys()));
+			//create a list of the keys
+			List<String> keyList = new ArrayList<String>();
+			StringBuffer buff = new StringBuffer("/sms-receive: ");
+			for(String key : params.keySet())
+			{
+				keyList.add(key);
+				buff.append(String.format("%s= %s, ", key, params.get(key)));
+			}
 			
-			ServerUI.addDebugMessage(String.format("/sms-receive: %s", rec_SMS.toString()));
+			ServerUI.addDebugMessage(buff.toString());
+			TwilioSMSReceive rec_SMS = new TwilioSMSReceive(createMap(params, keyList));
 			
 			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_SMS);
 			
@@ -58,13 +68,17 @@ public class SMSHandler extends ONCWebpageHandler
 			EntityType type = EntityType.UNKNOWN;
 			String name = "Anonymous";
 			String body = rec_SMS.getBody();
-			boolean bDeliveryConfirmed = body.equals("C") || body.toLowerCase().contains("confirmed");
+			boolean bDeliveryConfirmed = body.equalsIgnoreCase("c") || body.equalsIgnoreCase("confirmed");
 			String replyContent = "We didn't not recognize the number you texted from and are unable to process your message.";
 			
 			SMSStatus status;
 			try { status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase()); }
 			catch (IllegalArgumentException iae) { status = SMSStatus.ERROR; }
 			catch (NullPointerException npe) { status = SMSStatus.ERROR; }
+			
+//			String debug = String.format("sms-receive: MessageSID= %s, SmsStatus= %s, status= %s",
+//					rec_SMS.getMessageSid(), rec_SMS.getSmsStatus(), status);
+//			ServerUI.addDebugMessage(debug);
 			
 			//search the familyDB for the incoming phone number
 			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS, bDeliveryConfirmed);
@@ -74,7 +88,7 @@ public class SMSHandler extends ONCWebpageHandler
 				type = EntityType.FAMILY;
 				name = fam.getFirstName() + " " + fam.getLastName();
 				
-				if( bDeliveryConfirmed)
+				if(bDeliveryConfirmed)
 					replyContent =String.format("%s, thank you for confirming ONC gift delivery on 12/15 "
 												+ "between 1-4pm", name);
 				else
@@ -107,11 +121,29 @@ public class SMSHandler extends ONCWebpageHandler
 		}
 		else if(requestURI.equals("/sms-update"))
 		{
+			///show the params & create a list of the keys
+			List<String> keyList = new ArrayList<String>();
+			StringBuffer buff = new StringBuffer("/sms-update: ");
+			for(String key : params.keySet())
+			{
+				keyList.add(key);
+				buff.append(String.format("%s= %s, ", key, params.get(key)));
+			}
+			
+			ServerUI.addDebugMessage(buff.toString());
+			
 			//add a received Twilio object log message, add the object to the in-bound DB, and
 			//update the ONCSMS object that should have been previously added
-			TwilioSMSReceive rec_SMS = new TwilioSMSReceive(createMap(params, TwilioSMSReceive.keys()));
+			TwilioSMSReceive rec_SMS = new TwilioSMSReceive(createMap(params, keyList));
 			
-			ServerUI.addDebugMessage(String.format("/sms-update: %s", rec_SMS.toString()));
+//			SMSStatus status;
+//			try { status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase()); }
+//			catch (IllegalArgumentException iae) { status = SMSStatus.ERROR; }
+//			catch (NullPointerException npe) { status = SMSStatus.ERROR; }
+//			
+//			String debug = String.format("sms-update rec_SMS: MessageSID= %s, SmsStatus= %s, status= %s",
+//					rec_SMS.getMessageSid(), rec_SMS.getSmsStatus(), status);
+//			ServerUI.addDebugMessage(debug);
 			
 			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_SMS);
 			smsDB.updateSMSMessage(DBManager.getCurrentSeason(), rec_SMS);

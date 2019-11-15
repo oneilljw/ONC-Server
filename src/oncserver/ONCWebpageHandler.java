@@ -242,6 +242,22 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		return map;
 	}
 	
+	Map<String, String> createMap(Map<String, Object> params, List<String> keys)
+	{
+		Map<String, String> map = new HashMap<String, String>();
+		for(String key:keys)
+		{
+			//code modified 10-18-16 to prevent null value exception if input map does not contain a key
+			//if key is missing in input map, it is added with an empty string;
+			if(params.containsKey(key) && params.get(key) != null)
+				map.put(key, (String) params.get(key));
+			else
+				map.put(key, "");
+		}
+		
+		return map;
+	}
+	
 	String getHomePageHTML(WebClient wc, String message, boolean bShowSuccessDialog)
 	{
 		//determine which home page to send to client based on UserPermission
