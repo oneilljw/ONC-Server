@@ -85,7 +85,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		//notify all in-year clients of the add
 		Gson gson = new Gson();
 		ClientManager clientMgr = ClientManager.getInstance();
-		clientMgr.notifyAllInYearClients(year, "ADDDED_SMS" + gson.toJson(addedSMS, ONCSMS.class));
+		clientMgr.notifyAllInYearClients(year, "ADDED_SMS" + gson.toJson(addedSMS, ONCSMS.class));
 							
 		return addedSMS;
 	}
