@@ -81,6 +81,11 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		//add the new sms to the data base
 		smsDBYear.add(addedSMS);
 		smsDBYear.setChanged(true);
+		
+		//notify all in-year clients of the add
+		Gson gson = new Gson();
+		ClientManager clientMgr = ClientManager.getInstance();
+		clientMgr.notifyAllInYearClients(year, "ADDDED_SMS" + gson.toJson(addedSMS, ONCSMS.class));
 							
 		return addedSMS;
 	}
