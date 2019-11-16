@@ -72,7 +72,7 @@ public class TwilioIF
      * ***************************************************************************************************/
      public class TwilioSMSMessageSender extends SwingWorker<Void, Void>
      {
-     		private static final int SMS_MESSAGE_RATE = 1000 * 1200;		//one message every 12 seconds
+     		private static final int SMS_MESSAGE_RATE = 1000 * 10;		//one message every 10 seconds
      		
      		private SMSRequest request;
      		private List<ONCSMS> smsRequestList;
