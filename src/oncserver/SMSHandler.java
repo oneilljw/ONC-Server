@@ -135,16 +135,7 @@ public class SMSHandler extends ONCWebpageHandler
 			//add a received Twilio object log message, add the object to the in-bound DB, and
 			//update the ONCSMS object that should have been previously added
 			TwilioSMSReceive rec_SMS = new TwilioSMSReceive(createMap(params, keyList));
-			
-//			SMSStatus status;
-//			try { status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase()); }
-//			catch (IllegalArgumentException iae) { status = SMSStatus.ERROR; }
-//			catch (NullPointerException npe) { status = SMSStatus.ERROR; }
-//			
-//			String debug = String.format("sms-update rec_SMS: MessageSID= %s, SmsStatus= %s, status= %s",
-//					rec_SMS.getMessageSid(), rec_SMS.getSmsStatus(), status);
-//			ServerUI.addDebugMessage(debug);
-			
+		
 			inboundSMSDB.add(DBManager.getCurrentSeason(), rec_SMS);
 			smsDB.updateSMSMessage(DBManager.getCurrentSeason(), rec_SMS);
 			

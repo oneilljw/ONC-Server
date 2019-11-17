@@ -90,13 +90,16 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		return addedSMS;
 	}
 	
+	/*****
+	 * Must add to the DB and send back to clients before asking twilio to send. 
+	 * @param json
+	 * @return
+	 */
 	String processSMSRequest(String json)
 	{
 		Gson gson = new Gson();
 		SMSRequest request = gson.fromJson(json, SMSRequest.class);
-		
-//		List<String> addedSMSList = new ArrayList<String>();
-		
+
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
 		if(request.getMessage() != null && request.getEntityType() == EntityType.FAMILY)
@@ -107,32 +110,24 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 				String twilioFormattedPhoneNum = familyDB.getTwilioFormattedPhoneNumber(request.getYear(), famID, request.getPhoneChoice());
 				if(twilioFormattedPhoneNum != null)
 					smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
-							SMSDirection.UNKNOWN, request.getMessage(), SMSStatus.REQUESTED));
+							SMSDirection.OUTBOUND_API, request.getMessage(), SMSStatus.REQUESTED));
 				else
 					smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
-							SMSDirection.UNKNOWN, request.getMessage(), SMSStatus.ERR_NO_PHONE));
+							SMSDirection.OUTBOUND_API, request.getMessage(), SMSStatus.ERR_NO_PHONE));
 			}
 	    }	
 		
-		//if the request list isn't empty, add the ONCSMS request list to the database, send the sms 
-		//requests in the background and notify the clients of the new requests.
+		//if the request list isn't empty, ask twilio to validate the phone numbers in the request list
+		//can accept SMS messages.
 		String response = "SMS_REQUEST_FAILED";
 		if(!smsRequestList.isEmpty())
 		{
-//			//create the list to strings to send to clients
-//			addedSMSList = addSMSRequestList(request.getYear(), smsRequestList);
-			
 			//ask twilio to send the SMS's
 			TwilioIF twilioIF;
 			try
 			{
 				twilioIF = TwilioIF.getInstance();
-				response = twilioIF.sendSMSList(request, smsRequestList);
-				
-//				//notify all in year clients
-//				ClientManager clientMgr = ClientManager.getInstance();
-//				clientMgr.notifyAllInYearClients(request.getYear(), addedSMSList);
-				
+				response = twilioIF.validateSMSList(request, smsRequestList);
 			}
 			catch (IOException e)
 			{
@@ -143,10 +138,50 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 	    return response;
 	}
 	
+	//callback from Twilio IF when validation task completes
+	void twilioValidationRequestComplete(SMSRequest request, List<ONCSMS> postValidationSMSRequestList)
+	{
+		//add the list of valid and invalid SMS requests to the database
+		List<String> addedSMSList = addSMSRequestList(request.getYear(), postValidationSMSRequestList);
+		
+		//notify all in year clients of added SMS messages. This is the first time the messages
+		//are sent to clients. The request list status will show whether the request had a phone
+		//number and if so, if it was a mobile phone able to accept SMS messages. 
+		if(addedSMSList != null && !addedSMSList.isEmpty())
+		{
+			ClientManager clientMgr = ClientManager.getInstance();
+			clientMgr.notifyAllInYearClients(request.getYear(), addedSMSList);
+		}
+		
+		//ask twilio to send the validated sms list. Only need to send requests that have
+		//status = SMSStatus.VALIDATED
+		List<ONCSMS> sendRequestList = new ArrayList<ONCSMS>();
+		for(ONCSMS sms : postValidationSMSRequestList)
+			if(sms.getStatus() == SMSStatus.VALIDATED)
+				sendRequestList.add(sms);
+		
+		String response = "SMS_REQUEST_FAILED";
+		if(!sendRequestList.isEmpty())
+		{
+			//ask twilio to send the SMS's
+			TwilioIF twilioIF;
+			try
+			{
+				twilioIF = TwilioIF.getInstance();
+				response = twilioIF.sendSMSList(request,sendRequestList);
+			}
+			catch (IOException e)
+			{
+				response = "TWILIO IF Error " + e.getMessage();
+			}
+		}
+		
+		ServerUI.addDebugMessage(response);
+	}
+/*	
 	//callback from Twilio IF when background task completes
 	void twilioRequestComplete(SMSRequest request, List<ONCSMS> sentSMSList)
-	{
-		
+	{	
 		//add the sms objects to the data base and notify clients
 		List<String> addedSMSList = addSMSRequestList(request.getYear(), sentSMSList);
 		
@@ -157,7 +192,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 			clientMgr.notifyAllInYearClients(request.getYear(), addedSMSList);
 		}
 	}
-	
+*/	
 	List<String> addSMSRequestList(int year, List<ONCSMS> reqList)
 	{	
 		Gson gson = new Gson();
@@ -199,14 +234,18 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 	
 	ONCSMS updateSMSMessage(int year, TwilioSMSReceive rec_text)
 	{
+		ServerUI.addDebugMessage(String.format("smsDB.updateSMS: mssgSID= %s, status= %s", 
+				rec_text.getMessageSid(), rec_text.getSmsStatus()));
+		
 		//retrieve the sms data base for the year
 		SMSDBYear smsDBYear = smsDB.get(DBManager.offset(year));
 		List<ONCSMS> searchList = smsDBYear.getList();
 		
 		int index = 0;
-		while(index < searchList.size() && !searchList.get(index).getMessageSID().equals(rec_text.getMessageSid()))
+		while(index < searchList.size() && !searchList.get(index).getPhoneNum().equals(formatPhoneNumber(rec_text.getTo())))
 			index++;
 		
+		ServerUI.addDebugMessage(String.format("smsDB.updateSMS: searchIndex= %d", index));
 		if(index < searchList.size())
 		{
 			//update parameters and save
@@ -233,6 +272,9 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 				ServerUI.addLogMessage(String.format("SMSHdlr: SMSStatus exception for received status %s",
 						rec_text.getSmsStatus()));
 			}
+			
+			ServerUI.addDebugMessage(String.format("smsDB.updateSMS: found ONCSMS= %d, mssgID= %s, new status= %s", 
+					rec_text.getID(), rec_text.getMessageSid(), rec_text.getSmsStatus()));
 			
 			Gson gson = new Gson();
 			ClientManager clientMgr = ClientManager.getInstance();
