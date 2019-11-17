@@ -1086,7 +1086,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	ONCFamily smsMessageReceived(int year, TwilioSMSReceive receivedSMS, boolean bDeliveryConfirmed)
+	ONCFamily smsMessageReceived(int year, TwilioSMSReceive receivedSMS)
 	{
 		String formatedPhoneNum = formatPhoneNumber(receivedSMS.getFrom().substring(2));
 		
@@ -1100,12 +1100,22 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		if(i < fAL.size())
 		{
 			//found the family. If the SMS Message is confirming delivery, check and potentially change
-			//the family's family status to Confirmed
+			//the family's family status to Confirmed or Contacted
 			ONCFamily fam = fAL.get(i);
 			
-			if(bDeliveryConfirmed && fam.getFamilyStatus() == FamilyStatus.Contacted)
+			if(receivedSMS.getBody().equalsIgnoreCase("yes") && fam.getFamilyStatus() == FamilyStatus.Contacted)
 			{
 				fam.setFamilyStatus(FamilyStatus.Confirmed);
+				familyDB.get(DBManager.offset(year)).setChanged(true);
+				
+				//notify all in-year clients of the status change
+				Gson gson = new Gson();
+	    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+	    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+			}
+			else if(receivedSMS.getBody().equalsIgnoreCase("no") && fam.getFamilyStatus() == FamilyStatus.Confirmed)
+			{
+				fam.setFamilyStatus(FamilyStatus.Contacted);
 				familyDB.get(DBManager.offset(year)).setChanged(true);
 				
 				//notify all in-year clients of the status change

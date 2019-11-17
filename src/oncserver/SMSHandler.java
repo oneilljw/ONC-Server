@@ -68,27 +68,22 @@ public class SMSHandler extends ONCWebpageHandler
 			EntityType type = EntityType.UNKNOWN;
 			String name = "Anonymous";
 			String body = rec_SMS.getBody();
-			boolean bDeliveryConfirmed = body.equalsIgnoreCase("yes");
 			String replyContent = "Unable to process messages from unregistered numbers.";
 			
 			SMSStatus status;
 			try { status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase()); }
 			catch (IllegalArgumentException iae) { status = SMSStatus.ERROR; }
 			catch (NullPointerException npe) { status = SMSStatus.ERROR; }
-			
-//			String debug = String.format("sms-receive: MessageSID= %s, SmsStatus= %s, status= %s",
-//					rec_SMS.getMessageSid(), rec_SMS.getSmsStatus(), status);
-//			ServerUI.addDebugMessage(debug);
-			
+	
 			//search the familyDB for the incoming phone number
-			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS, bDeliveryConfirmed);
+			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS);
 			if(fam != null)
 			{
 				id = fam.getID();
 				type = EntityType.FAMILY;
 				name = fam.getFirstName() + " " + fam.getLastName();
 				
-				if(bDeliveryConfirmed)
+				if(body.equalsIgnoreCase("yes"))
 					replyContent =String.format("%s, thank you for confirming ONC gift delivery on Sunday, December 15th "
 												+ "between 1-4pm", name);
 				else if(body.equalsIgnoreCase("no"))
