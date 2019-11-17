@@ -234,22 +234,20 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 	
 	ONCSMS updateSMSMessage(int year, TwilioSMSReceive rec_text)
 	{
-		ServerUI.addDebugMessage(String.format("smsDB.updateSMS: mssgSID= %s, status= %s", 
-				rec_text.getMessageSid(), rec_text.getSmsStatus()));
-		
 		//retrieve the sms data base for the year
 		SMSDBYear smsDBYear = smsDB.get(DBManager.offset(year));
 		List<ONCSMS> searchList = smsDBYear.getList();
 		
-		int index = 0;
-		while(index < searchList.size() && !searchList.get(index).getPhoneNum().equals(formatPhoneNumber(rec_text.getTo())))
-			index++;
+		int i;
+		for(i = searchList.size()-1; i >= 0; i--)
+			if(searchList.get(i).getDirection() == SMSDirection.OUTBOUND_API &&
+				searchList.get(i).getPhoneNum().equals(rec_text.getTo()))
+				break;
 		
-		ServerUI.addDebugMessage(String.format("smsDB.updateSMS: searchIndex= %d", index));
-		if(index < searchList.size())
+		if(i >= 0)
 		{
 			//update parameters and save
-			ONCSMS updateSMS = searchList.get(index);
+			ONCSMS updateSMS = searchList.get(i);
 			
 			//update the ONCSMS object with new status
 			try
@@ -273,9 +271,6 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 						rec_text.getSmsStatus()));
 			}
 			
-			ServerUI.addDebugMessage(String.format("smsDB.updateSMS: found ONCSMS= %d, mssgID= %s, new status= %s", 
-					rec_text.getID(), rec_text.getMessageSid(), rec_text.getSmsStatus()));
-			
 			Gson gson = new Gson();
 			ClientManager clientMgr = ClientManager.getInstance();
 			clientMgr.notifyAllInYearClients(year, "UPDATED_SMS" + gson.toJson(updateSMS, ONCSMS.class));
@@ -289,8 +284,8 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		}
 		else
 		{
-			ServerUI.addLogMessage(String.format("ServSMSDB: unable to find ONCSMS object SID= %s",
-					rec_text.getMessageSid()));	
+			ServerUI.addLogMessage(String.format("ServSMSDB: unable to find ONCSMS object phone#= %s",
+					rec_text.getTo()));	
 			return null;
 		}
 	}
