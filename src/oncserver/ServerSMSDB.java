@@ -244,11 +244,10 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 				searchList.get(i).getPhoneNum().equals(rec_text.getTo()))
 				break;
 		
-		if(i >= 0)
+		//Only need to update the SMS if we can find it and it hasn't already been delivered.
+		ONCSMS updateSMS;
+		if(i >= 0 && (updateSMS = searchList.get(i)).getStatus().compareTo(SMSStatus.DELIVERED) < 0)
 		{
-			//update parameters and save
-			ONCSMS updateSMS = searchList.get(i);
-			
 			//update the ONCSMS object with new status
 			try
 			{
@@ -284,8 +283,8 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		}
 		else
 		{
-			ServerUI.addLogMessage(String.format("ServSMSDB: unable to find ONCSMS object phone#= %s",
-					rec_text.getTo()));	
+			if(i == 0)
+				ServerUI.addLogMessage(String.format("ServSMSDB: unable to find ONCSMS phone#= %s", rec_text.getTo()));	
 			return null;
 		}
 	}

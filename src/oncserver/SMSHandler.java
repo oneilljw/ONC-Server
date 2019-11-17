@@ -68,8 +68,8 @@ public class SMSHandler extends ONCWebpageHandler
 			EntityType type = EntityType.UNKNOWN;
 			String name = "Anonymous";
 			String body = rec_SMS.getBody();
-			boolean bDeliveryConfirmed = body.equalsIgnoreCase("c") || body.equalsIgnoreCase("confirmed");
-			String replyContent = "The number you texted from was unrecognized. We are unable to process your message.";
+			boolean bDeliveryConfirmed = body.equalsIgnoreCase("yes");
+			String replyContent = "Unable to process messages from unregistered numbers.";
 			
 			SMSStatus status;
 			try { status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase()); }
@@ -91,9 +91,12 @@ public class SMSHandler extends ONCWebpageHandler
 				if(bDeliveryConfirmed)
 					replyContent =String.format("%s, thank you for confirming ONC gift delivery on Sunday, December 15th "
 												+ "between 1-4pm", name);
+				else if(body.equalsIgnoreCase("no"))
+					replyContent =String.format("%s, you replied \"NO\" and we are unable to confirm your gift delivery. "
+											+ "Please contact your child's school if you are no longer in need "
+											+ "of assistance, or if your delivery address has changed.", name);
 				else
-					replyContent =String.format("%s, sorry you were unable to confirm ONC gift delivery. "
-											+ "Please contact your school counselor for assistance", name);
+					replyContent = "We are only able to process delivery confirmations (Yes or No)."; 
 			}
 //			else
 //			{
