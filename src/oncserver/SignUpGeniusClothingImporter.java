@@ -115,6 +115,9 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
         				}
 				}
 				
+				ServerUI.addLogMessage(String.format("Clothing SignUp Imported: %d Gifts Adopted, %d Gifts Unclaimed", 
+						signUpFilledItemsList.size(), signUpClothingList.size()-signUpFilledItemsList.size()));
+				
 				//order the filled SignUp Activity list by email. We use this ordering to iterate thru the
 				//list to identity unique partners. Many partners adopt more then one clothing or coat gift
 				Collections.sort(signUpFilledItemsList, new SUAEmailComparator());
