@@ -93,9 +93,12 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 		protected Void doInBackground() throws Exception
 		{			
 			String response = getSignUpJson(String.format(SIGNUP_REPORT_URL, reportType.toString(), signup.getSignupid(), apiKey()));
-//			String response = simulateGeniusReportFetch("Clothing SignUp Test Json.txt");
+//			String response = simulateGeniusReportFetch("SignUpGeniusClothingJsonGunnTest.txt");
 			if(response != null && !response.isEmpty())
 			{
+				//save the imported json
+				saveJsonToFile(response, "SignUpGeniusClothingJsonImport.txt");
+				
 				//get the report that was imported
 				Gson gson = new Gson();
 				signUpReport = gson.fromJson(response.toString(), SignUpReport.class); //create the report from the json
@@ -115,7 +118,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
         				}
 				}
 				
-				ServerUI.addLogMessage(String.format("Clothing SignUp Imported: %d Gifts Adopted, %d Gifts Unclaimed", 
+				ServerUI.addDebugMessage(String.format("Clothing SignUp Imported: %d Gifts Adopted, %d Gifts Unclaimed", 
 						signUpFilledItemsList.size(), signUpClothingList.size()-signUpFilledItemsList.size()));
 				
 				//order the filled SignUp Activity list by email. We use this ordering to iterate thru the
@@ -156,7 +159,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 						ONCChildGift childGift = getChildGift(sua.getItem());
 						if(childGift != null)
 							cp.addChildGift(childGift);
-					}		
+					}
 				}			
 			}
 				
@@ -168,6 +171,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 		//SignUp Genius dumps the full SignUp report each time the report is requested.
 		protected void done()
 	    {
+			ServerUI.addDebugMessage("Clothing SignUp Background Importer Complete");
         		Gson gson = new Gson();
         		List<String> clientResponseList = new ArrayList<String>();
 			int year = DBManager.getCurrentSeason();	//assume it's for the current season
@@ -247,7 +251,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 						
 						clientResponseList.add("UPDATED_PARTNER"+gson.toJson(updatedPartner, ONCPartner.class));
 					}
-				}	
+				}
 			}
 			
 			//save the imported file
@@ -263,6 +267,8 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 				ClientManager clientMgr = ClientManager.getInstance();
 				clientMgr.notifyAllInYearClients(year, clientResponseList);
 			}
+			
+			ServerUI.addDebugMessage("Clothing SignUp Importer EDT Procssing Complete");
         	}
 		
 		void saveClothingSignUp(String filename)
@@ -306,13 +312,13 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
     			
     			ONCChildGift childGift = null;
 			if(itemParts.length == 3)
-			{
+			{	
 				//find the family by ONC Num
 				String oncNum = itemParts[0].substring(6).trim();
 				int year = DBManager.getCurrentSeason();
 				ONCFamily f = familyDB.getFamilyByONCNum(year, oncNum);
 				if(f != null)
-				{
+				{	
 					//get list of children in family
 					List<ONCChild> childrenInFamilyList = childDB.getChildList(year, f.getID());
 					

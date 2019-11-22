@@ -1,8 +1,11 @@
 package oncserver;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -115,7 +118,34 @@ public abstract class SignUpGeniusImportWorker extends SwingWorker <Void, Void>
     		{
     			return null;
     		}
-    	}	
+    	}
+	
+	void saveJsonToFile(String json, String filename) 
+	{
+		String path = String.format("%s/%dDB/%s", System.getProperty("user.dir"),DBManager.getCurrentSeason(), filename);
+
+		BufferedWriter writer = null;
+		try
+		{
+			writer = new BufferedWriter(new FileWriter(path));
+			writer.write(json);
+		}
+		catch (IOException e)
+		{
+			ServerUI.addDebugMessage("SignUp Genius Import Error: Unable to write json to " + filename);
+		}
+		finally
+		{
+			try
+			{
+				writer.close();
+			}
+			catch (IOException e)
+			{
+				ServerUI.addDebugMessage("SignUp Genius Import Error: Unable to close json file " + filename);
+			}
+		}
+	}
 	
 	protected class SignUpCommon
 	{
