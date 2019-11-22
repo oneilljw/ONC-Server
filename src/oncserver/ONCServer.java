@@ -94,9 +94,6 @@ public class ONCServer
 		//set up the database manager and load the data base from persistent store
 		DBManager.getInstance(serverUI.getIcon(0));
 		
-		//Initialize the IF to SignUp Genius
-		SignUpGeniusIF.getInstance();
-
 		//Create the client listener socket and start the loop		
 		startServer();	//Start the server on app start up
     }
