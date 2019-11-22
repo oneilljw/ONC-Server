@@ -20,7 +20,7 @@ import com.google.gson.reflect.TypeToken;
 public class ServerChildDB extends ServerSeasonalDB
 {
 	private static final int CHILD_DB_HEADER_LENGTH = 12;
-	private static final int NUMBER_GIFTS_PER_CHILD = 3;
+	public static final int NUMBER_GIFTS_PER_CHILD = 3;
 	
 	private static List<ChildDBYear> childDB;
 	private static ServerChildDB instance = null;
@@ -283,7 +283,7 @@ public class ServerChildDB extends ServerSeasonalDB
 						//if gift has been assigned, but not yet delivered or any subsequent status,
 						//decrement the partner assignee count
 						if(cg != null && cg.getGiftStatus() == GiftStatus.Assigned)
-							serverPartnerDB.decrementGiftsAssignedCount(year, cg.getPartnerID());
+							serverPartnerDB.decrementGiftsAssignedCount(year, cg.getPartnerID(), true);
 					}
 				}
 				
@@ -357,7 +357,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	 * @param year - which year's data base is being changed
 	 * @param addedWish - the child wish object that was changed
 	 ************************************************************************************/
-	void updateChildsWishID(int year, ONCChildGift addedWish)
+	ONCChild updateChildsWishID(int year, ONCChildGift addedWish)
 	{
 		//Find the child using the added wish child ID
 		ChildDBYear childDBYear = childDB.get(DBManager.offset(year));
@@ -372,7 +372,10 @@ public class ServerChildDB extends ServerSeasonalDB
 			ONCChild c = cAL.get(index);
 			c.setChildGiftID(addedWish.getID(), addedWish.getGiftNumber());
 			childDBYear.setChanged(true);
+			return c;
 		}
+		else
+			return null;
 	}
 	
 	List<ONCChild> getChildList(int year, int famid)

@@ -49,7 +49,7 @@ public class SignUpGeniusIF
 		
 		return instance;
 	}
-
+/*
 	void requestSignUpList()
 	{
 		SignUpGeniusVolunteerImporter importer = new SignUpGeniusVolunteerImporter();
@@ -75,7 +75,7 @@ public class SignUpGeniusIF
 	//List of registered listeners for Client change events
 	protected ArrayList<SignUpListener> listeners;
    
-	/** Register a listener for database DataChange events */
+	// Register a listener for database DataChange events
 	synchronized public void addSignUpListener(SignUpListener l)
 	{
 		if (listeners == null)
@@ -83,7 +83,7 @@ public class SignUpGeniusIF
    		listeners.add(l);
 	}  
 
-	/** Remove a listener for server DataChange */
+	// Remove a listener for server DataChange
 	synchronized public void removeSignUpListener(SignUpListener l)
 	{
    		if (listeners == null)
@@ -91,7 +91,7 @@ public class SignUpGeniusIF
    		listeners.remove(l);
 	}
    
-	/** Fire a Data ChangedEvent to all registered listeners */
+	/** Fire a Data ChangedEvent to all registered listeners
 	@SuppressWarnings("unchecked")
 	void fireSignUpDataChanged(Object source, SignUpEventType eventType, Object eventObject)
 	{
@@ -110,6 +110,7 @@ public class SignUpGeniusIF
    				l.signUpDataReceived(event);
    		}
    }
+*/	
 /*	
 	private String getSignUpData(String url)
 	{
@@ -147,7 +148,7 @@ public class SignUpGeniusIF
 		}
 		return response.toString();
 	}
-*/	
+	
 	private class SignUpCommon
 	{
 		private String[] message;
@@ -206,12 +207,13 @@ public class SignUpGeniusIF
 			return list;	
 		}
 	}
-	
+*/	
 	/***************************************************************************************************
     * This class communicates with SignUp Genius thru it's api to fetch season volunteer and activity data.
     * This executes as a background task since the size of SignUps can grow large.
     * ***************************************************************************************************/
-    public class SignUpGeniusVolunteerImporter extends SwingWorker<Void, Void>
+/*
+	public class SignUpGeniusVolunteerImporter extends SwingWorker<Void, Void>
     {
     		SignUpEventType type;
     		String url;
@@ -415,7 +417,7 @@ public class SignUpGeniusIF
 			if(!uniqueVolList.isEmpty())
 				createNewAndModifiedVolunteerLists(uniqueVolList, signUpActList);
 		}
-		
+*/		
 		/***
 		 * Parses the list of imported sign-up activities and produces a list of unique sign-up genius
 		 * activities in the list. A volunteer may sign-up for multiple activities, this method
@@ -424,6 +426,7 @@ public class SignUpGeniusIF
 		 * @param signUpActivityList
 		 * @return
 		 */
+/*		
 		List<SignUpActivity> createUniqueActivityList(List<SignUpActivity> signUpActivityList)
 		{	
 			//create the unique activity list
@@ -434,7 +437,7 @@ public class SignUpGeniusIF
 			
 			return uniqueSignUpActivityList;
 		}
-		
+*/		
 		/***
 		 * Parses the list of imported sign-up activities and produces a list of unique volunteers
 		 * in the list. A volunteer may sign-up for multiple activities, this method produces a list
@@ -442,6 +445,7 @@ public class SignUpGeniusIF
 		 * @param signUpActivityList
 		 * @return
 		 */
+/*		
 		List<ONCVolunteer> createUniqueVolunteerList(List<SignUpActivity>  signUpActivityList)
 		{	
 			//create the unique volunteer list
@@ -605,7 +609,7 @@ public class SignUpGeniusIF
 				e.printStackTrace();
 			}				
 		}
-/*		
+		
 		List<VolAct> createVolunteerActivityList(List<SignUpActivity> suActList, ONCVolunteer vol)
 		{
 			List<VolAct> vaList = new ArrayList<VolAct>();
@@ -620,7 +624,7 @@ public class SignUpGeniusIF
 						sua.getFirstname().equalsIgnoreCase(vol.getFirstName()) &&
 						 sua.getLastname().equalsIgnoreCase(vol.getLastName()))
 					{
-						Activity actualActivity = activityDB.findActivity(DBManager.getCurrentYear(), sua.getSlotitemid());
+						Activity actualActivity = activityDB.findActivity(DBManager.getCurrentSeason(), sua.getSlotitemid());
 						if(actualActivity != null)
 							vaList.add(new VolAct(-1, vol.getID(), actualActivity.getID(),
 										sua.getSlotitemid(), sua.getMyqty(), sua.getComment()));
@@ -640,10 +644,10 @@ public class SignUpGeniusIF
 	
 			return vaList;
 		}
-*/		
-		 /*
-	     * Executed in event dispatching thread
-	     */
+		
+		 //
+	     //Executed in event dispatching thread
+	     //
 	    @Override
 	    protected void done()
 	    {
@@ -654,7 +658,7 @@ public class SignUpGeniusIF
 	    		{
 	    			//update the time sign up was imported and notify the clients that a signup was imported
 	    			signup.setLastImportTimeInMillis(System.currentTimeMillis());
-/*	    			
+	    			
 	    			System.out.println(String.format("GeniusIF.done: #SignUpImported ID= %d, time=%d", 
 	    					signup.getSignupid(), signup.getLastImportTimeInMillis()));
 	    			System.out.println(String.format("GeniusIF.done: #New Activities= %d", newActivitiesFoundList.size())); 
@@ -662,7 +666,7 @@ public class SignUpGeniusIF
 	    			System.out.println(String.format("GeniusIF.done: #Deleted Activities= %d", deletedActivitiesFoundList.size())); 
 	    			System.out.println(String.format("GeniusIF.done: #Updated Volunteers= %d", updatedVolunteerFoundList.size())); 
 	    			System.out.println(String.format("GeniusIF.done: #New Volunteers= %d", newVolunteerFoundList.size())); 
-*/				
+				
 	    			signUpContentReceived(SignUpEventType.REPORT, signup);
 	    				
 	    			//if lists are not empty, notify clients
@@ -738,11 +742,12 @@ public class SignUpGeniusIF
 	    		}
 	    }
     }
-    
+*/    
     /***************************************************************************************************
      * This class processes sign-ups from sign up genius to determine which volunteer activities
      * are already in the data base and which are new, have been modified or deleted
      * ***************************************************************************************************/
+/*    
      public class ImportedVolunteerActivityProcessor extends SwingWorker<Void, Void>
      {
     	 	private List<SignUpActivity> signUpActList;
@@ -886,7 +891,7 @@ public class SignUpGeniusIF
 			}			
 			return null;
 		}
-/*		
+		
 		void writeToFile(List<VolAct> vaList)
 		{
 			 
@@ -912,7 +917,7 @@ public class SignUpGeniusIF
 		    		System.err.format("IO Exception: %s%n", x);
 		    }	
 		}
-*/		
+		
 		@Override
 		protected void done()
 		{
@@ -943,7 +948,7 @@ public class SignUpGeniusIF
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-/*			
+			
 			//print the new VA's found
 			for(VolAct newVA : newVAList)
 				System.out.println(String.format("SUGIF.VAImporter.done: new VA id= %d, volID=%d, actID=%d, genID=%d, qty=%d, comment=%s",
@@ -958,7 +963,7 @@ public class SignUpGeniusIF
 			for(VolAct delVA : delVAList)
 				System.out.println(String.format("SUGIF.VAImporter.done: deleted VA id= %d, volID=%d, actID=%d, genID=%d, qty=%d, comment=%s",
 						delVA.getID(), delVA.getVolID(), delVA.getActID(), delVA.getGeniusID(), delVA.getQty(), delVA.getComment()));
-*/
 		}
      }
+*/
 }

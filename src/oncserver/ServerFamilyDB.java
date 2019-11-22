@@ -1144,6 +1144,19 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
+	ONCFamily getFamilyByONCNum(int year, String oncNum)	//Persistent odb, wfcm or onc id number string
+	{
+		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
+		int index = 0;	
+		while(index < fAL.size() && !fAL.get(index).getONCNum().equals(oncNum))
+			index++;
+		
+		if(index < fAL.size())
+			return fAL.get(index);
+		else
+			return null;
+	}
+	
 	void checkFamilyStatusOnSMSStatusCallback(int year, ONCSMS receivedSMS)
 	{
 		ONCFamily fam = getFamily(year, receivedSMS.getEntityID());

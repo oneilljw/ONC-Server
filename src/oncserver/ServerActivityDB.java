@@ -43,7 +43,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	private static final String GENIUS_STATUS_FILENAME = "GeniusSignUps.csv";
 	private static final int SIGNUP_RECORD_LENGTH = 6;
 	
-	private static final int GENIUS_IMPORT_TIMER_RATE = 1000 * 30; //30 seconds
+	private static final int GENIUS_IMPORT_TIMER_RATE = 1000 * 270; //2.5 minutes
 	
 	private static ServerActivityDB instance = null;
 	
@@ -135,9 +135,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 	//Return the list of sign-ups
 	String getSignUps()
 	{
-		Gson gson = new Gson();
-//		Type listtype = new TypeToken<ArrayList<SignUp>>(){}.getType();
-				
+		Gson gson = new Gson();		
 		String response = gson.toJson(geniusSignUps, GeniusSignUps.class);
 		return response;	
 	}
@@ -177,68 +175,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		
 		return index < actList.size() ? actList.get(index) : null;
 	}
-/*	
-	void printActivities(int year, String mssg)
-	{
-		List<Activity> actList = activityDB.get(year - BASE_YEAR).getList();
-		for(Activity a : actList)
-			System.out.println(String.format("ServActDB.printActivities %s: act ID= %d, actGenID= %d, act Name= %s",
-					mssg, a.getID(), a.getGeniusID(),a.getName()));		
-	}
-	
-	static HtmlResponse getActivityDayJSONP(int year, String callbackFunction)
-	{		
-		Gson gson = new Gson();
-		Type listOfActivities = new TypeToken<ArrayList<ActivityDay>>(){}.getType();
-		
-		//put the activity database for the year in chronological order by start date.
-		//create the list of ActivityDay's
-		List<VolunteerActivity> searchList = new ArrayList<VolunteerActivity>();
-		for(VolunteerActivity va : activityDB.get(DBManager.offset(year)).getList())
-			if(va.isOpen())
-				searchList.add(va);
-		
-		Collections.sort(searchList, new VolunteerActivityDateComparator());
-		List<ActivityDay> dayList = new ArrayList<ActivityDay>();
-		
-		//get the first start date and activity. Create a new Activity Day and add teh
-		//first activity to its activity list.
-		int searchIndex = 0, dayCount = 0;
-		while(searchIndex < searchList.size())
-		{
-			//create a new ActivityDay object and populate all the activities
-			//from the search list that start on the same day
-			String startDate = searchList.get(searchIndex).getStartDate();
-			ActivityDay ad = new ActivityDay(dayCount++, startDate);
-		
-			while(searchIndex < searchList.size() && 
-					searchList.get(searchIndex).getStartDate().equals(startDate))
-				ad.addActivity(searchList.get(searchIndex++));
-				
-			dayList.add(ad);
-		}
-		
-		//create and wrap the json in the callback function per the JSONP protocol
-		String response = gson.toJson(dayList, listOfActivities);
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
-	}
-	
-	static HtmlResponse getActivitesJSONP(int year, String callbackFunction)
-	{		
-		Gson gson = new Gson();
-		Type listOfActivities = new TypeToken<ArrayList<VolunteerActivity>>(){}.getType();
-		
-		List<VolunteerActivity> searchList = new ArrayList<VolunteerActivity>();
-		for(VolunteerActivity va : activityDB.get(DBManager.offset(year)).getList())
-			if(va.isOpen())
-				searchList.add(va);
-		
-		String response = gson.toJson(searchList, listOfActivities);
 
-		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
-	}
-*/
 	/******
 	 * Returns an activity based on time. Finds the closest match from an activity. Used
 	 * when volunteer registers in the warehouse and didn't already register thru sign-up genius.
@@ -313,26 +250,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			
 		return volActList;
 	}
-/*	
-	static HtmlResponse getActivitiesJSONP(int year, String name, String callbackFunction)
-	{		
-		Gson gson = new Gson();
-		List<VolunteerActivity> searchList = activityDB.get(year - BASE_YEAR).getList();
 
-		String response;
-		int index=0;
-		while(index < searchList.size() && !searchList.get(index).getName().equalsIgnoreCase(name))
-			index++;
-		
-		if(index< searchList.size())
-			response = gson.toJson(searchList.get(index), VolunteerActivity.class);
-		else
-			response = "{\"id\":-1}";	//send back id = -1, meaning not found
-		
-		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HTTPCode.Ok);		
-	}
-*/
 	@Override
 	String add(int year, String json, ONCUser client) 
 	{
@@ -896,24 +814,24 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		@Override
 		public void actionPerformed(ActionEvent arg0) 
 		{
-			if(signUpVolunteerImporter != null && geniusSignUps != null && geniusSignUps.isImportEnabled())
-//			if(geniusIF != null && geniusSignUps != null && geniusSignUps.isImportEnabled())	
+			if(geniusSignUps != null && geniusSignUps.isImportEnabled())
+			{	
 				for(SignUp su : geniusSignUps.getSignUpList())
 				{
 					long time_diff = System.currentTimeMillis() - su.getLastImportTimeInMillis();
-					
-//					//DEBUG
-//					if(su.getFrequency().compareTo(Frequency.ONE_TIME) > 0)
-//						System.out.println(String.format("ServActDB.TimerListener: time diff to import %s is %d seconds, interval= %d seconds",
-//							su.getTitle(), time_diff/1000, su.getFrequency().interval()/1000));
-					
 					if(su.getFrequency().compareTo(Frequency.ONE_TIME) > 0 && time_diff >= su.getFrequency().interval())
-					{
-						signUpVolunteerImporter.requestSignUpContent(su, SignUpReportType.all);
-//						geniusIF.requestSignUpContent(su, SignUpReportType.all);
-//						System.out.println(String.format("Importing %s signup", su.getTitle()));
+					{	
+						if(su.getSignUpType() == SignUpType.Volunteer && signUpVolunteerImporter != null)
+							signUpVolunteerImporter.requestSignUpContent(su, SignUpReportType.all);
+					
+						if(su.getSignUpType() == SignUpType.Clothing && signUpClothingImporter != null)
+							signUpClothingImporter.requestSignUpContent(su, SignUpType.Clothing, SignUpReportType.all);
+						
+						if(su.getSignUpType() == SignUpType.Coat && signUpClothingImporter != null)
+							signUpClothingImporter.requestSignUpContent(su, SignUpType.Coat, SignUpReportType.all);
 					}
 				}
+			}
 		}	
 	}
 }

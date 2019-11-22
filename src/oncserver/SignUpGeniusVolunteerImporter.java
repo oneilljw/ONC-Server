@@ -76,7 +76,7 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
 		@Override
 		protected Void doInBackground() throws Exception
 		{
-			String response = getSignUpJson(String.format(SIGNUP_REPORT_URL, reportType.toString(), signup.getSignupid(), API_KEY));
+			String response = getSignUpJson(String.format(SIGNUP_REPORT_URL, reportType.toString(), signup.getSignupid(), apiKey()));
 			if(response != null && !response.isEmpty())
 			{
 				//get the report that was imported
@@ -504,6 +504,7 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
          * @author johnoneil
          *
          */
+/*        	
         	private class SignUpReport extends SignUpCommon
         	{
         		private SignUpContent data;
@@ -512,7 +513,7 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
         		SignUpContent getContent() { return data; }
         		
         	}
-        	
+*/        	
         	/***
         	 * Component of the object returned from SignUp Genius when importing a specific Volunteer SignUp
         	 * from the Our Neighbor's Child SignUp Genius Volunteer SignUps. An array of SignUpActivity objects
@@ -520,6 +521,7 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
         	 * @author johnoneil
         	 *
         	 */
+/*        	
         	private class SignUpContent
         	{
         		private SignUpActivity[] signup;
@@ -533,9 +535,9 @@ public class SignUpGeniusVolunteerImporter extends SignUpGeniusImporter
         			
         			return list;	
         		}
-        	}	
-	}
-		
+        	}
+*/        		
+	}		
 	/***************************************************************************************************
      * This class processes sign-ups from sign up genius to determine which volunteer activities
      * are already in the data base and which are new, have been modified or deleted

@@ -14,12 +14,13 @@ import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCUser;
+import ourneighborschild.SignUpActivity;
 import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
+public class ServerPartnerDB extends ServerSeasonalDB
 {
 	private static final int ORGANIZATION_DB_HEADER_LENGTH = 36;
 	private static final int STATUS_CONFIRMED = 5;
@@ -31,15 +32,11 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	
 	private ClientManager clientMgr;
 	private ServerGlobalVariableDB globalDB;
-	private static SignUpGeniusClothingImporter signUpClothingImporter;
 	
 	private ServerPartnerDB() throws FileNotFoundException, IOException
 	{
 		//create the partner data bases for TOTAL_YEARS number of years
 		partnerDB = new ArrayList<PartnerDBYear>();
-		
-		signUpClothingImporter = SignUpGeniusClothingImporter.getInstance();
-		signUpClothingImporter.addSignUpListener(this);
 				
 		for(int year = DBManager.getBaseSeason(); year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
@@ -224,6 +221,20 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			return null;
 	}
 	
+	ONCPartner getPartnerFromSignUpActivity(int year, ONCPartner suaPartner)
+	{
+		List<ONCPartner> pAL = partnerDB.get(DBManager.offset(year)).getList();
+		int i;
+		for(i=0; i<pAL.size(); i++)
+			if(pAL.get(i).matches(suaPartner))
+				break;
+		
+		if(i < pAL.size())
+			return pAL.get(i);
+		else
+			return null;
+	}
+	
 	String update(int year, String json)
 	{
 		//Create a organization object for the updated partner
@@ -276,9 +287,12 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		//partner with the update. A partner's status can only be changed from confirmed to a lesser
 		//status if their assigned count is zero. And, the request count can never be less then the
 		//assigned count
-		if(index < oAL.size() && !doPartnersMatch((currPartner = oAL.get(index)), updatedPartner))
+		
+//		if(index < oAL.size() && !doPartnersMatch((currPartner = oAL.get(index)), updatedPartner))
+		if(index < oAL.size())
 		{
 			//check if a change to the partner status is allowed
+			currPartner = oAL.get(index);
 			int currAssignedDeliveredCount = currPartner.getNumberOfOrnamentsAssigned() + currPartner.getNumberOfOrnamentsDelivered();
 			if(currPartner.getStatus() == STATUS_CONFIRMED && updatedPartner.getStatus() != STATUS_CONFIRMED &&
 				currAssignedDeliveredCount > 0)	
@@ -287,9 +301,18 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			}
 			
 			//check to see if a reduction to the number of ornaments requested must be modified to
-			//be no less then the sum of ornaments already assigned and delivered to the partner
-			if(currAssignedDeliveredCount > updatedPartner.getNumberOfOrnamentsRequested())
-				updatedPartner.setNumberOfOrnamentsRequested(currAssignedDeliveredCount);
+			//be no less then the higher number of ornaments already assigned or delivered to the partner
+			int minRequestedCount;
+			int currAssignedCount = currPartner.getNumberOfOrnamentsAssigned();
+			int currDeliveredCount = currPartner.getNumberOfOrnamentsDelivered();
+			
+			if(currAssignedCount > currDeliveredCount)
+				minRequestedCount = currAssignedCount;
+			else
+				minRequestedCount = currDeliveredCount;
+			
+			if(minRequestedCount > updatedPartner.getNumberOfOrnamentsRequested())
+				updatedPartner.setNumberOfOrnamentsRequested(minRequestedCount);
 			
 			//check if partner address has changed and a region update check is required
 			if(currPartner.getHouseNum() != updatedPartner.getHouseNum() ||
@@ -335,6 +358,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		
 //		System.out.println(String.format("ServPartDB.doPartnersMatch: Change Code= %d", c));
 		return c == 0;
+		
 	}
 	
 	void updateRegion(ONCPartner updatedOrg)
@@ -518,7 +542,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 		}
 	}
 	
-	void decrementGiftsAssignedCount(int year, int partnerID)
+	String decrementGiftsAssignedCount(int year, int partnerID, boolean bNotifyClients)
 	{
 		PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
 		List<ONCPartner> partnerList = partnerDBYear.getList();
@@ -534,8 +558,14 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 			
 			Gson gson = new Gson();
 			String response =  "UPDATED_PARTNER" + gson.toJson(partnerList.get(index), ONCPartner.class);
-			clientMgr.notifyAllInYearClients(year, response);
+			
+			if(bNotifyClients)
+				clientMgr.notifyAllInYearClients(year, response);
+			
+			return response;
 		}
+		
+		return "FAILED_UPDATE_PARTNER";
 	}
 
 	@Override
@@ -598,6 +628,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	 * @param newYear
 	 * @param partnerDBYear
 	 ******************************************************************************************/
+/*	
 	void determinePriorYearPerformance(int year)
 	{
 		//get the child wish data base reference
@@ -672,7 +703,7 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 //					confPart.getNumberOfOrnamentsDelivered(), confPart.getNumberOfOrnamentsReceivedBeforeDeadline(),
 //					confPart.getNumberOfOrnamentsReceivedAfterDeadline()));	
 	}
-	
+*/	
 	void savePYPartnerPerformace(List<ONCPartner> pyPerformancePartnerList)
 	{
 		String[] header = {"Part ID", "Status", "Type", "Gift Collection","Name", "Orn Delivered",
@@ -703,61 +734,6 @@ public class ServerPartnerDB extends ServerSeasonalDB implements SignUpListener
 	    	List<ONCPartner> getList() { return pList; }
 	    	
 	    	void add(ONCPartner addedOrg) { pList.add(addedOrg); }
-	}
-	@Override
-	public void signUpDataReceived(SignUpEvent event)
-	{
-//		System.out.println(String.format("ServPartdb.SUDataRec: type= %s", event.type().toString()));
-		if(event.type() == SignUpEventType.UPDATED_PARTNERS || event.type() == SignUpEventType.NEW_PARTNERS )
-		{
-			Gson gson = new Gson();
-			
-			//process list of updated partners.
-			@SuppressWarnings("unchecked")
-			List<ONCPartner> changedPartnerList = (List<ONCPartner>) event.getSignUpObject();
-			List<String> clientJsonMssgList = new ArrayList<String>();
-			
-			//add the updated partners to the database
-			if(event.type() == SignUpEventType.UPDATED_PARTNERS)
-			{
-				//print the lists
-//    				for(ONCPartner p : changedPartnerList)
-//    				System.out.println(String.format("ServPartnerDB.SUDataRec: updated partner id= %d. name= %s, contact= %s, "
-//    					+ "email= %s, phone= %s, address = %s %s %s %s", p.getID(),
-//    					p.getLastName(), p.getContact(), p.getContact_email(), p.getContact_phone(),
-//    					p.getHouseNum(), p.getStreet(), p.getCity(), p.getZipCode()));
-    				
-				for(ONCPartner p : changedPartnerList)
-				{
-					ONCPartner updatedPartner = update(DBManager.getCurrentSeason(), p);
-					if(updatedPartner != null)
-						clientJsonMssgList.add("UPDATED_PARTNER" + gson.toJson(updatedPartner, ONCPartner.class));
-				}
-			}
-			else
-			{
-				//print the lists
- //   				for(ONCPartner p : changedPartnerList)
- //   					System.out.println(String.format("ServPartnerDB.SUDataRec: new partner name= %s, contact= %s, "
- //   					+ "email= %s, phone= %s, address = %s %s %s %s",
- //   					p.getLastName(), p.getContact(), p.getContact_email(), p.getContact_phone(),
- //   					p.getHouseNum(), p.getStreet(), p.getCity(), p.getZipCode()));
-    				
-				for(ONCPartner p : changedPartnerList)
-				{
-					ONCPartner addedPartner = add(DBManager.getCurrentSeason(), p);
-					if(addedPartner != null)
-						clientJsonMssgList.add("ADDED_PARTNER" + gson.toJson(addedPartner, ONCPartner.class));
-				}
-			}
-			
-			if(!clientJsonMssgList.isEmpty())
-			{
-				//there were updates, send list of updated json's to clients
-				ClientManager clientMgr = ClientManager.getInstance();
-				clientMgr.notifyAllInYearClients(DBManager.getCurrentSeason(), clientJsonMssgList);
-			}
-		}
 	}
 	
 	@Override

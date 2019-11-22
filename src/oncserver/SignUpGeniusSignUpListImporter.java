@@ -61,18 +61,12 @@ public class SignUpGeniusSignUpListImporter extends SignUpGeniusImporter
 		private static final String SIGNUPS_URL = "https://api.signupgenius.com/v2/k/signups/created/active/?user_key=%s";
 		
 		GeniusSignUps importedSignUps;
-		
-//		SignUpGeniusSignUpListImportWorker()
-//		{
-//			//set the SignUpEventType to import a list of sign-ups
-//			super(SignUpEventType.SIGNUP_LIST_IMPORT);
-//		}
-		
+
 		@Override
 		protected Void doInBackground() throws Exception
 		{
 			//gets the list of sign-ups from SignUp Genius
-			String response = getSignUpJson(String.format(SIGNUPS_URL, API_KEY));
+			String response = getSignUpJson(String.format(SIGNUPS_URL, apiKey()));
 			if(response != null && !response.isEmpty())
 				processSignUpsJson(response.toString());
 			
@@ -137,7 +131,7 @@ public class SignUpGeniusSignUpListImporter extends SignUpGeniusImporter
 					su.setSignUpType(SignUpType.Unknown);	
 				}
 				
-				//adjust the SignUp Genius end time to milliseconds from seconds. Add christmas day
+				//adjust the SignUp Genius end time to milliseconds from seconds. Add Christmas day
 				//as an end time if one was not provided
 				if(su.getEndtimeInMillis() == 0)
 					su.setEndtime(getChristmasDayTimeInSeconds() * 1000);

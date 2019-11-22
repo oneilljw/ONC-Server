@@ -21,8 +21,6 @@ import com.google.gson.reflect.TypeToken;
 public class ServerChildGiftDB extends ServerSeasonalDB
 {
 	private static final int CHILD_GIFT_DB_HEADER_LENGTH = 10;
-	private static final int NUMBER_OF_GIFTS_PER_CHILD = 3;
-	private static final int PARTNER_TYPE_ONC_SHOPPER = 6;
 	private static final int GIFT_INDICATOR_ALLOW_SUBSTITUE = 2;
 	private static final String GIFT_WISH_DEFAULT_DETAIL = "Age appropriate";
 	private static ServerChildGiftDB instance = null;
@@ -140,6 +138,39 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		return "ADDED_GIFT_LIST" + gson.toJson(responseJsonList, responseListType);
 	}
 	
+	List<String> addListOfSignUpGeniusImportedGifts(int year, List<ONCChildGift> addedChildGiftList)
+	{
+		Gson gson = new Gson();
+		List<String> responseJsonList = new ArrayList<String>();
+
+		//retrieve the child wish data base for the year
+		ChildGiftDBYear cwDBYear = childGiftDB.get(DBManager.offset(year));
+		
+		for(ONCChildGift addedGift : addedChildGiftList)
+		{
+			//set the new ID for the added child gift
+			addedGift.setID(cwDBYear.getNextID());
+				
+			//retrieve the old gift being replaced
+			ONCChildGift oldGift = getChildGift(year, addedGift.getChildID(), addedGift.getGiftNumber());
+		
+			//Add the new wish to the proper data base
+			cwDBYear.add(addedGift);
+			
+			//Update the child object with new gift
+			childDB.updateChildsWishID(year, addedGift);
+		
+			//process added gift to see if other data bases require update. They do if the gift
+			//status has caused a family status change or if a partner assignment has changed
+			processGiftAdded(year, oldGift, addedGift);
+			responseJsonList.add("WISH_ADDED" + gson.toJson(addedGift, ONCChildGift.class));
+		}
+		
+		cwDBYear.setChanged(true);
+		
+		return responseJsonList;
+	}
+	
 	/*******************************************************************************************
 	 * This method implements a rules engine governing the relationship between a wish type and
 	 * wish status and wish assignment and wish status. It is called when a child's wish or
@@ -193,7 +224,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 				if(addedWish.getGiftStatus() == GiftStatus.Returned)
 					newStatus = GiftStatus.Returned;
 				else if(addedWish.getGiftStatus() == GiftStatus.Delivered && reqPartner != null && 
-							reqPartner.getID() > -1 && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
+							reqPartner.getID() > -1 && reqPartner.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
 					newStatus = GiftStatus.Shopping;
 				else if(addedWish.getGiftStatus() == GiftStatus.Delivered && reqPartner != null && reqPartner.getID() > -1)
 					newStatus = GiftStatus.Assigned;
@@ -208,9 +239,9 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 					newStatus = GiftStatus.Not_Selected;
 				else if(reqPartner != null && reqPartner.getID() == -1)
 					newStatus = GiftStatus.Selected;
-				else if(reqPartner != null && reqPartner.getType() != PARTNER_TYPE_ONC_SHOPPER)
+				else if(reqPartner != null && reqPartner.getType() != ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
 					newStatus = GiftStatus.Assigned;
-				else if(reqPartner != null && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
+				else if(reqPartner != null && reqPartner.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
 					newStatus = GiftStatus.Shopping;
 				break;
 				
@@ -240,7 +271,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			case Missing:
 				if(addedWish.getGiftStatus() == GiftStatus.Received)
 					newStatus = GiftStatus.Received;
-				else if(reqPartner != null && reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER)
+				else if(reqPartner != null && reqPartner.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
 					newStatus = GiftStatus.Shopping;
 				else if(addedWish.getGiftStatus() == GiftStatus.Assigned && reqPartner != null && reqPartner.getID() > -1)
 					newStatus = GiftStatus.Assigned;
@@ -266,7 +297,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	{	
 		if(replWish != null && reqPartner != null && 
 			replWish.getGiftStatus() == GiftStatus.Delivered && 
-			 reqPartner.getType() == PARTNER_TYPE_ONC_SHOPPER && 
+			 reqPartner.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER && 
 			  addedWish.getIndicator() == GIFT_INDICATOR_ALLOW_SUBSTITUE)
 		{
 			return GIFT_WISH_DEFAULT_DETAIL;
@@ -395,9 +426,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			//Search from the bottom of the data base for speed. New gifts are added to the bottom
 			int index = cgAL.size() -1;	//Set the element to the last child wish in the array
 			while(index >= 0 && cgAL.get(index).getID() != child.getChildGiftID(giftnum))
-//			while (index >= 0 && (cgAL.get(index).getChildID() != childid || 
-//				cgAL.get(index).getGiftNumber() != giftnum))
-			index--;
+				index--;
 		
 			return index == -1 ? null : cgAL.get(index);
 
@@ -405,7 +434,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		else
 			return null;
 	}
-	
+/*	
 	List<PriorYearPartnerPerformance> getPriorYearPartnerPerformanceList(int newYear)
 	{
 		//create the list to be returned
@@ -433,7 +462,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		
 		//for each child wish, get the prior year wish history for the child's wish 
 		for(ONCChild pyc: childDB.getList(newYear-1))
-			for(int gn=0; gn < NUMBER_OF_GIFTS_PER_CHILD; gn++)
+			for(int gn=0; gn < ServerChildDB.NUMBER_GIFTS_PER_CHILD; gn++)
 			{
 				//reset the assigned and received partner ID's
 				pyPartnerReceivedBeforeID = -1;
@@ -482,7 +511,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			
 		return pyPerformanceList;
 	}
-
+*/
 	@Override
 	void addObject(int year, String[] nextLine) 
 	{
