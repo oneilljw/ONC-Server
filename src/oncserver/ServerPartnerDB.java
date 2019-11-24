@@ -14,7 +14,6 @@ import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCUser;
-import ourneighborschild.SignUpActivity;
 import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;

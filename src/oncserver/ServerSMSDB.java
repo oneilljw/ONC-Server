@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.EntityType;
+import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCSMS;
 import ourneighborschild.ONCUser;
 import ourneighborschild.SMSDirection;
@@ -102,18 +103,24 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
-		if(request.getMessage() != null && request.getEntityType() == EntityType.FAMILY)
+		if(request.getMessageID() > -1 && request.getEntityType() == EntityType.FAMILY)
 	    {
 			//for each family in the request, create a ONCSMS request 
 			for(Integer famID : request.getEntityIDList() )
 			{
-				String twilioFormattedPhoneNum = familyDB.getTwilioFormattedPhoneNumber(request.getYear(), famID, request.getPhoneChoice());
-				if(twilioFormattedPhoneNum != null)
-					smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
-							SMSDirection.OUTBOUND_API, request.getMessage(), SMSStatus.REQUESTED));
-				else
-					smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
-							SMSDirection.OUTBOUND_API, request.getMessage(), SMSStatus.ERR_NO_PHONE));
+				ONCFamily f = familyDB.getFamily(request.getYear(), famID);
+				
+				if(f != null)
+				{
+					String twilioFormattedPhoneNum = getTwilioFormattedPhoneNumber(f, request.getPhoneChoice());
+					String message = getSMSBody(f);
+					if(twilioFormattedPhoneNum != null)
+						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
+							SMSDirection.OUTBOUND_API, message, SMSStatus.REQUESTED));
+					else
+						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
+							SMSDirection.OUTBOUND_API, message, SMSStatus.ERR_NO_PHONE));
+				}
 			}
 	    }	
 		
@@ -136,6 +143,49 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		}
 			
 	    return response;
+	}
+	
+	String getTwilioFormattedPhoneNumber(ONCFamily f, int phoneChoice)
+	{
+		String twilioFormattedPhoneNum = null;	//initialize returned number
+		
+		if(phoneChoice >= 0 && phoneChoice <= 1)	//validate the phone choice range
+		{	
+			if(phoneChoice == 0)	//home phone
+			{
+				if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
+					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
+				else if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
+					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getCellPhone()));
+			}
+			
+			//we've found the family, now check to see if we have a phone number to use
+			//if the request is to use the alternate phone, use it if it's valid
+			//if not add the primary phone.
+			if(phoneChoice == 1)	//cell phone
+			{
+				if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
+					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getCellPhone()));
+				else if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
+					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
+			}
+		}
+		
+		return twilioFormattedPhoneNum;
+	}
+	
+	String getSMSBody(ONCFamily f)
+	{
+		if(f.getLanguage().equals("Spanish"))
+			return "Our Neighbors Child (ONC): responde \"YES\" para confirmar que un adulto estará en casa "
+					+ "para recibir los regalos de sus hijos el domingo 15 de diciembre. Los voluntarios "
+					+ "entregarán entre la 1 y las 4 de la tarde. Responde \"NO\" si no puedes confirmar que "
+					+ "un adulto estará en casa para la entrega de regalos el 15 de diciembre";
+		else
+			return "Our Neighbors Child (ONC): Reply \"YES\" to confirm an adult will be "
+					+ "home to receive your children's gifts on Sunday, December 15. Volunteers will "
+					+ "deliver between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
+					+ "be home for gift delivery on December 15.";		
 	}
 	
 	//callback from Twilio IF when validation task completes
