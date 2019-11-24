@@ -114,6 +114,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 				{
 					String twilioFormattedPhoneNum = getTwilioFormattedPhoneNumber(f, request.getPhoneChoice());
 					String message = getSMSBody(f);
+					
 					if(twilioFormattedPhoneNum != null)
 						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
 							SMSDirection.OUTBOUND_API, message, SMSStatus.REQUESTED));
@@ -123,7 +124,7 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 				}
 			}
 	    }	
-		
+
 		//if the request list isn't empty, ask twilio to validate the phone numbers in the request list
 		//can accept SMS messages.
 		String response = "SMS_REQUEST_FAILED";

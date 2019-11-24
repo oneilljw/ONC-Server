@@ -67,7 +67,7 @@ public class SMSHandler extends ONCWebpageHandler
 			String messageID = rec_SMS.getMessageSid();
 			EntityType type = EntityType.UNKNOWN;
 			String name = "Anonymous";
-			String body = rec_SMS.getBody();
+			String body = rec_SMS.getBody().trim();
 			String replyContent = "Unable to process messages from unregistered numbers.";
 			
 			SMSStatus status;
@@ -83,18 +83,21 @@ public class SMSHandler extends ONCWebpageHandler
 				type = EntityType.FAMILY;
 				name = fam.getFirstName() + " " + fam.getLastName();
 				
-				if(body.equalsIgnoreCase("yes") && fam.getLanguage().equals("Spanish"))
+				boolean confirmingBody = body.equals("yes") || body.equals("YES") || body.equals("Yes");
+				boolean decliningBody = body.equals("no") || body.equals("NO") || body.equals("No");
+				
+				if(confirmingBody && fam.getLanguage().equals("Spanish"))
 					replyContent =String.format("%s, gracias por confirmar la entrega de los regalos de ONC el domingo 15 de diciembre entre la 1 a las 4 de la tarde.", name);
-				else if(body.equalsIgnoreCase("yes") && !fam.getLanguage().equals("Spanish"))
+				else if(confirmingBody && !fam.getLanguage().equals("Spanish"))
 					replyContent =String.format("%s, thank you for confirming ONC gift delivery on Sunday, December 15th between 1-4pm", name);
-				else if(body.equalsIgnoreCase("no") && fam.getLanguage().equals("Spanish"))
+				else if(decliningBody && fam.getLanguage().equals("Spanish"))
 					replyContent =String.format("%s, respondiste \"NO\" así que no podemos confirmar la entrega de los regalos. Comunica con la escuela de su hijo si ya no necesitas asistencia o si su dirección de entrega ha cambiado.", name);
-				else if(body.equalsIgnoreCase("no") && !fam.getLanguage().equals("Spanish"))
+				else if(decliningBody && !fam.getLanguage().equals("Spanish"))
 					replyContent =String.format("%s, you replied \"NO\" and we are unable to confirm your gift delivery. Please contact your child's school if you are no longer in need of assistance, or if your delivery address has changed.", name);
 				else if(fam.getLanguage().equals("Spanish"))
 					replyContent = "Solo aceptamos confirmaciones de \"YES\" o \"NO\"";
 				else
-					replyContent = "We are only able to process delivery confirmations (Yes or No)."; 
+					replyContent = "We are only able to process delivery confirmations (YES or NO)."; 
 			}
 //			else
 //			{

@@ -1103,7 +1103,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//the family's family status to Confirmed or Contacted
 			ONCFamily fam = fAL.get(i);
 			
-			if(receivedSMS.getBody().equalsIgnoreCase("yes") && fam.getFamilyStatus() == FamilyStatus.Contacted)
+			String body = receivedSMS.getBody().trim();
+			boolean confirmingBody = body.equals("yes") || body.equals("YES") || body.equals("Yes");
+			boolean decliningBody = body.equals("no") || body.equals("NO") || body.equals("No");
+			
+			if(confirmingBody && fam.getFamilyStatus() == FamilyStatus.Contacted)
 			{
 				fam.setFamilyStatus(FamilyStatus.Confirmed);
 				familyDB.get(DBManager.offset(year)).setChanged(true);
@@ -1113,7 +1117,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
 	    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 			}
-			else if(receivedSMS.getBody().equalsIgnoreCase("no") && fam.getFamilyStatus() == FamilyStatus.Confirmed)
+			else if(decliningBody && fam.getFamilyStatus() == FamilyStatus.Confirmed)
 			{
 				fam.setFamilyStatus(FamilyStatus.Contacted);
 				familyDB.get(DBManager.offset(year)).setChanged(true);
