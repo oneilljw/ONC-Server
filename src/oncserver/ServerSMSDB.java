@@ -152,12 +152,15 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 		
 		if(phoneChoice >= 0 && phoneChoice <= 1)	//validate the phone choice range
 		{	
+			String[] phones = f.getCellPhone().split("\\r?\\n");
+			String cellPhone = phones[0];
+			
 			if(phoneChoice == 0)	//home phone
 			{
 				if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
 					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
-				else if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
-					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getCellPhone()));
+				else if(!cellPhone.isEmpty() && cellPhone.trim().length() == 12)
+					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(cellPhone));
 			}
 			
 			//we've found the family, now check to see if we have a phone number to use
@@ -165,8 +168,8 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 			//if not add the primary phone.
 			if(phoneChoice == 1)	//cell phone
 			{
-				if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
-					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getCellPhone()));
+				if(!cellPhone.isEmpty() && cellPhone.trim().length() == 12)
+					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(cellPhone));
 				else if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
 					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
 			}
