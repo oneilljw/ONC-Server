@@ -24,7 +24,8 @@ public class TwilioIF
 	// Find your Account Sid and Token at twilio.com/console
     // DANGER! This is insecure. See http://twil.io/secure
     private static final String ONC_TWILIO_NUMBER = "+15716654028";
-    private static final String SMS_STATUS_CALLBACK = "https://34.224.169.163:8902/sms-update";
+    private static final String SMS_STATUS_CALLBACK = "https://34.234.112.242:8902/sms-update";	//production server
+//  private static final String SMS_STATUS_CALLBACK = "https://34.224.169.163:8902/sms-update";	//development server
 
     private static TwilioIF instance;
     private ServerSMSDB smsDB;
