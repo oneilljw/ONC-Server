@@ -1164,10 +1164,26 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	void checkFamilyStatusOnSMSStatusCallback(int year, ONCSMS receivedSMS)
 	{
 		ONCFamily fam = getFamily(year, receivedSMS.getEntityID());
-		if(fam != null && receivedSMS.getStatus() == SMSStatus.DELIVERED && 
+		if(fam != null && (receivedSMS.getStatus() == SMSStatus.SENT ||  receivedSMS.getStatus() == SMSStatus.DELIVERED) && 
 				(fam.getFamilyStatus() == FamilyStatus.Waitlist || fam.getFamilyStatus() == FamilyStatus.Verified))
 		{
+			//sometimes we don't get a DELIVERD status from the super carrier, so we'll accept a SENT status.
 			fam.setFamilyStatus(FamilyStatus.Contacted);
+			familyDB.get(DBManager.offset(year)).setChanged(true);
+			
+			//notify all in-year clients of the status change
+			Gson gson = new Gson();
+    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+		}
+		else if(fam != null && 
+				(receivedSMS.getStatus() == SMSStatus.UNDELIVERED || receivedSMS.getStatus() == SMSStatus.FAILED) && 
+				 fam.getFamilyStatus() == FamilyStatus.Contacted )
+		{
+			//message status updated to UNDELIVERED. If we already changed the family status to Contacted, change
+			//it back to either Waitlist or Verified.
+			FamilyStatus newStatus = fam.getDNSCode() == DNSCode.DNS_CODE_WAITLIST ? FamilyStatus.Waitlist : FamilyStatus.Verified;
+			fam.setFamilyStatus(newStatus);
 			familyDB.get(DBManager.offset(year)).setChanged(true);
 			
 			//notify all in-year clients of the status change

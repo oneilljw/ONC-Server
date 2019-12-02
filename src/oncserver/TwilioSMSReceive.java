@@ -73,6 +73,7 @@ public class TwilioSMSReceive extends ONCObject
 		this.NumMedia = nextLine[16];
 		this.From = nextLine[17];
 		this.FromZip = nextLine[18];
+		this.timestamp = nextLine[19].isEmpty() ? 0 : Long.parseLong(nextLine[19]);
 	}
 	
 	//getters
