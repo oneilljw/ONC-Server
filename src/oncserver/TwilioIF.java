@@ -31,7 +31,7 @@ public class TwilioIF
 //	private static final String SMS_STATUS_CALLBACK = "https://34.224.169.163:8902/sms-update";	//development server
     
     private static final int TWILIO_PARAMS_HEADER_LENGTH = 2;
-	private static final String TWILIO_PARAMS_FILENAME = "TwilioParamaters.csv";
+	private static final String TWILIO_PARAMS_FILENAME = "TwilioParameters.csv";
 
     private static TwilioIF instance;
     private ServerSMSDB smsDB;
@@ -69,13 +69,13 @@ public class TwilioIF
     	
 		if((header = reader.readNext()) != null)	//Does file have records? 
 		{
-    			//Read the User File
+    			//Read the Twilio parameter File
     			if(header.length == TWILIO_PARAMS_HEADER_LENGTH)	//Does the record have the right # of fields? 
     			{
     				if((nextLine = reader.readNext()) != null)
     				{	
     					//Read first line, it's the parameters
-    					twilioPhoneNumber = nextLine[0].isEmpty() ? null : nextLine[0];
+    					twilioPhoneNumber = nextLine[0].isEmpty() ? null : "+1" + nextLine[0];
     					twilioSMSStatusCallbackURL = nextLine[1].isEmpty() ? null : nextLine[1];		
     				}	
     			}
@@ -175,7 +175,7 @@ public class TwilioIF
      		
      	void sendSMS(ONCSMS requestedSMS) 
      	{	
-     		if(twilioPhoneNumber != null && twilioPhoneNumber.length() == 10 &&
+     		if(twilioPhoneNumber != null && twilioPhoneNumber.startsWith("+1") && twilioPhoneNumber.length() == 12 &&
      			twilioSMSStatusCallbackURL != null && !twilioSMSStatusCallbackURL.isEmpty())
      		{	
      			Message message = Message.creator(
