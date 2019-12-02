@@ -496,7 +496,7 @@ public class ServerRegionDB extends ServerPermanentDB
 		URL dirurl= null;
 		try 
 		{
-			dirurl = new URL(GEOCODE_URL + address + "&key=AIzaSyBtlgXPY8LqmSSs3V6SRrT6dW0oEpAHAZg");
+			dirurl = new URL(GEOCODE_URL + address + "&key=" + ServerEncryptionManager.getKey("key1"));
 		} 
 		catch (MalformedURLException e2) 
 		{
