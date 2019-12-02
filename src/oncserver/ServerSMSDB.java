@@ -9,6 +9,7 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import ourneighborschild.DNSCode;
 import ourneighborschild.EntityType;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCSMS;
@@ -19,7 +20,7 @@ import ourneighborschild.SMSStatus;
 
 public class ServerSMSDB extends ServerSeasonalDB
 {
-private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
+	private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 	
 	private static ServerSMSDB instance = null;
 	private static List<SMSDBYear> smsDB;
@@ -180,16 +181,41 @@ private static final int SMS_RECEIVE_DB_HEADER_LENGTH = 9;
 	
 	String getSMSBody(ONCFamily f)
 	{
-		if(f.getLanguage().equals("Spanish"))
+		if(f.getLanguage().equals("Spanish")  && f.getDNSCode() == -1)
+		{
 			return "Our Neighbors Child (ONC): responde \"YES\" para confirmar que un adulto estará en casa "
 					+ "para recibir los regalos de sus hijos el domingo 15 de diciembre. Los voluntarios "
 					+ "entregarán entre la 1 y las 4 de la tarde. Responde \"NO\" si no puedes confirmar que "
 					+ "un adulto estará en casa para la entrega de regalos el 15 de diciembre";
-		else
+		}
+		else if(!f.getLanguage().equals("Spanish")  && f.getDNSCode() == -1)
+		{	
 			return "Our Neighbors Child (ONC): Reply \"YES\" to confirm an adult will be "
 					+ "home to receive your children's gifts on Sunday, December 15. Volunteers will "
 					+ "deliver between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
-					+ "be home for gift delivery on December 15.";		
+					+ "be home for gift delivery on December 15.";
+		}
+		else if(f.getLanguage().equals("Spanish")  && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
+		{
+			 String response = String.format("Our Neighbors Child (ONC): La remisión de la lista de espera "
+			 		+ "ha sido aceptado. Responda \"YES\" para confirmar que un adulto estará en casa para "
+			 		+ "recibir los regalos por edad para los ninos con menos de doce años el domingo, "
+			 		+ "15 de diciembre. Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. "
+			 		+ "Responda \"NO\" si no puedes confirmar que un adulto estará en casa para la entrega "
+			 		+ "de los regalos el 15 de diciembre.", 
+					f.getHouseNum().trim(), f.getStreet().trim(), f.getUnit().trim());
+			 return response;
+		}
+		else
+		{	
+			String response = String.format("Our Neighbors Child (ONC): Your \"Wait List\" referral has been "
+					+ "accepted. Reply \"YES\" to confirm an adult will be home to receive age appropriate gifts "
+					+ "for each child 12 and under on Sunday, December 15. Volunteers will deliver to %s %s %s "
+					+ "anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
+					+ "be home for gift delivery on December 15.",
+					f.getHouseNum().trim(), f.getStreet().trim(), f.getUnit().trim());
+			return response;
+		}
 	}
 	
 	//callback from Twilio IF when validation task completes

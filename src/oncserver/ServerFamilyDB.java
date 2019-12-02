@@ -1165,7 +1165,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	{
 		ONCFamily fam = getFamily(year, receivedSMS.getEntityID());
 		if(fam != null && receivedSMS.getStatus() == SMSStatus.DELIVERED && 
-				fam.getFamilyStatus() == FamilyStatus.Verified)
+				(fam.getFamilyStatus() == FamilyStatus.Waitlist || fam.getFamilyStatus() == FamilyStatus.Verified))
 		{
 			fam.setFamilyStatus(FamilyStatus.Contacted);
 			familyDB.get(DBManager.offset(year)).setChanged(true);

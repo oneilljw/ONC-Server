@@ -68,7 +68,7 @@ public class SMSHandler extends ONCWebpageHandler
 			EntityType type = EntityType.UNKNOWN;
 			String name = "Anonymous";
 			String body = rec_SMS.getBody().trim();
-			String replyContent = "Unable to process messages from unregistered numbers.";
+			String replyContent = "ONC automation is unable to process messages from unregistered numbers.";
 			
 			SMSStatus status;
 			try { status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase()); }
