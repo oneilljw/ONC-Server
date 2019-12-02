@@ -181,40 +181,58 @@ public class ServerSMSDB extends ServerSeasonalDB
 	
 	String getSMSBody(ONCFamily f)
 	{
+		//determine if the family has a different address for delivery
+		String houseNum, street, unit;
+		String[] addressPart;
+		if(!f.getSubstituteDeliveryAddress().isEmpty() && 
+			(addressPart = f.getSubstituteDeliveryAddress().split("_")).length == 5)
+		{
+			houseNum = addressPart[0].trim();
+			street = addressPart[1].trim();
+			unit = addressPart[2].trim();
+		}
+		else
+		{
+			houseNum = f.getHouseNum().trim();
+			street = f.getStreet().trim();
+			unit = f.getUnit().trim();
+		}
+		
+		//determine which response to send
 		if(f.getLanguage().equals("Spanish")  && f.getDNSCode() == -1)
 		{
-			return "Our Neighbors Child (ONC): responde \"YES\" para confirmar que un adulto estará en casa "
-					+ "para recibir los regalos de sus hijos el domingo 15 de diciembre. Los voluntarios "
-					+ "entregarán entre la 1 y las 4 de la tarde. Responde \"NO\" si no puedes confirmar que "
-					+ "un adulto estará en casa para la entrega de regalos el 15 de diciembre";
+			return String.format("Our Neighbors Child (ONC): responde \"YES\" para confirmar que un adulto "
+					+ "estará en casa para recibir los regalos de sus hijos el domingo 15 de diciembre. "
+					+ "Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. Responde \"NO\" "
+					+ "si no puedes confirmar que un adulto estará en casa para la entrega de regalos el 15 de diciembre.",
+					houseNum, street, unit);
 		}
 		else if(!f.getLanguage().equals("Spanish")  && f.getDNSCode() == -1)
 		{	
-			return "Our Neighbors Child (ONC): Reply \"YES\" to confirm an adult will be "
+			return String.format("Our Neighbors Child (ONC): Reply \"YES\" to confirm an adult will be "
 					+ "home to receive your children's gifts on Sunday, December 15. Volunteers will "
-					+ "deliver between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
-					+ "be home for gift delivery on December 15.";
+					+ "deliver to %s %s %s between 1 and 4PM. Reply \"NO\" if you are unable to confirm an "
+					+ "adult will be home for gift delivery on December 15.",
+					houseNum, street, unit);
 		}
 		else if(f.getLanguage().equals("Spanish")  && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
 		{
-			 String response = String.format("Our Neighbors Child (ONC): La remisión de la lista de espera "
+			return String.format("Our Neighbors Child (ONC): La remisión de la lista de espera "
 			 		+ "ha sido aceptado. Responda \"YES\" para confirmar que un adulto estará en casa para "
 			 		+ "recibir los regalos por edad para los ninos con menos de doce años el domingo, "
 			 		+ "15 de diciembre. Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. "
 			 		+ "Responda \"NO\" si no puedes confirmar que un adulto estará en casa para la entrega "
 			 		+ "de los regalos el 15 de diciembre.", 
-					f.getHouseNum().trim(), f.getStreet().trim(), f.getUnit().trim());
-			 return response;
+					houseNum, street, unit);
 		}
 		else
 		{	
-			String response = String.format("Our Neighbors Child (ONC): Your \"Wait List\" referral has been "
+			return String.format("Our Neighbors Child (ONC): Your \"Wait List\" referral has been "
 					+ "accepted. Reply \"YES\" to confirm an adult will be home to receive age appropriate gifts "
 					+ "for each child 12 and under on Sunday, December 15. Volunteers will deliver to %s %s %s "
 					+ "anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
 					+ "be home for gift delivery on December 15.",
-					f.getHouseNum().trim(), f.getStreet().trim(), f.getUnit().trim());
-			return response;
+					houseNum, street, unit);
 		}
 	}
 	
@@ -258,21 +276,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		
 		ServerUI.addDebugMessage(response);
 	}
-/*	
-	//callback from Twilio IF when background task completes
-	void twilioRequestComplete(SMSRequest request, List<ONCSMS> sentSMSList)
-	{	
-		//add the sms objects to the data base and notify clients
-		List<String> addedSMSList = addSMSRequestList(request.getYear(), sentSMSList);
-		
-		//notify all in year clients of added SMS messages
-		if(addedSMSList != null && !addedSMSList.isEmpty())
-		{
-			ClientManager clientMgr = ClientManager.getInstance();
-			clientMgr.notifyAllInYearClients(request.getYear(), addedSMSList);
-		}
-	}
-*/	
+
 	List<String> addSMSRequestList(int year, List<ONCSMS> reqList)
 	{	
 		Gson gson = new Gson();

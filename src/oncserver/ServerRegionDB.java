@@ -165,15 +165,10 @@ public class ServerRegionDB extends ServerPermanentDB
 	
 	String getServedSchools()
 	{
-		List<School> esSchoolList = new ArrayList<School>();
-		for(School sch : schoolList)
-			if(sch.getType() == SchoolType.ES)
-				esSchoolList.add(sch);
-		
 		Gson gson = new Gson();
 		Type listOfSchools = new TypeToken<ArrayList<School>>(){}.getType();
 		
-		String response = gson.toJson(esSchoolList, listOfSchools);
+		String response = gson.toJson(schoolList, listOfSchools);
 		return response;	
 	}
 	

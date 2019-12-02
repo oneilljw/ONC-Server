@@ -1,6 +1,7 @@
 package oncserver;
 
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.rest.lookups.v1.PhoneNumber;
 
+import au.com.bytecode.opencsv.CSVReader;
 import ourneighborschild.ONCSMS;
 import ourneighborschild.SMSDirection;
 import ourneighborschild.SMSRequest;
@@ -23,17 +25,26 @@ public class TwilioIF
 {
 	// Find your Account Sid and Token at twilio.com/console
     // DANGER! This is insecure. See http://twil.io/secure
-	private static final String ONC_TWILIO_PHONE_NUMBER = "+15716654028";	//production server
+//	private static final String ONC_TWILIO_PHONE_NUMBER = "+15716654028";	//production server
 //	private static final String ONC_TWILIO_PHONE_NUMBER = "+15716654044";	//development server
-    private static final String SMS_STATUS_CALLBACK = "https://34.234.112.242:8902/sms-update";	//production server
+//  private static final String SMS_STATUS_CALLBACK = "https://34.234.112.242:8902/sms-update";	//production server
 //	private static final String SMS_STATUS_CALLBACK = "https://34.224.169.163:8902/sms-update";	//development server
+    
+    private static final int TWILIO_PARAMS_HEADER_LENGTH = 2;
+	private static final String TWILIO_PARAMS_FILENAME = "TwilioParamaters.csv";
 
     private static TwilioIF instance;
     private ServerSMSDB smsDB;
     
+    private String twilioPhoneNumber;
+    private String twilioSMSStatusCallbackURL;
+    
     private TwilioIF() throws FileNotFoundException, IOException
     {	
     		smsDB = ServerSMSDB.getInstance();
+    		
+    		String paramFile = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), TWILIO_PARAMS_FILENAME);
+    		readParamaters(paramFile);
     }
     
     public static TwilioIF getInstance() throws FileNotFoundException, IOException
@@ -42,6 +53,45 @@ public class TwilioIF
 			instance = new TwilioIF();
 		
 		return instance;
+	}
+    
+    /***
+	 * @param year - used to create a default date for the year if the file is empty
+	 * @param file
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	private void readParamaters(String file) throws FileNotFoundException, IOException
+	{
+		CSVReader reader = new CSVReader(new FileReader(file));
+		String[] nextLine, header;
+    	
+		if((header = reader.readNext()) != null)	//Does file have records? 
+		{
+    			//Read the User File
+    			if(header.length == TWILIO_PARAMS_HEADER_LENGTH)	//Does the record have the right # of fields? 
+    			{
+    				if((nextLine = reader.readNext()) != null)
+    				{	
+    					//Read first line, it's the parameters
+    					twilioPhoneNumber = nextLine[0].isEmpty() ? null : nextLine[0];
+    					twilioSMSStatusCallbackURL = nextLine[1].isEmpty() ? null : nextLine[1];		
+    				}	
+    			}
+    			else
+    			{
+    				String error = String.format("Twilio Paramaters file corrupted, header lentgth = %d", header.length);
+    				ServerUI.addDebugMessage(error);
+    			}		   			
+    		}
+    		else
+    		{
+    			String error = String.format("Twilio Paramaters file is empty");
+    			ServerUI.addDebugMessage(error);
+    		}
+    	
+		reader.close();
 	}
     
     /***
@@ -124,25 +174,32 @@ public class TwilioIF
      	}
      		
      	void sendSMS(ONCSMS requestedSMS) 
-     	{	  
-     		Message message = Message.creator(
+     	{	
+     		if(twilioPhoneNumber != null && twilioPhoneNumber.length() == 10 &&
+     			twilioSMSStatusCallbackURL != null && !twilioSMSStatusCallbackURL.isEmpty())
+     		{	
+     			Message message = Message.creator(
      	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
-     	                new com.twilio.type.PhoneNumber(ONC_TWILIO_PHONE_NUMBER),
+     	                new com.twilio.type.PhoneNumber(twilioPhoneNumber),
      	                requestedSMS.getBody())
-     	            .setStatusCallback(URI.create(SMS_STATUS_CALLBACK))
+     	            .setStatusCallback(URI.create(twilioSMSStatusCallbackURL))
      	            .create();
      	        
-     	        if(message.getErrorCode() == null)
-     	        {
-     	        		if(message.getDirection().toString().equals("outbound-api"))
-     	        			requestedSMS.setDirection(SMSDirection.OUTBOUND_API);
+     	        		if(message.getErrorCode() == null)
+     	        		{
+     	        			if(message.getDirection().toString().equals("outbound-api"))
+     	        				requestedSMS.setDirection(SMSDirection.OUTBOUND_API);
      	        		
-     	        		requestedSMS.setMessageSID(message.getSid());
-     	        		requestedSMS.setStatus(SMSStatus.valueOf(message.getStatus().toString().toUpperCase()));
-     	        }
+     	        			requestedSMS.setMessageSID(message.getSid());
+     	        			requestedSMS.setStatus(SMSStatus.valueOf(message.getStatus().toString().toUpperCase()));
+     	        		}
      	        
-     	        ServerUI.addDebugMessage(String.format("SMS Mssg Sent %s %s", message.getSid(), message.getTo()));
-     	    }
+     	        		ServerUI.addDebugMessage(String.format("SMS Mssg Sent %s %s", message.getSid(), message.getTo()));
+     		}
+     		else
+     			ServerUI.addDebugMessage(String.format("SMS Mssg: Invalid Twilio phone number %s or URL %s",
+     					twilioPhoneNumber, twilioSMSStatusCallbackURL));
+     	}
 /*     	    
      	   SMSStatus fetchMessage(String messageSID)
      	    {
