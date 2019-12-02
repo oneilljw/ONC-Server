@@ -24,7 +24,6 @@ import javax.swing.JOptionPane;
 import ourneighborschild.Address;
 import ourneighborschild.Region;
 import ourneighborschild.School;
-import ourneighborschild.SchoolType;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
