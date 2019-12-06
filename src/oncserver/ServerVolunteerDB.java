@@ -403,7 +403,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			if(bWarehouseSignIn)
 			{
 				updatedVol.setSignIns(updatedVol.getSignIns() + 1);
-				updatedVol.setDateChanged(new Date());
+				updatedVol.setDateChanged(System.currentTimeMillis());
 			}
 			
 			//A DESIGN QUESTION IS SHOULD WE CHANGE THE GROUP FIELD FROM A STRING TO AN INTEGER AND
@@ -459,7 +459,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 					volParams.get("delcity"), volParams.get("delzipcode"),
 					volParams.get("primaryphone"), volParams.get("primaryphone"),
 					volParams.get("group").equals("Other") ? volParams.get("groupother") : volParams.get("group"),
-					volParams.get("comment"), new Date(), website);
+					volParams.get("comment"), System.currentTimeMillis(), website);
 			
 			addedVol.setID(volDBYear.getNextID());
 			if(bWarehouseSignIn)	
