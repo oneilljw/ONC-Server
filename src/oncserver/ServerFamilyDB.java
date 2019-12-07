@@ -1086,7 +1086,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	ONCFamily smsMessageReceived(int year, TwilioSMSReceive receivedSMS)
+	ONCFamily smsMessageReceived(int year, TwilioSMSReceive receivedSMS, boolean bDeliveryTimeframe,
+									boolean bConfirmingBody, boolean bDecliningBody)
 	{
 		String formatedPhoneNum = formatPhoneNumber(receivedSMS.getFrom().substring(2));
 		
@@ -1103,32 +1104,35 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//the family's family status to Confirmed or Contacted
 			ONCFamily fam = fAL.get(i);
 			
-			String body = receivedSMS.getBody().trim();
-			boolean confirmingBody = body.equals("yes") || body.equals("YES") || body.equals("Yes");
-			boolean decliningBody = body.equals("no") || body.equals("NO") || body.equals("No");
-			
-			if(confirmingBody && fam.getFamilyStatus() == FamilyStatus.Contacted)
+			//if the family has already confirmed and it's in the time frame of delivery, we don't want
+			//to change family status regardless of what response we get.
+			if(!bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
 			{
-				fam.setFamilyStatus(FamilyStatus.Confirmed);
-				familyDB.get(DBManager.offset(year)).setChanged(true);
+				//it's not around delivery day or the family wasn't already confirmed, 
+				//so we potentially want to change family status.
+				if(bConfirmingBody && fam.getFamilyStatus() == FamilyStatus.Contacted)
+				{
+					fam.setFamilyStatus(FamilyStatus.Confirmed);
+					familyDB.get(DBManager.offset(year)).setChanged(true);
 				
-				//notify all in-year clients of the status change
-				Gson gson = new Gson();
-	    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-	    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
-			}
-			else if(decliningBody && fam.getFamilyStatus() == FamilyStatus.Confirmed)
-			{
-				fam.setFamilyStatus(FamilyStatus.Contacted);
-				familyDB.get(DBManager.offset(year)).setChanged(true);
+					//notify all in-year clients of the status change
+					Gson gson = new Gson();
+	    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+	    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+				}
+				else if(bDecliningBody && fam.getFamilyStatus() == FamilyStatus.Confirmed)
+				{
+					fam.setFamilyStatus(FamilyStatus.Contacted);
+					familyDB.get(DBManager.offset(year)).setChanged(true);
 				
-				//notify all in-year clients of the status change
-				Gson gson = new Gson();
-	    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-	    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+					//notify all in-year clients of the status change
+					Gson gson = new Gson();
+	    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+	    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+				}
 			}
 			
-			return fAL.get(i);
+			return fam;
 		}
 		else
 			return null;
@@ -1164,32 +1168,37 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	void checkFamilyStatusOnSMSStatusCallback(int year, ONCSMS receivedSMS)
 	{
 		ONCFamily fam = getFamily(year, receivedSMS.getEntityID());
-		if(fam != null && (receivedSMS.getStatus() == SMSStatus.SENT ||  receivedSMS.getStatus() == SMSStatus.DELIVERED) && 
+		
+		//we only consider changing family status to Contacted based on outgoing message status if the family 
+		//has not yet confirmed delivery
+		if(fam != null && fam.getFamilyStatus() != FamilyStatus.Confirmed)
+		{	
+			if((receivedSMS.getStatus() == SMSStatus.SENT ||  receivedSMS.getStatus() == SMSStatus.DELIVERED) && 
 				(fam.getFamilyStatus() == FamilyStatus.Waitlist || fam.getFamilyStatus() == FamilyStatus.Verified))
-		{
-			//sometimes we don't get a DELIVERD status from the super carrier, so we'll accept a SENT status.
-			fam.setFamilyStatus(FamilyStatus.Contacted);
-			familyDB.get(DBManager.offset(year)).setChanged(true);
+			{
+				//sometimes we don't get a DELIVERD status from the super carrier, so we'll accept a SENT status.
+				fam.setFamilyStatus(FamilyStatus.Contacted);
+				familyDB.get(DBManager.offset(year)).setChanged(true);
 			
-			//notify all in-year clients of the status change
-			Gson gson = new Gson();
-    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
-		}
-		else if(fam != null && 
-				(receivedSMS.getStatus() == SMSStatus.UNDELIVERED || receivedSMS.getStatus() == SMSStatus.FAILED) && 
-				 fam.getFamilyStatus() == FamilyStatus.Contacted )
-		{
-			//message status updated to UNDELIVERED. If we already changed the family status to Contacted, change
-			//it back to either Waitlist or Verified.
-			FamilyStatus newStatus = fam.getDNSCode() == DNSCode.DNS_CODE_WAITLIST ? FamilyStatus.Waitlist : FamilyStatus.Verified;
-			fam.setFamilyStatus(newStatus);
-			familyDB.get(DBManager.offset(year)).setChanged(true);
+				//notify all in-year clients of the status change
+				Gson gson = new Gson();
+    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+			}
+			else if((receivedSMS.getStatus() == SMSStatus.UNDELIVERED || receivedSMS.getStatus() == SMSStatus.FAILED) && 
+					fam.getFamilyStatus() == FamilyStatus.Contacted )
+			{
+				//message status updated to UNDELIVERED. If we already changed the family status to Contacted, change
+				//it back to either Waitlist or Verified.
+				FamilyStatus newStatus = fam.getDNSCode() == DNSCode.DNS_CODE_WAITLIST ? FamilyStatus.Waitlist : FamilyStatus.Verified;
+				fam.setFamilyStatus(newStatus);
+				familyDB.get(DBManager.offset(year)).setChanged(true);
 			
-			//notify all in-year clients of the status change
-			Gson gson = new Gson();
-    			String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+				//notify all in-year clients of the status change
+				Gson gson = new Gson();
+    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+			}
 		}
 	}
 	

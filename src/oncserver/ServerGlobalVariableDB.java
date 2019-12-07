@@ -116,12 +116,26 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	
 	static boolean isDeliveryDay(int year)
 	{
-		//check if today is delivery day
+		//check if it's the day before or the day of delivery
 		Calendar delDayCal = globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
 		Calendar today = Calendar.getInstance();
 
 		return delDayCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
 				delDayCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR);
+	}
+	
+	static boolean isDayBeforeOrDeliveryDay(int year)
+	{
+		//check if today is delivery day
+		Calendar delDayCal = globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
+		Calendar today = Calendar.getInstance();
+
+		return delDayCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+				(delDayCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) ||
+				 delDayCal.get(Calendar.DAY_OF_YEAR-1) == today.get(Calendar.DAY_OF_YEAR-1));
+		
+		//TEST PURPOSES ONLY
+//		return true;
 	}
 	
 	static Calendar getDeliveryDay(int year)

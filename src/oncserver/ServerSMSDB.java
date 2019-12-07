@@ -104,7 +104,9 @@ public class ServerSMSDB extends ServerSeasonalDB
 
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
-		if(request.getMessageID() > -1 && request.getEntityType() == EntityType.FAMILY)
+		if(request.getMessageID() > 0  && request.getMessageID() < 3 &&
+			request.getPhoneChoice() > 0  && request.getPhoneChoice() < 3 &&
+			 request.getEntityType() == EntityType.FAMILY)
 	    {
 			//for each family in the request, create a ONCSMS request 
 			for(Integer famID : request.getEntityIDList() )
@@ -114,7 +116,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 				if(f != null)
 				{
 					String twilioFormattedPhoneNum = getTwilioFormattedPhoneNumber(f, request.getPhoneChoice());
-					String message = getSMSBody(f);
+					String message = getSMSBody(f, request.getMessageID());
 					
 					if(twilioFormattedPhoneNum != null)
 						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
@@ -151,12 +153,12 @@ public class ServerSMSDB extends ServerSeasonalDB
 	{
 		String twilioFormattedPhoneNum = null;	//initialize returned number
 		
-		if(phoneChoice >= 0 && phoneChoice <= 1)	//validate the phone choice range
+		if(phoneChoice > 0 && phoneChoice < 3)	//validate the phone choice range
 		{	
 			String[] phones = f.getCellPhone().split("\\r?\\n");
 			String cellPhone = phones[0];
 			
-			if(phoneChoice == 0)	//home phone
+			if(phoneChoice == 1)	//primary phone
 			{
 				if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
 					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
@@ -167,7 +169,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 			//we've found the family, now check to see if we have a phone number to use
 			//if the request is to use the alternate phone, use it if it's valid
 			//if not add the primary phone.
-			if(phoneChoice == 1)	//cell phone
+			if(phoneChoice == 2)	//alternate phone
 			{
 				if(!cellPhone.isEmpty() && cellPhone.trim().length() == 12)
 					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(cellPhone));
@@ -179,7 +181,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		return twilioFormattedPhoneNum;
 	}
 	
-	String getSMSBody(ONCFamily f)
+	String getSMSBody(ONCFamily f, int messageID)
 	{
 		//determine if the family has a different address for delivery
 		String houseNum, street, unit;
@@ -198,41 +200,65 @@ public class ServerSMSDB extends ServerSeasonalDB
 			unit = f.getUnit().trim();
 		}
 		
-		//determine which response to send
-		if(f.getLanguage().equals("Spanish")  && f.getDNSCode() == -1)
-		{
-			return String.format("Our Neighbors Child (ONC): responde \"YES\" para confirmar que un adulto "
+		//determine which message to send based on language and message ID
+		if(f.getLanguage().equals("Spanish"))
+		{	
+			if(messageID == 1 && f.getDNSCode() == -1)
+			{
+				return String.format("Our Neighbors Child (ONC): Responde \"YES\" para confirmar que un adulto "
 					+ "estará en casa para recibir los regalos de sus hijos el domingo 15 de diciembre. "
 					+ "Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. Responde \"NO\" "
 					+ "si no puedes confirmar que un adulto estará en casa para la entrega de regalos el 15 de diciembre.",
 					houseNum, street, unit);
-		}
-		else if(!f.getLanguage().equals("Spanish")  && f.getDNSCode() == -1)
-		{	
-			return String.format("Our Neighbors Child (ONC): Reply \"YES\" to confirm an adult will be "
-					+ "home to receive your children's gifts on Sunday, December 15. Volunteers will "
-					+ "deliver to %s %s %s between 1 and 4PM. Reply \"NO\" if you are unable to confirm an "
-					+ "adult will be home for gift delivery on December 15.",
-					houseNum, street, unit);
-		}
-		else if(f.getLanguage().equals("Spanish")  && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
-		{
-			return String.format("Our Neighbors Child (ONC): La remisión de la lista de espera "
-			 		+ "ha sido aceptado. Responda \"YES\" para confirmar que un adulto estará en casa para "
-			 		+ "recibir los regalos por edad para los ninos con menos de doce años el domingo, "
-			 		+ "15 de diciembre. Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. "
-			 		+ "Responda \"NO\" si no puedes confirmar que un adulto estará en casa para la entrega "
-			 		+ "de los regalos el 15 de diciembre.", 
-					houseNum, street, unit);
+			}
+			else if(messageID == 1 && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
+			{
+				return String.format("Our Neighbors Child (ONC): La remisión de la lista de espera "
+				 		+ "ha sido aceptado. Responda \"YES\" para confirmar que un adulto estará en casa para "
+				 		+ "recibir los regalos por edad para los ninos con menos de doce años el domingo, "
+				 		+ "15 de diciembre. Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. "
+				 		+ "Responda \"NO\" si no puedes confirmar que un adulto estará en casa para la entrega "
+				 		+ "de los regalos el 15 de diciembre.", 
+						houseNum, street, unit);
+			}
+			else
+			{
+				//message ID must be 2
+				return String.format("Our Neighbors Child (ONC): Este es un recordatorio de entrega de regalos. "
+						+ "POR FAVOR NO RESPONDA. Un voluntario de ONC entregará los regalos de sus hijos mañana "
+						+ "a %s %s %s en cualquier momento entre la 1 y las 4 p.m. Un adulto debe estar en "
+						+ "casa para aceptar la entrega de regalos.",
+						houseNum, street, unit);
+			}
 		}
 		else
 		{	
-			return String.format("Our Neighbors Child (ONC): Your \"Wait List\" referral has been "
+			//if the family speaks any other primary language besides Spanish, we'll send SMS in English.
+			if(messageID == 1 && f.getDNSCode() == -1)
+			{	
+				return String.format("Our Neighbors Child (ONC): Reply \"YES\" to confirm an adult will be "
+					+ "home to receive your children's gifts on Sunday, December 15. Volunteers will "
+					+ "deliver to %s %s %s anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an "
+					+ "adult will be home for gift delivery on December 15.",
+					houseNum, street, unit);
+			}
+			else if(messageID == 1 && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
+			{	
+				return String.format("Our Neighbors Child (ONC): Your \"Wait List\" referral has been "
 					+ "accepted. Reply \"YES\" to confirm an adult will be home to receive age appropriate gifts "
 					+ "for each child 12 and under on Sunday, December 15. Volunteers will deliver to %s %s %s "
 					+ "anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
 					+ "be home for gift delivery on December 15.",
 					houseNum, street, unit);
+			}
+			else
+			{
+				//message id must be 2
+				return String.format("Our Neighbor’s Child (ONC): This is a gift delivery reminder. PLEASE DO "
+						+ "NOT RESPOND. An ONC volunteer will deliver your children's gifts tomorrow to "
+						+ "%s %s %s anytime between 1 and 4pm. An adult must be home to accept gift delivery.",
+						houseNum, street, unit);
+			}
 		}
 	}
 	
