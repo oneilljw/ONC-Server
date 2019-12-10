@@ -205,7 +205,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		{	
 			if(messageID == 1 && f.getDNSCode() == -1)
 			{
-				return String.format("Our Neighbors Child (ONC): Responde \"YES\" para confirmar que un adulto "
+				return String.format("Our Neighbor's Child (ONC): Responde \"YES\" para confirmar que un adulto "
 					+ "estará en casa para recibir los regalos de sus hijos el domingo 15 de diciembre. "
 					+ "Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. Responde \"NO\" "
 					+ "si no puedes confirmar que un adulto estará en casa para la entrega de regalos el 15 de diciembre.",
@@ -213,7 +213,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 			}
 			else if(messageID == 1 && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
 			{
-				return String.format("Our Neighbors Child (ONC): La remisión de la lista de espera "
+				return String.format("Our Neighbor's Child (ONC): La remisión de la lista de espera "
 				 		+ "ha sido aceptado. Responda \"YES\" para confirmar que un adulto estará en casa para "
 				 		+ "recibir los regalos por edad para los ninos con menos de doce años el domingo, "
 				 		+ "15 de diciembre. Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. "
@@ -224,11 +224,16 @@ public class ServerSMSDB extends ServerSeasonalDB
 			else
 			{
 				//message ID must be 2
-				return String.format("Our Neighbors Child (ONC): Este es un recordatorio de entrega de regalos. "
-						+ "POR FAVOR NO RESPONDA. Un voluntario de ONC entregará los regalos de sus hijos mañana "
-						+ "a %s %s %s en cualquier momento entre la 1 y las 4 p.m. Un adulto debe estar en "
-						+ "casa para aceptar la entrega de regalos.",
+				return String.format("POR FAVOR, NO RESPONDA.\n" 
+						+ "Our Neighbor's Child (ONC): Este mensaje es un recordatorio de entrega de regalos. "
+						+ "Un voluntario de ONC entregará los regalos de sus hijos mañana a %s %s %s entre "
+						+ "las horas de 1 y 4pm. Un adulto debe estar presente en casa para aceptar la entrega.",
 						houseNum, street, unit);
+//				return String.format("Our Neighbors Child (ONC): Este es un recordatorio de entrega de regalos. "
+//						+ "POR FAVOR NO RESPONDA. Un voluntario de ONC entregará los regalos de sus hijos mañana "
+//						+ "a %s %s %s en cualquier momento entre la 1 y las 4 p.m. Un adulto debe estar en "
+//						+ "casa para aceptar la entrega de regalos.",
+//						houseNum, street, unit);
 			}
 		}
 		else
@@ -236,7 +241,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 			//if the family speaks any other primary language besides Spanish, we'll send SMS in English.
 			if(messageID == 1 && f.getDNSCode() == -1)
 			{	
-				return String.format("Our Neighbors Child (ONC): Reply \"YES\" to confirm an adult will be "
+				return String.format("Our Neighbor's Child (ONC): Reply \"YES\" to confirm an adult will be "
 					+ "home to receive your children's gifts on Sunday, December 15. Volunteers will "
 					+ "deliver to %s %s %s anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an "
 					+ "adult will be home for gift delivery on December 15.",
@@ -244,7 +249,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 			}
 			else if(messageID == 1 && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
 			{	
-				return String.format("Our Neighbors Child (ONC): Your \"Wait List\" referral has been "
+				return String.format("Our Neighbor's Child (ONC): Your \"Wait List\" referral has been "
 					+ "accepted. Reply \"YES\" to confirm an adult will be home to receive age appropriate gifts "
 					+ "for each child 12 and under on Sunday, December 15. Volunteers will deliver to %s %s %s "
 					+ "anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "

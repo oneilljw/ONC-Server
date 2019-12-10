@@ -93,7 +93,7 @@ public class SMSHandler extends ONCWebpageHandler
 				if(fam.getLanguage().equals("Spanish"))
 				{
 					if(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
-						replyContent = String.format("%s, nuestro sistema de mensajería automatizado no se supervisa y no puede procesar su respuesta. Gracias.", name);
+						replyContent = String.format("%s, este es un mensaje automatico y no necesario responder. Gracias.", name);
 					else if(bConfirmingBody)
 						replyContent = String.format("%s, gracias por confirmar la entrega de los regalos de ONC el domingo 15 de diciembre entre la 1 a las 4 de la tarde.", name);
 					else if(bDecliningBody)
