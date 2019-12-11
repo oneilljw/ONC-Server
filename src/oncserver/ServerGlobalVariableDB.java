@@ -124,6 +124,8 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 				delDayCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR);
 	}
 	
+	//method determines if today is within one day of delivery day. Both today and delivery day
+	//must be in the same calendar year.
 	static boolean isDayBeforeOrDeliveryDay(int year)
 	{
 		//check if today is delivery day
@@ -132,10 +134,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 
 		return delDayCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
 				(delDayCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) ||
-				 delDayCal.get(Calendar.DAY_OF_YEAR-1) == today.get(Calendar.DAY_OF_YEAR-1));
-		
-		//TEST PURPOSES ONLY
-//		return true;
+				 delDayCal.get(Calendar.DAY_OF_YEAR)-1 == today.get(Calendar.DAY_OF_YEAR));
 	}
 	
 	static Calendar getDeliveryDay(int year)
