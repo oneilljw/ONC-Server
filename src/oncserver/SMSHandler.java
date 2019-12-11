@@ -78,12 +78,15 @@ public class SMSHandler extends ONCWebpageHandler
 			
 			//determine if this is a response to the delivery day reminder
 			boolean bDeliveryTimeframe = ServerGlobalVariableDB.isDayBeforeOrDeliveryDay(DBManager.getCurrentSeason());
+			ServerUI.addDebugMessage(String.format("bDeliveryTimframe= %b", bDeliveryTimeframe));
+			
 			boolean bConfirmingBody = body.equals("yes") || body.equals("YES") || body.equals("Yes");
 			boolean bDecliningBody = body.equals("no") || body.equals("NO") || body.equals("No");
 	
 			//search the familyDB for the incoming phone number
-			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS,
-														bDeliveryTimeframe, bConfirmingBody, bDecliningBody);
+			ONCFamily fam = familyDB.getFamilyBySMS(DBManager.getCurrentSeason(), rec_SMS);
+//			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS,
+//														bDeliveryTimeframe, bConfirmingBody, bDecliningBody);
 			if(fam != null)
 			{
 				id = fam.getID();
@@ -112,6 +115,9 @@ public class SMSHandler extends ONCWebpageHandler
 					else
 						replyContent = "We are only able to process delivery confirmations (YES or NO).";
 				}
+				
+				familyDB.checkFamilyStatusOnSmsReceived(DBManager.getCurrentSeason(), fam, bDeliveryTimeframe,
+														bConfirmingBody, bDecliningBody);
 			}
 //			else
 //			{
