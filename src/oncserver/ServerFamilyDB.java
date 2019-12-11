@@ -1106,7 +1106,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			//if the family has already confirmed and it's in the time frame of delivery, we don't want
 			//to change family status regardless of what response we get.
-			if(!bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
+			if(!(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed))
 			{
 				//it's not around delivery day or the family wasn't already confirmed, 
 				//so we potentially want to change family status.
