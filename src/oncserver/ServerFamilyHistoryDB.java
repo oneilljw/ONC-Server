@@ -141,6 +141,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
 			//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
 			//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
+			//TEMPORARY CHANGE TO RECOVER FROM 2019 ISSUE
 			if(priorHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0 && 
 					addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned)
 			{
