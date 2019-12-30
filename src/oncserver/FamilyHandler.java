@@ -443,7 +443,7 @@ public class FamilyHandler extends ONCWebpageHandler
 															"", "Family Referred", 
 															addedFamily.getChangedBy(), 
 															System.currentTimeMillis(),
-															famDNSCode.getAcronym());
+															famDNSCode.getID());
 		
 				ONCFamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, false);
 				if(addedFamHistory != null)
