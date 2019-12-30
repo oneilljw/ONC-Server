@@ -210,7 +210,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 					+ "estará en casa para recibir los regalos de sus hijos el domingo %s diciembre. "
 					+ "Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. Responde \"NO\" "
 					+ "si no puedes confirmar que un adulto estará en casa para la entrega de regalos el %s diciembre.",
-					zDeliveryDate, houseNum, street, unit);
+					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
 			}
 			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
 			{
@@ -220,7 +220,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 				 		+ "%s diciembre. Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. "
 				 		+ "Responda \"NO\" si no puedes confirmar que un adulto estará en casa para la entrega "
 				 		+ "de los regalos el %s diciembre.", 
-				 		zDeliveryDate, houseNum, street, unit);
+				 		zDeliveryDate, houseNum, street, unit, zDeliveryDate);
 			}
 			else
 			{
@@ -241,7 +241,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 					+ "home to receive your children's gifts on Sunday, December %s. Volunteers will "
 					+ "deliver to %s %s %s anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an "
 					+ "adult will be home for gift delivery on December %s.",
-					zDeliveryDate, houseNum, street, unit);
+					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
 			}
 			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
 			{	
@@ -249,8 +249,8 @@ public class ServerSMSDB extends ServerSeasonalDB
 					+ "accepted. Reply \"YES\" to confirm an adult will be home to receive age appropriate gifts "
 					+ "for each child 12 and under on Sunday, December %s. Volunteers will deliver to %s %s %s "
 					+ "anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
-					+ "be home for gift delivery on December %s.",
-					zDeliveryDate, houseNum, street, unit);
+					+ "be home for gift delivery on December %s.", 
+					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
 			}
 			else
 			{
