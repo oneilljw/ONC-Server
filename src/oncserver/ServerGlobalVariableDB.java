@@ -114,6 +114,29 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 			return null;
 	}
 	
+	static String getDeliveryDayOfMonth(int year, String language)
+	{
+		//returns a string of the day of the month of delivery with suffix
+		Calendar delDayCal = globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
+		int deliveryDayOfMonth = delDayCal.get(Calendar.DAY_OF_MONTH);
+		
+		if(language.equals("Spansih"))
+		{
+			return Integer.toString(deliveryDayOfMonth) + " de";
+		}
+		else
+		{
+			if(deliveryDayOfMonth == 1 || deliveryDayOfMonth == 21 || deliveryDayOfMonth == 31)
+				return Integer.toString(deliveryDayOfMonth) + "st";
+			if(deliveryDayOfMonth == 2 || deliveryDayOfMonth == 22)
+				return Integer.toString(deliveryDayOfMonth) +"nd";
+			else if(deliveryDayOfMonth == 3 || deliveryDayOfMonth == 23)
+				return Integer.toString(deliveryDayOfMonth) + "rd";
+			else
+				return Integer.toString(deliveryDayOfMonth)+ "th";
+		}
+	}
+	
 	static boolean isDeliveryDay(int year)
 	{
 		//check if it's the day before or the day of delivery

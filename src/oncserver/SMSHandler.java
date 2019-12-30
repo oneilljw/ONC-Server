@@ -78,27 +78,25 @@ public class SMSHandler extends ONCWebpageHandler
 			
 			//determine if this is a response to the delivery day reminder
 			boolean bDeliveryTimeframe = ServerGlobalVariableDB.isDayBeforeOrDeliveryDay(DBManager.getCurrentSeason());
-			ServerUI.addDebugMessage(String.format("bDeliveryTimframe= %b", bDeliveryTimeframe));
-			
 			boolean bConfirmingBody = body.equals("yes") || body.equals("YES") || body.equals("Yes");
 			boolean bDecliningBody = body.equals("no") || body.equals("NO") || body.equals("No");
 	
 			//search the familyDB for the incoming phone number
 			ONCFamily fam = familyDB.getFamilyBySMS(DBManager.getCurrentSeason(), rec_SMS);
-//			ONCFamily fam = familyDB.smsMessageReceived(DBManager.getCurrentSeason(), rec_SMS,
-//														bDeliveryTimeframe, bConfirmingBody, bDecliningBody);
+
 			if(fam != null)
 			{
 				id = fam.getID();
 				type = EntityType.FAMILY;
 				name = fam.getFirstName() + " " + fam.getLastName();
+				String zDeliveryDate = ServerGlobalVariableDB.getDeliveryDayOfMonth(DBManager.getCurrentSeason(),  fam.getLanguage());
 				
 				if(fam.getLanguage().equals("Spanish"))
 				{
 					if(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
 						replyContent = String.format("%s, este es un mensaje automatico y no necesario responder. Gracias.", name);
 					else if(bConfirmingBody)
-						replyContent = String.format("%s, gracias por confirmar la entrega de los regalos de ONC el domingo 15 de diciembre entre la 1 a las 4 de la tarde.", name);
+						replyContent = String.format("%s, gracias por confirmar la entrega de los regalos de ONC el domingo %s diciembre entre la 1 a las 4 de la tarde.", name, zDeliveryDate);
 					else if(bDecliningBody)
 						replyContent = String.format("%s, respondiste \"NO\" así que no podemos confirmar la entrega de los regalos. Comunica con la escuela de su hijo si ya no necesitas asistencia o si su dirección de entrega ha cambiado.", name);
 					else
@@ -109,7 +107,7 @@ public class SMSHandler extends ONCWebpageHandler
 					if(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
 						replyContent = String.format("%s, our automated messaging system is not monitored and not able to process your response. Thank you.", name);
 					else if(bConfirmingBody)
-						replyContent = String.format("%s, thank you for confirming ONC gift delivery on Sunday, December 15th between 1-4pm.", name);
+						replyContent = String.format("%s, thank you for confirming ONC gift delivery on Sunday, December %s between 1-4pm.", name, zDeliveryDate);
 					else if(bDecliningBody)
 						replyContent = String.format("%s, you replied \\\"NO\\\" and we are unable to confirm your gift delivery. Please contact your child's school if you are no longer in need of assistance, or if your delivery address has changed.", name);
 					else

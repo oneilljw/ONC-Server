@@ -1100,29 +1100,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-//	ONCFamily smsMessageReceived(int year, TwilioSMSReceive receivedSMS, boolean bDeliveryTimeframe,
-//									boolean bConfirmingBody, boolean bDecliningBody)
 	void checkFamilyStatusOnSmsReceived(int year, ONCFamily fam, boolean bDeliveryTimeframe, boolean bConfirmingBody,
 										boolean bDecliningBody)
 	{
-//		String formatedPhoneNum = formatPhoneNumber(receivedSMS.getFrom().substring(2));
-		
-//		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
-//		int i;
-//		for(i=0; i<fAL.size(); i++)
-//			if(formatPhoneNumber(fAL.get(i).getHomePhone()).equals(formatedPhoneNum) ||
-//				formatPhoneNumber(fAL.get(i).getCellPhone()).equals(formatedPhoneNum))
-//				break;
-//		
-//		if(i < fAL.size())
 		if(fam != null);
 		{
-//			//found the family. If the SMS Message is confirming delivery, check and potentially change
-//			//the family's family status to Confirmed or Contacted
-//			ONCFamily fam = fAL.get(i);
-			
-			//if the family has already confirmed and it's in the time frame of delivery, we don't want
-			//to change family status regardless of what response we get.
 			if(!(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed))
 			{
 				//it's not around delivery day or the family wasn't already confirmed, 
@@ -1148,11 +1130,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 				}
 			}
-			
-//			return fam;
 		}
-//		else
-//			return null;
 	}
 
 	
