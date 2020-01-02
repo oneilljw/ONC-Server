@@ -152,6 +152,7 @@ public class ONCServer
 		serverUI.setStoplight(0, "Server started");	//Set server status to green - running
 		
 		serverUI.addUIAndLogMessage("App Server Interface Loop started");
+		serverUI.addUIAndLogMessage(String.format("System current time in millis: %d", System.currentTimeMillis()));
 		
 		serverUI.btnStartServer.setVisible(false);
 		serverUI.btnStopServer.setVisible(true);
