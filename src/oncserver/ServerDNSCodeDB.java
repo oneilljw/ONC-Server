@@ -102,7 +102,7 @@ public class ServerDNSCodeDB extends ServerPermanentDB
 		DNSCode addDNSCodeReq = gson.fromJson(json, DNSCode.class);
 		
 		addDNSCodeReq.setID(nextID++);
-		addDNSCodeReq.setDateChanged(new Date());
+		addDNSCodeReq.setDateChanged(System.currentTimeMillis());
 		addDNSCodeReq.setChangedBy(client.getLNFI());
 		dnsCodeList.add(addDNSCodeReq);
 		bSaveRequired = true;
@@ -128,7 +128,7 @@ public class ServerDNSCodeDB extends ServerPermanentDB
 		}
 		else
 		{
-			reqDNSCode.setDateChanged(new Date());
+			reqDNSCode.setDateChanged(System.currentTimeMillis());
 			reqDNSCode.setChangedBy(client.getLNFI());
 			dnsCodeList.set(index, reqDNSCode);
 			bSaveRequired = true;

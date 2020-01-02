@@ -265,7 +265,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		ActivityDBYear activityDBYear = activityDB.get(DBManager.offset(year));
 		
 		addedActivity.setID(activityDBYear.getNextID());
-		addedActivity.setDateChanged(new Date());
+		addedActivity.setDateChanged(System.currentTimeMillis());
 		addedActivity.setChangedBy(client.getLNFI());
 		addedActivity.setStoplightChangedBy(client.getLNFI());
 		
@@ -281,7 +281,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		ActivityDBYear activityDBYear = activityDB.get(DBManager.offset(year));
 		
 		addedActivity.setID(activityDBYear.getNextID());
-		addedActivity.setDateChanged(new Date());
+		addedActivity.setDateChanged(System.currentTimeMillis());
 		
 		activityDBYear.add(addedActivity);
 		activityDBYear.setChanged(true);
@@ -295,7 +295,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		//Create an object from the json for the updated activity
 		Gson gson = new Gson();
 		Activity updatedActivity = gson.fromJson(json, Activity.class);
-		updatedActivity.setDateChanged(new Date());
+		updatedActivity.setDateChanged(System.currentTimeMillis());
 		
 		//Find the current activity being updated
 		ActivityDBYear activityDBYear = activityDB.get(DBManager.offset(year));

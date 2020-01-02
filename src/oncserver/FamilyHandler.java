@@ -358,7 +358,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					{
 						MealType reqMealType = MealType.valueOf(mealMap.get("mealtype"));
 						mealReq = new ONCMeal(-1, -1, MealStatus.Requested, reqMealType,
-								dietRestrictions, -1, wc.getWebUser().getLNFI(), new Date(), 3,
+								dietRestrictions, -1, wc.getWebUser().getLNFI(), System.currentTimeMillis(), 3,
 								"Family Referred", wc.getWebUser().getLNFI());
 			
 						addedMeal = mealDB.add(year, mealReq);
@@ -684,7 +684,7 @@ public class FamilyHandler extends ONCWebpageHandler
 				ensureUpperCaseStreetName(familyMap.get("street")).equals(lastFamilyAdded.getStreet()) &&
 				familyMap.get("zipcode").equals(lastFamilyAdded.getZipCode()) &&
 				familyMap.get("detail").equals(lastFamilyAdded.getDetails()) &&
-				areReferralsWithinASecond(System.currentTimeMillis(), lastFamilyAdded.getTimeInMillis());
+				areReferralsWithinASecond(System.currentTimeMillis(), lastFamilyAdded.getTimestamp());
 	}
 	
 	boolean areReferralsWithinASecond(long millis1, long millis2)

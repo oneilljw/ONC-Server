@@ -107,7 +107,7 @@ public class ServerUserDB extends ServerPermanentDB
 		su.setID(nextID++);	//Set id for new user
 		su.setUserPW(USER_PASSWORD_PREFIX + su.getPermission().toString());
 		su.setStatus(UserStatus.Change_PW);
-		su.setDateChanged(new Date());
+		su.setDateChanged(System.currentTimeMillis());
 		su.setChangedBy(client.getLNFI());
 		
 		userAL.add(su); //Add new user to data base
@@ -150,7 +150,7 @@ public class ServerUserDB extends ServerPermanentDB
 				su.setStatus(UserStatus.Change_PW);
 			}
 			
-			su.setDateChanged(new Date());
+			su.setDateChanged(System.currentTimeMillis());
 			
 			//set updated group list
 			su.setGroupList(updatedUser.getGroupList());
@@ -420,15 +420,10 @@ public class ServerUserDB extends ServerPermanentDB
 	@Override
 	void addObject(String type, String[] nextLine) 
 	{
-		Calendar date_changed = Calendar.getInstance();
-		if(!nextLine[6].isEmpty())
-			date_changed.setTimeInMillis(Long.parseLong(nextLine[8]));
-		
 		nextLine[1] = ServerEncryptionManager.decrypt(nextLine[1]);
 		nextLine[2] = ServerEncryptionManager.decrypt(nextLine[2]);
 			
-		userAL.add(new ONCServerUser(nextLine, date_changed.getTime()));
-		
+		userAL.add(new ONCServerUser(nextLine));	
 	}
 	
 	void requestSave()
@@ -670,7 +665,7 @@ public class ServerUserDB extends ServerPermanentDB
 				lastName.concat(" " + name_parts[index++]);
 		}
 		
-		return new ONCServerUser(-1, new Date(), currClient.getClientUser().getLNFI(), 3, 
+		return new ONCServerUser(-1, System.currentTimeMillis(), currClient.getClientUser().getLNFI(), 3, 
 				"New Britepaths Referral User", currClient.getClientUser().getLNFI(),
 				firstName, lastName, UserStatus.Inactive, UserAccess.Website, UserPermission.Agent,
 				bpFam.getReferringAgentEmail(), USER_PASSWORD_PREFIX + UserPermission.Agent.toString(),
@@ -799,7 +794,7 @@ public class ServerUserDB extends ServerPermanentDB
 			{
 				ONCServerUser su = ServerUserDB.getServerUser(emailUserID[i]);
 				su.setStatus(UserStatus.Update_Profile);
-				su.setDateChanged(new Date());
+				su.setDateChanged(System.currentTimeMillis());
 				
 				ONCUser emailedUser = ServerUserDB.getServerUser(emailUserID[i]).getUserFromServerUser();
 				emailList.add(ServerUserDB.getServerUser(emailUserID[i]).getUserFromServerUser());

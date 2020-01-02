@@ -378,7 +378,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		//set the new ID for the catalog wish
 		PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
 		addedPartner.setID(partnerDBYear.getNextID());
-		addedPartner.setDateChanged(new Date());
+		addedPartner.setDateChanged(System.currentTimeMillis());
 		addedPartner.setChangedBy(client.getLNFI());
 		addedPartner.setStoplightChangedBy(client.getLNFI());
 		

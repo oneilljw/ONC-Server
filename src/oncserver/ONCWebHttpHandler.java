@@ -800,7 +800,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		//determine if its an add partner request or a partner update request
 		if(partnerID.equals("New"))
 		{			
-			ONCPartner addPartner = new ONCPartner(-1, new Date(),
+			ONCPartner addPartner = new ONCPartner(-1, System.currentTimeMillis(),
 					wc.getWebUser().getLNFI(), 3,
 					"New partner", wc.getWebUser().getLNFI(), 
 					ONCWebPartnerExtended.getStatus(partnerMap.get("status")),
@@ -832,7 +832,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			if(currPartner != null)
 			{
 				ONCPartner updatePartner = new ONCPartner(currPartner);
-				updatePartner.setDateChanged(new Date());
+				updatePartner.setDateChanged(System.currentTimeMillis());
 				updatePartner.setChangedBy(wc.getWebUser().getLNFI());
 				updatePartner.setStoplightPos(3);
 				updatePartner.setStoplightMssg("Update Partner via website");

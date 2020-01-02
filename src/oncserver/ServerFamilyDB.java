@@ -749,7 +749,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			//set the new ID for the added family
 			addedFam.setID(fDBYear.getNextID());
-			addedFam.setDateChanged(new Date());
+			addedFam.setDateChanged(System.currentTimeMillis());
 			addedFam.setChangedBy(client.getLNFI());
 			addedFam.setStoplightChangedBy(client.getLNFI());
 			

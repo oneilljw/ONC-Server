@@ -153,7 +153,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		//set the new ID for the new driver
 		VolunteerDBYear volunteerDBYear = volDB.get(DBManager.offset(year));
 		addedDriver.setID(volunteerDBYear.getNextID());
-		addedDriver.setDateChanged(new Date());
+		addedDriver.setDateChanged(System.currentTimeMillis());
 		addedDriver.setChangedBy(client.getLNFI());
 		addedDriver.setStoplightChangedBy(client.getLNFI());
 		
@@ -275,7 +275,7 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			if(bWarehouseSignIn)
 			{
 				updatedVol.setSignIns(updatedVol.getSignIns() + 1);
-				updatedVol.setDateChanged(new Date());
+				updatedVol.setDateChanged(System.currentTimeMillis());
 			}
 			
 			if(volParams.get("group").equals("Other"))

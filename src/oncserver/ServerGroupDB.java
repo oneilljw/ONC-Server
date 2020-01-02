@@ -113,7 +113,7 @@ public class ServerGroupDB extends ServerPermanentDB
 			//add an all group to the top of the list with id = -1 if bAddAll is true.
 			if(bDefault)
 			{
-				ONCGroup allGroup = new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
+				ONCGroup allGroup = new ONCGroup(-1, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
 									loggedInUser.getLNFI(), "Any", GroupType.Community, false, false, false, false, false);
 				returnList.add(0, allGroup);
 			}
@@ -133,10 +133,10 @@ public class ServerGroupDB extends ServerPermanentDB
 			Collections.sort(returnList, new ONCGroupNameComparator());
 				
 			if(returnList.isEmpty())
-				returnList.add(0, new ONCGroup(-2, new Date(), loggedInUser.getLNFI(), 3, "", 
+				returnList.add(0, new ONCGroup(-2, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
 								loggedInUser.getLNFI(), "None", GroupType.Community, true, false, false, false, false));
 			else if(bDefault && returnList.size() > 1)
-				returnList.add(0, new ONCGroup(-1, new Date(), loggedInUser.getLNFI(), 3, "", 
+				returnList.add(0, new ONCGroup(-1, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
 								loggedInUser.getLNFI(), "Any", GroupType.Community, true, false, false, false, false));
 				
 			Collections.sort(returnList, new ONCGroupNameComparator());
@@ -169,12 +169,12 @@ public class ServerGroupDB extends ServerPermanentDB
 		Collections.sort(returnList, new ONCGroupNameComparator());
 		
 		//add an artificial "Self" group to the top of the list
-		returnList.add(0, new ONCGroup(-2, new Date(), "", 3, "", 
+		returnList.add(0, new ONCGroup(-2, System.currentTimeMillis(), "", 3, "", 
 				"", "Self", GroupType.Volunteer, true, true, true, true, true));
 		
 		//add an artificial "Other" group to the bottom of the list. ID = -3 tells the web page
 		//to display a text field requiring the user to specify the actual group their with
-		returnList.add(new ONCGroup(-3, new Date(), "", 3, "", 
+		returnList.add(new ONCGroup(-3, System.currentTimeMillis(), "", 3, "", 
 				"", "Other", GroupType.Volunteer, true, true, true, true, true));
 		
 		String response = gson.toJson(returnList, listtype);
@@ -195,12 +195,12 @@ public class ServerGroupDB extends ServerPermanentDB
 		Collections.sort(preprocessGroupList, new ONCGroupNameComparator());
 		
 		//add an artificial "Self" group to the top of the list
-		preprocessGroupList.add(0, new ONCGroup(-2, new Date(), "", 3, "", 
+		preprocessGroupList.add(0, new ONCGroup(-2, System.currentTimeMillis(), "", 3, "", 
 				"", "Self", GroupType.Volunteer, true, true, true, true, true));
 		
 		//add an artificial "Other" group to the bottom of the list. ID = -3 tells the web page
 		//to display a text field requiring the user to specify the actual group their with
-		preprocessGroupList.add(new ONCGroup(-3, new Date(), "", 3, "", 
+		preprocessGroupList.add(new ONCGroup(-3, System.currentTimeMillis(), "", 3, "", 
 				"", "Other", GroupType.Volunteer, true, true, true, true, true));
 		
 		StringBuffer buff = new StringBuffer();
@@ -231,7 +231,7 @@ public class ServerGroupDB extends ServerPermanentDB
 		ONCGroup addGroupReq = gson.fromJson(json, ONCGroup.class);
 		
 		addGroupReq.setID(nextID++);
-		addGroupReq.setDateChanged(new Date());
+		addGroupReq.setDateChanged(System.currentTimeMillis());
 		addGroupReq.setChangedBy(client.getLNFI());
 		groupList.add(addGroupReq);
 		bSaveRequired = true;
@@ -257,7 +257,7 @@ public class ServerGroupDB extends ServerPermanentDB
 		}
 		else
 		{
-			reqGroup.setDateChanged(new Date());
+			reqGroup.setDateChanged(System.currentTimeMillis());
 			groupList.set(index, reqGroup);
 			bSaveRequired = true;
 			return "UPDATED_GROUP" + gson.toJson(reqGroup, ONCGroup.class);

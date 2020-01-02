@@ -111,7 +111,7 @@ public class ServerMealDB extends ServerSeasonalDB
 		
 		//set the new ID and time stamp for the added ONCMeal
 		addedMeal.setID(mealDBYear.getNextID());
-		addedMeal.setDateChanged(new Date());
+		addedMeal.setDateChanged(System.currentTimeMillis());
 		addedMeal.setChangedBy(client.getLNFI());
 		addedMeal.setStoplightChangedBy(client.getLNFI());
 		
@@ -248,7 +248,7 @@ public class ServerMealDB extends ServerSeasonalDB
 		//go thru each meal in the db to determine the most current meal for family
 		for(ONCMeal meal:mealAL)
 			if(meal.getFamilyID() == famid && (currMeal == null || currMeal != null &&
-				currMeal.getDateChanged().before(meal.getDateChanged())))
+				currMeal.getTimestampDate().before(meal.getTimestampDate())))
 			{
 				currMeal = meal;	//found a more recent meal for family
 			}

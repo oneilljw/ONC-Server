@@ -76,7 +76,7 @@ public class ServerNoteDB extends ServerSeasonalDB
 								
 		//set the new ID and time stamps for the added ONCNote
 		addedNote.setID(noteDBYear.getNextID());
-		addedNote.setDateChanged(new Date());
+		addedNote.setDateChanged(System.currentTimeMillis());
 		addedNote.setChangedBy(client.getLNFI());
 		
 		//if the showNextSeason flag is set, clear the showNextSeason flag for all other family notes
