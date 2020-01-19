@@ -6,7 +6,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -392,14 +391,14 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			//determine if this is a wait list gift request. A wait list gift referral is a referral that
 			//requests gifts, is received after the gift deadline but before the wait list deadline
-			Date timeNow = new Date();
+			Long timeNow = System.currentTimeMillis();
 			boolean bWaitlistFamily = params.containsKey(GIFTS_REQUESTED_KEY) &&
 									  params.get(GIFTS_REQUESTED_KEY).equals("on") &&
-									   timeNow.after(globalDB.getDeadline(year, "December Gift")) &&
-									    timeNow.before(globalDB.getDeadline(year, "Waitlist Gift"));
+									   timeNow >= globalDB.getDeadline(year, "December Gift") &&
+									    timeNow < globalDB.getDeadline(year, "Waitlist Gift");
 			
 			//determine if this is a food only request
-			boolean bFoodOnly = new Date().before(globalDB.getDeadline(year, "December Meal")) && 
+			boolean bFoodOnly = timeNow < globalDB.getDeadline(year, "December Meal") && 
 					 addedMeal != null && 
 					  (!params.containsKey(GIFTS_REQUESTED_KEY) ||
 					  params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("off"));
@@ -644,11 +643,11 @@ public class FamilyHandler extends ONCWebpageHandler
 		{
 			//family was the last one received, no processing occurred
 			String mssg, successMssg, title;
-			Date timeNow = new Date();
+			Long timeNow = System.currentTimeMillis();
 			boolean bWaitlistFamily = params.containsKey(GIFTS_REQUESTED_KEY) &&
 					  params.get(GIFTS_REQUESTED_KEY).equals("on") &&
-					   timeNow.after(globalDB.getDeadline(year, "December Gift")) &&
-					    timeNow.before(globalDB.getDeadline(year, "Waitlist Gift"));
+					   timeNow >= globalDB.getDeadline(year, "December Gift") &&
+					    timeNow < globalDB.getDeadline(year, "Waitlist Gift");
 			if(!bWaitlistFamily)
 			{
 				mssg = String.format("%s Family Referral Accepted, ONC# %s",

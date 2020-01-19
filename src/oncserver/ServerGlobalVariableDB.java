@@ -7,8 +7,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.swing.JOptionPane;
 
@@ -82,7 +82,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
-	Date getSeasonStartDate(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDate(); }
+	Long getSeasonStartDate(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDate(); }
 	Calendar getSeasonStartCal(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartCal(); }
 	int getGiftCardID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDefaultGiftCardID(); }
 	int getDeliveryActivityID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryActivityID(); }
@@ -92,7 +92,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		return globalDB.get(DBManager.offset(year)).getServerGVs().getGiftsReceivedDeadline();
 	}
 	
-	Date getDeadline(int year, String deadline)
+	Long getDeadline(int year, String deadline)
 	{
 		//check if year is in database. If it's not, return null
 		if(DBManager.offset(year) < globalDB.size())
@@ -108,7 +108,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 			else if(deadline.equals("Edit"))
 				return globalDB.get(DBManager.offset(year)).getServerGVs().getFamilyEditDeadline();
 			else
-				return Calendar.getInstance().getTime();
+				return System.currentTimeMillis();
 		}
 		else
 			return null;
@@ -187,11 +187,11 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     			{
     				if((nextLine = reader.readNext()) != null)
     				{
-    					Calendar xmasDay = Calendar.getInstance();
+    					Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     					xmasDay.set(year, Calendar.DECEMBER, 25, 0, 0, 0);
     					xmasDay.set(Calendar.MILLISECOND, 0);
     					
-    					Calendar seasonStart = Calendar.getInstance();
+    					Calendar seasonStart = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     					seasonStart.set(year, Calendar.SEPTEMBER, 1, 0, 0, 0);
     					seasonStart.set(Calendar.MILLISECOND, 0);
     					
@@ -270,7 +270,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	void createNewSeason(int newYear) 
 	{
 		//create the new year ServerGVs
-		Calendar seasonStartDate = Calendar.getInstance();
+		Calendar seasonStartDate = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 		seasonStartDate.set(Calendar.YEAR, newYear);
 		seasonStartDate.set(Calendar.MONTH, Calendar.SEPTEMBER);
 		seasonStartDate.set(Calendar.DAY_OF_MONTH, 1);
@@ -279,6 +279,15 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		seasonStartDate.set(Calendar.SECOND, 0);
 		seasonStartDate.set(Calendar.MILLISECOND, 0);
 		
+		Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+		xmasDay.set(Calendar.YEAR, newYear);
+		xmasDay.set(Calendar.MONTH, Calendar.DECEMBER);
+		xmasDay.set(Calendar.DAY_OF_MONTH, 25);
+		xmasDay.set(Calendar.HOUR_OF_DAY, 0);
+		xmasDay.set(Calendar.MINUTE, 0);
+		xmasDay.set(Calendar.SECOND, 0);
+		xmasDay.set(Calendar.MILLISECOND, 0);
+/*		
 		Calendar deliveryDate = Calendar.getInstance();
 		deliveryDate.set(Calendar.YEAR, newYear);
 		deliveryDate.set(Calendar.MONTH, Calendar.DECEMBER);
@@ -341,20 +350,19 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		waitlistGiftDeadline.set(Calendar.MINUTE, 0);
 		waitlistGiftDeadline.set(Calendar.SECOND, 0);
 		waitlistGiftDeadline.set(Calendar.MILLISECOND, 0);
-
+*/
 		
-		ServerGVs newYearServerGVs = new ServerGVs(deliveryDate.getTime(), seasonStartDate.getTime(),
-													DEFAULT_ADDRESS, giftsreceivedDate.getTime(),
-													thanksgivingMealDeadline.getTime(),
-													decemberGiftDeadline.getTime(),
-													familyEditDeadline.getTime(), -1, -1,
-													decemberMealDeadline.getTime(),
-													waitlistGiftDeadline.getTime(), -1);
+		ServerGVs newYearServerGVs = new ServerGVs(xmasDay.getTimeInMillis(), seasonStartDate.getTimeInMillis(),
+													DEFAULT_ADDRESS, xmasDay.getTimeInMillis(),
+													xmasDay.getTimeInMillis(),
+													xmasDay.getTimeInMillis(),
+													xmasDay.getTimeInMillis(), -1, -1,
+													xmasDay.getTimeInMillis(),
+													xmasDay.getTimeInMillis(), -1);
 		
 		GlobalVariableDBYear newGVDBYear = new GlobalVariableDBYear(newYear, newYearServerGVs);
 		globalDB.add(newGVDBYear);
 		newGVDBYear.setChanged(true);
-		
 	}
 
 	@Override

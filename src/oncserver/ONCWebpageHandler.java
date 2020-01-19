@@ -11,7 +11,6 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -322,12 +321,12 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			
 			//get current season
 			int currSeason = DBManager.getCurrentSeason();
-			Calendar today = Calendar.getInstance();
-			Date seasonStartDate = gDB.getSeasonStartDate(currSeason);
-			Date compareDate = gDB.getDeadline(currSeason, day);
+			Long today = System.currentTimeMillis();
+			Long seasonStartDate = gDB.getSeasonStartDate(currSeason);
+			Long compareDate = gDB.getDeadline(currSeason, day);
 			
 			if(seasonStartDate != null && compareDate != null && 
-				today.getTime().compareTo(seasonStartDate) >=0 && today.getTime().compareTo(compareDate) < 0 )
+				today >= seasonStartDate && today < compareDate )
 				return "enabled";
 			else
 				return "disabled";
