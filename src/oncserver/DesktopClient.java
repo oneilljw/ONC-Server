@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 7.20f;
+	private static final float MINIMUM_CLIENT_VERSION = 7.21f;
 	
 	private int id;
 	private String version;
@@ -488,6 +488,15 @@ public class DesktopClient extends Thread
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
+                else if(command.startsWith("POST<update_list_of_families>"))
+                {                	
+                		//update the list of family update requests in the family data base
+                		clientMgr.addLogMessage(command);
+                		String response = serverFamilyDB.updateListOfFamilies(year, command.substring(29), clientUser);
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
                 else if(command.startsWith("POST<add_family>"))
                 {
                 		clientMgr.addLogMessage(command);
@@ -912,6 +921,15 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		String response = mealDB.add(year, command.substring(14), clientUser);
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<add_list_of_meals>"))
+                {                	
+                		//update the list of meals in the meal data base
+                		clientMgr.addLogMessage(command);
+                		String response = mealDB.addListOfMealChanges(year, command.substring(23), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);

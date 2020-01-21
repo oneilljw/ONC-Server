@@ -212,7 +212,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 					+ "si no puedes confirmar que un adulto estará en casa para la entrega de regalos el %s diciembre.",
 					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
 			}
-			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
+			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.WAITLIST)
 			{
 				return String.format("Our Neighbor's Child (ONC): La remisión de la lista de espera "
 				 		+ "ha sido aceptado. Responda \"YES\" para confirmar que un adulto estará en casa para "
@@ -243,7 +243,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 					+ "adult will be home for gift delivery on December %s.",
 					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
 			}
-			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.DNS_CODE_WAITLIST)
+			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.WAITLIST)
 			{	
 				return String.format("Our Neighbor's Child (ONC): Your \"Wait List\" referral has been "
 					+ "accepted. Reply \"YES\" to confirm an adult will be home to receive age appropriate gifts "

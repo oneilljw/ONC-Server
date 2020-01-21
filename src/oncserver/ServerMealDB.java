@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ourneighborschild.MealStatus;
+import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCUser;
 
@@ -159,20 +160,67 @@ public class ServerMealDB extends ServerSeasonalDB
 					
 		return "ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class);
 	}
-/*	
-	MealStatus mealStatusEnginge(ONCMeal currMeal, ONCMeal addedMeal)
+	
+	//adds list of meals changes from client. Only the assignee or status may change and those changes are
+	//temporally mutually exclusive 
+	String addListOfMealChanges(int year, String mealListJson, ONCUser client)
 	{
-		if(addedMeal.getPartnerID() == -1)	//no partner
-			return MealStatus.None;
-		else if(currMeal.getPartnerID() == -1 && addedMeal.getPartnerID() > -1)
-			return MealStatus.Assigned;
-		else if(currMeal.getPartnerID() > -1 && currMeal.getPartnerID() != addedMeal.getPartnerID())
-			return MealStatus.Assigned;
-		else if(currMeal.getPartnerID() > -1 && currMeal.getPartnerID() == addedMeal.getPartnerID())
-			return addedMeal.getStatus();
+		//Create an add meal list 
+		Gson gson = new Gson();
+		Type listOfMeals = new TypeToken<ArrayList<ONCMeal>>(){}.getType();		
+		List<ONCMeal> addedMealList = gson.fromJson(mealListJson, listOfMeals);
+		List<String> responseJsonList = new ArrayList<String>();
+
+		//retrieve the meal data base for the year
+		MealDBYear mealDBYear = mealDB.get(DBManager.offset(year));
 		
-	}
-*/	
+		//get a reference to the Family database so we can update the meal ID
+		ServerFamilyDB serverFamilyDB = null;
+		try
+		{
+			serverFamilyDB = ServerFamilyDB.getInstance();
+		
+			for(ONCMeal addedMeal : addedMealList)
+			{
+				//set the new ID and time stamp for the added ONCMeal
+				addedMeal.setID(mealDBYear.getNextID());
+				addedMeal.setDateChanged(System.currentTimeMillis());
+				addedMeal.setChangedBy(client.getLNFI());
+				addedMeal.setStoplightChangedBy(client.getLNFI());
+			
+				//retrieve the current meal being replaced. Set the status of the added meal relative to 
+				//a parter change. This is the rules engine that governs meal status
+				ONCMeal currMeal = findCurrentMealForFamily(year, addedMeal.getFamilyID());
+				if(currMeal != null && currMeal.getPartnerID() != addedMeal.getPartnerID())
+				{
+					if(addedMeal.getPartnerID() == -1)
+						addedMeal.setMealStatus(MealStatus.Requested);
+					else
+						addedMeal.setMealStatus(MealStatus.Assigned);
+				}
+			
+				//notify the family database of an added meal
+				serverFamilyDB.familyMealAdded(year, addedMeal);
+				
+				//add the new meal to the data base
+				mealDBYear.add(addedMeal);
+				mealDBYear.setChanged(true);
+				
+				responseJsonList.add("ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class));
+			}
+			
+			Type responseListType = new TypeToken<ArrayList<String>>(){}.getType();
+			return "ADDED_LIST_MEALS" + gson.toJson(responseJsonList, responseListType);
+		}
+		catch (FileNotFoundException e) 
+		{
+			return "ADDED_LIST_FAILED";
+		}
+		catch (IOException e) 
+		{
+			return "ADDED_LIST_FAILED";
+		}
+	}	
 	
 	//add used by the Web Client. It can only add a new meal when it adds a family
 	ONCMeal add(int year, ONCMeal addedMeal)

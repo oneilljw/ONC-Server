@@ -667,6 +667,58 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return "UPDATE_FAILED";
 	}
 	
+	String updateListOfFamilies(int year, String giftListJson, ONCUser client)
+	{
+		//Create an update family list 
+		Gson gson = new Gson();
+		Type listOfFamilies = new TypeToken<ArrayList<ONCFamily>>(){}.getType();		
+		List<ONCFamily> updatedFamilyList = gson.fromJson(giftListJson, listOfFamilies);
+		List<String> responseJsonList = new ArrayList<String>();
+
+		//retrieve the family data base for the year
+		FamilyDBYear familyDBYear = familyDB.get(DBManager.offset(year));
+		List<ONCFamily> fAL = familyDBYear.getList();
+		
+		for(ONCFamily updatedFamily : updatedFamilyList)
+		{
+			//Find the position for the current family being replaced
+			int index = 0;
+			while(index < fAL.size() && fAL.get(index).getID() != updatedFamily.getID())
+				index++;
+			
+			//replace the current family object with the update. First, check for address change.
+			//if address has changed, update the region. 
+			if(index < fAL.size())
+			{
+				//update timestamp and changed by info
+				updatedFamily.setDateChanged(System.currentTimeMillis());
+				updatedFamily.setChangedBy(client.getLNFI());
+				
+				//check to see if either status or DNS code is changing, if so, add a history item
+				ONCFamily currFam = fAL.get(index);
+				if(currFam != null && 
+					(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
+					  currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
+					   currFam.getDNSCode() != updatedFamily.getDNSCode()))
+				{
+					ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+																updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(),
+																"Status Changed", updatedFamily.getChangedBy(), true);
+						
+					updatedFamily.setDeliveryID(histItem.getID());
+				}
+					
+				fAL.set(index, updatedFamily);
+				familyDBYear.setChanged(true);
+
+				responseJsonList.add("UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class));
+			}
+		}
+		
+		Type responseListType = new TypeToken<ArrayList<String>>(){}.getType();
+		return "UPDATED_LIST_FAMILIES" + gson.toJson(responseJsonList, responseListType);
+	}
+	
 	ONCFamily update(int year, ONCFamily updatedFamily, WebClient wc, boolean bAutoAssign, String updateNote)
 	{
 		//Find the position for the current family being replaced
@@ -1185,7 +1237,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				//message status updated to UNDELIVERED. If we already changed the family status to Contacted, change
 				//it back to either Waitlist or Verified.
-				FamilyStatus newStatus = fam.getDNSCode() == DNSCode.DNS_CODE_WAITLIST ? FamilyStatus.Waitlist : FamilyStatus.Verified;
+				FamilyStatus newStatus = fam.getDNSCode() == DNSCode.WAITLIST ? FamilyStatus.Waitlist : FamilyStatus.Verified;
 				fam.setFamilyStatus(newStatus);
 				familyDB.get(DBManager.offset(year)).setChanged(true);
 			
