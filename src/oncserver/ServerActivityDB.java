@@ -38,7 +38,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 {
-	private static final int ACTIVITY_DB_HEADER_LENGTH = 15;
+	private static final int ACTIVITY_DB_HEADER_LENGTH = 16;
 	private static final String GENIUS_STATUS_FILENAME = "GeniusSignUps.csv";
 	private static final int SIGNUP_RECORD_LENGTH = 6;
 	
@@ -128,6 +128,21 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 			
 		String response = gson.toJson(activityDB.get(DBManager.offset(year)).getList(), listtype);
 		return response;	
+	}
+	
+	Activity getDefaultDeliveryActivity(int year)
+	{
+		Activity defaultDeliveryActivity = null;
+		ActivityDBYear activityDBYear = activityDB.get(DBManager.offset(year));
+		
+		for(Activity a : activityDBYear.getList())
+			if(a.isDefaultDeliveryActivity())
+			{
+				defaultDeliveryActivity = a;
+				break;
+			}
+
+		return defaultDeliveryActivity;	
 	}
 	
 	
@@ -664,7 +679,7 @@ public class ServerActivityDB extends ServerSeasonalDB implements SignUpListener
 		 if(activityDBYear.isUnsaved())
 		 {
 			 String[] header = {"ID", "Genius ID", "Category" ,"Name","StartTimeMillis",
-					 			"EndTimeMillis", "Location", "Description", "Open", "Notify", 
+					 			"EndTimeMillis", "Location", "Description", "Open", "Notify", "Del Act?", 
 					 			"Timestamp", "Changed By", "SL Pos","SL Message", "SL Changed By"};
 			 
 			String path = String.format("%s/%dDB/ActivityDB.csv", System.getProperty("user.dir"), year);

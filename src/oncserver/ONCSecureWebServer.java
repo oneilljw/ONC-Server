@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,6 +25,7 @@ import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
 
+import ourneighborschild.ServerGVs;
 import ourneighborschild.WebsiteStatus;
 
 public class ONCSecureWebServer
@@ -189,9 +191,12 @@ public class ONCSecureWebServer
 			contextCount++;
 		}
 		
-		//set up the volunteer handler
-		String[] volContexts = {"/driversignin", "/signindriver", "/volunteersignin", "/signinvolunteer",
-								"/volunteerregistration", "/registervolunteer", "/currentyear", "/contactinfo"};
+		//set up the volunteer handler. Volunteer registration developed but never uses. Volunteers
+		//register thru integration with SignUp Genius.
+		String[] volContexts = {"/volunteersignin", "/signinvolunteer",
+//								"/volunteerregistration", "/registervolunteer",
+								"/currentyear", "/contactinfo"
+								};
 				
 		VolunteerHandler volHandler = new VolunteerHandler();
 		for(String contextname : volContexts)
@@ -220,17 +225,8 @@ public class ONCSecureWebServer
 		//determine if logging should be enabled. Logging is enabled if the server is started
 		//after the season start date and before the end of the data base current year
 		ServerGlobalVariableDB gvDB = ServerGlobalVariableDB.getInstance();
-		Calendar now = Calendar.getInstance();
-		Calendar yearEndCal = Calendar.getInstance();
-		yearEndCal.set(Calendar.YEAR, DBManager.getCurrentSeason());
-		yearEndCal.set(Calendar.MONTH, Calendar.DECEMBER);
-		yearEndCal.set(Calendar.DAY_OF_MONTH, 31);
-		yearEndCal.set(Calendar.HOUR, 11);
-		yearEndCal.set(Calendar.MINUTE, 59);
-		yearEndCal.set(Calendar.SECOND, 59);
-		yearEndCal.set(Calendar.MILLISECOND, 999);
-				
-		if(now.after(gvDB.getSeasonStartCal(DBManager.getCurrentSeason())) && now.before(yearEndCal))
+		ServerGVs serverGVs = gvDB.getServerGlobalVariables(DBManager.getCurrentSeason());
+		if(serverGVs.isInSeason(DBManager.getCurrentSeason()))
 			websiteStatus = new WebsiteStatus(true, true, "Online");
 		else
 		{

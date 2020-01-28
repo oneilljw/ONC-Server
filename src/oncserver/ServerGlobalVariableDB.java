@@ -28,7 +28,6 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	private static final int DEFAULT_GIFT = -1;
 	private static final int DEFAULT_GIFTCARD_ID = -1;
-	private static final int DEFAULT_DELIVERY_ACTIVITY_ID = -1;
 	
 	private static ServerGlobalVariableDB instance = null;
 	private static List<GlobalVariableDBYear> globalDB;
@@ -58,6 +57,11 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		return instance;
 	}
 	
+	ServerGVs getServerGlobalVariables(int year)
+	{
+		return globalDB.get(DBManager.offset(year)).getServerGVs();
+	}
+	
 	String getGlobalVariables(int year)
 	{
 		String gvjson = null;
@@ -82,45 +86,52 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
-	Long getSeasonStartDate(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDate(); }
-	Calendar getSeasonStartCal(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartCal(); }
-	int getGiftCardID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDefaultGiftCardID(); }
-	int getDeliveryActivityID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryActivityID(); }
-	
-	Calendar getDateGiftsRecivedDealdine(int year)
-	{
-		return globalDB.get(DBManager.offset(year)).getServerGVs().getGiftsReceivedDeadline();
+	Long getSeasonStartDate(int year) 
+	{ 
+//		ServerGVs serverGVs = globalDB.get(DBManager.offset(year)).getServerGVs();
+//		return ServerGVs.getSeasonStartDateMillis();
+		return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDateMillis(); 
 	}
+//	Calendar getSeasonStartCal(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartCal(); }
+	int getGiftCardID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDefaultGiftCardID(); }
+//	int getDeliveryActivityID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryActivityID(); }
 	
-	Long getDeadline(int year, String deadline)
+//	Calendar getDateGiftsRecivedDealdine(int year)
+//	{
+//		return globalDB.get(DBManager.offset(year)).getServerGVs().getGiftsReceivedDeadline();
+//	}
+	
+	Long getDeadlineMillis(int year, String deadline)
 	{
 		//check if year is in database. If it's not, return null
 		if(DBManager.offset(year) < globalDB.size())
 		{
 			if(deadline.equals("Thanksgiving Meal"))
-				return globalDB.get(DBManager.offset(year)).getServerGVs().getThanksgivingMealDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getThanksgivingMealDeadlineMillis();
 			else if(deadline.equals("December Meal"))
-				return globalDB.get(DBManager.offset(year)).getServerGVs().getDecemberMealDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getDecemberMealDeadlineMillis();
 			else if(deadline.equals("December Gift"))
-				return globalDB.get(DBManager.offset(year)).getServerGVs().getDecemberGiftDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getDecemberGiftDeadlineMillis();
 			else if(deadline.equals("Waitlist Gift"))
-				return globalDB.get(DBManager.offset(year)).getServerGVs().getWaitListGiftDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getWaitListGiftDeadlineMillis();
 			else if(deadline.equals("Edit"))
-				return globalDB.get(DBManager.offset(year)).getServerGVs().getFamilyEditDeadline();
+				return globalDB.get(DBManager.offset(year)).getServerGVs().getFamilyEditDeadlineMillis();
 			else
 				return System.currentTimeMillis();
 		}
 		else
 			return null;
 	}
-	
-	static String getDeliveryDayOfMonth(int year, String language)
+
+	String getDeliveryDayOfMonth(int year, String language)
 	{
 		//returns a string of the day of the month of delivery with suffix
-		Calendar delDayCal = globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
+		Calendar delDayCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+		long delDayMillis = globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDayMillis();
+		delDayCal.setTimeInMillis(delDayMillis);
 		int deliveryDayOfMonth = delDayCal.get(Calendar.DAY_OF_MONTH);
 		
-		if(language.equals("Spansih"))
+		if(language.equals("Spanish"))
 		{
 			return Integer.toString(deliveryDayOfMonth) + " de";
 		}
@@ -139,30 +150,21 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	
 	static boolean isDeliveryDay(int year)
 	{
-		//check if it's the day before or the day of delivery
-		Calendar delDayCal = globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
-		Calendar today = Calendar.getInstance();
-
-		return delDayCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-				delDayCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR);
+		return globalDB.get(DBManager.offset(year)).getServerGVs().isDeliveryDay();
 	}
 	
 	//method determines if today is within one day of delivery day. Both today and delivery day
 	//must be in the same calendar year.
 	static boolean isDayBeforeOrDeliveryDay(int year)
 	{
-		//check if today is delivery day
-		Calendar delDayCal = globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
-		Calendar today = Calendar.getInstance();
-
-		return delDayCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-				(delDayCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) ||
-				 delDayCal.get(Calendar.DAY_OF_YEAR)-1 == today.get(Calendar.DAY_OF_YEAR));
+		return globalDB.get(DBManager.offset(year)).getServerGVs().isDeliveryDayOrDayBefore();
 	}
 	
 	static Calendar getDeliveryDay(int year)
 	{
-		return globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDateCal();
+		Calendar delDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+		delDay.setTimeInMillis(globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryDayMillis());
+		return delDay;
 	}
 
 	/***
@@ -195,20 +197,6 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     					seasonStart.set(year, Calendar.SEPTEMBER, 1, 0, 0, 0);
     					seasonStart.set(Calendar.MILLISECOND, 0);
     					
-    					//Read first line, it's the gv's
-//    					gvs = new ServerGVs(
-// 							nextLine[0].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[0]),
-//    						nextLine[1].isEmpty() ? seasonStart.getTimeInMillis() : Long.parseLong(nextLine[1]),
-//    						nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
-//    						nextLine[3].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[3]),
-//    						nextLine[4].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[4]),
-//    						nextLine[5].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[5]),
-//    						nextLine[6].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[6]),
-//    						nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]),
-//    						nextLine[8].isEmpty() ? DEFAULT_GIFTCARD_ID : Integer.parseInt(nextLine[8]),
-//    						nextLine[9].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[9]),
-//    						nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : Long.parseLong(nextLine[10]));
-    					
     					gvs = new ServerGVs(
     							nextLine[0].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[0]),
     							nextLine[1].isEmpty() ? seasonStart.getTimeInMillis() : parseSciNotationToLong(nextLine[1]),
@@ -220,8 +208,8 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     							nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]),
     							nextLine[8].isEmpty() ? DEFAULT_GIFTCARD_ID : Integer.parseInt(nextLine[8]),
     							nextLine[9].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[9]),
-    							nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[10]),
-    							nextLine[11].isEmpty() ? DEFAULT_DELIVERY_ACTIVITY_ID : Integer.parseInt(nextLine[11]));
+    							nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[10])
+    							);
     				
     				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
@@ -358,7 +346,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 													xmasDay.getTimeInMillis(),
 													xmasDay.getTimeInMillis(), -1, -1,
 													xmasDay.getTimeInMillis(),
-													xmasDay.getTimeInMillis(), -1);
+													xmasDay.getTimeInMillis());
 		
 		GlobalVariableDBYear newGVDBYear = new GlobalVariableDBYear(newYear, newYearServerGVs);
 		globalDB.add(newGVDBYear);
@@ -376,8 +364,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	{
 		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Deadline",
 							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Default Gift",
-							"Defalut Gift Card", "December Meal Deadline", "WaitList Gift Deadline",
-							"Del Act ID"};
+							"Defalut Gift Card", "December Meal Deadline", "WaitList Gift Deadline"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(DBManager.offset(year));
 		if(gvDBYear.isUnsaved())

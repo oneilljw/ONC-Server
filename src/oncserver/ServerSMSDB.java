@@ -26,6 +26,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 	private static List<SMSDBYear> smsDB;
 	
 	private ServerFamilyDB familyDB;
+	private ServerGlobalVariableDB globalVarDB;
 	
 	private ServerSMSDB() throws FileNotFoundException, IOException
 	{
@@ -50,8 +51,9 @@ public class ServerSMSDB extends ServerSeasonalDB
 			smsDBYear.setNextID(getNextID(smsDBYear.getList()));
 		}
 		
-		//initialize the Family DB interface
+		//initialize the FamilyDB and GlobalVariableDB interface
 		familyDB = ServerFamilyDB.getInstance();
+		globalVarDB = ServerGlobalVariableDB.getInstance();
 	}
 	
 	public static ServerSMSDB getInstance() throws FileNotFoundException, IOException
@@ -199,7 +201,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 			street = f.getStreet().trim();
 			unit = f.getUnit().trim();
 		}
-		String zDeliveryDate = ServerGlobalVariableDB.getDeliveryDayOfMonth(request.getYear(), f.getLanguage());
+		String zDeliveryDate = globalVarDB.getDeliveryDayOfMonth(request.getYear(), f.getLanguage());
 		
 		//determine which message to send based on language and message ID
 		if(f.getLanguage().equals("Spanish"))

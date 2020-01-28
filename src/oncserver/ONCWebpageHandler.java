@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ourneighborschild.ServerGVs;
 import ourneighborschild.UserPermission;
 
 import com.sun.net.httpserver.Headers;
@@ -42,6 +43,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
+	private static final String DELIVERY_DAY_ERROR_HTML = "DefaultDeliveryActivityNotSet.htm";
 	private static final String CHANGE_PASSWORD_HTML = "Change.htm";
 	private static final String VERIFY_IDENTITY_HTML = "VerifyIdentity.htm";
 	private static final String LOGIN_ERROR_HTML = "LoginError.htm";
@@ -106,6 +108,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("/volunteerregistration", readFile(String.format("%s/%s",System.getProperty("user.dir"), VOLUNTEER_REGISTRATION_HTML)));
 			webpageMap.put("online", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGOUT_HTML)));
 			webpageMap.put("offline", readFile(String.format("%s/%s",System.getProperty("user.dir"), MAINTENANCE_HTML)));
+			webpageMap.put("deliveryDayError", readFile(String.format("%s/%s",System.getProperty("user.dir"), DELIVERY_DAY_ERROR_HTML)));
 			webpageMap.put("changepw", readFile(String.format("%s/%s",System.getProperty("user.dir"), CHANGE_PASSWORD_HTML)));
 			webpageMap.put("/lostcredentials", readFile(String.format("%s/%s",System.getProperty("user.dir"), VERIFY_IDENTITY_HTML)));
 			webpageMap.put("loginerror", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGIN_ERROR_HTML)));
@@ -273,7 +276,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	String getFamilyStatusWebpage(WebClient wc, String message, String successMssg, 
 			String successDlgTitle, boolean bShowSuccessDialog)
 	{
-		Calendar deliveryDay = ServerGlobalVariableDB.getDeliveryDay(DBManager.getCurrentSeason());
+		Calendar deliveryDayCal = ServerGlobalVariableDB.getDeliveryDay(DBManager.getCurrentSeason());
 		SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy");
 		
 		String response = webpageMap.get("familystatus");
@@ -283,7 +286,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		response = response.replace("DECEMBER_MEAL_CUTOFF", enableReferralButton("December Meal"));
 		response = response.replace("WAITLIST_GIFT_CUTOFF", enableReferralButton("Waitlist Gift"));
 		response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
-		response = response.replace("DELIVERY_DATE", sdf.format(deliveryDay.getTime()));
+		response = response.replace("DELIVERY_DATE", sdf.format(deliveryDayCal.getTime()));
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
 		response = response.replace("SHOW_SUCCESS_DIALOG", bShowSuccessDialog ? "true" : "false");
 		response = response.replace("SUCCESS_DIALOG_HEADER", successDlgTitle);
@@ -318,12 +321,14 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		try 
 		{
 			gDB = ServerGlobalVariableDB.getInstance();
+			ServerGVs serverGVs = gDB.getServerGlobalVariables(DBManager.getCurrentSeason());
 			
 			//get current season
-			int currSeason = DBManager.getCurrentSeason();
+//			int currSeason = DBManager.getCurrentSeason();
 			Long today = System.currentTimeMillis();
-			Long seasonStartDate = gDB.getSeasonStartDate(currSeason);
-			Long compareDate = gDB.getDeadline(currSeason, day);
+			Long seasonStartDate = serverGVs.getSeasonStartDateMillis();
+//			Long seasonStartDate = gDB.getSeasonStartDate(currSeason);
+			Long compareDate = gDB.getDeadlineMillis(DBManager.getCurrentSeason(), day);
 			
 			if(seasonStartDate != null && compareDate != null && 
 				today >= seasonStartDate && today < compareDate )

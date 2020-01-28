@@ -1,12 +1,12 @@
 package oncserver;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
+
+import ourneighborschild.Activity;
 
 public class VolunteerHandler extends ONCWebpageHandler
 {
@@ -24,35 +24,35 @@ public class VolunteerHandler extends ONCWebpageHandler
 		
 		HtmlResponse htmlResponse;
 		
-		if(requestURI.equals("/registervolunteer"))
-		{
-			int year = Integer.parseInt((String)params.get("year"));
-			String callbackFunction = (String) params.get("callback");
-		
-			//create the volunteer key map
-			String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
-		    					"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
-		    					"group", "comment"};
-			Map<String, String> volParams = createMap(params, volKeys);
-		
-			//create the activity key map
-			List<String> activityKeyList = new ArrayList<String>();
-			for(int i=0 ; i<ServerActivityDB.size(year); i++)
-				if(params.containsKey("actckbox" + Integer.toString(i)))
-				{
-					activityKeyList.add("actckbox" + Integer.toString(i));
-					activityKeyList.add("actcomment" + Integer.toString(i));
-				}
-		
-			String[] activityKeys = new String[activityKeyList.size()];
-			activityKeys= activityKeyList.toArray(activityKeys);
-			Map<String, String> activityParams = createMap(params, activityKeys);
-		
-			htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year, volParams, activityParams, 
-										false, "Volunteer Registration Webpage", callbackFunction);
-			sendHTMLResponse(t, htmlResponse); 
-		}
-		else if(requestURI.contains("/signinvolunteer"))
+//		if(requestURI.equals("/registervolunteer"))
+//		{
+//			int year = Integer.parseInt((String)params.get("year"));
+//			String callbackFunction = (String) params.get("callback");
+//		
+//			//create the volunteer key map
+//			String[] volKeys = {"delFN", "delLN", "groupother", "delhousenum", "delstreet", 
+//		    					"delunit", "delcity", "delzipcode", "primaryphone", "delemail",
+//		    					"group", "comment"};
+//			Map<String, String> volParams = createMap(params, volKeys);
+//		
+//			//create the activity key map
+//			List<String> activityKeyList = new ArrayList<String>();
+//			for(int i=0 ; i<ServerActivityDB.size(year); i++)
+//				if(params.containsKey("actckbox" + Integer.toString(i)))
+//				{
+//					activityKeyList.add("actckbox" + Integer.toString(i));
+//					activityKeyList.add("actcomment" + Integer.toString(i));
+//				}
+//		
+//			String[] activityKeys = new String[activityKeyList.size()];
+//			activityKeys= activityKeyList.toArray(activityKeys);
+//			Map<String, String> activityParams = createMap(params, activityKeys);
+//		
+//			htmlResponse = ServerVolunteerDB.addVolunteerJSONP(year, volParams, activityParams, 
+//										false, "Volunteer Registration Webpage", callbackFunction);
+//			sendHTMLResponse(t, htmlResponse); 
+//		}
+		if(requestURI.contains("/signinvolunteer"))
 		{
 			int year = Integer.parseInt((String)params.get("year"));
 			String callbackFunction = (String) params.get("callback");
@@ -108,33 +108,45 @@ public class VolunteerHandler extends ONCWebpageHandler
 		}
 		else if(requestURI.contains("/volunteersignin"))
 		{
-			String response = webpageMap.get(requestURI);
+			ServerActivityDB activityDB = ServerActivityDB.getInstance();
+			String response;
 			
-			//Pre-process the web page adding current variables, including group select options
-			response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
-			response = response.replace("CURRENT_YEAR", DBManager.getMostCurrentYear());
-			response = response.replace("<option>SELECT_OPTIONS</option>", ServerGroupDB.getVolunteerGroupHTMLSelectOptions());
-			
-			//is it Delivery Day?
-			if(ServerGlobalVariableDB.isDeliveryDay(DBManager.getCurrentSeason()))
+			//If today is delivery day and there isn't a default delivery activity yet, respond with 
+			//a web page that says that. Else, send the sign-in web page.
+			if(ServerGlobalVariableDB.isDeliveryDay(DBManager.getCurrentSeason()) && 
+					activityDB.getDefaultDeliveryActivity(DBManager.getCurrentSeason()) == null)
 			{
-				response = response.replaceAll("BANNER_TITLE", "ONC Delivery Day Volunteer Sign-In");
-				response = response.replace("IS_DELIVERY_DAY?", "true");
+				response = webpageMap.get("deliveryDayError");
 			}
 			else
-			{
-				response = response.replaceAll("BANNER_TITLE", "ONC Volunteer Sign-In");
-				response = response.replace("IS_DELIVERY_DAY?", "false");
+			{		
+				//Pre-process the web page adding current variables, including group select options
+				response = webpageMap.get(requestURI);
+				response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
+				response = response.replace("CURRENT_YEAR", DBManager.getMostCurrentYear());
+				response = response.replace("<option>SELECT_OPTIONS</option>", ServerGroupDB.getVolunteerGroupHTMLSelectOptions());
+			
+				//is it Delivery Day?
+				if(ServerGlobalVariableDB.isDeliveryDay(DBManager.getCurrentSeason()))
+				{
+					response = response.replaceAll("BANNER_TITLE", "ONC Delivery Day Volunteer Sign-In");
+					response = response.replace("IS_DELIVERY_DAY?", "true");
+				}
+				else
+				{
+					response = response.replaceAll("BANNER_TITLE", "ONC Volunteer Sign-In");
+					response = response.replace("IS_DELIVERY_DAY?", "false");
+				}
 			}
 
 			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
-		else		//volunteer registration, volunteer sign-in, or driver sign-in
-		{
-			String response = webpageMap.get(requestURI);
-			response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
-
-			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-		}
+//		else		//volunteer registration, volunteer sign-in, or driver sign-in
+//		{
+//			String response = webpageMap.get(requestURI);
+//			response = response.replace("ERROR_MESSAGE", "Please ensure all fields are complete prior to submission");
+//
+//			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+//		}
     }
 }

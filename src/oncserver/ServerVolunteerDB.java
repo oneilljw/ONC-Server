@@ -36,8 +36,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 	private static ServerWarehouseDB warehouseDB;
 	private static ServerActivityDB activityDB;
 	private static ServerVolunteerActivityDB volActDB;
-	private static ServerGlobalVariableDB sGVDB;
-//	private static SignUpGeniusIF geniusIF;
 
 	private ServerVolunteerDB() throws FileNotFoundException, IOException
 	{
@@ -51,7 +49,6 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 		warehouseDB = ServerWarehouseDB.getInstance();
 		activityDB = ServerActivityDB.getInstance();
 		volActDB = ServerVolunteerActivityDB.getInstance();
-		sGVDB = ServerGlobalVariableDB.getInstance();
 
 		//populate the data base for the last TOTAL_YEARS from persistent store
 		for(int year = DBManager.getBaseSeason();  year < DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
@@ -325,21 +322,28 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			ONCVolunteer addedVol = new ONCVolunteer(-1, "", fn, ln, volParams.get("delemail"), 
 					volParams.get("delhousenum"), volParams.get("delstreet"), volParams.get("delunit"),
 					volParams.get("delcity"), volParams.get("delzipcode"),
-					volParams.get("primaryphone"), volParams.get("primaryphone"),
+					"", volParams.get("primaryphone"),
 					volParams.get("group").equals("Other") ? volParams.get("groupother") : volParams.get("group"),
 					volParams.get("comment"), new Date(), website);
 			
 			addedVol.setID(volDBYear.getNextID());
 			if(bWarehouseSignIn)	
-				addedVol.setSignIns(addedVol.getSignIns() + 1);
+				addedVol.setSignIns(1);
 			
 			volDBYear.add(addedVol);
 			volDBYear.setChanged(true);
 			
 			//ask the activity DB for the activity that matches the sign-in within +/- 59 minutes
-			//of the activity start and end dates/times
+			//of the activity start and end dates/times. However, if it's delivery day and it's a warehouse
+			//sign-in, assume the volunteer is there to deliver gifts, since they didn't pre-register.
+			//Add a volunteer activity for the default delivery day activity
 //			Activity activity = activityDB.matchActivity(year, 1513532756000L);	//test for dday 2017 1745 UTC
-			Activity activity = activityDB.matchActivity(year, System.currentTimeMillis());
+			Activity activity = null;
+			if(bWarehouseSignIn && ServerGlobalVariableDB.isDeliveryDay(year))
+				activity = activityDB.getDefaultDeliveryActivity(year);
+			else
+				activity = activityDB.matchActivity(year, System.currentTimeMillis());
+			
 			if(activity != null)
 			{
 				//DEBUG
@@ -508,19 +512,34 @@ public class ServerVolunteerDB extends ServerSeasonalDB implements SignUpListene
 			volunteerDBYear.setChanged(true);
 			
 			//if a driver number is present, check to see if the driver volunteer has
-			//the activity for delivery. If they don't add it. First step is to find the
-			//delivery activity, it it exists. If it does, proceed to check to see if
-			//if the volunteer has a VolunterActivity for delivery. If they don't, add it.
+			//an activity for delivery. If they don't add the default delivery activity.
+			//First step is to find the delivery activity, it it exists. If it does, proceed to 
+			//check to see if the volunteer has a VolunterActivity for delivery. If they don't, add it.
 			if(!updatedDriver.getDrvNum().isEmpty() && isNumeric(updatedDriver.getDrvNum()))
 			{
-				int deliveryActivityID = sGVDB.getDeliveryActivityID(year);
-				if(deliveryActivityID > -1)
+				List<VolAct> drvActList = volActDB.getVolunteerActivities(year, updatedDriver);
+				boolean hasDeliveryActivity = false;
+				
+				for(VolAct va : drvActList)
 				{
-					Activity deliveryActivity = activityDB.findActivity(year, deliveryActivityID);
-					if(deliveryActivity != null)
+					Activity a = activityDB.findActivity(year, va.getActID());
+					if(a.isDeliveryActivity())
 					{
-						//if volunteer already has the activity, the check returns null
-						String addedVolActResult = checkForActivityAndAddIfMissing(year, updatedDriver, deliveryActivity);
+						hasDeliveryActivity = true;
+						break;
+					}
+				}
+				
+				if(!hasDeliveryActivity)
+				{
+					Activity defaultDeliveryAct = activityDB.getDefaultDeliveryActivity(year);
+					if(defaultDeliveryAct != null)
+					{
+						//if volunteer doesn't have a delivery activity and there is a default set,
+						//add a delivery activity
+						String addedVolActResult = volActDB.add(year,new VolAct(-1, updatedDriver.getID(),
+											defaultDeliveryAct.getID(), defaultDeliveryAct.getGeniusID(), 1, ""));
+
 						if(addedVolActResult != null && addedVolActResult.startsWith("ADDED_VOLUNTEER_ACTIVITY"))
 							clientMgr.notifyAllInYearClients(year, addedVolActResult);
 					}

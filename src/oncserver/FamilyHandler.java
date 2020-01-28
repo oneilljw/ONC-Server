@@ -394,11 +394,11 @@ public class FamilyHandler extends ONCWebpageHandler
 			Long timeNow = System.currentTimeMillis();
 			boolean bWaitlistFamily = params.containsKey(GIFTS_REQUESTED_KEY) &&
 									  params.get(GIFTS_REQUESTED_KEY).equals("on") &&
-									   timeNow >= globalDB.getDeadline(year, "December Gift") &&
-									    timeNow < globalDB.getDeadline(year, "Waitlist Gift");
+									   timeNow >= globalDB.getDeadlineMillis(year, "December Gift") &&
+									    timeNow < globalDB.getDeadlineMillis(year, "Waitlist Gift");
 			
 			//determine if this is a food only request
-			boolean bFoodOnly = timeNow < globalDB.getDeadline(year, "December Meal") && 
+			boolean bFoodOnly = timeNow < globalDB.getDeadlineMillis(year, "December Meal") && 
 					 addedMeal != null && 
 					  (!params.containsKey(GIFTS_REQUESTED_KEY) ||
 					  params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("off"));
@@ -646,8 +646,8 @@ public class FamilyHandler extends ONCWebpageHandler
 			Long timeNow = System.currentTimeMillis();
 			boolean bWaitlistFamily = params.containsKey(GIFTS_REQUESTED_KEY) &&
 					  params.get(GIFTS_REQUESTED_KEY).equals("on") &&
-					   timeNow >= globalDB.getDeadline(year, "December Gift") &&
-					    timeNow < globalDB.getDeadline(year, "Waitlist Gift");
+					   timeNow >= globalDB.getDeadlineMillis(year, "December Gift") &&
+					    timeNow < globalDB.getDeadlineMillis(year, "Waitlist Gift");
 			if(!bWaitlistFamily)
 			{
 				mssg = String.format("%s Family Referral Accepted, ONC# %s",

@@ -23,12 +23,14 @@ public class SMSHandler extends ONCWebpageHandler
 	private ServerInboundSMSDB inboundSMSDB;
 	private ServerSMSDB smsDB;
 	private ServerFamilyDB familyDB;
+	private ServerGlobalVariableDB globalVarDB;
 	
 	public SMSHandler() throws FileNotFoundException, IOException
 	{
 		this.inboundSMSDB = ServerInboundSMSDB.getInstance();
 		this.smsDB = ServerSMSDB.getInstance();
 		this.familyDB = ServerFamilyDB.getInstance();
+		this.globalVarDB = ServerGlobalVariableDB.getInstance();
 //		this.partnerDB = ServerPartnerDB.getInstance();
 		
 //		simulateSMSReceive();
@@ -89,7 +91,7 @@ public class SMSHandler extends ONCWebpageHandler
 				id = fam.getID();
 				type = EntityType.FAMILY;
 				name = fam.getFirstName() + " " + fam.getLastName();
-				String zDeliveryDate = ServerGlobalVariableDB.getDeliveryDayOfMonth(DBManager.getCurrentSeason(),  fam.getLanguage());
+				String zDeliveryDate = globalVarDB.getDeliveryDayOfMonth(DBManager.getCurrentSeason(),  fam.getLanguage());
 				
 				if(fam.getLanguage().equals("Spanish"))
 				{

@@ -530,7 +530,10 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			//found the partner, now determine which field to increment
 			if(addedGift.getGiftStatus() == GiftStatus.Received)
 			{
-				boolean bReceviedBeforeDeadline = addedGift.getDateChanged().before(globalDB.getDateGiftsRecivedDealdine(year));
+			
+				long receivingDeadline = globalDB.getServerGlobalVariables(year).getDecemberGiftDeadlineMillis();
+				boolean bReceviedBeforeDeadline = addedGift.getTimestamp() < receivingDeadline;
+//				boolean bReceviedBeforeDeadline = addedGift.getDateChanged().before(globalDB.getDateGiftsRecivedDealdine(year));
 				partnerList.get(index).incrementOrnReceived(bReceviedBeforeDeadline);
 			}
 			else if(addedGift.getGiftStatus() == GiftStatus.Delivered)
