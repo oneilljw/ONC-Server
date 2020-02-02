@@ -9,8 +9,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.Calendar;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -181,7 +179,7 @@ public class ONCSecureWebServer
 		String[] familyContexts = {"/referral","/referfamily","/familyupdate","/updatefamily","/familyview",
 				 					"/families","/familystatus","/commonfamily.js","/familysearch",
 				 					"/getfamily","/references","/newfamily", "/familynotes", 
-				 					"/noteresponse", "/dnscode"};
+				 					"/noteresponse", "/dnscode", "/deadlines"};
 		
 		FamilyHandler familyHandler = new FamilyHandler();
 		for(String contextname: familyContexts)

@@ -282,10 +282,10 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		String response = webpageMap.get("familystatus");
 		response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
 		response = response.replace("USER_MESSAGE", message);
-		response = response.replace("THANKSGIVING_MEAL_CUTOFF", enableReferralButton("Thanksgiving Meal"));
-		response = response.replace("DECEMBER_MEAL_CUTOFF", enableReferralButton("December Meal"));
-		response = response.replace("WAITLIST_GIFT_CUTOFF", enableReferralButton("Waitlist Gift"));
-		response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
+//		response = response.replace("THANKSGIVING_MEAL_CUTOFF", enableReferralButton("Thanksgiving Meal"));
+//		response = response.replace("DECEMBER_MEAL_CUTOFF", enableReferralButton("December Meal"));
+//		response = response.replace("WAITLIST_GIFT_CUTOFF", enableReferralButton("Waitlist Gift"));
+//		response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
 		response = response.replace("DELIVERY_DATE", sdf.format(deliveryDayCal.getTime()));
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
 		response = response.replace("SHOW_SUCCESS_DIALOG", bShowSuccessDialog ? "true" : "false");
@@ -324,10 +324,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			ServerGVs serverGVs = gDB.getServerGlobalVariables(DBManager.getCurrentSeason());
 			
 			//get current season
-//			int currSeason = DBManager.getCurrentSeason();
 			Long today = System.currentTimeMillis();
 			Long seasonStartDate = serverGVs.getSeasonStartDateMillis();
-//			Long seasonStartDate = gDB.getSeasonStartDate(currSeason);
 			Long compareDate = gDB.getDeadlineMillis(DBManager.getCurrentSeason(), day);
 			
 			if(seasonStartDate != null && compareDate != null && 

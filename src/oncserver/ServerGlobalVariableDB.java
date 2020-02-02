@@ -86,20 +86,21 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
-	Long getSeasonStartDate(int year) 
-	{ 
-//		ServerGVs serverGVs = globalDB.get(DBManager.offset(year)).getServerGVs();
-//		return ServerGVs.getSeasonStartDateMillis();
-		return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDateMillis(); 
-	}
-//	Calendar getSeasonStartCal(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartCal(); }
+	Long getSeasonStartDate(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDateMillis(); }
 	int getGiftCardID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDefaultGiftCardID(); }
-//	int getDeliveryActivityID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDeliveryActivityID(); }
-	
-//	Calendar getDateGiftsRecivedDealdine(int year)
-//	{
-//		return globalDB.get(DBManager.offset(year)).getServerGVs().getGiftsReceivedDeadline();
-//	}
+
+	static HtmlResponse getDeadlineJSONP(String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		
+		String response;
+		ServerGVs serverGVs = globalDB.get(DBManager.offset(DBManager.getCurrentSeason())).getServerGVs();
+		SeasonDeadlines sd = new SeasonDeadlines(serverGVs);
+		response = gson.toJson(sd, SeasonDeadlines.class);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);	
+	}
 	
 	Long getDeadlineMillis(int year, String deadline)
 	{

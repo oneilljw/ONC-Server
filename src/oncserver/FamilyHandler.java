@@ -289,6 +289,19 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
+		else if(requestURI.contains("/deadlines"))
+		{
+			HtmlResponse htmlResponse;
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				//get the JSON for response to response submission
+				htmlResponse = ServerGlobalVariableDB.getDeadlineJSONP((String) params.get("callback"));			
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
 	}
 	
 	ResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)

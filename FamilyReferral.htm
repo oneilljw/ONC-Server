@@ -483,14 +483,14 @@
 			dietres.value="";
 			dietres.disabled = true;
 		}
-		else if(sessionStorage.getItem('decemberMealCutoff') === 'disabled')
+		else if(sessionStorage.getItem('decemberMealCutoff') === true)
 		{
 			var choices = {'Unavailable - Past Deadline' : 'Unavailable'};
 			mealCombo.disabled = true;
 			dietres.value="";
 			dietres.disabled = true;
 		}
-		else if(sessionStorage.getItem('thanksgivingMealCutoff') === 'disabled')
+		else if(sessionStorage.getItem('thanksgivingMealCutoff') === true)
 		{
 			var choices = {"December":"December"};
 			mealCombo.disabled = false;

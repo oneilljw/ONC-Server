@@ -18,10 +18,28 @@
 	var pyColSortStatus = [1,1,1,1,1];
 	var cyColSortStatus = [1,1,1,1,1,1,1,1];
 	
-	sessionStorage.setItem('thanksgivingMealCutoff', "THANKSGIVING_MEAL_CUTOFF");
-	sessionStorage.setItem('decemberMealCutoff', "DECEMBER_MEAL_CUTOFF");
-	sessionStorage.setItem('waitlistGiftCutoff', "WAITLIST_GIFT_CUTOFF");
-	sessionStorage.setItem('editCutoff', "EDIT_CUTOFF");
+	//get the list of years from the data base and put it in the year combo box
+	
+	var deadlineparams = "offset=" + new Date().getTimezoneOffset() + "&callback=?";
+	$.getJSON('deadlines', deadlineparams, function(deadlines)
+	{	
+		if(deadlines.hasOwnProperty('error'))
+			window.location=document.getElementById('timeoutanchor').href;
+		else
+		{
+			//get current UTC time in millis, add timezone offset in millis to get local time
+			//relative to deadline. This way, if a deadline is midnight UTC, it will still be
+			//a midnight deadline local time.
+			var date = new Date();
+			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
+			
+			sessionStorage.setItem('thanksgivingMealCutoff', new Boolean(timeNow > deadlines.thanksgivingMealDeadline));
+			sessionStorage.setItem('decemberMealCutoff', new Boolean(timeNow > deadlines.decemberMealDeadline));
+			sessionStorage.setItem('waitlistGiftCutoff', new Boolean(timeNow > deadlines.waitlistDeadline));
+			sessionStorage.setItem('editCutoff', new Boolean(timeNow > deadlines.editDeadline));
+		}
+	});	
+	
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
     $( document ).ready(function()
@@ -83,7 +101,7 @@
     		
     			//determine the color and enabling of the Refer New Family button
     			var btnRNF = document.getElementById('new');
-    			if(sessionStorage.getItem('waitlistGiftCutoff') === 'disabled')
+    			if(sessionStorage.getItem('waitlistGiftCutoff') === true)
     			{
     				btnRNF.style.backgroundColor='Gray';
     	       		btnRNF.disabled = true;
@@ -652,13 +670,13 @@
             		btn.style.backgroundColor='Red';
             		btn.disabled = true;
             }
-            else if(sessionStorage.getItem('waitlistGiftCutoff') === 'disabled')
+    			else if(sessionStorage.getItem('waitlistGiftCutoff') === true)
             {
             		btn.style.backgroundColor='Gray';
             		btn.disabled = true;
             }
    	 	}
-    		else if(sessionStorage.getItem('editCutoff') === 'disabled')
+    		else if(sessionStorage.getItem('editCutoff') === true)
         {
             btn.style.backgroundColor='Gray';
             btn.disabled = true;
