@@ -33,10 +33,10 @@
 			var date = new Date();
 			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
 			
-			sessionStorage.setItem('thanksgivingMealCutoff', new Boolean(timeNow > deadlines.thanksgivingMealDeadline));
-			sessionStorage.setItem('decemberMealCutoff', new Boolean(timeNow > deadlines.decemberMealDeadline));
-			sessionStorage.setItem('waitlistGiftCutoff', new Boolean(timeNow > deadlines.waitlistDeadline));
-			sessionStorage.setItem('editCutoff', new Boolean(timeNow > deadlines.editDeadline));
+			sessionStorage.setItem('thanksgivingMealCutoff', deadlines.thanksgivingMealDeadline);
+			sessionStorage.setItem('decemberMealCutoff', deadlines.decemberMealDeadline);
+			sessionStorage.setItem('waitlistGiftCutoff', deadlines.waitlistDeadline);
+			sessionStorage.setItem('editCutoff', deadlines.editDeadline);
 		}
 	});	
 	
@@ -101,7 +101,9 @@
     		
     			//determine the color and enabling of the Refer New Family button
     			var btnRNF = document.getElementById('new');
-    			if(sessionStorage.getItem('waitlistGiftCutoff') === true)
+    			var date = new Date();
+    			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
+    			if(timeNow > sessionStorage.getItem('waitlistGiftCutoff'))
     			{
     				btnRNF.style.backgroundColor='Gray';
     	       		btnRNF.disabled = true;
@@ -422,12 +424,15 @@
     		var count = 0;
     		if(e.length > 0)
     		{
+    			var date = new Date();
+    			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
+    			
     			var agentID = e.value;
     			for(var i=0; i<pyFamJson.length; i++)
 			{
     				if(agentID == -1 || agentID == pyFamJson[i].agentID)
     				{
-    					addPYTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer");	//add row to table
+    					addPYTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer", timeNow);	//add row to table
     					count++;
     				}
 			}
@@ -448,12 +453,15 @@
     		var count = 0;
     		if(e.length > 0)
     		{
+    			var date = new Date();
+    			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
+    			
     			var agentID = e.options[e.selectedIndex].value;
     			for(var i=0; i<cyFamJson.length; i++)
 			{
     				if(agentID == -1 || agentID == cyFamJson[i].agentID)
     				{
-    					addCYTableRow(cyFamJson[i], document.getElementById('cyTable'), "Edit");
+    					addCYTableRow(cyFamJson[i], document.getElementById('cyTable'), "Edit", timeNow);
     					count++;
     				}
 			}
@@ -483,7 +491,7 @@
    	 	return cbElement.value;
     }
     
-    function addPYTableRow(family, table, buttontext)
+    function addPYTableRow(family, table, buttontext, timeNow)
     {   
         if (!document.getElementsByTagName) return;
        
@@ -543,13 +551,13 @@
         btn.innerHTML = buttontext;
         btn.style.width = cellwidth[col];
         btn.onclick=function() {familyAction(table, family.targetID);};
-		setButtonStatus(family, table, btn);
+		setButtonStatus(family, table, btn, timeNow);
         row.appendChild(btn);
         
         tabBody.appendChild(row);
     }
     
-    function addCYTableRow(family, table, buttontext)
+    function addCYTableRow(family, table, buttontext, timeNow)
     {   
         if (!document.getElementsByTagName) return;
        
@@ -646,7 +654,7 @@
         btn.innerHTML = buttontext;
         btn.style.width = cellwidth[col];
         btn.onclick=function() {familyAction(table, family.targetID);};
-		setButtonStatus(family, table, btn);
+		setButtonStatus(family, table, btn, timeNow);
         row.appendChild(btn);
         
         //set row color
@@ -661,22 +669,25 @@
         tabBody.appendChild(row);
     }
     
-    function setButtonStatus(family, table, btn)
+    function setButtonStatus(family, table, btn, timeNow)
     {
     		if(table=== document.getElementById('pyTable'))
     		{
+    			var date = new Date();
+    			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
+    			
     			if(alreadyReferred(family.targetID) === true)
             {
             		btn.style.backgroundColor='Red';
             		btn.disabled = true;
             }
-    			else if(sessionStorage.getItem('waitlistGiftCutoff') === true)
+    			else if(timeNow > sessionStorage.getItem('waitlistGiftCutoff'))
             {
             		btn.style.backgroundColor='Gray';
             		btn.disabled = true;
             }
    	 	}
-    		else if(sessionStorage.getItem('editCutoff') === true)
+    		else if(timeNow > sessionStorage.getItem('editCutoff'))
         {
             btn.style.backgroundColor='Gray';
             btn.disabled = true;

@@ -476,6 +476,12 @@
 		//clear the meal type combobox
     		mealCombo.options.length = 0;
 		
+    		//get current UTC time in millis, add timezone offset in millis to get local time
+		//relative to deadline. This way, if a deadline is midnight UTC, it will still be
+		//a midnight deadline local time.
+		var date = new Date();
+		var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
+		
 		if(cb.checked == false)
 		{
 			var choices = {'No Assistance Rqrd':'No Assistance Rqrd'};
@@ -483,14 +489,14 @@
 			dietres.value="";
 			dietres.disabled = true;
 		}
-		else if(sessionStorage.getItem('decemberMealCutoff') === true)
+		else if(timeNow > sessionStorage.getItem('decemberMealCutoff'))
 		{
 			var choices = {'Unavailable - Past Deadline' : 'Unavailable'};
 			mealCombo.disabled = true;
 			dietres.value="";
 			dietres.disabled = true;
 		}
-		else if(sessionStorage.getItem('thanksgivingMealCutoff') === true)
+		else if(timeNow > sessionStorage.getItem('thanksgivingMealCutoff'))
 		{
 			var choices = {"December":"December"};
 			mealCombo.disabled = false;
