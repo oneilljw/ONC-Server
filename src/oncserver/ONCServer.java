@@ -1,6 +1,10 @@
 package oncserver;
 
+import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.desktop.QuitEvent;
+import java.awt.desktop.QuitHandler;
+import java.awt.desktop.QuitResponse;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -22,8 +26,9 @@ public class ONCServer
 	 * @throws IOException 
 	 */
 	
-	private static final String APPNAME = "Our Neighbor's Child Server v7.00";
+	private static final String APPNAME = "Our Neighbor's Child Server v8.02";
 	private static final String ONC_COPYRIGHT = "\u00A92018 John W. O'Neill";
+	private static final int JAVA_VERSION_NINE = 9;
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
 	private ClientManager clientMgr; //Manages all connected clients
@@ -36,14 +41,11 @@ public class ONCServer
 	private JFrame oncFrame;
 	private ServerMenuBar serverMenuBar;
 	
-	//Check if we are on Mac OS X.  This is crucial to loading and using the OSXAdapter class.
-    private static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
-
 	ONCServer() throws IOException
 	{
 		//If running under MAC OSX, use the system menu bar and set the application title appropriately and
-    		//set up our application to respond to the Mac OS X application menu
-        if (MAC_OS_X) 
+    	//set up our application to respond to the Mac OS X application menu
+        if(System.getProperty("os.name").toLowerCase().startsWith("mac os x")) 
         {          	
             System.setProperty("apple.laf.useScreenMenuBar", "true");
             System.setProperty("com.apple.mrj.application.apple.menu.about.name", APPNAME);
@@ -60,23 +62,41 @@ public class ONCServer
 			catch (UnsupportedLookAndFeelException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace(); }
-			
-            // Generic registration with the Mac OS X application, attempts to register with the Apple EAWT
-            // See OSXAdapter.java to see how this is done without directly referencing any Apple APIs
-            try
-            {
-                // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
-                // use as delegates for various com.apple.eawt.ApplicationListener methods
-                OSXAdapter.setQuitHandler(this, getClass().getDeclaredMethod("quit", (Class[])null));
-                OSXAdapter.setAboutHandler(this,getClass().getDeclaredMethod("about", (Class[])null));
- //             OSXAdapter.setPreferencesHandler(this, getClass().getDeclaredMethod("preferences", (Class[])null));
- //             OSXAdapter.setFileHandler(this, getClass().getDeclaredMethod("loadImageFile", new Class[] { String.class }));
-            } 
-            catch (Exception e)
-            {
-                System.err.println("Error while loading the OSXAdapter:");
-                e.printStackTrace();
-            }
+            
+            //determine if java version is Java 9 or after. If so, use Desktop to set About, Preferences and Quit
+            //with lambds's. Otherwise use OSX Adapter
+            String javaVersion = System.getProperty("java.version");
+            String majorVersion = javaVersion.substring(0, javaVersion.indexOf('.'));
+            
+    		if(majorVersion.matches("-?\\d+(\\.\\d+)?") && Integer.parseInt(majorVersion) >= JAVA_VERSION_NINE)
+    		{
+    			Desktop desktop = Desktop.getDesktop();
+                
+                desktop.setAboutHandler(e ->
+                	JOptionPane.showMessageDialog(oncFrame, APPNAME + "\n" + ONC_COPYRIGHT, "About the ONC Server",
+            			JOptionPane.INFORMATION_MESSAGE, clientMgr.getAppIcon()));
+                
+                desktop.setQuitHandler(new ServerQuit());
+    		}
+    		else
+    		{	
+    			// Generic registration with the Mac OS X application, attempts to register with the Apple EAWT
+    			// See OSXAdapter.java to see how this is done without directly referencing any Apple APIs
+    			try
+    			{
+    				// Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
+    				// use as delegates for various com.apple.eawt.ApplicationListener methods
+    				OSXAdapter.setQuitHandler(this, getClass().getDeclaredMethod("quit", (Class[])null));
+    				OSXAdapter.setAboutHandler(this,getClass().getDeclaredMethod("about", (Class[])null));
+ //             	OSXAdapter.setPreferencesHandler(this, getClass().getDeclaredMethod("preferences", (Class[])null));
+ //             	OSXAdapter.setFileHandler(this, getClass().getDeclaredMethod("loadImageFile", new Class[] { String.class }));
+    			} 
+    			catch (Exception e)
+    			{
+    				System.err.println("Error while loading the OSXAdapter:");
+    				e.printStackTrace();
+    			}
+    		}    
         }
         
         //Set up client manager
@@ -102,9 +122,9 @@ public class ONCServer
     // A quit event is triggered by Cmd-Q, selecting Quit from the application or Dock menu, or logging out
     public boolean quit()
     {
-    		if(bServerRunning)	//Did user forget to stop the server prior to quitting? 
-    			serverIF.terminateServer();
-    		return true;
+    	if(bServerRunning)	//Did user forget to stop the server prior to quitting? 
+    		serverIF.terminateServer();
+    	return true;
     }
     
     // General info dialog; fed to the OSXAdapter as the method to call when 
@@ -145,14 +165,15 @@ public class ONCServer
     
     void startServer()
     {
-    		//Create and start the server loop
-    		serverIF = new ServerLoop(clientMgr);
+    	//Create and start the server loop
+    	serverIF = new ServerLoop(clientMgr);
     	
-    		serverIF.start();
+    	serverIF.start();
 		serverUI.setStoplight(0, "Server started");	//Set server status to green - running
 		
 		serverUI.addUIAndLogMessage("App Server Interface Loop started");
 		serverUI.addUIAndLogMessage(String.format("System current time in millis: %d", System.currentTimeMillis()));
+		ServerUI.addDebugMessage(String.format("User Directory: %s", System.getProperty("user.dir")));
 		
 		serverUI.btnStartServer.setVisible(false);
 		serverUI.btnStopServer.setVisible(true);
@@ -292,6 +313,18 @@ public class ONCServer
 //					e1.printStackTrace();
 //				}
 			}
+		}
+    }
+    
+    private class ServerQuit implements QuitHandler
+    {
+
+		@Override
+		public void handleQuitRequestWith(QuitEvent arg0, QuitResponse arg1)
+		{
+			if(bServerRunning)	//Did user forget to stop the server prior to quitting? 
+	    		serverIF.terminateServer();
+	    	System.exit(0);
 		}
     }
 }

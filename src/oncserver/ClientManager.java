@@ -21,6 +21,7 @@ import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
+
 public class ClientManager extends ClientEventGenerator
 {
 	private static final boolean CLIENT_TIMER_ENABLED = true;

@@ -16,12 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ourneighborschild.ServerGVs;
-import ourneighborschild.UserPermission;
-
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+
+import ourneighborschild.ServerGVs;
+import ourneighborschild.UserPermission;
+
 
 public abstract class ONCWebpageHandler implements HttpHandler 
 {
@@ -40,7 +41,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String VOLUNTEER_REGISTRATION_HTML = "VolRegistration.htm";
 	private static final String REFERRAL_STATUS_HTML = "ReferralStatus.htm";
 	private static final String DASHBOARD_HTML = "Dashboard.htm";
-	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
+	private static final String PARTNER_TABLE_HTML = "PartnerTablev2.0.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String DELIVERY_DAY_ERROR_HTML = "DefaultDeliveryActivityNotSet.htm";
@@ -209,6 +210,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	    
 	    reader.close();
 	    
+//	    String read_file = stringBuilder.toString();
+//	    ServerUI.addDebugMessage(String.format("Read %s, size=%d", file, read_file.length()));
+	    
 	    return stringBuilder.toString();
 	}
 	
@@ -217,13 +221,15 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		//get file
 	    String path = String.format("%s/%s", System.getProperty("user.dir"), filename);
 	    File file = new File(path);
-	    byte [] bytearray  = new byte [(int)file.length()];
+	    byte[] bytearray  = new byte [(int)file.length()];
 	      
 	    FileInputStream fis = new FileInputStream(file);
 	      
 	    BufferedInputStream bis = new BufferedInputStream(fis);
 	    bis.read(bytearray, 0, bytearray.length);
 	    bis.close();
+	    
+//	    ServerUI.addDebugMessage(String.format("Read Byte file %s, size=%d", file.getAbsolutePath(), bytearray.length));
 	    
 		return bytearray;
 	}

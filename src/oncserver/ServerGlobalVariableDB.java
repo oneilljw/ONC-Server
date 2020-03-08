@@ -23,7 +23,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerGlobalVariableDB extends ServerSeasonalDB
 {
-	private static final int GV_HEADER_LENGTH = 12;
+	private static final int GV_HEADER_LENGTH = 11;
 	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	private static final int DEFAULT_GIFT = -1;
@@ -218,7 +218,7 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     			}
     			else
     			{
-    				String error = String.format("GlobalVariablesDB file corrupted, header lentgth = %d", header.length);
+    				String error = String.format("GlobalVariablesDB file corrupted, %s header length = %d", file, header.length);
     				JOptionPane.showMessageDialog(null, error,  "Global Variables Corrupted",
     	       								JOptionPane.ERROR_MESSAGE);
     			}		   			

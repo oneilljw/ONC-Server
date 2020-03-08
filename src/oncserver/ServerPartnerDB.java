@@ -89,7 +89,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		return cloneList;		
 	}
-	
+
 	static HtmlResponse getPartnersJSONP(int year, boolean bConfirmedOnly, String callbackFunction)
 	{	
 		String response = "";

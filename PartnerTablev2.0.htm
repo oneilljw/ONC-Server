@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>ONC Gift Partners</title>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/b-1.6.1/b-flash-1.6.1/fh-3.1.6/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.css"/>
+  <script type="text/javascript" src="editprofile.js"></script>
+  <script src='https://code.jquery.com/jquery-3.3.1.js'></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/b-1.6.1/b-flash-1.6.1/sc-2.0.1/sp-1.0.1/sl-1.3.1/datatables.min.js"></script>
+  <script>
+	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
+	var types = [
+		"Business", 
+		"Church", 
+		"School", 
+		"Clothing", 
+		"Coat", 
+		"ONC Shopper"
+	];
+	
+    $( document ).ready(function()
+    {
+    		//update the nav bar links, set home link presence
+    		if(sessionStorage.getItem('homelinkVisibility') === 'visible')
+    		{
+    			var profileli = document.getElementById('profileli');
+    			profileli.parentNode.removeChild(profileli);
+    		}
+    		else
+    		{
+    			var homelinkli = document.getElementById('homelinkli');
+    			homelinkli.parentNode.removeChild(homelinkli);
+    		}
+    		
+    		$('#partnertable').DataTable( 
+		    {
+		    	"bAutoWidth": false,
+		    	"columns": [
+		    		{ "data": "id", width: '60px'},
+		    		{ "data": "name", width: '450px' },
+		    		{ "data": "type", width: '100px',
+//		    			"render": 
+//		    			function(d,t,r)
+//		    			{
+//	                		var $select = $("<select></select>", 
+//	                		{
+//	                        	"value": d
+//	                    	});
+//	                		$.each(types, function(k,v)
+//	                		{
+//	                    		var $option = $("<option></option>",
+//	                    		{
+//	                        		"text": v,
+//	                            	"value": v
+//	                        	});
+//	                        	if(d === v)
+//	                        	{
+//	                        		$option.attr("selected", "selected")
+//	                        	}
+//	                    		$select.append($option);
+//	                    	});
+//	                    	return $select.prop("outerHTML");
+//	                	}
+	            	},
+		    		{ "data": "status", width: '150px' },
+		    		{ "data": "collection", width: '80px' },
+		    		{ "data": "orn_req", width: '28px', className: 'dt-body-center' },
+		    		{ "data": "orn_delivered", width: '28px', className: 'dt-body-center' },
+		    		{ "data": "orn_received", width: '28px', className: 'dt-body-center' },
+		    		{ "defaultContent": "<button>Edit</button>", className: 'dt-body-center'} ],
+		    		
+		    	"scrollY":        "360px",
+		    	"scrollCollapse": true,
+		    	"paging":         false
+		   	});
+    		
+    		//get the list of years from the data base so we can determine current year
+    		var dbyearsparams = 'callback=?';
+    		$.getJSON('dbStatus', dbyearsparams, function(data)
+    		{	
+    			var combo = document.getElementById('dbYears');
+        			for (var i = data.length-1; i >= 0; i--)
+        				addComboBoxOption(combo, data[i].id, data[i].id);
+        			
+        		combo.selectedIndex = '0';
+        		
+				initializeFilters();
+				
+ 				//get partners from the server
+    			var partnerparams = "year=" + combo.value + "&confirmed=false&callback=?";
+    			$.getJSON('partners', partnerparams, function(data)
+    			{
+    				if(data.hasOwnProperty('error'))
+    					window.location=document.getElementById('timeoutanchor').href;
+    				else
+    				{
+						var table = $('#partnertable').DataTable();
+						table.rows.add(data);
+						
+						var typeSelect = document.getElementById('partnertype');
+						if(typeSelect.selectedIndex > 0)
+							table.columns(2).search(typeSelect.value);
+    			
+    					var statusSelect = document.getElementById('partnerstatus');
+						if(statusSelect.selectedIndex > 0)
+							table.columns(3).search(statusSelect.value);
+    		
+    					var collectionSelect = document.getElementById('partnercollection');
+						if(collectionSelect.selectedIndex > 0)
+							table.columns(4).search(collectionSelect.value);
+    
+    					table.draw();
+    				}
+    				
+    				$.getJSON('getstatus', dbyearsparams, function(status)
+    				{
+    					if(status.userstatus === 'Update_Profile')
+    				    {
+    				        showEditProfileDialog();
+    				        window.location=document.getElementById('editprofileanchor').href;
+    				    }
+    				});
+    			});
+				
+				var table = $('#partnertable').DataTable();
+				$('#partnertype').on('change', function ()
+				{
+					sessionStorage.setItem('partnertype', this.value);
+				    var result = table.columns(2).data().search( this.value);
+				    console.log(result);
+				    table.draw();
+				    checkReset();
+				});
+
+				$('#partnerstatus').on('change', function ()
+				{
+					sessionStorage.setItem('partnerstatus', this.value);
+					table.columns(3).search( this.value).draw();
+				    checkReset();
+				});
+				
+				$('#partnercollection').on('change', function ()
+				{
+					sessionStorage.setItem('partnercollection', this.value);
+					table.columns(4).search( this.value).draw();
+					checkReset();
+				});
+				
+				$('#partnertable tbody').on( 'click', 'button', function () {
+			        var partner = table.row( $(this).parents('tr') ).data();
+			        partnerAction( partner.id );
+			    } );
+    		});
+    });
+    
+    function initializeFilters()
+    {
+    	if(sessionStorage.getItem('curryear') != null)	
+			document.getElementById('dbYears').value = sessionStorage.getItem('curryear');
+    	else
+    		sessionStorage.setItem('curryear', document.getElementById('dbYears').value);
+    	
+    	if(sessionStorage.getItem('partnertype') != null)	
+			document.getElementById('partnertype').value = sessionStorage.getItem('partnertype');
+
+		if(sessionStorage.getItem('partnerstatus') != null)	
+			document.getElementById('partnerstatus').value = sessionStorage.getItem('partnerstatus');
+		
+		if(sessionStorage.getItem('partnercollection') != null)
+			document.getElementById('partnercollection').value = sessionStorage.getItem('partnercollection');
+		
+		//enable the listeners
+		document.getElementById('dbYears').setAttribute("onchange", "updateForYearSelection()");
+		document.getElementById('resetbtn').addEventListener('click', function(){ onResetFilters(true); });
+		
+		checkReset();
+    }
+    
+    function checkReset()
+    {
+    	var resetButton = document.getElementById('resetbtn');
+    		
+    	if(document.getElementById('partnertype').selectedIndex > 0 ||
+			document.getElementById('partnerstatus').selectedIndex > 0 ||
+			 document.getElementById('partnercollection').selectedIndex > 0)
+    	{	
+    		resetButton.style.backgroundColor='#336699';
+			resetButton.disabled = false;
+    	}
+    	else
+    	{
+    		resetButton.style.backgroundColor='Gray';
+    		resetButton.disabled = true;
+    	}	
+    }
+    
+    function getPartnersFromServer(year)
+    {  	
+    	//get partners from the server
+    	var partnerparams = "year=" + year + "&confirmed=false&callback=?";
+    	$.getJSON('partners', partnerparams, function(data)
+    	{
+    		if(data.hasOwnProperty('error'))
+    			window.location=document.getElementById('timeoutanchor').href;
+    		else
+    		{
+    			var table = $('#partnertable').DataTable();
+    			table.clear();
+				table.rows.add(data).draw();
+    		}
+    	});    	
+    }
+   
+    function updateForYearSelection()
+    {
+    	//get selected year and update session store
+    	var yearCB = document.getElementById('dbYears');
+		var selYear = yearCB.options[yearCB.selectedIndex].value;
+		
+		sessionStorage.setItem("curryear", selYear);
+		
+		getPartnersFromServer(selYear);	
+    }
+
+
+    function partnerAction(partnerID)
+    {
+   	 	sessionStorage.setItem("partnerid", partnerID);
+		var params = {};
+		params["partnerid"] = partnerID;
+		
+		post('partnerupdate', params);
+    }
+    
+    function newPartner()
+    {
+    	sessionStorage.setItem("partnerid", "New");
+    	
+    	var params = {};
+		post('partnerupdate', params);
+    }
+    
+    function filterChanged(element)
+    {
+    	sessionStorage.setItem(element.id, element.value);
+    	checkReset();
+    	
+    	var table = $('#partnertable').DataTable();
+    	table.search( element.value ).draw();
+    }
+    
+    function onResetFilters(bUpdateTable)
+    {
+    	var typeElement = document.getElementById('partnertype');
+    	var statusElement = document.getElementById('partnerstatus');
+    	var collectionElement = document.getElementById('partnercollection');
+    	
+        typeElement.value = 'Any';
+        statusElement.value = 'Any';
+        collectionElement.value = 'Any';
+        
+        sessionStorage.setItem(typeElement.id, typeElement.value);
+		sessionStorage.setItem(statusElement.id, statusElement.value);
+		sessionStorage.setItem(collectionElement.id, collectionElement.value);
+		
+		checkReset();
+		
+		if(bUpdateTable)
+		{
+			var table = $('#partnertable').DataTable();
+			table
+			 .search( '' )
+			 .columns().search( '' )
+			 .draw();
+		}
+    }
+    
+    function onResetYear()
+    {
+    	var yearCB = document.getElementById('dbYears');
+    	yearCB.selectedIndex = '0';	//reset to most current year
+    	sessionStorage.setItem('curryear', yearCB.value);
+    }
+    
+    function onChangePW() 
+    {
+    	if(validate())
+    	{
+			var params = {}	
+			params["field1"] = document.getElementById('currpw').value;
+			params["field2"] = document.getElementById('newpw').value;
+    		$.post('reqchangepw', params, function(response)
+    		{
+    			if(response.hasOwnProperty('error'))
+    				window.location=document.getElementById('timeoutanchor').href;
+    			else
+    				document.getElementById('message').textContent= response;
+    		});
+    		
+    		document.getElementById('currpw').value = "";
+	    	document.getElementById('newpw').value = "";
+	    	document.getElementById('verifypw').value = "";
+    		window.location=document.getElementById('closepopup').href;
+    	}
+    }
+
+    function onCancel()
+    {
+		window.location=document.getElementById('closepopup').href;
+    }
+	
+	function validate()
+    {
+		var mssgEl = document.getElementById("pw_mssg");
+    	var currpwEl = document.getElementById("currpw");
+        var pass1El = document.getElementById("newpw");
+        var pass2El = document.getElementById("verifypw");
+        var ok = true;
+        
+        if(currpwEl.value == "")
+        {
+        	//alert("current password field empty");
+            currpwEl.style.borderColor = "#E34234";
+            
+            mssgEl.style.color = "Red";
+            mssgEl.textContent = "Current password not provided, please try again!";
+            ok = false;
+        }
+        else if(pass1El.value == '' || pass2El.value == '')
+		{
+			//alert("Either New or Verify Passwords are empty");
+    		pass1El.style.borderColor = "#E34234";
+    		pass2El.style.borderColor = "#E34234";
+    
+    		mssgEl.style.color = "Red";
+    		mssgEl.textContent = "Please fill out both New and Confirm, try again!";
+    		ok = false;
+		}        
+        else if(pass1El.value !== pass2El.value)
+        {
+            //alert("New and Verify Passwords do not match");
+            pass1El.style.borderColor = "#E34234";
+            pass2El.style.borderColor = "#E34234";
+            
+            mssgEl.style.color = "Red";
+            mssgEl.textContent = "New and Verify passwords don't match, please try again!";
+            ok = false;
+        }
+
+        return ok;
+    }
+	
+	function onLogoutLink()
+	{
+		onResetYear();
+		onResetFilters();	//don't remember filter settings
+		
+		var params = {};
+		post('logout', params);
+	}
+	
+	function onSessionTimeout()
+	{
+		onResetYear();
+		onResetFilters();	//don't remember filer settings
+		window.location.assign('timeout');
+	}
+    
+	function post(path, params, method) 
+	{
+	    method = method || "post"; // Set method to post by default if not specified.
+
+	    // The rest of this code assumes you are not using a library.
+	    // It can be made less wordy if you use one.
+	    var form = document.createElement("form");
+	    form.setAttribute("method", method);
+	    form.setAttribute("action", path);
+
+	    for(var key in params) 
+	    {
+	    	if(params.hasOwnProperty(key))
+	        {
+	            var hiddenField = document.createElement("input");
+	            hiddenField.setAttribute("type", "hidden");
+	            hiddenField.setAttribute("name", key);
+	            hiddenField.setAttribute("value", params[key]);
+
+	        	form.appendChild(hiddenField);
+	        }
+	    }
+
+	    document.body.appendChild(form);
+	    form.submit();
+	}
+    </script>
+    <style type="text/css">         
+    .controlbar
+	{
+		width:90%;
+		height: 32px;
+		margin:0 auto;
+		background-color: #3CB371;
+		border: 1px solid black;
+	}
+	#tablediv 
+	{ 
+		width: 90%;
+		margin: auto;
+	}
+	#newbar { text-align: right; }
+	.textDialog 
+	{
+		position: fixed;
+		font-family: Arial, Helvetica, sans-serif;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background: rgba(5,5,5,0.4);
+		z-index: 99999;
+		opacity:0;
+		-webkit-transition: opacity 400ms ease-in;
+		-moz-transition: opacity 400ms ease-in;
+		transition: opacity 400ms ease-in;
+		pointer-events: none;
+	}
+	.textDialog:target 
+	{
+		opacity:1;
+		pointer-events: auto;
+	}
+	.textDialog > div 
+	{
+		width: 700px;
+		height: 400px;
+		position: relative;
+		margin: 10% auto;
+		padding: 5px 10px 5px 10px;
+		border-radius: 10px;
+		background: #fff;
+		background: -moz-linear-gradient(#fff, #999);
+		background: -webkit-linear-gradient(#fff, #999);
+		background: -o-linear-gradient(#fff, #999);
+	}
+	.textDialog label
+	{
+		float: left;
+    	text-align: right;
+    	margin-right: 0.5em;
+    	display: block;
+    	color: black;
+    	font-size: 85%;
+	}
+	dl
+	{	height:300px;
+		overflow-y:scroll;
+	}
+	dt
+	{
+		font-weight: bold;
+	}
+	dt:before
+	{
+		content: '\A';
+    	white-space: pre;
+	}
+	dd
+	{
+		font-style: italic;
+	}
+	#filterspan
+	{
+		display: inline-block;
+    	margin-left: 40px;
+	}
+	.select-css 
+	{
+		display: ck; 
+		width: auto;
+		font-size: 12px;
+		font-family: sans-serif;
+		font-weight: 700;
+		color: #444;
+		line-height: 1.3;
+		padding: .6em 1.4em .5em .8em;
+		max-width: 100%;
+		box-sizing: border-box;
+		margin: 0;
+		border: 1px solid #aaa;
+		box-shadow: 0 1px 0 1px rgba(0,0,0,.04);
+		border-radius: .5em;
+		-moz-appearance: none;
+		-webkit-appearance: none;
+		appearance: none;
+		background-color: #fff;		
+		background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'),linear-gradient(to bottom, #ffffff 0%,#e5e5e5 100%);
+		background-repeat: no-repeat, repeat;
+		background-position: right .7em top 50%, 0 0;
+		background-size: .65em auto, 100%;
+	}
+	.select-css::-ms-expand { display: none; }
+	.select-css:hover { border-color: #888; }
+	.select-css:focus 
+	{
+		border-color: #aaa;
+		box-shadow: 0 0 1px 3px rgba(59, 153, 252, .7);
+		box-shadow: 0 0 0 3px -moz-mac-focusring;
+		color: #222;
+		outline: none;
+	}
+	.select-css option
+	{
+		font-weight:normal;
+	}
+	.filterlabel
+	{
+		display: inline-block;
+		margin-left: 6px;
+    	margin-right: 6px;
+		font-size: 18px;
+	}
+	#resetbtn { margin-top: 4px; }
+	button 
+	{
+		background-color: #336699;
+		color: #ffffff;
+    	border-radius: 4px;
+  		border: none;
+  		padding: 4px 6px;
+  		text-align: center;
+  		text-decoration: none;
+  		display: inline-block;
+  		font-size: 14px;
+	}
+    </style>
+</head>
+<body>
+  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <div id="topbar" class="topbar">
+    <img src="onclogo" height="55" width="75"/>
+	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child's Partner Management System</span><br>
+	<span id="message">USER_MESSAGE</span></p>
+  </div>
+  <nav>
+   <ul>
+	    <li id="homelinkli"><a id='homelink' href='dashboard'>Dashboard</a></li>
+	</ul>
+	<ul class='floatright'>
+		<li id='profileli'><a href="#">Profile <span class="caret"></span></a>
+		  <div>
+		    <ul>
+			  <li><a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a></li>
+			  <li><a href="#chgpwdlg">Change Password</a></li>
+		    </ul>
+		  </div>
+	    </li>
+	    <li id="logoutli"><a href='javascript:onLogoutLink()'>Logout</a></li>
+	</ul>
+  </nav>
+  <div class='controlbar'>
+  		<select id="dbYears" class="select-css"></select>
+		<label>Partners</label>
+		<span id='filterspan'>
+		  <label for='partnertype' class='filterlabel'>Type:</label>
+		  <select id="partnertype" title="Type" class="select-css">
+		    <option value="Any">Any</option>
+    	    <option value="Business">Business</option>
+		    <option value="Church">Church</option>
+		    <option value="School">School</option>
+		    <option value="Clothing">Clothing</option>
+		    <option value="Coat">Coat</option>
+		    <option value="ONC Shopper">ONC Shopper</option>
+		  </select>
+		  <label for='partnerstatus' class='filterlabel'>Status:</label>
+		  <select id="partnerstatus" title="status" class="select-css">
+		    <option value="Any">Any</option>
+    	    <option value="No Action Yet">No Action Yet</option>
+		    <option value="1st Email Sent">1st Email Sent</option>
+		    <option value="Responded">Responded</option>
+		    <option value="2nd Email Sent">2nd Email Sent</option>
+		    <option value="Called, Left Mssg">Called, Left Mssg</option>
+		    <option value="Confirmed">Confirmed</option>
+		    <option value="Not Participating">Not Participating</option>
+		  </select>
+		  <label for='partnercollection' class='filterlabel'>Collection:</label>
+		  <select id="partnercollection" title="collection" class="select-css">
+		    <option value="Any">Any</option>
+		    <option value="General">General</option>
+		    <option value="Ornament">Ornament</option>
+		    <option value="Meals">Meals</option>
+		    <option value="Unknown">Unknown</option>
+		  </select>
+		</span>
+		<span class='floatright'>
+			<button id="resetbtn">Reset Filters</button>
+		</span>
+  </div>
+  <div id='tablediv'>
+	<table id="partnertable" class='display' style="width:100%">
+      <thead>
+        <tr>
+       		<th>ID</th>
+       		<th>Name</th>
+       		<th>Type</th>
+       		<th>Status</th>
+        	<th>Collection</th>
+        	<th>Req</th>
+        	<th>Del</th>
+        	<th>Rec</th>
+	   		<th>Action</th>
+        </tr>
+      </thead>
+      <tbody id='partnertbody'>
+      </tbody>
+	</table>
+  </div>
+  <div id='newbar' class='controlbar'>
+    <button id="new" onclick="newPartner()">Add New Partner</button>
+  </div>
+  <!-- Edit Profile Dialog -->
+  <div id="editProfile" class="modalDialog">
+	  <div class='innerextended'>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class='logospan'>Verify/Update ONC Profile</span>
+	  </div>
+	  <div class='greenbackground'>
+	  <fieldset class="fieldset-auto-width">
+  		<legend class="legend-major">Contact Information</legend>
+  		<div class= 'profilediv'>
+    	  		<label for="userfirstname">Name:</label>
+    	  		<input id='userfirstname' type="text" size="16" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="16" placeholder="Last Name" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="userorg" >Organization:</label>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="usertitle" >Title:</label>
+    	  		<input id='usertitle' type="text" size="33" placeholder="Title" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="useremail" >Email:</label>
+    	  		<input id='useremail' type="text" size="35" placeholder="Email address" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  	<div class= 'profilediv'>
+    	  		<label for="userphone" >Phone:</label>
+    	  		<input id='userphone' type="text" size="22" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  	</div>
+    	  </fieldset>
+    	  </div>
+    	  <div id='buttonbar'>
+    	    <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" value='unchanged' style="background-color:Grey" onclick="onUpdateProfile(this)" disabled>Update</button>
+    	  </div> 
+	</div>
+  </div>
+<!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div class='inner'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo">
+		  <span class='logospan'>Change Password</span>
+		</div>
+		<p id='pw_mssg'>Enter current and new password:</p>
+    	<p><label class='lbl_pw' for="currpw">Current Password:</label>
+    	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
+    	<p><label class='lbl_pw' for="newpw">New Password:</label>
+    	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
+    	<p><label class='lbl_pw' for="verifypw" >Verify Password:</label>
+    	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
+    	<div id='buttonbar'>
+      	  <button id="cancel" onclick="onCancel()">Cancel</button>
+      	  <button id="submit" onclick="onChangePW()">Change Password</button>
+    	</div> 
+	</div>
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div class='inner'>
+		<div class='dialogtopbar'>
+		  <img class='logoimg' src="onclogo"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>  
+</body>
+</html>
