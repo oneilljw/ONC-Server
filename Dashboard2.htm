@@ -2,20 +2,21 @@
 <html>
 <head lang="en">
   <title>ONC Dashboard</title>
-  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="editprofile.js"></script>
-<!--  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script> -->
   <script src="jquery.js"></script>
   <script src="staticcharts.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>  
   <script>
     $( document ).ready(function()
     {
-    		//get the list of years from the data base and put it in the year combo box
+    	//get the list of years from the data base and put it in the year combo box
    	 	var dbyearsparams = "callback=?";
    	 	$.getJSON('dbStatus', dbyearsparams, function(data)
     		{
-			var yearCombo = document.getElementById('yearlist');
+				var yearCombo = document.getElementById('yearlist');
     			for (var i = data.length-1; i >= 0; i--)
     			{
     				var option = document.createElement('option');
@@ -33,12 +34,11 @@
     			}
  
     			sessionStorage.setItem('curryear', yearCombo.value);
-    			setFamilyViewLink(yearCombo.value);
     			
     			google.charts.load('current', {packages: ['corechart', 'bar']});
-            google.charts.setOnLoadCallback(drawFamStatusChart);
+            	google.charts.setOnLoadCallback(drawFamStatusChart);
             
-            $.getJSON('getstatus', dbyearsparams, function(status)
+            	$.getJSON('getstatus', dbyearsparams, function(status)
             	{
             		if(status.userstatus === 'Update_Profile')
             		{
@@ -47,22 +47,16 @@
             		}
             	});
     		});
-    	  	
-    		window.setInterval(drawFamStatusChart, 300000);	//five minutes
+
+//  		window.setInterval(drawFamStatusChart, 300000);	//five minutes
     	});
-    
-    function setFamilyViewLink(year)
-    {
-   	 	var linkElem = document.getElementById('familyviewlink');
-		linkElem.href='/familyview?year=' + year; 
-    }
-    
+
     function drawFamStatusChart() 
     {
     		var familyparams = "year=" + sessionStorage.getItem('curryear')
 		   				+"&maptype=family" + "&callback=?";
     	
-   	 	var giftparams = "year=" + sessionStorage.getItem('curryear')
+   	 		var giftparams = "year=" + sessionStorage.getItem('curryear')
 						+"&maptype=gift" + "&callback=?";
     	
     		var mealparams = "year=" + sessionStorage.getItem('curryear')
@@ -78,7 +72,7 @@
     			else
     			{	
     				// Create our data table out of JSON data loaded from server.
-    	    			var famtable = new google.visualization.DataTable(familyData);
+    	    		var famtable = new google.visualization.DataTable(familyData);
     	 			var famview = new google.visualization.DataView(famtable);
         			famview.setColumns([0, 1,
                           	{ calc: "stringify",
@@ -95,16 +89,16 @@
     					titleTextStyle: 
     					{
     						fontSize: 16, // 12, 18 whatever you want (don't specify px)
-    		        			bold: true,    // true or false
+    		        		bold: true,    // true or false
     					},
-    	    				chartArea: {width: '70%'},
-    	    				hAxis: { minValue: 0 },
-    	    				legend: {position: 'none'},
-    	    				bars: 'horizontal' // Required for Material Bar Charts.
-    			};
+    	    			chartArea: {width: '70%'},
+    	    			hAxis: { minValue: 0 },
+    	    			legend: {position: 'none'},
+    	    			bars: 'horizontal' // Required for Material Bar Charts.
+    				};
     	
-    			var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
-    			famstatuschart.draw(famview, famoptions);
+    				var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
+    				famstatuschart.draw(famview, famoptions);
     			}
     		
     			$.getJSON('metrics', giftparams, function(giftData)
@@ -129,7 +123,10 @@
         		        		fontSize: 16, // 12, 18 whatever you want (don't specify px)
         		        		bold: true,    // true or false
         				},
-    		    			chartArea: {width: '65%'},
+    		    			chartArea:
+    		    			{
+    		    				width: '65%'
+    		    			},
     		    			hAxis: { minValue: 0 },
     		    			legend: {position: 'none'},
     		    		};
@@ -206,51 +203,33 @@
     
     function onChangePW() 
     {
-    		if(validate())
+    	if(validate())
    	 	{
 			var params = {}	
 			params["field1"] = document.getElementById('currpw').value;
 			params["field2"] = document.getElementById('newpw').value;
-    			$.post('reqchangepw', params, function(response)
-    			{
-    				document.getElementById('message').textContent= response;
-    			});
+    		$.post('reqchangepw', params, function(response)
+    		{
+    			document.getElementById('banner-message').textContent= response;
+    			document.getElementById('welcome-div').style.display = "block";
+    		});
     		
-    			document.getElementById('currpw').value = "";
-	    		document.getElementById('newpw').value = "";
-	    		document.getElementById('verifypw').value = "";
-    			window.location=document.getElementById('closepopup').href;
-    		}
+    		document.getElementById('currpw').value = "";
+	    	document.getElementById('newpw').value = "";
+	    	document.getElementById('verifypw').value = "";
+    		window.location=document.getElementById('closepopup').href;
+    	}
     }
     
 	function updateForYearSelection()
     {
-    		//get selected year
-    		var yearCB = document.getElementById("yearlist");
+    	//get selected year
+    	var yearCB = document.getElementById("yearlist");
 		var year = yearCB.options[yearCB.selectedIndex].value;
 		sessionStorage.setItem('curryear', year);
-		setFamilyViewLink(year);
 		drawFamStatusChart();
     }
-	
-	function clearSelect(select)
-	{
-		var i;
-		for(i=select.options.length-1;i>=0;i--)
-		{
-	    	select.remove(i);
-	    }
-	}
-	
-	function removeOptions(selectbox)
-	{
-	    var i;
-	    for(i=selectbox.options.length-1;i>=0;i--)
-	    {
-	        selectbox.remove(i);
-	    }
-	}
-	
+
 	function onProfileNotChanged()
     {
 		var params = {}	
@@ -346,84 +325,255 @@
 	    form.submit();
 	}
   </script>
-  <style type="text/css">	
-	#controlbar
+  <style type="text/css">
+  .header 
+	{
+		height: 70px;
+		width: 90% ;
+		margin: auto;
+		background-color: #484e78;
+	}
+	.header-links
+	{
+		display: inline-block;
+    	margin-top: 25px;   
+	}
+	.header-links a
+	{
+		font-size: 18px;
+		margin-right: 40px;
+		text-decoration: none;
+	}
+	.home-link
+	{
+		color: white;
+		font-style: italic;
+	}
+	.page-link { color: white; }
+	.page-link:hover { background-color: #bbb7ff; }
+	#logo-img
+	{
+		vertical-align: middle;
+    	margin-top: -8px;
+    	margin-left: 5px;
+    	margin-right: 10px;
+    	max-height: 55px;
+    	max-width: 75px;
+	}
+	.headerbuttons
+	{
+		display: inline-block;
+		float: right;
+		margin-top: 22px;
+	}
+	/* Dropdown Button */
+	.dropbtn 
+	{
+  		color: white;
+  		font-size: 16px;
+  		background-color: Transparent;
+  		background-repeat:no-repeat;
+  		border: none;
+  		cursor:pointer;
+  		overflow: hidden;
+  		outline:none;
+	}
+	.dropdown 
+	{
+  		position: relative;
+  		display: inline-block;
+	}
+	.dropdown-content
+	{
+ 		display: none;
+  		position: absolute;
+  		background-color: #f1f1f1;
+  		min-width: 160px;
+  		box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+ 		 z-index: 1;
+	}
+	.dropdown-content a
+	{
+  		color: black;
+  		padding: 12px 16px;
+  		text-decoration: none;
+  		display: block;
+	}
+	.dropdown-content a:hover { background-color: #bbb7ff; }
+	.dropdown:hover .dropdown-content { display: block; }
+	.dropdown:hover .dropbtn { background-color: #bbb7ff; }
+	.header-anchor { text-decoration: none;}
+	.floatleft { float:left; }
+	.floatright { float:right; }	
+	#logoutbtn
+	{
+		color: white;
+		font-size: 16px;
+  		background-color: Transparent;
+  		background-repeat:no-repeat;
+  		border: none;
+  		cursor:pointer;
+	}
+	#logoutbtn:hover  {background-color: #bbb7ff;}
+	#welcome-div
+	{
+		width: 90%;
+		height: 36px;
+		line-height: 36px;
+		margin-top: -8px;
+		margin-right: auto;
+		margin-left: auto;
+		background-color: black;
+		display: SHOW_MESSAGE;
+	}
+	#welcome-div p
+	{
+		color: white;
+		font-size: 18px;
+		font-style: italic;
+		padding-left: 8px;
+	}
+	#filterspan
+	{
+		display: inline-block;
+    	margin-left: 10px;
+	}
+	select 
+	{
+		display: ck;
+		vertical-align: middle;
+		width: auto;
+		font-size: 12px;
+		font-family: sans-serif;
+		font-weight: 700;
+		color: #444;
+		line-height: 1.3;
+		padding: .6em 1.4em .5em .8em;
+		max-width: 100%;
+		box-sizing: border-box;
+		margin: 0;
+		border: 1px solid #aaa;
+		box-shadow: 0 1px 0 1px rgba(0,0,0,.04);
+		border-radius: .5em;
+		-moz-appearance: none;
+		-webkit-appearance: none;
+		appearance: none;
+		background-color: #fff;		
+		background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'),linear-gradient(to bottom, #ffffff 0%,#e5e5e5 100%);
+		background-repeat: no-repeat, repeat;
+		background-position: right .7em top 50%, 0 0;
+		background-size: .65em auto, 100%;
+	}
+	select::-ms-expand { display: none; }
+	select:hover { border-color: #888; }
+	select-css:focus 
+	{
+		border-color: #aaa;
+		box-shadow: 0 0 1px 3px rgba(59, 153, 252, .7);
+		box-shadow: 0 0 0 3px -moz-mac-focusring;
+		color: #222;
+		outline: none;
+	}
+	select option { font-weight: normal; }
+	.filterlabel
+	{
+		display: inline-block;
+		margin-left: 6px;
+    	margin-right: 6px;
+		font-size: 18px;
+	}
+	form
 	{
 		width:90%;
-		height: 28px;
-		margin:0 auto;
-		background-color: #E8E8E8;
-		border: 1px solid black;
+		min-width: 900px;
+		margin: 0 auto;
+		border: none;
 	}
+	fieldset 
+	{
+		margin-top: 5px;
+		background-color: #E8E8E8;
+	}
+	legend
+	{
+  		padding: 0.2em 0.5em;
+  		border:1px solid black;
+  		background-color: #E8E8E8;
+  		font-size:80%;
+  		text-align:left;
+	}	
 	.constrainer 
     {
         width: 90%;
-		margin-left: auto;
-		margin-right: auto;
-        background-color: #3CB371;
-        border: 1px solid black;
+		margin: 0 auto;
+    }
+    table
+    {
+    	margin-top: 12px;
+    	margin-right: auto;
+    	margin-bottom: 0px;
+    	margin-left: auto;
+    }
+    td
+    {
+  		padding: 10px;
+  		background-color: #E8E8E8;
+  		border-color: black;
+  		border-width: 2px;
+  		border-style: ridge;
+	}
+    table, td
+    {
+    	border-color: black;
+    	border-width: 2px;
+    	border-style: ridge;
     }
   </style>
 </head>
 <body>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
-  <div id='topbar' class="topbar">
-    <img src="onclogo" height="55" width="75"/>
-	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child's Data Management System</span><br>
-	<span id="message">USER_MESSAGE</span></p>
+  <div class='header'>
+    <img id='logo-img' src="onclogo">
+    <span class='header-links'>
+      <a class='home-link' href='#'>Dashboard</a>
+      <a class='page-link' href="familystatus">Families</a>
+      <a class='page-link' href="partnertable">Partners</a>
+      <a class='page-link' href="regiontable">Regions</a>
+    </span>   
+    <div class='headerbuttons'>
+      <div class='dropdown'>
+        <button class=dropbtn>Profile</button>
+        <div class='dropdown-content'>
+      	  <a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a>
+      	  <a href="#chgpwdlg">Change Password</a>
+      	</div> 
+      </div>
+      <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
+    </div>
   </div>
-  <nav>
-	<ul>
-		<li>Dashboard</li>
-	    <li><a href="#">Families<span class="caret"></span></a>
-		  <div>
-		    <ul>
-		   	  <li><a id='familyviewlink' href="familyview?year=-1">View Family</a></li>
-			  <li><a href="familystatus">Refer Family</a></li>
-		    </ul>
-		  </div>
-	    </li>
-	    <li><a href="#">Partners<span class="caret"></span></a>
-		  <div>
-		    <ul>
-			  <li><a href="partnertable">Manage Partners</a></li>
-		    </ul>
-		  </div>
-	    </li>
-	     <li><a href="#">Regions <span class="caret"></span></a>
-		  <div>
-		    <ul>
-			  <li><a href="regiontable">Manage Regions</a></li>
-		    </ul>
-		  </div>
-	    </li>
-	</ul>
-	<ul class='floatright'>
-	  <li id='profileli'><a href="#">Profile <span class="caret"></span></a>
-		  <div>
-		    <ul>
-			  <li><a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a></li>
-			  <li><a href="#chgpwdlg">Change Password</a></li>
-		    </ul>
-		  </div>
-	  </li>	    
-	  <li id="logoutli"><a href="javascript:onLogoutLink()">Logout</a></li>
-	</ul>
-  </nav>
-  <div class='controlbar'>
-    <select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select>
+  <div id="welcome-div">
+    <p id='banner-message'>BANNER_MESSAGE<p>
   </div>
-  <!--Table and divs that hold the pie charts-->
+  <form>
+  	<fieldset>
+  		<legend>Filters</legend>
+		<span id='filterspan'>
+		  <label for='yearlist' class='filterlabel'>Season:</label>
+		  <select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select>
+		</span>  
+	</fieldset>		
+  </form>    
+  <!--Table and divs that hold the charts-->
   <div class="constrainer">
     <table>
       <tr>
-        <td><div id="famstatus_div" style="border: 1px solid #ccc"></div></td>
-        <td><div id="giftstatus_div" style="border: 1px solid #ccc"></div></td>
+        <td><div id="famstatus_div"></div></td>
+        <td><div id="giftstatus_div"></div></td>
       </tr>
       <tr>
-        <td><div id="mealstatus_div" style="border: 1px solid #ccc"></div></td>
-        <td><div id="delstatus_div" style="border: 1px solid #ccc"></div></td>
+        <td><div id="mealstatus_div"></div></td>
+        <td><div id="delstatus_div"></div></td>
       </tr>
     </table>
   </div>

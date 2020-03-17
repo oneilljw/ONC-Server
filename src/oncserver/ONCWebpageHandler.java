@@ -33,14 +33,14 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
 	private static final String EDIT_PROFILE_JS_FILE = "EditProfile.js";
-	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
+	private static final String PARTNER_UPDATE_HTML = "Partner2.htm";
 	private static final String REGION_TABLE_HTML = "RegionTable.htm";
 	private static final String REGION_UPDATE_HTML = "Region.htm";
 	private static final String DRIVER_SIGN_IN_HTML = "DriverReg.htm";
 	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
 	private static final String VOLUNTEER_REGISTRATION_HTML = "VolRegistration.htm";
 	private static final String REFERRAL_STATUS_HTML = "ReferralStatus.htm";
-	private static final String DASHBOARD_HTML = "Dashboard.htm";
+	private static final String DASHBOARD_HTML = "Dashboard2.htm";
 	private static final String PARTNER_TABLE_HTML = "PartnerTablev2.0.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
@@ -305,6 +305,14 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	String getPartnerTableWebpage(WebClient wc, String message)
 	{
 		String response = webpageMap.get("partnertable");
+		if(message.isEmpty())
+			response = response.replace("SHOW_MESSAGE", "none");
+		else
+		{
+			String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
+			response = response.replace("BANNER_MESSAGE", loginMssg);
+		}
+		
 		response = response.replace("USER_NAME", getUserFirstName(wc));
 		response = response.replace("USER_MESSAGE", message);
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
@@ -315,6 +323,15 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	String getDashboardWebpage(WebClient wc, String message)
 	{
 		String response = webpageMap.get("dashboard");
+		if(message.isEmpty())
+			response = response.replace("SHOW_MESSAGE", "none");
+		else
+		{
+			String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
+			response = response.replace("BANNER_MESSAGE", loginMssg);
+		}
+		
+		response = response.replace("SHOW_MESSAGE", "block");
 		response = response.replace("USER_NAME", getUserFirstName(wc));
 		response = response.replace("USER_MESSAGE", message);
 		

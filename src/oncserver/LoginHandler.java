@@ -354,9 +354,9 @@ public class LoginHandler extends ONCWebpageHandler
 	    				userMssg = "This is your first visit!";
 	    			else
 	    			{
-	    				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d, yyyy");
+	    				SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMM d, yyyy");
 	    				sdf.setTimeZone(TimeZone.getDefault());
-	    				userMssg = "You last visited " + sdf.format(lastLogin.getTime());
+	    				userMssg = "You last visited on " + sdf.format(lastLogin.getTime()) +".";
 	    			}
 
 	    			response = new HtmlResponse(getHomePageHTML(wc, userMssg, false), HttpCode.Ok, getSIDCookie(wc));

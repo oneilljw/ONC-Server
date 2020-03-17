@@ -508,7 +508,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
     					//submission successful, send the family table page back to the user
     					String userFN = wc.getWebUser().getFirstName().equals("") ? 
     							wc.getWebUser().getLastName() : wc.getWebUser().getFirstName();
-    							response =  String.format("%s, your password was successfully changed!", userFN);
+    					response =  String.format("%s, your password was successfully changed!", userFN);
     				}
     				else if(retCode == -1)
     					response = "Password Change Failed: Current password incorrect";		
