@@ -44,6 +44,8 @@ public class CommonHandler extends ONCWebpageHandler
 			sendCachedFile(t, "text/javascript", "staticcharts", false);
 		else if(requestURI.contains("/editprofile.js"))
 			sendCachedFile(t, "text/javascript", "editprofile", false);
+		else if(requestURI.contains("/editprofile2.js"))
+			sendCachedFile(t, "text/javascript", "editprofile2", false);
 		else if(requestURI.contains("/login.js"))
 			sendCachedFile(t, "text/javascript", "login", false);
 	}

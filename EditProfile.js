@@ -3,67 +3,68 @@ var profileCBGroups = [];
 var profileTableGroups = []; 
 function showEditProfileDialog() 
 {
-    	var params = "callback=?";
+    var params = "callback=?";
 			
-    	$.getJSON('getuser', params, function(user)
-    	{
-    		userJson = user;
+    $.getJSON('getuser', params, function(user)
+    {
+    	userJson = user;
     			
-    		if(userJson.hasOwnProperty('error'))
-      	{
-			window.location=document.getElementById('timeoutanchor').href;
-      	}
-    		else if(userJson.hasOwnProperty('lastname'))
-		{
-			setInput('userfirstname', user.firstname);
-			setInput('userlastname', user.lastname);
-			setInput('userorg', user.org);
-	    		setInput('usertitle', user.title);
-	    		setInput('useremail', user.email);
-	    		setInput('userphone', user.phone);
+    	if(userJson.hasOwnProperty('error'))
+    	{
+    		window.location=document.getElementById('timeoutanchor').href;
+    	}
+    	else if(userJson.hasOwnProperty('lastname'))
+    	{
+    		setInput('userfirstname', user.firstname);
+    		setInput('userlastname', user.lastname);
+    		setInput('userorg', user.org);
+	    	setInput('usertitle', user.title);
+	    	setInput('useremail', user.email);
+	    	setInput('userphone', user.phone);
     	    			
-    	    		//clear & populate the profileTable array with groups from user profile, if
-    	    		//user has Agent, Admin or Sys_Admin permission	
-    	    		if(user.permission === 'Agent' || user.permission === 'Admin' || user.permission === 'Sys_Admin')
-    	    		{
-    	    			profileTableGroups.length= 0;
-    	    			for(var i=0; i<userJson.groups.length; i++)
-    	    				profileTableGroups.push(userJson.groups[i]);
+    	    //clear & populate the profileTable array with groups from user profile, if
+    	    //user has Agent, Admin or Sys_Admin permission	
+    	    if(user.permission === 'Agent' || user.permission === 'Admin' || user.permission === 'Sys_Admin')
+    	    {
+    	    	profileTableGroups.length= 0;
+    	    	for(var i=0; i<userJson.groups.length; i++)
+    	    		profileTableGroups.push(userJson.groups[i]);
     	    			
-    	    			updateGroupTable();
+    	    	updateGroupTable();
     	    			
-    	    			//get profile eligible groups from server and place into the group combobox
-    	    			var profileGroupCB = document.getElementById('groupselect');
-    	    			var groupparams = "agentid=-1&default=off&profile=yes&callback=?";
-    	    			$.getJSON('groups', groupparams, function(data)
-    	    			{
-    	    				profileCBGroups = data;
-    	    				//clear the group combo boxes
-    	    	    			profileGroupCB.options.length = 0;
+    	    	//get profile eligible groups from server and place into the group combobox
+    	    	var profileGroupCB = document.getElementById('groupselect');
+    	    	var groupparams = "agentid=-1&default=off&profile=yes&callback=?";
+    	    	$.getJSON('groups', groupparams, function(data)
+    	    	{
+    	    		profileCBGroups = data;
+    	    		
+    	    		//clear the group combo boxes
+    	    	    profileGroupCB.options.length = 0;
     	    	    			
-    	    	    			//add a dummy option to the top of the group select
-    	    	    			addComboBoxOption(profileGroupCB, "--Select a School/Org To Add--", -1);
+    	    	    //add a dummy option to the top of the group select
+    	    	    addComboBoxOption(profileGroupCB, "--Select a School/Org To Add--", -1);
     	    			
-    	    	    			//add the groups for the agent
-    	    				for (var i=0; i < data.length; i++)
-    	    					addComboBoxOption(profileGroupCB, data[i].name, data[i].id);
-    	    			});
-    	    		}
-    		}
-    	});
+    	    	    //add the groups for the agent
+    	    		for (var i=0; i < data.length; i++)
+    	    			addComboBoxOption(profileGroupCB, data[i].name, data[i].id);
+    	    	});
+    	    }
+    	}
+    });
 }
 
 function setInput(elementID, value)
 {
-		if(value !== null && value !== 'null')
-			document.getElementById(elementID).value = value;
-		else
-			document.getElementById(elementID).value = '';
+	if(value !== null && value !== 'null')
+		document.getElementById(elementID).value = value;
+	else
+		document.getElementById(elementID).value = '';
 }
     
 function updateGroupTable()
 {
-    	$("#grouptbody").empty();
+    $("#grouptbody").empty();
 	for(var i=0; i<profileTableGroups.length; i++)
 		addGroupTableRow(i, profileTableGroups[i]);
 }
@@ -147,41 +148,41 @@ function removeGroup(groupid)
     
 function checkForProfileChange()
 {
-    	var updateButton = document.getElementById('update');
-    	updateButton.value = 'unchanged';
-    	updateButton.style.backgroundColor='Gray';
+    var updateButton = document.getElementById('update');
+    updateButton.value = 'unchanged';
+    updateButton.style.backgroundColor='Gray';
 	updateButton.disabled = true;
     		
-    	if(document.getElementById('userfirstname').value !== userJson.firstname ||
-    		document.getElementById('userlastname').value !== userJson.lastname ||
-    		document.getElementById('userorg').value !== userJson.org ||
-    		document.getElementById('usertitle').value !== userJson.title ||
-    		document.getElementById('useremail').value !== userJson.email ||
-    		document.getElementById('userphone').value !== userJson.phone)
+    if(document.getElementById('userfirstname').value !== userJson.firstname ||
+    	document.getElementById('userlastname').value !== userJson.lastname ||
+    	 document.getElementById('userorg').value !== userJson.org ||
+    	  document.getElementById('usertitle').value !== userJson.title ||
+    	   document.getElementById('useremail').value !== userJson.email ||
+    	    document.getElementById('userphone').value !== userJson.phone)
    	{
-    		updateButton.value = 'changed';
-    		updateButton.style.backgroundColor='#336699';
-    	    updateButton.disabled = false
+    	updateButton.value = 'changed';
+    	updateButton.style.backgroundColor='#336699';
+    	updateButton.disabled = false
    	}
-    	else if(userJson.groups.length != profileTableGroups.length)
-    	{
-    		updateButton.value = 'changed';
-    		updateButton.style.backgroundColor='#336699';
-    	    updateButton.disabled = false;
-    	}
-    	else
-    	{
-        	var index = 0;
-        	for(var index = 0; index < profileTableGroups.length; index++)
+    else if(userJson.groups.length != profileTableGroups.length)
+    {
+    	updateButton.value = 'changed';
+    	updateButton.style.backgroundColor='#336699'; 
+    	updateButton.disabled = false;
+    }
+    else
+    {
+        var index = 0;
+        for(var index = 0; index < profileTableGroups.length; index++)
+        {
+        	if(profileTableGroups[index].id !== userJson.groups[index].id)
         	{
-        		if(profileTableGroups[index].id !== userJson.groups[index].id)
-        		{
-        			updateButton.value= 'changed';
-        			updateButton.style.backgroundColor='#336699';
-            	    updateButton.disabled = false
-        		}		
-        	}
-    	}
+        		updateButton.value= 'changed';
+        		updateButton.style.backgroundColor='#336699';
+            	updateButton.disabled = false
+        	}		
+        }
+    }
 }
     
 function onUpdateProfile(button)

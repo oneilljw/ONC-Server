@@ -33,8 +33,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
 	private static final String EDIT_PROFILE_JS_FILE = "EditProfile.js";
+	private static final String EDIT_PROFILE2_JS_FILE = "EditProfile2.js";
 	private static final String PARTNER_UPDATE_HTML = "Partner2.htm";
-	private static final String REGION_TABLE_HTML = "RegionTable.htm";
+	private static final String REGION_TABLE_HTML = "RegionTable2.htm";
 	private static final String REGION_UPDATE_HTML = "Region.htm";
 	private static final String DRIVER_SIGN_IN_HTML = "DriverReg.htm";
 	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
@@ -128,6 +129,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("oncdialogstylesheet", readFileToByteArray(ONC_DIALOG__STYLE_SHEET_CSS));
 			webfileMap.put("oncloginstylesheet", readFileToByteArray(ONC_LOGIN__STYLE_SHEET_CSS));
 			webfileMap.put("editprofile", readFileToByteArray(EDIT_PROFILE_JS_FILE));
+			webfileMap.put("editprofile2", readFileToByteArray(EDIT_PROFILE2_JS_FILE));
 			webfileMap.put("login", readFileToByteArray(LOGIN_JS_FILE));
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
 			webfileMap.put("staticcharts", readFileToByteArray(STATIC_CHARTS_JS_FILE));

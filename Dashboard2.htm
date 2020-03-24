@@ -16,14 +16,13 @@
    	 	var dbyearsparams = "callback=?";
    	 	$.getJSON('dbStatus', dbyearsparams, function(data)
     		{
-				var yearCombo = document.getElementById('yearlist');
+				var yearCombo = document.getElementById('curryear');
     			for (var i = data.length-1; i >= 0; i--)
     			{
     				var option = document.createElement('option');
     				option.text = data[i].id;
     	   		 	option.value = data[i].id;
-
-    	    			try 
+    	   		 	try 
 	    			{
 	        			yearCombo.add(option, null); //Standard 
 	    			} 
@@ -32,6 +31,14 @@
 	        			yearCombo.add(option); // IE only
 	    			}
     			}
+    			
+    			if(sessionStorage.getItem('curryear') == null)
+            	{
+            		yearCombo.selectedIndex = 0;
+            		sessionStorage.setItem('curryear', yearCombo.value);
+            	}
+            	else
+            		yearCombo.value = sessionStorage.getItem('curryear');	
  
     			sessionStorage.setItem('curryear', yearCombo.value);
     			
@@ -224,7 +231,7 @@
 	function updateForYearSelection()
     {
     	//get selected year
-    	var yearCB = document.getElementById("yearlist");
+    	var yearCB = document.getElementById("curryear");
 		var year = yearCB.options[yearCB.selectedIndex].value;
 		sessionStorage.setItem('curryear', year);
 		drawFamStatusChart();
@@ -559,8 +566,8 @@
   	<fieldset>
   		<legend>Filters</legend>
 		<span id='filterspan'>
-		  <label for='yearlist' class='filterlabel'>Season:</label>
-		  <select id="yearlist" name="yearlist" onchange="updateForYearSelection()"></select>
+		  <label for='curryear' class='filterlabel'>Season:</label>
+		  <select id="curryear" onchange="updateForYearSelection()"></select>
 		</span>  
 	</fieldset>		
   </form>    

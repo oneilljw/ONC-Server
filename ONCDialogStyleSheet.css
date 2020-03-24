@@ -1,3 +1,6 @@
+/*
+	ONC Dialog Style Sheet
+*/
 .modalDialog 
 {
 	position: fixed;
@@ -21,7 +24,6 @@
 }
 .inner 
 {
-	width: 296px;
 	min-height: 100px;
 	height: auto;
 	position: relative;
@@ -33,6 +35,8 @@
 	background: -webkit-linear-gradient(#fff, #999);
 	background: -o-linear-gradient(#fff, #999);
 }
+.regular-width { width: 296px; }
+.extended-width { width: 350px; }
 .close 
 {
 	background: #606061;
@@ -62,6 +66,26 @@
     color: black;
     font-size: 85%;
 }
+.dialogtopbar
+{	
+/*	width: 100%;	*/
+   	height: 56px;
+   	margin-top: 8px;
+}
+.logospan
+{
+	display: inline-block;
+	font-size: 16px;
+	font-weight: bold;
+	margin-top: 16px;
+}
+#dialogmssg
+{
+	margin: 20px;
+   	font-weight: bold;
+   	font-style: italic;
+   	font-size: 120%;
+}
 .lbl_ep
 {
     width: 6em;    
@@ -81,37 +105,11 @@
 .inp_pw
 {
 	width: 120px;
-}
-.dialogtopbar
-{	
-	width: 100%;
-   	height: 50px;
-}
-.logoimg
-{
-   	float:left; 
-  	width: 50px;
-  	height: auto;
-  	margin-right: 8px;
-}
-.logospan
-{
-	display: inline-block;
-	font-size: 16px;
-	font-weight: bold;
-	margin-top: 8px;
-}
-#dialogmssg
-{
-	margin: 20px;
-   	font-weight: bold;
-   	font-style: italic;
-   	font-size: 120%;
-}    
+}  
 #buttonbar
 {
 	width: 100%;
-	margin: 0, auto;
+	margin-top: 8px;
 	text-align: center;
 }
 #pw_mssg
@@ -126,47 +124,26 @@
 	display: block;
 	margin: 0px 10px 0px 0px;
 }
-.innerextended 
+.edit-background
 {
-	width: 350px;
-	min-height: 100px;
-	height: auto;
-	position: relative;
-	margin: 10% auto;
-	padding: 5px 10px 15px 10px;
-	border-radius: 10px;
-	background: #fff;
-	background: -moz-linear-gradient(#fff, #999);
-	background: -webkit-linear-gradient(#fff, #999);
-	background: -o-linear-gradient(#fff, #999);
+	background-color: #484e78;
+  	padding: 2px 5px 10px 5px;
 }
-.fieldset-auto-width
+.edit-background input
 {
-    display: inline-block;
+  	padding: 4px 0px;
+ 	box-sizing: border-box;
+ 	margin-right: 10px;
+ 	font-size: 14px;
 }
-.profilediv
+.edit-background label
 {
-	margin-bottom: 6px;
+	padding-top: 6px;
+	font-size: 14px;
 }
-.greenbackground
+.edit-background p
 {
-  	background-color: #3CB371;
-  	padding-bottom: 10px;
+	margin-top: 5px;
+	margin-bottom: 0px;
 }
-/* only styling below here */
-table { border-collapse: collapse; }       
-th 
-{
-	background-color: lightgrey;
-	border: 1px solid gray;
-    border-width: 1px;
-}
-td
-{
-	border: 1px solid gray;
-	border-width: 1px; 
-}
-tr:first-child td { border-top-width: 0; }
-tr:nth-child(odd) { background-color: #ffffff; }
-tr:nth-child(even) { background-color: lightgrey; }
-#grouptable { border: 2px solid black}
+#groupselect { margin-top: 5px;}

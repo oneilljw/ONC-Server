@@ -1,148 +1,125 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-<title>ONC Gift Partners</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script> 
-<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
-<script type="text/javascript" src="editprofile2.js"></script>
-<script>
-	var getTableData = {resource:'partners'};
-	var updateObject = {storageItem:'partnerid', resource:'partnerupdate'};
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ONC Regions</title>
+  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script> 
+  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
+  <script type="text/javascript" src="editprofile2.js"></script>
+  <script>
+  	var getTableData = {resource:'regions'};
+	var updateObject = {storageItem:'regionid', resource:'regionupdate'};
 	var bResettingFilters = false;
 	var filters = null;
-
-	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
     $( document ).ready(function()
     {
     	//get filter selects
     	filters = document.getElementById('filterspan').getElementsByTagName('select');
     	
-    	//remove dashboard anchor & change partner anchor class to .breadcrumb-only
-    	if(sessionStorage.getItem('homelinkVisibility') === 'hidden')
-    	{
-    		var dashboardli = document.getElementById('dashboard-anchor');
-    		dashboardli.parentNode.removeChild(dashboardli);
-    		
-    		document.getElementById('partner-anchor').classList.add('breadcrumb-only');
-    		document.getElementById('partner-anchor').classList.remove('breadcrumb-current');
-    	}
-
     	var table = $('#oncdatatable').DataTable( 
+    	{
+    		dom: 'B<"search"f>rtip',
+    		orderClasses: false,
+    		stripeClasses:['stripe1','stripe2'],
+    		buttons: 
+    		{
+    			buttons: 
+    			[
+    			    { 
+    			    	text: 'Edit Street', 
+    			    	action: function ( e, dt, node, config )
+    			    	{
+    			    		var selectedRow = table.row('.selected').data();
+    			    		if(typeof selectedRow !== 'undefined')		    						
+    			    			rowAction(selectedRow.id);
+    			    	},
+    			    	enabled: false 
+    			    },
+    			    { 
+    				    text: 'Add New Street', 
+    				    action: function ( e, dt, node, config ) { newAction(); } 
+    				},
+    			    'excel',
+    			    'pdf'
+    			],
+    			dom: 
+    			{
+    				button: 
+    			    {
+    			    	className: ''
+    			    }
+    			}
+    		},
+    		columns: 
+    		[
+    			{ data: "id", visible: false},
+    			{ data: "streetDir", width: '28px', className: 'dt-body-center' },
+    			{ data: "streetName", width: '450px', className: 'dt-head-left'  },
+    			{ data: "streetType", width: '48px' },
+    			{ data: "postDir", width: '28px' },
+    			{ data: "zipCode", width: '64px',className: 'dt-body-center' },
+    			{ data: "region", width: '28px', className: 'dt-body-center' },
+    			{ data: "addressNumLow", width: '56px', className: 'dt-body-center' },
+    			{ data: "addressNumHi", width: '56px', className: 'dt-body-center' },
+    			{ data: "schoolRegion", visible: false},
+    			{ data: "school", width: '96px', className: 'dt-head-left' }
+    		],
+    		scrollY: "340px",
+    		scrollCollapse: true,
+    		paging: false
+    	});
+    	
+   		//get the list of years from the data base so we can determine current year
+    	var params = "callback=?";
+    	$.getJSON('zipcodes', params, function(codes)
 		{
-		    dom: 'B<"search"f>rtip',
-		    orderClasses: false,
-		    stripeClasses:['stripe1','stripe2'],
-		    buttons: 
-		    {
-		    	buttons: 
-		    	[
-		    		{ 
-		    			text: 'Edit Partner', 
-		    			action: function ( e, dt, node, config )
-		    			{
-		    				var selectedPartner = table.row('.selected').data();
-		    				if (typeof selectedPartner !== 'undefined')		    						
-		    					rowAction(selectedPartner.id);
-		    			},
-		    			enabled: false 
-		            },
-		            { 
-			    		text: 'Add New Partner', 
-			    		action: function ( e, dt, node, config ) { newAction(); }
-			        },
-		            'excel',
-		            'pdf'
-		    	],
-		    	dom: 
-		    	{
-		    		button: 
-		    		{
-		            	className: ''
-		            }
-		        }
-		    },
-		    columns: 
-		    [
-				{ data: "id", visible: false},
-		    	{ data: "name", width: '450px', className: 'dt-head-left'  },
-		    	{ data: "type", width: '100px' },
-		    	{ data: "status", width: '100px' },
-		    	{ data: "collection", width: '100px' },
-		    	{ data: "orn_req", width: '28px', className: 'dt-body-center' },
-		    	{ data: "orn_delivered", width: '28px', className: 'dt-body-center' },
-		    	{ data: "orn_received", width: '28px', className: 'dt-body-center' }
-		    ],
-		    footerCallback: function ( row, data, start, end, display ) 
-		    {
-		    	var api = this.api(), data;
-		    	$( api.column(5).footer() ).html(api.column(5, {search: 'applied'}).data().sum());
-		    	$( api.column(6).footer() ).html(api.column(6, {search: 'applied'}).data().sum());
-		    	$( api.column(7).footer() ).html(api.column(7, {search: 'applied'}).data().sum()); 	
-		    },	
-		    scrollY: "396px",
-		    scrollCollapse: true,
-		    paging: false
-		});
-    		
-    	//get the list of years from the data base so we can determine current year
-    	var params = 'callback=?';
-    	$.getJSON('dbStatus', params, function(data)
-    	{	
-    		var combo = document.getElementById('curryear');
-        		for(var i = data.length-1; i >= 0; i--)
-        			addComboBoxOption(combo, data[i].id, data[i].id);
-        	
-        	if(sessionStorage.getItem('curryear') == null)
-        	{
-        		combo.selectedIndex = 0;
-        		sessionStorage.setItem('curryear', combo.value);
-        	}
-        	else
-        		combo.value = sessionStorage.getItem('curryear');	
-        	
-        	initializeFiltersAndRowSelection();
-				
- 			//get partners from the server
-    		var partnerparams = "year=" + combo.value + "&confirmed=false&callback=?";
-    		$.getJSON('partners', partnerparams, function(data)
+			buildZipCodeSelect(codes);
+			
+			initializeFiltersAndRowSelection();
+			
+			//get regions from the server
+    		params = "zipcode=" + document.getElementById('zipcode').value + "&callback=?";
+    		$.getJSON('regions', params, function(data)
     		{
     			if(data.hasOwnProperty('error'))
     				window.location=document.getElementById('timeoutanchor').href;
     			else
     			{
-					var table = $('#oncdatatable').DataTable();
 					table.rows.add(data);
 						
-					table.column(2).search(document.getElementById('partnertype').value);
-    				table.column(3).search(document.getElementById('partnerstatus').value);
-    				table.column(4).search(document.getElementById('partnercollection').value);
+					table.column(6).search(document.getElementById('region').value);
+    				table.column(9).search(document.getElementById('school').value);
+    
     				table.draw();
-    				
-    			}
-    				
-    			$.getJSON('getstatus', params, function(status)
-    			{
-    				if(status.userstatus === 'Update_Profile')
-    				{
-    					showEditProfileDialog();
-    					window.location=document.getElementById('editprofileanchor').href;
-    				}
-    			});
-    		});
-    	});
+    			}			
+			});
+		});
     	
     	createGroupTable();	//create profile dialog group table
     });
     
+    function buildZipCodeSelect(codes)
+    {
+    	bResettingFilters == true;
+    	
+    	var zipCodeSelect = document.getElementById('zipcode');
+        for(var i=zipCodeSelect.options.length-1; i>=0; i--)
+        	zipCodeSelect.remove(i); 
+        
+        for(i=0; i<codes.length; i++)
+        	zipCodeSelect.options[i] = new Option(codes[i], codes[i]);
+        
+        bResettingFilters == false;
+    }
+    
     function getTableDataParams()
     {
-    	return "year=" + sessionStorage.getItem('curryear') + "&confirmed=false&callback=?";
+    	return "zipcode=" + document.getElementById('zipcode').value + "&callback=?";
     }
     
     function initializeFiltersAndRowSelection()
@@ -404,9 +381,9 @@
 
 	    document.body.appendChild(form);
 	    form.submit();
-	}	
-  </script>
-  <style type="text/css">
+	}
+    </script>
+    <style type="text/css">
     .header 
 	{
 		height: 70px;
@@ -646,17 +623,17 @@
 		width: 120px;
 	}
 	.floatleft { float:left; }
-	.floatright { float:right; }  
-</style>
+	.floatright { float:right; }
+    </style>
 </head>
 <body>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
-  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a> 
   <div class='header'> 
     <img class='logo-img' src="onclogo">
     <span class='header-links'>
-	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
-      <a id='partner-anchor' class='breadcrumb-current' href='#'>Partners</a>
+	  <a class='breadcrumb-first' href='dashboard'>Dashboard</a>
+      <a class='breadcrumb-current' href='#'>Regions</a>
     </span>   
     <div class='headerbuttons'>
       <div class='dropdown'>
@@ -671,41 +648,70 @@
   </div>
   <div id="welcome-div">
     <p id='banner-message'>BANNER_MESSAGE<p>
-  </div>    
+  </div>  
   <form>
-  <fieldset>
-  		<legend>Filters</legend>
+    <fieldset>
+  	  <legend>Filters</legend>
 		<span id='filterspan'>
-		  <label for='curryear' class='filterlabel'>Season:</label>
-		  <select id="curryear" title="Select season to display" data-type='data' data-column='-1' onchange='executeFilter(this)'></select>
-		  <label for='partnertype' class='filterlabel'>Type:</label>
-		  <select id="partnertype" title="Filter Partners by Type" data-type='search' data-column='2' onchange='executeFilter(this)'>
-		    <option value="">Any</option>
-    	    <option value="Business">Business</option>
-		    <option value="Church">Church</option>
-		    <option value="School">School</option>
-		    <option value="Clothing">Clothing</option>
-		    <option value="Coat">Coat</option>
-		    <option value="ONC Shopper">ONC Shopper</option>
+		  <label for='zipcode' class='filterlabel'>Zip Code:</label> 
+		  <select id="zipcode" title="Zip Code" data-type='data' data-column='5' onchange='executeFilter(this)'>
+		    <option value="20120">20120</option>
 		  </select>
-		  <label for='partnerstatus' class='filterlabel'>Status:</label>
-		  <select id="partnerstatus" title="Filter Partners by Status" data-type='search' data-column='3' onchange='executeFilter(this)'>
+		  <label for='region' class='filterlabel'>Region:</label>
+		  <select id="region" title="Region" data-type='search' data-column='6'  onchange='executeFilter(this)'>
 		    <option value="">Any</option>
-    	    <option value="No Action Yet">No Action Yet</option>
-		    <option value="1st Email Sent">1st Email Sent</option>
-		    <option value="Responded">Responded</option>
-		    <option value="2nd Email Sent">2nd Email Sent</option>
-		    <option value="Called, Left Mssg">Called, Left Mssg</option>
-		    <option value="Confirmed">Confirmed</option>
-		    <option value="Not Participating">Not Participating</option>
+		    <option value="A">A</option>
+		    <option value="B">B</option>
+		    <option value="C">C</option>
+		    <option value="D">D</option>
+		    <option value="E">E</option>
+		    <option value="F">F</option>
+		    <option value="G">G</option>
+		    <option value="H">H</option>
+		    <option value="I">I</option>
+		    <option value="J">J</option>
+		    <option value="K">K</option>
+		    <option value="L">L</option>
+		    <option value="M">M</option>
+		    <option value="N">N</option>
+		    <option value="O">O</option>
+		    <option value="P">P</option>
+		    <option value="Q">Q</option>
+		    <option value="R">R</option>
+		    <option value="S">S</option>
+		    <option value="T">T</option>
+		    <option value="U">U</option>
+		    <option value="V">V</option>
+		    <option value="W">W</option>
+		    <option value="X">X</option>
+		    <option value="Y">Y</option>
+		    <option value="Z">Z</option>
 		  </select>
-		  <label for='partnercollection' class='filterlabel'>Collection:</label>
-		  <select id="partnercollection" title="Filter Partners by Collection" data-type='search' data-column='4' onchange='executeFilter(this)'>
-		    <option value="">Any</option>
-		    <option value="General">General</option>
-		    <option value="Ornament">Ornament</option>
-		    <option value="Meals">Meals</option>
-		    <option value="Unknown">Unknown</option>
+		  <label for='school' class='filterlabel'>School:</label>
+	  	  <select id="school" title="Elementary School" data-type='search' data-column='9' onchange='executeFilter(this)'>
+	  	  	<option value="">Any</option>
+	  		<option value="J">Brookfield</option>
+	  		<option value="A">Bull Run</option>
+	  		<option value="B">Centre Ridge</option>
+	  		<option value="C">Centreville</option>
+	  		<option value="F">Cub Run</option>
+	  		<option value="H">Deer Park</option>
+	  		<option value="Q">Floris</option>
+	  		<option value="K">Greenbriar East</option>
+	  		<option value="L">Greenbriar West</option>
+	  		<option value="M">Lees Corner</option>
+	  		<option value="I">LondonTowne</option>
+	  		<option value="R">Lutie Lewis Coates</option>
+	  		<option value="S">McNair</option>
+	  		<option value="T">Navy</option>
+	  		<option value="P">Oak Hill</option>
+	  		<option value="N">Poplar Tree</option>
+	  		<option value="D">Powell</option>
+	  		<option value="E">Union Mill</option>
+	  		<option value="G">Virginia Run</option>
+	  		<option value="O">Willow Springs</option>
+	  		<option value="X">Missing</option>
+	  		<option value="Z">None of the Above</option>
 		  </select>
 		</span>
 		<span class='floatright resetbtn'>
@@ -716,34 +722,25 @@
   <div id='tablediv'>
     <table id="oncdatatable" class='display' style="width:100%">
       <thead>
-        <tr>
-       		<th>ID</th>
-       		<th id='partnerth'>Partners</th>
-       		<th>Type</th>
-       		<th>Status</th>
-        	<th>Collection</th>
-        	<th>Req</th>
-        	<th>Del</th>
-        	<th>Rec</th>
-        </tr>
+      <tr>
+        <th>ID</th>
+       	<th>Dir</th>
+       	<th>Street Name</th>
+       	<th>Type</th>
+        <th>Post Dir</th>
+        <th>Zip Code</th>
+        <th>Region</th>
+        <th>Low #</th>
+        <th>High #</th>
+        <th>School Region</th>
+        <th>Elementary School</th>
+      </tr>
       </thead>
-      <tbody id='partnertbody'>
+      <tbody>
       </tbody>
-      <tfoot>
-        <tr>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th id='orn_req_sum' style="text-align:center"></th>
-          <th id='orn_del_sum' style="text-align:center"></th>
-          <th id='orn_rec_sum' style="text-align:center"></th>
-        </tr>
-      </tfoot>
-	</table>
-  </div> 
-<!-- Edit Profile Dialog -->
+    </table>
+  </div>
+  <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
 	<div class='inner extended-width'>
 	  <div class='dialogtopbar'>
