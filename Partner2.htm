@@ -405,11 +405,6 @@
 		outline: none;
 	}
 	select option { font-weight: normal; }
-  	.right-justify
-  	{
-  		width: 25px;
-  		text-align:right;
-  	}
   	fieldset div
   	{
   		margin-top:6px;
@@ -424,8 +419,12 @@
   	.partner-performance input
   	{
   		width: 32px;
-  		text-align:right;
+  		text-align: center;
   		background-color: #e1e1e1;
+  	}
+  	#cyReq
+  	{
+  		background-color: #ffffff;
   	}
   	textarea 
   	{
@@ -482,78 +481,78 @@
     <p id='banner-message'>BANNER_MESSAGE<p>
   </div>
   <form id="updatepartner" action="updatepartner" method="post">
-  <input id='year' type="hidden" name="year">
-  <input id='partnerid' type="hidden" name="partnerid">
-  <fieldset>
-  <legend class="legend-major">Partner Information (Partners can be organizations or individuals)</legend>
-  	<div>
-  	<label for='partid'>ID:</label>
-  	<input id='partid' type='text' readonly>
-    <label for='partln'>Organization or Last Name:</label>
-    <input id='partln' title="Organization or Last Name" name="lastname" type="text" size="52" required>
-    <label for='partfn'>First Name (if individual):</label>
-    <input id='partfn' title="First Name" name="firstname" type="text" size="14">
-    </div>
-    <div class='fieldsetdiv'>
-    <label for='type'>Partner Type:</label>
-	<select id="type" title="Partner Type" name="type">
-      <option value="Business">Business</option>
-	  <option value="Church">Church</option>
-	  <option value="School">School</option>
-	  <option value="Clothing">Clothing</option>
-	  <option value="Coat">Coat</option>
-	  <option value="ONC Shopper">ONC Shopper</option>
-	</select>
-	<label for='status'>Status:</label>
-	<select id="status" title="status" name="status">
-      <option value="No Action Yet">No Action Yet</option>
-	  <option value="1st Email Sent">1st Email Sent</option>
-	  <option value="Responded">Responded</option>
-	  <option value="2nd Email Sent">2nd Email Sent</option>
-	  <option value="Called, Left Mssg">Called, Left Mssg</option>
-	  <option value="Confirmed">Confirmed</option>
-	  <option value="Not Participating">Not Participating</option>
-	</select>
-	<label for='collection'>Collection Type:</label>
-	<select id="collection" title="Type Of Collection" name="collection">
-	  <option value="General">General</option>
-	  <option value="Ornament">Ornament</option>
-	  <option value="Meals">Meals</option>
-	  <option value="Unknown">Unknown</option>
-	</select>
-	</div>
-	<div class='fieldsetdiv'>
-	<label for='housenum'>Address:</label>
-	<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off">
-    <input id="street" title="Street Name" name="street" type="text" size="36" placeholder="Street Name"  autocomplete="off">
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Unit #" autocomplete="off">
-    <input id="city" title="City" name="city" type="text" size='24' placeholder="City">	
-    <input id="zipcode" title="Zip Code" name="zipcode" type="text" size='10' placeholder="Zip Code">
-    <label for='phone'>Phone #:</label>
-    <input id="phone" title="Phone #" name="phone" type="text" size="12" placeholder="Phone #" onchange="verifyPhoneNumber(0)">
-    </div>
-  </fieldset>
-  <fieldset>
-  <legend class="legend-major">Partner Contact Information</legend>
-  	<div>
-  	<label for='firstcontactname'>1st Contact Full Name:</label>
-	<input id="firstcontactname" title="1st Contact Name" name="firstcontactname" type="text" size="20" autocomplete="off" required>
-	<label for='firstcontactemail'>Email:</label>
-	<input id='firstcontactemail' title="1st Contact Email address" name="firstcontactemail" type="email" size="30" required>
-	<label for='firstcontactphone'>Phone:</label>
-	<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontactphone" type="text" size="18" onchange="verifyPhoneNumber(1)">
-	</div>
-	<div class='fieldsetdiv'>
-	<label for='secondcontactname'>2nd Contact Full Name:</label>
-	<input id="secondcontactname" title="2nd Contact Name" name="secondcontactname" type="text" size="20" autocomplete="off">
-	<label for='secondcontactemail'>Email:</label>
-	<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="30">
-	<label for='secondcontactphone'>Phone:</label>
-	<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontactphone" type="text" size="18" onchange="verifyPhoneNumber(2)">
-	</div>
-  </fieldset>
-  <fieldset>
-    <legend id='curr-season-legend' class="legend-major">General Partner Information, Current Year Notes And Gift Delivery Information</legend>
+	<input id='year' type="hidden" name="year">
+	<input id='partnerid' type="hidden" name="partnerid">
+	<fieldset>
+	  <legend class="legend-major">Partner Information (Partners can be organizations or individuals)</legend>
+  	  <div>
+  	  	<label for='partid'>ID:</label>
+  		<input id='partid' type='text' readonly>
+    	<label for='partln'>Organization or Last Name:</label>
+    	<input id='partln' title="Organization or Last Name" name="lastname" type="text" size="52" required>
+    	<label for='partfn'>First Name (if individual):</label>
+    	<input id='partfn' title="First Name" name="firstname" type="text" size="14">
+      </div>
+      <div class='fieldsetdiv'>
+    	<label for='type'>Partner Type:</label>
+		<select id="type" title="Partner Type" name="type">
+      	  <option value="Business">Business</option>
+	  	  <option value="Church">Church</option>
+	  	  <option value="School">School</option>
+	  	  <option value="Clothing">Clothing</option>
+	  	  <option value="Coat">Coat</option>
+	  	  <option value="ONC Shopper">ONC Shopper</option>
+		</select>
+		<label for='status'>Status:</label>
+		<select id="status" title="status" name="status">
+      	  <option value="No Action Yet">No Action Yet</option>
+	  	  <option value="1st Email Sent">1st Email Sent</option>
+	  	  <option value="Responded">Responded</option>
+	  	  <option value="2nd Email Sent">2nd Email Sent</option>
+	  	  <option value="Called, Left Mssg">Called, Left Mssg</option>
+	  	  <option value="Confirmed">Confirmed</option>
+	  	  <option value="Not Participating">Not Participating</option>
+		</select>
+		<label for='collection'>Collection Type:</label>
+		<select id="collection" title="Type Of Collection" name="collection">
+	  	  <option value="General">General</option>
+	  	  <option value="Ornament">Ornament</option>
+	  	  <option value="Meals">Meals</option>
+	  	    <option value="Unknown">Unknown</option>
+		</select>
+	  </div>
+	  <div class='fieldsetdiv'>
+		<label for='housenum'>Address:</label>
+		<input id="housenum" title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off">
+    	<input id="street" title="Street Name" name="street" type="text" size="36" placeholder="Street Name"  autocomplete="off">
+    	<input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Unit #" autocomplete="off">
+    	<input id="city" title="City" name="city" type="text" size='24' placeholder="City">	
+    	<input id="zipcode" title="Zip Code" name="zipcode" type="text" size='10' placeholder="Zip Code">
+    	<label for='phone'>Phone #:</label>
+    	<input id="phone" title="Phone #" name="phone" type="text" size="12" placeholder="Phone #" onchange="verifyPhoneNumber(0)">
+      </div>
+    </fieldset>
+    <fieldset>
+  	  <legend class="legend-major">Partner Contact Information</legend>
+  	  <div>
+  		<label for='firstcontactname'>1st Contact Full Name:</label>
+		<input id="firstcontactname" title="1st Contact Name" name="firstcontactname" type="text" size="20" autocomplete="off" required>
+		<label for='firstcontactemail'>Email:</label>
+		<input id='firstcontactemail' title="1st Contact Email address" name="firstcontactemail" type="email" size="30" required>
+		<label for='firstcontactphone'>Phone:</label>
+		<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontactphone" type="text" size="18" onchange="verifyPhoneNumber(1)">
+	  </div>
+	  <div class='fieldsetdiv'>
+		<label for='secondcontactname'>2nd Contact Full Name:</label>
+		<input id="secondcontactname" title="2nd Contact Name" name="secondcontactname" type="text" size="20" autocomplete="off">
+		<label for='secondcontactemail'>Email:</label>
+		<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="30">
+		<label for='secondcontactphone'>Phone:</label>
+		<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontactphone" type="text" size="18" onchange="verifyPhoneNumber(2)">
+	  </div>
+  	</fieldset>
+  	<fieldset>
+      <legend id='curr-season-legend' class="legend-major">General Partner Information, Current Year Notes And Gift Delivery Information</legend>
       <fieldset class='floatleft'> 
 	  	<legend>General Partner Information</legend>
     	<textarea id='genTA' name='genTA' placeholder='Enter general partner info here'></textarea>
@@ -561,17 +560,17 @@
       <fieldset class='floatleft'>
       	<legend id='curr-season-textarea'>Current Season Notes</legend>
     	<textarea id='cyTA' name='cyTA' placeholder='Enter current year partner info here'></textarea>
-     </fieldset>
-  	 <fieldset class='floatleft'>
+	  </fieldset>
+  	  <fieldset class='floatleft'>
   	 	<label id='del-info-label' for='delTA'>Gift Delivery Information:</label>
     	<input id='delTA' name='delTA' type='text' size='100' placeholder='Enter gift delivery info here'>
-  	 </fieldset>	
-  </fieldset>
-  <fieldset>
-  	<legend class='legend-major'>Partner Performance: Hover cursor over field for definition. Gray fields are informational and are not editable.</legend>
+  	  </fieldset>
+  	</fieldset>
+	<fieldset>
+  	  <legend class='legend-major'>Partner Performance: Hover cursor over field for definition. Gray fields are informational and are not editable.</legend>
   	  <fieldset class='partner-performance floatleft'> 
-	  <legend id='pyPerf'></legend>
-  		<label for='pyReq'>Req:</label>
+	    <legend id='pyPerf'></legend>
+		<label for='pyReq'>Req:</label>
   		<input id="pyReq" title="# Of Ornaments Requested" type="text" readonly>
   		<label for='pyAss'>Assigned:</label>
   		<input id="pyAss" title="# Of Ornaments Assigned" type="text" readonly>
@@ -583,7 +582,7 @@
   		<input id="pyLate" title="# Of Gifts Received After Deadline" type="text" readonly>
   	  </fieldset>
   	  <fieldset class='partner-performance floatright'> 
-	  <legend id='cyPerf'></legend>
+	    <legend id='cyPerf'></legend>
   		<label for='cyReq'>Req:</label>
   		<input id="cyReq" class='right-justify' name='cyReq' title="# Of Ornaments Requested" type="text">
   		<label for='cyAss'>Assigned:</label>
@@ -595,7 +594,7 @@
   		<label for='cyLate'>Late:</label>
   		<input id="cyLate" title="# Of Gifts Received After Deadline" type="text" readonly>
   	  </fieldset>
-  </fieldset>
+    </fieldset>
   	<span id="errormessage"></span>
   	<span id="submitspan">
 	  <label for="btnsubmit">Please check that all fields are complete prior to submission: </label>
