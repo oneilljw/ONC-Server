@@ -3,537 +3,167 @@
 <head lang="en">
   <title>ONC Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
-  <script src="jquery.js"></script>
+  <link rel="stylesheet" type="text/css" href="oncnewstylesheet.css">
   <script src="staticcharts.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
-  <script type="text/javascript" src="editprofile2.js"></script>  
+  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
+  <script type="text/javascript" src="onccommon.js"></script>  
   <script>
     $( document ).ready(function()
     {
+    	//get filter selects
+    	filters = document.getElementById('filterspan').getElementsByTagName('select');
+    	
     	//get the list of years from the data base and put it in the year combo box
    	 	var dbyearsparams = "callback=?";
    	 	$.getJSON('dbStatus', dbyearsparams, function(data)
+    	{
+			var yearCombo = document.getElementById('curryear');
+    		for (var i = data.length-1; i >= 0; i--)
     		{
-				var yearCombo = document.getElementById('curryear');
-    			for (var i = data.length-1; i >= 0; i--)
-    			{
-    				var option = document.createElement('option');
-    				option.text = data[i].id;
-    	   		 	option.value = data[i].id;
-    	   		 	try 
-	    			{
-	        			yearCombo.add(option, null); //Standard 
-	    			} 
-	    			catch(error) 
-	    			{
-	        			yearCombo.add(option); // IE only
-	    			}
-    			}
+    			var option = document.createElement('option');
+    			option.text = data[i].id;
+    	   		option.value = data[i].id;
+    	   		try 
+	    		{
+	        		yearCombo.add(option, null); //Standard 
+	    		} 
+	    		catch(error) 
+	    		{
+	        		yearCombo.add(option); // IE only
+	    		}
+    		}
     			
-    			if(sessionStorage.getItem('curryear') == null)
-            	{
-            		yearCombo.selectedIndex = 0;
-            		sessionStorage.setItem('curryear', yearCombo.value);
-            	}
-            	else
-            		yearCombo.value = sessionStorage.getItem('curryear');	
+    		if(sessionStorage.getItem('curryear') == null)
+            {
+            	yearCombo.selectedIndex = 0;
+            	sessionStorage.setItem('curryear', yearCombo.value);
+            }
+            else
+            	yearCombo.value = sessionStorage.getItem('curryear');	
  
-    			sessionStorage.setItem('curryear', yearCombo.value);
+    		document.getElementById('resetbtn').disabled = yearCombo.selectedIndex == 0;
     			
-    			google.charts.load('current', {packages: ['corechart', 'bar']});
-            	google.charts.setOnLoadCallback(drawFamStatusChart);
+    		google.charts.load('current', {packages: ['corechart', 'bar']});
+            google.charts.setOnLoadCallback(drawStatusCharts);
             
-            	$.getJSON('getstatus', dbyearsparams, function(status)
+            $.getJSON('getstatus', dbyearsparams, function(status)
+            {
+            	if(status.userstatus === 'Update_Profile')
             	{
-            		if(status.userstatus === 'Update_Profile')
-            		{
-        				showEditProfileDialog();
-        				window.location=document.getElementById('editprofileanchor').href;
-            		}
-            	});
-    		});
-
-//  		window.setInterval(drawFamStatusChart, 300000);	//five minutes
+        			showEditProfileDialog();
+        			window.location=document.getElementById('editprofileanchor').href;
+            	}
+            });
     	});
 
-    function drawFamStatusChart() 
-    {
-    		var familyparams = "year=" + sessionStorage.getItem('curryear')
-		   				+"&maptype=family" + "&callback=?";
-    	
-   	 		var giftparams = "year=" + sessionStorage.getItem('curryear')
-						+"&maptype=gift" + "&callback=?";
-    	
-    		var mealparams = "year=" + sessionStorage.getItem('curryear')
-						+"&maptype=meal" + "&callback=?";
-    	
-    		var delparams = "year=" + sessionStorage.getItem('curryear')
-						+"&maptype=delivery" + "&callback=?";
+   	 	createGroupTable();	//create profile dialog group table
+//  	window.setInterval(drawStatusCharts, 300000);	//five minutes
+    });
 
-    		$.getJSON('metrics', familyparams, function(familyData)
+    var charts = [{title: 'Family Status', type: 'family', width: '70%', div: 'famstatus_div'},
+    			  {title: 'Gift Status', type: 'gift', width: '65%', div: 'giftstatus_div'},
+    			  {title: 'Meal Status', type: 'meal', width: '65%', div: 'mealstatus_div'},
+    			  {title: 'Delivery Status', type: 'delivery', width: '65%', div: 'delstatus_div'}];
+    
+    function drawStatusCharts() 
+    {
+    	var params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[0].type + "&callback=?";    	
+    	$.getJSON('metrics', params, function(data)
         {
-    			if(familyData.hasOwnProperty('error'))
+    		if(data.hasOwnProperty('error'))
 				window.location=document.getElementById('timeoutanchor').href;
-    			else
-    			{	
-    				// Create our data table out of JSON data loaded from server.
-    	    		var famtable = new google.visualization.DataTable(familyData);
-    	 			var famview = new google.visualization.DataView(famtable);
-        			famview.setColumns([0, 1,
-                          	{ calc: "stringify",
-                              sourceColumn: 1,
-                           	  type: "string",
-                              role: "annotation" },
-                            ]);
-
-    				var famoptions = 
-    				{
-    					width: 480,
-    					height: 240,
-    					title: sessionStorage.getItem('curryear') + ' Family Status',
-    					titleTextStyle: 
-    					{
-    						fontSize: 16, // 12, 18 whatever you want (don't specify px)
-    		        		bold: true,    // true or false
-    					},
-    	    			chartArea: {width: '70%'},
-    	    			hAxis: { minValue: 0 },
-    	    			legend: {position: 'none'},
-    	    			bars: 'horizontal' // Required for Material Bar Charts.
-    				};
-    	
-    				var famstatuschart = new google.visualization.BarChart(document.getElementById('famstatus_div'));
-    				famstatuschart.draw(famview, famoptions);
-    			}
-    		
-    			$.getJSON('metrics', giftparams, function(giftData)
+    		else
+    		{
+    			drawChart(charts[0], data);
+    			
+    			params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[1].type + "&callback=?";
+    			$.getJSON('metrics', params, function(data)
     			{
-    		    		// Create our data table out of JSON data loaded from server.
-    		    		var gifttable = new google.visualization.DataTable(giftData);
-    		    		var giftview = new google.visualization.DataView(gifttable);
-    		    		giftview.setColumns([0, 1,
-    		    		             { calc: "stringify",
-    		    		              	sourceColumn: 1,
-    		    		                type: "string",
-    		    		                role: "annotation"
-    		    		             }]);
-
-    		    		var giftoptions = 
-    		    		{
-    		    			width: 480,
-    		    			height: 240,
-    		    			title: sessionStorage.getItem('curryear') + ' Gift Status',
-    		    			titleTextStyle: 
-        				{
-        		        		fontSize: 16, // 12, 18 whatever you want (don't specify px)
-        		        		bold: true,    // true or false
-        				},
-    		    			chartArea:
-    		    			{
-    		    				width: '65%'
-    		    			},
-    		    			hAxis: { minValue: 0 },
-    		    			legend: {position: 'none'},
-    		    		};
-    		    		    	
-    		    		var giftstatuschart = new google.visualization.BarChart(document.getElementById('giftstatus_div'));
-    		    		giftstatuschart.draw(giftview, giftoptions);
-    		    
-    		    		$.getJSON('metrics', mealparams, function(mealData)
-    		    		{
-    		    			// Create our data table out of JSON data loaded from server.
-    		    			var mealtable = new google.visualization.DataTable(mealData);
-    		    			var mealview = new google.visualization.DataView(mealtable);
-    		    			mealview.setColumns([0, 1,
-    		                 		{ 
-    		    							calc: "stringify",
-    		                   			sourceColumn: 1,
-    		    							type: "string",
-    		                   			role: "annotation"
-    		                 		}]);
-
-    		    			var mealoptions = 
-    		    			{
-    		    				width: 480,
-    		    				height: 240,
-    		    				title: sessionStorage.getItem('curryear') + ' Meal Status',
-    		    				titleTextStyle: 
-    	    					{
-    	    		        			fontSize: 16, // 12, 18 whatever you want (don't specify px)
-    	    		        			bold: true,    // true or false
-    	    					},
-    		    				chartArea: {width: '65%'},
-    		    				hAxis: { minValue: 0 },
-    		    				legend: {position: 'none'},
-    		    			};
-    		    	
-    		    			var mealstatuschart = new google.visualization.BarChart(document.getElementById('mealstatus_div'));
-    		    			mealstatuschart.draw(mealview, mealoptions);
-    		    	
-    		    			$.getJSON('metrics', delparams, function(delData)
-    		    			{
-    		    				// Create our data table out of JSON data loaded from server.
-    		    				var deltable = new google.visualization.DataTable(delData);
-    		    				var delview = new google.visualization.DataView(deltable);
-    		    				delview.setColumns([0, 1,
-    		    	         				{ 
-    		    							calc: "stringify",
-    		    	           				sourceColumn: 1,
-    		    							type: "string",
-    		    	           				role: "annotation"
-    		    	         				}]);
-
-    		    				var deloptions = 
-    		    				{
-    		    					width: 480,
-    		    					height: 240,
-    		    					title: sessionStorage.getItem('curryear') + ' Gift Delivery Status',
-    		    					titleTextStyle: 
-    		    					{
-    		    		        			fontSize: 16, // 12, 18 whatever you want (don't specify px)
-    		    		        			bold: true,    // true or false
-    		    					},
-    		    					chartArea: {width: '65%'},
-    		    					hAxis: { minValue: 0 },
-    		    					legend: {position: 'none'},
-    		    				};
-
-    		    				var delstatuschart = new google.visualization.BarChart(document.getElementById('delstatus_div'));
-    		    				delstatuschart.draw(delview, deloptions);
-    		    			});
-    		    		});
+    				drawChart(charts[1], data);
+    				
+    				params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[2].type + "&callback=?";
+        			$.getJSON('metrics', params, function(data)
+        			{
+        				drawChart(charts[2], data);
+        				
+        				params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[3].type + "&callback=?";
+            			$.getJSON('metrics', params, function(data)
+            			{
+            				drawChart(charts[3], data);
+            			});
+        			});
     			});
-        });   			
-    }
-    
-    function onChangePW() 
-    {
-    	if(validate())
-   	 	{
-			var params = {}	
-			params["field1"] = document.getElementById('currpw').value;
-			params["field2"] = document.getElementById('newpw').value;
-    		$.post('reqchangepw', params, function(response)
-    		{
-    			document.getElementById('banner-message').textContent= response;
-    			document.getElementById('welcome-div').style.display = "block";
-    		});
-    		
-    		document.getElementById('currpw').value = "";
-	    	document.getElementById('newpw').value = "";
-	    	document.getElementById('verifypw').value = "";
-    		window.location=document.getElementById('closepopup').href;
-    	}
-    }
-    
-	function updateForYearSelection()
-    {
-    	//get selected year
-    	var yearCB = document.getElementById("curryear");
-		var year = yearCB.options[yearCB.selectedIndex].value;
-		sessionStorage.setItem('curryear', year);
-		drawFamStatusChart();
-    }
-
-	function onProfileNotChanged()
-    {
-		var params = {}	
-		$.post('profileunchanged', params, function(response)
-		{
-			document.getElementById('message').textContent= response.message;
-		}, "jsonp");
-		
-		window.location=document.getElementById('closepopup').href;
-    }
-	
-	function onCancel()
-    {
-		window.location=document.getElementById('closepopup').href;
-    }
-	
-	function validate()
-    {
-		var mssgEl = document.getElementById("pw_mssg");
-    		var currpwEl = document.getElementById("currpw");
-        var pass1El = document.getElementById("newpw");
-        var pass2El = document.getElementById("verifypw");
-        var ok = true;
-        
-        if(currpwEl.value == "")
-        {
-        	//alert("current password field empty");
-            currpwEl.style.borderColor = "#E34234";
-            
-            mssgEl.style.color = "Red";
-            mssgEl.textContent = "Current password not provided, please try again!";
-            ok = false;
-        }
-        else if(pass1El.value == '' || pass2El.value == '')
-    		{
-    			//alert("Either New or Verify Passwords are empty");
-        		pass1El.style.borderColor = "#E34234";
-        		pass2El.style.borderColor = "#E34234";
-        
-        		mssgEl.style.color = "Red";
-        		mssgEl.textContent = "Please fill out both New and Confirm, try again!";
-        		ok = false;
     		}
-        else if(pass1El.value !== pass2El.value)
-        {
-            //alert("New and Verify Passwords do not match");
-            pass1El.style.borderColor = "#E34234";
-            pass2El.style.borderColor = "#E34234";
-            
-            mssgEl.style.color = "Red";
-            mssgEl.textContent = "New and Verify passwords don't match, please try again!";
-            ok = false;
-        }
+        });
+    }    			
 
-        return ok;
-    }
-	
-	function onLogoutLink()
+	function getExternalData()
 	{
-		var params = {};
-		post('logout', params);
+		drawStatusCharts();
 	}
-	
-	function onSessionTimeout()
+
+	function drawChart(chart, data)
 	{
-		 window.location.assign('timeout');
-	}
-	
-	function post(path, params, method) 
-	{
-	    method = method || "post"; // Set method to post by default if not specified.
+		// Create our data table out of JSON data loaded from server.
+		var table = new google.visualization.DataTable(data);
+		var view = new google.visualization.DataView(table);
+		view.setColumns([0, 1,
+			{
+		    	calc: "stringify",
+		        sourceColumn: 1,
+		        type: "string",
+		        role: "annotation"},
+		    ]);
 
-	    // The rest of this code assumes you are not using a library.
-	    // It can be made less wordy if you use one.
-	    var form = document.createElement("form");
-	    form.setAttribute("method", method);
-	    form.setAttribute("action", path);
-
-	    for(var key in params) 
-	    {
-	        if(params.hasOwnProperty(key)) 
-	        {
-	            var hiddenField = document.createElement("input");
-	            hiddenField.setAttribute("type", "hidden");
-	            hiddenField.setAttribute("name", key);
-	            hiddenField.setAttribute("value", params[key]);
-
-	            form.appendChild(hiddenField);
-	         }
-	    }
-
-	    document.body.appendChild(form);
-	    form.submit();
+		var options = 
+		{
+		    width: 480,
+		    height: 240,
+		    title: sessionStorage.getItem('curryear') + ' ' + chart.title,
+		    titleTextStyle: 
+		    {
+		    	fontSize: 16, // 12, 18 whatever you want (don't specify px)
+		    	bold: true,    // true or false
+		    },
+		    chartArea: { width: chart.width},
+		    hAxis: { minValue: 0 },
+		    legend: { position: 'none'},
+//			bars: 'horizontal' // Required for Material Bar Charts.
+		};
+		    	
+		var chart = new google.visualization.BarChart(document.getElementById(chart.div));
+		chart.draw(view, options);
 	}
   </script>
-  <style type="text/css">
-  .header 
-	{
-		height: 70px;
-		width: 90% ;
-		margin: auto;
-		background-color: #484e78;
-	}
-	.header-links
-	{
-		display: inline-block;
-    	margin-top: 25px;   
-	}
+  <style type="text/css">	
 	.header-links a
 	{
+		color: white;
 		font-size: 18px;
 		margin-right: 40px;
 		text-decoration: none;
 	}
 	.home-link
 	{
-		color: white;
 		font-style: italic;
 	}
-	.page-link { color: white; }
-	.page-link:hover { background-color: #bbb7ff; }
-	#logo-img
-	{
-		vertical-align: middle;
-    	margin-top: -8px;
-    	margin-left: 5px;
-    	margin-right: 10px;
-    	max-height: 55px;
-    	max-width: 75px;
-	}
-	.headerbuttons
-	{
-		display: inline-block;
-		float: right;
-		margin-top: 22px;
-	}
-	/* Dropdown Button */
-	.dropbtn 
-	{
-  		color: white;
-  		font-size: 16px;
-  		background-color: Transparent;
-  		background-repeat:no-repeat;
-  		border: none;
-  		cursor:pointer;
-  		overflow: hidden;
-  		outline:none;
-	}
-	.dropdown 
-	{
-  		position: relative;
-  		display: inline-block;
-	}
-	.dropdown-content
-	{
- 		display: none;
-  		position: absolute;
-  		background-color: #f1f1f1;
-  		min-width: 160px;
-  		box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
- 		 z-index: 1;
-	}
-	.dropdown-content a
-	{
-  		color: black;
-  		padding: 12px 16px;
-  		text-decoration: none;
-  		display: block;
-	}
-	.dropdown-content a:hover { background-color: #bbb7ff; }
-	.dropdown:hover .dropdown-content { display: block; }
-	.dropdown:hover .dropbtn { background-color: #bbb7ff; }
-	.header-anchor { text-decoration: none;}
-	.floatleft { float:left; }
-	.floatright { float:right; }	
-	#logoutbtn
-	{
-		color: white;
-		font-size: 16px;
-  		background-color: Transparent;
-  		background-repeat:no-repeat;
-  		border: none;
-  		cursor:pointer;
-	}
-	#logoutbtn:hover  {background-color: #bbb7ff;}
-	#welcome-div
-	{
-		width: 90%;
-		height: 36px;
-		line-height: 36px;
-		margin-top: -8px;
-		margin-right: auto;
-		margin-left: auto;
-		background-color: black;
-		display: SHOW_MESSAGE;
-	}
-	#welcome-div p
-	{
-		color: white;
-		font-size: 18px;
-		font-style: italic;
-		padding-left: 8px;
-	}
-	#filterspan
-	{
-		display: inline-block;
-    	margin-left: 10px;
-	}
-	select 
-	{
-		display: ck;
-		vertical-align: middle;
-		width: auto;
-		font-size: 12px;
-		font-family: sans-serif;
-		font-weight: 700;
-		color: #444;
-		line-height: 1.3;
-		padding: .6em 1.4em .5em .8em;
-		max-width: 100%;
-		box-sizing: border-box;
-		margin: 0;
-		border: 1px solid #aaa;
-		box-shadow: 0 1px 0 1px rgba(0,0,0,.04);
-		border-radius: .5em;
-		-moz-appearance: none;
-		-webkit-appearance: none;
-		appearance: none;
-		background-color: #fff;		
-		background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'),linear-gradient(to bottom, #ffffff 0%,#e5e5e5 100%);
-		background-repeat: no-repeat, repeat;
-		background-position: right .7em top 50%, 0 0;
-		background-size: .65em auto, 100%;
-	}
-	select::-ms-expand { display: none; }
-	select:hover { border-color: #888; }
-	select-css:focus 
-	{
-		border-color: #aaa;
-		box-shadow: 0 0 1px 3px rgba(59, 153, 252, .7);
-		box-shadow: 0 0 0 3px -moz-mac-focusring;
-		color: #222;
-		outline: none;
-	}
-	select option { font-weight: normal; }
-	.filterlabel
-	{
-		display: inline-block;
-		margin-left: 6px;
-    	margin-right: 6px;
-		font-size: 18px;
-	}
-	form
-	{
-		width:90%;
-		min-width: 900px;
-		margin: 0 auto;
-		border: none;
-	}
-	fieldset 
-	{
-		margin-top: 5px;
-		background-color: #E8E8E8;
-	}
-	legend
-	{
-  		padding: 0.2em 0.5em;
-  		border:1px solid black;
-  		background-color: #E8E8E8;
-  		font-size:80%;
-  		text-align:left;
-	}	
-	.constrainer 
+	.page-link:hover { background-color: #bbb7ff; }   
+    .graph-div 
     {
-        width: 90%;
-		margin: 0 auto;
+        width: 90%;	
+		margin: 0 auto;	
     }
-    table
-    {
-    	margin-top: 12px;
-    	margin-right: auto;
-    	margin-bottom: 0px;
-    	margin-left: auto;
-    }
-    td
-    {
-  		padding: 10px;
-  		background-color: #E8E8E8;
-  		border-color: black;
-  		border-width: 2px;
-  		border-style: ridge;
-	}
-    table, td
+    .graph-div td
     {
     	border-color: black;
     	border-width: 2px;
     	border-style: ridge;
+    	padding: 10px;
+    	background-color: #E8E8E8;
+    	display: table-cell;
     }
   </style>
 </head>
@@ -541,7 +171,7 @@
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div class='header'>
-    <img id='logo-img' src="onclogo">
+    <img class='logo-img' src="onclogo">
     <span class='header-links'>
       <a class='home-link' href='#'>Dashboard</a>
       <a class='page-link' href="familystatus">Families</a>
@@ -567,12 +197,15 @@
   		<legend>Filters</legend>
 		<span id='filterspan'>
 		  <label for='curryear' class='filterlabel'>Season:</label>
-		  <select id="curryear" onchange="updateForYearSelection()"></select>
+		  <select id="curryear" title="Season" data-type='externaldata' data-column='-1' onchange='executeFilter(this)'></select>
+		</span>
+		<span class='floatright resetbtn'>
+			<button id="resetbtn" onclick='onResetFilters()'>Reset Filters</button>
 		</span>  
 	</fieldset>		
   </form>    
   <!--Table and divs that hold the charts-->
-  <div class="constrainer">
+  <div class="graph-div">
     <table>
       <tr>
         <td><div id="famstatus_div"></div></td>

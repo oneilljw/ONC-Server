@@ -34,6 +34,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
 	private static final String EDIT_PROFILE_JS_FILE = "EditProfile.js";
 	private static final String EDIT_PROFILE2_JS_FILE = "EditProfile2.js";
+	private static final String ONC_COMMON_JS_FILE = "ONCCommon.js";
 	private static final String PARTNER_UPDATE_HTML = "Partner2.htm";
 	private static final String REGION_TABLE_HTML = "RegionTable2.htm";
 	private static final String REGION_UPDATE_HTML = "Region.htm";
@@ -60,6 +61,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String ONC_ICON_FILE = "ONC.ico";
 	private static final String VANILLA_FONT_FILE = "vanilla.ttf";
 	private static final String ONC_STYLE_SHEET_CSS = "ONCStyleSheet.css";
+	private static final String ONC_STYLE_SHEET2_CSS = "ONCStyleSheet2.css";
 	private static final String ONC_DIALOG__STYLE_SHEET_CSS = "ONCDialogStyleSheet.css";
 	private static final String ONC_LOGIN__STYLE_SHEET_CSS = "ONCLoginStyleSheet.css";
 	private static final String JQUERY_JS_FILE = "jquery-1.11.3.js";
@@ -126,8 +128,10 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("oncicon", readFileToByteArray(ONC_ICON_FILE));
 			webfileMap.put("vanilla", readFileToByteArray(VANILLA_FONT_FILE));
 			webfileMap.put("oncstylesheet", readFileToByteArray(ONC_STYLE_SHEET_CSS));
+			webfileMap.put("oncstylesheet2", readFileToByteArray(ONC_STYLE_SHEET2_CSS));
 			webfileMap.put("oncdialogstylesheet", readFileToByteArray(ONC_DIALOG__STYLE_SHEET_CSS));
 			webfileMap.put("oncloginstylesheet", readFileToByteArray(ONC_LOGIN__STYLE_SHEET_CSS));
+			webfileMap.put("onccommon", readFileToByteArray(ONC_COMMON_JS_FILE));
 			webfileMap.put("editprofile", readFileToByteArray(EDIT_PROFILE_JS_FILE));
 			webfileMap.put("editprofile2", readFileToByteArray(EDIT_PROFILE2_JS_FILE));
 			webfileMap.put("login", readFileToByteArray(LOGIN_JS_FILE));

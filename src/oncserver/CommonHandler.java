@@ -34,6 +34,8 @@ public class CommonHandler extends ONCWebpageHandler
 			sendCachedFile(t, "application/octet-stream", "vanilla", false);
 		else if(requestURI.contains("/oncstylesheet"))
 			sendCachedFile(t, "text/css", "oncstylesheet", false);
+		else if(requestURI.contains("/oncnewstylesheet"))
+			sendCachedFile(t, "text/css", "oncstylesheet2", false);
 		else if(requestURI.contains("/oncdialogstylesheet"))
 			sendCachedFile(t, "text/css", "oncdialogstylesheet", false);
 		else if(requestURI.contains("/oncloginstylesheet"))
@@ -46,6 +48,8 @@ public class CommonHandler extends ONCWebpageHandler
 			sendCachedFile(t, "text/javascript", "editprofile", false);
 		else if(requestURI.contains("/editprofile2.js"))
 			sendCachedFile(t, "text/javascript", "editprofile2", false);
+		else if(requestURI.contains("/onccommon.js"))
+			sendCachedFile(t, "text/javascript", "onccommon", false);
 		else if(requestURI.contains("/login.js"))
 			sendCachedFile(t, "text/javascript", "login", false);
 	}

@@ -20,13 +20,11 @@ function createGroupTable()
 	    			    if(typeof selectedRow !== 'undefined')		    						
 	    			    	removeGroup(selectedRow);
 	    			},
-	    			className: 'edit-button',
 	    			enabled: false
 	    		},
 	    		{ 
 	    			text: 'Add School/Org.', 
 	    			action: function ( e, dt, node, config ) { addGroup(); },
-	    			className: 'edit-button',
 	    			enabled: false
 	    		},
 	    	],
