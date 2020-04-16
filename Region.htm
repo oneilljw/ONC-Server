@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
+  <title>ONC Region/Street Page</title>
   <meta charset="UTF-8">
-  <title>ONC Region Page</title>
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
-  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
-  <script> 
-  	var errorColor = '#FF9999';
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css"> 
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
+  <script type="text/javascript" src="onccommon.js"></script> 
+  <script>   
+	var updateObject = {storageItem:'updateregion', resource:'updateregion'};
   	
   	$( document ).ready(function()
 	{
+  		setBannerVisible(false);
+  		createGroupTable();	//create profile dialog group table
+  		
   		//set the hidden values
   		var currYear = new Date().getFullYear();
   		document.getElementById('year').value= currYear.toString();
@@ -20,7 +26,6 @@
   		
   		if(sessionStorage.getItem("regionid") !== "New")
   		{
-  			document.getElementById('banner').innerHTML='Update Existing ONC Region Form';
   			document.getElementById('regionlegend').innerHTML='Update Street & Region Information';
   			
   			regionparams = "regionid=" + sessionStorage.getItem("regionid") + "&callback=?";
@@ -28,125 +33,47 @@
 			$.getJSON('getregion', regionparams, function(region)
 			{
 				//fill in region info here
-				document.getElementById('dir').value= region.streetDir;
-				document.getElementById('street').value= region.streetName;
-				document.getElementById('type').value= region.streetType;
-				document.getElementById('postdir').value= region.postDir;
-				document.getElementById('zipcode').value= region.zipCode;
-				document.getElementById('region').value= region.region;
-				document.getElementById('addlo').value= region.addressNumLow;
-				document.getElementById('addhi').value= region.addressNumHi;
+				setInput('dir', region.streetDir);
+				setInput('street', region.streetName);
+				setInput('type', region.streetType);
+				setInput('postdir', region.postDir);
+				setInput('zipcode', region.zipCode);
+				setInput('region', region.region);
+				setInput('addlo', region.addressNumLow);
+				setInput('addhi', region.addressNumHi);
 			});
   		}
   		else
-  		{
-  			document.getElementById('banner').innerHTML='ONC Add New Street To Region Form';
-  			document.getElementById('regionlegend').innerHTML='Enter New Street & Region Information';
-  		}
+			document.getElementById('regionlegend').innerHTML='Enter New Street & Region Information';
 	});
-	 	
-  	function onLogoutLink()
-	{
-		var params = {};
-		post('logout', params);
-	}
-  	
-	function onSessionTimeout()
-	{
-		 window.location.assign('timeout');
-	}
-	
-	function onSubmit()
-	{
-		document.getElementById("updateregion").submit();
-	}
-	function post(path, params, method) 
-	{
-	    method = method || "post"; // Set method to post by default if not specified.
-
-	    // The rest of this code assumes you are not using a library.
-	    // It can be made less wordy if you use one.
-	    var form = document.createElement("form");
-	    form.setAttribute("method", method);
-	    form.setAttribute("action", path);
-
-	    for(var key in params) 
-	    {
-	    		if(params.hasOwnProperty(key))
-	        {
-	            var hiddenField = document.createElement("input");
-	            hiddenField.setAttribute("type", "hidden");
-	            hiddenField.setAttribute("name", key);
-	            hiddenField.setAttribute("value", params[key]);
-
-	        		form.appendChild(hiddenField);
-	        }
-	    }
-
-	    document.body.appendChild(form);
-	    form.submit();
-	}
   </script>
-  <style>
-  	.right-justify
-  	{
-  		width: 25px;
-  		text-align:right;
-  	}
-  	.fieldsetdiv
-  	{
-  		margin-top:6px;
-  	}
-  	.inertperfinput
-  	{
-  		width: 25px;
-  		text-align:right;
-  		background-color: #e1e1e1;
-  	}
-  	textarea 
-  	{
-    		height: 120px;
-    		padding: 2px 2px;
-    		box-sizing: border-box;
-    		border: 1px solid #ccc;
-    		border-radius: 4px;
-    		background-color: #f8f8f8;
-    		resize: none;
-    		display: block;
-	}
-	#partid
-	{
-		width: 64px;
-		text-align: center;
-	}
-	#genTA { width: 300px; }
-	#cyTA { width: 300px; }
-	#delTA { width: 150px; }
-	#submitspan {float: right;}
-	#errormessage
-	{
-		float: left;
-		font-weight: bold;
-		font-style: italic;
-		color: red;
-	}
+  <style>	
   </style>
 </head>
 <body>
-  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
-  <div id="topbar" class="topbar">
-    <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">ONC Region Form</span><br>
-	<span id="message">(please complete and click Submit to add or update a street)</span></p>
+  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a> 
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
+      <a id='region-anchor' class='breadcrumb-middle' href='regiontable'>Regions</a>
+      <a class='breadcrumb-current' href='#'>Edit Street</a>
+    </span>   
+    <div class='headerbuttons'>
+      <div class='dropdown'>
+        <button class=dropbtn>Profile</button>
+        <div class='dropdown-content'>
+      	  <a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a>
+      	  <a href="#chgpwdlg">Change Password</a>
+      	</div> 
+      </div>
+      <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
+    </div>
   </div>
-  <nav>
-    <ul>
-	    <li id="homeli"><a id='homelink' href='startpage'>Home</a></li>
-	</ul>
-	<ul class='floatright'>
-	    <li id="logoutli"><a  href='javascript:onLogoutLink()'>Logout</a></li>
-	</ul>
-  </nav>
+  <div id="welcome-div">
+    <p id='banner-message'>BANNER_MESSAGE</p>
+  </div>
   <form id="updateregion" action="updateregion" method="post">
   <input id='year' type="hidden" name="year">
   <input id='regionid' type="hidden" name="regionid">
@@ -256,27 +183,115 @@
 	</select>
     </div>
   </fieldset>
-  <br>
-  <div>
-  	<span id="errormessage"></span>
+  <span id="errormessage"></span>
   	<span id="submitspan">
-  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit partner to ONC" onclick= onSubmit()>
-  	</span>
-  </div>
+	  <label for="btnsubmit">Please check that all fields are complete prior to submission: </label>
+ 	  <button id="btnsubmit" type='button' title="Click to submit street to ONC" onclick= onSubmit()>Submit</button>
+	</span>
 </form>
-<!-- Timeout Dialog -->
-  <div id="timeoutdlg" class="modalDialog">
-	<div class='inner'>
+<!-- Edit Profile Dialog -->
+  <div id="editProfile" class="modalDialog">
+	<div class='inner extended-width'>
+	  <div class='dialogtopbar'>
+		<img class='logo-img' src="onclogo">
+		<span class='logospan'>Verify/Update ONC Profile</span>
+	  </div>
+	  <div class='edit-background'>
+	  	  <fieldset id='contact-info-fieldset'>
+  			  <legend class="legend-major">Contact Information</legend>
+  			  <p>
+    	  		<label for="userfirstname">Name:</label>
+    	  		<input id='userfirstname' type="text" size="14" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="16" placeholder="Last Name" onchange='checkForProfileChange()'>
+    		  </p>   		
+    		  <p>
+    	  		<label for="userorg">Organization:</label>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		 <label for="usertitle">Title:</label>
+    	 		 <input id='usertitle' type="text" size="35" placeholder="Title" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		<label for="useremail">Email:</label>
+    	  		<input id='useremail' type="text" size="34" placeholder="Email address" onchange='checkForProfileChange()'>
+    	      </p>
+    	 	  <p>
+    	  		<label for="userphone">Phone:</label>
+    	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  	  </p>
+      	  </fieldset>
+	  </div>
+      <div class='edit-background'>
+		<fieldset>
+			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
+  	    	 <table id="profiletable" class='display' style="width:100%">
+  		 	  <thead>
+    			<tr>
+    				<th>Id</th>
+        			<th>School or Organization</th>
+    			</tr>
+    		  </thead>
+    		  <tbody>
+    		  </tbody>
+	    	</table>
+	    	<div> 
+  		  		<select id="groupselect" title="School or Organization Name" oninput='onGroupSelected(this)'></select>
+  			</div>
+  		</fieldset>
+  	  </div>
+      <div class='buttonbar'>
+    	<button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" onclick="onUpdateProfile(this)" disabled>Update</button>
+      </div> 
+	</div>
+  </div>
+<!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div class='inner extended-width'>
+		<a href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo"/>
+		  <img class='logo-img' src="onclogo">
+		  <span class='logospan'>Change Password</span>
+		</div>
+		<div class='edit-background'>
+	  	  <fieldset>
+  			<legend class="legend-major">Enter Current and New Passwords</legend>
+  			<div id='pw_mssg'>Enter current and new password:</div>
+  			<table class='password-table'>
+  				<tr>
+  					<td>Current Password:</td>
+  					<td><input type="password" id="currpw" name="field1" width='100%' oninput='checkChangePWEnable()' autofocus></td>
+  				</tr>
+  				<tr>
+  					<td>New Password:</td>
+  					<td><input type="password" id="newpw" name="field2" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  				<tr>
+  					<td>Verify New Password:</td>
+  					<td><input type="password" id="verifypw" name="field3" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  			</table>
+		  </fieldset>
+		</div>
+    	<div class='buttonbar'>
+      	  <button onclick="onCancel()">Cancel</button>
+      	  <button id="btnchangepw" onclick="onChangePW()" disabled>Change Password</button>
+    	</div> 
+	</div>
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo"/>
 		  <span id='dialogmssg'>Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>
-    	<div id='buttonbar'>
+    	<div class='buttonbar'>
       	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
     	</div> 
 	</div>
-  </div>        
+  </div>  
 </body>
-</html> 
+</html>

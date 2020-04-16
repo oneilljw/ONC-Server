@@ -1,554 +1,229 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>ONC Gift Partners</title>
-  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
-  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
-  <script src="editprofile.js"></script>
-  <script src="jquery.js"></script>
-  <!-- <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script> -->
-  <script>
-	var currYear;
-	var partnerJson = [];
-	var partnertableColSortStatus = [1,1,1,1,1,1,1,1];
-	
+<title>ONC Gift Partners</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script> 
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
+<script type="text/javascript" src="onccommon.js"></script>
+<script type="text/javascript" src="onctable.js"></script>
+<script>
+	var getTableData = {resource:'partners'};
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
     $( document ).ready(function()
     {
-    		//update the nav bar links, set home link presence
-    		if(sessionStorage.getItem('homelinkVisibility') === 'visible')
+    	//get filter selects, reset buttons and tables 
+    	filters = document.getElementById('filterspan').getElementsByTagName('select');
+    	resets = document.getElementById('resetspan').getElementsByTagName('button');
+    	
+    	//decide whether to display the welcome message
+    	setBannerVisible(true);
+    	
+    	//remove dashboard anchor & change partner anchor class to .breadcrumb-only
+    	if(sessionStorage.getItem('homelinkVisibility') === 'hidden')
+    	{
+    		var dashboardli = document.getElementById('dashboard-anchor');
+    		dashboardli.parentNode.removeChild(dashboardli);
+    		
+    		document.getElementById('linktwo-anchor').classList.add('breadcrumb-only');
+    		document.getElementById('linktwo-anchor').classList.remove('breadcrumb-current');
+    	}
+
+    	var table = $('#oncdatatable').DataTable( 
+		{
+		    dom: 'B<"search"f>rtip',
+		    orderClasses: false,
+		    stripeClasses:['stripe1','stripe2'],
+		    buttons: 
+		    {
+		    	buttons: 
+		    	[
+		    		{ 
+		    			text: 'Edit Partner', 
+		    			action: function ( e, dt, node, config )
+		    			{
+		    				var selectedPartner = table.row('.selected').data();
+		    				if (typeof selectedPartner !== 'undefined')		    						
+		    					rowAction(selectedPartner.id);
+		    			},
+		    			enabled: false 
+		            },
+		            { 
+			    		text: 'Add New Partner', 
+			    		action: function ( e, dt, node, config ) { newAction(); }
+			        },
+		            'excel',
+		            'pdf'
+		    	],
+		    	dom: 
+		    	{
+		    		button: 
+		    		{
+		            	className: ''
+		            }
+		        }
+		    },
+		    columns: 
+		    [
+				{ data: "id", visible: false},
+		    	{ data: "name", width: '450px', className: 'dt-head-left'  },
+		    	{ data: "type", width: '100px' },
+		    	{ data: "status", width: '100px' },
+		    	{ data: "collection", width: '100px' },
+		    	{ data: "orn_req", width: '28px', className: 'dt-body-center' },
+		    	{ data: "orn_delivered", width: '28px', className: 'dt-body-center' },
+		    	{ data: "orn_received", width: '28px', className: 'dt-body-center' }
+		    ],
+		    footerCallback: function ( row, data, start, end, display ) 
+		    {
+		    	var api = this.api(), data;
+		    	$( api.column(5).footer() ).html(api.column(5, {search: 'applied'}).data().sum());
+		    	$( api.column(6).footer() ).html(api.column(6, {search: 'applied'}).data().sum());
+		    	$( api.column(7).footer() ).html(api.column(7, {search: 'applied'}).data().sum()); 	
+		    },
+		    language:
     		{
-    			var profileli = document.getElementById('profileli');
-    			profileli.parentNode.removeChild(profileli);
-    		}
-    		else
-    		{
-    			var homelinkli = document.getElementById('homelinkli');
-    			homelinkli.parentNode.removeChild(homelinkli);
-    		}
-		
-    		//get the list of years from the data base so we can determine current year
-    		var dbyearsparams = 'callback=?';
-    		$.getJSON('dbStatus', dbyearsparams, function(data)
-    		{	
-    			var combo = document.getElementById('dbYears');
-        			for (var i = data.length-1; i >= 0; i--)
-        				addComboBoxOption(combo, data[i].id, data[i].id);
-        			
-        		combo.selectedIndex = '0';
-        		
-			initializeFilters();
+                zeroRecords: "No Partners Found That Meet Filter Criteria - Sorry",
+                info: "Showing _TOTAL_ partners",
+                infoEmpty: "No Partner Data Available",
+                infoFiltered: " - filtered from _MAX_ total partners"
+            },
+		    scrollY: "396px",
+		    scrollCollapse: true,
+		    paging: false
+		});
+    		
+    	//get the list of years from the data base so we can determine current year
+    	var params = 'callback=?';
+    	$.getJSON('dbStatus', params, function(data)
+    	{	
+    		var combo = document.getElementById('curryear');
+        		for(var i = data.length-1; i >= 0; i--)
+        			addComboBoxOption(combo, data[i].id, data[i].id);
+        	
+        	if(sessionStorage.getItem('curryear') == null)
+        	{
+        		combo.selectedIndex = 0;
+        		sessionStorage.setItem('curryear', combo.value);
+        	}
+//        	else
+//        		combo.value = sessionStorage.getItem('curryear');	
+        	
+        	initializeFilters();
+			initializeRowSelection();
 				
-    			getPartnersFromServer(combo.value);
-    		
-    		});
-    	
-		// Write on keyup event of keyword current year seach input element
-        $("#partnersearch").keyup(function(){
-            _this = this;
-            // Show only matching TR's, hide rest of them
-            $.each($("#partnertable tbody tr"), function()
-            {
-                if($(this).find('td').eq(1).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
-                   $(this).hide();
-                else
-                   $(this).show();                
-            });
-        });
-     
-        $.getJSON('getstatus', dbyearsparams, function(status)
-        {
-        		if(status.userstatus === 'Update_Profile')
-            {
-        			showEditProfileDialog();
-        			window.location=document.getElementById('editprofileanchor').href;
-            }
-    		});
-    });
-    
-    function initializeFilters()
-    {
-    		if(sessionStorage.getItem('curryear') != null)	
-			document.getElementById('dbYears').value = sessionStorage.getItem('curryear');
-    		else
-    			sessionStorage.setItem('curryear', document.getElementById('dbYears').value);
-    	
-    		if(sessionStorage.getItem('partnertype') != null)	
-			document.getElementById('partnertype').value = sessionStorage.getItem('partnertype');
-		
-		if(sessionStorage.getItem('partnerstatus') != null)	
-			document.getElementById('partnerstatus').value = sessionStorage.getItem('partnerstatus');
-		
-		if(sessionStorage.getItem('partnercollection') != null)
-			document.getElementById('partnercollection').value = sessionStorage.getItem('partnercollection');
-		
-		//enable the listeners
-		document.getElementById('dbYears').setAttribute("onchange", "updateForYearSelection()");
-		document.getElementById('partnertype').setAttribute("onchange", "filterChanged(this)");
-		document.getElementById('partnerstatus').setAttribute("onchange", "filterChanged(this)");
-		document.getElementById('partnercollection').setAttribute("onchange", "filterChanged(this)");
-		document.getElementById('reset').addEventListener('click', function(){ onResetFilters(true); });
-		
-		checkReset();
-    }
-    
-    function checkReset()
-    {
-    		var resetButton = document.getElementById('reset');
-    		
-    		if(document.getElementById('partnertype').selectedIndex > 0 ||
-					 document.getElementById('partnerstatus').selectedIndex > 0 ||
-					  document.getElementById('partnercollection').selectedIndex > 0)
-    		{	
-    			resetButton.style.backgroundColor='#336699';
-			resetButton.disabled = false;
-    		}
-    		else
-    		{
-    			resetButton.style.backgroundColor='Gray';
-    			resetButton.disabled = true;
-    		}	
-    }
-    
-    function getPartnersFromServer(year)
-    {  	
-    		//get partners from the server
-    		var partnerparams = "year=" + year + "&confirmed=false&callback=?";
+ 			//get partners from the server
+    		var partnerparams = "year=" + combo.value + "&confirmed=false&callback=?";
     		$.getJSON('partners', partnerparams, function(data)
     		{
-    			if(data.hasOwnProperty('error'))
-    				window.location=document.getElementById('timeoutanchor').href;
-    			else
+    			var table = $('#oncdatatable').DataTable();
+				table.rows.add(data);
+					
+				table.column(2).search(document.getElementById('partnertype').value);
+   				table.column(3).search(document.getElementById('partnerstatus').value);
+   				table.column(4).search(document.getElementById('partnercollection').value);
+   				table.draw();
+    				
+    			$.getJSON('getstatus', params, function(status)
     			{
-    				partnerJson = data;
-    				updatePartnerTable();
-    			}
-    		});    	
-    }
-   
-    function updateForYearSelection()
-    {
-    		//get selected year and update session store
-    		var yearCB = document.getElementById('dbYears');
-		var selYear = yearCB.options[yearCB.selectedIndex].value;
-		
-		sessionStorage.setItem("curryear", selYear);
-		
-		getPartnersFromServer(selYear);	
-    }
-
-    function updatePartnerTable()
-    {
-   	 	$("#partnertbody").empty();
-   	 	
-   		var partnerType = document.getElementById('partnertype').value;
-   		var partnerStatus = document.getElementById('partnerstatus').value;
-   		var partnerCollection = document.getElementById('partnercollection').value;
-   	 	
-    		var count = 0;
-    		for(var i=0; i<partnerJson.length; i++)
-		{
-    			if((partnerType === 'Any' || partnerType === partnerJson[i].type) &&
-    				(partnerStatus === 'Any' || partnerStatus === partnerJson[i].status) &&
-    				(partnerCollection === 'Any' || partnerCollection === partnerJson[i].collection))
-    			{	
-    				addTableRow(partnerJson[i], document.getElementById('partnertable'), "Edit");	//add row to table
-    				count++;
-			}	
-		}
-    	
-    		//clear the search box
-    		var searchbox = document.getElementById('partnersearch');
-    		searchbox.value = "";
-    	
-    		//set the quanity in the table
-    		document.getElementById('count').innerHTML = 'Partners Shown: ' + count.toString();
-    }
-    
-    function addTableRow(partner, partnertable, buttontext)
-    {
-        if (!document.getElementsByTagName) return;
-        	
-        var partnerinfo = [partner.id, partner.name, partner.type, partner.status, partner.collection, partner.orn_req, 
-        						partner.orn_delivered, partner.orn_received];
-    
-        var cellwidth = ['88px', '440px', '104px', '128px', '80px', '32px', '32px', '32px', '56px'];
-        var cellAlign = ['left', 'left', 'left', 'left', 'left', 'center', 'center', 'center', 'left'];
-        
-	    var tabBody = partnertable.getElementsByTagName('tbody').item(0);
-        row=document.createElement("tr");
-         
-        for(index=0; index < partnerinfo.length; index++)	//create the family info cells
-        {
-        		cell = document.createElement("td");
-        		cell.appendChild(document.createTextNode(partnerinfo[index]));
-        		cell.style.width = cellwidth[index];
-        	 	cell.style.textAlign = cellAlign[index];
-        		row.appendChild(cell);
-        }
-        
-        btn = document.createElement("button");
-        btn.innerHTML = 'Edit';
-        btn.style.width = cellwidth[index];
-        btn.onclick=function() {partnerAction(partner.id);};
-        
-        row.appendChild(btn);
-        
-        tabBody.appendChild(row);
-    }
-
-    function partnerAction(partnerID)
-    {
-   	 	sessionStorage.setItem("partnerid", partnerID);
-		var params = {};
-		params["partnerid"] = partnerID;
-		
-		post('partnerupdate', params);
-    }
-    
-    function newPartner()
-    {
-    		sessionStorage.setItem("partnerid", "New");
-    	
-    		var params = {};
-		post('partnerupdate', params);
-    }
-    
-    function filterChanged(element)
-    {
-    		sessionStorage.setItem(element.id, element.value);
-    		checkReset();
-    		updatePartnerTable();
-    }
-    
-    function onResetFilters(bUpdateTable)
-    {
-    		var typeElement = document.getElementById('partnertype');
-    		var statusElement = document.getElementById('partnerstatus');
-    		var collectionElement = document.getElementById('partnercollection');
-    	
-        	typeElement.value = 'Any';
-        statusElement.value = 'Any';
-        collectionElement.value = 'Any';
-        
-        sessionStorage.setItem(typeElement.id, typeElement.value);
-		sessionStorage.setItem(statusElement.id, statusElement.value);
-		sessionStorage.setItem(collectionElement.id, collectionElement.value);
-		
-		checkReset();
-		
-		if(bUpdateTable)
-			updatePartnerTable();
-    }
-    
-    function onResetYear()
-    {
-    		var yearCB = document.getElementById('dbYears');
-    		yearCB.selectedIndex = '0';	//reset to most current year
-    		sessionStorage.setItem('curryear', yearCB.value);
-    }
-    
-    function onTableColClicked(headerElem)
-    {
-    		var table = $(headerElem).closest('table');
-    		var col = headerElem.getAttribute('data-col');
-    		
-    		partnertableColSortStatus[col] *= -1;
-    		var sortOrder = partnertableColSortStatus[col];
-    		
-    		sortTable(sortOrder,col,table[0].id);
-    }
-    
-    function sortTable(f,n,table)
-    {
-    		var rows = $('#partnertable tbody  tr').get();
-    		
-    		rows.sort(function(a, b) 
-    		{
-    			var A = getVal(a);
-    			var B = getVal(b);
-
-    			if(A < B)
-    				return -1*f;
-    			else if(A > B)
-    				return 1*f;
-    			else
-    				return 0;
-    		});
-
-    		function getVal(elm)
-    		{
-    			var v = $(elm).children('td').eq(n).text().toUpperCase();
-    			if($.isNumeric(v))
-    				v = parseInt(v,10);
-    			return v;
-    		}
-
-    		$.each(rows, function(index, row) 
-    		{
-    			$('#partnertable').children('tbody').append(row);
-    		});
-    }
-    
-    function onChangePW() 
-    {
-    		if(validate())
-    		{
-			var params = {}	
-			params["field1"] = document.getElementById('currpw').value;
-			params["field2"] = document.getElementById('newpw').value;
-    			$.post('reqchangepw', params, function(response)
-    			{
-    				if(response.hasOwnProperty('error'))
-    					window.location=document.getElementById('timeoutanchor').href;
-    				else
-    					document.getElementById('message').textContent= response;
+    				if(status.userstatus === 'Update_Profile')
+    				{
+    					showEditProfileDialog();
+    					window.location=document.getElementById('editprofileanchor').href;
+    				}
     			});
-    		
-    			document.getElementById('currpw').value = "";
-	    		document.getElementById('newpw').value = "";
-	    		document.getElementById('verifypw').value = "";
-    			window.location=document.getElementById('closepopup').href;
-    		}
-    }
-
-    function onCancel()
-    {
-		window.location=document.getElementById('closepopup').href;
-    }
-	
-	function validate()
-    {
-		var mssgEl = document.getElementById("pw_mssg");
-    		var currpwEl = document.getElementById("currpw");
-        var pass1El = document.getElementById("newpw");
-        var pass2El = document.getElementById("verifypw");
-        var ok = true;
-        
-        if(currpwEl.value == "")
-        {
-        	//alert("current password field empty");
-            currpwEl.style.borderColor = "#E34234";
-            
-            mssgEl.style.color = "Red";
-            mssgEl.textContent = "Current password not provided, please try again!";
-            ok = false;
-        }
-        else if(pass1El.value == '' || pass2El.value == '')
-		{
-			//alert("Either New or Verify Passwords are empty");
-    			pass1El.style.borderColor = "#E34234";
-    			pass2El.style.borderColor = "#E34234";
+    		});
+    	});
+    	
+    	createGroupTable();	//create profile dialog group table
+    });
     
-    			mssgEl.style.color = "Red";
-    			mssgEl.textContent = "Please fill out both New and Confirm, try again!";
-    			ok = false;
-		}        
-        else if(pass1El.value !== pass2El.value)
-        {
-            //alert("New and Verify Passwords do not match");
-            pass1El.style.borderColor = "#E34234";
-            pass2El.style.borderColor = "#E34234";
-            
-            mssgEl.style.color = "Red";
-            mssgEl.textContent = "New and Verify passwords don't match, please try again!";
-            ok = false;
-        }
-
-        return ok;
+    function getTableDataParams()
+    {
+    	return "year=" + sessionStorage.getItem('curryear') + "&confirmed=false&callback=?";
     }
-	
-	function onLogoutLink()
-	{
-		onResetYear();
-		onResetFilters();	//don't remember filer settings
-		
-		var params = {};
-		post('logout', params);
-	}
-	
-	function onSessionTimeout()
-	{
-		onResetYear();
-		onResetFilters();	//don't remember filer settings
-		window.location.assign('timeout');
-	}
     
-	function post(path, params, method) 
-	{
-	    method = method || "post"; // Set method to post by default if not specified.
-
-	    // The rest of this code assumes you are not using a library.
-	    // It can be made less wordy if you use one.
-	    var form = document.createElement("form");
-	    form.setAttribute("method", method);
-	    form.setAttribute("action", path);
-
-	    for(var key in params) 
-	    {
-	    	if(params.hasOwnProperty(key))
-	        {
-	            var hiddenField = document.createElement("input");
-	            hiddenField.setAttribute("type", "hidden");
-	            hiddenField.setAttribute("name", key);
-	            hiddenField.setAttribute("value", params[key]);
-
-	        	form.appendChild(hiddenField);
-	        }
-	    }
-
-	    document.body.appendChild(form);
-	    form.submit();
+    function rowAction(objectID)
+    {
+    	sessionStorage.setItem('partnerid', objectID);
+    	var params = {}
+    	params['partnerid'] = objectID;
+    	
+    	post('partnerupdate', params);
+    }
+    function newAction()
+    {
+    	sessionStorage.setItem('partnerid', "New");
+    	
+    	var params = {}
+    	post('partnerupdate', params);
+    }
+  </script>
+  <style type="text/css">	
+	#tablediv 
+	{ 
+		width: 90%;
+		margin: auto;
 	}
-    </script>
-    <style type="text/css">         
-    	.constrainer 
-        {
-         	width: 90%;
-			margin-left: auto;
-			margin-right: auto;
-            background-color: #3CB371;
-            border: 1px solid black;
-        }
-        .constrainer table { overflow-y: scroll; }
-        .constrainer thead { display: table-row; }
-        .constrainer tbody
-        {
-            overflow-x: scroll;
-            display: block;
-            height: 400px;
-        }
-
-        .onccol { width: 88px; }
-        .namecol { width: 440px; }
-        .typecol { width: 104px; }
-        .statcol { width: 128px; }
-        .collcol { width: 80px; }
-        .countcol { width: 32px; }
-        .actcol { width: 56px; }
-        
-        .controlbar
-		{
-			width:90%;
-			margin:0 auto;
-			background-color: #3CB371;
-			border: 1px solid black;
-		}
-		#newbar { text-align: right; }
-		.textDialog 
-		{
-			position: fixed;
-			font-family: Arial, Helvetica, sans-serif;
-			top: 0;
-			right: 0;
-			bottom: 0;
-			left: 0;
-			background: rgba(5,5,5,0.4);
-			z-index: 99999;
-			opacity:0;
-			-webkit-transition: opacity 400ms ease-in;
-			-moz-transition: opacity 400ms ease-in;
-			transition: opacity 400ms ease-in;
-			pointer-events: none;
-		}
-		.textDialog:target 
-		{
-			opacity:1;
-			pointer-events: auto;
-		}
-		.textDialog > div 
-		{
-			width: 700px;
-			height: 400px;
-			position: relative;
-			margin: 10% auto;
-			padding: 5px 10px 5px 10px;
-			border-radius: 10px;
-			background: #fff;
-			background: -moz-linear-gradient(#fff, #999);
-			background: -webkit-linear-gradient(#fff, #999);
-			background: -o-linear-gradient(#fff, #999);
-		}
-		.textDialog label
-		{
-			float: left;
-    			text-align: right;
-    			margin-right: 0.5em;
-    			display: block;
-    			color: black;
-    			font-size: 85%;
-		}
-		dl
-		{	height:300px;
-			overflow-y:scroll;
-		}
-		dt
-		{
-			font-weight: bold;
-		}
-		dt:before
-		{
-			content: '\A';
-    			white-space: pre;
-		}
-		dd
-		{
-			font-style: italic;
-		}
-		#filterspan
-		{
-			display: inline-block;
-    			margin-left: 40px;
-		}
-		th
-		{
-			cursor: pointer;
-		}
-    </style>
+	.search
+	{
+		font-weight: bold;
+		padding: 10px 8px;	
+	}
+	div.dataTables_filter input 
+	{
+		width: 120px;
+	}	 
+</style>
 </head>
 <body>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
-  <div id="topbar" class="topbar">
-    <img src="onclogo" height="55" width="75"/>
-	<p><span id="banner">USER_NAME, welcome to Our Neighbor's Child's Partner Management System</span><br>
-	<span id="message">USER_MESSAGE</span></p>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
+      <a id='linktwo-anchor' class='breadcrumb-current' href='#'>Partners</a>
+    </span>   
+    <div class='headerbuttons'>
+      <div class='dropdown'>
+        <button class=dropbtn>Profile</button>
+        <div class='dropdown-content'>
+      	  <a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a>
+      	  <a href="#chgpwdlg">Change Password</a>
+      	</div> 
+      </div>
+      <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
+    </div>
   </div>
-  <nav>
-   <ul>
-	    <li id="homelinkli"><a id='homelink' href='dashboard'>Dashboard</a></li>
-	</ul>
-	<ul class='floatright'>
-		<li id='profileli'><a href="#">Profile <span class="caret"></span></a>
-		  <div>
-		    <ul>
-			  <li><a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a></li>
-			  <li><a href="#chgpwdlg">Change Password</a></li>
-		    </ul>
-		  </div>
-	    </li>
-	    <li id="logoutli"><a href='javascript:onLogoutLink()'>Logout</a></li>
-	</ul>
-  </nav>
-  <div class='controlbar'>
-  		<select id="dbYears" name="dbYear"></select>
-		<label id='count'>Partners Shown: 0</label>
+  <div id="welcome-div">
+    <p id='banner-message'>BANNER_MESSAGE</p>
+  </div>    
+  <form>
+  <fieldset>
+  		<legend>Filters</legend>
 		<span id='filterspan'>
-		  <label for='partnertype'>Type:</label>
-		  <select id="partnertype" title="Type" name="type">
-		    <option value="Any">Any</option>
-    	    		<option value="Business">Business</option>
+		  <label for='curryear' class='filterlabel'>Season:</label>
+		  <select id="curryear" title="Select season to display" data-type='tabledata' data-column='-1' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'></select>
+		  <label for='partnertype' class='filterlabel'>Type:</label>
+		  <select id="partnertype" title="Filter Partners by Type" data-type='search' data-column='2' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		    <option value="">Any</option>
+    	    <option value="Business">Business</option>
 		    <option value="Church">Church</option>
 		    <option value="School">School</option>
 		    <option value="Clothing">Clothing</option>
 		    <option value="Coat">Coat</option>
 		    <option value="ONC Shopper">ONC Shopper</option>
 		  </select>
-		  <label for='partnerstatus'>Status:</label>
-		  <select id="partnerstatus" title="status" name="status">
-		    <option value="Any">Any</option>
-    	    		<option value="No Action Yet">No Action Yet</option>
+		  <label for='partnerstatus' class='filterlabel'>Status:</label>
+		  <select id="partnerstatus" title="Filter Partners by Status" data-type='search' data-column='3' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		    <option value="">Any</option>
+    	    <option value="No Action Yet">No Action Yet</option>
 		    <option value="1st Email Sent">1st Email Sent</option>
 		    <option value="Responded">Responded</option>
 		    <option value="2nd Email Sent">2nd Email Sent</option>
@@ -556,108 +231,146 @@
 		    <option value="Confirmed">Confirmed</option>
 		    <option value="Not Participating">Not Participating</option>
 		  </select>
-		  <label for='partnercollection'>Collection</label>
-		  <select id="partnercollection" title="collection" name="collection">
-		    <option value="Any">Any</option>
+		  <label for='partnercollection' class='filterlabel'>Collection:</label>
+		  <select id="partnercollection" title="Filter Partners by Collection" data-type='search' data-column='4' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		    <option value="">Any</option>
 		    <option value="General">General</option>
 		    <option value="Ornament">Ornament</option>
 		    <option value="Meals">Meals</option>
 		    <option value="Unknown">Unknown</option>
 		  </select>
-		  <button id="reset">Reset Filters</button>
 		</span>
-		<span class='floatright'>
-		  <label for="partnersearch">Search For:</label>
-		  <input type="text" id="partnersearch" placeholder="Type to search..." />
+		<span id='resetspan' class='floatright resetbtn'>
+			<button id="resetbtn" data-table='oncdatatable' onclick='onResetFilters(this)'>Reset Filters</button>
 		</span>
-  </div>
-  <div class="constrainer">
-	<table id="partnertable">
+	</fieldset>		
+  </form>		
+  <div id='tablediv'>
+    <table id="oncdatatable" class='display' style="width:100%">
       <thead>
         <tr>
-       		<th class='onccol' onclick='onTableColClicked(this)' data-col='0'>Partner ID</th>
-       		<th class='namecol' onclick='onTableColClicked(this)' data-col='1'>Name</th>
-       		<th class='typecol' onclick='onTableColClicked(this)' data-col='2'>Type</th>
-       		<th class='statcol' onclick='onTableColClicked(this)' data-col='3'>Status</th>
-        		<th class='collcol' onclick='onTableColClicked(this)' data-col='4'>Collection</th>
-        		<th class='countcol' onclick='onTableColClicked(this)' data-col='5'>Req</th>
-        		<th class='countcol' onclick='onTableColClicked(this)' data-col='6'>Del</th>
-        		<th class='countcol' onclick='onTableColClicked(this)' data-col='7'>Rec</th>
-        		<th class='actcol'>Action</th>
+       		<th>ID</th>
+       		<th id='partnerth'>Partners</th>
+       		<th>Type</th>
+       		<th>Status</th>
+        	<th>Collection</th>
+        	<th>Req</th>
+        	<th>Del</th>
+        	<th>Rec</th>
         </tr>
       </thead>
       <tbody id='partnertbody'>
       </tbody>
+      <tfoot>
+        <tr>
+          <th></th>
+          <th>Totals</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th id='orn_req_sum' style="text-align:center"></th>
+          <th id='orn_del_sum' style="text-align:center"></th>
+          <th id='orn_rec_sum' style="text-align:center"></th>
+        </tr>
+      </tfoot>
 	</table>
-  </div>
-  <div id='newbar' class='controlbar'>
-    <button id="new" onclick="newPartner()">Add New Partner</button>
-  </div>
-  <!-- Edit Profile Dialog -->
+  </div> 
+<!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
-	  <div class='innerextended'>
-		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
-		  <span class='logospan'>Verify/Update ONC Profile</span>
+	<div class='inner extended-width'>
+	  <div class='dialogtopbar'>
+		<img class='logo-img' src="onclogo">
+		<span class='logospan'>Verify/Update ONC Profile</span>
 	  </div>
-	  <div class='greenbackground'>
-	  <fieldset class="fieldset-auto-width">
-  		<legend class="legend-major">Contact Information</legend>
-  		<div class= 'profilediv'>
+	  <div class='edit-background'>
+	  	  <fieldset id='contact-info-fieldset'>
+  			  <legend class="legend-major">Contact Information</legend>
+  			  <p>
     	  		<label for="userfirstname">Name:</label>
-    	  		<input id='userfirstname' type="text" size="16" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userfirstname' type="text" size="14" placeholder="First Name" onchange='checkForProfileChange()'>
     	  		<input id='userlastname' type="text" size="16" placeholder="Last Name" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  	<div class= 'profilediv'>
-    	  		<label for="userorg" >Organization:</label>
+    		  </p>   		
+    		  <p>
+    	  		<label for="userorg">Organization:</label>
     	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  	<div class= 'profilediv'>
-    	  		<label for="usertitle" >Title:</label>
-    	  		<input id='usertitle' type="text" size="33" placeholder="Title" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  	<div class= 'profilediv'>
-    	  		<label for="useremail" >Email:</label>
-    	  		<input id='useremail' type="text" size="35" placeholder="Email address" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  	<div class= 'profilediv'>
-    	  		<label for="userphone" >Phone:</label>
-    	  		<input id='userphone' type="text" size="22" placeholder="Work Phone #" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  </fieldset>
-    	  </div>
-    	  <div id='buttonbar'>
-    	    <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
-        <button id="update" value='unchanged' style="background-color:Grey" onclick="onUpdateProfile(this)" disabled>Update</button>
-    	  </div> 
+    	 	  </p>
+    	 	  <p>
+    	  		 <label for="usertitle">Title:</label>
+    	 		 <input id='usertitle' type="text" size="34" placeholder="Title" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		<label for="useremail">Email:</label>
+    	  		<input id='useremail' type="text" size="34" placeholder="Email address" onchange='checkForProfileChange()'>
+    	      </p>
+    	 	  <p>
+    	  		<label for="userphone">Phone:</label>
+    	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  	  </p>
+      	  </fieldset>
+	  </div>
+      <div class='edit-background'>
+		<fieldset>
+			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
+  	    	 <table id="profiletable" class='display' style="width:100%">
+  		 	  <thead>
+    			<tr>
+    				<th>Id</th>
+        			<th>School or Organization</th>
+    			</tr>
+    		  </thead>
+    		  <tbody>
+    		  </tbody>
+	    	</table>
+	    	<div> 
+  		  		<select id="groupselect" title="School or Organization Name" oninput='onGroupSelected(this)'></select>
+  			</div>
+  		</fieldset>
+  	  </div>
+      <div class='buttonbar'>
+    	<button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" onclick="onUpdateProfile(this)" disabled>Update</button>
+      </div> 
 	</div>
   </div>
 <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
-	<div class='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+	<div class='inner extended-width'>
+		<a href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
+		  <img class='logo-img' src="onclogo">
 		  <span class='logospan'>Change Password</span>
 		</div>
-		<p id='pw_mssg'>Enter current and new password:</p>
-    	<p><label class='lbl_pw' for="currpw">Current Password:</label>
-    	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
-    	<p><label class='lbl_pw' for="newpw">New Password:</label>
-    	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
-    	<p><label class='lbl_pw' for="verifypw" >Verify Password:</label>
-    	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
-    	<div id='buttonbar'>
-      	  <button id="cancel" onclick="onCancel()">Cancel</button>
-      	  <button id="submit" onclick="onChangePW()">Change Password</button>
+		<div class='edit-background'>
+	  	  <fieldset>
+  			<legend class="legend-major">Enter Current and New Passwords</legend>
+  			<div id='pw_mssg'>Enter current and new password:</div>
+  			<table class='password-table'>
+  				<tr>
+  					<td>Current Password:</td>
+  					<td><input type="password" id="currpw" name="field1" width='100%' oninput='checkChangePWEnable()' autofocus></td>
+  				</tr>
+  				<tr>
+  					<td>New Password:</td>
+  					<td><input type="password" id="newpw" name="field2" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  				<tr>
+  					<td>Verify New Password:</td>
+  					<td><input type="password" id="verifypw" name="field3" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  			</table>
+		  </fieldset>
+		</div>
+    	<div class='buttonbar'>
+      	  <button onclick="onCancel()">Cancel</button>
+      	  <button id="btnchangepw" onclick="onChangePW()" disabled>Change Password</button>
     	</div> 
 	</div>
   </div>
   <!-- Timeout Dialog -->
   <div id="timeoutdlg" class="modalDialog">
-	<div class='inner'>
+	<div class='inner regular-width'>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo"/>
+		  <img class='logo-img' src="onclogo"/>
 		  <span id='dialogmssg'>Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>

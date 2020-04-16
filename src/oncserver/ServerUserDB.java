@@ -504,6 +504,28 @@ public class ServerUserDB extends ServerPermanentDB
 	}
 	
 	/***
+	 * Creates a list of all other ONCUsers in a specified group. If the only user in a group is the currentuser, 
+	 * returns an empty list.
+	 * @param groupID - id of group to be checked for other users
+	 * @param currentUser - user already in group
+	 * @return - List of ONCUsers other then the current user in the specified group
+	 */
+	List<ONCServerUser> getOtherUsersInGroup(int groupID, ONCUser currentUser)
+	{
+		List<ONCServerUser> otherGroupMembersList = new ArrayList<ONCServerUser>();
+		
+		//get the members of the group
+		List<ONCServerUser> membersInGroup = getUsersInGroup(groupID, EnumSet.allOf(UserStatus.class));
+		
+		for(ONCServerUser su : membersInGroup)
+			if(su.getID() != currentUser.getID())
+				otherGroupMembersList.add(su);
+			
+		
+		return otherGroupMembersList;
+	}
+	
+	/***
 	 * Returns an <Agent> json that contains agents that referred families in the parameter
 	 * year. Uses the JSONP construct.
 	 * @param year

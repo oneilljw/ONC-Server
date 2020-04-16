@@ -61,15 +61,9 @@ public class FamilyHandler extends ONCWebpageHandler
     			WebClient wc = clientMgr.findAndValidateClient(t.getRequestHeaders());
 			if(wc != null)
 			{
-    				int year = Integer.parseInt((String) params.get("year"));
-    				
-    				String zAgentID = (String) params.get("agentid");
-    				Integer agentID = zAgentID == null? null : Integer.parseInt((String) params.get("agentid"));
-    				
-    				String zGroupID = (String) params.get("agentid");
-    				Integer groupID = zGroupID==null? null : Integer.parseInt((String) params.get("groupid"));
-    		
-    				htmlResponse = ServerFamilyDB.getFamiliesJSONP(year, agentID, wc.getWebUser(), groupID, (String) params.get("callback"));
+				int year = Integer.parseInt((String) params.get("year"));
+
+				htmlResponse = ServerFamilyDB.getFamiliesJSONP(year, wc.getWebUser(),(String) params.get("callback"));
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
@@ -93,38 +87,39 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 		else if(requestURI.contains("/familysearch"))
 		{
-    			HtmlResponse htmlResponse;
-    		
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-    				//get the JSON of family reference list
-    				htmlResponse = ServerFamilyDB.searchForFamilyReferencesJSONP(
-						Integer.parseInt((String) params.get("year")),
-						 (String) params.get("searchstring"),
-						  (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				
-    			sendHTMLResponse(t, htmlResponse);
-		}
-		else if(requestURI.contains("/getfamily"))
-    		{
 			HtmlResponse htmlResponse;
-    		
-			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
+		
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
 			{
-				int year = Integer.parseInt((String) params.get("year"));
-				String targetID = (String) params.get("targetid");
-				boolean bIncludeSchool = ((String) params.get("schools")).equalsIgnoreCase("true") ? true : false;
-        		
-				htmlResponse = ServerFamilyDB.getFamilyJSONP(year, targetID, bIncludeSchool, (String) params.get("callback"));
+				//get the JSON of family reference list
+				htmlResponse = ServerFamilyDB.searchForFamilyReferencesJSONP(
+					Integer.parseInt((String) params.get("year")),
+					 (String) params.get("searchstring"),
+					  (String) params.get("callback"));
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
 				
 			sendHTMLResponse(t, htmlResponse);
-    		}
+		}
+		else if(requestURI.contains("/getfamily"))
+    	{
+			HtmlResponse htmlResponse;
+    		
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+				boolean bByReference = ((String) params.get("byReference")).equalsIgnoreCase("true") ? true : false;
+				String targetID = (String) params.get("targetid");
+				boolean bIncludeSchool = ((String) params.get("schools")).equalsIgnoreCase("true") ? true : false;
+        		
+				htmlResponse = ServerFamilyDB.getFamilyJSONP(year, bByReference, targetID, bIncludeSchool, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);
+    	}
 		else if(requestURI.contains("/commonfamily.js"))
 		{
 			sendCachedFile(t, "text/javascript", "commonfamily", false);
@@ -149,7 +144,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			WebClient wc;
     			
     			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    				response = getFamilyStatusWebpage(wc, "", "", "", false);
+    				response = getReferralStatusWebpage(wc, "", "", "", false);
     			else
     				response = invalidTokenReceived();
     		
@@ -182,7 +177,7 @@ public class FamilyHandler extends ONCWebpageHandler
     				logParameters(params, requestURI);
     				ResponseCode frc = processFamilyReferral(wc, params);
     			    				
-    				response = getFamilyStatusWebpage(wc, frc.getMessage(), frc.getSuccessMessage(), frc.getTitle(), true);
+    				response = getReferralStatusWebpage(wc, frc.getMessage(), frc.getSuccessMessage(), frc.getTitle(), true);
     			}
     			else
     				response = invalidTokenReceived();
@@ -235,7 +230,7 @@ public class FamilyHandler extends ONCWebpageHandler
     			{
     				//submission processed, send the home page back to the user
     				ResponseCode frc = processFamilyUpdate(wc, params);
-    				response = getFamilyStatusWebpage(wc, frc.getMessage(), frc.getMessage(), "Family Update Successful",true);
+    				response = getReferralStatusWebpage(wc, frc.getMessage(), frc.getMessage(), "Family Update Successful",true);
     			}
     			else
     				response = invalidTokenReceived();
@@ -294,8 +289,26 @@ public class FamilyHandler extends ONCWebpageHandler
 			HtmlResponse htmlResponse;
 			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
 			{
+				int offset;
+				try
+				{
+					offset = Integer.parseInt((String) params.get("offset")) * 60 * 1000;
+				}
+				catch (ClassCastException cce)
+				{
+					offset = 0;
+				}
+				catch (NullPointerException npe)
+				{
+					offset = 0;
+				}			
+				catch (NumberFormatException nfe)
+				{
+					offset = 0;
+				}
+			
 				//get the JSON for response to response submission
-				htmlResponse = ServerGlobalVariableDB.getDeadlineJSONP((String) params.get("callback"));			
+				htmlResponse = ServerGlobalVariableDB.getDeadlineJSONP(offset, (String) params.get("callback"));			
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
@@ -338,7 +351,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 		
 		//create the family map
-		String[] familyKeys = {"targetid", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
+		String[] familyKeys = {"targetid", "referencenum", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
 						   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
 						   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation", "uuid"};
 				
@@ -424,7 +437,7 @@ public class FamilyHandler extends ONCWebpageHandler
 				dnsCode = DNS_CODE_FOOD_ONLY;
 			
 			ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
-					familyMap.get("targetid"), "B-DI", dnsCode,
+					familyMap.get("referencenum"), "B-DI", dnsCode,
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohfn"), familyMap.get("hohln"), familyMap.get("housenum"),
 					ensureUpperCaseStreetName(familyMap.get("street")),

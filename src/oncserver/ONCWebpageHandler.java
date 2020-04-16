@@ -33,17 +33,17 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
 	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
 	private static final String EDIT_PROFILE_JS_FILE = "EditProfile.js";
-	private static final String EDIT_PROFILE2_JS_FILE = "EditProfile2.js";
 	private static final String ONC_COMMON_JS_FILE = "ONCCommon.js";
-	private static final String PARTNER_UPDATE_HTML = "Partner2.htm";
-	private static final String REGION_TABLE_HTML = "RegionTable2.htm";
+	private static final String ONC_TABLE_JS_FILE = "ONCTable.js";
+	private static final String PARTNER_UPDATE_HTML = "Partner.htm";
+	private static final String REGION_TABLE_HTML = "RegionTable.htm";
 	private static final String REGION_UPDATE_HTML = "Region.htm";
 	private static final String DRIVER_SIGN_IN_HTML = "DriverReg.htm";
 	private static final String VOLUNTEER_SIGN_IN_HTML = "WarehouseSignIn.htm";
 	private static final String VOLUNTEER_REGISTRATION_HTML = "VolRegistration.htm";
 	private static final String REFERRAL_STATUS_HTML = "ReferralStatus.htm";
-	private static final String DASHBOARD_HTML = "Dashboard2.htm";
-	private static final String PARTNER_TABLE_HTML = "PartnerTablev2.0.htm";
+	private static final String DASHBOARD_HTML = "Dashboard.htm";
+	private static final String PARTNER_TABLE_HTML = "PartnerTable.htm";
 	private static final String LOGOUT_HTML = "logout.htm";
 	private static final String MAINTENANCE_HTML = "maintenance.htm";
 	private static final String DELIVERY_DAY_ERROR_HTML = "DefaultDeliveryActivityNotSet.htm";
@@ -61,7 +61,6 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String ONC_ICON_FILE = "ONC.ico";
 	private static final String VANILLA_FONT_FILE = "vanilla.ttf";
 	private static final String ONC_STYLE_SHEET_CSS = "ONCStyleSheet.css";
-	private static final String ONC_STYLE_SHEET2_CSS = "ONCStyleSheet2.css";
 	private static final String ONC_DIALOG__STYLE_SHEET_CSS = "ONCDialogStyleSheet.css";
 	private static final String ONC_LOGIN__STYLE_SHEET_CSS = "ONCLoginStyleSheet.css";
 	private static final String JQUERY_JS_FILE = "jquery-1.11.3.js";
@@ -128,12 +127,11 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("oncicon", readFileToByteArray(ONC_ICON_FILE));
 			webfileMap.put("vanilla", readFileToByteArray(VANILLA_FONT_FILE));
 			webfileMap.put("oncstylesheet", readFileToByteArray(ONC_STYLE_SHEET_CSS));
-			webfileMap.put("oncstylesheet2", readFileToByteArray(ONC_STYLE_SHEET2_CSS));
 			webfileMap.put("oncdialogstylesheet", readFileToByteArray(ONC_DIALOG__STYLE_SHEET_CSS));
 			webfileMap.put("oncloginstylesheet", readFileToByteArray(ONC_LOGIN__STYLE_SHEET_CSS));
 			webfileMap.put("onccommon", readFileToByteArray(ONC_COMMON_JS_FILE));
+			webfileMap.put("onctable", readFileToByteArray(ONC_TABLE_JS_FILE));
 			webfileMap.put("editprofile", readFileToByteArray(EDIT_PROFILE_JS_FILE));
-			webfileMap.put("editprofile2", readFileToByteArray(EDIT_PROFILE2_JS_FILE));
 			webfileMap.put("login", readFileToByteArray(LOGIN_JS_FILE));
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
 			webfileMap.put("staticcharts", readFileToByteArray(STATIC_CHARTS_JS_FILE));
@@ -282,24 +280,20 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
 			return getPartnerTableWebpage(wc, message);	//send the partner table page
 		else	 
-			return getFamilyStatusWebpage(wc, message, message, "Sucessful Referral", bShowSuccessDialog); //send the family status page
+			return getReferralStatusWebpage(wc, message, message, "Sucessful Referral", bShowSuccessDialog); //send the family status page
 	}
 	
-	String getFamilyStatusWebpage(WebClient wc, String message, String successMssg, 
+	String getReferralStatusWebpage(WebClient wc, String message, String successMssg, 
 			String successDlgTitle, boolean bShowSuccessDialog)
 	{
 		Calendar deliveryDayCal = ServerGlobalVariableDB.getDeliveryDay(DBManager.getCurrentSeason());
 		SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy");
 		
 		String response = webpageMap.get("familystatus");
-		response = response.replace("USER_NAME", wc.getWebUser().getFirstName());
-		response = response.replace("USER_MESSAGE", message);
-//		response = response.replace("THANKSGIVING_MEAL_CUTOFF", enableReferralButton("Thanksgiving Meal"));
-//		response = response.replace("DECEMBER_MEAL_CUTOFF", enableReferralButton("December Meal"));
-//		response = response.replace("WAITLIST_GIFT_CUTOFF", enableReferralButton("Waitlist Gift"));
-//		response = response.replace("EDIT_CUTOFF", enableReferralButton("Edit"));
-		response = response.replace("DELIVERY_DATE", sdf.format(deliveryDayCal.getTime()));
+		String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
+		response = response.replace("BANNER_MESSAGE", loginMssg);
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+		response = response.replace("DELIVERY_DATE", sdf.format(deliveryDayCal.getTime()));
 		response = response.replace("SHOW_SUCCESS_DIALOG", bShowSuccessDialog ? "true" : "false");
 		response = response.replace("SUCCESS_DIALOG_HEADER", successDlgTitle);
 		response = response.replace("SUCCESS_DIALOG_MESSAGE", bShowSuccessDialog ? successMssg : "");
@@ -311,16 +305,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	String getPartnerTableWebpage(WebClient wc, String message)
 	{
 		String response = webpageMap.get("partnertable");
-		if(message.isEmpty())
-			response = response.replace("SHOW_MESSAGE", "none");
-		else
-		{
-			String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
-			response = response.replace("BANNER_MESSAGE", loginMssg);
-		}
-		
-		response = response.replace("USER_NAME", getUserFirstName(wc));
-		response = response.replace("USER_MESSAGE", message);
+		String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
+		response = response.replace("BANNER_MESSAGE", loginMssg);
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
 		
 		return response;
@@ -329,19 +315,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	String getDashboardWebpage(WebClient wc, String message)
 	{
 		String response = webpageMap.get("dashboard");
-		if(message.isEmpty())
-			response = response.replace("SHOW_MESSAGE", "none");
-		else
-		{
-			String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
-			response = response.replace("BANNER_MESSAGE", loginMssg);
-		}
-		
-		response = response.replace("SHOW_MESSAGE", "block");
-		response = response.replace("USER_NAME", getUserFirstName(wc));
-		response = response.replace("USER_MESSAGE", message);
-		
-		return response;
+		String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
+
+		return response.replace("BANNER_MESSAGE", loginMssg);
 	}
 	
 	String enableReferralButton(String day)

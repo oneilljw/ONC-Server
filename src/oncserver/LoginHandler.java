@@ -106,7 +106,7 @@ public class LoginHandler extends ONCWebpageHandler
     			sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
 		}
 		else if(requestURI.contains("/login"))
-    		{
+    	{
 			if(t.getRequestMethod().toLowerCase().equals("post"))
 				sendHTMLResponse(t, loginRequest(t, params));
 			else
@@ -118,7 +118,7 @@ public class LoginHandler extends ONCWebpageHandler
 		
 				sendHTMLResponse(t, new HtmlResponse("", HttpCode.Method_Not_Allowed));
 			}
-    		}
+    	}
 		else if(requestURI.equals("/lostcredentials"))
 		{
 			String response = webpageMap.get(requestURI);
@@ -309,16 +309,14 @@ public class LoginHandler extends ONCWebpageHandler
 	    	}
 	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
 	    	{
-	    		//get the old data before updating
-	    		Calendar lastLogin = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-	    		lastLogin.setTimeInMillis(serverUser.getLastLogin());
-	    		
+	    		//get prior last login time for welcome message before setting new
+	    		//last login time
+	    		long priorLastLogin = serverUser.getLastLogin();
+	    		serverUser.setLastLogin(System.currentTimeMillis());
+//	    		System.out.println(String.format("Prior LL: %d, curr LL: %d", priorLastLogin, serverUser.getLastLogin()));
+	    	
 	    		serverUser.incrementSessions();
 	    		serverUser.setFailedLoginCount(0);
-	    		
-	    		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-	    		serverUser.setLastLogin(calendar.getTimeInMillis());
-	    		
 	    		serverUser.setClientYear(DBManager.getCurrentSeason());
 	    		
 	    		userDB.requestSave();
@@ -354,9 +352,19 @@ public class LoginHandler extends ONCWebpageHandler
 	    				userMssg = "This is your first visit!";
 	    			else
 	    			{
-	    				SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMM d, yyyy");
+	    				//get UTC offset to where the user is located
+	    	    		long userOffsetInMillis = 0;
+	   					if(params.containsKey("offset") && isNumeric((String)params.get("offset")))
+	    					userOffsetInMillis = (Integer.parseInt((String)params.get("offset"))) * 60 * 1000 * -1;
+	    				
+	    				Calendar lastLoginCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+	    				lastLoginCal.setTimeInMillis(priorLastLogin + userOffsetInMillis);
+	    				
+	    				SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy, h:mm a");
+//	    				System.out.println(String.format("Last Login Millis: %d, Time: %s", priorLastLogin, sdf.format(lastLoginCal.getTime())));
+//	    				System.out.println(lastLoginCal);
 	    				sdf.setTimeZone(TimeZone.getDefault());
-	    				userMssg = "You last visited on " + sdf.format(lastLogin.getTime()) +".";
+	    				userMssg = "Your last login was on " + sdf.format(lastLoginCal.getTime()) +".";
 	    			}
 
 	    			response = new HtmlResponse(getHomePageHTML(wc, userMssg, false), HttpCode.Ok, getSIDCookie(wc));

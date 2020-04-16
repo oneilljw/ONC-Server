@@ -167,7 +167,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
-*/	
+	
 	static HtmlResponse getFamiliesJSONP(int year, Integer reqAgentID, ONCServerUser loggedInUser, Integer reqGroupID, String callbackFunction)
 	{	
 		Gson gson = new Gson();
@@ -274,7 +274,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 												ServerNoteDB.lastNoteStatus(year, f.getID())));
 			}
 		}
-/*		
+		
 		if(loggedInUser.getID() > -1)
 		{
 			//add only the families referred by that agent
@@ -314,7 +314,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					responseList.add(new ONCWebsiteFamily(f));
 			}	
 		}
-*/		
+		
 		//sort the list by HoH last name
 		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
 		
@@ -323,7 +323,66 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
-	
+*/	
+	static HtmlResponse getFamiliesJSONP(int year, ONCServerUser loggedInUser, String callbackFunction)
+	{	
+		Gson gson = new Gson();
+		Type listOfWebsiteFamilies = new TypeToken<ArrayList<ONCWebsiteFamily>>(){}.getType();
+		
+		List<ONCFamily> currentSeasonList = familyDB.get(DBManager.offset(DBManager.getCurrentSeason())).getList();
+		List<ONCFamily> searchList = familyDB.get(DBManager.offset(year)).getList();
+		List<ONCGroup> agentsGroupList = ServerGroupDB.getGroupList(loggedInUser);
+		
+		ArrayList<ONCWebsiteFamily> responseList = new ArrayList<ONCWebsiteFamily>();
+		
+		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
+		{
+			//case: admin or higher login, requested agent = ANY, request group = ANY
+			//can only happen if loggedInUser permission > AGENT. If the requested agent is
+			//the logged-in user and their permissions are higher then Agent return all families			
+			for(ONCFamily f : searchList)
+			{
+				boolean bAlreadyReferred = year == DBManager.getCurrentSeason() ? true : alreadyReferredInCurrentSeason(year, f, currentSeasonList);
+				
+				responseList.add(new ONCWebsiteFamily(f, bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()),
+									ServerNoteDB.lastNoteStatus(year, f.getID())));
+			}
+		}
+		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0)
+		{
+			//case: agent is the logged in user, return all referrals from the agent and any referrals
+			//from shared groups the agent is in.
+			for(ONCFamily f : searchList)
+			{
+				boolean bAlreadyReferred = year == DBManager.getCurrentSeason() ? true : alreadyReferredInCurrentSeason(year, f, currentSeasonList);
+				
+				if(f.getAgentID() == loggedInUser.getID())
+					responseList.add(new ONCWebsiteFamily(f,bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), 							ServerNoteDB.lastNoteStatus(year, f.getID())));
+				else
+					for(ONCGroup agentGroup : agentsGroupList)
+						if(agentGroup.groupSharesInfo() && f.getGroupID() == agentGroup.getID())
+							responseList.add(new ONCWebsiteFamily(f, bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), 
+									ServerNoteDB.lastNoteStatus(year, f.getID())));
+			}
+		}
+
+//		//sort the list by HoH last name
+//		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
+		
+		String response = gson.toJson(responseList, listOfWebsiteFamilies);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+	static boolean alreadyReferredInCurrentSeason(int year, ONCFamily f, List<ONCFamily> currentSeasonList)
+	{	
+		//check to see if the parameter family has already been referred in the current season
+		int index = 0;
+		while(index < currentSeasonList.size() && !currentSeasonList.get(index).getReferenceNum().contentEquals(f.getReferenceNum()))
+			index++;
+			
+		return index <currentSeasonList.size();
+	}
 	static HtmlResponse getFamilyReferencesJSONP(int year, String callbackFunction)
 	{		
 		Gson gson = new Gson();
@@ -344,6 +403,53 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
+	static HtmlResponse getAgentsWhoReferredJSONP(int year, ONCServerUser loggedInAgent, String callbackFunction)
+	{
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<ONCWebAgent>>(){}.getType();
+		List<ONCWebAgent> agentReferredInYearList = new LinkedList<ONCWebAgent>();
+		
+		List<ONCFamily> searchList = familyDB.get(DBManager.offset(year)).getList();
+		
+		if(loggedInAgent.getPermission().compareTo(UserPermission.Admin) >= 0)
+		{
+			//Admin or higher user - get all agents who referred in year
+			for(ONCFamily f : searchList)
+				if(!isInList(f.getAgentID(), agentReferredInYearList))
+					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
+		}
+		else if(loggedInAgent.getPermission() == UserPermission.Agent)
+		{
+			//add the agent
+			agentReferredInYearList.add(new ONCWebAgent(loggedInAgent));
+			
+			//get a list of groups the agent is in
+			for(ONCGroup g : ServerGroupDB.getGroupList(loggedInAgent))
+			{
+				if(g.groupSharesInfo())
+				{
+					//get all other agents in the group who referred families in the year
+					List<ONCServerUser> otherAgentsInGroup = userDB.getOtherUsersInGroup(g.getID(), loggedInAgent);
+					for(ONCServerUser otherAgent : otherAgentsInGroup)
+					{
+						//if agent referred in year, add them to the agent list
+						if(didAgentReferInYear(year, otherAgent.getID()) && !isInList(otherAgent.getID(), agentReferredInYearList))
+							agentReferredInYearList.add(new ONCWebAgent(otherAgent));
+					}
+				}
+			}	
+		}
+	
+		//sort the list by name and add an "anyone" to the top of the list
+		if(agentReferredInYearList.size() > 1)
+			Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
+
+		String response = gson.toJson(agentReferredInYearList, listtype);
+	
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+	}
+/*	
 	static HtmlResponse getAgentsWhoReferredJSONP(int year, ONCServerUser loggedInAgent, int groupID, String callbackFunction)
 	{
 		Gson gson = new Gson();
@@ -389,7 +495,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
-	
+*/	
 	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>
 	{
 		@Override
@@ -1063,7 +1169,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return "FAMILY_NOT_FOUND";
 	}
 	
-	static HtmlResponse getFamilyJSONP(int year, String targetID, boolean bIncludeSchools, String callbackFunction)
+	static HtmlResponse getFamilyJSONP(int year, boolean bByReference, String targetID, boolean bIncludeSchools, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		String response;
@@ -1071,9 +1177,21 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
 		
 		int index=0;
-		while(index<fAL.size() && !fAL.get(index).getReferenceNum().equals(targetID))
-			index++;
 		
+		if(bByReference)
+		{	
+			//search by reference number
+			while(index<fAL.size() && !fAL.get(index).getReferenceNum().equals(targetID))
+				index++;
+		}
+		else
+		{
+			//search by season family id number
+			int oncID = isNumeric(targetID) ? Integer.parseInt(targetID) : -1;
+			while(index<fAL.size() && fAL.get(index).getID() != oncID)
+				index++;
+		}
+					
 		if(index<fAL.size())
 		{
 			ONCFamily fam = fAL.get(index);
@@ -1186,17 +1304,28 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	}
 
 	
-	ONCFamily getFamilyByTargetID(int year, String targetID)	//Persistent odb, wfcm or onc id number string
+	ONCFamily getFamilyByTargetID(int year, String targetID)	//Persistent onc id number string
 	{
-		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
-		int index = 0;	
-		while(index < fAL.size() && !fAL.get(index).getReferenceNum().equals(targetID))
-			index++;
-		
-		if(index < fAL.size())
-			return fAL.get(index);
-		else
+		//Verify targetID is numeric and convert to string
+		try
+		{
+			int famID = Integer.parseInt(targetID);
+			
+			List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
+			int index = 0;	
+			while(index < fAL.size() && fAL.get(index).getID()!= famID)
+				index++;
+			
+			if(index < fAL.size())
+				return fAL.get(index);
+			else
+				return null;
+		}
+		catch (NumberFormatException nfe)
+		{
+			ServerUI.addLogMessage(String.format("WebServer Family Update: Unable to parse target id parameter: %s", targetID));
 			return null;
+		}
 	}
 	
 	ONCFamily getFamilyByONCNum(int year, String oncNum)	//Persistent odb, wfcm or onc id number string

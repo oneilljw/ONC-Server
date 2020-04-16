@@ -48,506 +48,497 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		HtmlResponse htmlResponse = null;
 		
 		if(requestURI.contains("/startpage"))
-    		{
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    			{
-    				String response = getHomePageHTML(wc, "", false);
-    				sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    			}
-    			else
-    			{	
-    				//send the user back to the ONC general web site
-    				Headers header = t.getResponseHeaders();
-    				ArrayList<String> headerList = new ArrayList<String>();
-    				headerList.add("http://www.ourneighborschild.org");
-    				header.put("Location", headerList);
-    				sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
-    			}	
-    		}		
-    		else if(t.getRequestURI().toString().contains("/dbStatus"))
-    		{
-    			//check to see that it's an active, authenticated session. If so, send db status
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    				sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
-    			else
-    			{
-    				//handle an imposter or a timed-out client
-    			}
-    		}
-    		else if(requestURI.contains("/agents"))
-    		{
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    			{
-    				int year = Integer.parseInt((String) params.get("year"));
-        			int groupID = Integer.parseInt((String) params.get("groupid"));
-    				htmlResponse = ServerFamilyDB.getAgentsWhoReferredJSONP(year, wc.getWebUser(), groupID, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+		{
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				String response = getHomePageHTML(wc, "", false);
+				sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+			}
+			else
+			{	
+				//send the user back to the ONC general web site
+				Headers header = t.getResponseHeaders();
+				ArrayList<String> headerList = new ArrayList<String>();
+				headerList.add("http://www.ourneighborschild.org");
+				header.put("Location", headerList);
+				sendHTMLResponse(t, new HtmlResponse("", HttpCode.Redirect));
+			}	
+		}		
+		else if(t.getRequestURI().toString().contains("/dbStatus"))
+		{
+			//check to see that it's an active, authenticated session. If so, send db status
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+				sendHTMLResponse(t, DBManager.getDatabaseStatusJSONP((String) params.get("callback")));
+			else
+			{
+				//handle an imposter or a timed-out client
+			}
+		}
+		else if(requestURI.contains("/agents"))
+		{
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+				htmlResponse = ServerFamilyDB.getAgentsWhoReferredJSONP(year, wc.getWebUser(), (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
    
     			sendHTMLResponse(t, htmlResponse);	
     		}    		
-    		else if(requestURI.contains("/groups"))
-    		{
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+    	else if(requestURI.contains("/groups"))
+		{
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				int agentID = Integer.parseInt((String) params.get("agentid"));
+	    		
+    			//test to see if a default value should be added to the top of the group list
+    			boolean bProfile = false;
+//    			if(params.containsKey("default"))
+//    			{
+//    				String includeDefault = (String) params.get("default");
+//    				bDefault = includeDefault.equalsIgnoreCase("on") ? true : false;
+//    			}
+    			if(params.containsKey("profile"))
     			{
-    				int agentID = Integer.parseInt((String) params.get("agentid"));
-    	    		
-        			//test to see if a default value should be added to the top of the group list
-        			boolean bDefault = false, bProfile = false;
-        			if(params.containsKey("default"))
-        			{
-        				String includeDefault = (String) params.get("default");
-        				bDefault = includeDefault.equalsIgnoreCase("on") ? true : false;
-        			}
-        			if(params.containsKey("profile"))
-        			{
-        				String includeProfile = (String) params.get("profile");
-        				bProfile = includeProfile.equalsIgnoreCase("yes") ? true : false;
-        			}
-    				htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID, bDefault,
-    																bProfile, (String) params.get("callback"));
+    				String includeProfile = (String) params.get("profile");
+    				bProfile = includeProfile.equalsIgnoreCase("yes") ? true : false;
     			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    				
-    			sendHTMLResponse(t, htmlResponse);	
-    		}
-    		else if(requestURI.contains("/volunteergroups"))
-    		{
-    			htmlResponse = ServerGroupDB.getVolunteerGroupListJSONP((String) params.get("callback"));
-    			sendHTMLResponse(t, htmlResponse);	
-    		}
-    		else if(requestURI.contains("/partners"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null &&
-    					params.containsKey("year") && params.containsKey("confirmed"))
-    			{
-    				int year = Integer.parseInt((String) params.get("year"));
-    				String confirmed = (String) params.get("confirmed");
-    				boolean bConfirmedOnly = confirmed.equalsIgnoreCase("true");
-    				htmlResponse = ServerPartnerDB.getPartnersJSONP(year, bConfirmedOnly, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
     			
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/regions"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-    				String zipCode = (String) params.get("zipcode");
-    				htmlResponse = ServerRegionDB.getAddressesJSONP(zipCode, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    			
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/zipcodes"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    				htmlResponse = ServerRegionDB.getZipCodeJSONP((String) params.get("callback"));
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    			
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/getagent"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-    				int agtID = Integer.parseInt((String) params.get("agentid"));
-    				htmlResponse = ServerUserDB.getAgentJSONP(agtID, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    			
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/getstatus"))
-    		{
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    				htmlResponse = ClientManager.getUserStatusJSONP(wc, (String) params.get("callback"));
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				
-    			sendHTMLResponse(t, htmlResponse);
-    		}    			
-    		else if(requestURI.contains("/getuser"))
-    		{
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    				htmlResponse = ClientManager.getClientJSONP(wc, (String) params.get("callback"));
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    			
-    			sendHTMLResponse(t, htmlResponse);
-    		}		
-    		else if(requestURI.contains("/updateuser"))
-    		{	
-    			String responseJson;
-    			
-    			//determine if a valid request from a logged in user. If so, process the update
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    			{
-    				ServerUserDB userDB = ServerUserDB.getInstance();
-    				ONCUser updatedUser = userDB.updateProfile(wc.getWebUser(), params);
-    			
-    				if(updatedUser != null)	//test to see if the update was required and successful
-    				{
-    					//if successful, notify all Clients of update and return a message to the web user
-    					Gson gson = new Gson();
-    					responseJson = gson.toJson(new ONCUser(updatedUser), ONCUser.class);
-    					clientMgr.notifyAllClients("UPDATED_USER" + responseJson);
-    				}
-    				else	//no change detected 
-    					responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
-    			}
-    			else	//invalid user, return a failure message
-    				responseJson =  "{\"message\":\"Invalid User\"}";
-    		
-    			HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
-    					HttpCode.Ok);
-    			sendHTMLResponse(t, htmlresponse);
-    		}
-    		else if(requestURI.contains("/getpartner"))
-    		{
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)	
-    			{
-    				int year = Integer.parseInt((String) params.get("year"));
-    				String partnerID = (String) params.get("partnerid");
-        		
-    				htmlResponse = ServerPartnerDB.getPartnerJSONP(year, partnerID, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/getregion"))
-    		{
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)	
-    			{
-    				String regionID = (String) params.get("regionid");
-        		
-    				htmlResponse = ServerRegionDB.getRegionJSONP(regionID, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/profileunchanged"))
-    		{	
-    			String responseJson;
-    			
-    			//determine if a valid request from a logged in user. If so, process the update
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null) 
-    			{
-    				ServerUserDB userDB = ServerUserDB.getInstance();
-    				ONCServerUser updatedUser = userDB.reviewedProfile(wc.getWebUser());
-    			
-    				if(updatedUser != null)	//test to see if the status update was required and successful
-    				{
-    					//if successful, notify all Clients of update and return a message to the web user
-    					Gson gson = new Gson();
-    					clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
-    											ONCUser.class));
-    				
-    					//return response
-    					responseJson =  "{\"message\":\"User Profile Information Validated\"}";
-    				}
-    				else	//no change detected 
-    					responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
-    			}
-    			else	//invalid user, return a failure message
-    				responseJson =  "{\"message\":\"Invalid User\"}";
-    		
-    			HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
+				htmlResponse = ServerGroupDB.getGroupListJSONP(wc.getWebUser(), agentID,
+																bProfile, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);	
+		}
+		else if(requestURI.contains("/volunteergroups"))
+		{
+			htmlResponse = ServerGroupDB.getVolunteerGroupListJSONP((String) params.get("callback"));
+			sendHTMLResponse(t, htmlResponse);	
+		}
+		else if(requestURI.contains("/partners"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null &&
+					params.containsKey("year") && params.containsKey("confirmed"))
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+				String confirmed = (String) params.get("confirmed");
+				boolean bConfirmedOnly = confirmed.equalsIgnoreCase("true");
+				htmlResponse = ServerPartnerDB.getPartnersJSONP(year, bConfirmedOnly, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/regions"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				String zipCode = (String) params.get("zipcode");
+				htmlResponse = ServerRegionDB.getAddressesJSONP(zipCode, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/zipcodes"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+				htmlResponse = ServerRegionDB.getZipCodeJSONP((String) params.get("callback"));
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/getagent"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				int agtID = Integer.parseInt((String) params.get("agentid"));
+				htmlResponse = ServerUserDB.getAgentJSONP(agtID, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/getstatus"))
+		{
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+				htmlResponse = ClientManager.getUserStatusJSONP(wc, (String) params.get("callback"));
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);
+		}    			
+		else if(requestURI.contains("/getuser"))
+		{
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+				htmlResponse = ClientManager.getClientJSONP(wc, (String) params.get("callback"));
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}		
+		else if(requestURI.contains("/updateuser"))
+		{	
+			String responseJson;
+			
+			//determine if a valid request from a logged in user. If so, process the update
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				ServerUserDB userDB = ServerUserDB.getInstance();
+				ONCUser updatedUser = userDB.updateProfile(wc.getWebUser(), params);
+			
+				if(updatedUser != null)	//test to see if the update was required and successful
+				{
+					//if successful, notify all Clients of update and return a message to the web user
+					Gson gson = new Gson();
+					responseJson = gson.toJson(new ONCUser(updatedUser), ONCUser.class);
+					clientMgr.notifyAllClients("UPDATED_USER" + responseJson);
+				}
+				else	//no change detected 
+					responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
+			}
+			else	//invalid user, return a failure message
+				responseJson =  "{\"message\":\"Invalid User\"}";
+		
+			HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
 					HttpCode.Ok);
-    			sendHTMLResponse(t, htmlresponse);
-    		}
-    		else if(requestURI.contains("/getmeal"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-    				int year = Integer.parseInt((String) params.get("year"));
-        			String targetID = (String) params.get("mealid");
-    				htmlResponse = ServerMealDB.getMealJSONP(year, targetID, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/children"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-    				int year = Integer.parseInt((String) params.get("year"));
-        			int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
-        			boolean bIncludeSchool = ((String) params.get("schools")).equalsIgnoreCase("true") ? true : false;
-    				htmlResponse =  ServerChildDB.getChildrenInFamilyJSONP(year, famID,  bIncludeSchool, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
-    				
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/wishes"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{	
-    				int year = Integer.parseInt((String) params.get("year"));
-    				int childID = Integer.parseInt((String) params.get("childid"));
+			sendHTMLResponse(t, htmlresponse);
+		}
+		else if(requestURI.contains("/getpartner"))
+		{
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)	
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+				String partnerID = (String) params.get("partnerid");
     		
-    				htmlResponse = ServerChildDB.getChildWishesJSONP(year, childID, (String) params.get("callback"));
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
-    				
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/adults"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
-    			{
-    				int year = Integer.parseInt((String) params.get("year"));
-    				int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
-    				htmlResponse = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
-//    				try
-//					{
-//						htmlResponse = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
-//					}
-//					catch (SQLException e)
-//					{
-//						// TODO Auto-generated catch block
-//						e.printStackTrace();
-//					}
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
-        			
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-//    		else if(requestURI.contains("/activities"))
-//    		{
-//    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-//    			{
-//    				int year = Integer.parseInt((String) params.get("year"));
-//    				htmlResponse = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
-//    			}
-//    			else
-//    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
-//    			
-//    			sendHTMLResponse(t, htmlResponse);
-//    		}
-//    		else if(requestURI.contains("/activitydays"))
-//    		{
-//    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-//    			{
-//    				int year = Integer.parseInt((String) params.get("year"));
-//    				htmlResponse = ServerActivityDB.getActivityDayJSONP(year, (String) params.get("callback"));
-//    			}
-//    			else
-//    				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
-//        			
-//    			sendHTMLResponse(t, htmlResponse);
-//    		}
-    		else if(requestURI.contains("/address"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-    				htmlResponse = verifyAddress(params);	//verify the address and send response
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+				htmlResponse = ServerPartnerDB.getPartnerJSONP(year, partnerID, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/getregion"))
+		{
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)	
+			{
+				String regionID = (String) params.get("regionid");
     		
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/checkaddresses"))
-    		{
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{
-//    			htmlResponse = verifyAddress(params);	//verify the address and send response
-    				htmlResponse = verifyHoHAndDeliveryAddress(params);
-    			}
-    			else
-    				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
-    		
-    			sendHTMLResponse(t, htmlResponse);
-    		}
-    		else if(requestURI.contains("/partnertable"))
-    		{
-    			String response = null;
+				htmlResponse = ServerRegionDB.getRegionJSONP(regionID, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/profileunchanged"))
+		{	
+			String responseJson;
+			
+			//determine if a valid request from a logged in user. If so, process the update
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null) 
+			{
+				ServerUserDB userDB = ServerUserDB.getInstance();
+				ONCServerUser updatedUser = userDB.reviewedProfile(wc.getWebUser());
+			
+				if(updatedUser != null)	//test to see if the status update was required and successful
+				{
+					//if successful, notify all Clients of update and return a message to the web user
+					Gson gson = new Gson();
+					clientMgr.notifyAllClients("UPDATED_USER" + gson.toJson(new ONCUser(updatedUser), 
+											ONCUser.class));
+				
+					//return response
+					responseJson =  "{\"message\":\"User Profile Information Validated\"}";
+				}
+				else	//no change detected 
+					responseJson =  "{\"message\":\"User Profile Unchanged, No Change Made\"}";
+			}
+			else	//invalid user, return a failure message
+				responseJson =  "{\"message\":\"Invalid User\"}";
+		
+			HtmlResponse htmlresponse = new HtmlResponse((String) params.get("callback") +"(" + responseJson +")", 
+				HttpCode.Ok);
+			sendHTMLResponse(t, htmlresponse);
+		}
+		else if(requestURI.contains("/getmeal"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+    			String targetID = (String) params.get("mealid");
+				htmlResponse = ServerMealDB.getMealJSONP(year, targetID, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/children"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+    			int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
+    			boolean bIncludeSchool = ((String) params.get("schools")).equalsIgnoreCase("true") ? true : false;
+				htmlResponse =  ServerChildDB.getChildrenInFamilyJSONP(year, famID,  bIncludeSchool, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/wishes"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{	
+				int year = Integer.parseInt((String) params.get("year"));
+				int childID = Integer.parseInt((String) params.get("childid"));
+		
+				htmlResponse = ServerChildDB.getChildWishesJSONP(year, childID, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/adults"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)	
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+				int famID = ServerFamilyDB.getFamilyID(year, (String) params.get("targetid"));
+				htmlResponse = ServerAdultDB.getAdultsInFamilyJSONP(year, famID, (String) params.get("callback"));
+
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
     			
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    				response = getPartnerTableWebpage(wc, "");	
-    			else
-    				response = invalidTokenReceived();
-    		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
-    		else if(requestURI.contains("/partnerupdate"))
-    		{
-    			String response;
-    		
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    				response = webpageMap.get("updatepartner");
-    			else
-    				response = invalidTokenReceived();
-    		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
-    		else if(requestURI.contains("/updatepartner"))
-    		{
-    			String response;
+			sendHTMLResponse(t, htmlResponse);
+		}
+/*		
+		else if(requestURI.contains("/activities"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+				htmlResponse = ServerActivityDB.getActivitesJSONP(year, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/activitydays"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				int year = Integer.parseInt((String) params.get("year"));
+				htmlResponse = ServerActivityDB.getActivityDayJSONP(year, (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String)params.get("callback"));
     			
-    			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("year") &&
-    				(wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)	
-    			{
-    				//read the partner table web page
-    				ResponseCode rc = processPartnerUpdate(wc, params);
-    				response = getPartnerTableWebpage(wc, rc.getMessage());	
-    			}
-    			else
-    				response = invalidTokenReceived();
+			sendHTMLResponse(t, htmlResponse);
+		}
+ */
+		else if(requestURI.contains("/address"))
+		{
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				htmlResponse = verifyAddress(params);	//verify the address and send response
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+		
+			sendHTMLResponse(t, htmlResponse);
+		}
+    	else if(requestURI.contains("/checkaddresses"))
+    	{
+    		if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			htmlResponse = verifyHoHAndDeliveryAddress(params);
+    		else
+    			htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
-    		else if(requestURI.contains("/regiontable"))
-    		{
-    			String response;
-    			
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    			{
-    				response = webpageMap.get("regiontable");
-    				response = response.replace("USER_MESSAGE", "");
-    			}
-    			else
-    				response = invalidTokenReceived();
-    		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
-    		else if(requestURI.contains("/regionupdate"))
-    		{
-    			String response;
-    			
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    				response = webpageMap.get("updateregion");
-    			else
-    				response = invalidTokenReceived();
-    		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
-    		else if(requestURI.contains("/updateregion"))
-    		{
-    			String response;
-    		
-    			if(t.getRequestMethod().toLowerCase().equals("post") &&  params.containsKey("year") &&
-    				(wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null) 
-    			{
-    				//process the region request
-    				ResponseCode rc = processRegionUpdate(wc, params);
-    			
-    				//submission processed, send the region table page back to the user
-    				response = webpageMap.get("regiontable");
-    				response = response.replace("USER_MESSAGE", rc.getMessage());
-    			}
-    			else
-    				response = invalidTokenReceived();
-    		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
-    		else if(requestURI.contains("/changepw"))	//from separate page
-    		{
-    			String response = null;
-    		
-    			if(t.getRequestMethod().toLowerCase().equals("post") &&
+    		sendHTMLResponse(t, htmlResponse);
+    	}
+		else if(requestURI.contains("/partnertable"))
+		{
+			String response = null;
+			
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+				response = getPartnerTableWebpage(wc, "");	
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/partnerupdate"))
+		{
+			String response;
+		
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+				response = webpageMap.get("updatepartner");
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/updatepartner"))
+		{
+			String response;
+			
+			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("year") &&
+				(wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)	
+			{
+				//read the partner table web page
+				ResponseCode rc = processPartnerUpdate(wc, params);
+				response = getPartnerTableWebpage(wc, rc.getMessage());	
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/regiontable"))
+		{
+			String response;
+			
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				response = webpageMap.get("regiontable");
+				response = response.replace("USER_MESSAGE", "");
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/regionupdate"))
+		{
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+				response = webpageMap.get("updateregion");
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/updateregion"))
+		{
+			String response;
+		
+			if(t.getRequestMethod().toLowerCase().equals("post") &&  params.containsKey("year") &&
+				(wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null) 
+			{
+				//process the region request
+				ResponseCode rc = processRegionUpdate(wc, params);
+			
+				//submission processed, send the region table page back to the user
+				response = webpageMap.get("regiontable");
+				response = response.replace("USER_MESSAGE", rc.getMessage());
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/changepw"))	//from separate page
+		{
+			String response = null;
+		
+			if(t.getRequestMethod().toLowerCase().equals("post") &&
     				(wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
     			{
     				ServerUserDB serveruserDB = ServerUserDB.getInstance();
  
     				int retCode = serveruserDB.changePassword((String) params.get("field1"),
-    														(String) params.get("field2"), wc);
-    			
-    				if(retCode == 0)
-    				{
-    					//submission successful, send the family table page back to the user
-    					response = getHomePageHTML(wc, "Your password change was successful!", false);
-    				}
-    				else if(retCode == -1)
-    				{
-    					response = "<!DOCTYPE html><html><head lang=\"en\"><title>Password Change Failed</title>"
-    						+ "</head><body><p>Change password failed, current password incorrect. Please try again</p></body></html>";
-    				}
-    				else if(retCode == -2)
-    				{
-    					response = "<!DOCTYPE html><html><head lang=\"en\"><title>Password Change Failed</title>"
-    						+ "</head><body><p>Change password failed, user couldn't be located, please contact ONC Exec Dir</p></body></html>";
-    				}
-    			}
-    			else
-    				response = invalidTokenReceived();
-    		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
-    		else if(requestURI.contains("/reqchangepw"))	//from web dialog box
-    		{
-    			String response;
-    		
-    			//determine if a valid request from a logged in user. If so, process the pw change
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    			{
-    				ServerUserDB userDB = ServerUserDB.getInstance();
-    				int retCode = userDB.changePassword((String) params.get("field1"), (String) params.get("field2"), wc);
-    			
-    				if(retCode == 0)
-    				{
-    					//submission successful, send the family table page back to the user
-    					String userFN = wc.getWebUser().getFirstName().equals("") ? 
-    							wc.getWebUser().getLastName() : wc.getWebUser().getFirstName();
-    					response =  String.format("%s, your password was successfully changed!", userFN);
-    				}
-    				else if(retCode == -1)
-    					response = "Password Change Failed: Current password incorrect";		
-    				else
-    					response = "Password Change Failed: User couldn't be located";  			
-    			}
-    			else	//invalid user, return a failure message
-    				response =  "Invalid Session ID";
-    		
-    			HtmlResponse htmlresponse = new HtmlResponse(response, HttpCode.Ok);
-    			sendHTMLResponse(t, htmlresponse);
-    		}
-    		else if(requestURI.contains("/dashboard"))
-    		{
-    			String response;
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-    				response = getDashboardWebpage(wc, "");
-    			else
-        			response = invalidTokenReceived();
-    			
-    			HtmlResponse htmlresponse = new HtmlResponse(response, HttpCode.Ok);
-    			sendHTMLResponse(t, htmlresponse);
-    		} 
-    		else if(requestURI.contains("/giftcatalog"))
-    		{
-    			String response;
-    			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null  &&
-    					params.containsKey("year") && params.containsKey("callback"))
-    			{	
-    				int year = Integer.parseInt((String) params.get("year"));
-    				response = ServerGiftCatalog.getGiftCatalogJSONP(year, (String) params.get("callback"));
-    			}
-    			else
-        			response = invalidTokenReceived();
-    			
-    			String callback = (String) params.get("callback");
-    			HtmlResponse htmlresponse = new HtmlResponse(callback +"(" + response +")", HttpCode.Ok);
-    			sendHTMLResponse(t, htmlresponse); 
-    		}
+														(String) params.get("field2"), wc);
+			
+				if(retCode == 0)
+				{
+					//submission successful, send the family table page back to the user
+					response = getHomePageHTML(wc, "Your password change was successful!", false);
+				}
+				else if(retCode == -1)
+				{
+					response = "<!DOCTYPE html><html><head lang=\"en\"><title>Password Change Failed</title>"
+						+ "</head><body><p>Change password failed, current password incorrect. Please try again</p></body></html>";
+				}
+				else if(retCode == -2)
+				{
+					response = "<!DOCTYPE html><html><head lang=\"en\"><title>Password Change Failed</title>"
+						+ "</head><body><p>Change password failed, user couldn't be located, please contact ONC Exec Dir</p></body></html>";
+				}
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/reqchangepw"))	//from web dialog box
+		{
+			String response;
+		
+			//determine if a valid request from a logged in user. If so, process the pw change
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				ServerUserDB userDB = ServerUserDB.getInstance();
+				int retCode = userDB.changePassword((String) params.get("field1"), (String) params.get("field2"), wc);
+			
+				if(retCode == 0)
+				{
+					//submission successful, send the family table page back to the user
+					String userFN = wc.getWebUser().getFirstName().equals("") ? 
+							wc.getWebUser().getLastName() : wc.getWebUser().getFirstName();
+					response =  String.format("%s, your password was successfully changed!", userFN);
+				}
+				else if(retCode == -1)
+					response = "Password Change Failed: Current password incorrect";		
+				else
+					response = "Password Change Failed: User couldn't be located";  			
+			}
+			else	//invalid user, return a failure message
+				response =  "Invalid Session ID";
+		
+			HtmlResponse htmlresponse = new HtmlResponse(response, HttpCode.Ok);
+			sendHTMLResponse(t, htmlresponse);
+		}
+		else if(requestURI.contains("/dashboard"))
+		{
+			String response;
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+				response = getDashboardWebpage(wc, "");
+			else
+    			response = invalidTokenReceived();
+			
+			HtmlResponse htmlresponse = new HtmlResponse(response, HttpCode.Ok);
+			sendHTMLResponse(t, htmlresponse);
+		} 
+		else if(requestURI.contains("/giftcatalog"))
+		{
+			String response;
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null  &&
+					params.containsKey("year") && params.containsKey("callback"))
+			{	
+				int year = Integer.parseInt((String) params.get("year"));
+				response = ServerGiftCatalog.getGiftCatalogJSONP(year, (String) params.get("callback"));
+			}
+			else
+    			response = invalidTokenReceived();
+			
+			String callback = (String) params.get("callback");
+			HtmlResponse htmlresponse = new HtmlResponse(callback +"(" + response +")", HttpCode.Ok);
+			sendHTMLResponse(t, htmlresponse); 
+		}
     }
 
 	HtmlResponse verifyAddress(Map<String, Object> params)

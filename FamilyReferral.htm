@@ -1,52 +1,334 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head lang="en">
-  <meta charset="UTF-8">
   <title>ONC Family Assistance Request</title>
-<!-- <script src="//code.jquery.com/jquery-1.12.4.js"></script> -->
-  <script src="jquery.js"></script>
-  <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <script src="commonfamily.js"></script>
-  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
-  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
-  <script> 
-  	var childrenJson= [];
-  	var adultsJson= [];
-  	var wishJson = {};
-  	var errorColor = '#FF9999';
-  	
-  	$( function() {
-  	    $( ".schoolname" ).autocomplete({
-  	      source: schools
-  	    });
-  	  });
-  	$('ul.ui-autocomplete.ui-menu').css({fontSize: '12px', width: '300px'});
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css"> 
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/sorting/natural.js"></script>
+  <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script type="text/javascript" src="onccommon.js"></script>
+  <script src="commonfamily.js"></script>
+  <script>
+  	var editedChild = {};	//holds original state of child when edit starts
+  	var editedAdult = {};
   	
   	$( document ).ready(function()
 	{
+  		setBannerVisible(false);
+  		createGroupTable();	//create profile dialog group table
+  		
+  		popluateCitySelects();
+  	
   		//set the hidden values
   		document.getElementById('year').value= sessionStorage.getItem("curryear");
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   			
   		//setup the add child DoB year parameters with a 20 year window
-  		var dobYearSelect = document.getElementById('dobyear');
-  		var currentyear = sessionStorage.getItem("curryear");
+  		let currentyear = sessionStorage.getItem("curryear");
   		for(year = currentyear; year > currentyear-21; year-- )
-  		{
-  			addComboBoxOption(dobYearSelect, year, year);
-  		}
+  			addComboBoxOption(document.getElementById('dobyear'), year, year);
   		
+  		let months = ['January','February','March','April','May','June','July',
+  					  'August','September','October','November','December'];  		
+  		for(let i=0; i<months.length; i++)
+  			addComboBoxOption(document.getElementById('dobmonth'), months[i], i+1);
+	
+  		//add days to days in month select
+		for(i=1; i<=31; i++)
+			addComboBoxOption(document.getElementById('dobday'), i, i);
+  	
   		//clear the group combobox
   		var groupcb = document.getElementById('groupcb');
 		groupcb.options.length = 0;
-  	
+		
+		//create the child table
+		var childtable = $('#childtable').DataTable( 
+		{
+		    dom: 'Brt',
+		    orderClasses: false,
+		    stripeClasses:['stripe1','stripe2'],
+		    autoWidth: false,
+		    buttons: 
+		    {
+		    	buttons: 
+		    	[
+		    		{ 
+		    			text: 'Edit Child', 
+		    			action: function ( e, dt, node, config )
+		    			{
+		    			    let selectedRowData = childtable.row('.selected').data();
+		    			    let selectedRowIndex = childtable.row('.selected').index();
+		    			    childAction(true, selectedRowData, selectedRowIndex);	
+		    			},
+		    			enabled: false
+		    		},
+		    		{ 
+		    			text: 'Add New Child', 
+		    			action: function ( e, dt, node, config )
+		    			{  
+		    				childAction(false, null, -1);
+		    			},
+		    		},
+		    		{ 
+		    			text: 'Move Child To Adult In Family', 
+		    			action: function ( e, dt, node, config )
+		    			{
+		    				let selectedChild = childtable.row('.selected').data();
+		    				
+		    				let adult = {};
+		    				adult["id"] = '-1';
+		    				adult["name"] = selectedChild.firstname + ' ' + selectedChild.lastname;
+		    				if(selectedChild.gender === 'Boy')
+		    					adult["gender"] = 'Male';
+		    				else if(selectedChild.gender === 'Girl')
+		    					adult["gender"] = 'Female';
+		    				else
+		    					adult["gender"] = selectedChild.gender;
+		    				
+		    				let adultTable = $('#adulttable').DataTable();
+		    				adultTable.row.add(adult).draw();
+		    				childtable.row('.selected').remove().draw();
+		    				
+		    				childtable.button( 0 ).enable( false );
+		    		    	childtable.button( 1 ).enable( true );
+		    		    	childtable.button( 2 ).enable( false );
+		    		    	childtable.button( 3 ).enable( false );	
+		    			},
+		    			enabled: false
+		    		},
+		    		{ 
+		    			text: 'Delete Child', 
+		    			action: function ( e, dt, node, config )
+		    			{
+		    				let selectedChild = childtable.row('.selected').data();
+		    				let mssg = "Are you sure you want to delete " + selectedChild.firstname + ' from the family?\r\nClick Confirm Delete to confirm';
+		    				document.getElementById('childdeletegmssg').textContent = mssg;
+		    				window.location=document.getElementById('childdeleteanchor').href;
+		    			},
+		    			enabled: false
+		    		}
+		    	],
+		    	dom: 
+		    	{
+		    		button: 
+		    		{
+		    			className: ''
+		    		}
+		    	}
+		    },
+		    order: [[ 3, "asc" ]],
+		    columns: 
+		    [
+		    	{ data: "id", visible: false},
+		    	{ data: "firstname", width: '11%'},
+		    	{ data: "lastname", width: '14%'},
+		    	{ data: "sDOB", type:'natural', width: '9%'},
+		    	{
+		    		data: "gender",
+		    		width: '11%',
+		    		render: function ( gender, type, child )
+		    		{
+		    			return getAge(child.sDOB) + " " + gender.toLowerCase();
+		    	    }
+		    	},
+		    	{ data: "school", width: '15%'},
+		    	{
+		    		data: "wish0",
+		    		width: '10%',
+	    			render: function (wish, type, child )
+		    		{
+	    				return $('#giftreq').prop("checked") == true ? wish : '';
+		    		},
+		    		visible: false
+		    	},
+		    	{
+		    		data: "wish1",
+		    		width: '10%',
+	    			render: function (wish, type, child )
+		    		{
+	    				return $('#giftreq').prop("checked") == true ? wish : '';
+		    	    },
+		    		visible: false
+		    	},
+		    	{
+		    		data: "wish2",
+		    		width: '10%',
+	    			render: function (wish, type, child )
+		    		{
+	    				return $('#giftreq').prop("checked") == true ? wish : '';
+		    		},
+		    		visible: false
+		    	},
+		    	{
+		    		data: "wish3",
+		    		width: '10%',
+	    			render: function (wish, type, child )
+		    		{
+	    				return $('#giftreq').prop("checked") == true ? wish : '';
+		    		},
+		    		visible: false
+		    	},
+		    ],
+//		    drawCallback: function( settings )
+//		    {
+//	        	var api = this.api();
+//	 			updateWishTable(api.rows(), api.rows().data());
+//	    	},
+			language:
+		    {
+		    	zeroRecords: "No children in the family",
+		        infoEmpty: "No children in the family"
+		    },
+		    scrollY: "100px",
+		    scrollCollapse: true,
+		    paging: false
+		});
+		
+		$('#childtable tbody').on( 'click', 'tr', function () 
+		{
+		    if( $(this).hasClass('selected') )
+		    {
+		    	$(this).removeClass('selected');
+		    	childtable.button( 0 ).enable( false );
+		    	childtable.button( 1 ).enable( true );
+		    	childtable.button( 2 ).enable( false );
+		    	childtable.button( 3 ).enable( false );
+		    }
+		    else
+		    {
+		    	childtable.$('tr.selected').removeClass('selected');
+		    	if(childtable.rows().count() > 0)
+		    	{	
+		    		$(this).addClass('selected');
+		    		childtable.button( 0 ).enable( true );
+		    		childtable.button( 1 ).enable( false );
+		    		childtable.button( 2 ).enable( true );
+		    		childtable.button( 3 ).enable( true );
+		    	}
+		    }
+		});
+		
+		$('#childtable tbody').on('dblclick', 'tr', function () 
+		{
+			let table = $('#childtable').DataTable();
+			if(childtable.rows().count() > 0)
+	    	{
+				let selectedRowData = table.row( this ).data();
+				let selectedRowIndex = table.row( this ).index();
+				childAction(true, selectedRowData, selectedRowIndex);
+	    	}
+		});
+		
+		//create the adult table
+		var adulttable = $('#adulttable').DataTable( 
+		{
+		    dom: 'Brt',
+		    orderClasses: false,
+		    stripeClasses:['stripe1','stripe2'],
+		    buttons: 
+		    {
+		    	buttons: 
+		    	[
+		    		{ 
+		    			text: 'Edit Adult', 
+		    			action: function ( e, dt, node, config )
+		    			{
+		    			    let selectedRow = adulttable.row('.selected').data();
+		    			    let selectedRowIndex = adulttable.row('.selected')[0][0];
+		    			    adultAction(true, selectedRow, selectedRowIndex);	
+		    			},
+		    			enabled: false
+		    		},
+		    		{ 
+		    			text: 'Add New Adult', 
+		    			action: function ( e, dt, node, config )
+		    			{  
+		    				adultAction(false, null);
+		    			}
+		    		},
+		    		{ 
+		    			text: 'Delete Adult', 
+		    			action: function ( e, dt, node, config )
+		    			{
+		    				let selectedAdult = adulttable.row('.selected').data();
+		    				let mssg = "Are you sure you want to delete " + selectedAdult.name + ' from the family?\r\nClick Delete to confirm';
+		    				document.getElementById('adultdeletegmssg').textContent = mssg;
+		    				window.location=document.getElementById('adultdeleteanchor').href;
+		    			},
+		    			enabled: false
+		    		},
+		    	],
+		    	dom: 
+		    	{
+		    		button: 
+		    		{
+		    			className: ''
+		    		}
+		    	}
+		    },
+		    columns: 
+		    [
+		    	{ data: "id", visible: false},
+		    	{ data: "name", width: '180px'},
+		    	{ data: "gender", width: '80px'}	
+		    ],
+		    language:
+		    {
+		    	zeroRecords: "No adults in the family",
+		        infoEmpty: "No adults in the family"
+		    },
+		    scrollY: "100px",
+		    scrollCollapse: true,
+		    paging: false
+		});
+		
+		$('#adulttable tbody').on( 'click', 'tr', function () 
+		{
+		    if( $(this).hasClass('selected') )
+		    {
+		    	$(this).removeClass('selected');
+		    	adulttable.button( 0 ).enable( false );
+		    	adulttable.button( 1 ).enable( true );
+		    	adulttable.button( 2 ).enable( false );
+		    }
+		    else
+		    {
+		    	adulttable.$('tr.selected').removeClass('selected');
+		    	if(adulttable.rows().count() > 0)
+		    	{	
+			    	$(this).addClass('selected');
+			    	adulttable.button( 0 ).enable( true );
+			    	adulttable.button( 1 ).enable( false );
+			    	adulttable.button( 2 ).enable( true );
+		    	}
+		    }
+		});
+		
+		$('#adulttable tbody').on('dblclick', 'tr', function () 
+		{
+			let table = $('#adulttable').DataTable();
+			if(adulttable.rows().count() > 0)
+			{	
+				let selectedRowData = table.row( this ).data();
+				let selectedRowIndex = table.row( this )[0][0];
+				adultAction(true, selectedRowData, selectedRowIndex);
+			}
+		});
+		
   		if(window.location.href.indexOf("referral") > -1)
   		{
   			//is a re-referral. Get info for the family
   			familyparams = "year=" + sessionStorage.getItem("prioryear") + "&" +
+  				"byReference=false&" +
 				"targetid=" + sessionStorage.getItem("targetid") + "&" +
-				"schools=false" + "&" +
+				"schools=false&" +
 				"callback=?";
 
 			$.getJSON('getfamily', familyparams, function(family)
@@ -54,38 +336,33 @@
 				document.getElementById('hohfn').value= family.HOHFirstName;
 				document.getElementById('hohln').value= family.HOHLastName;
 				
-				childrenJson = family.childList;
-  		     	updateChildTable(true);
-  		     	updateWishTable();
-  		     	
-  		     	adultsJson = family.adultList;
-  		     	updateAdultTable(true);
+				updateNewChildTable(family.childList);
+  		     	updateNewAdultTable(family.adultList);
   		     	
   		     	//update the family group select
   		     	addComboBoxOption(groupcb, family.groupName, family.groupID);
-  		     	document.getElementById('groupfs').style.visibility='hidden';
+  		     	document.getElementById('groupfs').style.display='none';
 			});
   		}
   		else
   		{
   			//is a new referral, get updated groups for the logged in user from server and place into group
   			//combobox. agentid =-1 defaults to the logged in user
-    			var groupparams = "agentid=-1&callback=?";
- 
-    			$.getJSON('groups', groupparams, function(data)
-    			{
-	    			//add the groups for the agent
-    				for (var i=0; i < data.length; i++)
-    					addComboBoxOption(groupcb, data[i].name, data[i].id);
-	    			
-	    			var groupfselem = document.getElementById('groupfs');
-	    			if(data.length > 1)
-	    				groupfselem.style.visibility='visible';
-	    			else	
-	  				groupfselem.style.visibility='hidden';
-    			});    	
+   			var groupparams = "agentid=-1&callback=?";
+   			$.getJSON('groups', groupparams, function(groups)
+   			{
+    			//add the groups for the agent
+    			for(let group of groups)
+   					addComboBoxOption(groupcb, group.name, group.id);
+    			
+    			var groupfsel = document.getElementById('groupfs');
+    			if(groups.length > 1)
+    				groupfsel.style.display='block';
+    			else	
+  					groupfsel.style.display='none';
+   			});    	
   		}
-  		
+ /* 		
   		$(function() {
   		    $("form input").keypress(function (e) {
   		        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
@@ -104,130 +381,218 @@
   				return false;
   			}
   		});
-  		
+ */		
   		$( ".address" ).tooltip({
   		  content: "Uncheck same as HOH address to edit",
   		  disabled: true,
   		  tooltipClass: "addresstooltip",
   		  position: { my: "left center", at: "right center" }  
   		});
-	});	
+	});
+  	
+  	function childAction(bEdit, selectedRow, rowIndex)
+  	{
+  		if(bEdit===true && typeof selectedRow !== 'undefined')
+	    {
+  			document.getElementById('editChild').setAttribute('data-mode', 'edit');
+  			document.getElementById('editChild').setAttribute('data-rowNumber', rowIndex);
+  			
+  			//save  the inital settings to determine if a change has occurred
+			//and set the inputs to current table values
+			editedChild["id"] = selectedRow.id;
+			setInput('childid', selectedRow.id);
+  			
+  			editedChild["childfirstname"] = selectedRow.firstname;
+	    	setInput('childfirstname', selectedRow.firstname);
+	    	
+	    	editedChild["childlastname"] = selectedRow.lastname;
+    		setInput('childlastname', selectedRow.lastname);
+    		
+    		const parts = selectedRow.sDOB.split('/');
+    		editedChild["dobmonth"] = parts[0];
+    		document.getElementById('dobmonth').value = parts[0];
+    		
+			if(parts[1].charAt(0) === '0')
+			{
+				editedChild["dobday"] =  parts[1].charAt(1);
+    			document.getElementById('dobday').value = parts[1].charAt(1);
+			}
+			else
+			{
+				editedChild["dobday"] =  parts[1];
+				document.getElementById('dobday').value = parts[1];
+			}	
+				
+			editedChild["dobyear"] = parts[2];
+    		document.getElementById('dobyear').value = parts[2];
+    		
+			document.getElementById('childage-span').textContent = getAge(selectedRow.sDOB);
+			document.getElementById('childyear-span').textContent = 'on 12/25/' +  sessionStorage.getItem('curryear');
+    		
+    		editedChild["childgender"] = selectedRow.gender;
+    		document.getElementById('childgender').value = selectedRow.gender;
+    		
+    		editedChild["childschool"] = selectedRow.school;
+	    	setInput('childschool', selectedRow.school);
+	    	
+	    	editedChild["childwish0"] = selectedRow.wish0;
+	    	setInput('childwish0', selectedRow.wish0);
+	    	
+	    	editedChild["childwish1"] = selectedRow.wish1;
+	    	setInput('childwish1', selectedRow.wish1);
+	    	
+	    	editedChild["childwish2"] = selectedRow.wish2;
+	    	setInput('childwish2', selectedRow.wish2);
+	    	
+	    	editedChild["childwish3"] = selectedRow.wish3;
+	    	setInput('childwish3', selectedRow.wish3);
+	    	
+	    	document.getElementById('childupdate').innerHTML = "Update";
+	    	document.getElementById('removechildspan').style.display= 'inline';
+	    }
+  		else
+  		{
+  			document.getElementById('editChild').setAttribute('data-mode', 'add');
+  			
+  			setInput('childid', "-1");
+  			setInput('childfirstname', '');
+    		setInput('childlastname', '');
+    		
+    		document.getElementById('dobmonth').selectedIndex = 0;
+    		document.getElementById('dobday').selectedIndex = 0;
+    		document.getElementById('dobyear').selectedIndex = 0;
+    		
+    		let sDoB = document.getElementById('dobmonth').value + '/' +
+    					document.getElementById('dobday').value + '/' +
+    		 			 document.getElementById('dobyear').value;
+    		
+    		document.getElementById('childage-span').textContent = getAge(sDoB);
+    		document.getElementById('childyear-span').textContent = 'on 12/25/' +  sessionStorage.getItem('curryear');
+    		
+    		document.getElementById('childgender').selectedIndex = 0;
+	    	setInput('childschool', '');
+	    	
+	    	setInput('childwish0', '');
+  			setInput('childwish1', '');
+    		setInput('childwish2', 'Age Appropriate Gift');
+    		setInput('childwish3', '');
+	    	
+	    	document.getElementById('childupdate').innerHTML = "Add";
+	    	document.getElementById('removechildspan').style.display = 'none';
+  		}
+  		
+	    document.getElementById('childwish2').disabled = true;	//wish 3 defalut since 2018
+  		document.getElementById('childupdate').disabled = true;
+	    window.location=document.getElementById('editchildanchor').href;
+  	}
+  	
+  	function adultAction(bEdit, selectedRow, rowIndex)
+  	{
+  		if(bEdit===true && typeof selectedRow !== 'undefined')
+	    {
+  			document.getElementById('editAdult').setAttribute('data-mode', 'edit');
+  			document.getElementById('editAdult').setAttribute('data-rowNumber', rowIndex);
+  			
+  			//save  the inital settings to determine if a change has occurred
+  			editedAdult["adultname"] = selectedRow.name;
+	    	setInput('adultname', selectedRow.name);
+  			
+  			editedAdult["adultgender"] = selectedRow.gender;
+	    	document.getElementById('adultgender').value=selectedRow.gender;
+	    	
+	    	document.getElementById('adultupdate').innerHTML = "Update";
+	    	document.getElementById('removeadultspan').style.display= 'inline';
+	    }
+  		else
+  		{
+  			document.getElementById('editAdult').setAttribute('data-mode', 'add');
+  			setInput('adultname', '');
+	    	document.getElementById('adultgender').selectedIndex=0;
+	    	
+	    	document.getElementById('adultupdate').innerHTML = "Add";
+	    	document.getElementById('removeadultspan').style.display = 'none';
+  		}
+  		
+  		document.getElementById('adultupdate').disabled = true;
+	    window.location=document.getElementById('editadultanchor').href;  
+  	}
 	
-	function updateWishTable()
-    {
-    		$("#twishbody").empty();
-    	
-    		for(var i=0; i<childrenJson.length; i++)
+  	function verifyAddedOrUpdatedChild()
+  	{
+		let child = getChild();
+		var age = calculateAge(child.sDOB);
+		if(age === 0 || child.gender === 'Unknown')
 		{
-    			addWishTableRow(i, childrenJson[i]);	//add row to table
+			//show pop-up asking to verify birthdate and gender
+			document.getElementById('childwarningmssg').textContent = "Is " + child.sDOB + " the correct" +
+			" DoB and " + child.gender + " the correct gender for the child you're updating or adding?";
+			
+			window.location=document.getElementById('childwarninganchor').href;
 		}
-    }
-	
-	function addWishTableRow(cnum, child)
-    {
-		var childinfo= [child.firstname, getAge(child.sDOB) + " " + child.gender.toLowerCase()];
-		var titleinfo= ['First name of child', 'Age as of 12/25/' + sessionStorage.getItem('curryear')];
-		var childfieldsize= [15, 14];
-		var wishplaceholder=["Wish 1", "Wish 2", "Wish 3", "Alt. Wish"];
-        
-	    var tabBody = document.getElementById("wishtable").getElementsByTagName('tbody').item(0);
-        row=document.createElement("tr");
-         
-        for(index=0; index < childinfo.length; index++)	//create the child info cells
-        {
-        		cell= document.createElement("td");
-    	    		content= document.createElement("input");
- 	    		content.type="text";
-        		content.value = childinfo[index];
-        		content.title = titleinfo[index];
-        		content.readOnly = true;
-        		content.setAttribute("size", childfieldsize[index]);
-        		cell.appendChild(content);
-        		row.appendChild(cell);
-        }
-
-        var giftassistancereqCkBox = document.getElementById('giftreq');
-        
-        for(wn=0; wn<wishplaceholder.length; wn++)
-        {
-        		var wlcell= document.createElement("td");
-        		var wish= document.createElement("input");
-        		wish.type="text";
-        		wish.name="wish" + cnum + wn;
-        		wish.id="wish" + cnum + wn;
-        		wish.placeholder= wishplaceholder[wn] + " for " + child.firstname;
-        		wish.setAttribute("size", 22);
-        		wish.setAttribute('data-age', calculateAge(child.sDOB));
-        		wish.setAttribute('data-cnum', cnum);
-        		wish.setAttribute('data-wnum', wn);
-        		wish.onchange = function(wish) { onWishInputChanged(wish); }
-        		
-        		if(giftassistancereqCkBox.checked)
-        		{
-        			wish.title="";
-        			if(wn === 2)	//Wish #3 automatically is "Age Appropriate Gift" for 2019 season
-        			{
-        				wish.value = "Age Appropriate Gift";
-        				wish.readOnly = true;
-        			}
-        			else
-        			{
-        				if(child.hasOwnProperty('wish' + wn))
-        					wish.value = child['wish' + wn];
-        				else
-        					wish.value = "";
-        				
-        				wish.ReadOnly = false;
-        			}	
-        		}		
-        		else
-        		{
-        			wish.title="Request gift assistace to edit";
-        			wish.readOnly = true;
-        			wish.value = "";
-        		}
-        			
-        		wlcell.appendChild(wish);
-        		row.appendChild(wlcell);
-        }
-       
-        tabBody.appendChild(row);
-    }
-	
-	function addChild()
-	{
-		var child = {};
-	
+		else
+			addOrUpdateValidatatedChild();
+  	}
+  	
+  	function getChild()
+  	{
+  		var child = {};
+  		
 		var sDoB = document.getElementById('dobmonth').value + '/' +
 					document.getElementById('dobday').value + '/' +
 					 document.getElementById('dobyear').value;
 		
-//		var age = calculateAge(document.getElementById('childdob').value);
-		var age = calculateAge(sDoB);
-		
-		if(document.getElementById('childfn').value === "")
-			document.getElementById('childfn').style.background = errorColor;
-		else if(document.getElementById('childln').value === "")
-			document.getElementById('childln').style.background = errorColor;
-		else if(document.getElementById('childschool').value === "")
-			document.getElementById('childschool').style.background = errorColor;
-		else
-		{
-        		child["firstname"] = document.getElementById('childfn').value;
-        		child["lastname"] = document.getElementById('childln').value;
-//        	child["sDOB"] =	document.getElementById('childdob').value;
-        		child["sDOB"] =sDoB;
-        		child["gender"] = document.getElementById('childgender').value;
-        		child["school"] = document.getElementById('childschool').value;
-        		
-        		if(checkForAddChildWarnings(child))
-        		{
-        			childrenJson.push(child);
-        			updateChildTable(true);
-            		updateWishTable();
-            		clearAddChild();
-        		}
-		}
+		child["id"] = document.getElementById('childid').value;
+		child["firstname"] = document.getElementById('childfirstname').value;
+       	child["lastname"] = document.getElementById('childlastname').value;
+       	child["sDOB"] = sDoB;
+       	child["gender"] = document.getElementById('childgender').value;
+       	child["school"] = document.getElementById('childschool').value;
+       	child["wish0"] = document.getElementById('childwish0').value;
+       	child["wish1"] = document.getElementById('childwish1').value;
+       	child["wish2"] = document.getElementById('childwish2').value;
+       	child["wish3"] = document.getElementById('childwish3').value;
+       	
+       	return child;
+  	}
+  	
+  	function addOrUpdateValidatatedChild()
+  	{
+  		let child = getChild();
+  		let childTable = $('#childtable').DataTable();
+   		
+   		//determine if this is an edit or add action
+   		if(document.getElementById('editChild').getAttribute('data-mode') === 'edit')
+   		{
+   			let rowNum = document.getElementById('editChild').getAttribute('data-rowNumber');
+   			childTable.row(rowNum).data( child ).draw();
+   		}
+   		else
+   			childTable.row.add(child).draw();
+   		
+   		onCancel();
+  	}
+	
+	function addOrUpdateAdult()
+	{
+		var adult = {};
+	
+		adult["id"] = document.getElementById('childid').value;
+		adult["name"] = document.getElementById('adultname').value;
+       	adult["gender"] = document.getElementById('adultgender').value;
+       	
+       	let adultTable = $('#adulttable').DataTable();
+       		
+   		//determine if this is an edit or add action
+   		if(document.getElementById('editAdult').getAttribute('data-mode') === 'edit')
+   		{
+   			let rowNum = document.getElementById('editAdult').getAttribute('data-rowNumber');
+   			adultTable.row(rowNum).data( adult ).draw();
+   		}
+   		else
+   			adultTable.row.add(adult).draw();
+   		
+   		//close the dialog
+   		onCancel();
 	}
 	
 	function onDoBChange()
@@ -239,125 +604,55 @@
 		
 		var year = document.getElementById('dobyear').value;
 		var month = document.getElementById('dobmonth').value;
+		
 		var daysInMonth = [31,28,31,30,31,30,31,31,30,31,30,31];
 		var lastDayOfMonth = daysInMonth[month-1];
 		
+		//adjust February if leap year
 		if(month == 2 && ((year % 100 === 0) ? (year % 400 === 0) : (year % 4 === 0)))
 			lastDayOfMonth++;
 
 		//add proper # of days to days in month select
-		for (i=1; i<=lastDayOfMonth; i++)
-		{
+		for(i=1; i<=lastDayOfMonth; i++)
 			addComboBoxOption(select, i, i);
-		}
 		
 		//reselect the value if its in the list
-		if(curr_value <= lastDayOfMonth)
+		if(curr_value && curr_value <= lastDayOfMonth)
 			select.value = curr_value;
 		else
 			select.value = 1;
-	}
-	
-	function checkForAddChildWarnings(child)
-	{
-		var age = calculateAge(child.sDOB);
-		if(age === 0 || child.gender === 'Unknown')
-		{
-			//show pop-up asking to verify birthdate and gender
-			document.getElementById('childwarningmssg').textContent = "Is " + child.sDOB + " the correct" +
-			" DoB and " + child.gender + " the correct gender for the child you're adding?";
-			
-			window.location=document.getElementById('childwarninganchor').href;
-			
-			return false;	//in case the user simply clicks to close the warning dialog
-		}
-		else
-			return true;
-	}
-	
-	function onVerifyChild(bCorrect)
-	{
-		if(bCorrect)
-		{
-			var child = {};
-			child["firstname"] = document.getElementById('childfn').value;
-    			child["lastname"] = document.getElementById('childln').value;
-//    		child["sDOB"] =	document.getElementById('childdob').value;
-    			child["sDOB"]= document.getElementById('dobmonth').value + '/' +
-							document.getElementById('dobday').value + '/' +
-							 document.getElementById('dobyear').value;
-    			child["gender"] = document.getElementById('childgender').value;
-    			child["school"] = document.getElementById('childschool').value;
-    			childrenJson.push(child);
-    			updateChildTable(true);
-        		updateWishTable();
-        		clearAddChild();
-		}
-		window.location=document.getElementById('closepopup').href;
-	}
-	
-	function clearAddChild()
-	{
-		var childfnElement = document.getElementById('childfn');
-		var childlnElement = document.getElementById('childln');
-		var childschoolElement = document.getElementById('childschool');
 		
-		childfnElement.value="";
-        childlnElement.value="";
-//      document.getElementById('childdob').value="";
-        document.getElementById('dobmonth').selectedIndex = 0;
-        document.getElementById('dobday').selectedIndex = 0;
-        document.getElementById('dobyear').selectedIndex = 0;
-        
-        document.getElementById('childgender').value="Unknown";
-        document.getElementById('childschool').value="";
-        
-        childfnElement.style.background = '#FFFFFF';
-        childlnElement.style.background = '#FFFFFF';
-        childschoolElement.style.background = '#FFFFFF'; 
-	}
-	
-	function removeChild(index)
-	{
-		childrenJson.splice(index, 1);
+		//update the child age span in the edit child dialog
+		let sDoB = document.getElementById('dobmonth').value + '/' +
+					document.getElementById('dobday').value + '/' +
+		 			 document.getElementById('dobyear').value;
 		
-		updateChildTable(true);
-        updateWishTable();	
-	}
-	
-	function addAdult()
-	{
-		var adultnameElement = document.getElementById('adultname');
+		document.getElementById('childage-span').textContent = getAge(sDoB);
 		
-		if(adultnameElement.value === "")
-			adultnameElement.style.background = errorColor;
-		else
-		{	
-       		var adult = {};
-        		adult["name"] = adultnameElement.value;
-        		adult["gender"] = document.getElementById('adultgender').value;
-        		adultsJson.push(adult);
-        
-        		updateAdultTable(true);
-        
-        		clearAddAdult();
-		}
+		checkForChildChange();
 	}
 	
-	function clearAddAdult()
+	function onDeleteChild()
 	{
-		var adultnameElement = document.getElementById('adultname');
+		onCancel();
 		
-		adultnameElement.value="";
-        document.getElementById('adultgender').value="Male";
-        
-        adultnameElement.style.background = '#FFFFFF';
+		let childtable = $('#childtable').DataTable();
+		childtable.row('.selected').remove().draw();
+		childtable.button(0).disable();
+		childtable.button(1).enable();
+		childtable.button(2).disable();
+		childtable.button(3).disable();
 	}
-	
-	function removeAdult(index)
+
+	function onDeleteAdult()
 	{
-		adultsJson.splice(index, 1);
-		updateAdultTable(true);
+		onCancel();
+		
+		let adulttable = $('#adulttable').DataTable();
+		adulttable.row('.selected').remove().draw();
+		adulttable.button(0).disable();
+		adulttable.button(1).enable();
+		adulttable.button(2).disable();
 	}
 	
 	function calculateAge(birthday)
@@ -406,67 +701,50 @@
 			age.push('Newborn');
 		else
 		{
-	    		var y= [xmasday.getFullYear(), birthdate.getFullYear()],
-	    		ydiff= y[0]-y[1],
-	    		m= [xmasday.getMonth(), birthdate.getMonth()],
-	    		mdiff= m[0]-m[1],
-	    		d= [xmasday.getDate(), birthdate.getDate()],
-	    		ddiff= d[0]-d[1];
+    		var y= [xmasday.getFullYear(), birthdate.getFullYear()],
+    		ydiff= y[0]-y[1],
+    		m= [xmasday.getMonth(), birthdate.getMonth()],
+    		mdiff= m[0]-m[1],
+    		d= [xmasday.getDate(), birthdate.getDate()],
+    		ddiff= d[0]-d[1];
 
-	    		if(mdiff < 0 || (mdiff=== 0 && ddiff<0))--ydiff;
-	    		if(mdiff<0) mdiff+= 12;
-	    		if(ddiff<0)
-	    		{
-	        		birthdate.setMonth(m[1]+1, 0);
-	        		ddiff= birthdate.getDate()-d[1]+d[0];
-	        		--mdiff;
-	    		}
-	    		  	
-	    		if(ydiff> 0)
-	    			age.push(ydiff+ ' yr. old');
-	    		else if(mdiff>= 0) 
-	    			age.push(mdiff+ ' mos. old');
-	    		else if(mdiff=== -1)
-	    			age.push('1 yr. old');	//case when dob after xmas of prior year
+    		if(mdiff < 0 || (mdiff=== 0 && ddiff<0))--ydiff;
+    		if(mdiff<0) mdiff+= 12;
+    		if(ddiff<0)
+    		{
+        		birthdate.setMonth(m[1]+1, 0);
+        		ddiff= birthdate.getDate()-d[1]+d[0];
+        		--mdiff;
+    		}
+    		  	
+    		if(ydiff> 0)
+    			age.push(ydiff+ ' yr. old');
+    		else if(mdiff>= 0) 
+    			age.push(mdiff+ ' mos. old');
+    		else if(mdiff=== -1)
+    			age.push('1 yr. old');	//case when dob after xmas of prior year
 		}
-	    	return age.join('');
+	    
+		return age.join('');
 	}
 	
 	function onGiftAssistanceClicked(cb)
-	{		
-		for(var cnum=0; cnum<childrenJson.length; cnum++)
-		{
-			for(var wn=0; wn<4; wn++)
-			{
-				var wishElement = document.getElementById('wish' + cnum + wn);
-				
-				if(cb.checked)
-				{
-					wishElement.title="";
-					if(wn === 2)	//Wish #3 automatically is "Age Appropriate Gift" for 2019 season
-        				{
-        					wishElement.value = "Age Appropriate Gift";
-        					wishElement.readOnly = true;
-        				}
-					else
-					{
-						var childJson = childrenJson[cnum];
-        					if(childJson.hasOwnProperty("wish" + wn))
-        						wishElement.value = childJson["wish" + wn];
-        					else
-        						wishElement.value = '';
-        				
-						wishElement.readOnly = false;
-					}	
-				}	
-				else
-				{	
-					wishElement.title="Request gift assistace to edit";
-					wishElement.value = '';
-					wishElement.readOnly = true;
-				}
-			}	
-		}
+	{	
+		let childtable = $('#childtable').DataTable();
+		
+		//set the visibility of the wish columns
+		childtable.columns( [6,7,8,9] ).visible(cb.checked);
+		
+		//set the size of the child table div
+		let width = cb.checked ? '100%' : '65%';
+		$('#childtablediv').width(width);
+		
+		//force a redraw of the child table
+		childtable.rows().invalidate('data').draw(false);
+		
+		//set the edit child dialog to show the wishes or not
+		let childwishfieldset = document.getElementById('childwishfieldset');
+		childwishfieldset.style.display = cb.checked ? 'block' : 'none';
 	}
 	
 	function mealRqrdClicked(cb)
@@ -474,14 +752,11 @@
 		var mealCombo = document.getElementById('mealtype');
 		var dietres = document.getElementById('dietres');
 		//clear the meal type combobox
-    		mealCombo.options.length = 0;
+    	mealCombo.options.length = 0;
 		
-    		//get current UTC time in millis, add timezone offset in millis to get local time
-		//relative to deadline. This way, if a deadline is midnight UTC, it will still be
-		//a midnight deadline local time.
-		var date = new Date();
-		var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
-		
+    	//get current UTC time in millis and compare to the stored deadlines. The server
+    	//adjusted the deadlines from UTC to the local time zone of the browser at login
+		const nowMillis = Date.now();
 		if(cb.checked == false)
 		{
 			var choices = {'No Assistance Rqrd':'No Assistance Rqrd'};
@@ -489,14 +764,14 @@
 			dietres.value="";
 			dietres.disabled = true;
 		}
-		else if(timeNow > sessionStorage.getItem('decemberMealCutoff'))
+		else if(nowMillis > sessionStorage.getItem('decemberMealCutoff'))
 		{
 			var choices = {'Unavailable - Past Deadline' : 'Unavailable'};
 			mealCombo.disabled = true;
 			dietres.value="";
 			dietres.disabled = true;
 		}
-		else if(timeNow > sessionStorage.getItem('thanksgivingMealCutoff'))
+		else if(nowMillis > sessionStorage.getItem('thanksgivingMealCutoff'))
 		{
 			var choices = {"December":"December"};
 			mealCombo.disabled = false;
@@ -527,36 +802,21 @@
 	    		}  
 		}   	
 	}
-	function addComboBoxOption(combobox, text, value)
-	{
-		var option = document.createElement("option");
-		option.text = text;
-    		option.value = value;
-    		try 
-    		{
-        		combobox.add(option, null); //Standard 
-    		}
-    		catch(error)
-    		{
-        		combobox.add(option); // IE only
-    		}
-	}
+
 	function onWishInputChanged(wishevent)
 	{
-		var cnum = wishevent.target.getAttribute("data-cnum");
-		var wnum = wishevent.target.getAttribute("data-wnum");
+		//get the childs age from the selects in the edit child dialog
+		let sDoB = document.getElementById('dobmonth').value + '/' +
+					document.getElementById('dobday').value + '/' +
+					 document.getElementById('dobyear').value;
 		
-		var childJson = childrenJson[cnum];
-		childJson["wish" + wnum] = wishevent.target.value;
-		
-		var childage = document.getElementById(event.target.id).getAttribute('data-age');
-		if(childage < 13)
+		if(calculateAge(sDoB) < 13)
 		{	
-			var content = document.getElementById(event.target.id).value.toLowerCase();
+			let content = document.getElementById(wishevent.id).value.toLowerCase();
 			if(content.includes('gift card') || content.includes('giftcard'))
 			{
 				document.getElementById('giftcardmssg').textContent = "Based on limited availability, ONC" +
-				"\r\ngenerally provides gift cards to children\r\n13 and older. If there is an extenuating" +
+				"\r\ngenerally provides gift cards to children\r\n13 and older. \r\n\r\nIf there is an extenuating" +
 				"\r\ncircumstance requiring a gift card," +
 				"\r\nplease note it in Family Details below\r\n\and include the type of gift card" +
 				"\r\n(i.e.: Target, Amazon, iTunes, etc.)\r\nwith the corresponding wish.";
@@ -565,84 +825,174 @@
 			}
 		}
 	}
+	function checkForChildChange()
+	{
+		//if edit mode, check for input change, else check for empty
+		if(document.getElementById('editChild').getAttribute("data-mode") === 'edit')
+		{	
+			if(document.getElementById('childfirstname').value === editedChild['childfirstname'] &&
+				document.getElementById('childlastname').value === editedChild['childlastname'] &&
+				 document.getElementById('dobyear').value === editedChild['dobyear'] &&
+				  document.getElementById('dobmonth').value === editedChild['dobmonth'] &&
+				   document.getElementById('dobday').value === editedChild['dobday'] &&
+				    document.getElementById('childgender').value === editedChild['childgender'] &&
+				     document.getElementById('childschool').value === editedChild['childschool'] &&
+					  document.getElementById('childwish0').value == editedChild['childwish0'] &&
+					   document.getElementById('childwish1').value == editedChild['childwish1'] &&
+						document.getElementById('childwish2').value == editedChild['childwish2'] &&
+						 document.getElementById('childwish3').value == editedChild['childwish3'])
+			{
+				document.getElementById('childupdate').disabled = true;
+			}
+			else
+			{
+				document.getElementById('childupdate').disabled = false;
+			}
+		}
+		else	//add mode
+		{
+			if(document.getElementById('childfirstname').value === "" ||
+					document.getElementById('childlastname').value === "")
+//					 document.getElementById('childschool').value === "")
+			{
+				document.getElementById('childupdate').disabled = true;
+			}				
+			else
+			{
+				document.getElementById('childupdate').disabled = false;
+			}
+		}
+	}
+	function checkForAdultChange()
+	{
+		//if edit mode, check for input change, else check for empty
+		if(document.getElementById('editAdult').getAttribute("data-mode") === 'edit')
+		{
+			if(document.getElementById('adultname').value === editedAdult['adultname'] &&
+				document.getElementById('adultgender').value === editedAdult['adultgender'])
+			{
+				document.getElementById('adultupdate').disabled = true;
+			}
+			else
+				document.getElementById('adultupdate').disabled = false;
+		}
+		else	//add mode
+		{
+			if(document.getElementById('adultname').value === "")
+				document.getElementById('adultupdate').disabled = true;			
+			else
+				document.getElementById('adultupdate').disabled = false;
+		}
+	}
   </script>
   <style>
-	ul.ui-autocomplete.ui-menu
-	{
-		font-size:12px;
-		width:300px;
-	}
-	#submitspan {float: right;}
-	#errormessage
-	{
-		float: left;
-		font-weight: bold;
-		font-style: italic;
-		color: red;
-	}
-	table, th, td {border: 1px solid black;}
-	th, td {min-width: 60px; }
+	input[type='checkbox'] { transform : scale(1.4); }
+	.checkbox-label { font-size: 16px; }
 	.addresstooltip
 	{
   		background-color: black;
   		color: rgb(255, 77, 85) !important;
-  		font-size: 11px;
-	}
-	.addtable  { border: none; border-collapse: collapse;}
-	.addtable td { border: none; }
-	.namecol { width: 198px; }
-	.fncol { width: 104px; }
-	.lncol { width: 110px; }
-    .dobcol { width: 178px; }
-    .gendercol { width: 86px; }
-    .schoolcol { width: 149px; } 
-    .actcol { width: 68px; } 
+  		font-size: 14px;
+	}	    
 	#giftcardmssg 
 	{
 		margin-top: 0px;
 		white-space: pre;
+		line-height: 20px;
+		font-style: italic;
 	}
-	#warningbuttonbar
+	#childtablediv 
 	{
-		margin-top: 10px;
-		display: flex;
- 		justify-content: center;
+		width: 65%;
+		margin-top: 5px;
+	}	
+	#childtable td	/* keeps table rows to single line with ... */
+	{
+		max-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
+	#adulttablediv 
+	{ 
+		width: 40%;
+	}
+	#childwishfieldset { display: none; }
+	.edit-background span { font-size: 14px; }
+	textarea 
+  	{
+  		width: 75%;
+    	height: 36px;
+    	line-height: 18px;
+    	padding: 2px 2px;
+    	box-sizing: border-box;
+    	border: 1px solid #ccc;
+    	border-radius: 4px;
+    	background-color: #f8f8f8;
+    	font-size: 14px;
+    	resize: none;
+    	display: block;
+	}
+	td.cellerror
+	{
+		border: 3px solid red !important;
+	}
+	.errorimg
+	{
+		float: left;
+		display: block;
+		margin: 0px 10px 0px 0px;
+	}
+	/* Create two unequal columns that floats next to each other */
+
   </style>
 </head>
 <body>
   <a href="#badfamdlg" id="badfamanchor" style="visibility: hidden">Bad Family Referral</a>
   <a href="#childwarningdlg" id="childwarninganchor" style="visibility: hidden">Child Info Verification</a>
+  <a href="#childdeletedlg" id="childdeleteanchor" style="visibility: hidden">Delete Child Verification</a>
+  <a href="#adultdeletedlg" id="adultdeleteanchor" style="visibility: hidden">Delete Adult Verification</a>
   <a href="#giftcarddlg" id="giftcardanchor" style="visibility: hidden">Gift Card Warning</a>
   <a href="#verifdlg" id="verifanchor" style="visibility: hidden">Address Verification</a>
+  <a href="#editChild" id="editchildanchor" style="visibility: hidden">Edit Child</a>
+  <a href="#editAdult" id="editadultanchor" style="visibility: hidden">Edit Adult</a>
+  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
-  <div id="topbar" class="topbar">
-    <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">ONC Family Assistance Referral Form</span><br>
-	<span id="message">(please complete and click Submit To ONC)</span></p>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
+      <a id='partner-anchor' class='breadcrumb-middle' href='familystatus'>Families</a>
+      <a class='breadcrumb-current' href='#'>Family Referral</a>
+    </span>   
+    <div class='headerbuttons'>
+      <div class='dropdown'>
+        <button class=dropbtn>Profile</button>
+        <div class='dropdown-content'>
+      	  <a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a>
+      	  <a href="#chgpwdlg">Change Password</a>
+      	</div> 
+      </div>
+      <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
+    </div>
   </div>
-  <nav>
-    <ul>
-     <li id="homeli"><a id='homelink' href='startpage'>Home</a></li>
-<!--  <li id="homeli"><a id='homelink'>Home</a></li>	-->  	
-	</ul>
-	<ul class='floatright'>
-	    <li id="logoutli"><a href='javascript:onLogoutLink()'>Logout</a></li>
-	</ul>
-  </nav>
-  <form id="familyform" action="referfamily" method="post">
+  <div id="welcome-div">
+    <p id='banner-message'>BANNER_MESSAGE</p>
+  </div>
+  <!-- <form id="familyform" action="referfamily" method="post"> -->
+  <form>
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
   <input id='uuid' type="hidden" name="uuid" value= 'SERVER_GENERATED_UUID'>
-  <br>
   <fieldset>
   <legend class="legend-major">Head of Household (HOH) Information</legend>
-    <input id='hohfn' title="First Name" name="hohfn" type="text" size="20" placeholder="First Name" required>
-    <input id='hohln' title="Last Name" name="hohln" type="text" size="20" placeholder="Last Name" required>
-    <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
-    <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
-    <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onchange="verifyPhoneNumber(2)">
-  	<select id='language' title='Primary language' name='language'>
+    <div>
+      <input id='hohfn' title="First Name" name="hohfn" type="text" size="20" placeholder="First Name" required>
+      <input id='hohln' title="Last Name" name="hohln" type="text" size="20" placeholder="Last Name" required>
+      <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
+	  <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
+	  <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onchange="verifyPhoneNumber(2)">
+	  <select id='language' title='Primary language' name='language'>
 		<option value="English">English</option>
 		<option value="Spanish">Spanish</option>
 		<option value="Arabic">Arabic</option>
@@ -650,342 +1000,398 @@
 		<option value="Vietnamese">Vietnamese</option>
 		<option value="Other">Other</option>
 		<option value="?">Unknown</option>
-	</select>
-	<br>
-    <input id="housenum" class='address' title="House #" name="housenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
-    <input id="street" class='address' title="Street Name" name="street" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
-    <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" autocomplete="off">
-    <select id="city" title="City" name="city" onchange="cityChanged('city')">
-    	<option value="Centreville">Centreville</option>
-		<option value="Chantilly">Chantilly</option>
-		<option value="Clifton">Clifton</option>
-		<option value="Fairfax">Fairfax</option>
-		<option value="Fairfax Station">Fairfax Station</option>
-		<option value="Sully Station">Sully Station</option>
-		<option value="Alexandria">Alexandria</option>
-		<option value="Annandale">Annandale</option>
-		<option value="Arlington">Arlington</option>
-		<option value="Baileys Crossroads">Baileys Crossroads</option>
-		<option value="Belleview">Belleview</option>
-		<option value="Burke">Burke</option>
-		<option value="Cameron Station">Cameron Station</option>
-		<option value="Dunn Loring">Dunn Loring</option>
-		<option value="Engleside">Engleside</option>
-		<option value="Falls Church">Falls Church</option>
-		<option value="Fort Belvoir">Fort Belvoir</option>
-		<option value="Franconia">Franconia</option>
-		<option value="Great Falls">Great Falls</option>
-		<option value="Greenway">Greenway</option>
-		<option value="Herndon">Herndon</option>
-		<option value="Jefferson Manor">Jefferson Manor</option>
-		<option value="Kingstowne">Kingstowne</option>
-		<option value="Lorton">Lorton</option>
-		<option value="Mason Neck">Mason Neck</option>
-		<option value="McLean">McLean</option>
-		<option value="Merrifield">Merrifield</option>
-		<option value="Mosby">Mosby</option>
-		<option value="Mount Vernon">Mount Vernon</option>
-		<option value="Newington">Newington</option>
-		<option value="North Springfield">North Springfield</option>
-		<option value="Oak Hill">Oak Hill</option>
-		<option value="Oakton">Oakton</option>
-		<option value="Pimmit">Pimmit</option>
-		<option value="Reston">Reston</option>
-		<option value="Seven Corners">Seven Corners</option>
-		<option value="Springfield">Springfield</option>
-		<option value="Tysons Corner">Tysons Corner</option>
-		<option value="Vienna">Vienna</option>
-		<option value="West McLean">West McLean</option>
-		<option value="West Springfield">West Springfield</option>
-	</select>   
-    <select id="zipcode" title="Zip Code" name="zipcode">
-		<option value="20120">20120</option>
-		<option value="20121">20121</option>
-		<option value="20122">20122</option>
-	</select>
-	<input id='email' title="Email address" name="email" type="email" size="30" onchange='verifyEmail()' placeholder="email address">
-	<button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
+	  </select>
+	</div>
+	 <div class='fieldsetdiv'>
+      <input id="housenum" class='address' title="House #" name="housenum" type="text" size="7" placeholder="House #" autocomplete="off" required>
+      <input id="street" class='address' title="Street Name" name="street" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+      <input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Apt #" autocomplete="off">
+      <select id="city" title="City" name="city" onchange="cityChanged(this)">   		
+	  </select>   
+      <select id="zipcode" title="Zip Code" name="zipcode">	
+	  </select>
+	  <input id='email' title="Email address" name="email" type="email" size="30" onchange='verifyEmail()' placeholder="email address">
+	  <button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
+	</div>
   </fieldset>
-  <br>
   <fieldset>
-  <legend class="legend-major">Delivery Address and Transportation: Provide address that ONC will use for gift delivery and family's access to transportation</legend>
-	<input type="checkbox" id="sameaddress" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">Check if same as HOH address above, otherwise complete:
-	<input id="delhousenum" class='address' title="Delivery House #" name="delhousenum" type="text" size="8" placeholder="House #" autocomplete="off" required>
-    	<input id="delstreet" class='address' title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+  <legend class="legend-major">Delivery Address and Transportation: Provide address that ONC will use for gift delivery and family's access to transportation</legend>	
+	<input id="sameaddress" type="checkbox" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">
+	<label class='checkbox-label'>Check if same as HOH address, else complete:</label>
+	<input id="delhousenum" class='address' title="Delivery House #" name="delhousenum" type="text" size="7" placeholder="House #" autocomplete="off" required>
+    <input id="delstreet" class='address' title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
     <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
-    <select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged('delcity')">
-    	<option value="Centreville">Centreville</option>
-		<option value="Chantilly">Chantilly</option>
-		<option value="Clifton">Clifton</option>
-		<option value="Fairfax">Fairfax</option>
-		<option value="Fairfax Station">Fairfax Station</option>
-		<option value="Sully Station">Sully Station</option>
-		<option value="Alexandria">Alexandria</option>
-		<option value="Annandale">Annandale</option>
-		<option value="Arlington">Arlington</option>
-		<option value="Baileys Crossroads">Baileys Crossroads</option>
-		<option value="Belleview">Belleview</option>
-		<option value="Burke">Burke</option>
-		<option value="Cameron Station">Cameron Station</option>
-		<option value="Dunn Loring">Dunn Loring</option>
-		<option value="Engleside">Engleside</option>
-		<option value="Falls Church">Falls Church</option>
-		<option value="Fort Belvoir">Fort Belvoir</option>
-		<option value="Franconia">Franconia</option>
-		<option value="Great Falls">Great Falls</option>
-		<option value="Greenway">Greenway</option>
-		<option value="Herndon">Herndon</option>
-		<option value="Jefferson Manor">Jefferson Manor</option>
-		<option value="Kingstowne">Kingstowne</option>
-		<option value="Lorton">Lorton</option>
-		<option value="Mason Neck">Mason Neck</option>
-		<option value="McLean">McLean</option>
-		<option value="Merrifield">Merrifield</option>
-		<option value="Mosby">Mosby</option>
-		<option value="Mount Vernon">Mount Vernon</option>
-		<option value="Newington">Newington</option>
-		<option value="North Springfield">North Springfield</option>
-		<option value="Oak Hill">Oak Hill</option>
-		<option value="Oakton">Oakton</option>
-		<option value="Pimmit">Pimmit</option>
-		<option value="Reston">Reston</option>
-		<option value="Seven Corners">Seven Corners</option>
-		<option value="Springfield">Springfield</option>
-		<option value="Tysons Corner">Tysons Corner</option>
-		<option value="Vienna">Vienna</option>
-		<option value="West McLean">West McLean</option>
-		<option value="West Springfield">West Springfield</option>
+    <select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged(this)">	
 	</select>	
     <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
-		<option value="20120">20120</option>
-		<option value="20121">20121</option>
-		<option value="20122">20122</option>
 	</select>
 	<button type="button" id='verifydeladdress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
-  <br><br>
-  <label>Does the family have their own transportation? </label>
-  <input id="transYes" type="radio" name="transportation" value="Yes">Yes
-  <input id="transNo" type="radio" name="transportation" value="No" checked>No
+  <div>
+  	<input id="transYes" type="checkbox">
+	<label class='checkbox-label'>Check if family has their own transportation</label>	    
+  </div>	
   </fieldset>
-  <br>
   <fieldset>
-  <legend class="legend-major">Family Members</legend>
+  <legend class="legend-major">Family Members &#38; Gift Assistance</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
-  	<table class='addtable'><tr>
-  	<td class='fncol'><input id="childfn" title="First name of child to be added" type="text" size='14' placeholder="First Name"></td>
-  	<td class='lncol'><input id="childln" title="Last name of child to be added" type="text" size='15' placeholder="Last Name"></td>
-    <td class='dobcol'><select id='dobmonth' title='Month child was born' onchange='onDoBChange()'>
-    		<option value=1>Jan</option>
-    		<option value=2>Feb</option>
-    		<option value=3>Mar</option>
-    		<option value=4>Apr</option>
-    		<option value=5>May</option>
-    		<option value=6>Jun</option>
-    		<option value=7>Jul</option>
-    		<option value=8>Aug</option>
-    		<option value=9>Sep</option>
-    		<option value=10>Oct</option>
-    		<option value=11>Nov</option>
-    		<option value=12>Dec</option>
-     </select>
-    	<select id='dobday' title='Day child was born'>
-    		<option value=1>1</option>
-    		<option value=2>2</option>
-    		<option value=3>3</option>
-    		<option value=4>4</option>
-    		<option value=5>5</option>
-    		<option value=6>6</option>
-    		<option value=7>7</option>
-    		<option value=8>8</option>
-    		<option value=9>9</option>
-    		<option value=10>10</option>
-    		<option value=11>11</option>
-    		<option value=12>12</option>
-    		<option value=13>13</option>
-    		<option value=14>14</option>
-    		<option value=15>15</option>
-    		<option value=16>16</option>
-    		<option value=17>17</option>
-    		<option value=18>18</option>
-    		<option value=19>19</option>
-    		<option value=20>20</option>
-    		<option value=21>21</option>
-    		<option value=22>22</option>
-    		<option value=23>23</option>
-    		<option value=24>24</option>
-    		<option value=25>25</option>
-    		<option value=26>26</option>
-    		<option value=27>27</option>
-    		<option value=28>28</option>
-    		<option value=29>29</option>
-    		<option value=30>30</option>
-    		<option value=31>31</option>
-    	</select>
-    	<select id='dobyear' title='Year child was born' onchange='onDoBChange()'>
-    	</select>
-    	</td>
-	<td class='gendercol'><select id="childgender" title="Gender of child to be added">
-      	<option value="Unknown">Unknown</option>
-		<option value="Boy">Boy</option>
-		<option value="Girl">Girl</option>
-	</select></td>
-	<td class='schoolcol'><input id="childschool" class='schoolname' title="School attended, if none, enter Pre-K" type="text" size="20" placeholder="School"></td>
-	<td><button type="button" onclick="addChild()" title="Click to add child">Add Child</button></td>
-	<td><button type="button" onclick="clearAddChild()" title="Click to clear add child fields">Clear</button></td>
-	</tr></table>
-  <table id="childtable" border="1">
-  	<thead>
-    	<tr>
-        	<th class='fncol'>First Name</th>
-        	<th class='lncol'>Last Name</th>
-        	<th class='dobcol'>DoB</th>
-        	<th class='gendercol'>Gender</th>
-        	<th class='schoolcol'>School</th>
-        	<th class='actcol'>Action</th>
-    	</tr>
-      </thead>
-      <tbody id="tchildbody">
-      </tbody>
-  </table>
+  	<input type="checkbox" id='giftreq' name='giftreq' onclick='onGiftAssistanceClicked(this)' title="Check if family wants gift assistance">
+  	<label class='checkbox-label'>Check if family is requesting gift assistance for their children</label>
+	<div id='childtablediv'> 
+	  <table id="childtable" class='display compact' style="width:100%">
+		<thead>
+    		<tr>
+    			<th>Id</th>
+        		<th>First Name</th>
+        		<th>Last Name</th>
+        		<th>DoB</th>
+        		<th>Age/Gen.</th>
+        		<th>School</th>
+        		<th>Wish 1</th>	<!-- hidden, stores wishes entered by counselor -->
+        		<th>Wish 2</th>	<!-- hidden, stores wishes entered by counselor -->
+        		<th>Wish 3</th>	<!-- hidden, stores wishes entered by counselor -->
+        		<th>Alt. Wish</th>	<!-- hidden, stores wishes entered by counselor -->
+    		</tr>
+    	</thead>
+    	<tbody>
+    	</tbody>
+      </table>
+    </div>      
   </fieldset>
-  <br>
   <fieldset>
   	<legend>Other adults in family (in addition to the head of household)</legend>
-  	<table class='addtable'><tr>
-  	<td class='namecol'><input id="adultname" title="Name" type="text" size="28" placeholder="First & Last Name"></td>
-    <td class='gendercol'><select id="adultgender" title="Gender">
-		<option value="Male">Male</option>
-		<option value="Female">Female</option>
-		<option value="Unknown">Unknown</option>
-	</select></td>
-	<td><button type="button" onclick="addAdult()" title="Click to add adult to family">Add Adult</button></td>
-	<td><button type="button" onclick="clearAddAdult()" title="Click to clear adult fields">Clear</button></td>
-	</tr></table>
-  <table id="adulttable" border="1">
-  	<thead>
-    	<tr>
-        	<th class='namecol'>Name</th>
-        	<th class='gendercol'>Gender</th>
-        	<th class='actcol'>Action</th>
-    	</tr>
-    </thead>
-    <tbody id="tadultbody">
-    </tbody>
-</table>
+   <div id='adulttablediv'> 		
+	 <table id="adulttable" class='display compact' style="width:100%">
+		<thead>
+    		<tr>
+    			<th>Id</th>
+        		<th>Name</th>
+        		<th>Gender</th>
+    		</tr>
+    	</thead>
+    	<tbody>
+    	</tbody>
+      </table>
+    </div>  
   </fieldset>
   </fieldset>
-  <br>
-  <fieldset>
-   <legend class="legend-major">Gift Assistance: Check if family requests gifts and provide 3 wishes per child, in priority order, plus an alternate wish. If clothing or footwear, please include size</legend>
-     <input type="checkbox" id='giftreq' name='giftreq' onclick='onGiftAssistanceClicked(this)' title="Check if family wants gift assistance">Check to request gift assistance and complete below:
-  	 <table id="wishtable" border="1">
-  	<thead>
-    	<tr>
-        	<th>First Name</th>
-        	<th>Age/Gender</th>
-        	<th>Wish 1</th>
-        	<th>Wish 2</th>
-        	<th>Wish 3</th>
-        	<th>Alternate Wish</th>	
-    	</tr>
-      </thead>
-      <tbody id="twishbody">
-      </tbody>
-  </table>
-  </fieldset>
-  <br>
   <fieldset>
   <legend class="legend-major">Meal Assistance: ONC will refer family to WFCM or other meal providing organizations</legend>
 	<input type="checkbox" id='mealreq' onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
     <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
 		<option value="No Assistance Rqrd">No Assistance Rqrd</option>
 	</select>
-	<input id="dietres" type="text" name="dietres" size="68" placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
+	<input id="dietres" type="text" name="dietres" size='54' placeholder="Describe any dietary restrictions" title="Describe any family dietary restrictions" disabled>
   </fieldset>
-  <br>
   <fieldset>
    <legend class="legend-major">Family Details: Provide any additional details that may assist in serving this family</legend>
-	<input type="text" id='detail' name="detail" size="128" placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
+	<input type="text" id='detail' name="detail" style='width:100%' placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <fieldset id='groupfs'>
    <legend class="legend-major">Family Group: Select this referral's originating school/organization</legend>
     <select id="groupcb" name='groupcb' title="Family Group"></select>
   </fieldset>
-  <br>
   <div>
   	<span id="errormessage"></span>
   	<span id="submitspan">
-  	  <label for="submit">Please check that all fields are complete prior to submission: </label>
-  	  <input id="btnsubmit" type="button" value="Submit" style="background-color: #336699; color: #ffffff;" title="Click to sumbit family to ONC" onclick= onSubmit(true)>
+  	  <label for="btnsubmit">Please check that all fields are complete prior to submission: </label>
+  	  <button type="button" id='btnsubmit' onclick="onSubmitFamilyForm(true)">Submit</button>
   	</span>
   </div>
 </form>
 <!-- Invalid Family Dialog -->
   <div id="badfamdlg" class="modalDialog">
-	<div class='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+	<div class='inner regular-width'>
+		<a href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
+		  <img class='logo-img' src="onclogo">
 		  <span class="logospan">Invalid Family Referral</span>
+		</div>	
+		<div>
+		  <div class='column left'><img class='errorimg' src="erroricon"></div>
+		  <div class='column right' id='badfammssg'></div>	  
 		</div>
-		<span class='verifspan'><img class='errorimg' src="erroricon"></span>
-		<span id='badfammssg'></span>
+	</div>
+  </div>
+   <!-- Address Verification Dialog -->
+  <div id="verifdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<a href="#close" title="Close" class="close">X</a>	
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class='logospan'>Address Verification</span>
+		</div>	    	  	
+		<div>
+		  <div class='column left'><img id='verifimg' class='errorimg' src="erroricon"></div>
+		  <div class='column right' id='verifmssg'></div>	  
+		</div>	
 	</div>
   </div>
   <!-- Child Warning Dialog -->
   <div id="childwarningdlg" class="modalDialog">
-	<div class='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+	<div class='inner regular-width'>
+		<a href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
+		  <img class='logo-img' src="onclogo">
 		  <span class="logospan">Verify Child Info</span>
-		</div>
-		<span class='verifspan'><img class='errorimg' src="erroricon"></span>
+		</div>	
 		<span id='childwarningmssg'></span>
-		<div id='warningbuttonbar'>
-      	  <button id="correct" onclick="onVerifyChild(true)">Yes, As Best I Know</button>
-      	  <button id="fixit" onclick="onVerifyChild(false)">No, I'll Fix Them</button>
+		<div class='buttonbar'>
+      	  <button onclick="addOrUpdateValidatatedChild()">Yes, As Best I Know</button>
+      	  <button onclick="window.location=document.getElementById('editchildanchor').href">No, I'll Fix Them</button>
     	</div>
 	</div>
   </div>
-  <!-- Address Verification Dialog -->
-  <div id="verifdlg" class="modalDialog">
-	<div class='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+  <!-- Delete Child Verification Dialog -->
+  <div id="childdeletedlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<a href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
-		  <span class='logospan'>Address Verification</span>
-		</div>
-		<div>
-		  <span class='verifspan'><img id='verifimg' class='errorimg' src="erroricon"></span>
-		  <span id='verifmssg'></span>
-		</div>
+		  <img class='logo-img' src="onclogo">
+		  <span class="logospan">Confirm Delete Child</span>
+		</div>	
+		<span id='childdeletegmssg'></span>
+		<div class='buttonbar'>
+      	  <button onclick="onCancel()">Cancel</button>
+      	  <button onclick="onDeleteChild()">Confirm</button>
+    	</div>
+	</div>
+  </div>
+  <!-- Delete Adult Verification Dialog -->
+  <div id="adultdeletedlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<a href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class="logospan">Confirm Delete Child</span>
+		</div>	
+		<span id='adultdeletegmssg'></span>
+		<div class='buttonbar'>
+      	  <button onclick="onCancel()">Cancel</button>
+      	  <button onclick="onDeleteAdult()">Confirm</button>
+    	</div>
 	</div>
   </div>
   <!-- Gift Card Warning Dialog -->
   <div id="giftcarddlg" class="modalDialog">
-	<div class='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+	<div class='inner regular-width'>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
+		  <img class='logo-img' src="onclogo">
 		  <span class=logospan>Gift Cards</span>
 		</div>
 		  <p id='giftcardmssg'></p>
+		<div class='buttonbar'>
+    	<button onclick="window.location=document.getElementById('editchildanchor').href">Ok</button>
+      </div>
 	</div>
   </div>
-<!-- Timeout Dialog -->
-  <div id="timeoutdlg" class="modalDialog">
-	<div class='inner'>
+<!-- Edit Profile Dialog -->
+  <div id="editProfile" class="modalDialog">
+	<div class='inner extended-width'>
+	  <div class='dialogtopbar'>
+		<img class='logo-img' src="onclogo">
+		<span class='logospan'>Verify/Update ONC Profile</span>
+	  </div>
+	  <div class='edit-background'>
+	  	  <fieldset id='contact-info-fieldset'>
+  			  <legend class="legend-major">Contact Information</legend>
+  			  <p>
+    	  		<label for="userfirstname">Name:</label>
+    	  		<input id='userfirstname' type="text" size="14" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="17" placeholder="Last Name" onchange='checkForProfileChange()'>
+    		  </p>   		
+    		  <p>
+    	  		<label for="userorg">Organization:</label>
+    	  		<input id='userorg' type="text" size="34" placeholder="Organization" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		 <label for="usertitle">Title:</label>
+    	 		 <input id='usertitle' type="text" size="34" placeholder="Title" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		<label for="useremail">Email:</label>
+    	  		<input id='useremail' type="text" size="34" placeholder="Email address" onchange='checkForProfileChange()'>
+    	      </p>
+    	 	  <p>
+    	  		<label for="userphone">Phone:</label>
+    	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  	  </p>
+      	  </fieldset>
+	  </div>
+      <div class='edit-background'>
+		<fieldset>
+			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
+  	    	 <table id="profiletable" class='display' style="width:100%">
+  		 	  <thead>
+    			<tr>
+    				<th>Id</th>
+        			<th>School or Organization</th>
+    			</tr>
+    		  </thead>
+    		  <tbody>
+    		  </tbody>
+	    	</table>
+	    	<div> 
+  		  		<select id="groupselect" title="School or Organization Name" oninput='onGroupSelected(this)'></select>
+  			</div>
+  		</fieldset>
+  	  </div>
+      <div class='buttonbar'>
+    	<button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" onclick="onUpdateProfile(this)" disabled>Update</button>
+      </div> 
+	</div>
+  </div>
+<!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div class='inner extended-width'>
+		<a href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo"/>
+		  <img class='logo-img' src="onclogo">
+		  <span class='logospan'>Change Password</span>
+		</div>
+		<div class='edit-background'>
+	  	  <fieldset>
+  			<legend class="legend-major">Enter Current and New Passwords</legend>
+  			<div id='pw_mssg'>Enter current and new password:</div>
+  			<table class='password-table'>
+  				<tr>
+  					<td>Current Password:</td>
+  					<td><input type="password" id="currpw" name="field1" width='100%' oninput='checkChangePWEnable()' autofocus></td>
+  				</tr>
+  				<tr>
+  					<td>New Password:</td>
+  					<td><input type="password" id="newpw" name="field2" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  				<tr>
+  					<td>Verify New Password:</td>
+  					<td><input type="password" id="verifypw" name="field3" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  			</table>
+		  </fieldset>
+		</div>
+    	<div class='buttonbar'>
+      	  <button onclick="onCancel()">Cancel</button>
+      	  <button id="btnchangepw" onclick="onChangePW()" disabled>Change Password</button>
+    	</div> 
+	</div>
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo"/>
 		  <span id='dialogmssg'>Session Timeout</span>
 		</div>
 		<p id='to_mssg'>Your session expired due to inactivity</p>
-    	<div>
+    	<div class='buttonbar'>
       	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
     	</div> 
 	</div>
-  </div>    
+  </div> 
+<!-- Edit Child Dialog -->
+  <div id="editChild" data-mode='edit' class="modalDialog">
+	<div class='inner larger-width'>
+	  <a href="#close" title="Close" class="close">X</a>
+	  <div class='dialogtopbar'>
+		<img class='logo-img' src="onclogo">
+		<span class='logospan'>Update Child Information</span>
+	  </div>
+	  <div class='edit-background'>
+	  	  <fieldset id='contact-info-fieldset'>
+  			  <legend class="legend-major">Child Information</legend>
+  			  <div id='childiddiv' style="display: none"> 
+  			  	<input id='childid' type='text'>
+  			  </div>
+  			  <p>
+    	  		<label for="childfirstname">Name:</label>
+    	  		<input id='childfirstname' type="text" size="13" placeholder="First Name" oninput='checkForChildChange()'>
+    	  		<input id='childlastname' type="text" size="15" placeholder="Last Name" oninput='checkForChildChange()'>
+    		  </p>   		
+    		  <p>
+    	  		<label for="childDOB">DoB:</label>
+    	  		<select id='dobmonth' title='Month child was born' onchange='onDoBChange()'> 		    		
+     			</select>
+    			<select id='dobday' title='Day child was born' onchange='onDoBChange()'>    		
+    			</select>
+    			<select id='dobyear' title='Year child was born' onchange='onDoBChange()'>
+    			</select>
+    	 	  </p>
+    	 	  <p>
+    	  		<label for="childgender">Age/Gender:</label>
+    	  		<span id='childage-span'></span>
+    	  		<select id="childgender" title="Gender of child to be added" oninput='checkForChildChange()'>
+      				<option value="Unknown">Unknown</option>
+					<option value="Boy">Boy</option>
+					<option value="Girl">Girl</option>
+				</select>
+				<span id='childyear-span'></span>
+    	 	  </p>
+    	 	  <p>
+    	  		<label for="childschool">School:</label>
+    	  		<input id="childschool" class='schoolname' title="School attended, if none, enter Pre-K" type="text" size="28" placeholder="School" oninput='checkForChildChange()'>
+    	      </p>
+      	  </fieldset>
+		  <fieldset id='childwishfieldset'>
+		      <legend class="legend-major">Child Wishes</legend>
+		      <p><i>Provide three wishes in priority order, plus an alternate. If clothing or footwear, please include size.</i></p>
+		      <p>
+		      <label for="childwish0">Wish 1:</label>
+		      <textarea id='childwish0' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
+		      </p><p>
+		      <label for="childwish1">Wish 2:</label>
+		      <textarea id='childwish1' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
+		      </p><p>
+		      <label for="childwish2">Wish 3:</label>
+		      <textarea id='childwish2' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
+		      </p><p>
+		      <label for="childwish3">Alt. Wish:</label>
+		      <textarea id='childwish3' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
+		      </p>
+		  </fieldset>
+	  </div>
+      <div class='buttonbar'>
+    	<button id="childcancel" onclick="onCancel()">Cancel</button>
+        <button id="childupdate" onclick="verifyAddedOrUpdatedChild()" disabled>Update</button>
+        <span id='removechildspan'>
+          <button id="childremove" onclick="onRemoveChild(this)" disabled>Remove</button>
+         </span>
+      </div> 
+	</div>
+  </div>
+<!-- Edit Adult Dialog -->
+  <div id="editAdult" data-mode='edit' class="modalDialog">
+	<div class='inner extended-width'>
+	  <a href="#close" title="Close" class="close">X</a>
+	  <div class='dialogtopbar'>
+		<img class='logo-img' src="onclogo">
+		<span class='logospan'>Edit Adult</span>
+	  </div>
+	  <div class='edit-background'>
+	  	  <fieldset id='contact-info-fieldset'>
+  			  <legend class="legend-major">Adult Information</legend>
+  			  <p>
+    	  		<label for="adultname">Name:</label>
+    	  		<input id="adultname" title="Name" type="text" size="27" placeholder="First & Last Name" oninput='checkForAdultChange()'>
+    		  </p>   		
+    	 	  <p>
+    	  		<label for="adultgender">Gender:</label>
+    	  		<select id="adultgender" oninput='checkForAdultChange()'>
+					<option value="Male">Male</option>
+					<option value="Female">Female</option>
+					<option value="Unknown">Unknown</option>
+				</select>
+    	 	  </p>
+      	  </fieldset>
+	  </div>
+      <div class='buttonbar'>
+    	<button id="adultcancel" onclick="onCancel()">Cancel</button>
+        <button id="adultupdate" onclick="addOrUpdateAdult()" disabled>Update</button>
+        <span id='removeadultspan'>
+          <button id="adultremove" onclick="onRemoveAdult(this)" disabled>Remove</button>
+        </span>
+      </div> 
+	</div>
+  </div>  
 </body>
-</html>   
+</html>

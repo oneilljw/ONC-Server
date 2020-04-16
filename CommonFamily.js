@@ -3,116 +3,86 @@
  * Common functions for family referral and family info editing web pages
  * Date: 2018-07-23
  */
+var cities = {"Centreville":{"zipcodes":["20120", "20121"]},
+  				  "Chantilly":{"zipcodes":["20151"]},
+  				  "Clifton":{"zipcodes":['20124']},
+  				  "Fairfax":{"zipcodes":['20151','22030','22031','22032','22033','22034','22035','22036','22037','22038']},
+  				  "Fairfax Station":{"zipcodes":['22039']},
+  				  "Sully Station":{"zipcodes":['20120']},
+  				  "Alexandria":{"zipcodes":["22302","22303","22304","22305","22306","22307","22308","22309","22310","22311","22312","22315"]},
+  				  "Annandale":{"zipcodes":['22003']},
+  				  "Arlington":{"zipcodes":['22203','22204','22206','22207','22213']},
+  				  "Baileys Crossroads":{"zipcodes":['22041']},
+ 				  "Belleview":{"zipcodes":['22307']},
+ 				  "Burke":{"zipcodes":['22015']},
+ 				  "Cameron Station":{"zipcodes":['22304']},
+ 				  "Dunn Loring":{"zipcodes":['22027']},
+				  "Engleside":{"zipcodes":['22309']},
+				  "Falls Church":{"zipcodes":['22041','22042','22043','22044','22046']},
+  				  "Fort Belvoir":{"zipcodes":['22060']},
+  				  "Franconia":{"zipcodes":['22310']},
+ 				  "Great Falls":{"zipcodes":['22066']},
+ 				  "Greenway":{"zipcodes":['22067']},
+ 				  "Herndon":{"zipcodes":['22170','22171','22190','22191','22194']},
+ 				  "Jefferson Manor":{"zipcodes":['22303']},
+				  "Kingstowne":{"zipcodes":['22315']},
+ 				  "Lorton":{"zipcodes":['22079','22199']},
+ 				  "Mason Neck":{"zipcodes":['22079']},
+				  "McLean":{"zipcodes":['22101','22102','22103','22106']},
+				  "Merrifield":{"zipcodes":['22081','22116']},
+ 				  "Mosby":{"zipcodes":['22042']},
+				  "Mount Vernon":{"zipcodes":['22121']},
+ 				  "Newington":{"zipcodes":['22122']},
+ 				  "North Springfield":{"zipcodes":['22151']},
+				  "Oak Hill":{"zipcodes":['22171']},
+				  "Oakton":{"zipcodes":['22124']},
+				  "Pimmit":{"zipcodes":['22043']},
+ 				  "Reston":{"zipcodes":['22190','22191','22194']},
+ 				  "Seven Corners":{"zipcodes":['22044']},
+				  "Springfield":{"zipcodes":['22015','22150','22151','22152','22153']},
+				  "Tysons Corner":{"zipcodes":['22108','22182']},
+ 				  "Vienna":{"zipcodes":['22027','22124','22180','22181','22182','22183']},
+ 				  "West McLean":{"zipcodes":['22102','22103']},
+				  "West Springfield":{"zipcodes":['22152']}};
+
 var schools = ["Brookfield ES","Bull Run ES","Centre Ridge ES","Centreville ES","Centreville HS",
   					"Chantilly Acadamy","Chantilly HS","Cub Run ES","Deer Park ES","Floris ES","Franklin MS",
   					"Greenbriar East ES","Greenbriar West ES","Homeschooled", "Lees Corner ES","Lutie Lewis Coates ES",
   					"Liberty MS","London Towne ES","McNair ES","Mountain View HS","None","Oak Hill ES","Poplar Tree ES",
   					"Powell ES", "Pre-K","Rocky Run MS","Stone MS", "Union Mill ES", "Virginia Run ES", 
   					"Westfield HS","Willow Springs ES"];
-
-function updateChildTable(bAction)
+$( function()
 {
-    $("#tchildbody").empty();
-    	
-    for(var i=0; i<childrenJson.length; i++)
-	{
-    		addChildTableRow(i, childrenJson[i], bAction);	//add row to table
-	}
-   
-    $( function() {
-    		$( ".schoolname" ).autocomplete({
-    			source: schools
-    		});
-    	});
-    
-    $('ul.ui-autocomplete.ui-menu').css({fontSize: '12px', width: '300px'});
-}
-function updateAdultTable(bAction)
-{
-	$("#tadultbody").empty();
-	
-	for(var i=0; i<adultsJson.length; i++)
-	{
-		addAdultTableRow(i, adultsJson[i], bAction);	//add row to table
-	}
-}
-
-function addChildTableRow(cnum, child, bAction)
-{
-    var childinfo = [child.firstname, child.lastname, child.sDOB, child.gender, child.school];
-    var fieldname = ["childfn", "childln", "childdob", "childgender", "childschool"];
-    var fieldsize = [15, 16, 24, 11, 20];
-    
-    var tabBody = document.getElementById("childtable").getElementsByTagName('tbody').item(0);
-    row=document.createElement("tr");
-	
-    for(index=0; index < childinfo.length; index++)	//create the child info cells
+    $( ".schoolname" ).autocomplete(
     {
-    		cell= document.createElement("td");
-	    content= document.createElement("input");
-	    	content.type="text";
-	    	content.id=fieldname[index] + cnum;
-	    	content.name=fieldname[index] + cnum;
-	    	content.readOnly=!bAction;
-	    	content.value = childinfo[index];
-	    	content.setAttribute("size", fieldsize[index]);
-	    	
-	    	if(fieldname[index] === 'childschool')
-	    		content.className = 'schoolname';
-    		
-	    	cell.appendChild(content);
-	    	row.appendChild(cell);
-    }
-    
-    if(bAction === true)
-    {
-    		btn = document.createElement("button");
-    		btn.value=cnum;
-    		btn.type="button";
-    		btn.innerHTML = "Remove";
-    		btn.onclick=function() {removeChild(cnum);};
-    		row.appendChild(btn);
-    }
-    
-    tabBody.appendChild(row);
-}
-function addAdultTableRow(anum, adult, bAction)
+    	source: schools,
+  	    appendTo: "#editChild"
+    });
+});
+function popluateCitySelects()
 {
-    var tabBody = document.getElementById("adulttable").getElementsByTagName('tbody').item(0);
-    row=document.createElement("tr");
-    
-    cell= document.createElement("td");
-    adultname= document.createElement("input");
-    adultname.type="text";
-    adultname.id="adultname" + anum;
-    adultname.name="adultname" + anum;
-    adultname.value = adult.name;
-    adultname.readOnly = !bAction;
-    adultname.setAttribute("size", 27);
-    cell.appendChild(adultname);
-    row.appendChild(cell);
-    
-    cell= document.createElement("td");
-    var adultgender= document.createElement("input");
-    adultgender.type="text";
-    adultgender.id="adultgender" + anum;
-    adultgender.name="adultgender" + anum;
-    adultgender.value = adult.gender;
-    adultgender.setAttribute("size", 11);
-    cell.appendChild(adultgender);
-    row.appendChild(cell);
-    
-    if(bAction === true)
-    {	
-    		var btn = document.createElement("button");
-    		btn.value= anum;
-    		btn.type="button";
-    		btn.innerHTML = "Remove";
-    		btn.onclick=function() {removeAdult(anum);};
-    		row.appendChild(btn);
+	for(let key of Object.keys(cities))
+	{
+		addComboBoxOption(document.getElementById('city'), key, key);
+		addComboBoxOption(document.getElementById('delcity'), key, key);		
 	}
-    
-    tabBody.appendChild(row);
+	cityChanged(document.getElementById('city'));
+	cityChanged(document.getElementById('delcity'));
+}
+function updateNewChildTable(childList)
+{
+	let table = $('#childtable').DataTable();
+	table.clear();
+	table.rows.add(childList);
+	table.draw();
+}
+function updateNewAdultTable(adultList)
+{
+	let table = $('#adulttable').DataTable();
+	table.clear();
+	table.rows.add(adultList);
+//	baselineGroupCheckSum = table.column(0).data().sum();
+	table.draw();
 }
 function sameAddressClicked(cb)
 {	
@@ -126,8 +96,7 @@ function sameAddressClicked(cb)
 		clearDeliveryAddress();
 		$( ".address" ).tooltip( "option", "disabled", true);
 	}
-}
-  	
+} 	
 function copyAddressToDeliveryAddress()
 {
   	var addrInputElements = [document.getElementById('housenum'),
@@ -149,7 +118,7 @@ function copyAddressToDeliveryAddress()
 		delInputElements[i].value = addrInputElements[i].value;
 	
 	delSelectElements[0].value = addrSelectElements[0].value;
-	cityChanged('delcity');
+	cityChanged(document.getElementById('delcity'));
 	delSelectElements[1].value = addrSelectElements[1].value;
 		
 	//set read only
@@ -158,8 +127,7 @@ function copyAddressToDeliveryAddress()
 		delInputElements[i].readOnly = true;
 		addrInputElements[i].readOnly = true;
 	}
-}
-  	
+} 	
 function clearDeliveryAddress()
 {
   	var addrInputElements = [document.getElementById('housenum'),
@@ -175,259 +143,45 @@ function clearDeliveryAddress()
 		
 	//clear the delivery address elements
 	for(var i=0; i<delInputElements.length; i++)
-		delInputElements[i].value = "";
-		
-		delSelectElements[0].selectedIndex = 0;
-		cityChanged('delcity');
-		delSelectElements[1].selectedIndex = 0;
+	delInputElements[i].value = "";
 	
-		//clear read only for delivery input elements
-		for(var i=0; i<addrInputElements.length; i++)
-		{
-			delInputElements[i].readOnly = false;
-			addrInputElements[i].readOnly = false;
-		}
-		
-		//clear background color
-		changeAddressBackground(delInputElements, '#FFFFFF');
-		changeAddressBackground(delSelectElements, '#FFFFFF');
-  	}
+	delSelectElements[0].selectedIndex = 0;
+	cityChanged(document.getElementById('delcity'));
+	delSelectElements[1].selectedIndex = 0;
+
+	//clear read only for delivery input elements
+	for(var i=0; i<addrInputElements.length; i++)
+	{
+		delInputElements[i].readOnly = false;
+		addrInputElements[i].readOnly = false;
+	}
 	
-function cityChanged(elementName)
-{
-	if(elementName === 'city')
-		var zipElement = document.getElementById('zipcode')
-	else
-		var zipElement = document.getElementById('delzipcode')	
-			
-	removeOptions(zipElement);
-	
-	var cityElement = document.getElementById(elementName);
-	
-	if(cityElement.value === 'Centreville')
-	{
-		zipElement.options[0] = new Option('20120', '20120');
-		zipElement.options[1] = new Option('20121', '20121');
-	}
-	else if(cityElement.value === 'Chantilly')
-	{
-		zipElement.options[0] = new Option('20151', '20151');
-	}
-	else if(cityElement.value === 'Clifton')
-	{
-		zipElement.options[0] = new Option('20124', '20124');
-	}
-	else if(cityElement.value === 'Fairfax')
-	{
-		zipElement.options[0] = new Option('20151', '20151');
-		zipElement.options[1] = new Option('22030', '22030');
-		zipElement.options[2] = new Option('22031', '22031');
-		zipElement.options[3] = new Option('22032', '22032');
-		zipElement.options[4] = new Option('22033', '22033');
-		zipElement.options[5] = new Option('22034', '22034');
-		zipElement.options[6] = new Option('22035', '22035');
-		zipElement.options[7] = new Option('22036', '22036');
-		zipElement.options[8] = new Option('22037', '22037');
-		zipElement.options[9] = new Option('22038', '22038');
-	}
-	else if(cityElement.value === 'Fairfax Station')
-	{
-		zipElement.options[0] = new Option('22039', '22039');
-	}
-	else if(cityElement.value === 'Alexandria')
-	{
-		zipElement.options[0] = new Option('22302', '22302');
-		zipElement.options[1] = new Option('22303', '22303');
-		zipElement.options[2] = new Option('22304', '22304');
-		zipElement.options[3] = new Option('22306', '22306');
-		zipElement.options[4] = new Option('22307', '22307');
-		zipElement.options[5] = new Option('22308', '22308');
-		zipElement.options[6] = new Option('22309', '22309');
-		zipElement.options[7] = new Option('22310', '22310');
-		zipElement.options[8] = new Option('22311', '22311');
-		zipElement.options[9] = new Option('22312', '22312');
-		zipElement.options[10] = new Option('22315', '22315');
-	}
-	else if(cityElement.value === 'Annandale')
-	{
-		zipElement.options[0] = new Option('22003', '22003');
-	}
-	else if(cityElement.value === 'Arlington')
-	{
-		zipElement.options[0] = new Option('22203', '22203');
-		zipElement.options[1] = new Option('22204', '22204');
-		zipElement.options[2] = new Option('22206', '22206');
-		zipElement.options[3] = new Option('22207', '22207');
-		zipElement.options[4] = new Option('22213', '22213');
-	}
-	else if(cityElement.value === 'Baileys Crossroads')
-	{
-		zipElement.options[0] = new Option('22041', '22041');
-	}
-	else if(cityElement.value === 'Belleview')
-	{
-		zipElement.options[0] = new Option('22307', '22307');
-	}
-	else if(cityElement.value === 'Burke')
-	{
-		zipElement.options[0] = new Option('22015', '22015');
-	}
-	else if(cityElement.value === 'Cameron Station')
-	{
-		zipElement.options[0] = new Option('22304', '22304');
-	}
-	else if(cityElement.value === 'Dunn Loring')
-	{
-		zipElement.options[0] = new Option('22027', '22027');
-	}
-	else if(cityElement.value === 'Engleside')
-	{
-		zipElement.options[0] = new Option('22309', '22309');
-	}
-	else if(cityElement.value === 'Falls Church')
-	{
-		zipElement.options[0] = new Option('22041', '22041');
-		zipElement.options[1] = new Option('22042', '22042');
-		zipElement.options[2] = new Option('22043', '22043');
-		zipElement.options[3] = new Option('22044', '22044');
-		zipElement.options[4] = new Option('22046', '22046');
-	}
-	else if(cityElement.value === 'Fort Belvoir')
-	{
-		zipElement.options[0] = new Option('22060', '22060');
-	}
-	else if(cityElement.value === 'Franconia')
-	{
-		zipElement.options[0] = new Option('22310', '22310');
-	}
-	else if(cityElement.value === 'Great Falls')
-	{
-		zipElement.options[0] = new Option('22066', '22066');
-	}
-	else if(cityElement.value === 'Greenway')
-	{
-		zipElement.options[0] = new Option('22067', '22067');
-	}
-	else if(cityElement.value === 'Herndon')
-	{
-		zipElement.options[0] = new Option('20170', '20170');
-		zipElement.options[1] = new Option('20171', '20171');
-		zipElement.options[2] = new Option('20190', '20190');
-		zipElement.options[3] = new Option('20191', '20191');
-		zipElement.options[4] = new Option('20194', '20194');
-	}
-	else if(cityElement.value === 'Jefferson Manor')
-	{
-		zipElement.options[0] = new Option('22303', '22303');
-	}
-	else if(cityElement.value === 'Kingstowne')
-	{
-		zipElement.options[0] = new Option('22315', '22315');
-	}
-	else if(cityElement.value === 'Lorton')
-	{
-		zipElement.options[0] = new Option('22079', '22079');
-		zipElement.options[1] = new Option('22199', '22199');
-	}
-	else if(cityElement.value === 'Mason Neck')
-	{
-		zipElement.options[0] = new Option('22079', '22079');
-	}
-	else if(cityElement.value === 'McLean')
-	{
-		zipElement.options[0] = new Option('22101', '22101');
-		zipElement.options[1] = new Option('22102', '22102');
-		zipElement.options[2] = new Option('22103', '22103');
-		zipElement.options[3] = new Option('22106', '22106');
-	}
-	else if(cityElement.value === 'Merrifield')
-	{
-		zipElement.options[0] = new Option('22081', '22081');
-		zipElement.options[1] = new Option('22116', '22116');
-	}
-	else if(cityElement.value === 'Mosby')
-	{
-		zipElement.options[0] = new Option('22042', '22042');
-	}
-	else if(cityElement.value === 'Mount Vernon')
-	{
-		zipElement.options[0] = new Option('22121', '22121');
-	}
-	else if(cityElement.value === 'Newington')
-	{
-		zipElement.options[0] = new Option('22122', '22122');
-	}
-	else if(cityElement.value === 'North Springfield')
-	{
-		zipElement.options[0] = new Option('22151', '22151');
-	}
-	else if(cityElement.value === 'Oak Hill')
-	{
-		zipElement.options[0] = new Option('22171', '22171');
-	}
-	else if(cityElement.value === 'Oakton')
-	{
-		zipElement.options[0] = new Option('22124', '22124');
-	}
-	else if(cityElement.value === 'Pimmit')
-	{
-		zipElement.options[0] = new Option('22043', '22043');
-	}
-	else if(cityElement.value === 'Reston')
-	{
-		zipElement.options[0] = new Option('20190', '20190');
-		zipElement.options[1] = new Option('20191', '20191');
-		zipElement.options[2] = new Option('20194', '20194');
-	}
-	else if(cityElement.value === 'Seven Corners')
-	{
-		zipElement.options[0] = new Option('22044', '22044');
-	}
-	else if(cityElement.value === 'Springfield')
-	{
-		zipElement.options[0] = new Option('22015', '22015');
-		zipElement.options[1] = new Option('22150', '22150');
-		zipElement.options[2] = new Option('22151', '22151');
-		zipElement.options[3] = new Option('22152', '22152');
-		zipElement.options[4] = new Option('22153', '22153');
-	}
-	else if(cityElement.value === 'Sully Station')
-	{
-		zipElement.options[0] = new Option('20120', '20120');
-	}
-	else if(cityElement.value === 'Tysons Corner')
-	{
-		zipElement.options[0] = new Option('22102', '22102');
-		zipElement.options[1] = new Option('22182', '22182');
-	}
-	else if(cityElement.value === 'Vienna')
-	{
-		zipElement.options[0] = new Option('22027', '22027');
-		zipElement.options[1] = new Option('22124', '22124');
-		zipElement.options[2] = new Option('22180', '22180');
-		zipElement.options[3] = new Option('22181', '22181');
-		zipElement.options[4] = new Option('22182', '22182');
-		zipElement.options[5] = new Option('22183', '22183');
-	}
-	else if(cityElement.value === 'West McLean')
-	{
-		zipElement.options[0] = new Option('22102', '22102');
-		zipElement.options[1] = new Option('22103', '22103');
-	}
-	else if(cityElement.value === 'West Springfield')
-	{
-		zipElement.options[0] = new Option('22152', '22152');
-	}
+	//clear background color
+	changeAddressBackground(delInputElements, '#FFFFFF');
+	changeAddressBackground(delSelectElements, '#FFFFFF');
 }
+function cityChanged(citySelect)
+{
+	var zipSelect;
+	if(citySelect.id === 'city')
+		zipSelect = document.getElementById('zipcode');
+	else
+		zipSelect = document.getElementById('delzipcode');
 	
+	removeOptions(zipSelect);	//clear zip codes
+	
+	//add new zipcodes
+	let zipcodes=cities[citySelect.value].zipcodes
+	for(index=0; index < zipcodes.length; index++)
+		addComboBoxOption(zipSelect, zipcodes[index], zipcodes[index]);	
+}	
 function removeOptions(select)
 {
     for(var i=select.options.length-1;i>=0;i--)
         select.remove(i);   
 }
-
-function onSubmit(bReferral)
-{
+function onSubmitFamilyForm(bReferral)
+{	
 	var errorElement = document.getElementById('errormessage');
 	
 	//check
@@ -504,8 +258,6 @@ function onSubmit(bReferral)
 	      			}
 	      			else if(addresponse.returnCode === 0)
 	      			{
-//	      				document.getElementById("familyform").submit();
-	      				//determine if its a referral or an update
 	      				var urlmode = window.location.href;
 	      				if(urlmode.indexOf('referral') >= 0 || urlmode.indexOf('newfamily') >= 0)
 	      					post('referfamily', createReferralParams(true));
@@ -535,9 +287,8 @@ function onSubmit(bReferral)
 			document.getElementById('badfammssg').textContent = "Submission Error: HOH First or Last Names missing";
 			window.location=document.getElementById('badfamanchor').href;
 		}	
-	}
+	}	
 }
-
 function processAddressError(addresponse, delAddrElement, delAddrUnitElement, hohAddrElement, hohAddrUnitElement, errorElement)
 {
 	const DEL_ADDRESS_NOT_VALID = 1;
@@ -591,13 +342,11 @@ function processAddressError(addresponse, delAddrElement, delAddrUnitElement, ho
 	document.getElementById('badfammssg').textContent = addresponse.errMssg;
 	window.location=document.getElementById('badfamanchor').href;
 }
-
 function changeAddressBackground(elements, color)
 {
 	for(var i=0; i< elements.length; i++)
 		elements[i].style.backgroundColor = color;
 }
-
 function createAllAddressParams(hohAddrElement, delAddrElement)
 {	
 	var addressparams = "housenum=" + encodeURIComponent(hohAddrElement[0].value) + "&" +
@@ -614,7 +363,6 @@ function createAllAddressParams(hohAddrElement, delAddrElement)
 						"callback=?";
 	return addressparams;
 }
-
 function createAddressParams(addrElement, type)
 {	
 	var addressparams = "housenum=" + encodeURIComponent(addrElement[0].value) + "&" +
@@ -626,24 +374,26 @@ function createAddressParams(addrElement, type)
 						"callback=?";
 	return addressparams;
 }
-
 function verifySchools()
 {
 	var errorMssg = "";
-	for(var i=0; i< document.getElementById("childtable").rows.length -1; i++)
+	let childtable = $('#childtable').DataTable();
+	let children = childtable.rows().data();
+	
+	childtable.rows().every( function ( rowIdx, tableLoop, rowLoop )
 	{
-		var elementID = 'childschool' + i;
-		var schoolElement = document.getElementById(elementID);
-		if(schoolElement.value ==='')
-		{
-			var cnum = i+1;
-			schoolElement.style.backgroundColor = errorColor;
-			errorMssg = "School Missing for Child";
-		}	
-	}	
+		var child = this.data();
+		if(child.school === '')
+		{	
+			$(childtable.cells(this.index(), 5).nodes()).addClass( 'cellerror' );
+			errorMssg = "School Missing for " + child.firstname + " " + child.lastname;
+		}
+		else
+			$(childtable.cells(this.index(), 5).nodes()).removeClass( 'cellerror' );	
+	});	
+
 	return errorMssg;
 }
-
 function verifyGiftsAndMeals()
 {
 	var errorMssg = '';
@@ -683,7 +433,6 @@ function verifyPhoneNumbers()
 	
 	return errorMssg;	
 }
-
 function verifyPhoneNumber(elementNum)
 {
 	var phoneElement= [document.getElementById('homephone'), 
@@ -782,6 +531,7 @@ function verifyAddress(element)
        			if(addresponse.returnCode == 0)	//valid
        			{
        				changeAddressBackground(addrElement, '#FFFFFF');
+       				changeAddressBackground(unitElement, '#FFFFFF');
        				document.getElementById("verifimg").src="checkmarkicon";
        			}
        			else if(addresponse.returnCode === 2)	//missing unit
@@ -790,7 +540,7 @@ function verifyAddress(element)
        				changeAddressBackground(unitElement, errorColor);
        				document.getElementById("verifimg").src="erroricon";
        			}	
-       			else		//not in county or not served
+       			else	//not in county or not served
        			{	
        				changeAddressBackground(addrElement, errorColor);
        				document.getElementById("verifimg").src="erroricon";
@@ -809,16 +559,17 @@ function verifyAddress(element)
 		window.location=document.getElementById('verifanchor').href;
 	}
 }
-
 function createReferralParams(bReferral)
 {	
 	var params = {};
 	
-	//create the year parameter
+	//create the year, reference and target id parameters
 	params["year"] = sessionStorage.getItem("curryear");
+	params["targetid"] = sessionStorage.getItem("targetid");
+	params["referencenum"] = sessionStorage.getItem("referencenum");
 	
 	//create the common parameters
-	var commonelementname = ['targetid','language','hohfn','hohln','housenum','street','unit','city',
+	var commonelementname = ['language','hohfn','hohln','housenum','street','unit','city',
 							 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
 							 'email','homephone','cellphone', 'altphone','detail'];
 	for(cen=0; cen < commonelementname.length; cen++)
@@ -843,55 +594,30 @@ function createReferralParams(bReferral)
 			params[uniqueementname[uen]] = document.getElementById(uniqueementname[uen]).value;
 		
 		//create the child and wish parameters
-		var childelementname = ['childfn', 'childln', 'childdob', 'childgender', 'childschool'];
-		for(cn=0; cn < childrenJson.length; cn++)	
+		let childTable = $('#childtable').DataTable();
+		let children = childTable.rows().data();	
+		
+		for(cn=0; cn<childTable.rows().count(); cn++)
 		{
-			for(cfn=0; cfn<childelementname.length; cfn++)
-				params[childelementname[cfn]+cn] = document.getElementById(childelementname[cfn]+cn).value;
-			for(wn=0; wn < 4; wn++) 
-				params['wish'+cn+wn] = document.getElementById('wish'+cn+wn).value;
+			params["childfn"+cn] = children[cn].firstname;
+			params["childln"+cn] = children[cn].lastname;
+			params["childdob"+cn] = children[cn].sDOB;
+			params["childgender"+cn] = children[cn].gender;
+			params["childschool"+cn] = children[cn].school;
+			params["wish"+cn+"0"] = children[cn].wish0;
+			params["wish"+cn+"1"] = children[cn].wish1;
+			params["wish"+cn+"2"] = children[cn].wish2;
+			params["wish"+cn+"3"] = children[cn].wish3;
 		}
 	
 		//create the adult parameters
-		var adultelementname = ['adultname','adultgender'];
-		for(an=0; an < adultsJson.length; an++)
-			for(afn=0; afn<adultelementname.length; afn++)
-				params[adultelementname[afn]+an] = document.getElementById(adultelementname[afn]+an).value;	    			
+		let adultTable = $('#adulttable').DataTable();
+		let adults = adultTable.rows().data();	
+		for(an=0; an < adultTable.rows().count(); an++)
+		{
+			params["adultname"+an] = adults[an].name;
+			params["adultgender"+an] = adults[an].gender;	
+		}
 	}	
 	return params;
-}
-
-function onLogoutLink()
-{
-	var params = {};
-	post('logout', params);
-}
-
-function onSessionTimeout()
-{
-	 window.location.assign('timeout');
-}
-function post(path, params, method) 
-{
-    method = method || "post"; // Set method to post by default if not specified.
-
-    var form = document.createElement("form");
-    form.setAttribute("method", method);
-    form.setAttribute("action", path);
-
-    for(var key in params) 
-    {
-    		if(params.hasOwnProperty(key))
-        {
-            var hiddenField = document.createElement("input");
-            hiddenField.setAttribute("type", "hidden");
-            hiddenField.setAttribute("name", key);
-            hiddenField.setAttribute("value", params[key]);
-
-        		form.appendChild(hiddenField);
-        }
-    }
-
-    document.body.appendChild(form);
-    form.submit();
 }

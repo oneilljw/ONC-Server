@@ -83,8 +83,7 @@ public class ServerGroupDB extends ServerPermanentDB
 	 * @param callbackFunction
 	 * @return
 	 */
-	static HtmlResponse getGroupListJSONP(ONCServerUser loggedInUser, int agentID, boolean bDefault, 
-											boolean bProfile, String callbackFunction)
+	static HtmlResponse getGroupListJSONP(ONCServerUser loggedInUser, int agentID, boolean bProfile, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		Type listtype = new TypeToken<ArrayList<ONCGroup>>(){}.getType();
@@ -109,13 +108,13 @@ public class ServerGroupDB extends ServerPermanentDB
 			
 			Collections.sort(returnList, new ONCGroupNameComparator());
 			
-			//add an all group to the top of the list with id = -1 if bAddAll is true.
-			if(bDefault)
-			{
-				ONCGroup allGroup = new ONCGroup(-1, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
-									loggedInUser.getLNFI(), "Any", GroupType.Community, false, false, false, false, false);
-				returnList.add(0, allGroup);
-			}
+//			//add an all group to the top of the list with id = -1 if bAddAll is true.
+//			if(bDefault)
+//			{
+//				ONCGroup allGroup = new ONCGroup(-1, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
+//									loggedInUser.getLNFI(), "Any", GroupType.Community, false, false, false, false, false);
+//				returnList.add(0, allGroup);
+//			}
 		}
 		else //user with permission AGENT logged in
 		{	
@@ -131,14 +130,20 @@ public class ServerGroupDB extends ServerPermanentDB
 				
 			Collections.sort(returnList, new ONCGroupNameComparator());
 				
-			if(returnList.isEmpty())
-				returnList.add(0, new ONCGroup(-2, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
-								loggedInUser.getLNFI(), "None", GroupType.Community, true, false, false, false, false));
-			else if(bDefault && returnList.size() > 1)
-				returnList.add(0, new ONCGroup(-1, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
-								loggedInUser.getLNFI(), "Any", GroupType.Community, true, false, false, false, false));
-				
-			Collections.sort(returnList, new ONCGroupNameComparator());
+//			if(returnList.isEmpty())
+//			{	
+//				ONCGroup topListGroup = new ONCGroup(-2, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
+//						loggedInUser.getLNFI(), "None", GroupType.Community, true, false, false, false, false);
+//				returnList.add(0, topListGroup);
+//			}
+//			else if(bDefault && returnList.size() > 1)
+//			{
+//				ONCGroup topListGroup = new ONCGroup(-1, System.currentTimeMillis(), loggedInUser.getLNFI(), 3, "", 
+//						loggedInUser.getLNFI(), "Any", GroupType.Community, true, false, false, false, false);
+//				returnList.add(0, topListGroup);
+//			}
+//				
+//			Collections.sort(returnList, new ONCGroupNameComparator());
 		}
 		
 		String response = gson.toJson(returnList, listtype);

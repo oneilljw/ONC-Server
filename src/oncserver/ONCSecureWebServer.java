@@ -165,7 +165,7 @@ public class ONCSecureWebServer
 		String[] commonContexts = {"/trustlogo", "/jquery.js","/staticcharts.js","/favicon.ico", "/oncsplash",
 								   "/clearx", "/onclogo", "/oncstylesheet", "/oncnewstylesheet", "/oncdialogstylesheet", "/erroricon",
 								   "/checkmarkicon", "/oncloginstylesheet", "/vanilla", "/editprofile.js",
-								   "/editprofile2","/login.js","/onccommon.js"};
+								   "/login.js","/onccommon.js", "/onctable"};
 		
 		CommonHandler commonHandler = new CommonHandler();
 		for(String contextname: commonContexts)

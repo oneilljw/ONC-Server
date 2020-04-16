@@ -26,7 +26,7 @@ import java.util.List;
 		private String	FamilyEmail;
 		private String	details;
 		private String  transportation;
-		private int		groupID;
+//		private int		groupID;
 		private String	groupName;
 		private int		mealID;
 		private String 	notes;
@@ -55,7 +55,7 @@ import java.util.List;
 			this.FamilyEmail = f.getEmail();
 			this.details = f.getDetails();
 			this.transportation = f.getTransportation().toString();
-			this.groupID = f.getGroupID();
+//			this.groupID = f.getGroupID();
 			this.groupName = groupname;
 			this.mealID = f.getMealID();
 			this.notes = f.getNotes();
@@ -82,7 +82,7 @@ import java.util.List;
 		String getFamilyEmail() {return FamilyEmail;}
 		String getDetails() {return details;}
 		String getTransportation() { return transportation; }
-		int getGroupID() {return groupID;}
+//		int getGroupID() {return groupID;}
 		String getGroupName() { return groupName; }
 		int getMealID() {return mealID;}
 		String getNotes() { return notes; }
@@ -108,7 +108,7 @@ import java.util.List;
 		void setFamilyEmail(String familyEmail) {FamilyEmail = familyEmail;}
 		void setDetails(String details) {this.details = details;}
 		void setTransportation(Transportation t) {this.transportation = t.toString(); }
-		void setGroupID(int groupID) {this.groupID = groupID;}
+//		void setGroupID(int groupID) {this.groupID = groupID;}
 		void setGroupName( String name) { this.groupName = name; }
 		void setMealID(int mealID) {this.mealID = mealID;}
 		void setNotes( String notes) { this.notes = notes; }

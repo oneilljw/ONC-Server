@@ -89,13 +89,13 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	Long getSeasonStartDate(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDateMillis(); }
 	int getGiftCardID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDefaultGiftCardID(); }
 
-	static HtmlResponse getDeadlineJSONP(String callbackFunction)
+	static HtmlResponse getDeadlineJSONP(int offset, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		
 		String response;
 		ServerGVs serverGVs = globalDB.get(DBManager.offset(DBManager.getCurrentSeason())).getServerGVs();
-		SeasonDeadlines sd = new SeasonDeadlines(serverGVs);
+		SeasonDeadlines sd = new SeasonDeadlines(serverGVs, offset);
 		response = gson.toJson(sd, SeasonDeadlines.class);
 		
 		//wrap the json in the callback function per the JSONP protocol

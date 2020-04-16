@@ -6,14 +6,14 @@
 <script src="login.js"></script>
 <link rel="stylesheet" type="text/css" href="oncloginstylesheet.css">
 <style>
-  a 
+  #loginhelp-div a 
   { 
   	font-size: 12px;
   	text-decoration: none;
   }
-  a:link { color: red; }
-  a:visited { color: red; }
-  a:hover { color: green; }
+  #loginhelp-div a:link { color: red; }
+  #loginhelp-div a:visited { color: red; }
+  #loginhelp-div a:hover { color: green; }
   #attempts 
   {
   	padding-top: 5px;
@@ -25,22 +25,29 @@
 </style>
 </head>
 <body>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='dashboard-anchor' class='breadcrumb-first'>Data Management System Login</a>
+	</span>
+  </div>
   <div id="inner">
 	<form action="login" method="post">
       <fieldset>
-    		<legend class='legend-major'>LEGEND_MESSAGE</legend>
-    		<p><font color="COLOR">WELCOME_MESSAGE</font></p>
-    		<label for="field1">User Name:</label>
-    		<input type="text" id="field1" name="field1" oninput='onInputChange()' autofocus/>
-    		<label for="field2" class='linetwo' >Password:</label>
-    		<input class='linetwo' type="password" id="field2" name="field2" oninput='onInputChange()'>
-    		<div>
-    			<button id="submit" type="submit" disabled>Login</button>
-    		</div>
-    		<div>
-    		  <span id='attempts'>LOGIN_ATTEMPT</span>
-      	  <span id='forgotpw'><a href='lostcredentials'>Forgot Password?</a></span>
-      	</div>
+     	<input type='text' id='offset' name='offset' style="display: none">
+   		<legend class='legend-major'>LEGEND_MESSAGE</legend>
+   		<p><font color="COLOR">WELCOME_MESSAGE</font></p>
+   		<label for="field1">User Name:</label>
+   		<input type="text" id="field1" name="field1" oninput='onInputChange()' autofocus/>
+   		<label for="field2" class='linetwo' >Password:</label>
+   		<input class='linetwo' type="password" id="field2" name="field2" oninput='onInputChange()'>
+   		<div>
+   			<button id="submit" type="submit" disabled>Login</button>
+   		</div>
+   		<div id='loginhelp-div'>
+   			<span id='attempts'>LOGIN_ATTEMPT</span>
+     	 	<span id='forgotpw'><a href='lostcredentials'>Forgot Password?</a></span>
+     	</div>
       </fieldset>
     </form>
   </div>  

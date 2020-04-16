@@ -188,8 +188,8 @@
     
     function getFamilyFromServer(year, id)
     {
-    		familyparams = "year=" + year + "&targetid=" + id + "&schools=true" + "&callback=?";
-    		$.getJSON('getfamily', familyparams, function(data)
+    		familyparams = "year=" + year + "&byReference=false" + "&targetid=" + id + "&schools=true" + "&callback=?";
+    		$.getJSON('getfamilybyreference', familyparams, function(data)
     		{
     			famJson = data;
     			if(famJson.hasOwnProperty('error'))

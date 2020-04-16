@@ -2,710 +2,589 @@
 <html>
 <head lang="en">
   <title>ONC Family Referral Status</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
-  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
-  <script src="editprofile.js"></script>
-  <script src="jquery.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script> 
+  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/sorting/natural.js"></script>
+  <script type="text/javascript" src="onccommon.js"></script>
+  <script type="text/javascript" src="onctable.js"></script>
   <script>
-	var pyFamJson = [];
+//	var pyFamJson = [];
 	var cyFamJson = [];
-//	var userJson = {};
-//	var profileCBGroups = [];
-//	var profileTableGroups = [];
-	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;
-	
+	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;	
 	var NoteStatus = {NONE: -1,SENT: 1,READ: 2,RESPONDED: 3,LATE: 4};
-	var pyColSortStatus = [1,1,1,1,1];
-	var cyColSortStatus = [1,1,1,1,1,1,1,1];
-	
-	//get the list of years from the data base and put it in the year combo box
-	
-	var deadlineparams = "offset=" + new Date().getTimezoneOffset() + "&callback=?";
-	$.getJSON('deadlines', deadlineparams, function(deadlines)
-	{	
-		if(deadlines.hasOwnProperty('error'))
-			window.location=document.getElementById('timeoutanchor').href;
-		else
-		{
-			//get current UTC time in millis, add timezone offset in millis to get local time
-			//relative to deadline. This way, if a deadline is midnight UTC, it will still be
-			//a midnight deadline local time.
-			var date = new Date();
-			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
-			
-			sessionStorage.setItem('thanksgivingMealCutoff', deadlines.thanksgivingMealDeadline);
-			sessionStorage.setItem('decemberMealCutoff', deadlines.decemberMealDeadline);
-			sessionStorage.setItem('waitlistGiftCutoff', deadlines.waitlistDeadline);
-			sessionStorage.setItem('editCutoff', deadlines.editDeadline);
-		}
-	});	
-	
+
+	var getTableData = {resource:'families'};
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
     $( document ).ready(function()
     {
-    		//update the nav bar links, set home link presence
-    		if(sessionStorage.getItem('homelinkVisibility') === 'visible')
-    		{
-    			var profileli = document.getElementById('profileli');
-    			profileli.parentNode.removeChild(profileli);
-    		}
-    		else
-    		{
-    			var homelinkli = document.getElementById('homelinkli');
-    			homelinkli.parentNode.removeChild(homelinkli);
-    		}
+    	//get filter selects & reset buttons
+    	for(let filter of document.getElementById('pyfilterspan').getElementsByTagName('select'))
+    	 filters.push(filter);
+    	
+    	for(let filter of document.getElementById('cyfilterspan').getElementsByTagName('select'))
+       	 filters.push(filter);
+    	
+    	resets.push(document.getElementById('pyresetbtn'));
+    	resets.push(document.getElementById('cyresetbtn'));
+    	
+    	//decide whether to display the welcome message
+    	setBannerVisible(true);
+    	
+    	//remove dashboard anchor & change partner anchor class to .breadcrumb-only
+    	if(sessionStorage.getItem('homelinkVisibility') === 'hidden')
+    	{
+    		var dashboardli = document.getElementById('dashboard-anchor');
+    		dashboardli.parentNode.removeChild(dashboardli);
+    		
+    		document.getElementById('linktwo-anchor').classList.add('breadcrumb-only');
+    		document.getElementById('linktwo-anchor').classList.remove('breadcrumb-current');
+    	}
+    	
+    	//initialize the tables
+   		let pytable = $('#pytable').DataTable( 
+		{
+			dom: 'B<"search"f>rtip',
+			orderClasses: false,
+			stripeClasses:['stripe1','stripe2'],
+			buttons: 
+			{
+				buttons: 
+				[
+					{ 
+ 						text: 'Refer Prior Family',
+ 						name: 'btnReRefer',
+				    	action: function ( e, dt, node, config )
+				    	{
+				    		let selectedRow = pytable.row('.selected').data();
+				    		if(typeof selectedRow !== 'undefined')		    						
+				    			rowAction('pytable', selectedRow);
+				    	},
+				    	enabled: false 
+				    },
+				    { 
+					    text: 'Refer New Family',
+					    name: 'btnReferNew',
+					    action: function ( e, dt, node, config ) { newAction(); }
+					},
+				    { 
+				    	text: 'Code',
+				    	name: 'btnPYCode',
+				    	action: function ( e, dt, node, config )
+				    	{
+				    		var selectedRow = pytable.row('.selected').data();
+				    		if (typeof selectedRow !== 'undefined')		    						
+				    			dnsCode(selectedRow);
+				    	},
+				    	enabled: false 
+				    },
+				    {
+		                extend: 'excelHtml5',
+		                exportOptions: { columns: ':visible' }
+		            },
+		            {
+		                extend: 'pdfHtml5',
+		                exportOptions: { columns: ':visible' }
+		            }
+				],
+				dom: 
+				{
+				    button: 
+				    {
+				    	className: ''
+				    }
+				}
+			},
+			order: [[ 3, "asc" ]],
+			columns: 
+			[
+				{ data: "id", searchable: false, visible: false},
+				{ data: "oncNum", type:'natural', width: '10%', className: 'dt-head-left'  },
+				{ data: "HOHFirstName", width: '25%' },
+				{ data: "HOHLastName", width: '30%' },
+				{ data: "dnsCodeAcronym",
+				  width: '10%',
+//				  render: function (data, type, row)
+//				  {
+//					  return (data == '') ? '' : '<button>' + data + '</button>';
+//				  },
+				  className: 'dt-body-center',
+				},
+				{ data: "bAlreadyReferred",
+				  type: 'boolean', 
+				  width: '25%px',
+				  className: 'checkmark',
+				  render: function (data, type, row)
+				  {
+                      return (data == true) ? '&#x2713;' : '';
+				  },
+				  className: 'dt-body-center' 
+				},
+				{ data: "fstatus", width: '80px', className: 'dt-body-center', visible: false },
+				{ data: "giftStatus", width: '80px', className: 'dt-body-center', visible: false },
+				{ data: "mealStatus", width: '80px', className: 'dt-body-center', visible: false },
+				{ data: "agentID", visible: false },
+				{ data: "groupID", visible: false }
+			],
+			language:
+		    {
+		    	zeroRecords: "No Families Found That Meet Filter Criteria - Sorry",
+		        info: "Showing _TOTAL_ prior season families",
+		        infoEmpty: "No Family Data Available",
+		        infoFiltered: " of _MAX_ total prior season families"
+		    },
+		    rowCallback: function(row, data, index)
+		    {
+		        if(data.bAlreadyReferred == true)
+		        	$(row).find('td:eq(4)').addClass("checkmark"); 
+		    },
+			scrollY: '20vh',
+			scrollCollapse: true,
+			paging: false
+		});
+   		
+   		let cytable = $('#cytable').DataTable( 
+ 		{
+ 			dom: 'B<"search"f>rtip',
+ 			orderClasses: false,
+ 			stripeClasses:['stripe1','stripe2'],
+ 			buttons: 
+ 			{
+ 				buttons: 
+ 				[
+ 					{ 
+ 						text: 'Edit Family',
+ 						name: 'btnEdit',
+				    	action: function ( e, dt, node, config )
+				    	{
+				    		let selectedRow = cytable.row('.selected').data();
+				    		if(typeof selectedRow !== 'undefined')		    						
+				    			rowAction('cytable', selectedRow);
+				    	},
+				    	enabled: false 
+				    },
+/*				    
+					{ 
+				    	text: 'Note', 
+				    	action: function ( e, dt, node, config )
+				    	{
+				    		var selectedRow = cytable.row('.selected').data();
+				    		if (typeof selectedRow !== 'undefined')		    						
+				    			rowAction(selectedRow.id);
+				    	},
+				    	enabled: false 
+				    },
+*/				    
+				    { 
+				    	text: 'Code',
+				    	name: 'btnCYCode',
+				    	action: function ( e, dt, node, config )
+				    	{
+				    		var selectedRow = cytable.row('.selected').data();
+				    		if (typeof selectedRow !== 'undefined')		    						
+				    			dnsCode(selectedRow);
+				    	},
+				    	enabled: false 
+				    },
+				    {
+		                extend: 'excelHtml5',
+		                exportOptions: { columns: ':visible' }
+		            },
+		            {
+		                extend: 'pdfHtml5',
+		                exportOptions: { columns: ':visible' }
+		            }
+				],
+				dom: 
+				{
+				    button: 
+				    {
+				    	className: ''
+				    }
+				}
+			},
+			order: [[ 3, "asc" ]],
+			columns: 
+			[
+				{ data: "id", searchable: false, visible: false},
+				{ data: "oncNum", type:'natural', width: '48px', className: 'dt-head-left'  },
+				{ data: "HOHFirstName", width: '140px' },
+				{ data: "HOHLastName", width: '160px' },
+				{ data: "dnsCodeAcronym", width: '40px', className: 'dt-body-center' },
+				{ data: "fstatus",
+				  width: '80px',
+				  render: function (data, type, row)
+				  {
+					  return (data === 'Confirmed') ? data + ' &#x2713;' : data;
+				  },
+				  className: 'dt-body-center'
+				},
+				{ data: "giftStatus",
+				  width: '80px',
+				  render: function (data, type, row)
+				  {
+					  return (data === 'Delivered') ? data + ' &#x2713;' : data;
+				  },
+				  className: 'dt-body-center'
+				},
+				{ data: "mealStatus",
+				  width: '80px',
+				  render: function (data, type, row)
+				  {
+					  return (data === 'Referred') ? data + ' &#x2713;' : data;
+				  },
+				  className: 'dt-body-center'
+				},
+				{ data: "agentID", searchable: false, visible: false },
+				{ data: "groupID", visible: false }
+			],
+			language:
+		    {
+		    	zeroRecords: "No Families Found That Meet Filter Criteria - Sorry",
+		        info: "Showing _TOTAL_ current season families",
+		        infoEmpty: "No Family Data Available",
+		        infoFiltered: " of _MAX_ total current season families"
+		    },
+			scrollY: '20vh',
+			scrollCollapse: true,
+			paging: false
+ 		});
 
-    		// Write on keyup event of keyword prior year seach input element
-        $("#pysearch").keyup(function()
-        	{
-                _this = this;
-                // Show only matching TR, hide rest of them
-                $.each($("#pyTable tbody tr"), function()
-                	{
-                    if($(this).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
-                       $(this).hide();
-                    else
-                       $(this).show();                
-                });
-        });
-        	
-        // Write on keyup event of keyword current year seach input element
-        $("#cysearch").keyup(function()
-        	{
-                _this = this;
-                // Show only matching TR, hide rest of them
-                $.each($("#cyTable tbody tr"), function()
-                	{
-                    if($(this).find('td').eq(2).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
-                       $(this).hide();
-                    else
-                       $(this).show();                
-                });
-        });
+   	 	//get the list of current seasons deadlines from the data base and use it to determine
+   	 	//what an agent can do
+   	 	const deadlineparams = "offset=" + new Date().getTimezoneOffset() + "&callback=?";
+		$.getJSON('deadlines', deadlineparams, function(deadlines)
+		{
+			if(deadlines.hasOwnProperty('error'))
+				window.location=document.getElementById('timeoutanchor').href;
+			else
+			{
+				sessionStorage.setItem('thanksgivingMealCutoff', deadlines.thanksgivingMealDeadline);
+				sessionStorage.setItem('decemberMealCutoff', deadlines.decemberMealDeadline);
+				sessionStorage.setItem('editDeadline', deadlines.editDeadline);
+				sessionStorage.setItem('decemberGiftDeadline', deadlines.decemberGiftDeadline);
+				sessionStorage.setItem('waitlistGiftDeadline', deadlines.waitlistDeadline);
+				
+				//remove the refer family buttons and family edit button if past referral/edit deadlines
+				const nowMillis = Date.now();
+				if(nowMillis >= deadlines.waitlistDeadline)
+				{
+					let pytable = $('#pytable').DataTable();
+					pytable.buttons('btnReRefer:name').remove();
+					pytable.buttons('btnReferNew:name').remove();
+				}
+				if(nowMillis >= deadlines.editDeadline)
+				{
+					let cytable = $('#cytable').DataTable();
+					cytable.buttons('btnEdit:name').remove();
+				}
+			}
+			
+	   		const dbyearsparams = "callback=?";
+	   		$.getJSON('dbStatus', dbyearsparams, function(data)
+	   		{	
+	//   		document.getElementById('curragtenslbl').innerHTML = data[data.length-1].id.toString() + ' Families Referred By:';
+	   		
+				let combo = document.getElementById("prioryear");
+	   			for(var i = data.length-1; i >= 0; i--)
+	   				if(data[i].id != data[data.length-1].id)
+	   					addComboBoxOption(combo, data[i].id, data[i].id);
+	   			
+	   			//set the season filter regardelss of the redundnacy in ONCTable since
+	   			//to get the agent filters we need to know the year.
+	   			if(sessionStorage.getItem('prioryear') === null)
+	        	{
+	        		combo.selectedIndex = 0;
+	        		sessionStorage.setItem('prioryear', combo.value);
+	        	}
+	        	else
+	        		combo.value = sessionStorage.getItem('prioryear');
+	   			
+	   			//check to ensure the current year is stored in session storage
+	   			if(sessionStorage.getItem('curryear') === null)
+	   				sessionStorage.setItem('curryear', data[data.length-1].id);
+	   			
+	   			//set the current season combo
+	   			combo = document.getElementById("currseason");
+	   			addComboBoxOption(combo, data[data.length-1].id, data[data.length-1].id);
+	   			
+	   			//set the prior season already referred column header and current season filter legend
+	   			let thelement = document.getElementById('priorseasonreferred');
+	   			thelement.innerHTML = data[data.length-1].id + ' Referral Submitted?';
+	   			
+	   			let cyLegendElem = document.getElementById('cyFilterLegend');
+	   			cyLegendElem.innerHTML = data[data.length-1].id + ' Season Filters';
+	   			
+				getPYandCYIntialGroupsAgentsAndFamlies();
+	   		});
+		});
     		
-   	 	//get the list of years from the data base and put it in the year combo box
-    		var dbyearsparams = "callback=?";
-    		$.getJSON('dbStatus', dbyearsparams, function(data)
-    		{	
-			sessionStorage.setItem('curryear', data[data.length-1].id);
-			sessionStorage.setItem('prioryear', data[data.length-1].id - 1);
-    		
-    			document.getElementById('curragtenslbl').innerHTML = data[data.length-1].id.toString() + ' Families Referred By:';
-    		
-			var combo = document.getElementById("dbYears");
-			var yearCombo = document.getElementById("yearlist");
-    			for (var i = data.length-1; i >= 0; i--)
-    				if(data[i].id != data[data.length-1].id)
-    					addComboBoxOption(combo, data[i].id, data[i].id);
-    		
-    			//determine the color and enabling of the Refer New Family button
-    			var btnRNF = document.getElementById('new');
-    			var date = new Date();
-    			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
-    			if(timeNow > sessionStorage.getItem('waitlistGiftCutoff'))
-    			{
-    				btnRNF.style.backgroundColor='Gray';
-    	       		btnRNF.disabled = true;
-    			}
-    			
-    			getPYandCYIntialGroupsAgentsAndFamlies();
-    		});
-    		
-    		//if the page load was the result of a successful referral, show the dialog box
+    	//if the page load was the result of a successful referral, show the dialog box
 	  	if(bShowSuccessDialog)
   			window.location=document.getElementById('successanchor').href;
 	  	else
 	  	{
-	  		var dbyearsparams = "callback=?";
-	  		$.getJSON('getstatus', dbyearsparams, function(status)
+	  		const params = "callback=?";
+	  		$.getJSON('getstatus', params, function(status)
 	  		{
 	  			if(status.userstatus === 'Update_Profile')
 	  			{
-	  			    	showEditProfileDialog();
-	  			    	window.location=document.getElementById('editprofileanchor').href;
+	  			    showEditProfileDialog();
+	  			    window.location=document.getElementById('editprofileanchor').href;
 	  			}
 	  		}); 	
 	  	}
+    		
+	  	createGroupTable();	//create profile dialog group table
     });
     
-    function onTableColClicked(headerElem)
+    function getTableDataParams()
     {
-    		var table = $(headerElem).closest('table');
-    		var col = headerElem.getAttribute('data-col');
-    		
-    		if(table[0].id === 'pyTable')
-    		{
-    			pyColSortStatus[col] *= -1;
-    			var sortOrder =  pyColSortStatus[col];
-    		}
-    		else
-    		{	
-    			cyColSortStatus[col] *= -1;
-    			var sortOrder =  cyColSortStatus[col];
-    		}
-    			
-    		sortTable(sortOrder,col,table[0].id);
-    }
-    
-    function sortTable(f,n,table)
-    {
-    		if(table === 'pyTable')
-    			var rows = $('#pyTable tbody  tr').get();
-    		else
-    			var rows = $('#cyTable tbody  tr').get();
-
-    		rows.sort(function(a, b) 
-    		{
-    			var A = getVal(a);
-    			var B = getVal(b);
-
-    			if(A < B)
-    				return -1*f;
-    			else if(A > B)
-    				return 1*f;
-    			else
-    				return 0;
-    		});
-
-    		function getVal(elm)
-    		{
-    			var v = $(elm).children('td').eq(n).text().toUpperCase();
-    			if($.isNumeric(v))
-    				v = parseInt(v,10);
-    			return v;
-    		}
-
-    		$.each(rows, function(index, row) 
-    		{
-    			if(table === 'pyTable')
-    				$('#pyTable').children('tbody').append(row);
-    			else
-    				$('#cyTable').children('tbody').append(row);
-    		});
+    	return "year=" + sessionStorage.getItem('prioryear') + "&callback=?";
     }
     
     //this function gets current year agents and families before prior year beacuse we use the
     //current year families to deterimine the button status in the prior year family table
     function getPYandCYIntialGroupsAgentsAndFamlies()
     {
-    		var pyGroupCBElem = document.getElementById('pygroups');
-    		var cyGroupCBElem = document.getElementById('currgroups');
-    		var profileGroupCB = document.getElementById('groupselect');
+   		const pyGroupCBElem = document.getElementById('pygroups');
+   		const cyGroupCBElem = document.getElementById('currgroups');
     		
    	 	//get groups from server and place into the group comboboxes. agentid =-1 defaults
 		//to the logged in user
-		var groupparams = "agentid=-1&default=on&callback=?";
-		$.getJSON('groups', groupparams, function(data)
+		const groupparams = "agentid=-1&callback=?";
+		$.getJSON('groups', groupparams, function(groups)
 		{
 			//clear the group comboboxes
-    			pyGroupCBElem.options.length = 0;
-    			cyGroupCBElem.options.length = 0;
-		
-    			//add the groups for the agent
-			for (var i=0; i < data.length; i++)
+    		pyGroupCBElem.options.length = 0;
+    		cyGroupCBElem.options.length = 0;
+    		
+    		//if groups is empty, add a "None" option. If it has more then
+    		//one group, add a "Any" option
+    		if(groups.length == 0)
+    		{
+    			addComboBoxOption(pyGroupCBElem, "None", "");
+    			addComboBoxOption(cyGroupCBElem, "None", "");
+    		}
+    		else if(groups.length > 1)
+    		{
+    			addComboBoxOption(pyGroupCBElem, "All", "");
+    			addComboBoxOption(cyGroupCBElem, "All", "");
+    		}	
+    		
+    		//add the groups for the agent
+			for(let group of groups)
 			{
-				addComboBoxOption(pyGroupCBElem, data[i].name, data[i].id);
-				addComboBoxOption(cyGroupCBElem, data[i].name, data[i].id);
+				addComboBoxOption(pyGroupCBElem, group.name, group.id);
+				addComboBoxOption(cyGroupCBElem, group.name, group.id);
 			}
     			
-    			//now that we have the groups, get the prior year agent combo box content
-    			var pyAgentCBElem = document.getElementById('pyagents');
-    			var cyAgentCBElem = document.getElementById('curragents');
-    			pyAgentCBElem.options.length = 0;
-    			cyAgentCBElem.options.length = 0;
-		
+   			//now that we have the groups, get the prior year agent combo box content
+   			const pyAgentCBElem = document.getElementById('pyagents');
+   			const cyAgentCBElem = document.getElementById('curragents');
+   			pyAgentCBElem.options.length = 0;
+   			cyAgentCBElem.options.length = 0;
+   			
 			//populate the current year agent combobox
-	    		var agentsparams ="year=" + sessionStorage.getItem('curryear') + "&groupid=" + cyGroupCBElem.value + "&callback=?";
+	    	const agentsparams ="year=" + document.getElementById("currseason").value + "&callback=?";
 			$.getJSON('agents', agentsparams, function(cyAgentData)
 			{
 				//add the "Anyone" option if there is more than one agent object
 				if(cyAgentData.hasOwnProperty('error'))
 					window.location=document.getElementById('timeoutanchor').href;
 				else if(cyAgentData.length > 1)
-					addComboBoxOption(cyAgentCBElem, "Anyone", -1);
+					addComboBoxOption(cyAgentCBElem, "Anyone", "");
 	    	
-	    			//add the agents for the year
-				for (var i=0; i < cyAgentData.length; i++)
-					addComboBoxOption(cyAgentCBElem, cyAgentData[i].name, cyAgentData[i].id);
+	    		//add the agents for the year
+				for (let agent of cyAgentData)
+					addComboBoxOption(cyAgentCBElem, agent.name, agent.id);
 	    			
-	    			//populate the current year families
-	    			var familiesparams = "year=" + sessionStorage.getItem('curryear') + 
-	    								"&agentid=" + cyAgentCBElem.value + 
-	    								"&groupid=" + cyGroupCBElem.value + "&callback=?";
-    				$.getJSON('families', familiesparams, function(cyFamData)
-    				{
-    					if(cyFamData.hasOwnProperty('error'))
-    						window.location=document.getElementById('timeoutanchor').href;
-    					else
-    					{
-    						cyFamJson = cyFamData;
-    						updateCYTable();
-    					}
-    					
-    					//populate the prior year agent combobox
-    					var agentsparams ="year=" + sessionStorage.getItem('prioryear') + "&groupid=" + pyGroupCBElem.value + "&callback=?";
-    					$.getJSON('agents', agentsparams, function(pyAgentData)
-    					{
-    						//add the "Anyone" option if there is more than one agent object
-    						if(pyAgentData.hasOwnProperty('error'))
-    							window.location=document.getElementById('timeoutanchor').href;
-    						else if(pyAgentData.length > 1)
-    							addComboBoxOption(pyAgentCBElem, "Anyone", -1);
-    			    	
-    			    			//add the agents for the prior year
-    						for (var i=0; i < pyAgentData.length; i++)
-    							addComboBoxOption(pyAgentCBElem, pyAgentData[i].name, pyAgentData[i].id);
-    			    			
-    			    			//populate prior year families
-	    					var familiesparams = "year=" + sessionStorage.getItem('prioryear') + 
-	    								"&agentid=" + pyAgentCBElem.value + 
-	    								"&groupid=" + pyGroupCBElem.value + "&callback=?";
-    						$.getJSON('families', familiesparams, function(pyFamData)
-    						{
-    							if(pyFamData.hasOwnProperty('error'))
-    								window.location=document.getElementById('timeoutanchor').href;
-    							else
-    							{
-    								pyFamJson = pyFamData;
-    								updatePYTable();
-    							}
-    						});
-    					});
-    				});	    			
+	    		//populate the prior year agent combobox
+				var agentsparams ="year=" + sessionStorage.getItem('prioryear') + "&callback=?";
+				$.getJSON('agents', agentsparams, function(pyAgentData)
+				{
+					//add the "Anyone" option if there is more than one agent object
+					if(pyAgentData.hasOwnProperty('error'))
+						window.location=document.getElementById('timeoutanchor').href;
+					else if(pyAgentData.length > 1)
+						addComboBoxOption(pyAgentCBElem, "Anyone", "");
+			    	
+			    	//add the agents for the prior year
+					for (let agent of pyAgentData)
+						addComboBoxOption(pyAgentCBElem, agent.name, agent.id);
+	    		
+	    			//now that we have groups and agents, initialize filters and row selection
+	    			initializeFilters();
+	    			setEnabledCYTableRowSelection();
+	    			setEnabledPYTableRowSelection()
+	    			
+	    			//get current year families
+	    			const cyfamilyparams = "year=" + sessionStorage.getItem('curryear') + "&callback=?";
+	    			$.getJSON('families', cyfamilyparams, function(data)
+	    			{
+	    				if(data.hasOwnProperty('error'))
+	    					window.location=document.getElementById('timeoutanchor').href;
+	    				else
+	    				{
+	    					cyFamJson = data;
+	    					var table = $('#cytable').DataTable();
+	    					table.rows.add(data);
+	    					
+	    					let val = document.getElementById('curragents').value;
+	    					table.column(8).search(val ? '^'+val+'$' : '', true, false);
+	    					
+	    					val = document.getElementById('currgroups').value;
+	    					table.column(9).search(val ? '^'+val+'$' : '', true, false);
+	    					
+	    		   			table.draw();
+	    				}
+	    				    			    			
+	    				const pyfamilyparams = "year=" + sessionStorage.getItem('prioryear') + "&callback=?";
+	   					$.getJSON('families', pyfamilyparams, function(data)
+	   					{
+	   						if(data.hasOwnProperty('error'))
+	   							window.location=document.getElementById('timeoutanchor').href;
+	   						else
+	   						{
+								var table = $('#pytable').DataTable();
+	   							table.rows.add(data);
+	   							
+	   							let val = document.getElementById('pyagents').value;
+	   	    					table.column(9).search(val ? '^'+val+'$' : '', true, false);
+	   	    					
+	   	    					val = document.getElementById('pygroups').value;
+	   	    					table.column(10).search(val ? '^'+val+'$' : '', true, false);
+	   							
+	   				   			table.draw();
+	   						}
+	   					});
+	    			});
+    			});	    			
 			});
 		});
     }
     
-    function getGroupsAgentsAndFamiliesFromServer(year, groupcb, agentcb)
-    {  	
-    		//get updated agentJson from server and place into group combobox. agentid =-1 defaults
-    		//to the logged in user
-    		var groupparams = "agentid=-1&default=on&callback=?";
-    		$.getJSON('groups', groupparams, function(data)
-    		{
-    				//clear the group combobox
-        			groupcb.options.length = 0;
-    		
-	    			//add the groups for the agent
-    				for (var i=0; i < data.length; i++)
-    					addComboBoxOption(groupcb, data[i].name, data[i].id);
-	    	
-    				getAgentsAndFamiliesFromServer(agentcb, year, groupcb.value);
-    		});    	
-    }
-    
-    function getAgentsAndFamiliesFromServer(agtcb, year, groupid)
-    {
-    		//clear the agent combobox
-		agtcb.options.length = 0;
-	
-		//get updated agentJson from server and place into combobox
-    		var agentsparams ="year=" + year + "&groupid=" + groupid + "&callback=?";
-	
-		$.getJSON('agents', agentsparams, function(data)
+    function setEnabledPYTableRowSelection()
+	{	
+		$('#pytable tbody').on( 'click', 'tr', function () 
 		{
-			//add the "Anyone" option if there is more than one agent object
-			if(data.hasOwnProperty('error'))
-				window.location=document.getElementById('timeoutanchor').href;
-			else if(data.length > 1)
-				addComboBoxOption(agtcb, "Anyone", -1);
-    	
-    			//add the agents for the year
-			for (var i=0; i < data.length; i++)
-				addComboBoxOption(agtcb, data[i].name, data[i].id);
-    		
-    			//get the families
-			getFamiliesFromServer(year, agtcb.value.toString(), groupid);
-		});
-    }
-    
-    function getFamiliesFromServer(year, agentid, groupid)
-    {
-    		var familiesparams = "year=" + year + "&agentid=" + agentid + "&groupid=" + groupid + "&callback=?";
-    	
-    		$.getJSON('families', familiesparams, function(data)
-    		{
-    			if(data.hasOwnProperty('error'))
-    				window.location=document.getElementById('timeoutanchor').href;
-    			else if(year === sessionStorage.getItem('curryear'))
-    			{
-    				cyFamJson = data;
-        			updateCYTable();
-    			}
-    			else
-    			{
-    				pyFamJson = data;
-    				updatePYTable();
-    			}
-    		});
-    }
-    
-    function updateFamiliesOnAgentChange(agtcb)
-    {
-    		//agent changed to "anyone" so just get the families, don't change the groups
-    		if(agtcb === document.getElementById("pyagents"))
-        		getFamiliesFromServer(sessionStorage.getItem('prioryear'), agtcb.value, document.getElementById('pygroups').value);
-    		else
-        		getFamiliesFromServer(sessionStorage.getItem('curryear'), agtcb.value, document.getElementById('currgroups').value);	
-    }
-    
-    function updateAgentsOnGroupChange(groupElement)
-    {
-    		if(groupElement === document.getElementById('currgroups'))
-    		{	
-    			var agtcb = document.getElementById('curragents');
-    			var agtYear = sessionStorage.getItem('curryear');
-    		}
-    		else
-    		{
-    			var agtcb = document.getElementById('pyagents');
-    			var agtYear = sessionStorage.getItem('prioryear');
-    		}
-    	
-    		//archive the current agent and clear the agent combobox
-    		var priorselagentID = agtcb.value;
-    		agtcb.options.length = 0;
-		
-    		//get updated agentJson from server and place into combobox
-    		var agentsparams = "year=" + agtYear.toString() + "&groupid=" + groupElement.value +
-    					   "&callback=?";
-    	
-    		$.getJSON('agents', agentsparams, function(data)
-    		{
-			//add the "Anyone" option if there is more than one agent object
-			if(data.hasOwnProperty('error'))
-				window.location=document.getElementById('timeoutanchor').href;
+			let pytable = $('#pytable').DataTable();
+			
+			if( $(this).hasClass('selected') )
+			{
+				$(this).removeClass('selected');
+				
+				//if re-referral button hasn't been removed, disable it
+				if(Date.now() < sessionStorage.getItem('waitlistGiftDeadline'))
+				{	
+					pytable.buttons('btnReRefer:name').enable(false);
+					pytable.buttons('btnReRefer:name').nodes().css("background-color", "gray");
+					
+					pytable.buttons('btnReferNew:name').enable(true);
+					pytable.buttons('btnReferNew:name').nodes().css("background-color", "#484e78");
+				}
+				
+				pytable.buttons('btnPYCode:name').enable(false);
+			}
 			else
 			{
-				if(data.length > 1)
-					addComboBoxOption(agtcb, "Anyone", -1);
-
-		    		//add the agents for the year
-	    			for (var i=0; i < data.length; i++)
-					addComboBoxOption(agtcb, data[i].name, data[i].id);
-		    	
-	    			//re-select the previously selected agent, now in the new group
-	    			//get the families for the agent
-	        		selectCBOptionByValue(agtcb, priorselagentID);
-	        		getFamiliesFromServer(agtYear, agtcb.value, groupElement.value);
+				pytable.$('tr.selected').removeClass('selected');
+				$(this).addClass('selected');
+				
+				//if re-referral button hasn't been removed amd the family hasn't already
+				//been referred, enable the re-refer button.
+				if(Date.now() < sessionStorage.getItem('waitlistGiftDeadline'))
+				{
+					if(pytable.row( this ).data().bAlreadyReferred)
+					{
+						pytable.buttons('btnReRefer:name').enable(false);
+						pytable.buttons('btnReRefer:name').nodes().css("background-color", "red");
+					}
+					else
+					{
+						pytable.buttons('btnReRefer:name').enable(true);
+						pytable.buttons('btnReRefer:name').nodes().css("background-color", "#484e78");
+					}
+					
+					pytable.buttons('btnReferNew:name').enable(false);
+					pytable.buttons('btnReferNew:name').nodes().css("background-color", "gray");
+				}
+					
+				//if selected row(family) has a DNS Code, enable the code button
+				pytable.buttons('btnPYCode:name').enable(pytable.row(this).data().dnsCodeID > -1);
 			}
-    		});   		
-    }
-    
-	function addComboBoxOption(combobox, text, value)
-	{
-		var option = document.createElement("option");
-		option.text = text;
-    		option.value = value;
-    		try 
-    		{
-        		combobox.add(option, null); //Standard 
-    		}
-    		catch(error)
-    		{
-        		combobox.add(option); // IE only
-    		}
+		});
+	    
+		if(Date.now() < sessionStorage.getItem('waitlistGiftDeadline'))
+		{	
+			$('#pytable tbody').on('dblclick', 'tr', function () 
+			{
+				let pytable = $('#pytable').DataTable();
+				if(pytable.row( this ).data().bAlreadyReferred === false)
+					rowAction('pytable', pytable.row( this ).data());
+			});
+		}	
 	}
-	
-    function updateForYearSelection()
-    {
-    		//get selected year and update session store
-		sessionStorage.setItem("prioryear", document.getElementById("dbYears").value);
-		
-		//get the groups, agents & families for the prior year selected
-		getAgentsAndFamiliesFromServer(document.getElementById('pyagents'), sessionStorage.getItem('prioryear'), document.getElementById('pygroups').value);
-    }
-    
-    function updatePYTable()
-    {
-    		$("#pytbody").empty();
-    		var e = document.getElementById("pyagents");
-    		var count = 0;
-    		if(e.length > 0)
-    		{
-    			var date = new Date();
-    			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
-    			
-    			var agentID = e.value;
-    			for(var i=0; i<pyFamJson.length; i++)
-			{
-    				if(agentID == -1 || agentID == pyFamJson[i].agentID)
-    				{
-    					addPYTableRow(pyFamJson[i], document.getElementById('pyTable'), "Refer", timeNow);	//add row to table
-    					count++;
-    				}
-			}
-		}
-    	
-    		//clear the search box
-    		var searchbox = document.getElementById('pysearch');
-    		searchbox.value = "";
-    	
-    		//set the quanity in the table
-    		document.getElementById('pyfamilycount').innerHTML = ': ' + count.toString();
-    }
-    
-    function updateCYTable()
-    {
-    		$("#cytbody").empty();
-    		var e = document.getElementById("curragents");
-    		var count = 0;
-    		if(e.length > 0)
-    		{
-    			var date = new Date();
-    			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
-    			
-    			var agentID = e.options[e.selectedIndex].value;
-    			for(var i=0; i<cyFamJson.length; i++)
-			{
-    				if(agentID == -1 || agentID == cyFamJson[i].agentID)
-    				{
-    					addCYTableRow(cyFamJson[i], document.getElementById('cyTable'), "Edit", timeNow);
-    					count++;
-    				}
-			}
-		}
-    	
-    		//clear the search box
-    		var searchbox = document.getElementById('cysearch');
-    		searchbox.value = "";
-    	
-    		//set the quanity in the table
-    		document.getElementById('cyfamilycount').innerHTML = ': ' + count.toString();
-    }    
-    
-    function selectCBOptionByValue(cbElement, value)
-    {
-    		var options = cbElement.options;
-    	
-   		var index = 0;
-   		while(index < cbElement.length && options[index].value != value)
-    		index++;
-    		
-    		if(index < cbElement.length)	
-    			cbElement.selectedIndex = index;
-    		else
-    			cbElement.selectedIndex = 0;
-    	
-   	 	return cbElement.value;
-    }
-    
-    function addPYTableRow(family, table, buttontext, timeNow)
-    {   
-        if (!document.getElementsByTagName) return;
-       
-        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.lastNoteStatus,
-        						family.dnsCodeAcronym];
-        
-        var cellwidth = ['68px','152px','160px','68px','68px','68px'];
-        
-	    var tabBody = table.getElementsByTagName('tbody').item(0);
-        row=document.createElement("tr");
-        
-        var col = 0;
-        while(col< 3)	//create the first 3 family info cells
-        {
-        		var cell = document.createElement("td");
-        		cell.appendChild(document.createTextNode(familyinfo[col]));
-        		cell.style.width = cellwidth[col++];
-        		row.appendChild(cell);
-        }
-        
-        //create a note button, if necessary in column 4
-        var cell = document.createElement("td");
-        if(family.lastNoteStatus > NoteStatus.NONE)
-        {	
-        		var notebtn = document.createElement("button");
-     		notebtn.style.width = cellwidth[col++];
-        		notebtn.innerHTML = 'Note';
-        		notebtn.onclick=function() {familyNote(table, family);};
-        		cell.appendChild(notebtn);	
-   		}
-        else
-        	{
-        		cell.appendChild(document.createTextNode(""));
-      		cell.style.width = cellwidth[col++];
-        	}
-        row.appendChild(cell);
-        
-        //create a dns button, if necessary in column 5
-        var cell = document.createElement("td");
-        if(family.dnsCodeID > -1)
-        {	
-        		var dnsbtn = document.createElement("button");
-        		dnsbtn.style.width = cellwidth[col++];
-        		dnsbtn.innerHTML = family.dnsCodeAcronym;
-        		dnsbtn.onclick=function() {dnsCode(family);};
-        		cell.appendChild(dnsbtn);
-    		}
-        else
-        	{
-    			cell.appendChild(document.createTextNode(""));
-    			cell.style.width = cellwidth[col++];
-        	}
-        row.appendChild(cell);
-
-        //add the refer or edit button
-        btn = document.createElement("button");
-        btn.innerHTML = buttontext;
-        btn.style.width = cellwidth[col];
-        btn.onclick=function() {familyAction(table, family.targetID);};
-		setButtonStatus(family, table, btn, timeNow);
-        row.appendChild(btn);
-        
-        tabBody.appendChild(row);
-    }
-    
-    function addCYTableRow(family, table, buttontext, timeNow)
-    {   
-        if (!document.getElementsByTagName) return;
-       
-        var fstatus;
-        	if(family.fstatus === 'Confirmed')
-        		fstatus = 'Confirmed \u2713';
-        	else
-        		fstatus = family.fstatus;
-        
-        	var dstatus;
-        	if(family.giftStatus === 'Delivered')
-        		dstatus = 'Delivered \u2713';
-        	else if(family.giftStatus === 'Referred')
-        		dstatus = 'Referred \u2713';
-        	else
-        		dstatus = family.giftStatus;
-        	
-        	var mealstatus;
-        	if(family.mealStatus === 'Thanksgiving_Confirmed')
-        		mealstatus = 'Thanksgiving \u2713';
-        	else if(family.mealStatus === 'December_Confirmed')
-        		mealstatus = 'December \u2713';
-        	else if(family.mealStatus === 'Both_Confirmed')
-        		mealstatus = 'Both \u2713';
-        	else if(family.mealStatus === 'None')
-        		mealstatus = "Not Requested";
-        	else if(family.mealStatus === 'Referred')
-        		mealstatus = 'Referred \u2713'
-        	else
-        		mealstatus = family.mealStatus;
-        
-        var familyinfo = [family.oncNum, family.HOHFirstName, family.HOHLastName, family.lastNoteStatus,
-        						family.dnsCodeAcronym, fstatus, dstatus, mealstatus];
-        
-        var cellwidth = ['68px', '152px', '160px', '68px', '68px','128px', '128px', '128px', '68px'];
-        
-	    var tabBody = table.getElementsByTagName('tbody').item(0);
-        row=document.createElement("tr");
-        
-        var col = 0;
-        while(col< 3)	//create the first 3 family info cells
-        {
-        		var cell = document.createElement("td");
-        		cell.appendChild(document.createTextNode(familyinfo[col]));
-        		cell.style.width = cellwidth[col++];
-        		row.appendChild(cell);
-        }
-        
-        //create a note button, if necessary in column 4
-        var cell = document.createElement("td");
-        if(family.lastNoteStatus > NoteStatus.NONE)
-        {	
-        		var notebtn = document.createElement("button");
-     		notebtn.style.width = cellwidth[col++];
-        		notebtn.innerHTML = 'Note';
-        		notebtn.onclick=function() {familyNote(table, family);};
-        		cell.appendChild(notebtn);	
-   		}
-        else
-        	{
-        		cell.appendChild(document.createTextNode(""));
-      		cell.style.width = cellwidth[col++];
-        	}
-        row.appendChild(cell);
-        
-        //create a dns button, if necessary in column 5
-        var cell = document.createElement("td");
-        if(family.dnsCodeID > -1)
-        {	
-        		var dnsbtn = document.createElement("button");
-        		dnsbtn.style.width = cellwidth[col++];
-        		dnsbtn.innerHTML = family.dnsCodeAcronym;
-        		dnsbtn.onclick=function() {dnsCode(family);};
-        		cell.appendChild(dnsbtn);
-    		}
-        else
-        	{
-    			cell.appendChild(document.createTextNode(""));
-    			cell.style.width = cellwidth[col++];
-        	}
-        row.appendChild(cell);
-
-        //create the last three family info cells
-        while(col < familyinfo.length)	//create the three status cells
-        {
-        		cell = document.createElement("td");
-        		cell.appendChild(document.createTextNode(familyinfo[col]));
-        		cell.style.width = cellwidth[col++];
-        		row.appendChild(cell);
-        }
-        
-        //add the refer or edit button
-        btn = document.createElement("button");
-        btn.innerHTML = buttontext;
-        btn.style.width = cellwidth[col];
-        btn.onclick=function() {familyAction(table, family.targetID);};
-		setButtonStatus(family, table, btn, timeNow);
-        row.appendChild(btn);
-        
-        //set row color
-		if(family.lastNoteStatus > NoteStatus.NONE && 
-				family.lastNoteStatus !== NoteStatus.RESPONDED)
+    function setEnabledCYTableRowSelection()
+	{	
+		$('#cytable tbody').on( 'click', 'tr', function () 
 		{
-			row.style.backgroundColor = "Yellow";
-		}
-		else if(family.dnsCodeID > -1)
-			row.style.backgroundColor = "Red";
-        
-        tabBody.appendChild(row);
-    }
-    
-    function setButtonStatus(family, table, btn, timeNow)
+			let cytable = $('#cytable').DataTable();
+			if( $(this).hasClass('selected') )
+			{
+				$(this).removeClass('selected');
+				
+				//if edit button hasn't been removed, disable it
+				if(Date.now() < sessionStorage.getItem('editDeadline'))
+					cytable.buttons('btnEdit:name').enable(false);
+				
+				cytable.buttons('btnCYCode:name').enable(false);
+			}
+			else
+			{
+				cytable.$('tr.selected').removeClass('selected');
+				$(this).addClass('selected');
+				
+				//if edit button hasn't been removed, enable it
+				if(Date.now() < sessionStorage.getItem('editDeadline'))
+					cytable.buttons('btnEdit:name').enable(true);
+				
+				//if selected row(family) has a DNS Code, enable the code button
+				cytable.buttons('btnCYCode:name').enable(cytable.row(this).data().dnsCodeID > -1);
+			}
+		});
+	    
+		if(Date.now() < sessionStorage.getItem('editDeadline'))
+		{	
+			$('#cytable tbody').on('dblclick', 'tr', function () 
+			{
+				let cytable = $('#cytable').DataTable();
+				rowAction('cytable', cytable.row( this ).data());
+			});
+		}	
+	}  
+    function rowAction(tableID, famObject)
     {
-    		if(table=== document.getElementById('pyTable'))
-    		{
-    			var date = new Date();
-    			var timeNow = date.getTime() + date.getTimezoneOffset() * 60 * 1000 * -1;
-    			
-    			if(alreadyReferred(family.targetID) === true)
-            {
-            		btn.style.backgroundColor='Red';
-            		btn.disabled = true;
-            }
-    			else if(timeNow > sessionStorage.getItem('waitlistGiftCutoff'))
-            {
-            		btn.style.backgroundColor='Gray';
-            		btn.disabled = true;
-            }
-   	 	}
-    		else if(timeNow > sessionStorage.getItem('editCutoff'))
-        {
-            btn.style.backgroundColor='Gray';
-            btn.disabled = true;
-   	 	}
-    }
-
-    function familyAction(table, targetID)
-    {
-   	 	sessionStorage.setItem("targetid", targetID);
-		var params = {}
-		params["targetid"] = targetID;
-		
-		if(table=== document.getElementById('pyTable'))
+    	sessionStorage.setItem('targetid', famObject.id);
+    	sessionStorage.setItem('referencenum', famObject.referenceNum);
+    	
+    	var params = {};
+	   	if(tableID === 'pytable')
 			post('referral', params);
 		else
 			post('familyupdate', params);
-    }
-    
+    }    
+    function newAction()
+    {
+    	sessionStorage.setItem('targetid', "NNA");
+    	sessionStorage.setItem('referencenum', "NNA");
+    	post('newfamily', '');
+    }    
     function familyNote(table, family)
     {
 		var year;
@@ -742,57 +621,52 @@
 			
 			window.location=document.getElementById('notesanchor').href;
 		});
-    }
-    
+    }    
     function formatDate(date)
     {
-    		var minute;
-    		if(date.minute < 10)
-    			minute = '0' + date.minute;
-    		else
-    			minute = date.minute;
-    		
-    		var out = date.month+1 + "/" + date.dayOfMonth + "/" + date.year + " " + date.hourOfDay + ":" + minute;
-    		return out;
-    }
-    
+   		var minute;
+   		if(date.minute < 10)
+   			minute = '0' + date.minute;
+   		else
+   			minute = date.minute;
+   		
+   		var out = date.month+1 + "/" + date.dayOfMonth + "/" + date.year + " " + date.hourOfDay + ":" + minute;
+   		return out;
+    }   
     function submitNoteResponse(button)
     {
-    		var year =  sessionStorage.getItem('curryear');
-    		var response = document.getElementById('notesresponse').value;
-    		if(response.length > 0)
-    		{
-    			var responseparams = "year=" + year + "&noteID=" + button.value + "&response=" + response + "&callback=?";
-    			$.getJSON('noteresponse', responseparams, function(noteResponse)
-    			{
-    				if(noteResponse.status === NoteStatus.RESPONDED);
-    				{
-    					var legend = 'On ' + formatDate(noteResponse.timeResponse) 
-    								+ ' ' + noteResponse.respondedBy + '. responded';
-    					document.getElementById('responselegend').textContent = legend;
-    					document.getElementById("responsesubmit").style.backgroundColor='Gray';
-    					document.getElementById("responsesubmit").disabled = true;
-    					setLastNoteStatusResponded(noteResponse.ownerID);
-	    				updateCYTable();
-    				}
-    			});
-    		}
-    }
-    
+   		var year =  sessionStorage.getItem('curryear');
+   		var response = document.getElementById('notesresponse').value;
+   		if(response.length > 0)
+   		{
+   			var responseparams = "year=" + year + "&noteID=" + button.value + "&response=" + response + "&callback=?";
+   			$.getJSON('noteresponse', responseparams, function(noteResponse)
+   			{
+   				if(noteResponse.status === NoteStatus.RESPONDED);
+   				{
+   					var legend = 'On ' + formatDate(noteResponse.timeResponse) 
+   								+ ' ' + noteResponse.respondedBy + '. responded';
+   					document.getElementById('responselegend').textContent = legend;
+   					document.getElementById("responsesubmit").style.backgroundColor='Gray';
+   					document.getElementById("responsesubmit").disabled = true;
+   					setLastNoteStatusResponded(noteResponse.ownerID);
+    				updateCYTable();
+   				}
+   			});
+   		}
+    }    
     function setLastNoteStatusResponded(famID)
     {
-    		var i = 0;
-    		while(i< cyFamJson.length && cyFamJson[i].id != famID)
-    			i++;
-    		
-    		if(i< cyFamJson.length)
-    			cyFamJson[i].lastNoteStatus = NoteStatus.RESPONDED;
-    }
-    
+   		var i = 0;
+   		while(i< cyFamJson.length && cyFamJson[i].id != famID)
+   			i++;
+   		
+   		if(i< cyFamJson.length)
+   			cyFamJson[i].lastNoteStatus = NoteStatus.RESPONDED;
+    }    
     function dnsCode(family)
     {
-		
-		document.getElementById("dnsheader").textContent = 'DNS Code for ' + family.HOHLastName + ' family';
+		document.getElementById("dnsheader").textContent = 'Code for ' + family.HOHLastName + ' family';
 		
 		var codeparams = "code=" + family.dnsCodeID + "&callback=?";
 		$.getJSON('dnscode', codeparams, function(dnsCode)
@@ -802,226 +676,104 @@
 			
 			window.location=document.getElementById('dnscodeanchor').href;
 		});
-    }
-    
+    }    
     function newFamily()
     {
-    		sessionStorage.setItem("targetid", "NNA");
-		sessionStorage.setItem("prioryear", sessionStorage.getItem('curryear')-1);
-		
+    	sessionStorage.setItem("targetid", "NNA");
 		post('newfamily', "");
     }
-    
-    function alreadyReferred(targetID)
-    {
-    		var index = 0;
-    		while(index < cyFamJson.length && cyFamJson[index].targetID != targetID)
-    	    		index++;
-    	
-    		if(index < cyFamJson.length)
-    			return true;
-    		else
-    	   	 return false;
-    }
-    
-    function onHeaderClicked()
-    {
-    		alert("Clicked");
-    }
-     
-    function onChangePW() 
-    {
-    		if(validatePW())
-    		{
-			var params = {}	
-			params["field1"] = document.getElementById('currpw').value;
-			params["field2"] = document.getElementById('newpw').value;
-    			$.post('reqchangepw', params, function(response)
-    			{
-    				document.getElementById('message').textContent= response;
-    			});
-    		
-    			document.getElementById('currpw').value = "";
-	    		document.getElementById('newpw').value = "";
-	    		document.getElementById('verifypw').value = "";
-    			window.location=document.getElementById('closepopup').href;
-    		}
-    }
-    
-    function onCancel()
-    {
-		window.location=document.getElementById('closepopup').href;
-    }
-	
-	function validatePW()
-    {
-		var mssgEl = document.getElementById("pw_mssg");
-    		var currpwEl = document.getElementById("currpw");
-        var pass1El = document.getElementById("newpw");
-        var pass2El = document.getElementById("verifypw");
-        var ok = true;
-        
-        if(currpwEl.value == "")
-        {
-        		//alert("current password field empty");
-            currpwEl.style.borderColor = "#E34234";
-            
-            mssgEl.style.color = "Red";
-            mssgEl.textContent = "Current password not provided, please try again!";
-            ok = false;
-        }
-        else if(pass1El.value == '' || pass2El.value == '')
-        	{
-        		//alert("Either New or Verify Passwords are empty");
-            pass1El.style.borderColor = "#E34234";
-            pass2El.style.borderColor = "#E34234";
-            
-            mssgEl.style.color = "Red";
-            mssgEl.textContent = "Please fill out both New and Confirm, try again!";
-            ok = false;
-        	}
-        else if(pass1El.value !== pass2El.value)
-        {
-            //alert("Either New or Verify Passwords are empty");
-            pass1El.style.borderColor = "#E34234";
-            pass2El.style.borderColor = "#E34234";
-            
-            mssgEl.style.color = "Red";
-            mssgEl.textContent = "New and Verify passwords don't match, please try again!";
-            ok = false;
-        }
-
-        return ok;
-    }
-	
-	function onLogoutLink()
-	{
-		var params = {};
-		post('logout', params);
-	}
-	
-	function onSessionTimeout()
-	{
-		 window.location.assign('timeout');
-	}
-    
-	function post(path, params, method) 
-	{
-	    method = method || "post"; // Set method to post by default if not specified.
-
-	    // The rest of this code assumes you are not using a library.
-	    // It can be made less wordy if you use one.
-	    var form = document.createElement("form");
-	    form.setAttribute("method", method);
-	    form.setAttribute("action", path);
-
-	    for(var key in params) 
-	    {
-	    		if(params.hasOwnProperty(key))
-	        {
-	            var hiddenField = document.createElement("input");
-	            hiddenField.setAttribute("type", "hidden");
-	            hiddenField.setAttribute("name", key);
-	            hiddenField.setAttribute("value", params[key]);
-
-	        		form.appendChild(hiddenField);
-	        }
-	    }
-
-	    document.body.appendChild(form);
-	    form.submit();
-	}
     </script>
-    <style type="text/css">         
-    		.constrainer 
-        {
-         	width: 90%;
-			margin-left: auto;
-			margin-right: auto;
-            background-color: #3CB371;
-            border: 1px solid black;
-        }
-        .constrainer table { overflow-y: scroll; }
-        .constrainer thead { display: table-row; }
-        .constrainer tbody
-        {
-            overflow-x: scroll;
-            display: block;
-            height: 208px;
-        }
-
-        .onccol { width: 68px; cursor: pointer; }
-        .fncol { width: 152px; cursor: pointer; }
-        .lncol { width: 160px; cursor: pointer; }
-        .btncol { width: 68px; cursor: pointer; }
-        .statcol { width: 128px; cursor: pointer;}
-		#newbar { text-align: right; }
-		.textDialog 
-		{
-			position: fixed;
-			font-family: Arial, Helvetica, sans-serif;
-			top: 0;
-			right: 0;
-			bottom: 0;
-			left: 0;
-			background: rgba(5,5,5,0.4);
-			z-index: 99999;
-			opacity:0;
-			-webkit-transition: opacity 400ms ease-in;
-			-moz-transition: opacity 400ms ease-in;
-			transition: opacity 400ms ease-in;
-			pointer-events: none;
-		}
-		.textDialog:target 
-		{
-			opacity:1;
-			pointer-events: auto;
-		}
-		.textDialog > div 
-		{
-			width: 700px;
-			height: 400px;
-			position: relative;
-			margin: 10% auto;
-			padding: 5px 10px 5px 10px;
-			border-radius: 10px;
-			background: #fff;
-			background: -moz-linear-gradient(#fff, #999);
-			background: -webkit-linear-gradient(#fff, #999);
-			background: -o-linear-gradient(#fff, #999);
-		}
-		.textDialog label
-		{
-			float: left;
-    			text-align: right;
-    			margin-right: 0.5em;
-    			display: block;
-    			color: black;
-    			font-size: 85%;
-		}
-		dl
-		{	height:300px;
-			overflow-y:scroll;
-		}
-		dt
-		{
-			font-weight: bold;
-		}
-		dt:before
-		{
-			content: '\A';
-    			white-space: pre;
-		}
-		dd
-		{
-			font-style: italic;
-		}
-		textarea 
-		{
-			width: 316px;
-			height: 64px;
-		}
-    </style>  
+    <style type="text/css">
+    #tablediv 
+	{ 
+		width: 90%;
+		margin: auto;
+	}
+	.search
+	{
+		font-weight: bold;
+		padding: 10px 8px;	
+	}
+	div.dataTables_filter input 
+	{
+		width: 120px;
+	}
+	.textDialog 
+	{
+		position: fixed;
+		font-family: Arial, Helvetica, sans-serif;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background: rgba(5,5,5,0.4);
+		z-index: 99999;
+		opacity:0;
+		-webkit-transition: opacity 400ms ease-in;
+		-moz-transition: opacity 400ms ease-in;
+		transition: opacity 400ms ease-in;
+		pointer-events: none;
+	}
+	.textDialog:target 
+	{
+		opacity:1;
+		pointer-events: auto;
+	}
+	.textDialog > div 
+	{
+		width: 700px;
+		height: 400px;
+		position: relative;
+		margin: 10% auto;
+		padding: 5px 10px 5px 10px;
+		border-radius: 10px;
+		background: #fff;
+		background: -moz-linear-gradient(#fff, #999);
+		background: -webkit-linear-gradient(#fff, #999);
+		background: -o-linear-gradient(#fff, #999);
+	}
+	.textDialog label
+	{
+		float: left;
+   		text-align: right;
+   		margin-right: 0.5em;
+   		display: block;
+   		color: black;
+   		font-size: 85%;
+	}
+	dl
+	{	height:300px;
+		overflow-y:scroll;
+	}
+	dt
+	{
+		font-weight: bold;
+	}
+	dt:before
+	{
+		content: '\A';
+   		white-space: pre;
+	}
+	dd
+	{
+		font-style: italic;
+	}
+	textarea 
+	{
+		width: 400px;
+		height: 140px;
+		font-size: 16px;
+	}
+	.success-dlg
+	{
+		min-height: 200px;
+	}    
+    .checkmark
+    { 
+    	color: green;
+    	font-size: 17px;
+    }
+</style> 
 </head>
 <body>
   <a href="#notesdlg" id="notesanchor" style="visibility: hidden">Notes</a>
@@ -1029,96 +781,104 @@
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <a href="#successdlg" id="successanchor" style="visibility: hidden">Success</a>
-  <header>
-    <div id="topbar" class="topbar">
-      <img src="onclogo" height="55" width="75"/>
-	  <p><span id="banner">USER_NAME, welcome to Our Neighbor's Child's Family Referral System</span><br>
-	<span id="message">USER_MESSAGE</span></p>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
+      <a id='linktwo-anchor' class='breadcrumb-current' href='#'>Family Referral Status</a>
+    </span>   
+    <div class='headerbuttons'>
+      <div class='dropdown'>
+        <button class=dropbtn>Helpful Hints</button>
+        <div class='dropdown-content'>
+      	  <a href="#faqdlg">FAQ's</a>
+      	  <a href="#defdlg">Codes/Status Key</a>
+      	</div> 
+      </div>
+      <div class='dropdown'>
+        <button class=dropbtn>Profile</button>
+        <div class='dropdown-content'>
+      	  <a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a>
+      	  <a href="#chgpwdlg">Change Password</a>
+      	</div> 
+      </div>
+      <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
     </div>
-  </header>
-  <nav>
-   <ul>
-	    <li id="homelinkli"><a id='homelink' href='dashboard'>Dashboard</a></li>
-	</ul>
-	<ul class='floatright'>
-		<li id='profileli'><a href="#">Profile <span class="caret"></span></a>
-		  <div>
-		    <ul>
-			  <li><a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a></li>
-			  <li><a href="#chgpwdlg">Change Password</a></li>
-		    </ul>
-		  </div>
-	    </li>
-	    <li id='hintsli'><a href="#">Helpful Hints <span class="caret"></span></a>
-		  <div>
-		    <ul>
-			  <li><a href="#faqdlg">FAQ's</a></li>
-			  <li><a href="#defdlg">Codes/Status Key</a></li>
-		    </ul>
-		  </div>
-	    </li>
-	    <li id="logoutli"><a  href="javascript:onLogoutLink()">Logout</a></li>
-	</ul>
-  </nav>
-  <div class='controlbar'>
-		<select id="dbYears" name="dbYear" onchange="updateForYearSelection()" ></select>
-		<label for="pyagents">Families Referred By</label>
-		<select id="pyagents"  onchange="updateFamiliesOnAgentChange(this)" name="pyagtID"></select>
-		<label id= pygroupslbl for="pygroups">in Group:</label>
-		<select id="pygroups" onchange="updateAgentsOnGroupChange(this)" name="pyGroupID"></select>
-		<label id="pyfamilycount" for="pygroups"> : 0</label>
-		<span class='floatright'>
-		  <label for="pysearch">Search For:</label>
-		  <input type="text" id="pysearch" placeholder="Type to search..." />
-		</span>
   </div>
-  <div class="constrainer">
-	<table id="pyTable">
+  <div id="welcome-div">
+    <p id='banner-message'>BANNER_MESSAGE</p>
+  </div> 
+  <form>
+    <fieldset>
+  		<legend>Prior Season Filters</legend>
+		<span id='pyfilterspan'>
+		  <label for='prioryear' class='filterlabel'>Season:</label>
+		  <select id="prioryear" title="Select season to display" data-type='tabledata' data-column='-1' data-table='pytable' data-reset='pyresetbtn' onchange='executeFilter(this)'></select>
+		  <label for='pyagents' class='filterlabel'>Families Referred By:</label>
+		  <select id="pyagents" title="Filter Families By Agent" data-type='search' data-column='9' data-table='pytable' data-reset='pyresetbtn'  onchange='executeFilter(this)'></select>
+		  <label for='pygroups' class='filterlabel'>in Group:</label>
+		  <select id="pygroups" title="Filter Families By Group" data-type='search' data-column='10' data-table='pytable' data-reset='pyresetbtn' onchange='executeFilter(this)'></select> 
+		</span>
+		<span class='floatright resetbtn'>
+			<button id="pyresetbtn" data-table='pytable' onclick='onResetFilters(this)'>Reset Filters</button>
+		</span>
+	</fieldset>		
+  </form>
+  <div id='tablediv'>
+    <table id="pytable" class='display compact' style="width:100%">
       <thead>
         <tr>
-       	<th class='onccol' onclick='onTableColClicked(this)' data-col='0'>ONC #</th>
-       	<th class='fncol' onclick='onTableColClicked(this)' data-col='1'>First Name</th>
-       	<th class='lncol' onclick='onTableColClicked(this)' data-col='2'>Last Name</th>
-       	<th class='btncol' onclick='onTableColClicked(this)' data-col='3'>Note</th>
-       	<th class='btncol' onclick='onTableColClicked(this)' data-col='4'>Code</th>
-        	<th class='onccol'>Action</th>
+        <th>ONC ID</th>
+       	<th>ONC #</th>
+       	<th>First Name</th>
+       	<th>Last Name</th>
+	  	<th>Code</th>
+	  	<th id='priorseasonreferred'>Already Referred ?</th>
+       	<th>Family Status</th>
+       	<th>Gift Status</th>
+        <th>Meal Status</th>
+        <th>Agent ID</th>
+        <th>Group ID</th>
         </tr>
       </thead>
       <tbody id='pytbody'>
       </tbody>
 	</table>
   </div>
-  <div id='newbar' class='controlbar'>
-    <button id="new" onclick="newFamily()">Refer New Family</button>
-  </div>
-  <br><br>
-  <div class='controlbar'>
-	<label id= curragtenslbl for="curragents">xxxx Families Referred By</label>
-	<select id="curragents"  onchange="updateFamiliesOnAgentChange(this)" name="curragtID"></select>
-	<label id= currgroupslbl for="currgroups">in Group:</label>
-	<select id="currgroups" onchange="updateAgentsOnGroupChange(this)"name="currGroupID"></select>
-	<label id="cyfamilycount" for="currgroups"> : 0</label>
-	<span class='floatright'>
-	  <label for="cysearch">Search For:</label>
-	  <input type="text" id="cysearch" placeholder="Type to search..." />
-	</span>
-  </div>
-  <div class="constrainer">
-    <table id= 'cyTable'>
+  <form>
+    <fieldset>
+  		<legend id='cyFilterLegend'>Current Season Filters</legend>
+		<span id='cyfilterspan'>
+		  <!-- 'currseason' vs 'curryear' since it never changes. Prevents interference with curryear selects that change -->
+		  <label for='currseason' class='filterlabel'>Season:</label>
+		  <select id="currseason" title="Select season to display" data-type='tabledata' data-column='-1' data-table='cytable' data-reset='cyresetbtn' onchange='executeFilter(this)' disabled></select>
+		  <label for='curragents' class='filterlabel'>Families Referred By:</label>
+		  <select id="curragents" title="Filter Families By Agent" data-type='search' data-column='8' data-table='cytable' data-reset='cyresetbtn' onchange='executeFilter(this)'></select>
+		  <label for='currgroups' class='filterlabel'>in Group:</label>
+		  <select id="currgroups" title="Filter Families By Group" data-type='search' data-column='9' data-table='cytable' data-reset='cyresetbtn' onchange='executeFilter(this)'></select> 
+		</span>
+		<span class='floatright resetbtn'>
+			<button id="cyresetbtn" data-table='cytable' onclick='onResetFilters(this)'>Reset Filters</button>
+		</span>
+	</fieldset>		
+  </form>
+  <div id='tablediv'>
+    <table id="cytable" class='display compact' style="width:100%">
       <thead>
         <tr>
-       	<th class='onccol' onclick='onTableColClicked(this)' data-col='0'>ONC #</th>
-       	<th class='fncol' onclick='onTableColClicked(this)' data-col='1'>First Name</th>
-       	<th class='lncol' onclick='onTableColClicked(this)' data-col='2'>Last Name</th>
-       	<th class='btncol' onclick='onTableColClicked(this)' data-col='3'>Note</th>
-       	<th class='btncol' onclick='onTableColClicked(this)' data-col='4'>Code</th>
-        	<th class='statcol' onclick='onTableColClicked(this)' data-col='5'>Family Status</th>
-        	<th class='statcol' onclick='onTableColClicked(this)' data-col='6'>Gift Status</th>
-        	<th class='statcol' onclick='onTableColClicked(this)' data-col='7'>Meal Status</th>
-        	<th class='onccol'>Action</th>
+        <th>ONC ID</th>
+       	<th>ONC #</th>
+       	<th>First Name</th>
+       	<th>Last Name</th>
+       	<th>Code</th>
+       	<th>Family Status</th>
+       	<th>Gift Status</th>
+        <th>Meal Status</th>
+        <th>Agent ID</th>
+        <th>Group ID</th>
         </tr>
       </thead>
-      <tbody id='cytbody'>
+      <tbody id='pytbody'>
       </tbody>
 	</table>
   </div>
@@ -1142,81 +902,6 @@
 		      <button id="responsesubmit" class='floatright' onclick='submitNoteResponse(this)'>Submit</button>
 		    </fieldset>
 		</div>
-	</div>
-  </div>
-<!--DNS Code Dialog -->
-  <div id="dnscodedlg" class="modalDialog">
-	<div class='innerextended'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
-		  <span class=logospan id="dnsheader"></span>
-		</div>
-		<div class='greenbackground'>
-		<!-- This is the body of the dialog. -->
-		    <fieldset class="fieldset-auto-width">
-		      <legend id='dnslegend' class="legend-major">DNS Code</legend>
-		      <textarea id='dnscode' disabled></textarea>
-		    </fieldset>
-		</div>
-	</div>
-  </div>  
-<!-- Edit Profile Dialog -->
-  <div id="editProfile" class="modalDialog">
-	  <div class='innerextended'>
-		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
-		  <span class='logospan'>Verify/Update ONC Profile</span>
-	  </div>
-	  <div class='greenbackground'>
-	  <fieldset class="fieldset-auto-width">
-  		<legend class="legend-major">Contact Information</legend>
-  		<div class= 'profilediv'>
-    	  		<label for="userfirstname">Name:</label>
-    	  		<input id='userfirstname' type="text" size="16" placeholder="First Name" onchange='checkForProfileChange()'>
-    	  		<input id='userlastname' type="text" size="16" placeholder="Last Name" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  	<div class= 'profilediv'>
-    	  		<label for="userorg" >Organization:</label>
-    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  	<div class= 'profilediv'>
-    	  		<label for="usertitle" >Title:</label>
-    	  		<input id='usertitle' type="text" size="33" placeholder="Title" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  	<div class= 'profilediv'>
-    	  		<label for="useremail" >Email:</label>
-    	  		<input id='useremail' type="text" size="35" placeholder="Email address" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  	<div class= 'profilediv'>
-    	  		<label for="userphone" >Phone:</label>
-    	  		<input id='userphone' type="text" size="22" placeholder="Work Phone #" onchange='checkForProfileChange()'>
-    	  	</div>
-    	  </fieldset>
-    	  </div>
-    	  <div class='greenbackground'>
-    	  <fieldset class="fieldset-auto-width">
-    	  <legend class="legend-major">Your School(s) or Organization(s)</legend>
-  	    <table id="grouptable">
-  		  <thead>
-    			<tr>
-        			<th width='320px' >School or Organization</th>
-        			<th class='onccol'>Action</th>
-    			</tr>
-    		  </thead>
-    		  <tbody id="grouptbody">
-    		  </tbody>
-	    </table>
-	    <div class='profilediv'> 
-  		  <select id="groupselect" title="School or Organization Name" oninput='onGroupSelected(this)'></select>
-  		  <button id='addgroup' value='unchanged' type="button" onclick="addGroup()" style="background-color:Grey" title="Click to add school or organization" disabled>Add School/Org.</button>
-  		</div>
-  </fieldset>
-  </div>
-    	  <div id='buttonbar'>
-    	    <button id="cancel" onclick="onProfileNotChanged()">No Change</button>
-        <button id="update" value='unchanged' style="background-color:Grey" onclick="onUpdateProfile(this)" disabled>Update</button>
-    	  </div> 
 	</div>
   </div>
 <!-- FAQ Dialog -->
@@ -1353,53 +1038,140 @@
         </dl>
 	</div>
   </div>
- <!-- Change Password Dialog -->
-  <div id="chgpwdlg" class="modalDialog">
-	<div class='inner'>
-		<a id='closepopup' href="#close" title="Close" class="close">X</a>
-		<div class='dialogtopbar'>
-		  <img class='logo-img' src="onclogo">
-		  <span class='logospan'>Change Password</span>
-		</div>
-		<p id='pw_mssg'>Enter current and new password:</p>
-    	<p><label class='lbl_pw' for="currpw">Current Password:</label>
-    	<input class='inp_pw' type="password" id="currpw" name="field1" autofocus></p>
-    	<p><label class='lbl_pw' for="newpw">New Password:</label>
-    	<input class='inp_pw' type="password" id="newpw" name="field2"><br></p>
-    	<p><label class='lbl_pw' for="verifypw" >Verify Password:</label>
-    	<input class='inp_pw' type="password" id="verifypw" name="field3"></p>
-    	<div id='buttonbar'>
-      	  <button id="cancel" onclick="onCancel()">Cancel</button>
-      	  <button id="submit" onclick="onChangePW()">Change Password</button>
-    	</div> 
-	</div>
-  </div>
 <!-- Success Dialog -->
   <div id="successdlg" class="modalDialog">
-	<div class='inner'>
+	<div class='inner success-dlg regular-width'>
 		<a id='closepopup' href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
 		  <img class='logo-img' src="onclogo">
 		  <span class=logospan id="successfamheader">SUCCESS_DIALOG_HEADER</span>
-		</div>
+		</div>		
 		<div>
-		  <span class='verifspan'><img class='errorimg' src="checkmarkicon"></span>
-		  <span id='successfammssg'>SUCCESS_DIALOG_MESSAGE</span>
+		  <div class='column left'><img class='errorimg' src="checkmarkicon"></div>
+		  <div class='column right'>SUCCESS_DIALOG_MESSAGE</div>	  
 		</div>
 	</div>
   </div>  
-<!-- Timeout Dialog -->
-  <div id="timeoutdlg" class="modalDialog">
-	<div id='inner'>
+<!-- Edit Profile Dialog -->
+  <div id="editProfile" class="modalDialog">
+	<div class='inner extended-width'>
+	  <div class='dialogtopbar'>
+		<img class='logo-img' src="onclogo">
+		<span class='logospan'>Verify/Update ONC Profile</span>
+	  </div>
+	  <div class='edit-background'>
+	  	  <fieldset id='contact-info-fieldset'>
+  			  <legend class="legend-major">Contact Information</legend>
+  			  <p>
+    	  		<label for="userfirstname">Name:</label>
+    	  		<input id='userfirstname' type="text" size="14" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="16" placeholder="Last Name" onchange='checkForProfileChange()'>
+    		  </p>   		
+    		  <p>
+    	  		<label for="userorg">Organization:</label>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		 <label for="usertitle">Title:</label>
+    	 		 <input id='usertitle' type="text" size="34" placeholder="Title" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		<label for="useremail">Email:</label>
+    	  		<input id='useremail' type="text" size="34" placeholder="Email address" onchange='checkForProfileChange()'>
+    	      </p>
+    	 	  <p>
+    	  		<label for="userphone">Phone:</label>
+    	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  	  </p>
+      	  </fieldset>
+	  </div>
+      <div class='edit-background'>
+		<fieldset>
+			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
+  	    	 <table id="profiletable" class='display' style="width:100%">
+  		 	  <thead>
+    			<tr>
+    				<th>Id</th>
+        			<th>School or Organization</th>
+    			</tr>
+    		  </thead>
+    		  <tbody>
+    		  </tbody>
+	    	</table>
+	    	<div> 
+  		  		<select id="groupselect" title="School or Organization Name" oninput='onGroupSelected(this)'></select>
+  			</div>
+  		</fieldset>
+  	  </div>
+      <div class='buttonbar'>
+    	<button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" onclick="onUpdateProfile(this)" disabled>Update</button>
+      </div> 
+	</div>
+  </div>
+<!--DNS Code Dialog -->
+  <div id="dnscodedlg" class="modalDialog">
+	<div class='inner double-width'>
+		<a href="#close" title="Close" class="close">X</a>
 		<div class='dialogtopbar'>
 		  <img class='logo-img' src="onclogo">
-		  <span class=logospan id="successfamheader">Session Timeout</span>
+		  <span class=logospan id="dnsheader"></span>
+		</div>	
+		<div>
+		<!-- This is the body of the dialog. -->
+		    <fieldset class="fieldset-auto-width">
+		      <legend id='dnslegend' class="legend-major">DNS Code</legend>
+		      <textarea id='dnscode' disabled></textarea>
+		    </fieldset>
 		</div>
-		<p id='to_mssg'>Your session expired due to inactivity</p>
-    	<div id='buttonbar'>
-      	  <button id="submit" onclick="onSessionTimeout()">Logout</button>
+	</div>
+  </div>    
+<!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div class='inner extended-width'>
+		<a href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class='logospan'>Change Password</span>
+		</div>
+		<div class='edit-background'>
+	  	  <fieldset>
+  			<legend class="legend-major">Enter Current and New Passwords</legend>
+  			<div id='pw_mssg'>Enter current and new password:</div>
+  			<table class='password-table'>
+  				<tr>
+  					<td>Current Password:</td>
+  					<td><input type="password" id="currpw" name="field1" width='100%' oninput='checkChangePWEnable()' autofocus></td>
+  				</tr>
+  				<tr>
+  					<td>New Password:</td>
+  					<td><input type="password" id="newpw" name="field2" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  				<tr>
+  					<td>Verify New Password:</td>
+  					<td><input type="password" id="verifypw" name="field3" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  			</table>
+		  </fieldset>
+		</div>
+    	<div class='buttonbar'>
+      	  <button onclick="onCancel()">Cancel</button>
+      	  <button id="btnchangepw" onclick="onChangePW()" disabled>Change Password</button>
     	</div> 
 	</div>
   </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div class='buttonbar'>
+      	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>  
 </body>
 </html>
