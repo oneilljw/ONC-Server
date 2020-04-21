@@ -138,7 +138,7 @@ public class ONCSecureWebServer
 							"/getpartner", "/updateuser", "/partnerupdate", "/updatepartner",
 							"/groups", "/volunteergroups", "/partners", "/partnertable", "/regiontable", 
 							"/regions", "/zipcodes", "/regionupdate", "/updateregion", "/getregion",
-							"/profileunchanged", "/dashboard", "/giftcatalog"
+							"/profileunchanged", "/dashboard", "/giftcatalog", "/schools",
 							};
 		
 		ONCWebHttpHandler oncHttpHandler = new ONCWebHttpHandler();
@@ -165,7 +165,9 @@ public class ONCSecureWebServer
 		String[] commonContexts = {"/trustlogo", "/jquery.js","/staticcharts.js","/favicon.ico", "/oncsplash",
 								   "/clearx", "/onclogo", "/oncstylesheet", "/oncnewstylesheet", "/oncdialogstylesheet", "/erroricon",
 								   "/checkmarkicon", "/oncloginstylesheet", "/vanilla", "/editprofile.js",
-								   "/login.js","/onccommon.js", "/onctable"};
+								   "/login.js","/onccommon.js", "/onctable", "/giftcardicon", "/stoplighticon-any",
+								   "/stoplighticon-gray", "/stoplighticon-green", "/stoplighticon-yellow",
+								   "/stoplighticon-red"};
 		
 		CommonHandler commonHandler = new CommonHandler();
 		for(String contextname: commonContexts)
@@ -179,7 +181,7 @@ public class ONCSecureWebServer
 		String[] familyContexts = {"/referral","/referfamily","/familyupdate","/updatefamily","/familyview",
 				 					"/families","/familystatus","/commonfamily.js","/familysearch",
 				 					"/getfamily","/references","/newfamily", "/familynotes", 
-				 					"/noteresponse", "/dnscode", "/deadlines"};
+				 					"/noteresponse", "/dnscode","/donotservecodes","/deadlines","/fammgmt"};
 		
 		FamilyHandler familyHandler = new FamilyHandler();
 		for(String contextname: familyContexts)

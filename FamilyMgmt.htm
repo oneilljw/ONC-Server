@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<title>ONC Family Management</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script> 
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/sorting/natural.js"></script>
+<script type="text/javascript" src="onccommon.js"></script>
+<script type="text/javascript" src="onctable.js"></script>
+<script>
+	var schools = [];
+	var getTableData = {resource:'families'};
+//	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
+	
+    $( document ).ready(function()
+    {
+    	//get filter selects & reset button
+    	for(let filter of document.getElementById('filterspan').getElementsByTagName('select'))
+    	 filters.push(filter);
+    	
+    	for(let filter of document.getElementById('filter-second-row').getElementsByTagName('select'))
+       	 filters.push(filter);
+    	
+    	resets = document.getElementById('resetspan').getElementsByTagName('button');
+    	
+    	//decide whether to display the welcome message
+    	setBannerVisible(true);
+    	
+    	//remove dashboard anchor & change partner anchor class to .breadcrumb-only
+//    	if(sessionStorage.getItem('homelinkVisibility') === 'hidden')
+//    	{
+//    		var dashboardli = document.getElementById('dashboard-anchor');
+//    		dashboardli.parentNode.removeChild(dashboardli);
+//    		
+//    		document.getElementById('linktwo-anchor').classList.add('breadcrumb-only');
+//    		document.getElementById('linktwo-anchor').classList.remove('breadcrumb-current');
+//    	}
+    	
+    	let genericparams = "callback=?";
+		$.getJSON('donotservecodes', genericparams, function(codes)
+		{	
+			createChangeHTML(codes);
+			populateDNSCodeFilter(codes);
+			
+ 			$.getJSON('schools', genericparams, function(data)
+ 		    {
+ 		    	schools = data;
+ 		    	populateSchoolFilter(schools);
+
+		    	var table = $('#oncdatatable').DataTable( 
+				{
+				    dom: 'B<"search"f>rtip',
+				    select: { style: 'os'},
+				    order: [[ 1, "asc" ]],
+				    orderClasses: false,
+				    stripeClasses:['stripe1','stripe2'],
+				    buttons: 
+				    {
+				    	buttons: 
+				    	[
+				    		{ 
+				    			text: 'Edit Family', 
+				    			action: function ( e, dt, node, config )
+				    			{
+				    				var selectedPartner = table.row('.selected').data();
+				    				if (typeof selectedPartner !== 'undefined')		    						
+				    					rowAction(selectedPartner.id);
+				    			},
+				    			enabled: false 
+				            },
+				            { 
+					    		text: 'Apply Changes', 
+					    		action: function ( e, dt, node, config ) { newAction(); },
+					    		enabled: false
+					        },
+					        { text: 'Email', enabled: false },
+					        { text: 'SMS', enabled: false },
+					        { text: 'Print', enabled: false },
+					        { text: 'Export', enabled: false },
+				            'excel',
+				            'pdf',
+				            { text: 'Clear',
+					          action: function ( e, dt, node, config)
+					          {
+					        	  table.rows( { selected: true } ).deselect();
+					        	  table.rows().invalidate('data').draw(false);	//redraw footer
+					          }
+					        }
+				    	],
+				    	dom: 
+				    	{
+				    		button: 
+				    		{
+				            	className: ''
+				            }
+				        }
+				    },
+				    columns: 
+				    [
+						{ data: "id", visible: false},
+						{ data: "oncNum",  type:'natural'},				
+						{ data: "referenceNum"},
+						{ data: "dnsCodeAcronym"},
+						{ data: "HOHFirstName"},
+						{ data: "HOHLastName"},	
+						{ data: "fstatus"},
+						{ data: "giftStatus"},
+						{ data: "schoolcode",
+						  render: function (data, type, row)
+						  {
+							  if(type === 'display')
+							  {	  					  
+								  let index = 0;
+								  while(index < schools.length && schools[index].code !== data)
+									  index++;
+								  
+								  return index < schools.length ? schools[index].name : '';
+							  }
+							  else
+								  return data;
+						  },
+						},				
+						{ data: "bGiftCardOnly",
+						  type: 'boolean',
+						  render: function (data, type, row)
+						  {
+		//					  return (data == true) ? '&#x2713;' : '';
+							  if(type === 'display')
+							  	  return (data == true) ? '<img src='+ "'/giftcardicon'" + '/>' : '';
+							  else
+								  return data;
+						  },
+						  className: 'dt-body-center',	
+						},
+						{ data: "slPos",
+						  render: function (data, type, row)
+						  {
+							  if(type === 'display')
+							  {
+								  if(data === 0)
+				                      return '<img src='+ "'/stoplighticon-green'" + '/>';
+								  if(data === 1)
+				                      return '<img src='+ "'/stoplighticon-yellow'" + '/>';
+								  if(data === 2)
+				                      return '<img src='+ "'/stoplighticon-red'" + '/>';
+				                  else
+				                      return '';
+							  }
+							  else
+								  return data;
+						  },
+						  className: 'dt-body-center'
+						},				
+						{ data: "zipcode", visible: false},
+						{ data: "HomePhone", visible: false},
+						{ data: "OtherPhone", visible: false},
+						{ data: "email", 
+						  visible: false,
+						  render: function (data, type, row)
+						  {
+							  if(type === 'filter')
+							  {
+								  if(data.length > 0)
+				                      return 'Yes';
+				                  else
+				                      return 'No';
+							  }
+							  else
+								  return data;
+						  },
+						}
+				    ],			        
+				    footerCallback: function ( row, data, start, end, display ) 
+				    {
+		    			var api = this.api(), data;
+		    			$( api.column(1).footer() ).html("Change:");
+		    			$( api.column(3).footer() ).html(createChangeHTML(codes));
+		    			$( api.column(6).footer() ).html(createFamStatusChangeHTML());
+		    			$( api.column(7).footer() ).html(createGiftStatusChangeHTML()); 	
+				    },				    
+				    language:
+		    		{
+		                zeroRecords: "No Families Found That Meet Filter Criteria - Sorry",
+		                info: "Showing _TOTAL_ families",
+		                infoEmpty: "No Family Data Available",
+		                infoFiltered: " - filtered from _MAX_ total families"
+		            },
+				    scrollY: "396px",
+				    scrollCollapse: true,
+				    paging: false
+				});
+    		
+		    	//get the list of years from the data base so we can determine current year
+		    	var params = 'callback=?';
+		    	$.getJSON('dbStatus', params, function(data)
+		    	{	
+		    		var combo = document.getElementById('curryear');
+		        		for(var i = data.length-1; i >= 0; i--)
+		        			addComboBoxOption(combo, data[i].id, data[i].id);
+		        	
+		        	if(sessionStorage.getItem('curryear') == null)
+		        	{
+		        		combo.selectedIndex = 0;
+		        		sessionStorage.setItem('curryear', combo.value);
+		        	}
+		//        	else
+		//        		combo.value = sessionStorage.getItem('curryear');	
+		        	
+		        	initializeFilters();
+					initializeMultipleRowSelection();
+    			
+					//get families from the server
+		    		let familyparams = "year=" + combo.value + "&type=full&callback=?";
+		    		$.getJSON('families', familyparams, function(data)
+		    		{
+		    			var table = $('#oncdatatable').DataTable();
+						table.rows.add(data);
+							
+	//					table.column(2).search(document.getElementById('partnertype').value);
+	//   				table.column(3).search(document.getElementById('partnerstatus').value);
+	//   				table.column(4).search(document.getElementById('partnercollection').value);
+		   				table.draw();
+		    		});
+		    	});
+ 			});
+    	});
+    	
+    	createGroupTable();	//create profile dialog group table
+    });
+    
+    function getTableDataParams()
+    {
+    	return "year=" + sessionStorage.getItem('curryear') + "&type=full&callback=?";
+    }
+    
+    function rowAction(objectID)
+    {
+    	sessionStorage.setItem('partnerid', objectID);
+    	var params = {}
+    	params['partnerid'] = objectID;
+    	
+    	post('partnerupdate', params);
+    }
+    function newAction()
+    {
+    	sessionStorage.setItem('partnerid', "New");
+    	
+    	var params = {}
+    	post('partnerupdate', params);
+    }
+    
+    function populateDNSCodeFilter(codes)
+    {
+    	let dnsselect = document.getElementById('dnscode');
+    	
+    	addComboBoxOption(dnsselect, "Any", "");
+    	
+    	for(let code of codes)
+    		addComboBoxOption(dnsselect, code.acronym, code.acronym);
+    }
+   
+    function onDNSChange(element)
+    {
+    	console.log(element);
+    	console.log(element.value);
+    }
+    
+    function populateSchoolFilter(school)
+    {
+    	let select = document.getElementById('schoolfilter');
+    	addComboBoxOption(select, "Any", "");
+    	
+    	for(let school of schools)
+    		addComboBoxOption(select, school.name, school.code);	
+    }
+    function createChangeHTML(codes)
+    {
+    	var html = '<select id="dnschangeselect" onchange="onDNSChange(this)"><option value="">No Change</option>';
+    	for(let code of codes)
+    		html += '<option value="' + code.acronym +'">'+code.acronym+'</option>';
+    		 
+    	return html;
+    }
+    function createFamStatusChangeHTML()
+    {
+    	var html = '<select id="famstatuschangeselect"><option value="">No Change</option>';
+    		html += '<option value="Unverified">Unverified</option>';
+    		html += '<option value="Waitlist">Waitlist</option>';
+    		html += '<option value="Verified">Verfied</option>';
+    		html += '<option value="Contacted">Contacted</option>';
+    		html += '<option value="Confirmed">Confirmed</option>';
+    		 
+    	return html;
+    }
+    function createGiftStatusChangeHTML()
+    {
+    	var html = '<select id="famstatuschangeselect"><option value="">No Change</option>';
+    		html += '<option value="NotRequested">Not Requested</option>';
+    		html += '<option value="Requested">Requested</option>';
+    		html += '<option value="Selected">Selected</option>';
+    		html += '<option value="Received">Received</option>';
+    		html += '<option value="Verified">Verified</option>';
+    		html += '<option value="Packaged">Packaged</option>';
+    		html += '<option value="Assigned">Assigned</option>';
+    		html += '<option value="Delivered">Delivered</option>';
+    		html += '<option value="Attempted">Attempted</option>';
+    		html += '<option value="Returned">Returned</option>';
+    		html += '<option value="CounselorPickUp">Counselor Pick-Up</option>';
+    		html += '<option value="Referred">Referred</option>';
+    		 
+    	return html;
+    }
+  </script>
+  <style type="text/css">	
+	#tablediv 
+	{ 
+		width: 90%;
+		margin: auto;
+	}
+	.search
+	{
+		font-weight: bold;
+		padding: 10px 8px;	
+	}
+	div.dataTables_filter input 
+	{
+		width: 120px;
+	}
+	 .checkmark
+    { 
+    	color: green;
+    }
+	.footer th { border: 0; } 
+</style>
+</head>
+<body>
+  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
+      <a id='linktwo-anchor' class='breadcrumb-current' href='#'>Family Management</a>
+    </span>   
+    <div class='headerbuttons'>
+      <div class='dropdown'>
+        <button class=dropbtn>Profile</button>
+        <div class='dropdown-content'>
+      	  <a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a>
+      	  <a href="#chgpwdlg">Change Password</a>
+      	</div> 
+      </div>
+      <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
+    </div>
+  </div>
+  <div id="welcome-div">
+    <p id='banner-message'>BANNER_MESSAGE</p>
+  </div>    
+  <form>
+  <fieldset>
+  	<legend>Filters</legend>
+  	  <div>	
+		<span id='filterspan'>
+		  <label for='curryear' class='filterlabel'>Season:</label>
+		  <select id="curryear" title="Select season to display" data-type='tabledata' data-column='-1' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'></select>
+		  <label for='dnscode' class='filterlabel'>DNS:</label>
+		  <select id="dnscode" title="Filter Families By DNS Code" data-type='search' data-column='3' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		  </select>
+		  <label for='familystatus' class='filterlabel'>Family Status:</label>
+		  <select id="familystatus" title="Filter Families by Family Status" data-type='search' data-column='6' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		    <option value="">Any</option>
+    	    <option value="Unverified">Unverified</option>
+		    <option value="Waitlist">Waitlist</option>
+		    <option value="Verified">Verified</option>
+		    <option value="Contacted" >Contacted</option>
+		    <option value="Confirmed">Confirmed</option>
+		  </select>
+		  <label for='giftstatus' class='filterlabel'>Gift Status:</label>
+		  <select id="giftstatus" title="Filter Families By Family Gift Status" data-type='search' data-column='7' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		    <option value="">Any</option>
+		    <option value="Not Requested">Not Requested</option>
+		    <option value="Requested">Requested</option>
+		    <option value="Selected">Selected</option>
+		    <option value="Received">Received</option>
+		    <option value="Verified">Verified</option>
+		    <option value="Packaged">Packaged</option>
+		    <option value="Assigned">Assigned</option>
+		    <option value="Delivered">Delivered</option>
+		    <option value="Attempted">Attempted</option>
+		    <option value="Returned">Returned</option>
+		    <option value="Counselor Pick-Up">Counselor Pick-Up</option>
+		    <option value="Referred">Referred</option>
+		  </select>
+		</span>
+		<span id='resetspan' class='floatright resetbtn'>
+			<button id="resetbtn" data-table='oncdatatable' onclick='onResetFilters(this)'>Reset Filters</button>
+		</span>
+	  </div>
+	  <div id='filter-second-row' class='fieldsetdiv'>
+<!--    
+	  	  <label for='mealstatus' class='filterlabel'>Meal Status:</label>
+		  <select id="mealstatus" title="Filter Families By Family Meal Status" data-type='search' data-column='8' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		    <option value="">Any</option>
+		    <option value="None">Not Requested</option>
+		    <option value="Requested">Requested</option>
+		    <option value="Assigned">Assigned</option>
+		    <option value="Referred">Referred</option>
+		  </select>
+-->			  
+		  <label for='schoolfilter' class='filterlabel'>Schools:</label>
+		  <select id="schoolfilter" title="Filter Families By Elementary School" data-type='search' data-column='8' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		  </select>
+		  <label for='giftcardfilter' class='filterlabel'>Gift Card Only:</label>
+		  <select id="giftcardfilter" title="Filter Families That Are Gift Card Only" data-type='search' data-column='9' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		  	<option value="">Any</option>
+		    <option value="true">Yes</option>
+		    <option value="false">No</option>
+		  </select>
+		  <label for='stoplightfilter' class='filterlabel'>Stoplight:</label>
+		  <select id="stoplightfilter" title="Filter Families By Stoplight" data-type='search' data-column='10' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		  	<option value="">Any</option>
+		  	<option value="3">None</option>
+		    <option value="0">Green</option>
+		    <option value="1">Yellow</option>
+		    <option value="2">Red</option>
+		  </select>
+		  <label for='emailfilter' class='filterlabel'>Email?:</label>
+		  <select id="emailfilter" title="Filter Families By Email Address" data-type='search' data-column='14' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		  	<option value="">Any</option>
+		  	<option value="Yes">Yes</option>
+		    <option value="No">No</option>
+		  </select>
+	  </div>
+	</fieldset>		
+  </form>		
+  <div id='tablediv'>
+    <table id="oncdatatable" class='display compact' style="width:100%">
+      <thead>
+        <tr>
+       		<th>ID</th>
+       		<th>ONC</th>    		
+       		<th>Ref #</th>
+       		<th>DNS</th>
+       		<th>First Name</th>
+        	<th>Last Name</th> 
+        	<th>Fam Status</th>
+        	<th>Gift Status</th>
+        	<th>ES School</th>        	
+        	<th>GCO?</th>      	
+        	<th>SL</th>         	      	
+        	<th>Zip Code</th>
+        	<th>Home Phone</th>
+        	<th>Other Phone</th>
+        	<th>Email</th>         	         	
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>      
+      <tfoot>
+        <tr class='footer'>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th><select><option>No Change</option></select></th>
+          <th><select><option>No Change</option></select></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+        </tr>
+      </tfoot>      
+	</table>
+  </div>
+<!-- Edit Profile Dialog -->
+  <div id="editProfile" class="modalDialog">
+	<div class='inner extended-width'>
+	  <div class='dialogtopbar'>
+		<img class='logo-img' src="onclogo">
+		<span class='logospan'>Verify/Update ONC Profile</span>
+	  </div>
+	  <div class='edit-background'>
+	  	  <fieldset id='contact-info-fieldset'>
+  			  <legend class="legend-major">Contact Information</legend>
+  			  <p>
+    	  		<label for="userfirstname">Name:</label>
+    	  		<input id='userfirstname' type="text" size="14" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="16" placeholder="Last Name" onchange='checkForProfileChange()'>
+    		  </p>   		
+    		  <p>
+    	  		<label for="userorg">Organization:</label>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		 <label for="usertitle">Title:</label>
+    	 		 <input id='usertitle' type="text" size="34" placeholder="Title" onchange='checkForProfileChange()'>
+    	 	  </p>
+    	 	  <p>
+    	  		<label for="useremail">Email:</label>
+    	  		<input id='useremail' type="text" size="34" placeholder="Email address" onchange='checkForProfileChange()'>
+    	      </p>
+    	 	  <p>
+    	  		<label for="userphone">Phone:</label>
+    	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  	  </p>
+      	  </fieldset>
+	  </div>
+      <div class='edit-background'>
+		<fieldset>
+			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
+  	    	 <table id="profiletable" class='display' style="width:100%">
+  		 	  <thead>
+    			<tr>
+    				<th>Id</th>
+        			<th>School or Organization</th>
+    			</tr>
+    		  </thead>
+    		  <tbody>
+    		  </tbody>
+	    	</table>
+	    	<div> 
+  		  		<select id="groupselect" title="School or Organization Name" oninput='onGroupSelected(this)'></select>
+  			</div>
+  		</fieldset>
+  	  </div>
+      <div class='buttonbar'>
+    	<button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" onclick="onUpdateProfile(this)" disabled>Update</button>
+      </div> 
+	</div>
+  </div>
+<!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div class='inner extended-width'>
+		<a href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class='logospan'>Change Password</span>
+		</div>
+		<div class='edit-background'>
+	  	  <fieldset>
+  			<legend class="legend-major">Enter Current and New Passwords</legend>
+  			<div id='pw_mssg'>Enter current and new password:</div>
+  			<table class='password-table'>
+  				<tr>
+  					<td>Current Password:</td>
+  					<td><input type="password" id="currpw" name="field1" width='100%' oninput='checkChangePWEnable()' autofocus></td>
+  				</tr>
+  				<tr>
+  					<td>New Password:</td>
+  					<td><input type="password" id="newpw" name="field2" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  				<tr>
+  					<td>Verify New Password:</td>
+  					<td><input type="password" id="verifypw" name="field3" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  			</table>
+		  </fieldset>
+		</div>
+    	<div class='buttonbar'>
+      	  <button onclick="onCancel()">Cancel</button>
+      	  <button id="btnchangepw" onclick="onChangePW()" disabled>Change Password</button>
+    	</div> 
+	</div>
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div id='buttonbar'>
+      	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>  
+</body>
+</html>

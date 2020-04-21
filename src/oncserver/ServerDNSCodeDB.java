@@ -12,6 +12,8 @@ import com.google.gson.reflect.TypeToken;
 import ourneighborschild.DNSCode;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCUser;
+import ourneighborschild.Region;
+import ourneighborschild.School;
 
 public class ServerDNSCodeDB extends ServerPermanentDB
 {
@@ -64,6 +66,18 @@ public class ServerDNSCodeDB extends ServerPermanentDB
 			index++;
 		
 		return index < dnsCodeList.size() ? dnsCodeList.get(index) : new DNSCode();
+	}
+	
+	static HtmlResponse getDNSCodesJSONP(String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfDNSCodes = new TypeToken<ArrayList<DNSCode>>(){}.getType();
+		
+
+		String response = gson.toJson(dnsCodeList, listOfDNSCodes);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
 	static HtmlResponse getDNSCodeJSONP(String code, String callbackFunction)

@@ -113,6 +113,15 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				
 			sendHTMLResponse(t, htmlResponse);	
 		}
+    	else if(requestURI.contains("/schools"))
+		{
+			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+				htmlResponse = ServerRegionDB.getSchoolsJSONP((String) params.get("callback"));
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error Message", (String)params.get("callback"));
+				
+			sendHTMLResponse(t, htmlResponse);	
+		}
 		else if(requestURI.contains("/volunteergroups"))
 		{
 			htmlResponse = ServerGroupDB.getVolunteerGroupListJSONP((String) params.get("callback"));

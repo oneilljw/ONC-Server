@@ -31,6 +31,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String ONC_FAMILY_PAGE_HTML = "ONC.htm";
 	private static final String UPDATE_HTML = "Edit.htm";
 	private static final String REFERRAL_HTML = "FamilyReferral.htm";
+	private static final String FAMILY_MGMT_HTML = "FamilyMgmt.htm";
 	private static final String COMMON_FAMILY_JS_FILE = "CommonFamily.js";
 	private static final String EDIT_PROFILE_JS_FILE = "EditProfile.js";
 	private static final String ONC_COMMON_JS_FILE = "ONCCommon.js";
@@ -55,6 +56,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
 	private static final String CLEAR_X_FILE = "clear_x.gif";
 	private static final String ONC_LOGO_FILE = "onclogosmall.gif";
+	private static final String GIFT_CARD_LOGO_FILE = "giftcard.png";
 	private static final String TRUST_LOGO_FILE = "comodo_secure_seal_76x26_transp.png";
 	private static final String ERROR_ICON_FILE = "if_Error_381599.png";
 	private static final String CHECKMARK_ICON_FILE = "if_Checkmark_1891021.png";
@@ -66,6 +68,12 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String JQUERY_JS_FILE = "jquery-1.11.3.js";
 	private static final String LOGIN_JS_FILE = "login.js";
 	private static final String STATIC_CHARTS_JS_FILE = "staticcharts.js";
+	private static final String STOPLIGHT_ANY_FILE = "Button-Blank-Any-icon.png";
+	private static final String STOPLIGHT_GRAY_FILE = "Button-Blank-Gray-icon.png";
+	private static final String STOPLIGHT_GREEN_FILE = "Button-Blank-Green-icon.png";
+	private static final String STOPLIGHT_YELLOW_FILE = "Button-Blank-Yellow-icon.png";
+	private static final String STOPLIGHT_RED_FILE = "Button-Blank-Red-icon.png";
+	
 	
 	protected static final String SESSION_ID_NAME = "SID=";
 	
@@ -101,6 +109,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("familystatus", readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_STATUS_HTML)));
 			webpageMap.put("family", readFile(String.format("%s/%s",System.getProperty("user.dir"), ONC_FAMILY_PAGE_HTML)));
 			webpageMap.put("referral", readFile(String.format("%s/%s",System.getProperty("user.dir"), REFERRAL_HTML)));
+			webpageMap.put("fammgmt", readFile(String.format("%s/%s",System.getProperty("user.dir"), FAMILY_MGMT_HTML)));
 			webpageMap.put("update", readFile(String.format("%s/%s",System.getProperty("user.dir"), UPDATE_HTML)));
 			webpageMap.put("partnertable", readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_TABLE_HTML)));
 			webpageMap.put("updatepartner", readFile(String.format("%s/%s",System.getProperty("user.dir"), PARTNER_UPDATE_HTML)));
@@ -120,6 +129,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
 			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
 			webfileMap.put("clearx", readFileToByteArray(CLEAR_X_FILE));
+			webfileMap.put("giftcardicon", readFileToByteArray(GIFT_CARD_LOGO_FILE));
 			webfileMap.put("onclogo", readFileToByteArray(ONC_LOGO_FILE));
 			webfileMap.put("trustlogo", readFileToByteArray(TRUST_LOGO_FILE));
 			webfileMap.put("erroricon", readFileToByteArray(ERROR_ICON_FILE));
@@ -135,6 +145,11 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("login", readFileToByteArray(LOGIN_JS_FILE));
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
 			webfileMap.put("staticcharts", readFileToByteArray(STATIC_CHARTS_JS_FILE));
+			webfileMap.put("stoplighticon-any", readFileToByteArray(STOPLIGHT_ANY_FILE));
+			webfileMap.put("stoplighticon-gray", readFileToByteArray(STOPLIGHT_GRAY_FILE));
+			webfileMap.put("stoplighticon-green", readFileToByteArray(STOPLIGHT_GREEN_FILE));
+			webfileMap.put("stoplighticon-yellow", readFileToByteArray(STOPLIGHT_YELLOW_FILE));
+			webfileMap.put("stoplighticon-red", readFileToByteArray(STOPLIGHT_RED_FILE));
 			
 			return "UPDATED_WEBPAGES";
 		} 

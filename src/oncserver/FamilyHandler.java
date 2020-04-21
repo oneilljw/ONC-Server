@@ -62,8 +62,14 @@ public class FamilyHandler extends ONCWebpageHandler
 			if(wc != null)
 			{
 				int year = Integer.parseInt((String) params.get("year"));
-
-				htmlResponse = ServerFamilyDB.getFamiliesJSONP(year, wc.getWebUser(),(String) params.get("callback"));
+				boolean bFullFamily = false;
+				if(params.containsKey("type"))
+					bFullFamily = ((String) params.get("type")).equals("full");
+				
+				if(bFullFamily)
+					htmlResponse = ServerFamilyDB.getFullFamiliesJSONP(year, wc.getWebUser(),(String) params.get("callback"));
+				else
+					htmlResponse = ServerFamilyDB.getFamiliesJSONP(year, wc.getWebUser(),(String) params.get("callback"));
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
@@ -158,6 +164,19 @@ public class FamilyHandler extends ONCWebpageHandler
     			{	
     				response = webpageMap.get("referral");
     				response = response.replace("SERVER_GENERATED_UUID", UUID.randomUUID().toString());
+    			}
+    			else
+    				response = invalidTokenReceived();
+    		
+    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/fammgmt"))
+		{
+    			String response;
+    			
+    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			{	
+    				response = webpageMap.get("fammgmt");
     			}
     			else
     				response = invalidTokenReceived();
@@ -278,6 +297,19 @@ public class FamilyHandler extends ONCWebpageHandler
 			{
 				//get the JSON for response to response submission
 				htmlResponse = ServerDNSCodeDB.getDNSCodeJSONP((String) params.get("code"), (String) params.get("callback"));
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/donotservecodes"))
+		{
+			HtmlResponse htmlResponse;
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				//get the JSON for response to response submission
+				htmlResponse = ServerDNSCodeDB.getDNSCodesJSONP((String) params.get("callback"));
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));

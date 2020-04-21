@@ -129,14 +129,26 @@
 		var chart = new google.visualization.BarChart(document.getElementById(chart.div));
 		chart.draw(view, options);
 	}
+	function onFamilyDetailClicked()
+	{
+		let params = {'year': sessionStorage.getItem('curryear'), 'type':'full'};
+		post('fammgmt',params,'get');
+	}
   </script>
-  <style type="text/css">	
+  <style type="text/css">
+/*  	
 	.header-links a
 	{
 		color: white;
 		font-size: 18px;
 		margin-right: 40px;
 		text-decoration: none;
+	}
+*/	
+	.header-button-div
+	{
+		display: inline-block;
+   		margin-top: 23px;   
 	}
 	.home-link
 	{
@@ -157,6 +169,16 @@
     	background-color: #E8E8E8;
     	display: table-cell;
     }
+    .headerbtn
+	{
+		font-size: 16px;
+ 		background-color: Transparent;
+ 		background-repeat:no-repeat;
+ 		border: none;
+ 		cursor:pointer;
+		color: white;
+	}
+	.headerbtn:hover { background-color: #bbb7ff; }
   </style>
 </head>
 <body>
@@ -164,12 +186,18 @@
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div class='header'>
     <img class='logo-img' src="onclogo">
-    <span class='header-links'>
-      <a class='home-link' href='#'>Dashboard</a>
-      <a class='page-link' href="familystatus">Families</a>
-      <a class='page-link' href="partnertable">Partners</a>
-      <a class='page-link' href="regiontable">Regions</a>
-    </span>   
+	<div class='header-button-div'>
+	  <button class='dropbtn home-link'>Dashboard</button>
+	  <div class='dropdown'>
+        <button class='dropbtn'>Families</button>
+        <div class='dropdown-content'>
+          <a href="familystatus">Referral Status</a>
+      	  <a onclick='onFamilyDetailClicked()'>Family Management</a>
+      	</div>
+      </div>	
+      <button class='headerbtn' onclick="window.location.href='partnertable'">Partners</button>
+      <button class='headerbtn' onclick="window.location.href='regiontable'">Regions</button>
+      </div>    
     <div class='headerbuttons'>
       <div class='dropdown'>
         <button class=dropbtn>Profile</button>
@@ -178,7 +206,7 @@
       	  <a href="#chgpwdlg">Change Password</a>
       	</div> 
       </div>
-      <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
+      <button class='headerbtn' onclick='onLogoutLink()'>Logout</button>
     </div>
   </div>
   <div id="welcome-div">

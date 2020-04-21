@@ -191,6 +191,7 @@
     		familyparams = "year=" + year + "&byReference=false" + "&targetid=" + id + "&schools=true" + "&callback=?";
     		$.getJSON('getfamilybyreference', familyparams, function(data)
     		{
+    			console.log(data);
     			famJson = data;
     			if(famJson.hasOwnProperty('error'))
       		{

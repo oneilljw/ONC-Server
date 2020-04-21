@@ -54,6 +54,35 @@ function initializeRowSelection()
 		rowAction(selectedRowData.id);
 	});
 }
+function initializeMultipleRowSelection()
+{
+	let table = $('#oncdatatable').DataTable();
+	$('#oncdatatable tbody').on( 'click', 'tr', function () 
+	{
+		if( $(this).hasClass('selected') )
+		{
+			$(this).removeClass('selected');
+//			table.button( 0 ).enable( table.rows( '.selected' ).count() > 0 );
+		}
+		else
+		{
+//			table.$('tr.selected').removeClass('selected');
+			$(this).addClass('selected');
+//			table.button( 0 ).enable( true );
+		}
+		table.button( 0 ).enable( table.rows( '.selected' ).count() == 1 );
+		table.button( 1 ).enable( table.rows( '.selected' ).count() > 0 );
+		table.button( 2 ).enable( table.rows( '.selected' ).count() > 0 );
+		table.button( 3 ).enable( table.rows( '.selected' ).count() > 0 );
+		table.button( 4 ).enable( table.rows( '.selected' ).count() > 0 );
+	});
+    
+	$('#oncdatatable tbody').on('dblclick', 'tr', function () 
+	{
+		let selectedRowData = table.row( this ).data();
+		rowAction(selectedRowData.id);
+	});
+}
 function getTableDataFromServer(tableElement)
 {
 	$.getJSON(getTableData.resource, getTableDataParams(), function(data)

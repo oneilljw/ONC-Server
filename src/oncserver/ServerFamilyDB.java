@@ -374,6 +374,27 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
+	static HtmlResponse getFullFamiliesJSONP(int year, ONCServerUser loggedInUser, String callbackFunction)
+	{	
+		Gson gson = new Gson();
+		Type listOfWebsiteFamilies = new TypeToken<ArrayList<ONCWebsiteFamily>>(){}.getType();
+		
+		List<ONCFamily> searchList = familyDB.get(DBManager.offset(year)).getList();
+		
+		ArrayList<ONCWebsiteFamilyFull> responseList = new ArrayList<ONCWebsiteFamilyFull>();
+		
+		if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0)
+		{
+			//case: admin or higher login			
+			for(ONCFamily f : searchList)
+				responseList.add(new ONCWebsiteFamilyFull(f, dnsCodeDB.getDNSCode(f.getDNSCode())));
+		}
+		
+		String response = gson.toJson(responseList, listOfWebsiteFamilies);
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
 	static boolean alreadyReferredInCurrentSeason(int year, ONCFamily f, List<ONCFamily> currentSeasonList)
 	{	
 		//check to see if the parameter family has already been referred in the current season

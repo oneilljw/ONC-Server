@@ -223,6 +223,23 @@ public class ServerRegionDB extends ServerPermanentDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 	
+	static HtmlResponse getSchoolsJSONP(String callbackFunction)
+	{		
+		Gson gson = new Gson();
+		Type listOfSchools = new TypeToken<ArrayList<School>>(){}.getType();
+		
+		List<School> elementarySchoolList = new ArrayList<School>();
+		
+		for(School school : schoolList)
+			if(!school.getCode().isEmpty())
+				elementarySchoolList.add(school);
+
+		String response = gson.toJson(elementarySchoolList, listOfSchools);
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+	}
+	
 	static HtmlResponse getRegionJSONP(String regionID, String callbackFunction)
 	{		
 		Gson gson = new Gson();

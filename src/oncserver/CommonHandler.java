@@ -22,6 +22,8 @@ public class CommonHandler extends ONCWebpageHandler
 			sendCachedFile(t, "image/png", "trustlogo", false);
 		else if(requestURI.contains("/erroricon"))
 			sendCachedFile(t, "image/png", "erroricon", false);
+		else if(requestURI.contains("/giftcardicon"))
+			sendCachedFile(t, "image/png", "giftcardicon", false);
 		else if(requestURI.contains("/checkmarkicon"))
 			sendCachedFile(t, "image/png", "checkmarkicon", false);
 		else if(requestURI.contains("/clearx"))
@@ -52,5 +54,15 @@ public class CommonHandler extends ONCWebpageHandler
 			sendCachedFile(t, "text/javascript", "onctable", false);
 		else if(requestURI.contains("/login.js"))
 			sendCachedFile(t, "text/javascript", "login", false);
+		else if(requestURI.contains("/stoplighticon-any"))
+			sendCachedFile(t, "image/png", "stoplighticon-any", false);
+		else if(requestURI.contains("/stoplighticon-gray"))
+			sendCachedFile(t, "image/png", "stoplighticon-gray", false);
+		else if(requestURI.contains("/stoplighticon-green"))
+			sendCachedFile(t, "image/png", "stoplighticon-green", false);
+		else if(requestURI.contains("/stoplighticon-yellow"))
+			sendCachedFile(t, "image/png", "stoplighticon-yellow", false);
+		else if(requestURI.contains("/stoplighticon-red"))
+			sendCachedFile(t, "image/png", "stoplighticon-red", false);
 	}
 }
