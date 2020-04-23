@@ -12,8 +12,6 @@ import com.google.gson.reflect.TypeToken;
 import ourneighborschild.DNSCode;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCUser;
-import ourneighborschild.Region;
-import ourneighborschild.School;
 
 public class ServerDNSCodeDB extends ServerPermanentDB
 {

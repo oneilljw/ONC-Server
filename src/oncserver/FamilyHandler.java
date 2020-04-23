@@ -1,4 +1,4 @@
-package oncserver;
+ package oncserver;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -172,16 +172,14 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 		else if(requestURI.contains("/fammgmt"))
 		{
-    			String response;
-    			
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    			{	
-    				response = webpageMap.get("fammgmt");
-    			}
-    			else
-    				response = invalidTokenReceived();
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+    			response = getFamilyManagementWebpage("", "", false);
+    		else
+    			response = invalidTokenReceived();
     		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+    		sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
 		else if(requestURI.contains("/referfamily"))
     		{
@@ -241,21 +239,57 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 		else if(requestURI.contains("/updatefamily"))
 		{
-    			String response = null;
-    			WebClient wc; 		
+			String response = null;
+			WebClient wc; 		
 
-    			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("year") &&
-    				((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null))
-    			{
-    				//submission processed, send the home page back to the user
-    				ResponseCode frc = processFamilyUpdate(wc, params);
-    				response = getReferralStatusWebpage(wc, frc.getMessage(), frc.getMessage(), "Family Update Successful",true);
-    			}
-    			else
-    				response = invalidTokenReceived();
-    		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-    		}
+			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("year") &&
+				((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null))
+			{
+				//submission processed, send the home page back to the user
+				ResponseCode frc = processFamilyUpdate(wc, params);
+				response = getReferralStatusWebpage(wc, frc.getMessage(), frc.getMessage(), "Family Update Successful",true);
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+    	}
+		else if(requestURI.contains("/updatefamilies"))
+		{
+			//web client has submitted a request to change the dns code, family status for 
+			//family gift status for one or more families
+			String response = null;
+			WebClient wc; 		
+
+			if(t.getRequestMethod().toLowerCase().equals("post") && params.containsKey("year") &&
+				 params.containsKey("famid0") && ((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null))
+			{
+				//process the request
+				int year = Integer.parseInt((String) params.get("year"));
+
+				ServerFamilyDB familyDB = ServerFamilyDB.getInstance();
+				List<String> jsonResponseList = familyDB.updateListOfFamilies(params, wc.getWebUser());
+				
+				ResponseCode frc;
+				if(!jsonResponseList.isEmpty())
+				{	
+					frc = new ResponseCode("Family Updates Accepted", null, null);
+					response = getFamilyManagementWebpage(frc.getMessage(), "Family Update Successful", true);
+					
+					//notify all in year clients
+					clientMgr.notifyAllInYearClients(year, jsonResponseList);
+				}	
+				else
+				{
+					frc = new ResponseCode("Family Updates Failed", null, null);
+					response = getFamilyManagementWebpage(frc.getMessage(), "Family Update Failed", true);
+				}
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+    	}
 		else if(requestURI.contains("/familynotes"))
 		{
 			WebClient wc;

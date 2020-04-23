@@ -70,11 +70,14 @@ function initializeMultipleRowSelection()
 			$(this).addClass('selected');
 //			table.button( 0 ).enable( true );
 		}
+		
 		table.button( 0 ).enable( table.rows( '.selected' ).count() == 1 );
-		table.button( 1 ).enable( table.rows( '.selected' ).count() > 0 );
+//		table.button( 1 ).enable(changeselects['dnschangeselect'] != 'No Change' && table.rows( '.selected' ).count() > 0);
 		table.button( 2 ).enable( table.rows( '.selected' ).count() > 0 );
 		table.button( 3 ).enable( table.rows( '.selected' ).count() > 0 );
 		table.button( 4 ).enable( table.rows( '.selected' ).count() > 0 );
+		
+		checkApplyChangesEnabled(table);
 	});
     
 	$('#oncdatatable tbody').on('dblclick', 'tr', function () 
@@ -82,6 +85,14 @@ function initializeMultipleRowSelection()
 		let selectedRowData = table.row( this ).data();
 		rowAction(selectedRowData.id);
 	});
+}
+function resetTableButtons(table, count)
+{
+	for(i=0; i< count; i++)
+		table.button( i ).enable(false);
+	
+	//reset the stored change select values
+	changeselects['dnschangeselect'] = 'No Change';
 }
 function getTableDataFromServer(tableElement)
 {

@@ -6,8 +6,6 @@ import java.util.Map;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 
-import ourneighborschild.Activity;
-
 public class VolunteerHandler extends ONCWebpageHandler
 {
 	public void handle(HttpExchange te) throws IOException 

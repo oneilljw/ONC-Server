@@ -13,7 +13,9 @@
 <script type="text/javascript" src="onccommon.js"></script>
 <script type="text/javascript" src="onctable.js"></script>
 <script>
+	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;
 	var schools = [];
+	var changeselects = {'dnschangeselect':-2,'famstatuschangeselect':'No_Change','giftstatuschangeselect':'No_Change'};
 	var getTableData = {resource:'families'};
 //	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
@@ -67,15 +69,15 @@
 				    			text: 'Edit Family', 
 				    			action: function ( e, dt, node, config )
 				    			{
-				    				var selectedPartner = table.row('.selected').data();
-				    				if (typeof selectedPartner !== 'undefined')		    						
-				    					rowAction(selectedPartner.id);
+				    				var selectedFamily = table.row('.selected').data();
+				    				if (typeof selectedFamily !== 'undefined')		    						
+				    					rowAction(selectedFamily);
 				    			},
 				    			enabled: false 
 				            },
 				            { 
 					    		text: 'Apply Changes', 
-					    		action: function ( e, dt, node, config ) { newAction(); },
+					    		action: function ( e, dt, node, config ) { applyChanges(); },
 					    		enabled: false
 					        },
 					        { text: 'Email', enabled: false },
@@ -89,6 +91,7 @@
 					          {
 					        	  table.rows( { selected: true } ).deselect();
 					        	  table.rows().invalidate('data').draw(false);	//redraw footer
+					        	  resetTableButtons(table, 5);
 					          }
 					        }
 				    	],
@@ -226,6 +229,10 @@
 	//   				table.column(4).search(document.getElementById('partnercollection').value);
 		   				table.draw();
 		    		});
+		    		
+		    		//if the page load was the result of a successful referral, show the dialog box
+		    	  	if(bShowSuccessDialog)
+		      			window.location=document.getElementById('successanchor').href;
 		    	});
  			});
     	});
@@ -238,20 +245,56 @@
     	return "year=" + sessionStorage.getItem('curryear') + "&type=full&callback=?";
     }
     
-    function rowAction(objectID)
+    function rowAction(famObject)
     {
-    	sessionStorage.setItem('partnerid', objectID);
-    	var params = {}
-    	params['partnerid'] = objectID;
+    	sessionStorage.setItem('targetid', famObject.id);
+    	sessionStorage.setItem('referencenum', famObject.referenceNum);
     	
-    	post('partnerupdate', params);
+    	var params = {};
+		post('familyupdate', params);
     }
-    function newAction()
+    function applyChanges()
     {
-    	sessionStorage.setItem('partnerid', "New");
+    	//get the selected family id's
+    	let table = $('#oncdatatable').DataTable();
+    	let selectedFamilys = table.rows( { selected: true } ).data();
     	
-    	var params = {}
-    	post('partnerupdate', params);
+    	//build params, first the select values, then the family ids
+    	params = {};
+    	params["year"] = sessionStorage.getItem('curryear');
+    	
+    	if(changeselects['dnschangeselect'] !== -2)
+    		params['dnschangeselect'] = changeselects['dnschangeselect'];
+    	
+    	if(changeselects['famstatuschangeselect'] !== "No_Change")
+        		params['famstatuschangeselect'] = changeselects['famstatuschangeselect'];
+    	
+    	if(changeselects['giftstatuschangeselect'] !== "No_Change")
+    		params['giftstatuschangeselect'] = changeselects['giftstatuschangeselect'];
+    	
+    	if(Object.keys(params).length > 1)	//must have at least one change to post to server
+    	{
+    		for(i=0; i<selectedFamilys.length; i++)
+    			params['famid'+i] = selectedFamilys[i].id;
+    	  	
+    		post('updatefamilies', params);
+    	}
+    }
+    
+    function onChangeSelect(element)
+    {
+    	changeselects[element.id] = element.value;
+    	
+    	let table = $('#oncdatatable').DataTable();
+    	checkApplyChangesEnabled(table);
+    }
+    
+    function checkApplyChangesEnabled(table)
+    {
+    	table.button( 1 ).enable(table.rows( '.selected' ).count() > 0 && 
+    	 (changeselects['dnschangeselect'] !== -2 ||
+    	   changeselects['famstatuschangeselect'] !== 'No_Change' ||
+    	    changeselects['giftstatuschangeselect'] !== 'No_Change'));	
     }
     
     function populateDNSCodeFilter(codes)
@@ -261,15 +304,9 @@
     	addComboBoxOption(dnsselect, "Any", "");
     	
     	for(let code of codes)
-    		addComboBoxOption(dnsselect, code.acronym, code.acronym);
+    		addComboBoxOption(dnsselect, code.acronym, code.id);
     }
    
-    function onDNSChange(element)
-    {
-    	console.log(element);
-    	console.log(element.value);
-    }
-    
     function populateSchoolFilter(school)
     {
     	let select = document.getElementById('schoolfilter');
@@ -280,15 +317,17 @@
     }
     function createChangeHTML(codes)
     {
-    	var html = '<select id="dnschangeselect" onchange="onDNSChange(this)"><option value="">No Change</option>';
+    	var html = '<select id="dnschangeselect" onchange="onChangeSelect(this)"><option value="-2">No Change</option>';
     	for(let code of codes)
-    		html += '<option value="' + code.acronym +'">'+code.acronym+'</option>';
+    		html += '<option value="' + code.id +'">'+code.acronym+'</option>';
+    		
+    	html += '<option value="-1">No Code</option>';	
     		 
     	return html;
     }
     function createFamStatusChangeHTML()
     {
-    	var html = '<select id="famstatuschangeselect"><option value="">No Change</option>';
+    	var html = '<select id="famstatuschangeselect" onchange="onChangeSelect(this)"><option value="No_Change">No Change</option>';
     		html += '<option value="Unverified">Unverified</option>';
     		html += '<option value="Waitlist">Waitlist</option>';
     		html += '<option value="Verified">Verfied</option>';
@@ -299,7 +338,7 @@
     }
     function createGiftStatusChangeHTML()
     {
-    	var html = '<select id="famstatuschangeselect"><option value="">No Change</option>';
+    	var html = '<select id="giftstatuschangeselect" onchange="onChangeSelect(this)"><option value="No_Change">No Change</option>';
     		html += '<option value="NotRequested">Not Requested</option>';
     		html += '<option value="Requested">Requested</option>';
     		html += '<option value="Selected">Selected</option>';
@@ -341,6 +380,7 @@
 <body>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <a href="#successdlg" id="successanchor" style="visibility: hidden">Success</a>
   <div class='header'> 
     <img class='logo-img' src="onclogo">
     <span class='header-links'>
@@ -482,6 +522,20 @@
       </tfoot>      
 	</table>
   </div>
+<!-- Success Dialog -->
+<div id="successdlg" class="modalDialog">
+  <div class='inner success-dlg regular-width'>
+	<a id='closepopup' href="#close" title="Close" class="close">X</a>
+	<div class='dialogtopbar'>
+	  <img class='logo-img' src="onclogo">
+	  <span class=logospan id="successfamheader">SUCCESS_DIALOG_HEADER</span>
+	</div>		
+	<div>
+	  <div class='column left'><img class='errorimg' src="checkmarkicon"></div>
+	  <div class='column right'>SUCCESS_DIALOG_MESSAGE</div>	  
+	</div>
+  </div>
+</div>
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
 	<div class='inner extended-width'>

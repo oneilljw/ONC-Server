@@ -794,6 +794,95 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return "UPDATE_FAILED";
 	}
 	
+	List<String> updateListOfFamilies(Map<String, Object> params, ONCServerUser client)
+	{
+		//process the request
+		int year = Integer.parseInt((String) params.get("year"));
+		
+		//get the list of family id's the web client requested to update
+		List<Integer> famIDList = new ArrayList<Integer>();
+		int index = 0;
+		while(params.containsKey("famid" + Integer.toString(index)))
+		{
+			String zID = (String) params.get("famid" + Integer.toString(index++));
+			famIDList.add(Integer.parseInt(zID));
+		}
+		
+		Gson gson = new Gson();
+		List<String> responseJsonList = new ArrayList<String>();
+		
+		//retrieve the family data base for the year
+		FamilyDBYear familyDBYear = familyDB.get(DBManager.offset(year));
+		List<ONCFamily> fAL = familyDBYear.getList();
+			
+		for(Integer famID : famIDList)
+		{
+			//Find the position for the current family being updated
+			index = 0;
+			while(index < fAL.size() && fAL.get(index).getID() != famID)
+				index++;
+			
+			//replace the current family object with the update. First, check for address change.
+			//if address has changed, update the region. 
+			if(index < fAL.size())
+			{	
+				ONCFamily currFam = fAL.get(index);
+				ONCFamily updatedFamily = new ONCFamily(currFam);
+				
+				updatedFamily.setDateChanged(System.currentTimeMillis());
+				updatedFamily.setChangedBy(client.getLNFI());
+				
+				//try to set the new DNS Code if it was requested by the web client
+				if(params.containsKey("dnschangeselect"))
+				{
+					String zDNSCode = (String) params.get("dnschangeselect");
+					if(isNumeric(zDNSCode))
+					{
+						int dnsCode = Integer.parseInt(zDNSCode);
+						if(dnsCode > -2)
+							updatedFamily.setDNSCode(dnsCode);
+					}
+				}
+				
+				//set the new family status if the fam status key was sent from web page
+				if(params.containsKey("famstatuschangeselect"))
+				{
+					String updatedFamStatus = (String) params.get("famstatuschangeselect");
+					if(!updatedFamStatus.contentEquals("No_Change"))
+						updatedFamily.setFamilyStatus(FamilyStatus.valueOf(updatedFamStatus));
+				}
+				
+				//set the new family gift status if the fam gift status key was sent from web page
+				if(params.containsKey("giftstatuschangeselect"))
+				{
+					String updatedFamGiftStatus = (String) params.get("giftstatuschangeselect");
+					if(!updatedFamGiftStatus.contentEquals("No_Change"))
+						updatedFamily.setGiftStatus(FamilyGiftStatus.valueOf(updatedFamGiftStatus));
+				}
+				
+				//check to see if either status or DNS code is changing, if so, add a history item
+				if(currFam != null && 
+					(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
+					  currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
+					   currFam.getDNSCode() != updatedFamily.getDNSCode()))
+				{
+					ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+																updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(),
+																"Status Changed", updatedFamily.getChangedBy(), true);
+						
+					updatedFamily.setDeliveryID(histItem.getID());
+				}
+					
+				fAL.set(index, updatedFamily);
+				familyDBYear.setChanged(true);
+
+				responseJsonList.add("UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class));
+			}
+		}
+		
+		return responseJsonList;
+	}
+	
 	String updateListOfFamilies(int year, String giftListJson, ONCUser client)
 	{
 		//Create an update family list 
@@ -2116,6 +2205,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				return o1.getONCNum().compareTo(o2.getONCNum());
 		}
 	}
+/* 
     private static class ONCWebsiteFamilyLNComparator implements Comparator<ONCWebsiteFamily>
 	{
 		@Override
@@ -2124,7 +2214,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return o1.getHOHLastName().toLowerCase().compareTo(o2.getHOHLastName().toLowerCase());
 		}
 	}
-/*
+
     private void convertDNSCodes()
     {
     		//for each year in the datbaase, convert the DNS code from a string to an int

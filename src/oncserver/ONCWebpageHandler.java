@@ -317,6 +317,16 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		return response;
 	}
 	
+	String getFamilyManagementWebpage(String successMssg, String successDlgTitle, boolean bShowSuccessDialog)
+	{
+		String response = webpageMap.get("fammgmt");
+		response = response.replace("SHOW_SUCCESS_DIALOG", bShowSuccessDialog ? "true" : "false");
+		response = response.replace("SUCCESS_DIALOG_HEADER", successDlgTitle);
+		response = response.replace("SUCCESS_DIALOG_MESSAGE", bShowSuccessDialog ? successMssg : "");
+		
+		return response;
+	}
+	
 	String getPartnerTableWebpage(WebClient wc, String message)
 	{
 		String response = webpageMap.get("partnertable");
