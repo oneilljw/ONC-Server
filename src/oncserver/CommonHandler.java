@@ -64,5 +64,7 @@ public class CommonHandler extends ONCWebpageHandler
 			sendCachedFile(t, "image/png", "stoplighticon-yellow", false);
 		else if(requestURI.contains("/stoplighticon-red"))
 			sendCachedFile(t, "image/png", "stoplighticon-red", false);
+		else if(requestURI.contains("/deliverycards"))
+			sendFile(t, "application/pdf", "DeliveryCard.pdf");
 	}
 }

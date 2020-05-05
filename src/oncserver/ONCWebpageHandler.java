@@ -52,6 +52,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String VERIFY_IDENTITY_HTML = "VerifyIdentity.htm";
 	private static final String LOGIN_ERROR_HTML = "LoginError.htm";
 	private static final String RECOVERY_LOGIN_HTML = "LoginRecovery.htm";
+	private static final String PDF_VIEWER_HTML = "PDFViewer.htm";
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
 	private static final String CLEAR_X_FILE = "clear_x.gif";
@@ -73,7 +74,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String STOPLIGHT_GREEN_FILE = "Button-Blank-Green-icon.png";
 	private static final String STOPLIGHT_YELLOW_FILE = "Button-Blank-Yellow-icon.png";
 	private static final String STOPLIGHT_RED_FILE = "Button-Blank-Red-icon.png";
-	
+	private static final String DELIVERY_CARD_FILE = "DeliveryCard.pdf";
 	
 	protected static final String SESSION_ID_NAME = "SID=";
 	
@@ -125,6 +126,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("/lostcredentials", readFile(String.format("%s/%s",System.getProperty("user.dir"), VERIFY_IDENTITY_HTML)));
 			webpageMap.put("loginerror", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGIN_ERROR_HTML)));
 			webpageMap.put("recoverylogin", readFile(String.format("%s/%s",System.getProperty("user.dir"), RECOVERY_LOGIN_HTML)));
+			webpageMap.put("getdeliverycards", readFile(String.format("%s/%s",System.getProperty("user.dir"), PDF_VIEWER_HTML)));
 			
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
 			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
@@ -150,6 +152,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("stoplighticon-green", readFileToByteArray(STOPLIGHT_GREEN_FILE));
 			webfileMap.put("stoplighticon-yellow", readFileToByteArray(STOPLIGHT_YELLOW_FILE));
 			webfileMap.put("stoplighticon-red", readFileToByteArray(STOPLIGHT_RED_FILE));
+			webfileMap.put("deliverycards", readFileToByteArray(DELIVERY_CARD_FILE));
 			
 			return "UPDATED_WEBPAGES";
 		} 

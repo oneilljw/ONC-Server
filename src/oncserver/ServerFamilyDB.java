@@ -3,6 +3,7 @@ package oncserver;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,6 +38,27 @@ import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.itextpdf.barcodes.BarcodeEAN;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.element.AreaBreak;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.property.AreaBreakType;
+import com.itextpdf.layout.property.TextAlignment;
+import com.itextpdf.layout.property.VerticalAlignment;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
@@ -56,10 +78,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerFamilyHistoryDB familyHistoryDB;
 	private static ServerUserDB userDB;
 	private static ServerChildDB childDB;
+	private static ServerGiftCatalog cat;
 	private static ServerAdultDB adultDB;
 	private static ServerMealDB mealDB;
 	private static ServerGlobalVariableDB globalDB;
 	private static ServerDNSCodeDB dnsCodeDB;
+	private static ServerRegionDB regionDB;
 	
 	private static ClientManager clientMgr;
 	
@@ -119,11 +143,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//set references to associated data bases
 		familyHistoryDB = ServerFamilyHistoryDB.getInstance();
 		childDB = ServerChildDB.getInstance();
+		cat = ServerGiftCatalog.getInstance();
 		adultDB = ServerAdultDB.getInstance();
 		userDB = ServerUserDB.getInstance();
 		mealDB = ServerMealDB.getInstance();
 		globalDB = ServerGlobalVariableDB.getInstance();
 		dnsCodeDB = ServerDNSCodeDB.getInstance();
+		regionDB = ServerRegionDB.getInstance();
 
 		clientMgr = ClientManager.getInstance();
 	}
@@ -1893,7 +1919,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
      ********************************************************************************************/
     String generateONCNumber(int year, String schoolCode)
     {
-    		String oncNum = null;
+    	String oncNum = null;
     	
 		if(oncnumRangeMap.containsKey(schoolCode))
 		{
@@ -1914,7 +1940,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		else
 			oncNum = "NNA";
 		
-    		return oncNum;
+    	return oncNum;
     }
     
     /***
@@ -1980,29 +2006,29 @@ public class ServerFamilyDB extends ServerSeasonalDB
      */
     ONCFamily isPriorYearFamily(int year, ONCFamily addedFamily, List<ONCChild> addedChildList)
     {
-    		boolean bFamilyIsInPriorYear = false;
-    		ONCFamily pyFamily = null;
-    		int yearIndex = year-1;
-    	
-    		//check each prior year for a match
-    		while(yearIndex >= DBManager.getBaseSeason() && !bFamilyIsInPriorYear)
-    		{
-    			List<ONCFamily> pyFamilyList = familyDB.get(DBManager.offset(yearIndex)).getList();
-    		
-    			//check each family in year for a match
-    			int pyFamilyIndex = 0;
-    			while(pyFamilyIndex < pyFamilyList.size() && !bFamilyIsInPriorYear)
-    			{
-    				pyFamily = pyFamilyList.get(pyFamilyIndex++);
-    				List<ONCChild> pyChildList = childDB.getChildList(yearIndex, pyFamily.getID());
-    			
-    				bFamilyIsInPriorYear = areFamiliesTheSame(pyFamily, pyChildList, addedFamily, addedChildList);	
-    			}
-    		
-    			yearIndex--;
-    		}
-    	
-    		return bFamilyIsInPriorYear ? pyFamily : null;
+		boolean bFamilyIsInPriorYear = false;
+		ONCFamily pyFamily = null;
+		int yearIndex = year-1;
+	
+		//check each prior year for a match
+		while(yearIndex >= DBManager.getBaseSeason() && !bFamilyIsInPriorYear)
+		{
+			List<ONCFamily> pyFamilyList = familyDB.get(DBManager.offset(yearIndex)).getList();
+		
+			//check each family in year for a match
+			int pyFamilyIndex = 0;
+			while(pyFamilyIndex < pyFamilyList.size() && !bFamilyIsInPriorYear)
+			{
+				pyFamily = pyFamilyList.get(pyFamilyIndex++);
+				List<ONCChild> pyChildList = childDB.getChildList(yearIndex, pyFamily.getID());
+			
+				bFamilyIsInPriorYear = areFamiliesTheSame(pyFamily, pyChildList, addedFamily, addedChildList);	
+			}
+		
+			yearIndex--;
+		}
+	
+		return bFamilyIsInPriorYear ? pyFamily : null;
     }
     
     boolean areFamiliesTheSame(ONCFamily checkFamily, List<ONCChild> checkChildList, 
@@ -2014,47 +2040,47 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //				checkFamily.getHOHLastName(), checkFamily.getODBFamilyNum(), 
 //				addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
     	
-    		return checkFamily.getFirstName().equalsIgnoreCase(addedFamily.getFirstName()) &&
-    			checkFamily.getLastName().equalsIgnoreCase(addedFamily.getLastName()) &&
-    			areChildrenTheSame(checkChildList, addedChildList);
+		return checkFamily.getFirstName().equalsIgnoreCase(addedFamily.getFirstName()) &&
+			checkFamily.getLastName().equalsIgnoreCase(addedFamily.getLastName()) &&
+			areChildrenTheSame(checkChildList, addedChildList);
     }
     
     boolean areChildrenTheSame(List<ONCChild> checkChildList, List<ONCChild> addedChildList)
     {
-    		boolean bChildrenAreTheSame = true;
-    	
-    		int checkChildIndex = 0;
-    		while(checkChildIndex < checkChildList.size() && bChildrenAreTheSame)
-    		{
-    			ONCChild checkChild = checkChildList.get(checkChildIndex);
-    			if(!isChildInList(checkChild, addedChildList))
-    				bChildrenAreTheSame = false;
-    			else
-    				checkChildIndex++;
-    		}
-    	
-    		return bChildrenAreTheSame;
+		boolean bChildrenAreTheSame = true;
+	
+		int checkChildIndex = 0;
+		while(checkChildIndex < checkChildList.size() && bChildrenAreTheSame)
+		{
+			ONCChild checkChild = checkChildList.get(checkChildIndex);
+			if(!isChildInList(checkChild, addedChildList))
+				bChildrenAreTheSame = false;
+			else
+				checkChildIndex++;
+		}
+	
+		return bChildrenAreTheSame;
     }
     
     
     boolean isChildInList(ONCChild checkChild, List<ONCChild> addedChildList)
     {
-    		boolean bChildIsInList = false;
-    		int addedChildIndex = 0;
-        	
-    		while(addedChildIndex < addedChildList.size()  && !bChildIsInList)
-    		{
-    			ONCChild addedChild = addedChildList.get(addedChildIndex);
-    		
-    			if(checkChild.getChildLastName().equalsIgnoreCase(addedChild.getChildLastName()) &&
-    				checkChild.getChildDOB().equals(addedChild.getChildDOB()) &&
-    					checkChild.getChildGender().equalsIgnoreCase(addedChild.getChildGender()))
-    				bChildIsInList = true;
-    			else
-    				addedChildIndex++;
-    		}	
-    			
-    		return bChildIsInList;
+		boolean bChildIsInList = false;
+		int addedChildIndex = 0;
+    	
+		while(addedChildIndex < addedChildList.size()  && !bChildIsInList)
+		{
+			ONCChild addedChild = addedChildList.get(addedChildIndex);
+		
+			if(checkChild.getChildLastName().equalsIgnoreCase(addedChild.getChildLastName()) &&
+				checkChild.getChildDOB().equals(addedChild.getChildDOB()) &&
+					checkChild.getChildGender().equalsIgnoreCase(addedChild.getChildGender()))
+				bChildIsInList = true;
+			else
+				addedChildIndex++;
+		}	
+			
+		return bChildIsInList;
     }
     
     
@@ -2170,21 +2196,234 @@ public class ServerFamilyDB extends ServerSeasonalDB
     //for a particular year
     static int getNumReferralsByUserAndGroup(int year, ONCUser u, ONCGroup g)
     {
-    		if(DBManager.isYearAvailable(year))
-    		{
-    			int count = 0;
-    			for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
-    				if(f.getAgentID() == u.getID() && f.getGroupID() == g.getID())
-    					count++;
-    			
-    			return count;
-    		}
-    		else
-    			return 0;
+		if(DBManager.isYearAvailable(year))
+		{
+			int count = 0;
+			for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
+				if(f.getAgentID() == u.getID() && f.getGroupID() == g.getID())
+					count++;
+			
+			return count;
+		}
+		else
+			return 0;
     }
     
     int getMinONCNum() { return oncnumRangeMap.get("A") != null ? oncnumRangeMap.get("A").getStart() : 10000; }
     int getMaxONCNum() { return oncnumRangeMap.get("Z") != null ? oncnumRangeMap.get("Z").getEnd() : -1; }
+    
+    //create a delivery card file
+    HtmlResponse createDelCardFileJSONP(Map<String, Object> params)
+    {
+    	String message;
+    	boolean bResult = false;
+    	
+    	//process the request
+		int year = Integer.parseInt((String) params.get("year"));
+		
+		//get the list of family id's the web client requested to update
+		List<Integer> famIDList = new ArrayList<Integer>();
+		int index = 0;
+		while(params.containsKey("famid" + Integer.toString(index)))
+		{
+			String zID = (String) params.get("famid" + Integer.toString(index++));
+			famIDList.add(Integer.parseInt(zID));
+		}
+    	
+    	//convert family id list to family list
+    	List<ONCFamily> familyList = new ArrayList<ONCFamily>();
+    	for(Integer famid : famIDList)
+    	{
+    		ONCFamily f = getFamily(year, famid);
+    		if(f != null)
+    			familyList.add(f);
+    		
+    	}
+    	
+    	String dest = String.format("%s/DeliveryCard.pdf", System.getProperty("user.dir")); 
+    	PdfWriter writer;
+		try
+		{
+			writer = new PdfWriter(dest);
+			PdfDocument pdfDoc = new PdfDocument(writer);
+			Document document = new Document(pdfDoc);
+			
+			for(index=0; index < familyList.size(); index++)
+			{
+				if(index % 2 == 0)
+					createDelCardPDF(year, familyList.get(index), pdfDoc, document, CardType.TOP);
+				else if(index == familyList.size()-1)
+					createDelCardPDF(year, familyList.get(index), pdfDoc, document, CardType.LAST);
+				else
+					createDelCardPDF(year, familyList.get(index), pdfDoc, document, CardType.BOTTOM);				
+			}
+			
+			document.close();
+			
+			bResult = true;
+			message = String.format("%d delivery cards created", index);
+		} 
+		catch (FileNotFoundException e) 
+		{
+			message = "Failed: IOException occurred";
+		}
+		catch (IOException e) 
+		{
+			message = "Failed: IOException occurred";
+		}
+		
+		Gson gson = new Gson();
+		CreationResult result = new CreationResult(bResult, message);
+		String response = gson.toJson(result, CreationResult.class);
+			
+		//wrap the json in the callback function per the JSONP protocol
+		String callbackFunction = (String) params.get("callback");
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+    }
+    //create a delivery card pdf
+    void createDelCardPDF(int year, ONCFamily f, PdfDocument pdfDoc, Document document, CardType type) throws IOException
+    {
+		document.setMargins(16,40,0,20);
+		
+		//set up fonts for various components
+		PdfFont datafont = PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN, true);
+		PdfFont boldfont = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD, true);
+		
+		//create a newline paragraph
+		Paragraph newline = new Paragraph("\n");
+		
+		//create the top line table
+		Paragraph oncNumP = new Paragraph(f.getONCNum()).setFont(boldfont).setFontSize(26);
+		Paragraph driverP = new Paragraph("Driver #: ______ ").setFont(boldfont).setFontSize(20);
+		Paragraph nameP = new Paragraph("Name: ________________").setFont(boldfont).setFontSize(20);
+		
+		float[] topColWidths = {164, 160, 236};
+		Table table = new Table(topColWidths);
+	    Cell cell = new Cell().add(oncNumP).setBorder(Border.NO_BORDER);
+	    table.addCell(cell);
+	    Cell cellTwo = new Cell().add(driverP)
+	    		.setTextAlignment(TextAlignment.RIGHT)
+	    	    .setVerticalAlignment(VerticalAlignment.MIDDLE).setBorder(Border.NO_BORDER);
+	    table.addCell(cellTwo);
+	    Cell cellThree = new Cell().add(nameP)
+	    		.setVerticalAlignment(VerticalAlignment.MIDDLE).setBorder(Border.NO_BORDER);
+	    table.addCell(cellThree);
+	    document.add(table);
+								
+	    //create the address table
+		float[] addrColWidths = {200, 280};
+		table = new Table(addrColWidths);
+		
+		Paragraph p = new Paragraph();
+		p.setFont(datafont).setFontSize(12).setMultipliedLeading(1.0f);
+		List<Text> address = new ArrayList<Text>();
+		address.add(new Text("\n"));
+		address.add(new Text(String.format("%s %s\n", f.getFirstName(), f.getLastName())));
+		address.add(new Text(String.format("%s %s\n", f.getHouseNum(), f.getStreet())));
+		address.add(new Text(String.format("%s, VA %s\n", f.getCity(), f.getZipCode())));	   
+		for(Text t : address)
+			p.add(t);
+		
+		table.addCell(new Cell().add(p).setBorder(Border.NO_BORDER));
+		table.addCell(new Cell().setBorder(Border.NO_BORDER));
+		table.addCell(new Cell().setBorder(Border.NO_BORDER));
+		table.addCell(new Cell().add(new Paragraph(String.format("ONC %d", year))
+												.setFont(boldfont)
+											    .setFontSize(12)
+											    .setTextAlignment(TextAlignment.RIGHT))
+												.setBorder(Border.NO_BORDER));
+	    document.add(table);
+	    
+	    //create the middle table
+		CellList cellList = new CellList();
+		cellList.addCell("Elementary School:  ",regionDB.getSchoolByCode(f.getSchoolCode()).getName(), boldfont, datafont);
+		cellList.addCell("Region:  ", ServerRegionDB.getRegion(f.getRegion()), boldfont, datafont);
+		cellList.addCell("Primary Phone:  ", f.getHomePhone(), boldfont, datafont);
+		cellList.addCell("Alternate Phone:  ", f.getCellPhone(), boldfont, datafont);
+		cellList.addCell("Language:  ", f.getLanguage(), boldfont, datafont);
+		cellList.addCell();
+		cellList.addCell("Special Delivery Comments:  ", f.getDeliveryInstructions(), boldfont, datafont);
+		cellList.addCell();
+	
+		float[] midColWidths = {220, 180};
+		table = new Table(midColWidths);
+		for(Cell c : cellList.getCells())
+			table.addCell(c);
+	    document.add(table);
+	    
+	    document.add(newline);
+	    
+	    //create the bottom table
+	    float[] botColWidths = {50, 130, 100, 180};
+		table = new Table(botColWidths);
+	    Cell cell5 = new Cell().add(new Paragraph("TOY BAGS").setFont(boldfont).setFontSize(11).setTextAlignment(TextAlignment.CENTER)).setBorder(Border.NO_BORDER);
+	    Cell cell6 = new Cell().add(new Paragraph("BIKE(S)").setFont(boldfont).setFontSize(11).setTextAlignment(TextAlignment.CENTER)).setBorder(Border.NO_BORDER);
+	    Cell cell7 = new Cell().add(new Paragraph("OTHER LARGE ITEMS").setFont(boldfont).setFontSize(11).setTextAlignment(TextAlignment.CENTER)).setBorder(Border.NO_BORDER);
+	    
+	    String zBikes = Integer.toString(getNumberOfBikesSelectedForFamily(year, f));
+	    Cell cellBikeCount = new Cell().add(new Paragraph(zBikes).setFont(boldfont).setFontSize(28).setTextAlignment(TextAlignment.CENTER)).setBorder(Border.NO_BORDER);
+	   
+	    table.addCell(new Cell().setBorder(Border.NO_BORDER));
+	    table.addCell(cell5);
+	    table.addCell(cell6);
+	    table.addCell(cell7);
+	    table.addCell(new Cell().setBorder(Border.NO_BORDER));
+	    table.addCell(new Cell().setBorder(Border.NO_BORDER));
+	    table.addCell(cellBikeCount);
+	    table.addCell(new Cell().setBorder(Border.NO_BORDER));
+	    document.add(table);
+	    
+	    // Creating the season icon as an ImageData object
+	    String[] imageFiles = {"Gift-icon.png","Christmas-Mistletoe-icon.gif",
+	    		"Snowman-icon.gif","Santa-icon.gif","Stocking-icon.gif"};
+	    
+	    int imageFileIndex = year % 5;
+	    String imageFileName = imageFiles[imageFileIndex];
+	    String imageFile = String.format("%s/Icons/%s", System.getProperty("user.dir"), imageFileName);
+	    
+	    ImageData data = ImageDataFactory.create(imageFile);
+	    Image img = new Image(data);
+	    img.scaleAbsolute(44,44);
+	    img.setFixedPosition(500, type == CardType.TOP ? 700 : 270);
+	    document.add(img);
+	   
+
+		//UPC-E Barcode   
+	    BarcodeEAN barcode = new BarcodeEAN(pdfDoc);
+	    barcode.setCodeType(BarcodeEAN.UPCE);
+	    String formattedONCNum = ("0000000" + f.getONCNum()).substring(f.getONCNum().length());
+	    int zParity = BarcodeEAN.calculateEANParity(formattedONCNum);
+	    barcode.setCode(formattedONCNum + Integer.toString(zParity));
+	    PdfFormXObject barcodeObject = barcode.createFormXObject(ColorConstants.BLACK,ColorConstants.BLACK, pdfDoc);
+	    Image barcodeImage = new Image(barcodeObject).scale(1.2f, 1.2f);
+	    Paragraph barcodeP = new Paragraph().setTextAlignment(TextAlignment.RIGHT);
+	    barcodeP.add(barcodeImage);
+	    document.add(barcodeP);
+	    
+	    if(type == CardType.TOP)	//add space at the end to align the top of the bottom card
+	    {	
+	    	Paragraph fillerP = new Paragraph().setFixedLeading(28).add(new Text("\n\n"));
+	    	document.add(fillerP);
+	    }
+	    else if(type == CardType.BOTTOM)
+	    	document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+    }
+    
+    int getNumberOfBikesSelectedForFamily(int year, ONCFamily f)
+	{
+		int nBikes = 0;
+		for(ONCChild c: childDB.getChildList(year, f.getID()))
+		{	
+			for(int wn=0; wn<NUMBER_OF_WISHES_PER_CHILD; wn++)
+			{
+				int childwishID = c.getChildGiftID(wn);
+				if(childwishID > -1 && ServerChildGiftDB.getGift(year, childwishID).getGiftID() == cat.getGiftID(year, "Bike"))
+					nBikes++;
+			}
+		}
+				
+		return nBikes;	
+	}
     
     private static class ONCFamilyONCNumComparator implements Comparator<ONCFamily>
 	{
@@ -2234,5 +2473,43 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		//getters
     		int getStart() { return start; }
     		int getEnd() { return end; }
+    }
+    
+    private class CellList
+    {  	
+    	private List<Cell> cellList;
+    	
+    	CellList()
+    	{
+    		cellList = new ArrayList<Cell>();
+    	}
+    	void addCell(String leader, String data, PdfFont leaderFont, PdfFont dataFont)
+    	{
+    		cellList.add(new Cell().add(new Paragraph().add(new Text(leader).setFont(leaderFont))
+    											.add(new Text(data).setFont(dataFont))
+    											.setFontSize(12))
+    											.setHeight(23)
+    											.setBorder(Border.NO_BORDER));
+    	}
+    	void addCell()
+    	{
+    		cellList.add(new Cell().setBorder(Border.NO_BORDER));
+    	}
+    	
+    	List<Cell> getCells() { return cellList; }
+    }
+    
+    private enum CardType { TOP, BOTTOM, LAST };
+    
+    private class CreationResult
+    {
+    	private boolean bResult;
+    	private String message;
+    		
+    	CreationResult(boolean bResult, String message)
+    	{
+    		this.bResult = bResult;
+    		this.message = message;
+    	}
     }
 }

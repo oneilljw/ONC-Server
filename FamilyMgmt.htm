@@ -14,6 +14,7 @@
 <script type="text/javascript" src="onctable.js"></script>
 <script>
 	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;
+	var dnscodes=[];
 	var schools = [];
 	var changeselects = {'dnschangeselect':-2,'famstatuschangeselect':'No_Change','giftstatuschangeselect':'No_Change'};
 	var getTableData = {resource:'families'};
@@ -46,6 +47,7 @@
     	let genericparams = "callback=?";
 		$.getJSON('donotservecodes', genericparams, function(codes)
 		{	
+			dnscodes = codes;
 			createChangeHTML(codes);
 			populateDNSCodeFilter(codes);
 			
@@ -82,7 +84,11 @@
 					        },
 					        { text: 'Email', enabled: false },
 					        { text: 'SMS', enabled: false },
-					        { text: 'Print', enabled: false },
+					        { 
+						        text: 'Print',
+						       	action: function ( e, dt, node, config ) { window.location='#printdlg'; },
+						        enabled: false 
+					        },
 					        { text: 'Export', enabled: false },
 				            'excel',
 				            'pdf',
@@ -107,12 +113,22 @@
 				    [
 						{ data: "id", visible: false},
 						{ data: "oncNum",  type:'natural'},				
-						{ data: "referenceNum"},
-						{ data: "dnsCodeAcronym"},
+						{ data: "referenceNum"},						
+						{ data: "dnsCodeID",
+						  render: function (data, type, row)
+						  {
+							  if(type === 'display' && data != -1)
+							  	  return dnscodes[data].acronym;
+							  else if(type === 'display')
+								  return '';
+							  else
+								  return data;
+						  }
+						},
 						{ data: "HOHFirstName"},
 						{ data: "HOHLastName"},	
 						{ data: "fstatus"},
-						{ data: "giftStatus"},
+						{ data: "giftStatus"},						
 						{ data: "schoolcode",
 						  render: function (data, type, row)
 						  {
@@ -126,19 +142,19 @@
 							  }
 							  else
 								  return data;
-						  },
-						},				
+						  }
+						},
 						{ data: "bGiftCardOnly",
 						  type: 'boolean',
 						  render: function (data, type, row)
 						  {
-		//					  return (data == true) ? '&#x2713;' : '';
+//							  return (data == true) ? '&#x2713;' : '';
 							  if(type === 'display')
 							  	  return (data == true) ? '<img src='+ "'/giftcardicon'" + '/>' : '';
 							  else
 								  return data;
 						  },
-						  className: 'dt-body-center',	
+						  className: 'dt-body-center'	
 						},
 						{ data: "slPos",
 						  render: function (data, type, row)
@@ -159,9 +175,9 @@
 						  },
 						  className: 'dt-body-center'
 						},				
-						{ data: "zipcode", visible: false},
-						{ data: "HomePhone", visible: false},
-						{ data: "OtherPhone", visible: false},
+//						{ data: "zipcode", visible: false},
+//						{ data: "HomePhone", visible: false},
+//						{ data: "OtherPhone", visible: false},
 						{ data: "email", 
 						  visible: false,
 						  render: function (data, type, row)
@@ -193,47 +209,55 @@
 		                infoEmpty: "No Family Data Available",
 		                infoFiltered: " - filtered from _MAX_ total families"
 		            },
-				    scrollY: "396px",
+				    scrollY: "50vh",
 				    scrollCollapse: true,
 				    paging: false
 				});
     		
+		    	//get the list of years from the session storage and populate the season select
+		    	data = JSON.parse(sessionStorage.getItem('dbyears'));
+		    	
 		    	//get the list of years from the data base so we can determine current year
-		    	var params = 'callback=?';
-		    	$.getJSON('dbStatus', params, function(data)
-		    	{	
-		    		var combo = document.getElementById('curryear');
-		        		for(var i = data.length-1; i >= 0; i--)
-		        			addComboBoxOption(combo, data[i].id, data[i].id);
-		        	
-		        	if(sessionStorage.getItem('curryear') == null)
-		        	{
-		        		combo.selectedIndex = 0;
-		        		sessionStorage.setItem('curryear', combo.value);
-		        	}
-		//        	else
-		//        		combo.value = sessionStorage.getItem('curryear');	
-		        	
-		        	initializeFilters();
-					initializeMultipleRowSelection();
-    			
-					//get families from the server
-		    		let familyparams = "year=" + combo.value + "&type=full&callback=?";
-		    		$.getJSON('families', familyparams, function(data)
-		    		{
-		    			var table = $('#oncdatatable').DataTable();
-						table.rows.add(data);
-							
-	//					table.column(2).search(document.getElementById('partnertype').value);
-	//   				table.column(3).search(document.getElementById('partnerstatus').value);
-	//   				table.column(4).search(document.getElementById('partnercollection').value);
-		   				table.draw();
-		    		});
-		    		
-		    		//if the page load was the result of a successful referral, show the dialog box
-		    	  	if(bShowSuccessDialog)
-		      			window.location=document.getElementById('successanchor').href;
-		    	});
+//		    	var params = 'callback=?';
+//		    	$.getJSON('dbStatus', params, function(data)
+//	    		{	
+	    		var combo = document.getElementById('curryear');
+	        		for(var i = data.length-1; i >= 0; i--)
+	        			addComboBoxOption(combo, data[i].id, data[i].id);
+	        	
+	        	if(sessionStorage.getItem('curryear') == null)
+	        	{
+	        		combo.selectedIndex = 0;
+	        		sessionStorage.setItem('curryear', combo.value);
+	        	}
+	        	else
+	        		combo.value = sessionStorage.getItem('curryear');	
+	        	
+	        	initializeFilters();
+				initializeMultipleRowSelection();
+   			
+				//get families from the server
+	    		let familyparams = "year=" + combo.value + "&type=full&callback=?";
+	    		$.getJSON('families', familyparams, function(data)
+	    		{
+	    			var table = $('#oncdatatable').DataTable();
+					table.rows.add(data);
+					
+					table.column(3).search(document.getElementById('dnscode').value);
+					table.column(6).search(document.getElementById('familystatus').value);
+   					table.column(7).search(document.getElementById('giftstatus').value);
+	   				table.column(8).search(document.getElementById('schoolfilter').value);
+	   				table.column(9).search(document.getElementById('giftcardfilter').value);
+   					table.column(10).search(document.getElementById('stoplightfilter').value);
+	   				table.column(11).search(document.getElementById('emailfilter').value);
+	   				
+	   				table.draw();
+	    		});
+	    		
+	    		//if the page load was the result of a successful referral, show the dialog box
+	    	  	if(bShowSuccessDialog)
+	      			window.location=document.getElementById('successanchor').href;
+//		    	});
  			});
     	});
     	
@@ -281,6 +305,29 @@
     	}
     }
     
+    function onDeliveryCards()
+    {
+    	//get the selected family id's
+    	let table = $('#oncdatatable').DataTable();
+    	let selectedFamilys = table.rows( { selected: true } ).data();
+    	
+    	//build params
+    	let params = "year=" + sessionStorage.getItem('curryear');
+    	
+    	for(i=0; i<selectedFamilys.length; i++)
+			params += '&famid' + i + '=' + selectedFamilys[i].id;
+    	
+    	params += "&callback=?";
+   
+		$.getJSON('createdeliverycards', params, function(data)
+		{
+			if(data.bResult == true)
+				window.open('getdeliverycards');
+		});
+		
+		onCancel();
+    }
+    
     function onChangeSelect(element)
     {
     	changeselects[element.id] = element.value;
@@ -305,6 +352,8 @@
     	
     	for(let code of codes)
     		addComboBoxOption(dnsselect, code.acronym, code.id);
+    	
+    	addComboBoxOption(dnsselect, "No Codes", "-1");
     }
    
     function populateSchoolFilter(school)
@@ -354,6 +403,11 @@
     		 
     	return html;
     }
+    function documentTypeSelected()
+    {
+    	let selElement = document.getElementById('printselect');
+    	document.getElementById('btnprint').disabled = selElement.getSelectedOption == 0;
+    }
   </script>
   <style type="text/css">	
 	#tablediv 
@@ -374,13 +428,20 @@
     { 
     	color: green;
     }
-	.footer th { border: 0; } 
+	.footer th { border: 0; }
+	#printselectdiv
+	{
+		margin-top: 10px;
+		padding-bottom: 10px;
+		text-align: center; 
+	} 
 </style>
 </head>
 <body>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <a href="#successdlg" id="successanchor" style="visibility: hidden">Success</a>
+  <a href="#printdlg" id="printanchor" style="visibility: hidden">Success</a>
   <div class='header'> 
     <img class='logo-img' src="onclogo">
     <span class='header-links'>
@@ -470,7 +531,7 @@
 		    <option value="2">Red</option>
 		  </select>
 		  <label for='emailfilter' class='filterlabel'>Email?:</label>
-		  <select id="emailfilter" title="Filter Families By Email Address" data-type='search' data-column='14' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
+		  <select id="emailfilter" title="Filter Families By Email Address" data-type='search' data-column='11' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
 		  	<option value="">Any</option>
 		  	<option value="Yes">Yes</option>
 		    <option value="No">No</option>
@@ -484,19 +545,16 @@
         <tr>
        		<th>ID</th>
        		<th>ONC</th>    		
-       		<th>Ref #</th>
+       		<th>Ref #</th>     		
        		<th>DNS</th>
        		<th>First Name</th>
         	<th>Last Name</th> 
         	<th>Fam Status</th>
-        	<th>Gift Status</th>
+        	<th>Gift Status</th>     	
         	<th>ES School</th>        	
         	<th>GCO?</th>      	
         	<th>SL</th>         	      	
-        	<th>Zip Code</th>
-        	<th>Home Phone</th>
-        	<th>Other Phone</th>
-        	<th>Email</th>         	         	
+        	<th>Email</th>           	         	         	
         </tr>
       </thead>
       <tbody>
@@ -505,15 +563,12 @@
         <tr class='footer'>
           <th></th>
           <th></th>
-          <th></th>
+          <th></th>      
           <th></th>
           <th></th>
           <th></th>
           <th><select><option>No Change</option></select></th>
           <th><select><option>No Change</option></select></th>
-          <th></th>
-          <th></th>
-          <th></th>
           <th></th>
           <th></th>
           <th></th>
@@ -522,6 +577,23 @@
       </tfoot>      
 	</table>
   </div>
+<!-- Print Dialog -->
+<div id="printdlg" class="modalDialog">
+  <div class='inner success-dlg regular-width'>
+	<a href="#close" title="Close" class="close">X</a>
+	<div class='dialogtopbar'>
+	  <img class='logo-img' src="onclogo">
+	  <span class=logospan>Print Document</span>
+	</div>		
+	<div id="printselectdiv">
+	  <select id='printselect' onchange='documentTypeSelected()'><option value=''>-- Select Document Type --</option><option value='delcards'>Print Delivery Cards</select>  
+	</div>
+	<div class='buttonbar'>
+    	<button onclick="onCancel()">Cancel</button>
+        <button id="btnprint" onclick="onDeliveryCards()" disabled>Print</button>
+      </div> 
+  </div>
+</div>
 <!-- Success Dialog -->
 <div id="successdlg" class="modalDialog">
   <div class='inner success-dlg regular-width'>

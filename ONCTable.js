@@ -83,7 +83,7 @@ function initializeMultipleRowSelection()
 	$('#oncdatatable tbody').on('dblclick', 'tr', function () 
 	{
 		let selectedRowData = table.row( this ).data();
-		rowAction(selectedRowData.id);
+		rowAction(selectedRowData);
 	});
 }
 function resetTableButtons(table, count)
@@ -121,7 +121,7 @@ function executeFilter(filter)
 	if(!bResettingFilters)
 	{
 		let val = filter.value;
-
+		
 		sessionStorage.setItem(filter.id, filter.value);
 	    
 	    if(filter.dataset.type === 'tabledata')

@@ -15,5 +15,12 @@
 	<classpathentry kind="lib" path="lib/commons-codec-1.11.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/twilio-7.44.0-jar-with-dependencies.jar"/>
+	<classpathentry kind="lib" path="lib/kernel-7.1.11.jar"/>
+	<classpathentry kind="lib" path="lib/layout-7.1.11.jar"/>
+	<classpathentry kind="lib" path="lib/io-7.1.11.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-log4j12-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j.api-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/barcodes-7.1.11.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

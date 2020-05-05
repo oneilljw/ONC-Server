@@ -303,6 +303,15 @@ public class ServerRegionDB extends ServerPermanentDB
 			return "Z";
 	}
 	
+	School getSchoolByCode(String code)
+	{
+		int index=0;
+		while(index < schoolList.size() && !schoolList.get(index).getCode().contentEquals(code))
+			index++;
+		
+		return index < schoolList.size() ? schoolList.get(index) : null;
+	}
+	
 	boolean isZipCodeServed(String zipcode)
 	{
 		int index = 0;

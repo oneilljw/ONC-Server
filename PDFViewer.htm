@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<title>ONC PDF Viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+    function print()
+    {
+        var objFra = document.getElementById('myFrame');
+        objFra.contentWindow.focus();
+        objFra.contentWindow.print();
+    }
+</script>
+<style>
+	.header 
+	{
+		height: 70px;
+		width: 90% ;
+		margin: 0 auto;
+		background-color: #484e78;
+	}
+	.header-links
+	{
+		display: inline-block;
+	   	margin-top: 25px;   
+	}
+	.logo-img
+	{
+		vertical-align: middle;
+	   	margin-top: -8px;
+	   	margin-left: 5px;
+	   	margin-right: 10px;
+	   	max-height: 55px;
+	   	max-width: 75px;
+	}
+	.breadcrumb-only
+	{
+		color: white;
+		font-size: 18px;
+		font-style: italic;
+		text-decoration: none;
+	}
+	#pdfdiv
+	{
+		width: 90% ;
+		margin: 0 auto;
+	}
+	iframe
+	{
+		width: 100%;
+		display: block;
+		height: 600px;
+	}
+	button 
+	{
+		background-color: #484e78; /* was #336699; */
+		color: #ffffff;
+	   	border-radius: 6px;
+	 	border: none;
+	 	padding: 4px 6px;
+	 	font-size: 14px;
+	}
+	#btnspan
+	{
+		margin-top: 5px;
+		float: right;
+	}
+</style>
+<body>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a class='breadcrumb-only'>Delivery Cards</a>
+    </span>   
+  </div>
+  <div id='pdfdiv'>
+  	<iframe src='deliverycards' id="myFrame"></iframe>
+  	<span id='btnspan'>
+  		<button onclick="window.close()">Close</button>
+  		<button id='bt' onclick="print()">Print Delivery Cards</button>
+    </span>
+  </div>
+</body>
+</html>

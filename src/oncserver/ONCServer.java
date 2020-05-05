@@ -9,13 +9,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+
+import org.apache.log4j.BasicConfigurator;
 
 import ourneighborschild.OSXAdapter;
 
@@ -137,11 +142,13 @@ public class ONCServer
     
     private void createandshowGUI()
 	{
+    		MenuBarListener mbl = new MenuBarListener();
     		serverMenuBar = new ServerMenuBar();
-    		serverMenuBar.countsMI.addActionListener(new MenuBarListener());
-    		serverMenuBar.convertStatusMI.addActionListener(new MenuBarListener());
-    		serverMenuBar.createHistMI.addActionListener(new MenuBarListener());
-    		serverMenuBar.updateUserNameMI.addActionListener(new MenuBarListener());
+    		serverMenuBar.countsMI.addActionListener(mbl);
+    		serverMenuBar.convertStatusMI.addActionListener(mbl);
+    		serverMenuBar.createHistMI.addActionListener(mbl);
+    		serverMenuBar.updateUserNameMI.addActionListener(mbl);
+    		serverMenuBar.createDelCardsMI.addActionListener(mbl);
     		serverUI = ServerUI.getInstance();
     	
     		oncFrame =  new JFrame(APPNAME);
@@ -224,6 +231,7 @@ public class ONCServer
 					new ONCServer();
 					ONCSecureWebServer.getInstance();
 					ONCWebServer.getInstance();
+					BasicConfigurator.configure();
 				} 
 				catch (IOException e)
 				{
@@ -237,7 +245,29 @@ public class ONCServer
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
-			if(e.getSource() == serverMenuBar.countsMI)
+			if(e.getSource() == serverMenuBar.createDelCardsMI)
+			{
+/*				
+				//create delivery card pdf
+				try {
+					ServerFamilyDB serverFamilyDB = ServerFamilyDB.getInstance();
+					List<Integer> famIDList = new ArrayList<Integer>();
+					famIDList.add(254);
+					famIDList.add(255);
+					famIDList.add(256);
+					famIDList.add(270);
+					serverFamilyDB.createDelCardFile(2019, famIDList);
+					ServerUI.addDebugMessage("Delivery Card PDF created");
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+*/				
+			}
+			else if(e.getSource() == serverMenuBar.countsMI)
 			{
 //				//update py performance
 //				try {

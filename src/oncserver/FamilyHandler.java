@@ -228,14 +228,14 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 		else if(requestURI.contains("/familyupdate"))
 		{
-    			String response;
-    			
-    			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
-    				response = webpageMap.get("update");
-    			else
-    				response = invalidTokenReceived();
-    		
-    			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+				response = webpageMap.get("update");
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
 		else if(requestURI.contains("/updatefamily"))
 		{
@@ -290,6 +290,17 @@ public class FamilyHandler extends ONCWebpageHandler
 		
 			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
     	}
+		else if(requestURI.contains("/getdeliverycards"))
+		{
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+				response = webpageMap.get("getdeliverycards");
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
 		else if(requestURI.contains("/familynotes"))
 		{
 			WebClient wc;
@@ -345,6 +356,25 @@ public class FamilyHandler extends ONCWebpageHandler
 				//get the JSON for response to response submission
 				htmlResponse = ServerDNSCodeDB.getDNSCodesJSONP((String) params.get("callback"));
 			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/getdeliverycards"))
+		{
+			
+		}
+		else if(requestURI.contains("/createdeliverycards"))
+		{
+			HtmlResponse htmlResponse;
+			
+			if(params.containsKey("year") && params.containsKey("famid0") && 
+				clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				ServerFamilyDB famDB = ServerFamilyDB.getInstance();
+				htmlResponse = famDB.createDelCardFileJSONP(params); 
+			}			
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
 			

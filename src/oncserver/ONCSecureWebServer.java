@@ -167,7 +167,7 @@ public class ONCSecureWebServer
 								   "/checkmarkicon", "/oncloginstylesheet", "/vanilla", "/editprofile.js",
 								   "/login.js","/onccommon.js", "/onctable", "/giftcardicon", "/stoplighticon-any",
 								   "/stoplighticon-gray", "/stoplighticon-green", "/stoplighticon-yellow",
-								   "/stoplighticon-red"};
+								   "/stoplighticon-red","/deliverycards",};
 		
 		CommonHandler commonHandler = new CommonHandler();
 		for(String contextname: commonContexts)
@@ -179,7 +179,7 @@ public class ONCSecureWebServer
 		
 		//set up the family handler
 		String[] familyContexts = {"/referral","/referfamily","/familyupdate","/updatefamily",
-									"/updatefamilies","/familyview",
+									"/updatefamilies","/familyview","/getdeliverycards","/createdeliverycards",
 				 					"/families","/familystatus","/commonfamily.js","/familysearch",
 				 					"/getfamily","/references","/newfamily", "/familynotes", 
 				 					"/noteresponse", "/dnscode","/donotservecodes","/deadlines","/fammgmt"};

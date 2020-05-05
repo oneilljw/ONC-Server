@@ -10,7 +10,7 @@ public class ServerMenuBar extends JMenuBar
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public JMenuItem showLogMI, countsMI, convertStatusMI, createHistMI, updateUserNameMI;
+	public JMenuItem showLogMI, countsMI, convertStatusMI, createHistMI, updateUserNameMI, createDelCardsMI;
 
 	public ServerMenuBar()
 	{
@@ -39,5 +39,9 @@ public class ServerMenuBar extends JMenuBar
 	    updateUserNameMI = new JMenuItem("Update User Name");
 	    updateUserNameMI.setEnabled(true);
 	    menuTools.add(updateUserNameMI);
+	    
+	    createDelCardsMI = new JMenuItem("Deliviery Cards");
+	    createDelCardsMI.setEnabled(true);
+	    menuTools.add(createDelCardsMI);
 	}
 }
