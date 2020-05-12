@@ -21,8 +21,6 @@ import com.google.gson.reflect.TypeToken;
 public class ServerPartnerDB extends ServerSeasonalDB
 {
 	private static final int ORGANIZATION_DB_HEADER_LENGTH = 36;
-	private static final int STATUS_CONFIRMED = 5;
-	private static final int ORG_TYPE_CLOTHING = 4;
 	
 	private static List<PartnerDBYear> partnerDB;
 	
@@ -44,7 +42,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			//add the list for the year to the db
 			partnerDB.add(partnerDBYear);
 					
-			importDB(year, String.format("%s/%dDB/OrgDB.csv",
+			importDB(year, String.format("%s/%dDB/PartnerDB.csv",
 						System.getProperty("user.dir"),
 							year), "Partner DB", ORGANIZATION_DB_HEADER_LENGTH);
 			
@@ -106,12 +104,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			//confirmed partners to the temporary list
 			for(ONCPartner p: partnerDB.get(DBManager.offset(year)).getList())
 			{
-				if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollectionType.Ornament
-						&& p.getType() < ORG_TYPE_CLOTHING)
-				{
-					confirmedWebPartnerList.add(new ONCWebPartner(p));
-				}
-				else if(p.getStatus() == STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollectionType.Ornament)
+				if(p.getStatus() == ONCPartner.PARTNER_STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollectionType.Ornament)
+					confirmedWebPartnerList.add(new ONCWebPartner(p));				
+				else if(p.getStatus() == ONCPartner.PARTNER_STATUS_CONFIRMED && p.getGiftCollectionType() == GiftCollectionType.Ornament)
 					confirmedWebPartnerOtherList.add(new ONCWebPartner(p));		
 			}
 			
@@ -125,7 +120,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			
 			response = gson.toJson(confirmedWebPartnerList, listOfWebPartners);
 		}
-		else		//return a list of all in year partners sorted alphabetically
+		else	//return a list of all in year partners sorted alphabetically
 		{
 			Type listOfWebPartnersExtended = new TypeToken<ArrayList<ONCWebPartnerExtended>>(){}.getType();
 			ArrayList<ONCWebPartnerExtended> webPartnerExtendedList = new ArrayList<ONCWebPartnerExtended>();
@@ -248,7 +243,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		//If partner is located, replace the current partner with the update. Check to 
 		//ensure the partner status isn't confirmed with gifts assigned. If so, deny the change. 
-		if(index == oAL.size() || (reqOrg.getStatus() != STATUS_CONFIRMED && 
+		if(index == oAL.size() || (reqOrg.getStatus() != ONCPartner.PARTNER_STATUS_CONFIRMED && 
 									oAL.get(index).getNumberOfOrnamentsAssigned() > 0)) 
 		{
 			return "UPDATE_FAILED";
@@ -292,7 +287,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			//check if a change to the partner status is allowed
 			currPartner = oAL.get(index);
 			int currAssignedDeliveredCount = currPartner.getNumberOfOrnamentsAssigned() + currPartner.getNumberOfOrnamentsDelivered();
-			if(currPartner.getStatus() == STATUS_CONFIRMED && updatedPartner.getStatus() != STATUS_CONFIRMED &&
+			if(currPartner.getStatus() == ONCPartner.PARTNER_STATUS_CONFIRMED && updatedPartner.getStatus() != ONCPartner.PARTNER_STATUS_CONFIRMED &&
 				currAssignedDeliveredCount > 0)	
 			{
 				updatedPartner.setStatus(currPartner.getStatus());	
@@ -461,7 +456,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			index++;
 		
 		//partner must be present and have no ornaments assigned to be deleted
-		if(index < oAL.size() && oAL.get(index).getStatus() != STATUS_CONFIRMED &&
+		if(index < oAL.size() && oAL.get(index).getStatus() != ONCPartner.PARTNER_STATUS_CONFIRMED &&
 				oAL.get(index).getNumberOfOrnamentsAssigned() == 0)
 		{
 			oAL.remove(index);
@@ -479,7 +474,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		int ornReq = 0;
 		for(ONCPartner p : pAL)
-			if(p.getStatus() == STATUS_CONFIRMED)
+			if(p.getStatus() == ONCPartner.PARTNER_STATUS_CONFIRMED)
 				ornReq += p.getNumberOfOrnamentsRequested();
 		
 		return ornReq;
@@ -768,4 +763,65 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			return o1.getName().compareTo(o2.getName());
 		}
 	}
+/*	
+	void convertOldPartnerDBToNewPartnerDB()
+	{
+		int dbYear[] = {2012,2013,2014,2015,2016,2017,2018,2019};
+		
+		//for each year, read in the year, perform the conversion and then save the new file
+		for(int year : dbYear)
+		{
+			//get current partner list for the year
+			PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
+			List<ONCPartner> updatedPartnerList = new ArrayList<ONCPartner>();
+			
+			for(ONCPartner currP : partnerDBYear.getList())
+			{
+				//make a copy
+				ONCPartner updatedPartner = new ONCPartner(currP);
+				
+				if(currP.getType() == ONCPartner.PARTNER_TYPE_CLOTHING)
+				{
+					updatedPartner.setType(4);
+					updatedPartner.setGiftCollectionType(GiftCollectionType.Clothing);
+				}
+				else if(currP.getType() == ONCPartner.PARTNER_TYPE_COAT)
+				{
+					updatedPartner.setType(4);
+					updatedPartner.setGiftCollectionType(GiftCollectionType.Coats);
+				}
+				else if(currP.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
+				{
+					updatedPartner.setType(4);
+					updatedPartner.setGiftCollectionType(GiftCollectionType.ONCShopper);
+				}
+				
+				if(currP.getLastName().startsWith("ONC") || currP.getLastName().startsWith("Shopper") ||
+						currP.getLastName().startsWith("Wish Anticipation"))
+					updatedPartner.setType(5);
+				
+				updatedPartnerList.add(updatedPartner);
+			}
+			
+			saveConvertedDB(year, updatedPartnerList);
+		}
+	}
+	
+	void saveConvertedDB(int year, List<ONCPartner> convertedPartnerList)
+	{
+		String[] header = {"Org ID", "Status", "Type", "Gift Collection", "Name",
+				"Street #", "Street", "Unit", "City", "Zip", "Region", "Phone",
+	 			"Orn Requested", "Orn Assigned", "Orn Delivered", "Gifts Received Before",
+	 			"Gifts Received After", "Other", "Deliver To", "Special Notes",
+	 			"Contact", "Contact Email", "Contact Phone",
+	 			"Contact2", "Contact2 Email", "Contact2 Phone",
+	 			"Time Stamp", "Changed By", "Stoplight Pos", "Stoplight Mssg", "Stoplight C/B",
+	 			"PY Requested",	"PY Assigned", "PY Delivered",
+	 			"PY Received Before", "PY Received After"};
+		
+		String path = String.format("%s/%dDB/PartnerDB.csv", System.getProperty("user.dir"), year);
+		System.out.println(String.format("%d Partner.csv saved", year));
+		exportDBToCSV(convertedPartnerList, header, path);
+	}
+*/	
 }

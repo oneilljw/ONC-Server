@@ -13,6 +13,7 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCUser;
+import ourneighborschild.GiftCollectionType;
 import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
@@ -224,7 +225,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 				if(addedWish.getGiftStatus() == GiftStatus.Returned)
 					newStatus = GiftStatus.Returned;
 				else if(addedWish.getGiftStatus() == GiftStatus.Delivered && reqPartner != null && 
-							reqPartner.getID() > -1 && reqPartner.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
+							reqPartner.getID() > -1 && reqPartner.getGiftCollectionType() == GiftCollectionType.ONCShopper)
 					newStatus = GiftStatus.Shopping;
 				else if(addedWish.getGiftStatus() == GiftStatus.Delivered && reqPartner != null && reqPartner.getID() > -1)
 					newStatus = GiftStatus.Assigned;
@@ -239,9 +240,9 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 					newStatus = GiftStatus.Not_Selected;
 				else if(reqPartner != null && reqPartner.getID() == -1)
 					newStatus = GiftStatus.Selected;
-				else if(reqPartner != null && reqPartner.getType() != ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
+				else if(reqPartner != null && reqPartner.getGiftCollectionType() != GiftCollectionType.ONCShopper)
 					newStatus = GiftStatus.Assigned;
-				else if(reqPartner != null && reqPartner.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
+				else if(reqPartner != null && reqPartner.getGiftCollectionType() == GiftCollectionType.ONCShopper)
 					newStatus = GiftStatus.Shopping;
 				break;
 				
@@ -271,7 +272,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			case Missing:
 				if(addedWish.getGiftStatus() == GiftStatus.Received)
 					newStatus = GiftStatus.Received;
-				else if(reqPartner != null && reqPartner.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER)
+				else if(reqPartner != null && reqPartner.getGiftCollectionType() == GiftCollectionType.ONCShopper)
 					newStatus = GiftStatus.Shopping;
 				else if(addedWish.getGiftStatus() == GiftStatus.Assigned && reqPartner != null && reqPartner.getID() > -1)
 					newStatus = GiftStatus.Assigned;
@@ -297,7 +298,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	{	
 		if(replWish != null && reqPartner != null && 
 			replWish.getGiftStatus() == GiftStatus.Delivered && 
-			 reqPartner.getType() == ONCPartner.PARTNER_TYPE_ONC_SHOPPER && 
+			 reqPartner.getGiftCollectionType() == GiftCollectionType.ONCShopper && 
 			  addedWish.getIndicator() == GIFT_INDICATOR_ALLOW_SUBSTITUE)
 		{
 			return GIFT_WISH_DEFAULT_DETAIL;

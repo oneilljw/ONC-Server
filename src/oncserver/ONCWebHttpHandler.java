@@ -383,7 +383,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			String response = null;
 			
 			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
-				response = getPartnerTableWebpage(wc, "");	
+				response = getPartnerTableWebpage(wc, "", "", false);	
 			else
 				response = invalidTokenReceived();
 		
@@ -409,7 +409,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			{
 				//read the partner table web page
 				ResponseCode rc = processPartnerUpdate(wc, params);
-				response = getPartnerTableWebpage(wc, rc.getMessage());	
+				response = getPartnerTableWebpage(wc, rc.getTitle(), rc.getSuccessMessage(), rc.transactionSuccessful());	
 			}
 			else
 				response = invalidTokenReceived();
@@ -815,13 +815,15 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			
 			if(returnedPartner != null)
 			{
-				rc = new ResponseCode(String.format("Partner %d, %s successfully added to the database", 
-									returnedPartner.getID(), returnedPartner.getLastName()));
+				String dlgMessage = String.format("Partner %d, %s successfully added to the database", 
+						returnedPartner.getID(), returnedPartner.getLastName());
+				
+				rc = new ResponseCode(dlgMessage, "Partner Added", true);
 				mssg = "ADDED_PARTNER" + gson.toJson(returnedPartner, ONCPartner.class);
 				clientMgr.notifyAllInYearClients(year, mssg);
 			}
 			else
-				rc = new ResponseCode("Partner was unable to be added to the database");
+				rc = new ResponseCode("Partner was unable to be added to the database", "Add Failed", true);
 		}
 		else
 		{
@@ -861,17 +863,20 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			
 				if(returnedPartner != null)
 				{
-					rc = new ResponseCode(String.format("Partner %d, %s successfully updated", 
-									returnedPartner.getID(), returnedPartner.getLastName()));
+					String dlgMessage = String.format("Partner %d, %s successfully updated", 
+							returnedPartner.getID(), returnedPartner.getLastName());
+					
+					rc = new ResponseCode(dlgMessage, "Partner Updated", true);
 					
 					mssg = "UPDATED_PARTNER" + gson.toJson(returnedPartner, ONCPartner.class);
 					clientMgr.notifyAllInYearClients(year, mssg);
 				}
 				else
-					rc = new ResponseCode(String.format("No changes detected for %s", currPartner.getLastName()));
+					rc = new ResponseCode(String.format("No changes detected for %s", currPartner.getLastName()),
+							"No Change Made", true);
 			}
 			else
-				rc = new ResponseCode("Partner was not found in the database");
+				rc = new ResponseCode("Partner was not found in the database", "Partner Not Found", true);
 		}
 
 		return rc;	

@@ -3,7 +3,6 @@ package oncserver;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -2340,10 +2339,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		cellList.addCell("Region:  ", ServerRegionDB.getRegion(f.getRegion()), boldfont, datafont);
 		cellList.addCell("Primary Phone:  ", f.getHomePhone(), boldfont, datafont);
 		cellList.addCell("Alternate Phone:  ", f.getCellPhone(), boldfont, datafont);
-		cellList.addCell("Language:  ", f.getLanguage(), boldfont, datafont);
-		cellList.addCell();
-		cellList.addCell("Special Delivery Comments:  ", f.getDeliveryInstructions(), boldfont, datafont);
-		cellList.addCell();
+		cellList.addCell("Language:  ", f.getLanguage(), boldfont, datafont, 1, 2);
+		cellList.addCell("Special Delivery Comments:  ", f.getDeliveryInstructions(), boldfont, datafont, 1,2);
 	
 		float[] midColWidths = {220, 180};
 		table = new Table(midColWidths);
@@ -2491,6 +2488,17 @@ public class ServerFamilyDB extends ServerSeasonalDB
     											.setHeight(23)
     											.setBorder(Border.NO_BORDER));
     	}
+    	void addCell(String leader, String data, PdfFont leaderFont, PdfFont dataFont, int rowspan, int colspan)
+    	{
+    		Cell newCell = new Cell(rowspan, colspan);
+    		newCell.add(new Paragraph().add(new Text(leader).setFont(leaderFont))
+									  .add(new Text(data).setFont(dataFont))
+									  .setFontSize(12));
+    		newCell.setHeight(23).setBorder(Border.NO_BORDER);
+    		
+    		cellList.add(newCell);
+    											
+    	}
     	void addCell()
     	{
     		cellList.add(new Cell().setBorder(Border.NO_BORDER));
@@ -2503,8 +2511,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
     
     private class CreationResult
     {
-    	private boolean bResult;
-    	private String message;
+    	@SuppressWarnings("unused")
+		private boolean bResult;
+    	@SuppressWarnings("unused")
+		private String message;
     		
     	CreationResult(boolean bResult, String message)
     	{

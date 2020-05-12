@@ -12,6 +12,7 @@
 <script type="text/javascript" src="onccommon.js"></script>
 <script type="text/javascript" src="onctable.js"></script>
 <script>
+	var bShowSuccessDialog = SHOW_SUCCESS_DIALOG;
 	var getTableData = {resource:'partners'};
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	
@@ -79,6 +80,7 @@
 		    	{ data: "orn_delivered", width: '28px', className: 'dt-body-center' },
 		    	{ data: "orn_received", width: '28px', className: 'dt-body-center' }
 		    ],
+		    order: [[2,"asc"],[1, "asc"]],
 		    footerCallback: function ( row, data, start, end, display ) 
 		    {
 		    	var api = this.api(), data;
@@ -128,15 +130,22 @@
    				table.column(3).search(document.getElementById('partnerstatus').value);
    				table.column(4).search(document.getElementById('partnercollection').value);
    				table.draw();
-    				
-    			$.getJSON('getstatus', params, function(status)
-    			{
-    				if(status.userstatus === 'Update_Profile')
-    				{
-    					showEditProfileDialog();
-    					window.location=document.getElementById('editprofileanchor').href;
-    				}
-    			});
+   				
+   				//if the page load was the result of a successful partner transaction, show the dialog box
+   			  	if(bShowSuccessDialog)
+   		  			window.location=document.getElementById('successanchor').href;
+   			  	else
+   			  	{
+   			  		const params = "callback=?";
+   			  		$.getJSON('getstatus', params, function(status)
+   			  		{
+   			  			if(status.userstatus === 'Update_Profile')
+   			  			{
+   			  			    showEditProfileDialog();
+   			  			    window.location=document.getElementById('editprofileanchor').href;
+   			  			}
+   			  		}); 	
+   			  	}
     		});
     	});
     	
@@ -178,12 +187,17 @@
 	div.dataTables_filter input 
 	{
 		width: 120px;
-	}	 
+	}
+	.success-dlg
+	{
+		min-height: 160px;
+	}    	 
 </style>
 </head>
 <body>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
+  <a href="#successdlg" id="successanchor" style="visibility: hidden">Success</a>
   <div class='header'> 
     <img class='logo-img' src="onclogo">
     <span class='header-links'>
@@ -216,9 +230,8 @@
     	    <option value="Business">Business</option>
 		    <option value="Church">Church</option>
 		    <option value="School">School</option>
-		    <option value="Clothing">Clothing</option>
-		    <option value="Coat">Coat</option>
-		    <option value="ONC Shopper">ONC Shopper</option>
+		    <option value="Individual">Individual</option>
+		    <option value="Internal">Internal</option>
 		  </select>
 		  <label for='partnerstatus' class='filterlabel'>Status:</label>
 		  <select id="partnerstatus" title="Filter Partners by Status" data-type='search' data-column='3' data-table='oncdatatable' data-reset='resetbtn' onchange='executeFilter(this)'>
@@ -237,6 +250,9 @@
 		    <option value="General">General</option>
 		    <option value="Ornament">Ornament</option>
 		    <option value="Meals">Meals</option>
+		    <option value="Clothing">Clothing</option>
+	  	 	<option value="Coats">Coats</option>
+	  	  	<option value="ONCShopper">ONC Shopper</option>
 		    <option value="Unknown">Unknown</option>
 		  </select>
 		</span>
@@ -274,7 +290,21 @@
         </tr>
       </tfoot>
 	</table>
-  </div> 
+  </div>
+<!-- Success Dialog -->
+  <div id="successdlg" class="modalDialog">
+	<div class='inner success-dlg regular-width'>
+		<a id='closepopup' href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class=logospan id="successfamheader">SUCCESS_DIALOG_HEADER</span>
+		</div>		
+		<div>
+		  <div class='column left'><img class='errorimg' src="checkmarkicon"></div>
+		  <div class='column right'>SUCCESS_DIALOG_MESSAGE</div>	  
+		</div>
+	</div>
+  </div>     
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
 	<div class='inner extended-width'>

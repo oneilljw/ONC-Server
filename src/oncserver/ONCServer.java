@@ -284,26 +284,23 @@ public class ONCServer
 			}
 			else if(e.getSource() == serverMenuBar.convertStatusMI)
 			{
-//				//update py performance
-//				try {
-//					ServerFamilyDB serverFamilyDB = ServerFamilyDB.getInstance();
-//					serverFamilyDB.convertFamilyDBForStatusChanges(2016);
-//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2016));
-//					serverFamilyDB.convertFamilyDBForStatusChanges(2015);
-//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2015));
-//					serverFamilyDB.convertFamilyDBForStatusChanges(2014);
-//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2014));
-//					serverFamilyDB.convertFamilyDBForStatusChanges(2013);
-//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2013));
-//					serverFamilyDB.convertFamilyDBForStatusChanges(2012);
-//					clientMgr.addLogMessage(String.format("%d ServerDB Performance Updated", 2012));
-//				} catch (FileNotFoundException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				} catch (IOException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				}
+/*				
+				//convert org db to partner db. Add Individual type
+				try 
+				{
+					ServerPartnerDB serverPartnerDB = ServerPartnerDB.getInstance();
+					serverPartnerDB.convertOldPartnerDBToNewPartnerDB();
+					
+				} catch (FileNotFoundException e1)
+				{
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) 
+				{
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+*/				
 			}			
 			else if(e.getSource() == serverMenuBar.createHistMI)
 			{

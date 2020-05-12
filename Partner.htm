@@ -81,6 +81,8 @@
 				setInput('cyDel', partner.orn_delivered);
 				setInput('cyRec', partner.orn_rec_before);
 				setInput('cyLate', partner.orn_rec_after);
+				
+				onTypeChange(document.getElementById('type'));
 			});
   		}
   		else
@@ -88,6 +90,27 @@
   			document.getElementById('objectid').value= "New";
   		}
 	});
+  	
+  	function onTypeChange(element)
+  	{
+  		if(element.value == 'Individual')
+  		{
+  			document.getElementById('secondcontact-info').style.display = 'none';
+  			document.getElementById('phone-span').style.display = 'none';
+  			document.getElementById('firstcontactname-span').style.display = 'none';
+  			
+  			let fullname = document.getElementById('partfn').value + ' ' + document.getElementById('partln').value;
+  			document.getElementById('firstcontactname').value = fullname;
+  			
+  			document.getElementById('firstcontactphone').value = document.getElementById('phone').value;
+  		}
+  		else
+  		{
+  			document.getElementById('secondcontact-info').style.display = 'block';
+  			document.getElementById('phone-span').style.display = 'inline-block';
+  			document.getElementById('firstcontactname-span').style.display = 'inline-block';
+  		}
+  	}
   	
   	function verifyPhoneNumber(elementNum)
   	{
@@ -182,20 +205,13 @@
   	  <div>
   	  	<label for='objectid'>ID:</label>
   		<input id='objectid' type='text' readonly>
-    	<label for='partln'>Organization or Last Name:</label>
-    	<input id='partln' title="Organization or Last Name" name="lastname" type="text" size="42" required>
-    	<label for='partfn'>First Name (if individual):</label>
-    	<input id='partfn' title="First Name" name="firstname" type="text" size="14">
-      </div>
-      <div class='fieldsetdiv'>
-    	<label for='type'>Partner Type:</label>
-		<select id="type" title="Partner Type" name="type">
+  		<label for='type'>Partner Type:</label>
+		<select id="type" title="Partner Type" name="type" onchange='onTypeChange(this)'>
       	  <option value="Business">Business</option>
 	  	  <option value="Church">Church</option>
 	  	  <option value="School">School</option>
-	  	  <option value="Clothing">Clothing</option>
-	  	  <option value="Coat">Coat</option>
-	  	  <option value="ONC Shopper">ONC Shopper</option>
+	  	  <option value="Individual">Individual</option>
+	  	  <option value="Internal">Internal</option>
 		</select>
 		<label for='status'>Status:</label>
 		<select id="status" title="status" name="status">
@@ -212,8 +228,17 @@
 	  	  <option value="General">General</option>
 	  	  <option value="Ornament">Ornament</option>
 	  	  <option value="Meals">Meals</option>
-	  	    <option value="Unknown">Unknown</option>
-		</select>
+	  	  <option value="Clothing">Clothing</option>
+	  	  <option value="Coats">Coats</option>
+	  	  <option value="ONCShopper">ONC Shopper</option>
+	  	  <option value="Unknown">Unknown</option>
+		</select>   	
+      </div>
+      <div class='fieldsetdiv'>
+		<label for='partln'>Organization or Last Name:</label>
+    	<input id='partln' title="Organization or Last Name" name="lastname" type="text" size="42" required>
+    	<label for='partfn'>First Name (if individual):</label>
+    	<input id='partfn' title="First Name" name="firstname" type="text" size="14">
 	  </div>
 	  <div class='fieldsetdiv'>
 		<label for='housenum'>Address:</label>
@@ -222,27 +247,31 @@
     	<input id="unit" title="Apt. or Unit #" name="unit" type="text" size="8" placeholder="Unit #" autocomplete="off">
     	<input id="city" title="City" name="city" type="text" size='20' placeholder="City">	
     	<input id="zipcode" title="Zip Code" name="zipcode" type="text" size='10' placeholder="Zip Code">
-    	<label for='phone'>Phone #:</label>
-    	<input id="phone" title="Phone #" name="phone" type="text" size="12" placeholder="Phone #" onchange="verifyPhoneNumber(0)">
+    	<span id='phone-span'>
+    		<label for='phone'>Phone #:</label>
+    		<input id="phone" title="Phone #" name="phone" type="text" size="16" placeholder="Phone #" onchange="verifyPhoneNumber(0)">
+    	</span>
       </div>
     </fieldset>
     <fieldset>
   	  <legend class="legend-major">Partner Contact Information</legend>
   	  <div>
-  		<label for='firstcontactname'>1st Contact Full Name:</label>
-		<input id="firstcontactname" title="1st Contact Name" name="firstcontactname" type="text" size="20" autocomplete="off" required>
+  	    <span id='firstcontactname-span'>
+  			<label for='firstcontactname'>1st Contact Full Name:</label>
+			<input id="firstcontactname" title="1st Contact Name" name="firstcontactname" type="text" size="30" autocomplete="off" required>
+		</span>
 		<label for='firstcontactemail'>Email:</label>
-		<input id='firstcontactemail' title="1st Contact Email address" name="firstcontactemail" type="email" size="30" required>
+		<input id='firstcontactemail' title="1st Contact Email address" name="firstcontactemail" type="email" size="32" required>
 		<label for='firstcontactphone'>Phone:</label>
-		<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontactphone" type="text" size="18" onchange="verifyPhoneNumber(1)">
+		<input id="firstcontactphone" title="1st Contact Phone #" name="firstcontactphone" type="text" size="20" onchange="verifyPhoneNumber(1)">
 	  </div>
-	  <div class='fieldsetdiv'>
+	  <div id='secondcontact-info' class='fieldsetdiv'>
 		<label for='secondcontactname'>2nd Contact Full Name:</label>
-		<input id="secondcontactname" title="2nd Contact Name" name="secondcontactname" type="text" size="20" autocomplete="off">
+		<input id="secondcontactname" title="2nd Contact Name" name="secondcontactname" type="text" size="29" autocomplete="off">
 		<label for='secondcontactemail'>Email:</label>
-		<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="30">
+		<input id='secondcontactemail' title="2nd Contact Email address" name="secondcontactemail" type="email" size="32">
 		<label for='secondcontactphone'>Phone:</label>
-		<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontactphone" type="text" size="18" onchange="verifyPhoneNumber(2)">
+		<input id="secondcontactphone" title="2nd Contact Phone #" name="secondcontactphone" type="text" size="20" onchange="verifyPhoneNumber(2)">
 	  </div>
   	</fieldset>
   	<fieldset>

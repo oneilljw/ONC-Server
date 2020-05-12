@@ -28,7 +28,7 @@ public class ServerMenuBar extends JMenuBar
 	    countsMI.setEnabled(false);
 	    menuTools.add(countsMI);
 	    
-	    convertStatusMI = new JMenuItem("Convert Family & Gift Status");
+	    convertStatusMI = new JMenuItem("Convert Partner DB");
 	    convertStatusMI.setEnabled(true);
 	    menuTools.add(convertStatusMI);
 	    

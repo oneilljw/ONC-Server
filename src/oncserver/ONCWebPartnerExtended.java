@@ -50,7 +50,7 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 	
 	String getTypeString(int type)
 	{
-		String[] types = {"Any","Business","Church","School", "Clothing", "Coat", "ONC Shopper"};
+		String[] types = {"Any","Business","Church","School", "Individual", "Internal"};
 		return types[type];
 	}
 	
@@ -71,7 +71,7 @@ public class ONCWebPartnerExtended extends ONCWebPartner
 	
 	static int getType(String zType)
 	{
-		String[] types = {"Any","Business","Church","School", "Clothing", "Coat", "ONC Shopper"};
+		String[] types = {"Any","Business","Church","School", "Individual", "Internal"};
 		
 		int index = 0;
 		while(index < types.length && !types[index].equals(zType))
