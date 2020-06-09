@@ -3,7 +3,6 @@
 <head lang="en">
   <title>ONC Volunteer Sign-In</title>
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
-  <link rel="stylesheet" type="text/css" href="oncdialogstylesheet.css">
   <script src="jquery.js"></script>
   <script> 
   	var errorColor = '#FF9999';
@@ -301,8 +300,9 @@
     		$.post('signinvolunteer', volunteerparams, function(data, textStatus)
     		{
     			clearAllButGroupSelect();
-			document.getElementById('success_mssg').innerHTML = data.message;
-			window.location=document.getElementById('registeredanchor').href;
+    			console.log(data);
+				document.getElementById('success_mssg').innerHTML = data.message;
+				window.location=document.getElementById('registeredanchor').href;
     		}, "json");
 	}
 	
@@ -373,7 +373,6 @@
   </script>
   <style>
     .inputline {display: block; margin-bottom: 10px;}
-	.rightspan {float: right;}
 	#errormessage
 	{
 		float: left;
@@ -388,30 +387,23 @@
 </head>
 <body>
 <a href="#registereddlg" id="registeredanchor" style="visibility: hidden">Success</a>
-  <div id="topbar" class="topbar">
-    <img src="onclogo" height="55" width="75"/>
-    <p><span id="banner">BANNER_TITLE</span><br>
-	<span id="message">(Please complete and click Sign In)</span></p>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a class='breadcrumb-only'>Volunteer Sign-In</a>
+    </span>   
   </div>
-   <nav>
-    <ul>
-	    <li id="homeli"><a id='homelink' href='onchomepage'>Home</a></li>
-	</ul>
-	<ul class='floatright'>
-	    <li id="logoutli"><a id='logoutlink' href='onchomepage'>Logout</a></li>
-	</ul>
-  </nav>
   <form id='signinform' name='signinform'>  
   <input id="year" value=CURRENT_YEAR type="hidden" name="year">
   <br>
   <fieldset>
-    <legend class="legend-major">Volunteer Information: If you registered via the ONC Website/SignUpGenius, enter the first and last name you used when you registered and we'll lookup your contact information</legend>
+    <legend class="legend-major">Volunteer Information: If you registered via the ONC Website/SignUpGenius, enter the first and last name you registered with and we'll lookup your information</legend>
   <div class= 'inputline' >
       <label for="delfn">Your Name:</label>
       <input id="delfn" title="First Name" name="delFN" type="text" size="20" placeholder="First Name" onchange ='getContactInfo()'>
       <input id="delln" title="Last Name" name="delLN" type="text" size="20" placeholder="Last Name" onchange ='getContactInfo()'>
-      <span class='rightspan'>
-	  <input id="btnclear" class='rightspan' type="button" value='Reset' style="background-color: #336699; color: #ffffff;" title="Click to clear info" onclick= clearForm()>
+      <span class='floatright'>
+	  <button type="button" title="Click to clear info" onclick= clearForm()>Reset</button>
 	  </span>
   </div>
   <div class= 'inputline'>
@@ -442,21 +434,23 @@
   <br>
   <div>
   	<span id="errormessage"></span>
-  	<span class ='rightspan'>
-  	  <input id="btnsubmit" type="button" value="Sign In" style="background-color: #336699; color: #ffffff;" title="Click to sign in" onclick= verifySignIn()>
+  	<span class ='floatright'> 	 
+  	  <button type='button' title="Click to sign in" onclick= verifySignIn()>Sign In</button>
   	</span>
   </div>
  </form>
  <!-- Success Dialog -->
   <div id="registereddlg" class="modalDialog">
-	<div class='inner'>
+	<div class='inner success-dlg regular-width'>
 	<a id='closepopup' href="#close" title="Close" class="close" onclick="onCloseDialog()"></a>
 		<div class='dialogtopbar'>
-		  <img class='logoimg' src="onclogo">
+		  <img class='logo-img' src="onclogo">
 		  <span class='logospan'>You're Signed In!</span>
 		</div>
-		<p id='success_mssg'>SUCCESS_MSSG</p>
-    	<div id='buttonbar'>
+		<div class='column left'><img class='errorimg' src="checkmarkicon"></div>
+		<div id='success_mssg' class='column right'>SUCCESS_MSSG</div>
+<!--    <p id='success_mssg'>SUCCESS_MSSG</p>-->		
+    	<div class='buttonbar'>
       <button id="btnsuccess" onclick="onCloseDialog()">Close</button>
     	</div> 
 	</div>

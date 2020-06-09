@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.HttpCookie;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -180,16 +181,33 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		if(html.getCookie() != null)
 		{
 			Headers header = t.getResponseHeaders();
-    			ArrayList<String> headerList = new ArrayList<String>();
-    			headerList.add(html.getCookie().toString());
-    			header.put("Set-Cookie", headerList);
+			
+    		ArrayList<String> headerList = new ArrayList<String>();
+    		headerList.add(html.getCookie().toString());
+    		header.put("Set-Cookie", headerList);
+    		
+    		//add a SameSite=None cookie
+//    		ArrayList<String> sameSiteList = new ArrayList<String>();
+//    		headerList.add(getSameSiteCookie().toString());
+//    		header.put("Set-Cookie", sameSiteList);
 		}
-		
+				
 		t.sendResponseHeaders(html.getCode(), html.getResponse().getBytes().length);
 		OutputStream os = t.getResponseBody();
 		os.write(html.getResponse().getBytes());
 		os.close();
 		t.close();
+	}
+	
+	HttpCookie getSameSiteCookie()
+	{
+		HttpCookie cookie = new HttpCookie("SameSite", "Lax");
+		cookie.setPath("/");
+		cookie.setDomain(".oncdms.org");
+		cookie.setSecure(true);
+		cookie.setHttpOnly(true);
+		
+		return cookie;
 	}
 	
 	void sendXMLResponse(HttpExchange t, HtmlResponse html) throws IOException

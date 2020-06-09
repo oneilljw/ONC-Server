@@ -123,6 +123,8 @@ function executeFilter(filter)
 		let val = filter.value;
 		
 		sessionStorage.setItem(filter.id, filter.value);
+		
+		console.log(filter.dataset);
 	    
 	    if(filter.dataset.type === 'tabledata')
 	    	getTableDataFromServer(document.getElementById(filter.dataset.table));

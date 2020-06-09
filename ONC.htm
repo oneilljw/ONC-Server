@@ -337,7 +337,7 @@
     
     function getChildWishesFromServer(year, childid)
     {
-    		childwishparams= "year=" + year + "&childid=" + childid + "&callback=?";
+    	childwishparams= "year=" + year + "&childid=" + childid + "&callback=?";
 
 		$.getJSON('wishes', childwishparams, function(data)
 		{
