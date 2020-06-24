@@ -577,9 +577,9 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		//create a new partner data base year for the year provided in the newYear parameter
 		//Then copy the prior years partners to the newly created partner db year list.
 		//Reset each partners status to NO_ACTION_YET
-		//Mark the newly created WishCatlogDBYear for saving during the next save event
+		//Mark the newly created PartnerDBYear for saving during the next save event
 				
-		//get a reference to the prior years wish catalog
+		//get a reference to the prior years partner catalog
 		List<ONCPartner> lyPartnerList = partnerDB.get(partnerDB.size()-1).getList();
 				
 		//create the new PartnerDBYear
@@ -748,8 +748,8 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
 		if(partnerDBYear.isUnsaved())
 		{
-//			System.out.println(String.format("PartnerDB save() - Saving Partner DB"));
-			String path = String.format("%s/%dDB/OrgDB.csv", System.getProperty("user.dir"), year);
+//			System.out.println(String.format("PartnerDB save() - Saving %d Partner DB", year));
+			String path = String.format("%s/%dDB/PartnerDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(partnerDBYear.getList(),  header, path);
 			partnerDBYear.setChanged(false);
 		}
