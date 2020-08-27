@@ -198,7 +198,10 @@
   		else	//delivery address is the same. Copy and set same as checkbox
   		{
   			let sameaddresscheckbox = document.getElementById('sameaddress');
-  			sameaddresscheckbox.checked = true;
+//			COVID 19 -- NO DELIVERIES SO NO DELIVERY ADDRESS. SO DELIVERY ADDRESS WILL ALWAYS BE HOH ADDRESS
+//			CHECKBOX IS LEFT UNCHECKED TO ALLOW USER TO UPDATE HOH ADDRESS. DELIVERY ADDRESS FIELDSET IS HIDDEN
+//  		sameaddresscheckbox.checked = true;
+  			sameaddresscheckbox.checked = false;
   			sameAddressClicked(sameaddresscheckbox);	
   		}
   		
@@ -356,7 +359,7 @@
 	  <button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
 	</div>
   </fieldset>
-  <fieldset>
+  <fieldset class='covidfieldset'>
   <legend class="legend-major">Delivery Address and Transportation: Update address that ONC will use for gift delivery and family's access to transportation</legend>	
 	<input id="sameaddress" type="checkbox" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">
 	<label class='checkbox-label'>Check if same as HOH address, else complete:</label>
@@ -400,7 +403,7 @@
       </table>
     </div>      
   </fieldset>
-  <fieldset>
+  <fieldset class='covidfieldset'>>
   	<legend>Other adults in family (in addition to the head of household)</legend>
    <div id='adulttablediv'> 		
 	 <table id="adulttable" class='display compact' style="width:100%">
@@ -417,7 +420,7 @@
     </div>  
   </fieldset>
   </fieldset>
-  <fieldset>
+  <fieldset class='covidfieldset'>>
   <legend class="legend-major">Meal Assistance - Review Only. Email ONC with updates</legend>
   	<div>
 	  <label for='mealtype'>Requested For:</label>
@@ -491,8 +494,8 @@
   			  <legend class="legend-major">Contact Information</legend>
   			  <p>
     	  		<label for="userfirstname">Name:</label>
-    	  		<input id='userfirstname' type="text" size="14" placeholder="First Name" onchange='checkForProfileChange()'>
-    	  		<input id='userlastname' type="text" size="17" placeholder="Last Name" onchange='checkForProfileChange()'>
+    	  		<input id='userfirstname' type="text" size="12" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="14" placeholder="Last Name" onchange='checkForProfileChange()'>
     		  </p>   		
     		  <p>
     	  		<label for="userorg">Organization:</label>

@@ -146,7 +146,7 @@
 		    		{
 	    				return $('#giftreq').prop("checked") == true ? wish : '';
 		    		},
-		    		visible: false
+		    		visible: true	//covid 2020, normally is false
 		    	},
 		    	{
 		    		data: "wish1",
@@ -155,7 +155,7 @@
 		    		{
 	    				return $('#giftreq').prop("checked") == true ? wish : '';
 		    	    },
-		    		visible: false
+		    		visible: true	//covid 2020, normally is false
 		    	},
 		    	{
 		    		data: "wish2",
@@ -164,7 +164,7 @@
 		    		{
 	    				return $('#giftreq').prop("checked") == true ? wish : '';
 		    		},
-		    		visible: false
+		    		visible: false	//covid 2020, normally is false, this year will not be displayed
 		    	},
 		    	{
 		    		data: "wish3",
@@ -173,7 +173,7 @@
 		    		{
 	    				return $('#giftreq').prop("checked") == true ? wish : '';
 		    		},
-		    		visible: false
+		    		visible: true	//covid 2020, normally is false
 		    	},
 		    ],
 //		    drawCallback: function( settings )
@@ -474,7 +474,8 @@
 	    	
 	    	setInput('childwish0', '');
   			setInput('childwish1', '');
-    		setInput('childwish2', 'Age Appropriate Gift');
+//    		setInput('childwish2', 'Age Appropriate Gift');
+    		setInput('childwish2', 'No Wish 2 - Covid 19');
     		setInput('childwish3', '');
 	    	
 	    	document.getElementById('childupdate').innerHTML = "Add";
@@ -733,10 +734,12 @@
 		let childtable = $('#childtable').DataTable();
 		
 		//set the visibility of the wish columns
-		childtable.columns( [6,7,8,9] ).visible(cb.checked);
+<!--	childtable.columns( [6,7,8,9] ).visible(cb.checked); Covid 2020 temporary change-->
+		childtable.columns( [6,7,9] ).visible(cb.checked);
 		
 		//set the size of the child table div
-		let width = cb.checked ? '100%' : '65%';
+<!--	let width = cb.checked ? '100%' : '65%';	Covid 2020 temporary change-->
+		let width = cb.checked ? '100%' : '100%';
 		$('#childtablediv').width(width);
 		
 		//force a redraw of the child table
@@ -903,7 +906,7 @@
 	}
 	#childtablediv 
 	{
-		width: 65%;
+		width: 100%;	/* Covid 2020 - normally should be width: 65%; */
 		margin-top: 5px;
 	}	
 	#childtable td	/* keeps table rows to single line with ... */
@@ -917,7 +920,8 @@
 	{ 
 		width: 40%;
 	}
-	#childwishfieldset { display: none; }
+/*	#childwishfieldset { display: none; } Covid 19 - no meals, only gifts */
+	#childwishfieldset { display: block; }
 	.edit-background span { font-size: 14px; }
 	textarea 
   	{
@@ -943,7 +947,10 @@
 		display: block;
 		margin: 0px 10px 0px 0px;
 	}
-	/* Create two unequal columns that floats next to each other */
+	#childwish2
+	{
+		display: none;
+	}
 
   </style>
 </head>
@@ -1014,7 +1021,7 @@
 	  <button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
 	</div>
   </fieldset>
-  <fieldset>
+  <fieldset class='covidfieldset'>
   <legend class="legend-major">Delivery Address and Transportation: Provide address that ONC will use for gift delivery and family's access to transportation</legend>	
 	<input id="sameaddress" type="checkbox" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">
 	<label class='checkbox-label'>Check if same as HOH address, else complete:</label>
@@ -1035,7 +1042,7 @@
   <legend class="legend-major">Family Members &#38; Gift Assistance</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
-  	<input type="checkbox" id='giftreq' name='giftreq' onclick='onGiftAssistanceClicked(this)' title="Check if family wants gift assistance">
+  	<input type="checkbox" id='giftreq' name='giftreq' onclick='onGiftAssistanceClicked(this)' title="Check if family wants gift assistance" checked disabled>
   	<label class='checkbox-label'>Check if family is requesting gift assistance for their children</label>
 	<div id='childtablediv'> 
 	  <table id="childtable" class='display compact' style="width:100%">
@@ -1047,10 +1054,10 @@
         		<th>DoB</th>
         		<th>Age/Gen.</th>
         		<th>School</th>
-        		<th>Wish 1</th>	<!-- hidden, stores wishes entered by counselor -->
-        		<th>Wish 2</th>	<!-- hidden, stores wishes entered by counselor -->
-        		<th>Wish 3</th>	<!-- hidden, stores wishes entered by counselor -->
-        		<th>Alt. Wish</th>	<!-- hidden, stores wishes entered by counselor -->
+        		<th>Wish 1</th>	<!-- hidden, stores wishes entered by counselor; Covid 2020 visible -->
+        		<th>Wish 2</th>	<!-- hidden, stores wishes entered by counselor Covid 2020 visible-->
+        		<th>Wish 3</th>	<!-- hidden, stores wishes entered by counselor Covid 2020 never visible-->
+        		<th>Alt. Wish</th>	<!-- hidden, stores wishes entered by counselor Covid 2020 visible-->
     		</tr>
     	</thead>
     	<tbody>
@@ -1058,7 +1065,7 @@
       </table>
     </div>      
   </fieldset>
-  <fieldset>
+  <fieldset class='covidfieldset'>
   	<legend>Other adults in family (in addition to the head of household)</legend>
    <div id='adulttablediv'> 		
 	 <table id="adulttable" class='display compact' style="width:100%">
@@ -1075,7 +1082,7 @@
     </div>  
   </fieldset>
   </fieldset>
-  <fieldset>
+  <fieldset class='covidfieldset'>
   <legend class="legend-major">Meal Assistance: ONC will refer family to WFCM or other meal providing organizations</legend>
 	<input type="checkbox" id='mealreq' onclick="mealRqrdClicked(this)" title="Check if family needs meal assistance">Check to request meal assistance for:
     <select id="mealtype" name="mealtype" title="When does the family need meal assistance?" disabled>
@@ -1197,8 +1204,8 @@
   			  <legend class="legend-major">Contact Information</legend>
   			  <p>
     	  		<label for="userfirstname">Name:</label>
-    	  		<input id='userfirstname' type="text" size="14" placeholder="First Name" onchange='checkForProfileChange()'>
-    	  		<input id='userlastname' type="text" size="17" placeholder="Last Name" onchange='checkForProfileChange()'>
+    	  		<input id='userfirstname' type="text" size="12" placeholder="First Name" onchange='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="14" placeholder="Last Name" onchange='checkForProfileChange()'>
     		  </p>   		
     		  <p>
     	  		<label for="userorg">Organization:</label>
@@ -1334,7 +1341,8 @@
       	  </fieldset>
 		  <fieldset id='childwishfieldset'>
 		      <legend class="legend-major">Child Wishes</legend>
-		      <p><i>Provide three wishes in priority order, plus an alternate. If clothing or footwear, please include size.</i></p>
+<!--  		  <p><i>Provide three wishes in priority order, plus an alternate. If clothing or footwear, please include size.</i></p> Covid 19 Only two gifts per child-->
+		      <p><i>Provide two wishes in priority order, plus an alternate. If clothing or footwear, please include size.</i></p>
 		      <p>
 		      <label for="childwish0">Wish 1:</label>
 		      <textarea id='childwish0' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
@@ -1342,7 +1350,7 @@
 		      <label for="childwish1">Wish 2:</label>
 		      <textarea id='childwish1' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
 		      </p><p>
-		      <label for="childwish2">Wish 3:</label>
+<!--  		  <label for="childwish2">Wish 3:</label> Removed for 2020 - COVID 19 -->
 		      <textarea id='childwish2' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
 		      </p><p>
 		      <label for="childwish3">Alt. Wish:</label>

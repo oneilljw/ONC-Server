@@ -246,11 +246,15 @@ function onSubmitFamilyForm(bReferral)
 		//HoH and Delivery addresses are good. First check the delivery address
 		if(hohNameElement[0].value !== "" && hohNameElement[1].value !== "")
 		{
-			if(delAddrElement[0].value !== "" && delAddrElement[1].value !== ""  &&
-				hohAddrElement[0].value !== "" && hohAddrElement[1].value != "")
+			//COVID 19 -- ELIMINATE THE DELIVERY ADDRESS CHECK. ONLY CHECK HOH ADDRESS
+//			if(delAddrElement[0].value !== "" && delAddrElement[1].value !== ""  &&
+//				hohAddrElement[0].value !== "" && hohAddrElement[1].value != "")
+			if(hohAddrElement[0].value !== "" && hohAddrElement[1].value != "")
 			{
 				//form the address check url
-	       		$.getJSON('checkaddresses', createAllAddressParams(hohAddrElement, delAddrElement), function(addresponse)
+				//COVID 19 -- ONLY CHECK THE HOH ADDRESS
+//	       		$.getJSON('checkaddresses', createAllAddressParams(hohAddrElement, delAddrElement), function(addresponse)
+	       		$.getJSON('address', createAddressParams(hohAddrElement, ''), function(addresponse)
 	      		{
 	      			if(addresponse.hasOwnProperty('error'))
 	      			{
@@ -271,10 +275,13 @@ function onSubmitFamilyForm(bReferral)
 			}
 			else
 			{
-				changeAddressBackground(delAddrElement, errorColor);
-				changeAddressBackground(hohAddrElement, errorColor);
-				errorElement.textContent = "Submission Error: Delivery or HoH address is incomplete";
-				document.getElementById('badfammssg').textContent = "Submission Error: Delivery or HOH address incomplete";
+//				COVID 19 -- ONLY HoH ADDRESS IS CHECKED					
+//				changeAddressBackground(delAddrElement, errorColor);
+				changeAddressBackground(hohAddrElement, errorColor);			
+//				errorElement.textContent = "Submission Error: Delivery or HoH address is incomplete";
+//				document.getElementById('badfammssg').textContent = "Submission Error: Delivery or HOH address incomplete";
+				errorElement.textContent = "Submission Error: HoH address is incomplete";
+				document.getElementById('badfammssg').textContent = "Submission Error: HOH address incomplete";
 				window.location=document.getElementById('badfamanchor').href;
 			}
 		}
@@ -568,22 +575,36 @@ function createReferralParams(bReferral)
 	params["targetid"] = sessionStorage.getItem("targetid");
 	params["referencenum"] = sessionStorage.getItem("referencenum");
 	
-	//create the common parameters
-	var commonelementname = ['language','hohfn','hohln','housenum','street','unit','city',
-							 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
-							 'email','homephone','cellphone', 'altphone','detail'];
-	for(cen=0; cen < commonelementname.length; cen++)
-		params[commonelementname[cen]] = document.getElementById(commonelementname[cen]).value;
+	//create the common parameters -- COVID 19 -- SEPARATED element names and parameter names so the
+	//delivery address will be created from the HOH address text field elements.
+//	var commonelementname = ['language','hohfn','hohln','housenum','street','unit','city',
+//							 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
+//							 'email','homephone','cellphone', 'altphone','detail'];
 	
+	var commonelementname = ['language','hohfn','hohln','housenum','street','unit','city',
+		 'zipcode','city','zipcode', 'housenum','street','unit',
+		 'email','homephone','cellphone', 'altphone','detail'];
+	
+	var paramname = ['language','hohfn','hohln','housenum','street','unit','city',
+		 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
+		 'email','homephone','cellphone', 'altphone','detail'];
+	
+	for(cen=0; cen < commonelementname.length; cen++)
+	{		
+//		params[commonelementname[cen]] = document.getElementById(commonelementname[cen]).value; COVID 19
+		params[paramname[cen]] = document.getElementById(commonelementname[cen]).value;
+	}	
+		
 	
 	if(bReferral)	//is this a referral or just an update? Create the unique parameters
 	{	
 		//create transportation and gift required parameters
-		if(document.getElementById('transYes').checked)
+		//COVID 19 -- transportation will always not be assessed -- check box fieldset is hidden
+//		if(document.getElementById('transYes').checked)
 			params['transportation'] = 'Yes';
-		else
-			params['transportation'] = 'No';
-	
+//		else
+//			params['transportation'] = 'No';
+		
 		if(document.getElementById('giftreq').checked)
 			params['giftreq'] = 'on';
 		else
