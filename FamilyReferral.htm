@@ -475,7 +475,7 @@
 	    	setInput('childwish0', '');
   			setInput('childwish1', '');
 //    		setInput('childwish2', 'Age Appropriate Gift');
-    		setInput('childwish2', 'No Wish 2 - Covid 19');
+    		setInput('childwish2', 'No Wish 3 - Covid 19');
     		setInput('childwish3', '');
 	    	
 	    	document.getElementById('childupdate').innerHTML = "Add";
@@ -951,6 +951,10 @@
 	{
 		display: none;
 	}
+	#giftreq
+	{
+		display: none;
+	}
 
   </style>
 </head>
@@ -1039,11 +1043,12 @@
   </div>	
   </fieldset>
   <fieldset>
-  <legend class="legend-major">Family Members &#38; Gift Assistance</legend>
+<!--  <legend class="legend-major">Family Members &#38; Gift Assistance</legend>  -->  
+  <legend class="legend-major">Child Information</legend>
   <fieldset class="gray">
-  	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
+  	<legend>ONC will provide gifts to children up to age 18 (or older if still enrolled in FCPS grades 1 - 12). Enter Pre-K for children not yet enrolled)</legend>
   	<input type="checkbox" id='giftreq' name='giftreq' onclick='onGiftAssistanceClicked(this)' title="Check if family wants gift assistance" checked disabled>
-  	<label class='checkbox-label'>Check if family is requesting gift assistance for their children</label>
+<!--<label class='checkbox-label'>Check if family is requesting gift assistance for their children</label> COVID 19 Removed --> 
 	<div id='childtablediv'> 
 	  <table id="childtable" class='display compact' style="width:100%">
 		<thead>
@@ -1094,8 +1099,14 @@
    <legend class="legend-major">Family Details: Provide any additional details that may assist in serving this family</legend>
 	<input type="text" id='detail' name="detail" style='width:100%' placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
+  <fieldset>
+   <legend class="legend-major">Gift Distribution</legend>
+   		<fieldset class="gray">
+  		<legend> Families will be notified (email or text) by ONC at the end of November. The message will include the pick-up location and a unique family number that must be displayed with a photo id in order to receive gifts. Gifts will be distributed on Sunday December 13th from 1-4pm.</legend>
+	</fieldset>
+  </fieldset>
   <fieldset id='groupfs'>
-   <legend class="legend-major">Family Group: Select this referral's originating school/organization</legend>
+   <legend class="legend-major">Referring School or Organization: Please select the school or organization submitting this referral</legend>
     <select id="groupcb" name='groupcb' title="Family Group"></select>
   </fieldset>
   <div>
