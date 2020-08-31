@@ -530,8 +530,34 @@
 			
 			window.location=document.getElementById('childwarninganchor').href;
 		}
+		else if(document.getElementById('giftreq').checked === true && 
+				(document.getElementById('childwish0').value === '' || 
+				document.getElementById('childwish1').value === '' ||
+//				document.getElementById('childwish2').value === '' ||	COVID 19 - NO WISH 3
+				document.getElementById('childwish3').value === ''))
+		{
+			//show pop-up asking to verify that wish is blank and to use age appropriate gift
+			document.getElementById('wishwarningmssg').textContent = "One or more wish entries is blank. ONC will select" + 
+			" age appropriate gifts if wish choices aren't provided.";
+			
+			window.location=document.getElementById('wishwarninganchor').href;
+		}
 		else
 			addOrUpdateValidatatedChild();
+  	}
+  	
+  	function addAgeAppropriateGiftForMissingWishes()
+  	{
+  		if(document.getElementById('childwish0').value === '')
+  			document.getElementById('childwish0').value = 'Age Appropriate Gift';
+  		if(document.getElementById('childwish1').value === '')
+  			document.getElementById('childwish1').value = 'Age Appropriate Gift';
+//  	if(document.getElementById('childwish2').value === '')	COVID 19 - NO WISH 3
+//  		document.getElementById('childwish2').value = 'No Wish 3 - Covid 19';
+  		if(document.getElementById('childwish3').value === '')
+  			document.getElementById('childwish3').value = 'Age Appropriate Gift';
+  		
+  		addOrUpdateValidatatedChild();
   	}
   	
   	function getChild()
@@ -961,6 +987,7 @@
 <body>
   <a href="#badfamdlg" id="badfamanchor" style="visibility: hidden">Bad Family Referral</a>
   <a href="#childwarningdlg" id="childwarninganchor" style="visibility: hidden">Child Info Verification</a>
+  <a href="#wishwarningdlg" id="wishwarninganchor" style="visibility: hidden">Wish Content Verification</a>
   <a href="#childdeletedlg" id="childdeleteanchor" style="visibility: hidden">Delete Child Verification</a>
   <a href="#adultdeletedlg" id="adultdeleteanchor" style="visibility: hidden">Delete Adult Verification</a>
   <a href="#giftcarddlg" id="giftcardanchor" style="visibility: hidden">Gift Card Warning</a>
@@ -1157,6 +1184,21 @@
 		<div class='buttonbar'>
       	  <button onclick="addOrUpdateValidatatedChild()">Yes, As Best I Know</button>
       	  <button onclick="window.location=document.getElementById('editchildanchor').href">No, I'll Fix Them</button>
+    	</div>
+	</div>
+  </div>
+  <!-- Wish Warning Dialog -->
+  <div id="wishwarningdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<a href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class="logospan">Verify Wish Content</span>
+		</div>	
+		<span id='wishwarningmssg'></span>
+		<div class='buttonbar'>
+      	  <button onclick="addAgeAppropriateGiftForMissingWishes()">Select Age Appropriate Gifts</button>
+      	  <button onclick="window.location=document.getElementById('editchildanchor').href">No, I'll Fix It</button>
     	</div>
 	</div>
   </div>
