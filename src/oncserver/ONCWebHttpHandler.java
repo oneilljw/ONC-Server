@@ -575,8 +575,9 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			}
 			else
 			{
-				errMssg = "Address is a school, it must be a residence in Fairfax County. "
-						+ "Only the delivery address can be a school in ONC served school pyramids.";
+				errMssg = "Address is a school, it must be a residence in Fairfax County. ";
+						//REMOVED DELIVERY ADDRESS DUE TO COVID 19 IN 2020
+//						+ "Only the delivery address can be a school in ONC served school pyramids.";
 				json = gson.toJson(new AddressValidation(1, errMssg), AddressValidation.class);
 			}
 		}

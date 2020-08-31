@@ -51,6 +51,7 @@ var schools = ["Brookfield ES","Bull Run ES","Centre Ridge ES","Centreville ES",
   					"Liberty MS","London Towne ES","McNair ES","Mountain View HS","None","Oak Hill ES","Poplar Tree ES",
   					"Powell ES", "Pre-K","Rocky Run MS","Stone MS", "Union Mill ES", "Virginia Run ES", 
   					"Westfield HS","Willow Springs ES"];
+
 $( function()
 {
     $( ".schoolname" ).autocomplete(
@@ -319,23 +320,27 @@ function processAddressError(addresponse, delAddrElement, delAddrUnitElement, ho
 	if(hohMissing > 0)	
 	{
 		changeAddressBackground(hohAddrUnitElement, errorColor);
-		errorElement.textContent = "Error: Delivery and/or HoH address missing Apt#";
+//		errorElement.textContent = "Error: Delivery and/or HoH address missing Apt#"; COVID 19 NO DELIVERY ADDRESS
+		errorElement.textContent = "Error: HoH address is missing Apt#";
 	}
 	else if(hohInvalid > 0)	
 	{
 		changeAddressBackground(hohAddrElement, errorColor);
-		errorElement.textContent = "Error: Delivery and/or HOH address incomplete or does not exist";
+//		errorElement.textContent = "Error: Delivery and/or HOH address incomplete or does not exist";	COVID 19 NO DELIVERY ADDRESS
+		errorElement.textContent = "Error: HOH address incomplete, does not exist or is an invalid HoH address";
 	}
 	
 	if(delMissing > 0)	//address found, missing unit
 	{
 		changeAddressBackground(delAddrUnitElement, errorColor);
-		errorElement.textContent = "Error: Delivery and/or HoH missing Apt#";
+//		errorElement.textContent = "Error: Delivery and/or HoH missing Apt#";	COVID 19 NO DELIVERY ADDRESS
+		errorElement.textContent = "Error: HoH missing Apt#";
 	}
 	else if(delInvalid > 0)	//del address was not found
 	{
 		changeAddressBackground(delAddrElement, errorColor);
-		errorElement.textContent = "Error: Delivery and/or HoH address incomplete or does not exist";
+//		errorElement.textContent = "Error: Delivery and/or HoH address incomplete or does not exist";	COVID 19 NO DELIVERY ADDRESS
+		errorElement.textContent = "Error: HoH address incomplete, does not exist or is an invalid HoH address";
 	}
 	else if(delOutOfArea > 0)
 	{
@@ -404,11 +409,20 @@ function verifySchools()
 function verifyGiftsAndMeals()
 {
 	var errorMssg = '';
+	
+	let table = $('#childtable').DataTable();
+	let nChildren = table.data().count();
+	
 	if(document.getElementById('giftreq').checked === false && 
 		document.getElementById('mealreq').checked === false)
 	{
 		errorMssg = "Neither gift nor meal assistance requested";
-	}	
+	}
+	else if(document.getElementById('giftreq').checked === true && nChildren === 0)	//COVID 19 - GIFTS ONLY, MUST HAVE CHILD
+	{
+		errorMssg = "No children in family, minimum is one child.";
+	}
+	
 	return errorMssg;
 }
 
