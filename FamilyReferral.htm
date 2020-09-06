@@ -473,8 +473,9 @@
 	    	setInput('childschool', '');
 	    	
 	    	setInput('childwish0', '');
-  			setInput('childwish1', '');
-//    		setInput('childwish2', 'Age Appropriate Gift');
+//  		setInput('childwish1', '');		COVID 19
+  			setInput('childwish1', 'Age Appropriate Gift');
+//    		setInput('childwish2', 'Age Appropriate Gift'); COVID 19
     		setInput('childwish2', 'No Wish 3 - Covid 19');
     		setInput('childwish3', '');
 	    	
@@ -1395,13 +1396,13 @@
 		  <fieldset id='childwishfieldset'>
 		      <legend class="legend-major">Child Wishes</legend>
 <!--  		  <p><i>Provide three wishes in priority order, plus an alternate. If clothing or footwear, please include size.</i></p> Covid 19 Only two gifts per child-->
-		      <p><i>Provide two wishes in priority order, plus an alternate. If clothing or footwear, please include size.</i></p>
+		      <p><i>Provide one wish, plus an alternate. If clothing or footwear, please include size. A second wish will automatically be "Age Appropriate"</i></p>
 		      <p>
 		      <label for="childwish0">Wish 1:</label>
 		      <textarea id='childwish0' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
 		      </p><p>
 		      <label for="childwish1">Wish 2:</label>
-		      <textarea id='childwish1' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
+		      <textarea id='childwish1' oninput='checkForChildChange()' onchange='onWishInputChanged(this)' disabled></textarea>
 		      </p><p>
 <!--  		  <label for="childwish2">Wish 3:</label> Removed for 2020 - COVID 19 -->
 		      <textarea id='childwish2' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
