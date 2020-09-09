@@ -124,8 +124,6 @@ function executeFilter(filter)
 		
 		sessionStorage.setItem(filter.id, filter.value);
 		
-		console.log(filter.dataset);
-	    
 	    if(filter.dataset.type === 'tabledata')
 	    	getTableDataFromServer(document.getElementById(filter.dataset.table));
 	    else if(filter.dataset.type === 'search')

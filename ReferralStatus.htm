@@ -49,7 +49,8 @@
     	//initialize the tables
    		let pytable = $('#pytable').DataTable( 
 		{
-			dom: 'B<"search"f>rtip',
+//			dom: 'B<"search"f>rtip',
+			dom: 'i<"search"f>rtpB',
 			orderClasses: false,
 			stripeClasses:['stripe1','stripe2'],
 			buttons: 
@@ -57,7 +58,7 @@
 				buttons: 
 				[
 					{ 
- 						text: 'Refer Prior Family',
+ 						text: 'Refer Prior Year Family',
  						name: 'btnReRefer',
 				    	action: function ( e, dt, node, config )
 				    	{
@@ -150,7 +151,8 @@
    		
    		let cytable = $('#cytable').DataTable( 
  		{
- 			dom: 'B<"search"f>rtip',
+ //			dom: 'B<"search"f>rtip',
+ 			dom: 'i<"search"f>rtpB',
  			orderClasses: false,
  			stripeClasses:['stripe1','stripe2'],
  			buttons: 
@@ -290,8 +292,12 @@
 	   		{	
 	//   		document.getElementById('curragtenslbl').innerHTML = data[data.length-1].id.toString() + ' Families Referred By:';
 	   		
+				let maxseasons = 0;	// only display 5 seasons of prior referrals
+				if(data.length > 5)
+					maxseasons = data.length - 6;
+				
 				let combo = document.getElementById("prioryear");
-	   			for(var i = data.length-1; i >= 0; i--)
+	   			for(var i = data.length-1; i >= maxseasons; i--)
 	   				if(data[i].id != data[data.length-1].id)
 	   					addComboBoxOption(combo, data[i].id, data[i].id);
 	   			
@@ -692,11 +698,17 @@
 	.search
 	{
 		font-weight: bold;
-		padding: 10px 8px;	
+		padding: 10px 8px;
+	}
+	div.dt-buttons
+	{
+		position:relative;
+		float:right;
 	}
 	div.dataTables_filter input 
 	{
 		width: 120px;
+		margin-bottom: 5px;
 	}
 	.textDialog 
 	{

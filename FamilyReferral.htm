@@ -51,7 +51,8 @@
 		//create the child table
 		var childtable = $('#childtable').DataTable( 
 		{
-		    dom: 'Brt',
+//		    dom: 'Brt',
+		    dom: 'rtB',
 		    orderClasses: false,
 		    stripeClasses:['stripe1','stripe2'],
 		    autoWidth: false,
@@ -943,6 +944,11 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
+	div.dt-buttons
+	{
+		position:relative;
+		float:right;
+	}
 	#adulttablediv 
 	{ 
 		width: 40%;
@@ -1395,8 +1401,7 @@
       	  </fieldset>
 		  <fieldset id='childwishfieldset'>
 		      <legend class="legend-major">Child Wishes</legend>
-<!--  		  <p><i>Provide three wishes in priority order, plus an alternate. If clothing or footwear, please include size.</i></p> Covid 19 Only two gifts per child-->
-		      <p><i>Provide one wish, plus an alternate. If clothing or footwear, please include size. A second wish will automatically be "Age Appropriate"</i></p>
+	 		  <p><i>Provide child's primary gift wish and an alternate choice. Clothing or footwear wishes must include size. ONC will include an age appropriate gift as donations allow.</i></p>
 		      <p>
 		      <label for="childwish0">Wish 1:</label>
 		      <textarea id='childwish0' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>

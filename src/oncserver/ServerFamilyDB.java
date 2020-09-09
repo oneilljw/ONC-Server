@@ -1334,6 +1334,30 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//get a list of the children, list of adults, agent and meal, if there is a meal
 			List<ONCWebChild> childList = childDB.getWebChildList(year, fam.getID(), bIncludeSchools);
 			List<ONCAdult> adultList = adultDB.getAdultsInFamily(year, fam.getID());
+			List<ONCWebChild> adjustedAgeChildList = new ArrayList<ONCWebChild>();
+			
+			//Check dob year for each child in the family. If the year of birth is more than 20 years from the 
+			//year of the current season, move the child into the adult list
+			for(ONCWebChild wc : childList)
+			{
+				String[] dobParts = wc.getDOB().split("/");	//string dob in form mm/dd/yyyy
+				if(dobParts.length == 3 && dobParts[2].length() == 4)
+				{
+					try
+					{
+						int dobyear = Integer.parseInt(dobParts[2]);
+						if(DBManager.getCurrentSeason() - dobyear > 20)
+							adultList.add(new ONCAdult(wc));	//child is over age, add to adult list
+						else
+							adjustedAgeChildList.add(wc);	//child is still age eligible, add to checked child list
+					}
+					catch (NumberFormatException nfe)
+					{
+						adjustedAgeChildList.add(wc);	//something is wrong with dob format, add child anyway
+					}
+				}
+			}	
+			
 			ONCWebAgent famAgent = userDB.getWebAgent(fam.getAgentID());
 			ONCMeal famMeal = fam.getMealID() > -1 ? mealDB.getMeal(year,  fam.getMealID()) : null;
 			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fam.getDNSCode());
@@ -1341,7 +1365,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,
 													ServerRegionDB.getRegion(fam.getRegion()),
 													ServerGroupDB.getGroup(fam.getGroupID()).getName(),
-													childList, adultList, famAgent, famMeal, famDNSCode);
+													adjustedAgeChildList, adultList, famAgent, famMeal, famDNSCode);
 			
 			response = gson.toJson(webFam, ONCWebsiteFamilyExtended.class);
 		}
@@ -2499,10 +2523,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
     		cellList.add(newCell);
     											
     	}
-    	void addCell()
-    	{
-    		cellList.add(new Cell().setBorder(Border.NO_BORDER));
-    	}
+//    	void addCell()
+//    	{
+//    		cellList.add(new Cell().setBorder(Border.NO_BORDER));
+//   	}
     	
     	List<Cell> getCells() { return cellList; }
     }
