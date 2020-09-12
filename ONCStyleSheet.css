@@ -219,6 +219,16 @@ button:disabled
 {
 	background-color: gray;
 }
+div.dt-buttons
+{
+	position:relative;
+	float:right;
+}
+div.dataTables_filter input 
+{
+	width: 120px;
+	margin-bottom: 5px;
+}
 .dt-buttons
 {
 	margin: 5px 0px 5px 0px;
