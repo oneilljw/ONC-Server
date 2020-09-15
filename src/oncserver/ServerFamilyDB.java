@@ -64,7 +64,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static final int FAMILYDB_HEADER_LENGTH = 44;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
-	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
+	private static final int NUMBER_OF_WISHES_PER_CHILD = 2;	//COVID 19 - Two gifts/child not three
 	private static final String ODB_FAMILY_MEMBER_COLUMN_SEPARATOR = " - ";
 	private static final int DEFAULT_GROUP_ID = 62;
 	private static final int DNS_WAITLIST_CODE = 1;
