@@ -988,7 +988,10 @@
 	{
 		display: none;
 	}
-
+	.childinfop
+	{
+		padding-bottom: 12px;
+	}
   </style>
 </head>
 <body>
@@ -1254,13 +1257,13 @@
   </div>
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
-	<div class='inner double-width'>
+	<div class='inner full-width'>
 	  <div class='dialogtopbar'>
 		<img class='logo-img' src="onclogo">
 		<span class='logospan'>Verify/Update ONC Profile</span>
 	  </div>
-	  <div class='edit-background'>
-	  	  <fieldset id='contact-info-fieldset'>
+	  <div class='edit-background' style='height:230px'>
+	  	 <fieldset id='contact-info-fieldset' style='float:left'>
   			  <legend class="legend-major">Contact Information</legend>
   			  <p>
     	  		<label for="userfirstname">Name:</label>
@@ -1269,9 +1272,9 @@
     		  </p>   		
     		  <p>
     	  		<label for="userorg">Organization:</label>
-    	  		<input id='userorg' type="text" size="34" placeholder="Organization" onchange='checkForProfileChange()'>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
     	 	  </p>
-    	 	  <p>
+    	 	  <p style='width:440px'>
     	  		 <label for="usertitle">Title:</label>
     	 		 <input id='usertitle' type="text" size="34" placeholder="Title" onchange='checkForProfileChange()'>
     	 	  </p>
@@ -1283,9 +1286,7 @@
     	  		<label for="userphone">Phone:</label>
     	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
     	  	  </p>
-      	  </fieldset>
-	  </div>
-      <div class='edit-background'>
+      	</fieldset>      
 		<fieldset>
 			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
   	    	 <table id="profiletable" class='display' style="width:100%">
@@ -1358,24 +1359,24 @@
   </div> 
 <!-- Edit Child Dialog -->
   <div id="editChild" data-mode='edit' class="modalDialog">
-	<div class='inner larger-width'>
+	<div class='inner full-width'>
 	  <a href="#close" title="Close" class="close">X</a>
 	  <div class='dialogtopbar'>
 		<img class='logo-img' src="onclogo">
-		<span class='logospan'>Update Child Information</span>
+		<span class='logospan'>Provide Child Information & Gift Wishes</span>
 	  </div>
-	  <div class='edit-background'>
-	  	  <fieldset id='contact-info-fieldset'>
+	  <div class='edit-background'style='height:250px'>
+	  	  <fieldset style='float:left'>
   			  <legend class="legend-major">Child Information</legend>
   			  <div id='childiddiv' style="display: none"> 
   			  	<input id='childid' type='text'>
   			  </div>
-  			  <p>
+  			  <p class='childinfop'>
     	  		<label for="childfirstname">Name:</label>
     	  		<input id='childfirstname' type="text" size="13" placeholder="First Name" oninput='checkForChildChange()'>
     	  		<input id='childlastname' type="text" size="15" placeholder="Last Name" oninput='checkForChildChange()'>
     		  </p>   		
-    		  <p>
+    		  <p class='childinfop'>
     	  		<label for="childDOB">DoB:</label>
     	  		<select id='dobmonth' title='Month child was born' onchange='onDoBChange()'> 		    		
      			</select>
@@ -1384,7 +1385,7 @@
     			<select id='dobyear' title='Year child was born' onchange='onDoBChange()'>
     			</select>
     	 	  </p>
-    	 	  <p>
+    	 	  <p class='childinfop'>
     	  		<label for="childgender">Age/Gender:</label>
     	  		<span id='childage-span'></span>
     	  		<select id="childgender" title="Gender of child to be added" oninput='checkForChildChange()'>
@@ -1394,14 +1395,14 @@
 				</select>
 				<span id='childyear-span'></span>
     	 	  </p>
-    	 	  <p>
+    	 	  <p class='childinfop'>
     	  		<label for="childschool">School:</label>
     	  		<input id="childschool" class='schoolname' title="School attended, if none, enter Pre-K" type="text" size="28" placeholder="School" oninput='checkForChildChange()'>
     	      </p>
       	  </fieldset>
 		  <fieldset id='childwishfieldset'>
-		      <legend class="legend-major">Child Wishes</legend>
-	 		  <p><i>Provide child's primary gift wish and an alternate choice. Clothing or footwear wishes must include size. ONC will include an age appropriate gift as donations allow.</i></p>
+		      <legend class="legend-major">Child's Gift Wishes</legend>
+	 		  <p><i>Provide child's primary gift wish and an alternate choice. Clothing or footwear wishes <b>must</b> include size. ONC will also include an age appropriate gift as donations allow.</i></p>
 		      <p>
 		      <label for="childwish0">Wish 1:</label>
 		      <textarea id='childwish0' oninput='checkForChildChange()' onchange='onWishInputChanged(this)'></textarea>
@@ -1435,7 +1436,7 @@
 		<span class='logospan'>Edit Adult</span>
 	  </div>
 	  <div class='edit-background'>
-	  	  <fieldset id='contact-info-fieldset'>
+	  	  <fieldset>
   			  <legend class="legend-major">Adult Information</legend>
   			  <p>
     	  		<label for="adultname">Name:</label>

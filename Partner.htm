@@ -327,13 +327,13 @@
   </form>
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
-	<div class='inner double-width'>
+	<div class='inner full-width'>
 	  <div class='dialogtopbar'>
 		<img class='logo-img' src="onclogo">
 		<span class='logospan'>Verify/Update ONC Profile</span>
 	  </div>
-	  <div class='edit-background'>
-	  	  <fieldset id='contact-info-fieldset'>
+	  <div class='edit-background' style='height:230px'>
+	  	 <fieldset id='contact-info-fieldset' style='float:left'>
   			  <legend class="legend-major">Contact Information</legend>
   			  <p>
     	  		<label for="userfirstname">Name:</label>
@@ -342,9 +342,9 @@
     		  </p>   		
     		  <p>
     	  		<label for="userorg">Organization:</label>
-    	  		<input id='userorg' type="text" size="34" placeholder="Organization" onchange='checkForProfileChange()'>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" onchange='checkForProfileChange()'>
     	 	  </p>
-    	 	  <p>
+    	 	  <p style='width:440px'>
     	  		 <label for="usertitle">Title:</label>
     	 		 <input id='usertitle' type="text" size="34" placeholder="Title" onchange='checkForProfileChange()'>
     	 	  </p>
@@ -356,9 +356,7 @@
     	  		<label for="userphone">Phone:</label>
     	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
     	  	  </p>
-      	  </fieldset>
-	  </div>
-      <div class='edit-background'>
+      	</fieldset>      
 		<fieldset>
 			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
   	    	 <table id="profiletable" class='display' style="width:100%">

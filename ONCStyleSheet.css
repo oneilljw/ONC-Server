@@ -304,6 +304,7 @@ table.dataTable tbody tr.stripe2.selected
 .extended-width { width: 392px; }
 .larger-width { width: 420px; }
 .double-width { width: 440px; }
+.full-width { width: 800px; }
 .close 
 {
 	background: #606061;
