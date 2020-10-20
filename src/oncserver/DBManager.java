@@ -299,11 +299,35 @@ public class DBManager
     		reader.close();
 	}
 	
+	void saveDBToPermanentStore()
+	{
+		//always command a save of the user database regardless of saved status. This means
+		//if a user logs in and changes their profile off-season, the changes are still saved
+		//regardless
+		userDB.save();
+		
+		//For each year in the database that is unlocked, command each of the component 
+		//databases that are periodically saved to save data to persistent store
+		for(DBYear dbYear: dbYearList)
+		{
+			if(!dbYear.isLocked())
+			{
+				for(ServerPermanentDB permDB: dbPermanentAutosaveList)
+					permDB.save();
+				
+				for(ServerSeasonalDB seasonalDB: dbSeasonalAutosaveList)
+					seasonalDB.save(dbYear.getYear());
+			}
+		}
+	}
+	
 	private class SaveTimerListener implements ActionListener
 	{
 		@Override
 		public void actionPerformed(ActionEvent arg0) 
 		{
+			saveDBToPermanentStore();
+/*
 			//always command a save of the user database regardless of saved status. This means
 			//if a user logs in and changes their profile off-season, the changes are still saved
 			//regardless
@@ -322,6 +346,7 @@ public class DBManager
 						seasonalDB.save(dbYear.getYear());
 				}
 			}
+*/			
 		}	
 	}
 }

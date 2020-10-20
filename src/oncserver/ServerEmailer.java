@@ -9,6 +9,7 @@ import java.util.Properties;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.event.TransportEvent;
 import javax.mail.event.TransportListener;
@@ -69,10 +70,20 @@ public class ServerEmailer extends SwingWorker<Void, Void> implements TransportL
 		//Set system properties to create session
 		Properties props = System.getProperties();
         props.put("mail.smtps.host", credentials.getServerName());
+        props.put("mail.smtp.port", "465");
+        props.put("mail.smtp.ssl.enable", "true");
         props.put("mail.smtps.auth","true");
         
-        //Create the session and transport
-        Session session = Session.getInstance(props, null);
+        // Get the Session object and pass user name and password
+        Session session = Session.getInstance(props, new javax.mail.Authenticator()
+        {
+            protected PasswordAuthentication getPasswordAuthentication() 
+            {
+                return new PasswordAuthentication(credentials.getUserID(), credentials.getPassword());
+            }
+        });
+        
+        //Create the transport
         SMTPTransport t = (SMTPTransport)session.getTransport("smtps");
         t.addTransportListener(this);
 
@@ -91,15 +102,16 @@ public class ServerEmailer extends SwingWorker<Void, Void> implements TransportL
         this.setProgress(0);	//Initialize progress bound, incremented by transport listeners
 		for(ONCEmail email:emailAL)
 		{
-			try {	//Create the message and send it
+			try 
+			{	//Create the message and send it
 				msg = createMimeMessage(session, email);
-			} catch (MessagingException mex) {
-//				System.out.println("send failed, message exception: " + mex);
+			} 
+			catch (MessagingException mex)
+			{
 				mex.printStackTrace();
 				msg = null;
-			} catch (IOException ioex) {
-				// TODO Auto-generated catch block
-//				System.out.println("send failed, io exception: " + ioex);
+			} catch (IOException ioex)
+			{
 				ioex.printStackTrace();
 				msg = null;
 			}

@@ -13,6 +13,7 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCUser;
+import ourneighborschild.PartnerGiftStatus;
 import ourneighborschild.GiftCollectionType;
 import ourneighborschild.GiftStatus;
 
@@ -172,6 +173,11 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		return responseJsonList;
 	}
 	
+	PartnerGiftStatus checkForPartnerGiftStatusChange()
+	{
+		return PartnerGiftStatus.Unassigned;
+	}
+	
 	/*******************************************************************************************
 	 * This method implements a rules engine governing the relationship between a wish type and
 	 * wish status and wish assignment and wish status. It is called when a child's wish or
@@ -182,7 +188,8 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	 * a wish was selected from the catalog and is reset to empty, the wish status is set to
 	 * CHILD_WISH_EMPTY.
 	 ************************************************************************************************************/
-	GiftStatus checkForStatusChange(ONCChildGift addedWish, ONCPartner reqPartner, ONCChildGift oldWish)
+/*	
+	GiftStatus checkForGiftStatusChange(ONCChildGift addedWish, ONCPartner reqPartner, ONCChildGift oldWish)
 	{
 		GiftStatus currStatus, newStatus;
 		
@@ -289,11 +296,12 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		
 		return newStatus;			
 	}
-	
+*/	
 	/*** checks for automatic change of wish detail. An automatic change is triggered if
 	 * the replaced wish is of status Delivered and requested parter is of type ONC Shopper
 	 * and the requested wish indicator is #. 
 	 */
+/*	
 	String checkForDetailChange(ONCChildGift addedWish, ONCPartner reqPartner, ONCChildGift replWish)
 	{	
 		if(replWish != null && reqPartner != null && 
@@ -306,7 +314,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		else
 			return addedWish.getDetail();
 	}
-	
+*/	
 	void processGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)
 	{
 		//ask the family data base to check to see if the new gift changes either the family gift status or
@@ -561,13 +569,14 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"Child Gift ID", "Child ID", "Gift ID", "Detail",
-	 			"Gift #", "Restrictions", "Status","Changed By", "Time Stamp", "Org ID"};
+	 			"Gift #", "Restrictions", "Status","Changed By", "Time Stamp",
+	 			"PartnerID"};
 		
 		ChildGiftDBYear gwDBYear = childGiftDB.get(DBManager.offset(year));
 		if(gwDBYear.isUnsaved())
 		{
 			String path = String.format("%s/%dDB/ChildWishDB.csv", System.getProperty("user.dir"), year);
-			exportDBToCSV(gwDBYear.getList(),  header, path);
+			exportDBToCSV(gwDBYear.getList(), header, path);
 			gwDBYear.setChanged(false);
 		}
 	}

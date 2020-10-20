@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 8.00f;
+	private static final float MINIMUM_CLIENT_VERSION = 8.03f;
 	
 	private int id;
 	private String version;
@@ -81,11 +81,11 @@ public class DesktopClient extends Thread
      */
     public DesktopClient(Socket socket, int id)
     {
-    		this.id = id;
-    		version = "N/A";
-    		state = ClientState.Connected;
-    		heartbeat = Heartbeat.Not_Started;
-    		year = -1;
+		this.id = id;
+		version = "N/A";
+		state = ClientState.Connected;
+		heartbeat = Heartbeat.Not_Started;
+		year = -1;
         this.socket = socket;
         
         //Initialize the client manager interface
@@ -97,7 +97,7 @@ public class DesktopClient extends Thread
         //Initialize the web server and data base interface
         try
         {
-        		dbManager = DBManager.getInstance(clientMgr.getAppIcon());
+        	dbManager = DBManager.getInstance(clientMgr.getAppIcon());
 			userDB = ServerUserDB.getInstance();
 			serverRegionDB = ServerRegionDB.getInstance();
 	        globalvariableDB = ServerGlobalVariableDB.getInstance();

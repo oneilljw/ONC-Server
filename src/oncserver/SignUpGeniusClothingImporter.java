@@ -201,7 +201,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 							clientResponseList.add(partnerDB.decrementGiftsAssignedCount(year, cg.getPartnerID(), false));
 							
 						//set the added gift partner id and set the status to DELIVERED
-						cg.setChildWishAssigneeID(cp.getPartner().getID());
+						cg.setChildWishAssignee0ID(cp.getPartner().getID());
 						cg.setChildWishStatus(GiftStatus.Delivered);	
 					}
 						
@@ -227,7 +227,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 								
 							//set the added gift partner id and set the status to DELIVERED. Add the gift
 							//to the list we'll send to the ChildGift DB
-							cg.setChildWishAssigneeID(cp.getPartner().getID());
+							cg.setChildWishAssignee0ID(cp.getPartner().getID());
 							cg.setChildWishStatus(GiftStatus.Delivered);
 							newGeniusClothingAdoptionsList.add(cg);
 								

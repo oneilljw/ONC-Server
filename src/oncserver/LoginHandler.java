@@ -397,7 +397,7 @@ public class LoginHandler extends ONCWebpageHandler
 	    	//However, never can use this object to update a user's info
 		ONCServerUser serverUser = (ONCServerUser) userDB.findUserByEmailAndPhone(email, phone);
 		if(serverUser != null)
-	    	{
+	    {
 			if(serverUser.getAccess() == UserAccess.App)
 			{
 				//send a webpage that informs user that we've sent them an email
@@ -446,17 +446,17 @@ public class LoginHandler extends ONCWebpageHandler
     													+ "to the website.");
     				response = new HtmlResponse(html, HttpCode.Ok);
 			}
-	    	}
-	    	else
-	    	{
-	    		//send a web page that informs user that we can't find them
-	    		html = webpageMap.get("loginerror");
-	    		html = html.replace("COLOR", "red");
-	    		html = html.replace("LEGEND_MESSAGE", "Unable to Verify Identity");
-	    		html = html.replace("ERROR_MESSAGE", "We are unable to verify your identity.<br>"
+	    }
+	    else
+	    {
+	    	//send a web page that informs user that we can't find them
+	    	html = webpageMap.get("loginerror");
+	    	html = html.replace("COLOR", "red");
+	    	html = html.replace("LEGEND_MESSAGE", "Unable to Verify Identity");
+	    	html = html.replace("ERROR_MESSAGE", "We are unable to verify your identity.<br>"
 	    								+ "Please contact ONC at<br>schoolcontact@ourneighborschild.org");
-	    		response = new HtmlResponse(html, HttpCode.Forbidden);
-	    	}
+	    	response = new HtmlResponse(html, HttpCode.Forbidden);
+	    }
 		
 		return response;
 	}

@@ -22,6 +22,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.log4j.BasicConfigurator;
 
+import ourneighborschild.DatabaseManager;
 import ourneighborschild.OSXAdapter;
 
 public class ONCServer
@@ -37,6 +38,7 @@ public class ONCServer
 	private ServerUI serverUI;	//User IF
 	private ServerLoop serverIF; 	//Server loop
 	private ClientManager clientMgr; //Manages all connected clients
+	private DBManager dbManager;
 
 	private boolean bServerRunning;
 //	private Timer dbSaveTimer;
@@ -117,7 +119,7 @@ public class ONCServer
         serverUI.btnStopServer.addActionListener(btnListener);
 
 		//set up the database manager and load the data base from persistent store
-		DBManager.getInstance(serverUI.getIcon(0));
+		dbManager = DBManager.getInstance(serverUI.getIcon(0));
 		
 		//Create the client listener socket and start the loop		
 		startServer();	//Start the server on app start up
@@ -190,6 +192,10 @@ public class ONCServer
     
     void stopServer()
     {
+    	dbManager.saveDBToPermanentStore(); //force a save of unsaved data to permanent store
+    	
+    	serverUI.writeServerLogFile(); //write the log before terminating
+    	
 		serverIF.stopServer();
 		try 
 		{
@@ -201,6 +207,7 @@ public class ONCServer
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		
 		serverUI.setStoplight(2, "Server Stopped");	//Set server status to red - stopped
 		
 		serverUI.addUIAndLogMessage("Server Interface Loop stopped");

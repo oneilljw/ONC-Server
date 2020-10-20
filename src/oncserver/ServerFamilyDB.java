@@ -1771,10 +1771,10 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only"};
 		
 		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
-		if(fDBYear.isUnsaved())
-			
+		if(fDBYear.isUnsaved())	
 		{
 			String path = String.format("%s/%dDB/NewFamilyDB.csv", System.getProperty("user.dir"), year);
+//			System.out.println(String.format("Saving FamilyDB to %s", path));
 			exportDBToCSV(fDBYear.getList(), header, path);
 			fDBYear.setChanged(false);
 		}
