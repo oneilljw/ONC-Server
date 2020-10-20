@@ -1774,7 +1774,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		if(fDBYear.isUnsaved())	
 		{
 			String path = String.format("%s/%dDB/NewFamilyDB.csv", System.getProperty("user.dir"), year);
-//			System.out.println(String.format("Saving FamilyDB to %s", path));
 			exportDBToCSV(fDBYear.getList(), header, path);
 			fDBYear.setChanged(false);
 		}
