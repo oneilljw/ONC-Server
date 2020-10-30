@@ -474,16 +474,35 @@
     		document.getElementById('childgender').selectedIndex = 0;
 	    	setInput('childschool', '');
 	    	
-	    	setInput('childwish0', '');
-//  		setInput('childwish1', '');		COVID 19
-  			setInput('childwish1', 'Age Appropriate Gift');
-//    		setInput('childwish2', 'Age Appropriate Gift'); COVID 19
-    		setInput('childwish2', 'No Wish 3 - Covid 19');
-    		setInput('childwish3', '');
+	    	if(Date.now() > sessionStorage.getItem('decemberGiftDeadline'))
+	    	{	
+	    		setInput('childwish0', 'TBD by ONC');
+  				setInput('childwish1', 'N/A');
+//    			setInput('childwish2', 'Age Appropriate Gift'); COVID 19
+    			setInput('childwish2', 'No Wish 3 - Covid 19');
+    			setInput('childwish3', 'N/A');
+	    	}
+	    	else
+	    	{
+	    		setInput('childwish0', '');
+//  			setInput('childwish1', '');		COVID 19
+  				setInput('childwish1', 'Age Appropriate Gift');
+//    			setInput('childwish2', 'Age Appropriate Gift'); COVID 19
+    			setInput('childwish2', 'No Wish 3 - Covid 19');
+    			setInput('childwish3', '');
+	    	}
 	    	
 	    	document.getElementById('childupdate').innerHTML = "Add";
 	    	document.getElementById('removechildspan').style.display = 'none';
   		}
+  		
+  		if(Date.now() > sessionStorage.getItem('decemberGiftDeadline')) //can't request specific gifts for waitlis
+    	{
+  			document.getElementById('childwish0').disabled = true;	
+  			document.getElementById('childwish1').disabled = true;
+  			document.getElementById('childwish2').disabled = true;
+  			document.getElementById('childwish3').disabled = true;
+    	}
   		
 	    document.getElementById('childwish2').disabled = true;	//wish 3 defalut since 2018
   		document.getElementById('childupdate').disabled = true;

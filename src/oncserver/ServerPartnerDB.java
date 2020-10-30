@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import ourneighborschild.Address;
+import ourneighborschild.ClonedGift;
+import ourneighborschild.ClonedGiftStatus;
 import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;
@@ -526,7 +528,7 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			if(addedGift.getGiftStatus() == GiftStatus.Received)
 			{
 			
-				long receivingDeadline = globalDB.getServerGlobalVariables(year).getDecemberGiftDeadlineMillis();
+				long receivingDeadline = globalDB.getServerGlobalVariables(year).getGiftsReceivedDeadlineMillis();
 				boolean bReceviedBeforeDeadline = addedGift.getTimestamp() < receivingDeadline;
 //				boolean bReceviedBeforeDeadline = addedGift.getDateChanged().before(globalDB.getDateGiftsRecivedDealdine(year));
 				partnerList.get(index).incrementOrnReceived(bReceviedBeforeDeadline);
@@ -534,6 +536,31 @@ public class ServerPartnerDB extends ServerSeasonalDB
 			else if(addedGift.getGiftStatus() == GiftStatus.Delivered)
 				partnerList.get(index).incrementOrnDelivered();
 			
+			partnerDBYear.setChanged(true);
+		}
+	}
+	
+	void decrementGiftActionCount(int year, ONCChildGift priorGift, ONCChildGift addedGift)
+	{	
+		PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
+		List<ONCPartner> partnerList = partnerDBYear.getList();
+		
+		//Find the the current partner being incremented
+		int index = 0;
+		while(index < partnerList.size() && partnerList.get(index).getID() != addedGift.getPartnerID())
+			index++;
+		
+		//increment the gift received count for the partner being replaced
+		if(index < partnerList.size())
+		{  
+			//found the partner, now determine which field to increment
+			if(priorGift.getGiftStatus() == GiftStatus.Received && addedGift.getGiftStatus() == GiftStatus.Delivered)
+			{
+				long receivingDeadline = globalDB.getServerGlobalVariables(year).getGiftsReceivedDeadlineMillis();
+				boolean bReceviedBeforeDeadline = addedGift.getTimestamp() < receivingDeadline;
+				partnerList.get(index).decrementOrnReceived(bReceviedBeforeDeadline);
+			}
+
 			partnerDBYear.setChanged(true);
 		}
 	}
@@ -563,6 +590,55 @@ public class ServerPartnerDB extends ServerSeasonalDB
 		
 		return "FAILED_UPDATE_PARTNER";
 	}
+	
+	String changeCount(int year, int partnerID, String countType, int count)
+	{
+		PartnerDBYear partnerDBYear = partnerDB.get(DBManager.offset(year));
+		List<ONCPartner> partnerList = partnerDBYear.getList();
+		
+		int index=0;
+		while(index < partnerList.size() && partnerList.get(index).getID() != partnerID)
+			index ++;
+		
+		//if partner was found, decrement the count. If not found, ignore the request. 
+		if(index < partnerList.size())
+		{
+			if(countType.equals("ASSIGNED"))
+			{	
+				if(count < 0)
+					partnerList.get(index).decrementOrnAssigned();
+				else
+					partnerList.get(index).incrementOrnAssigned();
+			}
+			else if(countType.equals("DELIVERED"))
+			{	
+				if(count < 0)
+					partnerList.get(index).decrementOrnDelivered();
+				else
+					partnerList.get(index).incrementOrnDelivered();
+			}
+			else if(countType.equals("RECEIVED"))
+			{
+				long receivingDeadline = globalDB.getServerGlobalVariables(year).getGiftsReceivedDeadlineMillis();
+				boolean bReceviedBeforeDeadline = System.currentTimeMillis() < receivingDeadline;
+				
+				if(count < 0)
+					partnerList.get(index).decrementOrnReceived(bReceviedBeforeDeadline);
+				else
+					partnerList.get(index).incrementOrnReceived(bReceviedBeforeDeadline);
+			}
+			
+			Gson gson = new Gson();
+			String response =  "UPDATED_PARTNER" + gson.toJson(partnerList.get(index), ONCPartner.class);
+			
+			clientMgr.notifyAllInYearClients(year, response);
+			
+			return response;
+		}
+		
+		return "FAILED_UPDATE_PARTNER";
+	}
+	
 
 	@Override
 	void addObject(int year, String[] nextLine)

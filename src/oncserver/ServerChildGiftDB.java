@@ -11,10 +11,8 @@ import java.util.List;
 import ourneighborschild.HistoryRequest;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
-import ourneighborschild.ONCPartner;
 import ourneighborschild.ONCUser;
-import ourneighborschild.PartnerGiftStatus;
-import ourneighborschild.GiftCollectionType;
+import ourneighborschild.ClonedGiftStatus;
 import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
@@ -23,8 +21,8 @@ import com.google.gson.reflect.TypeToken;
 public class ServerChildGiftDB extends ServerSeasonalDB
 {
 	private static final int CHILD_GIFT_DB_HEADER_LENGTH = 10;
-	private static final int GIFT_INDICATOR_ALLOW_SUBSTITUE = 2;
-	private static final String GIFT_WISH_DEFAULT_DETAIL = "Age appropriate";
+//	private static final int GIFT_INDICATOR_ALLOW_SUBSTITUE = 2;
+//	private static final String GIFT_WISH_DEFAULT_DETAIL = "Age appropriate";
 	private static ServerChildGiftDB instance = null;
 
 	private static List<ChildGiftDBYear> childGiftDB;
@@ -173,9 +171,9 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		return responseJsonList;
 	}
 	
-	PartnerGiftStatus checkForPartnerGiftStatusChange()
+	ClonedGiftStatus checkForPartnerGiftStatusChange()
 	{
-		return PartnerGiftStatus.Unassigned;
+		return ClonedGiftStatus.Unassigned;
 	}
 	
 	/*******************************************************************************************
@@ -342,6 +340,11 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		   (priorGift.getGiftStatus() == GiftStatus.Delivered || priorGift.getGiftStatus() == GiftStatus.Shopping))
 		{
 			serverPartnerDB.incrementGiftActionCount(year, addedGift);
+		}
+		else if(priorGift != null && addedGift.getGiftStatus() == GiftStatus.Delivered && 
+				   priorGift.getGiftStatus() == GiftStatus.Received)
+		{
+			serverPartnerDB.decrementGiftActionCount(year, priorGift, addedGift);
 		}
 		else if(priorGift != null && addedGift.getGiftStatus() == GiftStatus.Delivered && priorGift.getGiftStatus() == GiftStatus.Assigned)
 		{

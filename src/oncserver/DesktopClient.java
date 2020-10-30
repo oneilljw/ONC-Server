@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 8.03f;
+	private static final float MINIMUM_CLIENT_VERSION = 8.04f;
 	
 	private int id;
 	private String version;
@@ -53,6 +53,7 @@ public class DesktopClient extends Thread
     private ServerGroupDB serverGroupDB;
     private ServerChildDB childDB;
     private ServerChildGiftDB childwishDB;
+    private ServerClonedGiftDB clonedGiftDB;
     private ServerPartnerDB serverPartnerDB;
     private ServerActivityDB activityDB;
     private ServerVolunteerDB volunteerDB;
@@ -106,6 +107,7 @@ public class DesktopClient extends Thread
 	        serverGroupDB = ServerGroupDB.getInstance();
 	        childDB = ServerChildDB.getInstance();
 	        childwishDB = ServerChildGiftDB.getInstance();
+	        clonedGiftDB = ServerClonedGiftDB.getInstance();
 	        serverPartnerDB = ServerPartnerDB.getInstance();
 	        activityDB = ServerActivityDB.getInstance();
 	        volunteerDB = ServerVolunteerDB.getInstance();
@@ -283,6 +285,12 @@ public class DesktopClient extends Thread
                 		String response = getChildWishes(year);
                 		output.println(response);
                 }
+                else if(command.startsWith("GET<clonedgifts>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		String response = clonedGiftDB.getCurrentCloneGiftList(year);
+                		output.println(response);
+                }
                 else if(command.startsWith("GET<partners>"))
                 {
                 		clientMgr.addLogMessage(command);
@@ -372,6 +380,11 @@ public class DesktopClient extends Thread
                 {
                 		clientMgr.addLogMessage(command);
                 		output.println(childwishDB.getChildGiftHistory(year, command.substring(16)));
+                }
+                else if(command.startsWith("GET<clonedgifthistory>"))
+                {
+                		clientMgr.addLogMessage(command);
+                		output.println(clonedGiftDB.getGiftHistory(year, command.substring(22)));
                 }
                 else if(command.startsWith("GET<warehousehistory>"))
                 {
@@ -727,6 +740,15 @@ public class DesktopClient extends Thread
                 		//Add the list of gifts to the child gift data base
                 		clientMgr.addLogMessage(command);
                 		String response = childwishDB.addListOfGifts(year, command.substring(18), clientUser);
+                		output.println(response);
+                		clientMgr.addLogMessage(response);
+                		clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<add_clonedgiftlist>"))
+                {                	
+                		//Add the list of gifts to the cloned gift data base
+                		clientMgr.addLogMessage(command);
+                		String response = clonedGiftDB.addListOfGifts(year, command.substring(24), clientUser);
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.notifyAllOtherInYearClients(this, response);
