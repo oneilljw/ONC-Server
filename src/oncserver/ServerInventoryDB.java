@@ -26,19 +26,16 @@ import ourneighborschild.UPCFailure;
 public class ServerInventoryDB extends ServerPermanentDB
 {
 	private static final String INVENTORYDB_FILENAME = "InventoryDB.csv";
-//	private static final int INVENTORY_DB_RECORD_LENGTH = 6;
-//	private static final String API_KEY = "c41c148aae17866d16c9e278968539b3";
-	private static final String EANDATA_KEYCODE = "3236448D57742EAB";
 //	private static final String UPC_LOOKUP_URL = "http://api.upcdatabase.org/json/%s/%s";
-	private static final String EANDATA_URL = "http://eandata.com/feed/?v=3&keycode=%s&comp=no"
-											+"&search=%s&mode=json&find=%s&get=product";
-	private static final String EANDATA_SEARCH = "deep";
+	private static final String EANDATA_URL = "https://eandata.com/feed/?v=3&keycode=%s&mode=json&find=%s&get=product";
+//	private static final String EANDATA_SEARCH = "deep";
 	private static final String EANDATA_SUCCESS_CODE = "200";
+//	private static final String TEST_RESPONSE_JSON = "{\"status\":{\"version\":\"3.3\",\"code\":\"200\",\"message\":\"free 4\\/15\",\"find\":\"077890297698\",\"time\":1604082586.31153392791748046875,\"search\":\"normal\",\"run\":\"0.1499\",\"runtime\":\"0.1530\"},\"product\":{\"attributes\":{\"product\":\"Organic Chicken Broth\"},\"locked\":\"0\",\"modified\":\"2016-07-08 19:07:22\",\"hasImage\":\"No\"}}";
 	
 	private static ServerInventoryDB instance = null;
 	private static List<InventoryItem> invList;
 	private static List<Integer> hashTable;
-
+ 
 	ClientManager clientMgr;
 
 	public ServerInventoryDB() throws FileNotFoundException, IOException
@@ -160,6 +157,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 		else	//bar code is not in inventory, attempt to get it from an external data base
 		{
 			String upcDBItemJson = getUPCDataJson(addReq.getBarcode());
+//			String upcDBItemJson = TEST_RESPONSE_JSON;
 			if(upcDBItemJson == null)
 			{
 				UPCFailure upcFailure = new UPCFailure("false", "UPC Website did not respond");
@@ -312,7 +310,8 @@ public class ServerInventoryDB extends ServerPermanentDB
 		try
 		{
 //			String stringURL = String.format(UPC_LOOKUP_URL, API_KEY, barcode);
-			String stringURL = String.format(EANDATA_URL, EANDATA_KEYCODE, EANDATA_SEARCH, barcode);
+//			String stringURL = String.format(EANDATA_URL, EANDATA_KEYCODE, EANDATA_SEARCH, barcode);
+			String stringURL = String.format(EANDATA_URL, ServerEncryptionManager.getKey("key6"), barcode);
 			modAPIUrl = new URL(stringURL);
 		} 
 		catch (MalformedURLException e2)
@@ -328,6 +327,8 @@ public class ServerInventoryDB extends ServerPermanentDB
 		try
 		{
 			httpconn = (HttpURLConnection)modAPIUrl.openConnection();
+//			System.out.println(String.format("ServInvDB.getUPCData: httpconn code= %d, message= %s",
+//					httpconn.getResponseCode(), httpconn.getResponseMessage()));
 		} 
 		catch (IOException e1)
 		{
@@ -358,6 +359,7 @@ public class ServerInventoryDB extends ServerPermanentDB
 		}
 	    
 	    //return the UPCDatabaseItem Json
+//	    System.out.println(String.format("ServInvDB.getUPCDataJson: json: %s", responseJson.toString()));
 	    return responseJson.toString();
 	}
 	
