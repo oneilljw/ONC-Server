@@ -71,6 +71,11 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 			if(cg.getNextID() == -1)	//cloned gift is last in linked list, there for is current
 				currClonedGiftList.add(cg);
 		
+//		System.out.println(currClonedGiftList.size());
+//		
+//		String json = gson.toJson(currClonedGiftList, listtype);
+//		System.out.println(json.length());
+		
 		return gson.toJson(currClonedGiftList, listtype);
 	}
 	
@@ -127,45 +132,79 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 	
 	String addListOfGifts(int year, String giftListJson, ONCUser client)
 	{
-		//Create a child gift list for the added gift
+		//Create a cloned gift list for the add cloned gift requests
 		Gson gson = new Gson();
 		Type listOfClonedGifts = new TypeToken<ArrayList<ClonedGift>>(){}.getType();		
 		List<ClonedGift> reqAddClonedGiftList = gson.fromJson(giftListJson, listOfClonedGifts);
 		List<String> responseJsonList = new ArrayList<String>();
 
-		//retrieve the child wish data base for the year
+		//retrieve the cloned gift data base for the year
 		ClonedGiftDBYear cgDBYear = clonedGiftDB.get(DBManager.offset(year));
 		
+		//for each add clone gift request, check to see if the gift had already been cloned. If it 
+		//hasn't already been cloned, than add it. A new clone gift request has a requested cloned gift
+		//id of -1. 
 		for(ClonedGift reqAddClonedGift : reqAddClonedGiftList)
 		{
-			ClonedGift replacedClonedGift = null;
-			if(reqAddClonedGift.getID() > -1)	//replacing a previous cloned gift
-			{	
-				replacedClonedGift = getClonedGift(year, reqAddClonedGift.getID());
-				
-				if(replacedClonedGift != null)
-					reqAddClonedGift.setPriorID(replacedClonedGift.getID());
-			}
-					
-			//set the new ID for the added cloned gift and set the chain ID's
-			reqAddClonedGift.setID(cgDBYear.getNextID());
+//			System.out.println(String.format("ServClonedGiftDB.addListOfGifts: isDuplicate=%b, childID=%d, gn=%d",
+//					isDuplicateClone(year, reqAddClonedGift), reqAddClonedGift.getChildID(), reqAddClonedGift.getGiftNumber()));
 			
-			//set the replaced cloned gift next ID in the chain and determine if other
-			//data bases require update.
-			if(replacedClonedGift != null)
-			{	
-				replacedClonedGift.setNextID(reqAddClonedGift.getID());
-				responseJsonList.add("UPDATED_CLONED_GIFT" + gson.toJson(replacedClonedGift, ClonedGift.class));
-				processClonedGiftAdded(year, replacedClonedGift, reqAddClonedGift);	
+			if(reqAddClonedGift.getID() > -1 || reqAddClonedGift.getID() == -1 && !isDuplicateClone(year, reqAddClonedGift))
+			{
+				ClonedGift replacedClonedGift = null;
+				if(reqAddClonedGift.getID() > -1)	//replacing a previous cloned gift
+				{	
+					replacedClonedGift = getClonedGift(year, reqAddClonedGift.getID());
+					
+					if(replacedClonedGift != null)
+						reqAddClonedGift.setPriorID(replacedClonedGift.getID());
+				}
+						
+				//set the new ID for the added cloned gift and set the chain ID's
+				reqAddClonedGift.setID(cgDBYear.getNextID());
+				
+				//set the replaced cloned gift next ID in the chain and determine if other
+				//data bases require update.
+				if(replacedClonedGift != null)
+				{	
+					replacedClonedGift.setNextID(reqAddClonedGift.getID());
+					responseJsonList.add("UPDATED_CLONED_GIFT" + gson.toJson(replacedClonedGift, ClonedGift.class));
+					processClonedGiftAdded(year, replacedClonedGift, reqAddClonedGift);	
+				}
+			
+				cgDBYear.add(reqAddClonedGift);
+				cgDBYear.setChanged(true);
+				responseJsonList.add("ADDED_CLONED_GIFT" + gson.toJson(reqAddClonedGift, ClonedGift.class));
 			}
-		
-			cgDBYear.add(reqAddClonedGift);
-			cgDBYear.setChanged(true);
-			responseJsonList.add("ADDED_CLONED_GIFT" + gson.toJson(reqAddClonedGift, ClonedGift.class));
 		}
 		
 		Type responseListType = new TypeToken<ArrayList<String>>(){}.getType();
 		return "ADDED_LIST_CLONED_GIFTS" + gson.toJson(responseJsonList, responseListType);
+	}
+	
+	boolean isDuplicateClone(int year, ClonedGift requestedClone)
+	{
+//		System.out.println(String.format("ServClonedGiftDB.isDupClone: checking: childID=%d, giftID= %d, gn=%d",
+//			requestedClone.getChildID(), requestedClone.getGiftID(), requestedClone.getGiftNumber()));
+		
+		//retrieve the cloned gift data base for the year
+		ClonedGift dupClone = null;
+		for(ClonedGift cg : clonedGiftDB.get(DBManager.offset(year)).getList())
+		{
+			if(cg.getPriorID() == -1 && cg.getChildID() == requestedClone.getChildID() && 
+				cg.getGiftNumber() == requestedClone.getGiftNumber() &&
+				cg.getGiftID() == requestedClone.getGiftID())
+			{
+				dupClone = cg;
+				break;
+			}
+		}
+		
+//		if(dupClone != null)
+//			System.out.println(String.format("ServClonedGiftDB.isDupClone: dup found, childID=%d, giftID= %d, gn=%d",
+//						dupClone.getChildID(), dupClone.getGiftID(), dupClone.getGiftNumber()));
+			
+		return dupClone != null;
 	}
 	
 	void processClonedGiftAdded(int year, ClonedGift replacedGift, ClonedGift addedGift)

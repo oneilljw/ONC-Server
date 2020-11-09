@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 8.04f;
+	private static final float MINIMUM_CLIENT_VERSION = 8.07f;
 	
 	private int id;
 	private String version;
@@ -1172,10 +1172,18 @@ public class DesktopClient extends Thread
     		float lo_version = Float.parseFloat(lo.getVersion());
   	
     		String value = "INVALID";
+    		
+//    		System.out.println(String.format("DeskClient.loginReq: submitted password= %s", password));
     	
     		//don't want a reference here, want a new object. A user can be logged in more than once.
     		//However, never can use this object to update a user's info
     		ONCServerUser serverUser = (ONCServerUser) userDB.find(userID);
+    		
+//    		if(serverUser != null)
+//    			System.out.println(String.format("DeskClient.loginReq: serverUser Name= %s, id= %d, userPW= %s",
+//    				serverUser.getUserID(), serverUser.getID(), serverUser.getUserPW()));
+//    		else
+//    			System.out.println("ServerUser is null");
   
     		if(lo_version < MINIMUM_CLIENT_VERSION)	//Is client connecting with current software?
     		{
@@ -1307,6 +1315,11 @@ public class DesktopClient extends Thread
     		//Convert the array list to a json and return it
     		Gson gson = new Gson();
     		Type listtype = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();
+    		
+//    		System.out.println(childwishAL.size());
+//    		
+//    		String json = gson.toJson(childwishAL, listtype);
+//    		System.out.println(json.length());
    
     		return gson.toJson(childwishAL, listtype);
     }
