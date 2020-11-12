@@ -9,8 +9,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import ourneighborschild.Address;
-import ourneighborschild.ClonedGift;
-import ourneighborschild.ClonedGiftStatus;
 import ourneighborschild.GiftCollectionType;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCPartner;

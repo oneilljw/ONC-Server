@@ -41,7 +41,7 @@ public class ServerRegionDB extends ServerPermanentDB
 	private static final String REGION_FILENAME = "Regions_New.csv";
 	private static final String REGION_DB_NAME = "RegionDB";
 	
-	private static final int SCHOOL_DB_HEADER_LENGTH = 14;
+	private static final int SCHOOL_DB_HEADER_LENGTH = 15;
 	private static final String SCHOOL_FILENAME = "ServedSchoolsDB.csv";
 	private static final String SCHOOL_DB_NAME = "ServedSchoolsDB";
 	
