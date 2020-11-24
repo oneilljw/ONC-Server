@@ -160,7 +160,7 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 						reqAddClonedGift.setPriorID(replacedClonedGift.getID());
 				}
 						
-				//set the new ID for the added cloned gift and set the chain ID's
+				//set the new ID for the added cloned gift
 				reqAddClonedGift.setID(cgDBYear.getNextID());
 				
 				//set the replaced cloned gift next ID in the chain and determine if other
