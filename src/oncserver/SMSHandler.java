@@ -109,11 +109,11 @@ public class SMSHandler extends ONCWebpageHandler
 					if(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
 						replyContent = String.format("%s, our automated messaging system is not monitored and not able to process your response. Thank you.", name);
 					else if(bConfirmingBody)
-						replyContent = String.format("%s, thank you for confirming ONC gift delivery on Sunday, December %s between 1-4pm.", name, zDeliveryDate);
+						replyContent = String.format("%s, thank you for confirming ONC gift pickup on Sunday, December %s between 1-4pm.", name, zDeliveryDate);
 					else if(bDecliningBody)
-						replyContent = String.format("%s, you replied \\\"NO\\\" and we are unable to confirm your gift delivery. Please contact your child's school if you are no longer in need of assistance, or if your delivery address has changed.", name);
+						replyContent = String.format("%s, you replied \"NO\" indicating you are unable to pick up your children's gifts. Please contact your child's school.", name);
 					else
-						replyContent = "We are only able to process delivery confirmations (YES or NO).";
+						replyContent = "We are only able to process gift pickup confirmations (YES or NO).";
 				}
 				
 				familyDB.checkFamilyStatusOnSmsReceived(DBManager.getCurrentSeason(), fam, bDeliveryTimeframe,

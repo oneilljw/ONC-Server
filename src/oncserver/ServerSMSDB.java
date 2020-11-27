@@ -9,7 +9,6 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import ourneighborschild.DNSCode;
 import ourneighborschild.EntityType;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCSMS;
@@ -206,7 +205,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		//determine which message to send based on language and message ID
 		if(f.getLanguage().equals("Spanish"))
 		{	
-			if(request.getMessageID() == 1 && f.getDNSCode() == -1)
+			if(request.getMessageID() == 1)
 			{
 				return String.format("Our Neighbor's Child (ONC): Responde \"YES\" para confirmar que un adulto "
 					+ "estará en casa para recibir los regalos de sus hijos el domingo %s diciembre. "
@@ -214,16 +213,16 @@ public class ServerSMSDB extends ServerSeasonalDB
 					+ "si no puedes confirmar que un adulto estará en casa para la entrega de regalos el %s diciembre.",
 					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
 			}
-			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.WAITLIST)
-			{
-				return String.format("Our Neighbor's Child (ONC): La remisión de la lista de espera "
-				 		+ "ha sido aceptado. Responda \"YES\" para confirmar que un adulto estará en casa para "
-				 		+ "recibir los regalos por edad para los ninos con menos de doce años el domingo, "
-				 		+ "%s diciembre. Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. "
-				 		+ "Responda \"NO\" si no puedes confirmar que un adulto estará en casa para la entrega "
-				 		+ "de los regalos el %s diciembre.", 
-				 		zDeliveryDate, houseNum, street, unit, zDeliveryDate);
-			}
+//			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.WAITLIST)
+//			{
+//				return String.format("Our Neighbor's Child (ONC): La remisión de la lista de espera "
+//				 		+ "ha sido aceptado. Responda \"YES\" para confirmar que un adulto estará en casa para "
+//				 		+ "recibir los regalos por edad para los ninos con menos de doce años el domingo, "
+//				 		+ "%s diciembre. Los voluntarios entregarán a %s %s %s entre la 1 y las 4 de la tarde. "
+//				 		+ "Responda \"NO\" si no puedes confirmar que un adulto estará en casa para la entrega "
+//				 		+ "de los regalos el %s diciembre.", 
+//				 		zDeliveryDate, houseNum, street, unit, zDeliveryDate);
+//			}
 			else
 			{
 				//message ID must be 2
@@ -237,29 +236,35 @@ public class ServerSMSDB extends ServerSeasonalDB
 		else
 		{	
 			//if the family speaks any other primary language besides Spanish, we'll send SMS in English.
-			if(request.getMessageID() == 1 && f.getDNSCode() == -1)
+			if(request.getMessageID() == 1)
 			{	
-				return String.format("Our Neighbor's Child (ONC): Reply \"YES\" to confirm an adult will be "
-					+ "home to receive your children's gifts on Sunday, December %s. Volunteers will "
-					+ "deliver to %s %s %s anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an "
-					+ "adult will be home for gift delivery on December %s.",
-					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
+//				return String.format("Our Neighbor's Child (ONC): Reply \"YES\" to confirm an adult will be "
+//					+ "home to receive your children's gifts on Sunday, December %s. Volunteers will "
+//					+ "deliver to %s %s %s anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an "
+//					+ "adult will be home for gift delivery on December %s.",
+//					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
+//				
+				return String.format("Our Neighbor's Child (ONC) recently sent you an email with instructions on where "
+						+ "to pick up gifts for your family. Reply \"YES\" to confirm an adult will be "
+						+ "able to pick up your children's gifts on Sunday, December %s anytime between 1 and 4PM. "
+						+ "After checking your spam or junk folder, reply \"NO\" if you did not receive an email from ONC.",
+						zDeliveryDate, houseNum, street, unit, zDeliveryDate);
 			}
-			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.WAITLIST)
-			{	
-				return String.format("Our Neighbor's Child (ONC): Your \"Wait List\" referral has been "
-					+ "accepted. Reply \"YES\" to confirm an adult will be home to receive age appropriate gifts "
-					+ "for each child 12 and under on Sunday, December %s. Volunteers will deliver to %s %s %s "
-					+ "anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
-					+ "be home for gift delivery on December %s.", 
-					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
-			}
+//			else if(request.getMessageID() == 1 && f.getDNSCode() == DNSCode.WAITLIST)
+//			{	
+//				return String.format("Our Neighbor's Child (ONC): Your \"Wait List\" referral has been "
+//					+ "accepted. Reply \"YES\" to confirm an adult will be home to receive age appropriate gifts "
+//					+ "for each child 12 and under on Sunday, December %s. Volunteers will deliver to %s %s %s "
+//					+ "anytime between 1 and 4PM. Reply \"NO\" if you are unable to confirm an adult will "
+//					+ "be home for gift delivery on December %s.", 
+//					zDeliveryDate, houseNum, street, unit, zDeliveryDate);
+//			}
 			else
 			{
 				//message id must be 2
-				return String.format("Our Neighbor’s Child (ONC): This is a gift delivery reminder. PLEASE DO "
-						+ "NOT RESPOND. An ONC volunteer will deliver your children's gifts tomorrow to "
-						+ "%s %s %s anytime between 1 and 4pm. An adult must be home to accept gift delivery.",
+				return String.format("Our Neighbor’s Child (ONC): This is a gift pick reminder. PLEASE DO "
+						+ "NOT RESPOND. Your children's gifts must be picked up tomorrow at LOCATION "
+						+ "anytime between 1 and 4pm.",
 						houseNum, street, unit);
 			}
 		}
