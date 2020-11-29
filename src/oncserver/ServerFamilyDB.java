@@ -1438,7 +1438,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				//it's not around delivery day or the family wasn't already confirmed, 
 				//so we potentially want to change family status.
-				if(bConfirmingBody && fam.getFamilyStatus() == FamilyStatus.Contacted)
+				if(bConfirmingBody && (fam.getFamilyStatus() == FamilyStatus.Contacted ||
+										fam.getFamilyStatus() == FamilyStatus.Verified ||
+										 fam.getFamilyStatus() == FamilyStatus.Waitlist))
 				{
 					fam.setFamilyStatus(FamilyStatus.Confirmed);
 					familyDB.get(DBManager.offset(year)).setChanged(true);
@@ -1448,7 +1450,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
 	    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 				}
-				else if(bDecliningBody && fam.getFamilyStatus() == FamilyStatus.Confirmed)
+				else if(bDecliningBody && (fam.getFamilyStatus() == FamilyStatus.Confirmed ||
+											fam.getFamilyStatus() == FamilyStatus.Verified ||
+											 fam.getFamilyStatus() == FamilyStatus.Waitlist))
 				{
 					fam.setFamilyStatus(FamilyStatus.Contacted);
 					familyDB.get(DBManager.offset(year)).setChanged(true);

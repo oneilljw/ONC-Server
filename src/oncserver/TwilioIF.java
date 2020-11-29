@@ -45,6 +45,17 @@ public class TwilioIF
     		
     		String paramFile = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), TWILIO_PARAMS_FILENAME);
     		readParamaters(paramFile);
+/*   		
+    		//turn off logging
+    		 Set<String> loggers = new HashSet<>(Arrays.asList("org.apache.http", "groovyx.net.http"));
+    		    
+    		 for(String log:loggers)
+    		 { 
+    		    Logger logger = (Logger)LoggerFactory.getLogger(log);
+    		    logger.setLevel(Level.INFO);
+    		    logger.setAdditive(false);
+    		 }
+*/   		 
     }
     
     public static TwilioIF getInstance() throws FileNotFoundException, IOException

@@ -109,6 +109,10 @@ public class ServerSMSDB extends ServerSeasonalDB
 			request.getPhoneChoice() > 0  && request.getPhoneChoice() < 3 &&
 			 request.getEntityType() == EntityType.FAMILY)
 	    {
+			
+			//get the pickup locations
+			PickUpLocations puLocations = new PickUpLocations();
+			
 			//for each family in the request, create a ONCSMS request 
 			for(Integer famID : request.getEntityIDList() )
 			{
@@ -117,7 +121,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 				if(f != null)
 				{
 					String twilioFormattedPhoneNum = getTwilioFormattedPhoneNumber(f, request.getPhoneChoice());
-					String message = getSMSBody(f, request);
+					String message = get2020SMSBody(f, request, puLocations.getPickUpLocation(f));
 					
 					if(twilioFormattedPhoneNum != null)
 						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
@@ -181,7 +185,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		
 		return twilioFormattedPhoneNum;
 	}
-	
+/*	
 	String getSMSBody(ONCFamily f, SMSRequest request) //int messageID)
 	{
 		//determine if the family has a different address for delivery
@@ -268,6 +272,36 @@ public class ServerSMSDB extends ServerSeasonalDB
 						houseNum, street, unit);
 			}
 		}
+	}
+*/	
+	String get2020SMSBody(ONCFamily f, SMSRequest request, PickUpLocation puLocation) //int messageID)
+	{
+		//determine which message to send based on message ID
+		if(request.getMessageID() == 1)
+		{		
+			return String.format("Our Neighbor's Child (ONC) received the request you sent to your child's school for holiday GIFT assistance.\n\n"
+					+ "ONC sent an email with instuctions for Gift Pick Up to this email address: %s.\n\n"
+					+ "If this is correct and you received and understood the email, please reply YES.\n\n"
+					+ "If the email address is incorrect, please reply with the correct email address or reply NO if you do not have an email address."
+					, f.getEmail().trim());
+		}
+		else if(request.getMessageID() == 2)
+		{	
+			return String.format("Our Neighbor's Child (ONC) received the request you sent to your child's school for holiday GIFT assistance.\n\n"
+				+ "The truck containing your child's gifts will be in the parking lot of %s (%s) on Sunday, December 13 from 1PM to 4PM.\n%s\n\n"
+				+ "You (or someone you send) may receive your gifts if you bring your ONC Family #: %s and the name of the Head of Household who applied for assistance: %s %s.\n\n"
+				+ "Please write this information on a piece of paper and place it visibly in your vehicle's dashboard.\n\n"
+				+ "Only you or the person picking up your gifts should have this information. Vehicle occupants must wear a mask(s) and remain inside the vehicle for additional instructions.\n\n"
+				+ "Please reply YES if you understand these instructions and someone will bring this information to pick up your gifts on Sunday, December 13 between 1PM and 4PM."
+				,puLocation.getName(), puLocation.getAddress(), puLocation.getGoogleMapURL(), f.getONCNum(), f.getFirstName(), f.getLastName() );
+		}
+		else
+			return String.format("This is a reminder from Our Neighbor's Child (ONC) about your child(ren)'s holiday gifts.\n\n"
+					+ "All gifts must be picked up by 4PM today.\n"
+					+ "The truck with your child's gifts will be in the %s parking lot at %s until 4PM.\n\n"
+					+ "Please bring this information with you: ONC # %s, Head of Household Name %s %s.\n\n"
+					+ "Vehicle occupants must wear masks, follow directional signs and remain inside the vehicle for additional instructions."
+					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());		
 	}
 	
 	//callback from Twilio IF when validation task completes
@@ -463,5 +497,61 @@ public class ServerSMSDB extends ServerSeasonalDB
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	private class PickUpLocations
+	{
+		private List<PickUpLocation> locations;
+		
+		PickUpLocations()
+		{
+			locations = new ArrayList<PickUpLocation>();
+			
+			locations.add(new PickUpLocation("Centreville Baptist Church","15100 Lee Highway, Centreville", "https://goo.gl/maps/Khbgv2i4Tk1ZKjgT8"));	//index 0
+			locations.add(new PickUpLocation("Centreville United Methodist Church","6400 Old Centreville Road, Centreville", "https://goo.gl/maps/WMNjKxeHVHCsC4vP6"));	//index 1
+			locations.add(new PickUpLocation("Saint Andrew Lutheran Church","14640 Soucy Place, Centreville", "https://goo.gl/maps/TL48uuGFqiuUjxZv7"));	//index 2
+			locations.add(new PickUpLocation("A&A Transfer ","44200 Lavin Lane, Chantilly", "https://goo.gl/maps/WquCeZ95FurKcXJp6"));	//index 3
+			locations.add(new PickUpLocation("Saint Andrew Lutheran Church","14640 Soucy Place, Centreville", "https://goo.gl/maps/TL48uuGFqiuUjxZv7"));	//index 4
+			locations.add(new PickUpLocation("Centreville Baptist Church","15100 Lee Highway, Centreville", "https://goo.gl/maps/Khbgv2i4Tk1ZKjgT8"));	//index 5
+			locations.add(new PickUpLocation("King of Kings Lutheran Church","4025 Kings Way, Fairfax", "https://goo.gl/maps/DmcQqiCniUALDnQv8"));	//index 6
+		}
+		
+		PickUpLocation getPickUpLocation(ONCFamily fam)
+		{
+			int oncNum = Integer.parseInt(fam.getONCNum());
+			if(oncNum < 250)
+				return locations.get(0);	//100 to 250: CBC
+			else if(oncNum < 539)
+				return locations.get(1);	//251 to 539: CUMC
+			else if(oncNum < 590)
+				return locations.get(2);	//540 to 590: Saint Andrew
+			else if(oncNum < 741)
+				return locations.get(3);	//591 to 741: A&A 
+			else if(oncNum < 792)
+				return locations.get(4);	//742 to 792: Saint Andrew
+			else if(oncNum < 1018)
+				return locations.get(5);	//793 to 999: CBC
+			else
+				return locations.get(6);	//1000+: King of Kings
+		}
+	}
+	
+	private class PickUpLocation
+	{
+		private String name;
+		private String address;
+		private String googleMapURL;
+		
+		PickUpLocation(String name, String address, String url)
+		{
+			this.name = name;
+			this.address = address;
+			this.googleMapURL = url;
+		}
+		
+		//getters
+		String getName() { return name; }
+		String getAddress() { return address; }
+		String getGoogleMapURL() { return googleMapURL; }
 	}
 }

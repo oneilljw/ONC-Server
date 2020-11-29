@@ -69,9 +69,9 @@ public class SMSHandler extends ONCWebpageHandler
 			int id = -1;
 			String messageID = rec_SMS.getMessageSid();
 			EntityType type = EntityType.UNKNOWN;
-			String name = "Anonymous";
+			String name = "";
 			String body = rec_SMS.getBody().trim();
-			String replyContent = "ONC automation is unable to process messages from unregistered numbers.";
+			String replyContent = "Thank you for your response.";
 			
 			SMSStatus status;
 			try { status = SMSStatus.valueOf(rec_SMS.getSmsStatus().toUpperCase()); }
@@ -91,30 +91,16 @@ public class SMSHandler extends ONCWebpageHandler
 				id = fam.getID();
 				type = EntityType.FAMILY;
 				name = fam.getFirstName() + " " + fam.getLastName();
-				String zDeliveryDate = globalVarDB.getDeliveryDayOfMonth(DBManager.getCurrentSeason(),  fam.getLanguage());
+//				String zDeliveryDate = globalVarDB.getDeliveryDayOfMonth(DBManager.getCurrentSeason(),  fam.getLanguage());
 				
-				if(fam.getLanguage().equals("Spanish"))
-				{
-					if(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
-						replyContent = String.format("%s, este es un mensaje automatico y no necesario responder. Gracias.", name);
-					else if(bConfirmingBody)
-						replyContent = String.format("%s, gracias por confirmar la entrega de los regalos de ONC el domingo %s diciembre entre la 1 a las 4 de la tarde.", name, zDeliveryDate);
-					else if(bDecliningBody)
-						replyContent = String.format("%s, respondiste \"NO\" así que no podemos confirmar la entrega de los regalos. Comunica con la escuela de su hijo si ya no necesitas asistencia o si su dirección de entrega ha cambiado.", name);
-					else
-						replyContent = "Solo aceptamos confirmaciones de \"YES\" o \"NO\"";
-				}
+				if(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
+					replyContent = String.format("%s, our automated messaging system is not monitored and not able to process your response. Thank you.", name);
+				else if(bConfirmingBody)
+					replyContent = String.format("%s, thank you for your response", name);
+				else if(bDecliningBody)
+					replyContent = String.format("%s, thank you for your response", name);
 				else
-				{
-					if(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
-						replyContent = String.format("%s, our automated messaging system is not monitored and not able to process your response. Thank you.", name);
-					else if(bConfirmingBody)
-						replyContent = String.format("%s, thank you for confirming ONC gift pickup on Sunday, December %s between 1-4pm.", name, zDeliveryDate);
-					else if(bDecliningBody)
-						replyContent = String.format("%s, you replied \"NO\" indicating you are unable to pick up your children's gifts. Please contact your child's school.", name);
-					else
-						replyContent = "We are only able to process gift pickup confirmations (YES or NO).";
-				}
+					replyContent = "Thank you for your response";
 				
 				familyDB.checkFamilyStatusOnSmsReceived(DBManager.getCurrentSeason(), fam, bDeliveryTimeframe,
 														bConfirmingBody, bDecliningBody);
@@ -136,7 +122,7 @@ public class SMSHandler extends ONCWebpageHandler
 			smsDB.add(DBManager.getCurrentSeason(), sms);					
 				
 			String response = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
-				"<Response><Message>%s</Message></Response>", replyContent);
+				"<Response><Message><Body>%s</Body></Message></Response>", replyContent);
 			
 			htmlResponse = new HtmlResponse(response, HttpCode.Ok);
 		
