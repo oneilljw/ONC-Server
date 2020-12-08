@@ -758,7 +758,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	}
 
 	
-	String update(int year, String familyjson, boolean bAutoAssign)
+	String update(int year, String familyjson, ONCUser clientUser, boolean bAutoAssign)
 	{
 		//Create a family object for the updated family
 		Gson gson = new Gson();
@@ -810,6 +810,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				
 				updatedFamily.setDeliveryID(histItem.getID());
 			}
+			updatedFamily.setChangedBy(clientUser.getLNFI());
+			updatedFamily.setDateChanged(System.currentTimeMillis());
 			
 			fAL.set(index, updatedFamily);
 			fDBYear.setChanged(true);

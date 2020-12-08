@@ -31,7 +31,7 @@ public class DesktopClient extends Thread
 {
 	private static final int BASE_YEAR = 2012;
 	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
-	private static final float MINIMUM_CLIENT_VERSION = 8.12f;
+	private static final float MINIMUM_CLIENT_VERSION = 8.13f;
 	
 	private int id;
 	private String version;
@@ -187,72 +187,92 @@ public class DesktopClient extends Thread
                 //no less than once a second. However the heart beat rate is determined by the client
                 timeLastActive = System.currentTimeMillis();
             	
-                if (command.startsWith("LOGIN_REQUEST"))
+                if(command.startsWith("GET<changes>"))	//first because it's the most frequent server request
+                {   
+            		if(changeQ.isEmpty())
+            			output.println("NO_CHANGES");
+            		else
+            		{
+            			//bundle the change q into a list of strings and send to the client
+            			Gson gson = new Gson();
+            			List<String> qContents = new ArrayList<String>();
+            			Type listOfChanges = new TypeToken<ArrayList<String>>(){}.getType();
+            		
+            			while(!changeQ.isEmpty())
+            				qContents.add(changeQ.remove());
+            		
+            			String response = gson.toJson(qContents, listOfChanges);
+           
+            			output.println(response);
+            			clientMgr.addLogMessage("GET<changes> Response: " + response);
+            		}
+                }
+                else if (command.startsWith("LOGIN_REQUEST"))
                 { 
                     String response = loginRequest(command.substring(13));
                     output.println(response);
                 }
                 else if(command.startsWith("GET<users>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = userDB.getUsers();
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = userDB.getUsers();
+                	output.println(response);
 //                	clientMgr.addLogMessage(response);               	
                 }
                 else if(command.startsWith("GET<online_users>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = clientMgr.getOnlineUsers();
-                		output.println(response);
-                		clientMgr.addLogMessage(response);               	
+                	clientMgr.addLogMessage(command);
+                	String response = clientMgr.getOnlineUsers();
+                	output.println(response);
+                	clientMgr.addLogMessage(response);               	
                 }
                 else if(command.startsWith("GET<regions>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverRegionDB.getRegions();
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverRegionDB.getRegions();
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<dnscodes>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverDNSCodeDB.getDNSCodes();
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverDNSCodeDB.getDNSCodes();
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<served_schools>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverRegionDB.getServedSchools();
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverRegionDB.getServedSchools();
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<globals>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = globalvariableDB.getGlobalVariables(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = globalvariableDB.getGlobalVariables(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<dbstatus>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = dbManager.getDatabaseStatusList();
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = dbManager.getDatabaseStatusList();
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<keys>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = ServerEncryptionManager.getKeyMapJson();
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = ServerEncryptionManager.getKeyMapJson();
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<regionmatch>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverRegionDB.getRegionMatch(command.substring(16));
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverRegionDB.getRegionMatch(command.substring(16));
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<familys>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverFamilyDB.getFamilies(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverFamilyDB.getFamilies(year);
+                	output.println(response);
                 }
 //				else if(command.startsWith("GET<agents>"))
 //              {
@@ -263,178 +283,178 @@ public class DesktopClient extends Thread
 //              }
                 else if(command.startsWith("GET<groups>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverGroupDB.getGroupList();
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverGroupDB.getGroupList();
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<family>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverFamilyDB.getFamily(year, command.substring(11));
-                		output.println(response);		
+                	clientMgr.addLogMessage(command);
+                	String response = serverFamilyDB.getFamily(year, command.substring(11));
+                	output.println(response);		
                 }
                 else if(command.startsWith("GET<children>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = childDB.getChildren(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = childDB.getChildren(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<childwishes>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = getChildWishes(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = getChildWishes(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<clonedgifts>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = clonedGiftDB.getCurrentCloneGiftList(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = clonedGiftDB.getCurrentCloneGiftList(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<partners>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverPartnerDB.getPartners(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverPartnerDB.getPartners(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<activities>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = activityDB.getActivities(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.getActivities(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<drivers>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerDB.getDrivers(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerDB.getDrivers(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<volunteer_activities>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerActivityDB.getVolunteerActivities(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerActivityDB.getVolunteerActivities(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<deliveries>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = famHistoryDB.getFamilyHistory(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = famHistoryDB.getFamilyHistory(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<catalog>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = wishCatalog.getGiftCatalog(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = wishCatalog.getGiftCatalog(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<wishdetail>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = wishDetailDB.getWishDetail(year);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = wishDetailDB.getWishDetail(year);
+                	output.println(response);
                 }
                 else if(command.startsWith("GET<adults>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = adultDB.getAdults(year);
-                		output.println(response);		
+                	clientMgr.addLogMessage(command);
+                	String response = adultDB.getAdults(year);
+                	output.println(response);		
                 }
                 else if(command.startsWith("GET<notes>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = noteDB.getNotes(year);
-                		output.println(response);		
+                	clientMgr.addLogMessage(command);
+                	String response = noteDB.getNotes(year);
+                	output.println(response);		
                 }
                 else if(command.startsWith("GET<meals>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = mealDB.getMeals(year);
-                		output.println(response);		
+                	clientMgr.addLogMessage(command);
+                	String response = mealDB.getMeals(year);
+                	output.println(response);		
                 }
                 else if(command.startsWith("GET<batteries>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = batteryDB.getBatteries(year);
-                		output.println(response);
-                		state = ClientState.DB_Selected;
-                    	clientMgr.clientStateChanged(ClientType.DESKTOP, ClientEventType.ACTIVE, this); 
+                	clientMgr.addLogMessage(command);
+                	String response = batteryDB.getBatteries(year);
+                	output.println(response);
+                	state = ClientState.DB_Selected;
+                    clientMgr.clientStateChanged(ClientType.DESKTOP, ClientEventType.ACTIVE, this); 
                 }
                 else if(command.startsWith("GET<pychild>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(prioryearDB.getPriorYearChild(year, command.substring(12)));
+                	clientMgr.addLogMessage(command);
+                	output.println(prioryearDB.getPriorYearChild(year, command.substring(12)));
                 }
                 else if(command.startsWith("GET<inventory>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(inventoryDB.getInventory());
+                	clientMgr.addLogMessage(command);
+                	output.println(inventoryDB.getInventory());
                 }
                 else if(command.startsWith("GET<search_pychild>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String jsonResponse = prioryearDB.searchForPriorYearChild(year, command.substring(19));
-                		output.println(jsonResponse);
-                		clientMgr.addLogMessage(jsonResponse);
+                	clientMgr.addLogMessage(command);
+                	String jsonResponse = prioryearDB.searchForPriorYearChild(year, command.substring(19));
+                	output.println(jsonResponse);
+                	clientMgr.addLogMessage(jsonResponse);
                 }
                 else if(command.startsWith("GET<wishhistory>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(childwishDB.getChildGiftHistory(year, command.substring(16)));
+                	clientMgr.addLogMessage(command);
+                	output.println(childwishDB.getChildGiftHistory(year, command.substring(16)));
                 }
                 else if(command.startsWith("GET<clonedgifthistory>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(clonedGiftDB.getGiftHistory(year, command.substring(22)));
+                	clientMgr.addLogMessage(command);
+                	output.println(clonedGiftDB.getGiftHistory(year, command.substring(22)));
                 }
                 else if(command.startsWith("GET<warehousehistory>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(warehouseDB.getWarehouseSignInHistory(year, command.substring(21)));
+                	clientMgr.addLogMessage(command);
+                	output.println(warehouseDB.getWarehouseSignInHistory(year, command.substring(21)));
                 }
                 else if(command.startsWith("GET<deliveryhistory>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(famHistoryDB.getFamilyHistory(year, command.substring(20)));
+                	clientMgr.addLogMessage(command);
+                	output.println(famHistoryDB.getFamilyHistory(year, command.substring(20)));
                 }
                 else if(command.startsWith("GET<website_status>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(ONCSecureWebServer.getWebsiteStatusJson());
+                	clientMgr.addLogMessage(command);
+                	output.println(ONCSecureWebServer.getWebsiteStatusJson());
                 }
                 else if(command.startsWith("GET<genius_signups>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(activityDB.getSignUps());
+                	clientMgr.addLogMessage(command);
+                	output.println(activityDB.getSignUps());
                 }
                 else if(command.startsWith("GET<sms_messages>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		output.println(smsDB.getSMSMessages(year));
+                	clientMgr.addLogMessage(command);
+                	output.println(smsDB.getSMSMessages(year));
                 }
                 else if(command.equals("GET<request_signups>"))
                 {
-                		clientMgr.addLogMessage(command);
+                	clientMgr.addLogMessage(command);
 //                	SignUpGeniusIF geniusIF = SignUpGeniusIF.getInstance();
 //                	geniusIF.requestSignUpList();
-                		SignUpGeniusSignUpListImporter suListImporter = SignUpGeniusSignUpListImporter.getInstance();
-                		suListImporter.requestSignUpList();
-                		output.println("REQUESTED_SIGNUPS");
+                	SignUpGeniusSignUpListImporter suListImporter = SignUpGeniusSignUpListImporter.getInstance();
+                	suListImporter.requestSignUpList();
+                	output.println("REQUESTED_SIGNUPS");
                 }
                 else if(command.startsWith("POST<update_signup>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = activityDB.updateSignUp(command.substring(19));
-                		clientMgr.addLogMessage(response);
-                		output.println(response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.updateSignUp(command.substring(19));
+                	clientMgr.addLogMessage(response);
+                	output.println(response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_genius_signups>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = activityDB.updateGeniusSignUps(command.substring(27));
-                		clientMgr.addLogMessage(response);
-                		output.println(response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.updateGeniusSignUps(command.substring(27));
+                	clientMgr.addLogMessage(response);
+                	output.println(response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("GET<changes>"))
                 {   
@@ -460,21 +480,21 @@ public class DesktopClient extends Thread
                 }
                 else if(command.startsWith("POST<add_user>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = userDB.add(command.substring(14), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = userDB.add(command.substring(14), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
  //               	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_user>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = userDB.update(year, command.substring(17));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = userDB.update(year, command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
  //               	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<setyear>"))
                 {
@@ -491,166 +511,166 @@ public class DesktopClient extends Thread
                 }
                 else if(command.startsWith("POST<update_family"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response;
-                		if(command.contains("_oncnum>"))
-                			response = serverFamilyDB.update(year, command.substring(26), true);
-                		else
-                			response = serverFamilyDB.update(year, command.substring(19), false);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response;
+            		if(command.contains("_oncnum>"))
+            			response = serverFamilyDB.update(year, command.substring(26), clientUser, true);
+            		else
+            			response = serverFamilyDB.update(year, command.substring(19), clientUser, false);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_list_of_families>"))
                 {                	
-                		//update the list of family update requests in the family data base
-                		clientMgr.addLogMessage(command);
-                		String response = serverFamilyDB.updateListOfFamilies(year, command.substring(29), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		//update the list of family update requests in the family data base
+            		clientMgr.addLogMessage(command);
+            		String response = serverFamilyDB.updateListOfFamilies(year, command.substring(29), clientUser);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_family>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverFamilyDB.add(year, command.substring(16), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverFamilyDB.add(year, command.substring(16), clientUser);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<family_group>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverFamilyDB.addFamilyGroup(year, command.substring(18), this);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverFamilyDB.addFamilyGroup(year, command.substring(18), this);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<new_volunteer_group>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerDB.addVolunteerGroup(year, command.substring(25), this);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+            		clientMgr.addLogMessage(command);
+            		String response = volunteerDB.addVolunteerGroup(year, command.substring(25), this);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<update_volunteer_group>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerDB.updateVolunteerGroup(year, command.substring(28), this);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+            		clientMgr.addLogMessage(command);
+            		String response = volunteerDB.updateVolunteerGroup(year, command.substring(28), this);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<check_duplicatefamily>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverFamilyDB.checkForDuplicateFamily(year, command.substring(27), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverFamilyDB.checkForDuplicateFamily(year, command.substring(27), clientUser);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<update_child>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = childDB.update(year, command.substring(18));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = childDB.update(year, command.substring(18));
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_child>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = childDB.deleteChild(year, command.substring(18));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = childDB.deleteChild(year, command.substring(18));
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_child>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = childDB.add(year, command.substring(15), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = childDB.add(year, command.substring(15), clientUser);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_group>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverGroupDB.update(command.substring(18));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverGroupDB.update(command.substring(18));
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_group>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverGroupDB.delete(command.substring(18));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverGroupDB.delete(command.substring(18));
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_group>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverGroupDB.add(command.substring(15), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverGroupDB.add(command.substring(15), clientUser);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_barcode>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = inventoryDB.addFromBarcodeScan(command.substring(17));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+            		clientMgr.addLogMessage(command);
+            		String response = inventoryDB.addFromBarcodeScan(command.substring(17));
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
  //               	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<add_inventory>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = inventoryDB.add(command.substring(19), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+            		clientMgr.addLogMessage(command);
+            		String response = inventoryDB.add(command.substring(19), clientUser);
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
  //               	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_inventory>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = inventoryDB.update(command.substring(22));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = inventoryDB.update(command.substring(22));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_inventory>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = inventoryDB.delete(command.substring(22));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = inventoryDB.delete(command.substring(22));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_partner>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverPartnerDB.update(year, command.substring(20));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverPartnerDB.update(year, command.substring(20));
+            		output.println(response);
+            		clientMgr.addLogMessage(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_partner>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverPartnerDB.add(year, command.substring(17), clientUser);
-                		output.println(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverPartnerDB.add(year, command.substring(17), clientUser);
+            		output.println(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_partner>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverPartnerDB.delete(year, command.substring(20));
-                		output.println(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+            		clientMgr.addLogMessage(command);
+            		String response = serverPartnerDB.delete(year, command.substring(20));
+            		output.println(response);
+            		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
 /*                
                 else if(command.startsWith("POST<update_agent>"))
@@ -679,182 +699,182 @@ public class DesktopClient extends Thread
 */                
                 else if(command.startsWith("POST<update_catwish>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = wishCatalog.update(year, command.substring(20));
-                		output.println(response);
+            		clientMgr.addLogMessage(command);
+            		String response = wishCatalog.update(year, command.substring(20));
+            		output.println(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<add_catwish>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = wishCatalog.add(year, command.substring(17), clientUser);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = wishCatalog.add(year, command.substring(17), clientUser);
+                	output.println(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_catwish>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = wishCatalog.delete(year, command.substring(20));
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = wishCatalog.delete(year, command.substring(20));
+                	output.println(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_wishdetail>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = wishDetailDB.update(year, command.substring(23));
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = wishDetailDB.update(year, command.substring(23));
+                	output.println(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<add_wishdetail>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = wishDetailDB.add(year, command.substring(20), clientUser);
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = wishDetailDB.add(year, command.substring(20), clientUser);
+                	output.println(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_wishdetail>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = wishDetailDB.delete(year, command.substring(23));
-                		output.println(response);
+                	clientMgr.addLogMessage(command);
+                	String response = wishDetailDB.delete(year, command.substring(23));
+                	output.println(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<childwish>"))
                 {                	
-                		//Add the wish to the child wish data base and update the 
-                		//child wish ID in the child data base for the added wish
-                		clientMgr.addLogMessage(command);
-                		String response = childwishDB.add(year, command.substring(15), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	//Add the wish to the child wish data base and update the 
+                	//child wish ID in the child data base for the added wish
+                	clientMgr.addLogMessage(command);
+                	String response = childwishDB.add(year, command.substring(15), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_giftlist>"))
                 {                	
-                		//Add the list of gifts to the child gift data base
-                		clientMgr.addLogMessage(command);
-                		String response = childwishDB.addListOfGifts(year, command.substring(18), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	//Add the list of gifts to the child gift data base
+                	clientMgr.addLogMessage(command);
+                	String response = childwishDB.addListOfGifts(year, command.substring(18), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_clonedgiftlist>"))
                 {                	
-                		//Add the list of gifts to the cloned gift data base
-                		clientMgr.addLogMessage(command);
-                		String response = clonedGiftDB.addListOfGifts(year, command.substring(24), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	//Add the list of gifts to the cloned gift data base
+                	clientMgr.addLogMessage(command);
+                	String response = clonedGiftDB.addListOfGifts(year, command.substring(24), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_delivery>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = famHistoryDB.update(year, command.substring(21));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = famHistoryDB.update(year, command.substring(21));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_delivery>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = famHistoryDB.add(year, command.substring(18), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = famHistoryDB.add(year, command.substring(18), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delivery_group>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverFamilyDB.addFamilyHistoryList(year, command.substring(20));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverFamilyDB.addFamilyHistoryList(year, command.substring(20));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_activity>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = activityDB.update(year, command.substring(21));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.update(year, command.substring(21));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_activity>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = activityDB.delete(year, command.substring(21));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.delete(year, command.substring(21));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_activity>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = activityDB.add(year, command.substring(18), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = activityDB.add(year, command.substring(18), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_driver>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerDB.update(year, command.substring(19));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerDB.update(year, command.substring(19));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_driver>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerDB.delete(year, command.substring(19));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerDB.delete(year, command.substring(19));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_driver>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerDB.add(year, command.substring(16), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerDB.add(year, command.substring(16), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_volunteer_activity>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerActivityDB.update(year, command.substring(31));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerActivityDB.update(year, command.substring(31));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_volunteer_activity>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerActivityDB.delete(year, command.substring(31));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerActivityDB.delete(year, command.substring(31));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_volunteer_activity>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = volunteerActivityDB.add(year, command.substring(28), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = volunteerActivityDB.add(year, command.substring(28), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<volunteer_activity_group>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		List<String> responseList = volunteerActivityDB.addVolunteerActivityList(year, command.substring(30));
-                		output.println(responseList);
-                		clientMgr.notifyAllInYearClients(year, responseList);
+                	clientMgr.addLogMessage(command);
+                	List<String> responseList = volunteerActivityDB.addVolunteerActivityList(year, command.substring(30));
+                	output.println(responseList);
+                	clientMgr.notifyAllInYearClients(year, responseList);
                 }
                 
 /*MEALS ARE NOT UPDATED BY DESKTOP CLIENTS - NEW MEALS ARE ADDED
@@ -869,220 +889,219 @@ public class DesktopClient extends Thread
 */                
                 else if(command.startsWith("POST<delete_meal>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = mealDB.delete(year, command.substring(17));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = mealDB.delete(year, command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_adult>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = adultDB.add(year, command.substring(15), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = adultDB.add(year, command.substring(15), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_adult>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = adultDB.update(year, command.substring(18));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = adultDB.update(year, command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_adult>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = adultDB.delete(year, command.substring(18));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = adultDB.delete(year, command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_note>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = noteDB.add(year, command.substring(14), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = noteDB.add(year, command.substring(14), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_note>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = noteDB.update(year, command.substring(17));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = noteDB.update(year, command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_dnscode>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverDNSCodeDB.add(command.substring(17), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverDNSCodeDB.add(command.substring(17), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_dnscode>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = serverDNSCodeDB.update(command.substring(20), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = serverDNSCodeDB.update(command.substring(20), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_notet>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = noteDB.delete(year, command.substring(17));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = noteDB.delete(year, command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_meal>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = mealDB.add(year, command.substring(14), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = mealDB.add(year, command.substring(14), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_list_of_meals>"))
                 {                	
-                		//update the list of meals in the meal data base
-                		clientMgr.addLogMessage(command);
-                		String response = mealDB.addListOfMealChanges(year, command.substring(23), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	//update the list of meals in the meal data base
+                	clientMgr.addLogMessage(command);
+                	String response = mealDB.addListOfMealChanges(year, command.substring(23), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_battery>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = batteryDB.add(year, command.substring(17), clientUser);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = batteryDB.add(year, command.substring(17), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_battery>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = batteryDB.update(year, command.substring(20));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = batteryDB.update(year, command.substring(20));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<delete_battery>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = batteryDB.delete(year, command.substring(20));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = batteryDB.delete(year, command.substring(20));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<add_newseason>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = dbManager.createNewYear();
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = dbManager.createNewYear();
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_globals>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = globalvariableDB.update(year, command.substring(20));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherInYearClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = globalvariableDB.update(year, command.substring(20));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
                 else if(command.startsWith("POST<update_dbyear>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = dbManager.updateDBYear(year, command.substring(19));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = dbManager.updateDBYear(year, command.substring(19));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
 //                	clientMgr.dataChanged(this, response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<change_password>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = userDB.changePassword(year, command.substring(21), this);
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = userDB.changePassword(year, command.substring(21), this);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<chat_request>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = chatMgr.requestChat(command.substring(18));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = chatMgr.requestChat(command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<chat_accepted>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = chatMgr.acceptChat(command.substring(19));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = chatMgr.acceptChat(command.substring(19));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<chat_message>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = chatMgr.forwardChatMessage(command.substring(18));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = chatMgr.forwardChatMessage(command.substring(18));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<chat_ended>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = chatMgr.endChat(command.substring(16));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = chatMgr.endChat(command.substring(16));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<sms_request>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = smsDB.processSMSRequest(command.substring(17));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = smsDB.processSMSRequest(command.substring(17));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<update_website_status>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = ONCSecureWebServer.setWebsiteStatus(command.substring(27));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
-                		clientMgr.notifyAllOtherClients(this, response);
+                	clientMgr.addLogMessage(command);
+                	String response = ONCSecureWebServer.setWebsiteStatus(command.substring(27));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherClients(this, response);
                 }
                 else if(command.startsWith("POST<update_webpages>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = ONCWebpageHandler.reloadWebpagesAndWebfiles();
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = ONCWebpageHandler.reloadWebpagesAndWebfiles();
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if(command.startsWith("POST<send_user_email>"))
                 {
-                		clientMgr.addLogMessage(command);
-                		String response = userDB.createAndSendSeasonWelcomeEmail(year, command.substring(21));
-                		output.println(response);
-                		clientMgr.addLogMessage(response);
+                	clientMgr.addLogMessage(command);
+                	String response = userDB.createAndSendSeasonWelcomeEmail(year, command.substring(21));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
                 }
                 else if (command.startsWith("LOGOUT")) 
                 {
-                		String response = "GOODBYE";
-                		output.println(response);
+                	String response = "GOODBYE";
+                	output.println(response);
                 	
-                		if(clientUser != null)
-                			clientUser.setClientID(-1);	//note that client has gone off-line
+                	if(clientUser != null)
+                		clientUser.setClientID(-1);	//note that client has gone off-line
                 	
-                		String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstName() + " " + clientUser.getLastName() + 
+                	String mssg = "GLOBAL_MESSAGE" + clientUser.getFirstName() + " " + clientUser.getLastName() + 
              				  " is offline";
-                		clientMgr.notifyAllOtherClients(this, mssg);
-                		state = ClientState.Ended;
-                	
-                		clientMgr.clientLoggedOut(this);  
+                	clientMgr.notifyAllOtherClients(this, mssg);
+                	state = ClientState.Ended;
+                	clientMgr.clientLoggedOut(this);  
                 }
                 else
                 	output.println("UNRECOGNIZED_COMMAND" + command);
