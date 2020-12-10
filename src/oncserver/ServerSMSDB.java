@@ -295,7 +295,16 @@ public class ServerSMSDB extends ServerSeasonalDB
 				+ "Please reply YES if you understand these instructions and someone will bring this information to pick up your gifts on Sunday, December 13 between 1PM and 4PM."
 				,puLocation.getName(), puLocation.getAddress(), puLocation.getGoogleMapURL(), f.getONCNum(), f.getFirstName(), f.getLastName() );
 		}
-		else if(request.getMessageID() == 3)
+		else if(request.getMessageID() == 3 && f.getLanguage().equals("Spanish"))
+		{
+			return String.format("Este es un recordatorio de Our Neighbor's Child (ONC) sobre los regalos navideños de su(s) hijo(s).\n\n"
+				+ "Los regalos de sus hijos deben recogerse mañana entre las 1:00 de la tarde y las 4:00 de la tarde.\n"
+				+ "Un camión con los regalos de su hijo estará en el estacionamiento de la %s en el %s hasta las 4:00 de la tarde.\n\n"
+				+ "Por favor traiga esta información con usted mañana: El número de ONC: %s, y el nombre del jefe de familia: %s %s.\n\n"
+				+ "Los ocupantes del vehículo tienen que usar máscaras, seguir las señales direccionales, y quedarse dentro del vehículo para obtener instrucciones adicionales."
+				,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());
+		}
+		else if(request.getMessageID() == 3 && !f.getLanguage().equals("Spanish"))
 		{
 			return String.format("This is a reminder from Our Neighbor's Child (ONC) about your child(ren)'s holiday gifts.\n\n"
 					+ "Your children's gifts must be picked tomorrow between 1:00pm and  4:00pm.\n"
@@ -304,8 +313,17 @@ public class ServerSMSDB extends ServerSeasonalDB
 					+ "Vehicle occupants must wear masks, follow directional signs and remain inside the vehicle for additional instructions."
 					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());
 		}
+		else if(request.getMessageID() == 4 && f.getLanguage().contentEquals("Spanish"))
+		{
+			return String.format("Este es un recordatorio de Our Neighbor's Child (ONC) sobre los regalos navideños de su(s) hijo(s).\n\n"
+					+ "Todos los regalos tienen que ser recogidos a las 4:00 de la tarde de hoy\n\n."
+					+ "El camión con los regalos de su hijo está en el estacionamiento de la %s en %s hasta las 4:00 de la tarde.\n\n"
+					+ "Por favor traiga esta información con usted: El número de ONC: %s, y el nombre del jefe de familia: %s %s.\n\n"
+					+ "Los ocupantes del vehículo tienen que usar máscaras, seguir las señales direccionales, y quedarse dentro del vehículo para obtener instrucciones adicionales."
+					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());
+		}
 		else
-			return String.format("This is a reminder from Our Neighbor's Child (ONC) about your child(ren)'s holiday gifts.\n\n"
+			return String.format("This is a reminder from Our Neighbor's Child(ONC) about your child(ren)'s holiday gifts.\n\n"
 					+ "All gifts MUST be picked up by 4PM today.\n"
 					+ "The truck with your child's gifts is in the %s parking lot at %s until 4PM.\n\n"
 					+ "Please bring this information with you: ONC # %s, Head of Household Name: %s %s.\n\n"
