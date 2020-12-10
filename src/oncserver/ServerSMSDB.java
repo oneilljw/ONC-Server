@@ -307,7 +307,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		else
 			return String.format("This is a reminder from Our Neighbor's Child (ONC) about your child(ren)'s holiday gifts.\n\n"
 					+ "All gifts MUST be picked up by 4PM today.\n"
-					+ "The truck with your child's gifts will be in the %s parking lot at %s until 4PM.\n\n"
+					+ "The truck with your child's gifts is in the %s parking lot at %s until 4PM.\n\n"
 					+ "Please bring this information with you: ONC # %s, Head of Household Name: %s %s.\n\n"
 					+ "Vehicle occupants must wear masks, follow directional signs and remain inside the vehicle for additional instructions."
 					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());		
