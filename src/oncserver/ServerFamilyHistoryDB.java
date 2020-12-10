@@ -96,10 +96,12 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		addedHistoryObj.setID(histDBYear.getNextID());
 		addedHistoryObj.setDateChanged(System.currentTimeMillis());
 		
-		//if family gift status is greater than FamilyGiftStatus.Assigned, retain the assignee
-		if(addedHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) > 0)
+		//If requested delivered by field is null or the requested family gift status is Delivered,
+		//Attempted or Counselor Pickup, retain the assignee
+		if(addedHistoryObj.getdDelBy() == null || addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Delivered || 
+			addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Attempted ||
+			 addedHistoryObj.getGiftStatus() == FamilyGiftStatus.CounselorPickUp)
 		{
-			//find the last object, there has to be one for the status > Assigned
 			ONCFamilyHistory latestFHObj = getLastFamilyHistory(year, addedHistoryObj.getFamID());
 			if(latestFHObj != null)
 				addedHistoryObj.setdDelBy(latestFHObj.getdDelBy());
@@ -254,13 +256,17 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	ONCFamilyHistory addFamilyHistoryObject(int year, ONCFamilyHistory addedFamHistObj, boolean bNotify)
 	{
 		ClientManager clientMgr = ClientManager.getInstance();
+		
 		//add the new object to the data base
 		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
 		
 		addedFamHistObj.setID(histDBYear.getNextID());
 		addedFamHistObj.setDateChanged(System.currentTimeMillis());
 		
-		if(addedFamHistObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) > 0)
+		if(addedFamHistObj.getdDelBy() == null || 
+			addedFamHistObj.getGiftStatus() == FamilyGiftStatus.Delivered || 
+			 addedFamHistObj.getGiftStatus() == FamilyGiftStatus.Attempted ||
+			  addedFamHistObj.getGiftStatus() == FamilyGiftStatus.CounselorPickUp)
 		{
 			//find the last object, there has to be one for the status > Assigned
 			ONCFamilyHistory latestFHObj = getLastFamilyHistory(year, addedFamHistObj.getFamID());

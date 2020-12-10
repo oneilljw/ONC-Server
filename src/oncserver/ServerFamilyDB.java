@@ -805,8 +805,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				  currFam.getDNSCode() != updatedFamily.getDNSCode()))
 			{
 				DNSCode updatedFamCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
+					
 				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-						updatedFamily.getGiftStatus(), "", updatedFamCode.getID(), "Status Changed", updatedFamily.getChangedBy(), true);
+						updatedFamily.getGiftStatus(), null, updatedFamCode.getID(), "Status Changed", updatedFamily.getChangedBy(), true);
 				
 				updatedFamily.setDeliveryID(histItem.getID());
 			}
@@ -894,7 +895,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					   currFam.getDNSCode() != updatedFamily.getDNSCode()))
 				{
 					ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-																updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(),
+																updatedFamily.getGiftStatus(), null, updatedFamily.getDNSCode(),
 																"Status Changed", updatedFamily.getChangedBy(), true);
 						
 					updatedFamily.setDeliveryID(histItem.getID());
@@ -945,7 +946,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					   currFam.getDNSCode() != updatedFamily.getDNSCode()))
 				{
 					ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-																updatedFamily.getGiftStatus(), "", updatedFamily.getDNSCode(),
+																updatedFamily.getGiftStatus(), null, updatedFamily.getDNSCode(),
 																"Status Changed", updatedFamily.getChangedBy(), true);
 						
 					updatedFamily.setDeliveryID(histItem.getID());
@@ -989,7 +990,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//add a history item so change can be tracked. Changed by is the web user who made the change
 			DNSCode famDNSCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
 			ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-								updatedFamily.getGiftStatus(), "", famDNSCode.getID(), updateNote, wc.getWebUser().getLNFI(), true);
+								updatedFamily.getGiftStatus(), null, famDNSCode.getID(), updateNote, wc.getWebUser().getLNFI(), true);
 			updatedFamily.setDeliveryID(histItem.getID());
 			
 			fAL.set(index, updatedFamily);
@@ -1574,7 +1575,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    			fam.setGiftStatus(newGiftStatus);
 	    			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fam.getDNSCode());
 	    			ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
-						"", famDNSCode.getID(), "Gift Status Change", fam.getChangedBy(), true);
+						null, famDNSCode.getID(), "Gift Status Change", fam.getChangedBy(), true);
 	    			fam.setDeliveryID(addedHistItem.getID());
 	    		}
 	    	
