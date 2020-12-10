@@ -23,14 +23,14 @@ public class SMSHandler extends ONCWebpageHandler
 	private ServerInboundSMSDB inboundSMSDB;
 	private ServerSMSDB smsDB;
 	private ServerFamilyDB familyDB;
-	private ServerGlobalVariableDB globalVarDB;
+//	private ServerGlobalVariableDB globalVarDB;
 	
 	public SMSHandler() throws FileNotFoundException, IOException
 	{
 		this.inboundSMSDB = ServerInboundSMSDB.getInstance();
 		this.smsDB = ServerSMSDB.getInstance();
 		this.familyDB = ServerFamilyDB.getInstance();
-		this.globalVarDB = ServerGlobalVariableDB.getInstance();
+//		this.globalVarDB = ServerGlobalVariableDB.getInstance();
 //		this.partnerDB = ServerPartnerDB.getInstance();
 		
 //		simulateSMSReceive();

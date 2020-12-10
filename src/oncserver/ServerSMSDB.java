@@ -25,7 +25,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 	private static List<SMSDBYear> smsDB;
 	
 	private ServerFamilyDB familyDB;
-	private ServerGlobalVariableDB globalVarDB;
+//	private ServerGlobalVariableDB globalVarDB;
 	
 	private ServerSMSDB() throws FileNotFoundException, IOException
 	{
@@ -52,7 +52,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		
 		//initialize the FamilyDB and GlobalVariableDB interface
 		familyDB = ServerFamilyDB.getInstance();
-		globalVarDB = ServerGlobalVariableDB.getInstance();
+//		globalVarDB = ServerGlobalVariableDB.getInstance();
 	}
 	
 	public static ServerSMSDB getInstance() throws FileNotFoundException, IOException
@@ -295,9 +295,18 @@ public class ServerSMSDB extends ServerSeasonalDB
 				+ "Please reply YES if you understand these instructions and someone will bring this information to pick up your gifts on Sunday, December 13 between 1PM and 4PM."
 				,puLocation.getName(), puLocation.getAddress(), puLocation.getGoogleMapURL(), f.getONCNum(), f.getFirstName(), f.getLastName() );
 		}
+		else if(request.getMessageID() == 3)
+		{
+			return String.format("This is a reminder from Our Neighbor's Child (ONC) about your child(ren)'s holiday gifts.\n\n"
+					+ "Your children's gifts must be picked between 1:00pm and  4:00pm tomorrow.\n"
+					+ "A truck with your child's gifts will be in the %s parking lot at %s until 4:00pm.\n\n"
+					+ "Please bring this information with you tomorrow: ONC # %s, Head of Household Name %s %s.\n\n"
+					+ "Vehicle occupants must wear masks, follow directional signs and remain inside the vehicle for additional instructions."
+					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());
+		}
 		else
 			return String.format("This is a reminder from Our Neighbor's Child (ONC) about your child(ren)'s holiday gifts.\n\n"
-					+ "All gifts must be picked up by 4PM today.\n"
+					+ "All gifts MUST be picked up by 4PM today.\n"
 					+ "The truck with your child's gifts will be in the %s parking lot at %s until 4PM.\n\n"
 					+ "Please bring this information with you: ONC # %s, Head of Household Name %s %s.\n\n"
 					+ "Vehicle occupants must wear masks, follow directional signs and remain inside the vehicle for additional instructions."
