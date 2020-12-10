@@ -105,7 +105,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
-		if(request.getMessageID() > 0  && request.getMessageID() < 3 &&
+		if(request.getMessageID() > 0  && request.getMessageID() < 5 &&
 			request.getPhoneChoice() > 0  && request.getPhoneChoice() < 3 &&
 			 request.getEntityType() == EntityType.FAMILY)
 	    {
