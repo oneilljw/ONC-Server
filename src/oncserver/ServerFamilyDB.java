@@ -1607,14 +1607,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//family gifts have already been packaged, then don't perform the test
 	    FamilyGiftStatus newGiftStatus;
 	    if(fam.getGiftStatus().compareTo(FamilyGiftStatus.Packaged) < 0)
-	    		newGiftStatus = getLowestGiftStatus(year, famID);
+	    	newGiftStatus = getLowestGiftStatus(year, famID);
 	    else
-	    		newGiftStatus = fam.getGiftStatus();
+	    	newGiftStatus = fam.getGiftStatus();
 	    
 	    //determine if the families gift card only status could change after adding the wish.
 	    int giftCardGiftID = globalDB.getGiftCardID(year);
 	    boolean bGCStatusCouldChange = giftCardGiftID > -1 && 
-	    									((priorGift != null && priorGift.getCatalogGiftID() == giftCardGiftID) ^ 
+	    									((priorGift != null && priorGift.getCatalogGiftID() == giftCardGiftID) || 
 	    									(addedGift.getCatalogGiftID() == giftCardGiftID));
 	    
 	    //if gift status has changed or the gift card only status has changed update the data base
@@ -1622,24 +1622,24 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    if(newGiftStatus != fam.getGiftStatus() || 
 	    		(bGCStatusCouldChange && isGiftCardOnlyFamily(year, famID) != fam.isGiftCardOnly()))
 	    {
-	    		if(newGiftStatus != fam.getGiftStatus())
-	    		{
-	    			//create a family history change
-	    			fam.setGiftStatus(newGiftStatus);
-	    			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fam.getDNSCode());
-	    			ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
-						null, famDNSCode.getID(), "Gift Status Change", fam.getChangedBy(), true);
-	    			fam.setDeliveryID(addedHistItem.getID());
-	    		}
-	    	
-	    		if(bGCStatusCouldChange)
-	    			fam.setGiftCardOnly(isGiftCardOnlyFamily(year, famID));
-	    	
-	    		familyDB.get(DBManager.offset(year)).setChanged(true);
-	    	
-	    		Gson gson = new Gson();
-	    		String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-	    		clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+    		if(newGiftStatus != fam.getGiftStatus())
+    		{
+    			//create a family history change
+    			fam.setGiftStatus(newGiftStatus);
+    			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fam.getDNSCode());
+    			ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
+					null, famDNSCode.getID(), "Gift Status Change", fam.getChangedBy(), true);
+    			fam.setDeliveryID(addedHistItem.getID());
+    		}
+    	
+    		if(bGCStatusCouldChange)
+    			fam.setGiftCardOnly(isGiftCardOnlyFamily(year, famID));
+    	
+    		familyDB.get(DBManager.offset(year)).setChanged(true);
+    	
+    		Gson gson = new Gson();
+    		String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+    		clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 	    }
 	}
 	
@@ -1708,8 +1708,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //					while(giftindex < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
 					while(giftindex < numGiftsPerChild && bGiftCardOnlyFamily)
 					{
-						ONCChildGift cw = childGiftDB.getCurrentChildGift(year, c.getID(), giftindex++);
-						if(cw.getGiftStatus().compareTo(GiftStatus.Assigned) < 0 || cw.getCatalogGiftID() != giftCardID)	//gift card?
+						ONCChildGift cg = childGiftDB.getCurrentChildGift(year, c.getID(), giftindex++);
+						if(cg == null || cg != null && cg.getCatalogGiftID() != giftCardID)	//gift card?
 							bGiftCardOnlyFamily = false;
 					}	
 				}
