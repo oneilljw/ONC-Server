@@ -17,8 +17,6 @@ import java.util.Queue;
 import java.util.TimeZone;
 
 import ourneighborschild.Login;
-import ourneighborschild.ONCChild;
-import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.UserAccess;
@@ -30,7 +28,6 @@ import com.google.gson.reflect.TypeToken;
 public class DesktopClient extends Thread 
 {
 	private static final int BASE_YEAR = 2012;
-	private static final int NUMBER_OF_WISHES_PER_CHILD = 3;
 	private static final float MINIMUM_CLIENT_VERSION = 8.13f;
 	
 	private int id;
@@ -302,7 +299,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("GET<childwishes>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = getChildWishes(year);
+                	String response = childwishDB.getCurrentChildGiftList(year);
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<clonedgifts>"))
@@ -764,11 +761,20 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
+                else if(command.startsWith("POST<add_newclonedgiftlist>"))
+                {                	
+                	//Add the list of gifts to the cloned gift data base
+                	clientMgr.addLogMessage(command);
+                	String response = clonedGiftDB.addListOfGifts(year, command.substring(27), clientUser, true);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
                 else if(command.startsWith("POST<add_clonedgiftlist>"))
                 {                	
                 	//Add the list of gifts to the cloned gift data base
                 	clientMgr.addLogMessage(command);
-                	String response = clonedGiftDB.addListOfGifts(year, command.substring(24), clientUser);
+                	String response = clonedGiftDB.addListOfGifts(year, command.substring(24), clientUser, false);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
@@ -1311,36 +1317,6 @@ public class DesktopClient extends Thread
     		getClientUser().setClientYear(year);
     	
     		return "YEAR" + Integer.toString(year);
-    }
-    
-    /******************
-     * This method creates a json containing an array list of ONCChildWish's. The list 
-     * contains the current wishes for each child in the child data base. The method is
-     * in this class since access to both the child database and the child wish database
-     * is necessary to build the array list. 
-     * @param year
-     * @return
-     */
-    String getChildWishes(int year)
-    {
-    		//Build the array list of current ONCChildWish's for each child
-    		ArrayList<ONCChildGift> childwishAL = new ArrayList<ONCChildGift>();
-  
-    		for(ONCChild c:childDB.getList(year))  
-    			for(int wn=0; wn < NUMBER_OF_WISHES_PER_CHILD; wn++)		
-    				if(c.getChildGiftID(wn) > -1) //Wish must have a valid ID
-    					childwishAL.add(ServerChildGiftDB.getGift(year, c.getChildGiftID(wn)));
-    	
-    		//Convert the array list to a json and return it
-    		Gson gson = new Gson();
-    		Type listtype = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();
-    		
-//    		System.out.println(childwishAL.size());
-//    		
-//    		String json = gson.toJson(childwishAL, listtype);
-//    		System.out.println(json.length());
-   
-    		return gson.toJson(childwishAL, listtype);
     }
     
     int getYear() { return year; }

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ONC Gift Delivery</title>
+ <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+ <script>
+ 	var year = SEASON;
+ 	var targetID = TARGETID;
+ 	var giftStatus = GIFT_STATUS;
+ 	
+	function onConfirm()
+	{
+		//request the server change the delivery status
+		let partnerparams = "year=" + year + "&" + "targetid=" + targetid + "&" + "callback=?";
+		$.post('deliveryconfirmed', partnerparams, function(family)
+ 		{
+ 			console.log(family);
+ 		});
+	}
+	function onUndoConfirm()
+	{
+
+	}
+	function onClose()
+	{
+		window.close();
+	}
+  </script>
+  <style>
+	.center { text-align: center; }
+	p {font-size: 20px; }
+	.header 
+	{
+		height: 70px;
+		width: 90% ;
+		margin: 0 auto;
+		background-color: #484e78;
+	}
+	.header-links
+	{
+		display: inline-block;
+	   	margin-top: 25px;   
+	}
+	.logo-img
+	{
+		vertical-align: middle;
+	   	margin-top: -8px;
+	   	margin-left: 5px;
+	   	margin-right: 10px;
+	   	max-height: 55px;
+	   	max-width: 75px;
+	}
+	.breadcrumb-first
+	{
+		color: white;
+		font-size: 18px;
+		text-decoration: none;
+	}
+	button 
+	{
+		width: 240px;
+		height: 60px;
+		background-color: #484e78; /* was #336699; */
+		color: #ffffff;
+	   	border-radius: 6px;
+	 	border: none;
+	 	padding: 4px 6px;
+	 	font-size: 20px;
+	}
+	.confirmdiv { display: block; }
+	.undodiv { display: none; }
+	.closediv { display: none; }
+  </style>
+</head>
+<body>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='breadcrumb' class='breadcrumb-first' href='dashboard'>Gift Delivery</a>
+    </span>   
+  </div>
+  <form id='confirm' action="/deliveryconfirmed" method="post">
+    <div class='center'>
+      <p>GIFT_DEL_MSSG_LINE_ONE</p>
+      <p>GIFT_DEL_MSSG_LINE_TWO</p>
+      <div id='confirmdiv'><button onclick='onConfirm()'>Confirm Gift Delivery</button></div>
+      <div id='undodiv'><span>
+        <button onclick='onUndo()'>Undo</button>
+        <button onclick='onClose'>Close</button>
+      </span></div>
+      <div id='cloasediv'><button onclick='onClose()'>Close</button></div>
+    </div>
+  </form>
+</body>
+</html>

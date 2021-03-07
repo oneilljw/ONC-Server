@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ONC Gift Delivery</title>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
+</head>
+<style>
+	.center { text-align: center; }
+	p {font-size: 20px; }
+	.header 
+	{
+		height: 70px;
+		width: 90% ;
+		margin: 0 auto;
+		background-color: #484e78;
+	}
+	.header-links
+	{
+		display: inline-block;
+	   	margin-top: 25px;   
+	}
+	.logo-img
+	{
+		vertical-align: middle;
+	   	margin-top: -8px;
+	   	margin-left: 5px;
+	   	margin-right: 10px;
+	   	max-height: 55px;
+	   	max-width: 75px;
+	}
+	.breadcrumb-first
+	{
+		color: white;
+		font-size: 18px;
+		text-decoration: none;
+	}
+	button 
+	{
+		width: 100px;
+		height: 60px;
+		margin-right: 40px;
+		background-color: #484e78; /* was #336699; */
+		color: #ffffff;
+	   	border-radius: 6px;
+	 	border: none;
+	 	padding: 4px 6px;
+	 	font-size: 20px;
+	}
+</style>
+<body>
+  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a> 
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a class='breadcrumb-first' href='dashboard'>Gift Delivery Undone</a>
+    </span>   
+  </div>
+  <form id='confirm' action="/undoconfirmation" method="post">
+    
+	<div class='center'>
+      <p>DEL_MSSG_LINE_ONE</p>
+      <p>DEL_MSSG_LINE_TWO</p>
+      <p>DEL_MSSG_LINE_THREE</p>
+      <span>
+      	<button>Undo</button>
+        <button>Close</button>
+      </span>
+  	</div>
+ </form>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>ONC Gift Delivery</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <script src="https://rawgit.com/sitepoint-editors/jsqrcode/master/src/qr_packed.js"></script>
+</head>
+<script>
+	var qrcode;
+	var canvasElement;
+	var canvas;
+	var qrResult;
+	var outputData;
+	var btnScanQR;
+	let scanning = false;
+	
+	window.addEventListener('DOMContentLoaded', (event) => {
+    	qrcode = window.qrcode;
+    	video = document.createElement("video");
+    	canvasElement = document.getElementById("qr-canvas");
+    	canvas = canvasElement.getContext("2d");
+    	qrResult = document.getElementById("qr-result");
+    	outputData = document.getElementById("outputData");
+    	btnScanQR = document.getElementById("btn-scan-qr");
+    	
+    	qrcode.callback = res => {
+   		  if (res)
+   		  {
+   		    outputData.innerText = res;
+   		    scanning = false;
+
+   		    video.srcObject.getTracks().forEach(track => {
+   		      track.stop();
+   		    });
+
+   		    qrResult.hidden = false;
+   		    canvasElement.hidden = true;
+   		    btnScanQR.hidden = false;
+   		  }
+   		};
+
+   		btnScanQR.onclick = () => {
+   		  navigator.mediaDevices
+   		    .getUserMedia({ video: { facingMode: "environment" } })
+   		    .then(function(stream) {
+   		      scanning = true;
+   		      qrResult.hidden = true;
+   		      btnScanQR.hidden = true;
+   		      canvasElement.hidden = false;
+   		      video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
+   		      video.srcObject = stream;
+   		      video.play();
+   		      tick();
+   		      scan();
+   		    });
+   		};
+	});
+	
+	function tick()
+	{
+		canvasElement.height = video.videoHeight;
+		canvasElement.width = video.videoWidth;
+		console.log(canvasElement.width);
+		canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+		
+		scanning && requestAnimationFrame(tick);
+	}
+
+	function scan()
+	{
+		try 
+		{
+			qrcode.decode();
+		}
+		catch (e)
+		{
+			setTimeout(scan, 1000);
+		}
+	}
+</script>
+<style>
+	.center { text-align: center; }
+	p {font-size: 20px; }
+	.header 
+	{
+		height: 70px;
+		width: 90% ;
+		margin: 0 auto;
+		background-color: #484e78;
+	}
+	.header-links
+	{
+		display: inline-block;
+	   	margin-top: 25px;   
+	}
+	.logo-img
+	{
+		vertical-align: middle;
+	   	margin-top: -8px;
+	   	margin-left: 5px;
+	   	margin-right: 10px;
+	   	max-height: 55px;
+	   	max-width: 75px;
+	}
+	.breadcrumb-first
+	{
+		color: white;
+		font-size: 18px;
+		text-decoration: none;
+	}
+	button 
+	{
+		width: 100px;
+		height: 60px;
+		margin-right: 40px;
+		background-color: #484e78; /* was #336699; */
+		color: #ffffff;
+	   	border-radius: 6px;
+	 	border: none;
+	 	padding: 4px 6px;
+	 	font-size: 20px;
+	}
+	html { height: 100%; }
+	body
+	{
+	  font-family: sans-serif;
+	  padding: 0 10px;
+	  height: 100%;
+	  background: black;
+	  margin: 0;
+	}
+	h1
+	{
+	  color: white;
+	  margin: 0;
+	  padding: 15px;
+	}
+	#container
+	{
+	  text-align: center;
+	  margin: 0;
+	}
+	#qr-canvas
+	{
+	  margin: auto;
+	  width: calc(100% - 20px);
+	  max-width: 400px;
+	}
+	#btn-scan-qr
+	{
+	  cursor: pointer;
+	}
+	#btn-scan-qr img
+	{
+	  height: 10em;
+	  padding: 15px;
+	  margin: 15px;
+	  background: white;
+	}
+	#qr-result
+	{
+	  font-size: 1.2em;
+	  margin: 20px auto;
+	  padding: 20px;
+	  max-width: 700px;
+	  background-color: white;
+	}
+</style>
+<body>
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a class='breadcrumb-first' href='dashboard'>Gift Delivery Confirmation</a>
+    </span>   
+  </div>
+  <div id="container">
+    <h1>QR Code Scanner</h1>
+    <a id="btn-scan-qr">
+        <img src="https://dab1nmslvvntp.cloudfront.net/wp-content/uploads/2017/07/1499401426qr_icon.svg">
+    </a>
+    <canvas id="qr-canvas" hidden="" ></canvas>
+    <div id="qr-result" hidden="">
+        <b>Data:</b> <span id="outputData"></span>
+    </div>
+  </div>
+</body>
+</html>

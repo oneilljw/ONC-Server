@@ -7,6 +7,7 @@ import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.Transportation;
 import ourneighborschild.DNSCode;
+import ourneighborschild.GiftDistribution;
 
 import java.util.List;
 
@@ -36,6 +37,7 @@ import java.util.List;
 		private List<ONCAdult> adultList;
 		private ONCWebAgent agent;
 		private ONCMeal meal;
+		private GiftDistribution distribution;
 		
 		public ONCWebsiteFamilyExtended(ONCFamily f, String region, String groupname, List<ONCWebChild> childList, 
 										List<ONCAdult> adultList, ONCWebAgent agent, ONCMeal meal, DNSCode dnsCode)
@@ -65,6 +67,7 @@ import java.util.List;
 			this.adultList = adultList;
 			this.agent = agent;
 			this.meal = meal;
+			this.distribution = f.getGiftDistribution();
 		}
 		
 		//getters
@@ -92,6 +95,7 @@ import java.util.List;
 		List<ONCAdult> getAdultList() { return adultList; }
 		ONCWebAgent getAgent() { return agent; }
 		ONCMeal getMeal() { return meal; }
+		GiftDistribution getGiftDistribution() { return distribution; }
 
 		//setters
 		void setBatchNum(String bn) {BatchNum = bn;}
@@ -114,4 +118,5 @@ import java.util.List;
 		void setNotes( String notes) { this.notes = notes; }
 		void setDeliveryInstructions( String di) { this.delInstr = di; }
 		void setGiftCardOnly( boolean gco) { this.bGiftCardOnly = gco; }
+		void setGiftDistribution( GiftDistribution dist) { this.distribution = dist; }
 }

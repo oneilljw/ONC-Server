@@ -12,7 +12,6 @@ import ourneighborschild.HistoryRequest;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCUser;
-import ourneighborschild.ClonedGiftStatus;
 import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
@@ -20,9 +19,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerChildGiftDB extends ServerSeasonalDB
 {
-	private static final int CHILD_GIFT_DB_HEADER_LENGTH = 10;
-//	private static final int GIFT_INDICATOR_ALLOW_SUBSTITUE = 2;
-//	private static final String GIFT_WISH_DEFAULT_DETAIL = "Age appropriate";
+	private static final int CHILD_GIFT_DB_HEADER_LENGTH = 12;
 	private static ServerChildGiftDB instance = null;
 
 	private static List<ChildGiftDBYear> childGiftDB;
@@ -45,10 +42,10 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			childGiftDB.add(cwDBYear);
 							
 			//import the children from persistent store
-			importDB(year, String.format("%s/%dDB/ChildWishDB.csv",
+			importDB(year, String.format("%s/%dDB/ChildGiftDB.csv",
 					System.getProperty("user.dir"),
 						year), "Child Wish DB", CHILD_GIFT_DB_HEADER_LENGTH);
-			
+							
 			//set the next id
 			cwDBYear.setNextID(getNextID(cwDBYear.getList()));
 		}
@@ -70,35 +67,58 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	{
 		return childGiftDB.get(DBManager.offset(year)).getList();
 	}
+	
+	String getCurrentChildGiftList(int year)
+	{
+		Gson gson = new Gson();
+		Type listtype = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();
+		   
+		List<ONCChildGift> currChildGiftList = new ArrayList<ONCChildGift>();
+		for(ONCChildGift cg : childGiftDB.get(DBManager.offset(year)).getList())
+			if(cg.getNextID() == -1)	//cloned gift is last in linked list, there for is current
+				currChildGiftList.add(cg);
+		
+		return gson.toJson(currChildGiftList, listtype);
+	}
 
 	@Override
-	String add(int year, String wishjson, ONCUser client)
+	String add(int year, String giftjson, ONCUser client)
 	{
-		//Create a child wish object for the added wish
+		//Create a child gift object for the add gfit request
 		Gson gson = new Gson();
-		ONCChildGift addedWish = gson.fromJson(wishjson, ONCChildGift.class);
+		ONCChildGift addedGift = gson.fromJson(giftjson, ONCChildGift.class);
 		
-		//retrieve the child wish data base for the year
+		//retrieve the child gift data base for the year
 		ChildGiftDBYear cwDBYear = childGiftDB.get(DBManager.offset(year));
-				
-		//set the new ID for the added child wish
-		addedWish.setID(cwDBYear.getNextID());
-				
-		//retrieve the old wish being replaced
-		ONCChildGift oldWish = getChildGift(year, addedWish.getChildID(), addedWish.getGiftNumber());
 		
-		//Add the new wish to the proper data base
-		cwDBYear.add(addedWish);
+		//retrieve the old gift being replaced
+		ONCChildGift oldGift = getCurrentChildGift(year, addedGift.getChildID(), addedGift.getGiftNumber());
+				
+		//set the new ID, prior and next ID's for the added child gift
+		int addedGiftID = cwDBYear.getNextID();
+		addedGift.setID(addedGiftID);
+		addedGift.setNextID(-1);
+		
+		if(oldGift != null)
+		{	
+			oldGift.setNextID(addedGiftID);
+			addedGift.setPriorID(oldGift.getID());
+		}
+		else
+			addedGift.setPriorID(-1);
+		
+		//Add the new gift to the proper year data base
+		cwDBYear.add(addedGift);
 		cwDBYear.setChanged(true);
 		
-		//Update the child object with new wish
-		childDB.updateChildsWishID(year, addedWish);
+		//Update the child object to point to the addedGift
+//		childDB.updateChildsWishID(year, addedGift);
 		
-		//process new wish to see if other data bases require update. They do if the wish
+		//process new gift to see if other data bases require update. They do if the gift
 		//status has caused a family status change or if a partner assignment has changed
-		processGiftAdded(year, oldWish, addedWish);
+		processGiftAdded(year, oldGift, addedGift);
 		
-		return "WISH_ADDED" + gson.toJson(addedWish, ONCChildGift.class);
+		return "WISH_ADDED" + gson.toJson(addedGift, ONCChildGift.class);
 	}
 	
 	String addListOfGifts(int year, String giftListJson, ONCUser client)
@@ -114,17 +134,26 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		
 		for(ONCChildGift addedGift : addedChildGiftList)
 		{
-			//set the new ID for the added child gift
-			addedGift.setID(cwDBYear.getNextID());
-				
 			//retrieve the old gift being replaced
-			ONCChildGift oldGift = getChildGift(year, addedGift.getChildID(), addedGift.getGiftNumber());
+			ONCChildGift oldGift = getCurrentChildGift(year, addedGift.getChildID(), addedGift.getGiftNumber());
+			
+			int addedGiftID = cwDBYear.getNextID();
+			addedGift.setID(addedGiftID);
+			addedGift.setNextID(-1);	//this is the last gift in the linked list
+			
+			if(oldGift != null)
+			{	
+				oldGift.setNextID(addedGiftID);	//old gift must link to the added gift
+				addedGift.setPriorID(oldGift.getID());	//added gift must link to the old gift
+			}
+			else
+				addedGift.setPriorID(-1);	//this is the first gift in the linked list
 		
 			//Add the new wish to the proper data base
 			cwDBYear.add(addedGift);
 			
 			//Update the child object with new gift
-			childDB.updateChildsWishID(year, addedGift);
+//			childDB.updateChildsWishID(year, addedGift);
 		
 			//process added gift to see if other data bases require update. They do if the gift
 			//status has caused a family status change or if a partner assignment has changed
@@ -148,17 +177,26 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		
 		for(ONCChildGift addedGift : addedChildGiftList)
 		{
-			//set the new ID for the added child gift
-			addedGift.setID(cwDBYear.getNextID());
-				
 			//retrieve the old gift being replaced
-			ONCChildGift oldGift = getChildGift(year, addedGift.getChildID(), addedGift.getGiftNumber());
+			ONCChildGift oldGift = getCurrentChildGift(year, addedGift.getChildID(), addedGift.getGiftNumber());
+			
+			int addedGiftID = cwDBYear.getNextID();
+			addedGift.setID(addedGiftID);
+			addedGift.setNextID(-1);	//this is the last gift in the linked list
+			
+			if(oldGift != null)
+			{	
+				oldGift.setNextID(addedGiftID);	//old gift must link to the added gift
+				addedGift.setPriorID(oldGift.getID());	//added gift must link to the old gift
+			}
+			else
+				addedGift.setPriorID(-1);	//this is the first gift in the linked list
 		
 			//Add the new wish to the proper data base
 			cwDBYear.add(addedGift);
 			
 			//Update the child object with new gift
-			childDB.updateChildsWishID(year, addedGift);
+//			childDB.updateChildsWishID(year, addedGift);
 		
 			//process added gift to see if other data bases require update. They do if the gift
 			//status has caused a family status change or if a partner assignment has changed
@@ -171,10 +209,10 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		return responseJsonList;
 	}
 	
-	ClonedGiftStatus checkForPartnerGiftStatusChange()
-	{
-		return ClonedGiftStatus.Unassigned;
-	}
+//	ClonedGiftStatus checkForPartnerGiftStatusChange()
+//	{
+//		return ClonedGiftStatus.Unassigned;
+//	}
 	
 	/*******************************************************************************************
 	 * This method implements a rules engine governing the relationship between a wish type and
@@ -351,18 +389,6 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			serverPartnerDB.incrementGiftActionCount(year, addedGift);
 		}
 	}
-	
-	void deleteChildGifts(int year, int childID)
-	{
-		ChildGiftDBYear cwDBYear = childGiftDB.get(DBManager.offset(year));
-		List<ONCChildGift> cwAL = cwDBYear.getList();
-		for(int index = cwAL.size()-1; index >= 0; index--) 
-			if(cwAL.get(index).getChildID() == childID)
-			{
-				cwAL.remove(index);
-				cwDBYear.setChanged(true);
-			}
-	}
 
 	//Search the database for the child's gift history. Return a json of ArrayList<ONCChildGift>
 	String getChildGiftHistory(int year, String reqjson)
@@ -427,24 +453,27 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			return cgAL.get(index);		
 	}
 	
-	ONCChildGift getChildGift(int year, int childid, int giftnum)
+	ONCChildGift getCurrentChildGift(int year, int childid, int giftnum)
 	{
 		List<ONCChildGift> cgAL = childGiftDB.get(DBManager.offset(year)).getList();	//Get the child gift list for the year
 		
 		//get the gift id from the Child data base
-		ONCChild child = childDB.getChild(year, childid);
-		if(child != null)
-		{	
+//		ONCChild child = childDB.getChild(year, childid);
+//		if(child != null)
+//		{	
 			//Search from the bottom of the data base for speed. New gifts are added to the bottom
 			int index = cgAL.size() -1;	//Set the element to the last child wish in the array
-			while(index >= 0 && cgAL.get(index).getID() != child.getChildGiftID(giftnum))
+//			while(index >= 0 && cgAL.get(index).getID() != child.getChildGiftID(giftnum))
+			while(index >= 0 && (cgAL.get(index).getChildID() != childid ||
+								   cgAL.get(index).getGiftNumber() != giftnum ||
+								    cgAL.get(index).getNextID() != -1))	
 				index--;
 		
 			return index == -1 ? null : cgAL.get(index);
 
-		}
-		else
-			return null;
+//		}
+//		else
+//			return null;
 	}
 /*	
 	List<PriorYearPartnerPerformance> getPriorYearPartnerPerformanceList(int newYear)
@@ -529,7 +558,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	{
 		//Get the child gift list for the year and add the object
 		ChildGiftDBYear cgDBYear = childGiftDB.get(DBManager.offset(year));
-		cgDBYear.add(new ONCChildGift(nextLine));
+		cgDBYear.add(new ONCChildGift(nextLine, false));	//false indicates this is not a cloned gift
 	}
 
 	@Override
@@ -543,12 +572,82 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		childGiftDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
 	
+	void convertToLinkedLists()
+	{
+		int[] years = {2012,2013,2014,2015,2016,2017,2018,2019,2020};
+		int[] giftNumbers = {0, 1, 2};
+		for(int year : years)
+		{
+			List<ONCChildGift> resultList = new ArrayList<ONCChildGift>();
+			for(ONCChild c : childDB.getList(year))
+			{	
+				for(int gn : giftNumbers)
+				{
+					List<ONCChildGift> sourceList = new ArrayList<ONCChildGift>();
+					for(ONCChildGift cg : childGiftDB.get(DBManager.offset(year)).getList())
+						if(cg.getChildID() == c.getID() && cg.getGiftNumber() == gn)
+							sourceList.add(cg);
+					
+					if(!sourceList.isEmpty())
+					{
+						//now that we have a source list, sort it chronologically
+						Collections.sort(sourceList, new ChildGiftTimestampComparator());
+						
+						//now that we have a time ordered child gift list, add the prior and next id's
+						int index = 0;
+						while(index < sourceList.size())
+						{
+							sourceList.get(index).setPriorID(index == 0 ? -1 : sourceList.get(index-1).getID());
+							sourceList.get(index).setNextID(index == sourceList.size()-1 ? -1 : sourceList.get(index+1).getID());
+							resultList.add(sourceList.get(index));
+							index++;
+						}	
+					}
+				}
+			}
+			
+			//now that we have a linked list, sort it by id and save it
+			Collections.sort(resultList, new ChildGiftIDComparator());
+			
+			//save it to a new file
+			String[] header = {"Child Gift ID", "Child ID", "Gift ID", "Detail",
+		 			"Gift #", "Restrictions", "Status","Changed By", "Time Stamp",
+		 			"PartnerID", "Prior ID", "Next ID"};
+			
+			String path = String.format("%s/%dDB/ChildGiftDB.csv", System.getProperty("user.dir"), year);
+			exportDBToCSV(resultList, header, path);	
+		}
+	}
+	
 	private class ChildGiftDateChangedComparator implements Comparator<ONCChildGift>
 	{
 		@Override
 		public int compare(ONCChildGift cw1, ONCChildGift cw2)
 		{
 			return cw1.getDateChanged().compareTo(cw2.getDateChanged());
+		}
+	}
+	
+	private class ChildGiftTimestampComparator implements Comparator<ONCChildGift>
+	{
+		@Override
+		public int compare(ONCChildGift cw1, ONCChildGift cw2)
+		{
+			return cw1.getTimestamp().compareTo(cw2.getTimestamp());
+		}
+	}
+	
+	private class ChildGiftIDComparator implements Comparator<ONCChildGift>
+	{
+		@Override
+		public int compare(ONCChildGift cw1, ONCChildGift cw2)
+		{
+			if(cw1.getID() < cw2.getID())
+				return -1;
+			else if(cw1.getID() == cw2.getID())
+				return 0;
+			else
+				return 1;
 		}
 	}
 	
@@ -565,7 +664,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
     		//getters
     		List<ONCChildGift> getList() { return cgList; }
     	
-    		void add(ONCChildGift addedWish) { cgList.add(addedWish); }
+    		void add(ONCChildGift addedGift) { cgList.add(addedGift); }
     }
 
 	@Override
@@ -573,12 +672,12 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	{
 		String[] header = {"Child Gift ID", "Child ID", "Gift ID", "Detail",
 	 			"Gift #", "Restrictions", "Status","Changed By", "Time Stamp",
-	 			"PartnerID"};
+	 			"PartnerID", "Prior ID", "Next ID"};
 		
 		ChildGiftDBYear gwDBYear = childGiftDB.get(DBManager.offset(year));
 		if(gwDBYear.isUnsaved())
 		{
-			String path = String.format("%s/%dDB/ChildWishDB.csv", System.getProperty("user.dir"), year);
+			String path = String.format("%s/%dDB/ChildGiftDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(gwDBYear.getList(), header, path);
 			gwDBYear.setChanged(false);
 		}

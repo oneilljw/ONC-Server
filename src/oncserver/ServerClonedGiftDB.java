@@ -10,9 +10,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import ourneighborschild.ONCUser;
-import ourneighborschild.ClonedGift;
-import ourneighborschild.ClonedGiftStatus;
+import ourneighborschild.GiftStatus;
 import ourneighborschild.HistoryRequest;
+import ourneighborschild.ONCChildGift;
 
 public class ServerClonedGiftDB extends ServerSeasonalDB
 {
@@ -56,7 +56,7 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 		return instance;
 	}
 	
-	List<ClonedGift> getClonedGiftList(int year)
+	List<ONCChildGift> getClonedGiftList(int year)
 	{
 		return clonedGiftDB.get(DBManager.offset(year)).getList();
 	}
@@ -64,10 +64,10 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 	String getCurrentCloneGiftList(int year)
 	{
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<ClonedGift>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();
 		   
-		List<ClonedGift> currClonedGiftList = new ArrayList<ClonedGift>();
-		for(ClonedGift cg : clonedGiftDB.get(DBManager.offset(year)).getList())
+		List<ONCChildGift> currClonedGiftList = new ArrayList<ONCChildGift>();
+		for(ONCChildGift cg : clonedGiftDB.get(DBManager.offset(year)).getList())
 			if(cg.getNextID() == -1)	//cloned gift is last in linked list, there for is current
 				currClonedGiftList.add(cg);
 		
@@ -89,8 +89,8 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 		int childID = ghRequest.getID();
 		int gn = ghRequest.getNumber();
 		
-		List<ClonedGift> giftHistoryList = new ArrayList<ClonedGift>();
-		List<ClonedGift> searchList = clonedGiftDB.get(DBManager.offset(year)).getList();
+		List<ONCChildGift> giftHistoryList = new ArrayList<ONCChildGift>();
+		List<ONCChildGift> searchList = clonedGiftDB.get(DBManager.offset(year)).getList();
 		
 		//find the first cloned gift in the linked list
 		int index = 0;
@@ -102,7 +102,7 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 		
 		if(index < searchList.size())
 		{
-			ClonedGift nextClonedGiftInChain = searchList.get(index);	//first clone in chain
+			ONCChildGift nextClonedGiftInChain = searchList.get(index);	//first clone in chain
 			
 			giftHistoryList.add(nextClonedGiftInChain);
 			
@@ -119,7 +119,7 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 		}
 		
 		//Convert gift history list to json and return it
-		Type listtype = new TypeToken<ArrayList<ClonedGift>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();
 		String response = gson.toJson(giftHistoryList, listtype);
 		return response;
 	}
@@ -130,12 +130,12 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 		return "";
 	}
 	
-	String addListOfGifts(int year, String giftListJson, ONCUser client)
+	String addListOfGifts(int year, String giftListJson, ONCUser client, boolean bRejectDuplicates)
 	{
 		//Create a cloned gift list for the add cloned gift requests
 		Gson gson = new Gson();
-		Type listOfClonedGifts = new TypeToken<ArrayList<ClonedGift>>(){}.getType();		
-		List<ClonedGift> reqAddClonedGiftList = gson.fromJson(giftListJson, listOfClonedGifts);
+		Type listOfClonedGifts = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();		
+		List<ONCChildGift> reqAddClonedGiftList = gson.fromJson(giftListJson, listOfClonedGifts);
 		List<String> responseJsonList = new ArrayList<String>();
 
 		//retrieve the cloned gift data base for the year
@@ -144,37 +144,28 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 		//for each add clone gift request, check to see if the gift had already been cloned. If it 
 		//hasn't already been cloned, than add it. A new clone gift request has a requested cloned gift
 		//id of -1. 
-		for(ClonedGift reqAddClonedGift : reqAddClonedGiftList)
-		{
-//			System.out.println(String.format("ServClonedGiftDB.addListOfGifts: isDuplicate=%b, childID=%d, gn=%d",
-//					isDuplicateClone(year, reqAddClonedGift), reqAddClonedGift.getChildID(), reqAddClonedGift.getGiftNumber()));
-			
-			if(reqAddClonedGift.getID() > -1 || reqAddClonedGift.getID() == -1 && !isDuplicateClone(year, reqAddClonedGift))
+		for(ONCChildGift reqAddClonedGift : reqAddClonedGiftList)
+		{	
+			if(reqAddClonedGift.getID() == -1 && !isDuplicateClone(year, reqAddClonedGift, bRejectDuplicates))
 			{
-				ClonedGift replacedClonedGift = null;
-				if(reqAddClonedGift.getID() > -1)	//replacing a previous cloned gift
-				{	
-					replacedClonedGift = getClonedGift(year, reqAddClonedGift.getID());
-					
-					if(replacedClonedGift != null)
-						reqAddClonedGift.setPriorID(replacedClonedGift.getID());
-				}
-						
 				//set the new ID for the added cloned gift
-				reqAddClonedGift.setID(cgDBYear.getNextID());
+				int newClonedGiftID = cgDBYear.getNextID();
+				reqAddClonedGift.setID(newClonedGiftID);
+				reqAddClonedGift.setNextID(-1);
+				reqAddClonedGift.setChangedBy(client.getLNFI());
+				reqAddClonedGift.setTimestamp(System.currentTimeMillis());
 				
-				//set the replaced cloned gift next ID in the chain and determine if other
-				//data bases require update.
-				if(replacedClonedGift != null)
+				ONCChildGift previousClonedGift = getClonedGift(year, reqAddClonedGift);
+				if(previousClonedGift != null)	//replacing a previous cloned gift
 				{	
-					replacedClonedGift.setNextID(reqAddClonedGift.getID());
-					responseJsonList.add("UPDATED_CLONED_GIFT" + gson.toJson(replacedClonedGift, ClonedGift.class));
-					processClonedGiftAdded(year, replacedClonedGift, reqAddClonedGift);	
+					reqAddClonedGift.setPriorID(previousClonedGift.getID());
+					previousClonedGift.setNextID(newClonedGiftID);
+					processClonedGiftAdded(year, previousClonedGift, reqAddClonedGift);
 				}
-			
+				
 				cgDBYear.add(reqAddClonedGift);
 				cgDBYear.setChanged(true);
-				responseJsonList.add("ADDED_CLONED_GIFT" + gson.toJson(reqAddClonedGift, ClonedGift.class));
+				responseJsonList.add("ADDED_CLONED_GIFT" + gson.toJson(reqAddClonedGift, ONCChildGift.class));
 			}
 		}
 		
@@ -182,175 +173,155 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 		return "ADDED_LIST_CLONED_GIFTS" + gson.toJson(responseJsonList, responseListType);
 	}
 	
-	boolean isDuplicateClone(int year, ClonedGift requestedClone)
+	boolean isDuplicateClone(int year, ONCChildGift requestedClone, boolean bRejectDuplicates)
 	{
 //		System.out.println(String.format("ServClonedGiftDB.isDupClone: checking: childID=%d, giftID= %d, gn=%d",
 //			requestedClone.getChildID(), requestedClone.getGiftID(), requestedClone.getGiftNumber()));
 		
-		//retrieve the cloned gift data base for the year
-		ClonedGift dupClone = null;
-		for(ClonedGift cg : clonedGiftDB.get(DBManager.offset(year)).getList())
+		if(bRejectDuplicates)
 		{
-			if(cg.getPriorID() == -1 && cg.getChildID() == requestedClone.getChildID() && 
-				cg.getGiftNumber() == requestedClone.getGiftNumber() &&
-				cg.getGiftID() == requestedClone.getGiftID())
+			//retrieve the cloned gift data base for the year
+			ONCChildGift dupClone = null;
+			for(ONCChildGift cg : clonedGiftDB.get(DBManager.offset(year)).getList())
 			{
-				dupClone = cg;
-				break;
+				if(cg.getChildID() == requestedClone.getChildID() && 
+					cg.getGiftNumber() == requestedClone.getGiftNumber() &&
+					 cg.getCatalogGiftID() == requestedClone.getCatalogGiftID())
+				{
+					dupClone = cg;
+					break;
+				}
 			}
-		}
-		
-//		if(dupClone != null)
-//			System.out.println(String.format("ServClonedGiftDB.isDupClone: dup found, childID=%d, giftID= %d, gn=%d",
-//						dupClone.getChildID(), dupClone.getGiftID(), dupClone.getGiftNumber()));
 			
-		return dupClone != null;
+	//		if(dupClone != null)
+	//			System.out.println(String.format("ServClonedGiftDB.isDupClone: dup found, childID=%d, giftID= %d, gn=%d",
+	//						dupClone.getChildID(), dupClone.getGiftID(), dupClone.getGiftNumber()));
+				
+			return dupClone != null;
+		}
+		else
+			return false;
 	}
 	
-	void processClonedGiftAdded(int year, ClonedGift replacedGift, ClonedGift addedGift)
+	void processClonedGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)
 	{	
-		ClonedGiftStatus newStatus = replacedGift.getGiftStatus();	//default is to keep status
+		GiftStatus newStatus = priorGift.getGiftStatus();	//default is to keep status
 		
-		switch(replacedGift.getGiftStatus())
+		switch(priorGift.getGiftStatus())
 		{
 			case Unassigned:
 				if(addedGift.getPartnerID() > -1)
 				{	
-					newStatus = ClonedGiftStatus.Assigned;
+					newStatus = GiftStatus.Assigned;
 					serverPartnerDB.changeCount(year, addedGift.getPartnerID(), "ASSIGNED", 1);
 				}
 			break;
 			
 			case Assigned:
-				if(replacedGift.getPartnerID() > -1 && addedGift.getPartnerID() == -1)
+				if(priorGift.getPartnerID() > -1 && addedGift.getPartnerID() == -1)
 				{	
-					newStatus = ClonedGiftStatus.Unassigned;
-					serverPartnerDB.changeCount(year, replacedGift.getPartnerID(), "ASSIGNED", -1);
+					newStatus = GiftStatus.Unassigned;
+					serverPartnerDB.changeCount(year, priorGift.getPartnerID(), "ASSIGNED", -1);
 				}
-				else if(replacedGift.getPartnerID() > -1 && addedGift.getPartnerID() > -1 &&
-						 replacedGift.getPartnerID() != addedGift.getPartnerID())
+				else if(priorGift.getPartnerID() > -1 && addedGift.getPartnerID() > -1 &&
+						 priorGift.getPartnerID() != addedGift.getPartnerID())
 				{
-					newStatus = ClonedGiftStatus.Assigned;
-					serverPartnerDB.changeCount(year, replacedGift.getPartnerID(), "ASSIGNED", -1);
+					newStatus = GiftStatus.Assigned;
+					serverPartnerDB.changeCount(year, priorGift.getPartnerID(), "ASSIGNED", -1);
 					serverPartnerDB.changeCount(year, addedGift.getPartnerID(), "ASSIGNED", 1);					
 				}
-				else if(replacedGift.getPartnerID() > -1 &&  
-						 replacedGift.getPartnerID() == addedGift.getPartnerID() &&
-						  addedGift.getGiftStatus() == ClonedGiftStatus.Delivered)
+				else if(priorGift.getPartnerID() > -1 &&  
+						 priorGift.getPartnerID() == addedGift.getPartnerID() &&
+						  addedGift.getGiftStatus() == GiftStatus.Delivered)
 				{	
-					newStatus = ClonedGiftStatus.Delivered;
+					newStatus = GiftStatus.Delivered;
 					serverPartnerDB.changeCount(year, addedGift.getPartnerID(), "DELIVERED", 1);
 				}
 			break;
 			
 			case Delivered:
-				if(replacedGift.getPartnerID() == addedGift.getPartnerID() &&
-				    addedGift.getGiftStatus() == ClonedGiftStatus.Assigned)
+				if(priorGift.getPartnerID() == addedGift.getPartnerID() &&
+				    addedGift.getGiftStatus() == GiftStatus.Assigned)
 				{	
-					newStatus = ClonedGiftStatus.Assigned;
+					newStatus = GiftStatus.Assigned;
 					serverPartnerDB.changeCount(year, addedGift.getPartnerID(), "DELIVERED", -1);
 				}
-				else if(replacedGift.getPartnerID() == addedGift.getPartnerID() &&
-						addedGift.getGiftStatus() == ClonedGiftStatus.Received)
+				else if(priorGift.getPartnerID() == addedGift.getPartnerID() &&
+						addedGift.getGiftStatus() == GiftStatus.Received)
 				{	
-					newStatus = ClonedGiftStatus.Received;
+					newStatus = GiftStatus.Received;
 					serverPartnerDB.changeCount(year, addedGift.getPartnerID(), "RECEIVED", 1);
 				}
-				else if(replacedGift.getPartnerID() == addedGift.getPartnerID() &&
-						addedGift.getGiftStatus() == ClonedGiftStatus.Returned)
+				else if(priorGift.getPartnerID() == addedGift.getPartnerID() &&
+						addedGift.getGiftStatus() == GiftStatus.Returned)
 				{	
-					newStatus = ClonedGiftStatus.Returned;
+					newStatus = GiftStatus.Returned;
 				}
 			break;
 			
 			case Received:
-				if(replacedGift.getPartnerID() == addedGift.getPartnerID() &&
-			    	addedGift.getGiftStatus() == ClonedGiftStatus.Delivered)
+				if(priorGift.getPartnerID() == addedGift.getPartnerID() &&
+			    	addedGift.getGiftStatus() == GiftStatus.Delivered)
 				{	
-					newStatus = ClonedGiftStatus.Delivered;
+					newStatus = GiftStatus.Delivered;
 					serverPartnerDB.changeCount(year, addedGift.getPartnerID(), "RECEIVED", -1);
 				}
 			break;
 			
 			case Returned:
-				if(replacedGift.getPartnerID() == addedGift.getPartnerID() &&
-					addedGift.getGiftStatus() == ClonedGiftStatus.Delivered)
+				if(priorGift.getPartnerID() == addedGift.getPartnerID() &&
+					addedGift.getGiftStatus() == GiftStatus.Delivered)
 				{	
-					newStatus = ClonedGiftStatus.Delivered;
+					newStatus = GiftStatus.Delivered;
 				}
 			break;
 			
 			default:
-				newStatus = replacedGift.getGiftStatus();
+				newStatus = priorGift.getGiftStatus();
 			break;
 		}
 		
 		addedGift.setGiftStatus(newStatus);
 	}
-/*	
-	void deleteChildGifts(int year, int childID)
+
+	ONCChildGift getClonedGift(int year, int clonedGiftID)
 	{
-		ChildGiftDBYear cwDBYear = childGiftDB.get(DBManager.offset(year));
-		List<ONCChildGift> cwAL = cwDBYear.getList();
-		for(int index = cwAL.size()-1; index >= 0; index--) 
-			if(cwAL.get(index).getChildID() == childID)
-			{
-				cwAL.remove(index);
-				cwDBYear.setChanged(true);
-			}
-	}
-*/
-/*	
-	//Search the database for the child's gift history. Return a json of ArrayList<ONCChildGift>
-	String getChildGiftHistory(int year, String reqjson)
-	{
-		//Convert list to json and return it
-		Gson gson = new Gson();
-		HistoryRequest ghRequest = gson.fromJson(reqjson, HistoryRequest.class);
-		
-		List<ONCChildGift> cgHistory = new ArrayList<ONCChildGift>();
-		List<ONCChildGift> cgAL = childGiftDB.get(DBManager.offset(year)).getList();
-		
-		//Search for child gifts that match the child id
-		for(ONCChildGift cw: cgAL)
-			if(cw.getChildID() == ghRequest.getID() && cw.getGiftNumber() == ghRequest.getNumber())
-				cgHistory.add(cw);
-			
-		//Convert list to json and return it
-		Type listtype = new TypeToken<ArrayList<ONCChildGift>>(){}.getType();
-		
-		String response = gson.toJson(cgHistory, listtype);
-		return response;
-	}
-*/
-/*
-	List<ONCChildGift> getChildGiftHistory(int year, int childID, int wn)
-	{
-		//create the return list
-		List<ONCChildGift> cgHistory = new ArrayList<ONCChildGift>();
-		List<ONCChildGift> cgAL = childGiftDB.get(DBManager.offset(year)).getList();
-		
-		//Search for child gifts that match the child id and gift number. For each 
-		//gift that matches the child id and gift number, add it to the gift history list
-		for(ONCChildGift gw: cgAL)
-			if(gw.getChildID() == childID && gw.getGiftNumber() == wn)
-				cgHistory.add(gw);
-		
-		//sort the gift chronologically, most recent gift first in the list
-		Collections.sort(cgHistory, new ChildGiftDateChangedComparator());
-		
-		return cgHistory;
-	}
-*/
-	
-	ClonedGift getClonedGift(int year, int clonedGiftID)
-	{
-		List<ClonedGift> cgAL = clonedGiftDB.get(DBManager.offset(year)).getList();	//Get the cloned gift list for the year
+		List<ONCChildGift> cgAL = clonedGiftDB.get(DBManager.offset(year)).getList();	//Get the cloned gift list for the year
 		
 		//search the cloned gift data base for the cloned gift by the id
 		//Search from the bottom of the data base for speed. New gifts are added to the bottom
 		int index = cgAL.size()-1;
 		while(index >= 0 && cgAL.get(index).getID() != clonedGiftID)
+			index--;
+		
+		return index == -1 ? null : cgAL.get(index);
+	}
+	
+	ONCChildGift getClonedGift(int year, int childID, int giftNumber)
+	{
+		List<ONCChildGift> cgAL = clonedGiftDB.get(DBManager.offset(year)).getList();	//Get the cloned gift list for the year
+		
+		//search the cloned gift data base for the cloned gift by child id and gift number
+		//Search from the bottom of the data base for speed. New gifts are added to the bottom
+		int index = cgAL.size()-1;
+		while(index >= 0 && (cgAL.get(index).getChildID() != childID ||
+							  cgAL.get(index).getGiftNumber() != giftNumber ||
+							   cgAL.get(index).getNextID() != -1))
+			index--;
+		
+		return index == -1 ? null : cgAL.get(index);
+	}
+	
+	ONCChildGift getClonedGift(int year, ONCChildGift reqAddClonedGift)
+	{
+		List<ONCChildGift> cgAL = clonedGiftDB.get(DBManager.offset(year)).getList();	//Get the cloned gift list for the year
+		
+		//search the cloned gift data base for the cloned gift by child ID and gift number
+		//Search from the bottom of the data base for speed. New gifts are added to the bottom
+		int index = cgAL.size()-1;
+		while(index >= 0 && (cgAL.get(index).getChildID() != reqAddClonedGift.getChildID() ||
+							  cgAL.get(index).getGiftNumber() != reqAddClonedGift.getGiftNumber() ||
+							   cgAL.get(index).getNextID() != -1))
 			index--;
 		
 		return index == -1 ? null : cgAL.get(index);
@@ -361,7 +332,7 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 	{
 		//Get the cloned gift list for the year and add the object
 		ClonedGiftDBYear cgDBYear = clonedGiftDB.get(DBManager.offset(year));
-		cgDBYear.add(new ClonedGift(nextLine));
+		cgDBYear.add(new ONCChildGift(nextLine, true));	//true indicates this is a cloned gift
 	}
 
 	@Override
@@ -377,18 +348,18 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 	
 	private class ClonedGiftDBYear extends ServerDBYear
     {
-    		private List<ClonedGift> cgList;
+    		private List<ONCChildGift> cgList;
     	
     		ClonedGiftDBYear(int year)
     		{
     			super();
-    			cgList = new ArrayList<ClonedGift>();
+    			cgList = new ArrayList<ONCChildGift>();
     		}
     	
     		//getters
-    		List<ClonedGift> getList() { return cgList; }
+    		List<ONCChildGift> getList() { return cgList; }
     	
-    		void add(ClonedGift addedClonedGift) { cgList.add(addedClonedGift); }
+    		void add(ONCChildGift addedClonedGift) { cgList.add(addedClonedGift); }
     }
 
 	@Override

@@ -22,6 +22,8 @@ public class PriorYearDB extends ServerSeasonalDB
 	private static PriorYearDB instance = null;
 	private List<PriorYearChildDBYear> pycDB;
 	
+	private ServerChildGiftDB childGiftDB;
+	
 	private PriorYearDB() throws FileNotFoundException, IOException
 	{
 		//create the prior year child data base
@@ -43,6 +45,8 @@ public class PriorYearDB extends ServerSeasonalDB
 					
 			//set the next id
 			pycDBYear.setNextID(getNextID(pycDBYear.getList()));
+			
+			childGiftDB = ServerChildGiftDB.getInstance();
 		}
 	}
 	
@@ -266,21 +270,21 @@ public class PriorYearDB extends ServerSeasonalDB
 				(lyONCFamONCNum = Integer.parseInt(lyfam.getONCNum())) >= minONCNum &&
 				 lyONCFamONCNum <= maxONCNum && (lyfam.getDNSCode() == -1 || lyfam.getDNSCode() == WAITLIST_DNS_CODE))	
 			{
-				ONCChildGift lyChildWish1 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(0));
-				ONCChildGift lyChildWish2 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(1));
-				ONCChildGift lyChildWish3 = ServerChildGiftDB.getGift(newYear-1, lyc.getChildGiftID(2));
+				ONCChildGift lyChildWish1 = childGiftDB.getCurrentChildGift(newYear-1, lyc.getID(),0);
+				ONCChildGift lyChildWish2 = childGiftDB.getCurrentChildGift(newYear-1, lyc.getID(),1);
+				ONCChildGift lyChildWish3 = childGiftDB.getCurrentChildGift(newYear-1, lyc.getID(),2);
 				
 				//determine the wishes from last year. Check to ensure the child wish existed. If it didn't, 
 				//set the wish blank
 				String lyWish1 = "", lyWish2 = "", lyWish3 = "";
 				if(lyChildWish1 != null)
-					 lyWish1 = cat.findGiftNameByID(newYear-1, lyChildWish1.getGiftID()) + "- " + lyChildWish1.getDetail();
+					 lyWish1 = cat.findGiftNameByID(newYear-1, lyChildWish1.getCatalogGiftID()) + "- " + lyChildWish1.getDetail();
 				
 				if(lyChildWish2 != null)
-					lyWish2 = cat.findGiftNameByID(newYear-1, lyChildWish2.getGiftID()) + "- " + lyChildWish2.getDetail();
+					lyWish2 = cat.findGiftNameByID(newYear-1, lyChildWish2.getCatalogGiftID()) + "- " + lyChildWish2.getDetail();
 				
 				if(lyChildWish3 != null)
-					lyWish3 = cat.findGiftNameByID(newYear-1, lyChildWish3.getGiftID()) + "- " + lyChildWish3.getDetail();
+					lyWish3 = cat.findGiftNameByID(newYear-1, lyChildWish3.getCatalogGiftID()) + "- " + lyChildWish3.getDetail();
 	    		
 				//last year child was in a served family, have they already been added to the
 	    			//new years prior year child list?

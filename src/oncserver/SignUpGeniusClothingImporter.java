@@ -201,8 +201,8 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 							clientResponseList.add(partnerDB.decrementGiftsAssignedCount(year, cg.getPartnerID(), false));
 							
 						//set the added gift partner id and set the status to DELIVERED
-						cg.setChildWishAssignee0ID(cp.getPartner().getID());
-						cg.setChildWishStatus(GiftStatus.Delivered);	
+						cg.setPartnerID(cp.getPartner().getID());
+						cg.setGiftStatus(GiftStatus.Delivered);	
 					}
 						
 					//add the gift to the child gift data base, no client notification
@@ -227,8 +227,8 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 								
 							//set the added gift partner id and set the status to DELIVERED. Add the gift
 							//to the list we'll send to the ChildGift DB
-							cg.setChildWishAssignee0ID(cp.getPartner().getID());
-							cg.setChildWishStatus(GiftStatus.Delivered);
+							cg.setPartnerID(cp.getPartner().getID());
+							cg.setGiftStatus(GiftStatus.Delivered);
 							newGeniusClothingAdoptionsList.add(cg);
 								
 							//update the new partner's requested, assigned and delivered counts
@@ -305,81 +305,96 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 		 * @param item: String of json item value. See format above
 		 * @return ONCChildGift corresponding to item or null if ONCChildGift can't be located in data base
 		 */
-    		ONCChildGift getChildGift(String item)
-    		{
-    			//break the imported item into three strings at the astrisk
-    			String[] itemParts = item.split(" \\*\\* ");
-    			
-    			ONCChildGift childGift = null;
-			if(itemParts.length == 3)
-			{	
-				//find the family by ONC Num
-				String oncNum = itemParts[0].substring(6).trim();
-				int year = DBManager.getCurrentSeason();
-				ONCFamily f = familyDB.getFamilyByONCNum(year, oncNum);
-				if(f != null)
+    	ONCChildGift getChildGift(String item)
+    	{
+    		ServerChildGiftDB childGiftDB;
+			try 
+			{
+				childGiftDB = ServerChildGiftDB.getInstance();
+				//break the imported item into three strings at the asterisk
+	    		String[] itemParts = item.split(" \\*\\* ");
+	    			
+	    		ONCChildGift childGift = null;
+				if(itemParts.length == 3)
 				{	
-					//get list of children in family
-					List<ONCChild> childrenInFamilyList = childDB.getChildList(year, f.getID());
-					
-					//find the child that the item was selected for
-					int cn;
-					for(cn=0; cn < childrenInFamilyList.size(); cn++)
-					{
-						ONCChild child = childrenInFamilyList.get(cn);
-						String childAgeGenderString = child.getChildAge() + " " + child.getChildGender();
+					//find the family by ONC Num
+					String oncNum = itemParts[0].substring(6).trim();
+					int year = DBManager.getCurrentSeason();
+					ONCFamily f = familyDB.getFamilyByONCNum(year, oncNum);
+					if(f != null)
+					{	
+						//get list of children in family
+						List<ONCChild> childrenInFamilyList = childDB.getChildList(year, f.getID());
 						
-						if(childAgeGenderString.equals(itemParts[1].trim()))
-							break;
-					}
-						
-					if(cn < childrenInFamilyList.size())
-					{
-						//found the child the item was selected for, now find the ONCChildWish id
-						ONCChild child = childrenInFamilyList.get(cn);
-						int gn;
-						for(gn=0; gn < ServerChildDB.NUMBER_GIFTS_PER_CHILD; gn++)
+						//find the child that the item was selected for
+						int cn;
+						for(cn=0; cn < childrenInFamilyList.size(); cn++)
 						{
-							ONCChildGift childCurrGift = ServerChildGiftDB.getGift(year, child.getChildGiftID(gn));	
-							if(childCurrGift.getDetail().equals(itemParts[2].trim()))	 //there is a "\r" at the end of the imported item string
+							ONCChild child = childrenInFamilyList.get(cn);
+							String childAgeGenderString = child.getChildAge() + " " + child.getChildGender();
+							
+							if(childAgeGenderString.equals(itemParts[1].trim()))
 								break;
 						}
-			
-						if(gn < ServerChildDB.NUMBER_GIFTS_PER_CHILD)
-							childGift = ServerChildGiftDB.getGift(year, child.getChildGiftID(gn));
+							
+						if(cn < childrenInFamilyList.size())
+						{
+							//found the child the item was selected for, now find the ONCChildGift id
+							ONCChild child = childrenInFamilyList.get(cn);
+							
+							
+							int gn;
+							for(gn=0; gn < ServerChildDB.NUMBER_GIFTS_PER_CHILD; gn++)
+							{
+								ONCChildGift childCurrGift = childGiftDB.getCurrentChildGift(year, child.getID(), gn);	
+								if(childCurrGift.getDetail().equals(itemParts[2].trim()))	 //there is a "\r" at the end of the imported item string
+									break;
+							}
+				
+							if(gn < ServerChildDB.NUMBER_GIFTS_PER_CHILD)
+								childGift = childGiftDB.getCurrentChildGift(year, child.getID(), gn);
+						}
 					}
 				}
+				
+				return childGift;
+			} 
+			catch (FileNotFoundException e) 
+			{
+				return null;
+			} 
+			catch (IOException e) 
+			{
+				return null;
 			}
-			
-			return childGift;
-    		}
+    	}
 	
-        	private class ClothingPartner
-        	{
-        		private ONCPartner partner;
-        		private List<ONCChildGift> partnerGiftList;
-        		
-        		ClothingPartner(ONCPartner partner)
-        		{
-        			this.partner = partner;
-        			partnerGiftList = new ArrayList<ONCChildGift>();
-        		}
-        
-        		//getters
-        		ONCPartner getPartner() { return partner; }
-        		List<ONCChildGift> getGiftList() { return partnerGiftList; }
+    	private class ClothingPartner
+    	{
+    		private ONCPartner partner;
+    		private List<ONCChildGift> partnerGiftList;
+    		
+    		ClothingPartner(ONCPartner partner)
+    		{
+    			this.partner = partner;
+    			partnerGiftList = new ArrayList<ONCChildGift>();
+    		}
+    
+    		//getters
+    		ONCPartner getPartner() { return partner; }
+    		List<ONCChildGift> getGiftList() { return partnerGiftList; }
 
-        		//helpers
-        		void addChildGift(ONCChildGift cg) { partnerGiftList.add(cg); }
-        	}
+    		//helpers
+    		void addChildGift(ONCChildGift cg) { partnerGiftList.add(cg); }
+    	}
         	
-        	private class SUAEmailComparator implements Comparator<SignUpActivity>
-        	{
-        		@Override
-        		public int compare(SignUpActivity o1, SignUpActivity o2)
-        		{			
-        			return o1.getEmail().compareTo(o2.getEmail());
-        		}
-        	}
+    	private class SUAEmailComparator implements Comparator<SignUpActivity>
+    	{
+    		@Override
+    		public int compare(SignUpActivity o1, SignUpActivity o2)
+    		{			
+    			return o1.getEmail().compareTo(o2.getEmail());
+    		}
+    	}
 	}
 }

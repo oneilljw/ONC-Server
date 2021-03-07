@@ -61,10 +61,10 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 44;
+	private static final int FAMILYDB_HEADER_LENGTH = 45;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
-	private static final int NUMBER_OF_WISHES_PER_CHILD = 2;	//COVID 19 - Two gifts/child not three
+//	private static final int NUMBER_OF_WISHES_PER_CHILD = 2;	//COVID 19 - Two gifts/child not three
 	private static final String ODB_FAMILY_MEMBER_COLUMN_SEPARATOR = " - ";
 	private static final int DEFAULT_GROUP_ID = 62;
 	private static final int DNS_WAITLIST_CODE = 1;
@@ -382,7 +382,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				boolean bAlreadyReferred = year == DBManager.getCurrentSeason() ? true : alreadyReferredInCurrentSeason(year, f, currentSeasonList);
 				
 				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f,bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), 							ServerNoteDB.lastNoteStatus(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f,bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), ServerNoteDB.lastNoteStatus(year, f.getID())));
 				else
 					for(ONCGroup agentGroup : agentsGroupList)
 						if(agentGroup.groupSharesInfo() && f.getGroupID() == agentGroup.getID())
@@ -756,7 +756,47 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
+	
+	HtmlResponse confirmFamilyGiftDelivery(int year, int id, WebClient wc, String callbackFunction)
+	{
+		String response;
+		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
+		List<ONCFamily> fAL = fDBYear.getList();
+		
+		int index=0;
+		while(index < fAL.size() && fAL.get(index).getID() != id)
+			index++;
 
+		if(index < fAL.size())
+		{
+			if(fAL.get(index).getGiftStatus() == FamilyGiftStatus.Assigned)
+			{
+				ONCFamily updatedFamily = new ONCFamily(fAL.get(index));	//make a copy
+				updatedFamily.setGiftStatus(FamilyGiftStatus.Delivered);
+				
+				//add a history item
+				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+						updatedFamily.getGiftStatus(), null, updatedFamily.getDNSCode(),"Gift Status Change", wc.getWebUser().getLNFI(), true);
+				updatedFamily.setDeliveryID(histItem.getID());
+				
+				fAL.set(index, updatedFamily);
+				fDBYear.setChanged(true);
+				
+				response = "{\"message\":\"Gifts Successfully Delivered!\"}"; 
+			}
+			else if(fAL.get(index).getGiftStatus() == FamilyGiftStatus.Delivered)
+				response = "{\"message\":\"Gifts Already Delivered\"}"; 
+			else
+				response = String.format("{\"message\":\"Error: Invalid Family Gift Status: %s\"}",
+						fAL.get(index).getGiftStatus().toString());
+		}
+		else
+		{
+			response = "{\"message\":\"Error: Family Not Found\"}";
+		}
+		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+	}
 	
 	String update(int year, String familyjson, ONCUser clientUser, boolean bAutoAssign)
 	{
@@ -1392,6 +1432,19 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
+	static ONCFamily getFamilyByReference(int year, int id, String referenceNumber)
+	{
+		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
+		
+		ONCFamily family = null;
+		for(int i=0; i<fAL.size(); i++)
+		{
+			if(fAL.get(i).getID() == id && fAL.get(i).getReferenceNum().contentEquals(referenceNumber))
+				family = fAL.get(i);	
+		}
+		
+		return family;
+	}
 	ONCFamily getFamilyBySMS(int year, TwilioSMSReceive receivedSMS)
 	{
 		String formatedPhoneNum = formatPhoneNumber(receivedSMS.getFrom().substring(2));
@@ -1561,8 +1614,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	    //determine if the families gift card only status could change after adding the wish.
 	    int giftCardGiftID = globalDB.getGiftCardID(year);
 	    boolean bGCStatusCouldChange = giftCardGiftID > -1 && 
-	    									((priorGift != null && priorGift.getGiftID() == giftCardGiftID) ^ 
-	    									(addedGift.getGiftID() == giftCardGiftID));
+	    									((priorGift != null && priorGift.getCatalogGiftID() == giftCardGiftID) ^ 
+	    									(addedGift.getCatalogGiftID() == giftCardGiftID));
 	    
 	    //if gift status has changed or the gift card only status has changed update the data base
 	    //and notify clients
@@ -1625,44 +1678,53 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	
 	boolean isGiftCardOnlyFamily(int year, int famid)
 	{
-		//set a return variable to true. If we find one instance, we'll set it to false
-		boolean bGiftCardOnlyFamily = true;
-		
-		//first, determine if gift cards are even in the catalog. If they aren't, return false as
-		//it can't be a gift card only family
-//		int giftCardID = ServerWishCatalog.findWishIDByName(year, GIFT_CARD_WISH_NAME);
-		int giftCardID = globalDB.getGiftCardID(year);
-		if(giftCardID == -1)
-			bGiftCardOnlyFamily = false;
-		else
-		{	
-			List<ONCChild> childList = childDB.getChildList(year, famid);	//get the children in the family
-		
-			//examine each child to see if their assigned gifts are gift cards. If gift is not
-			//assigned or not a gift card, then it's not a gift card only family
-			int childindex=0;
-			while(childindex < childList.size() && bGiftCardOnlyFamily)
-			{
-				ONCChild c = childList.get(childindex++);	//get the child
-				
-				//if all gifts aren't assigned, then not a gift card only family
-				int wn = 0;
-				while(wn < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
-					if(c.getChildGiftID(wn++) == -1)
-						bGiftCardOnlyFamily = false;
-				
-				//if all are assigned, examine each gift to see if it's a gift card
-				int giftindex = 0;
-				while(giftindex < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
+		ServerChildGiftDB childGiftDB = null;
+		try 
+		{
+			childGiftDB = ServerChildGiftDB.getInstance();
+	
+			//set a return variable to true. If we find one instance, we'll set it to false
+			boolean bGiftCardOnlyFamily = true;
+			
+			//first, determine if gift cards are even in the catalog. If they aren't, return false as
+			//it can't be a gift card only family
+			int giftCardID = globalDB.getGiftCardID(year);
+			if(giftCardID == -1)
+				bGiftCardOnlyFamily = false;
+			else
+			{	
+				List<ONCChild> childList = childDB.getChildList(year, famid);	//get the children in the family
+			
+				//examine each child to see if their assigned gifts are gift cards. If gift is not
+				//assigned or not a gift card, then it's not a gift card only family
+				int childindex=0;
+				while(childindex < childList.size() && bGiftCardOnlyFamily)
 				{
-					ONCChildGift cw = ServerChildGiftDB.getGift(year, c.getChildGiftID(giftindex++));
-					if(cw.getGiftID() != giftCardID)	//gift card?
-						bGiftCardOnlyFamily = false;
-				}	
+					ONCChild c = childList.get(childindex++);	//get the child
+	
+					//if all are assigned, examine each gift to see if it's a gift card
+					int numGiftsPerChild = globalDB.getServerGlobalVariables(year).getNumberOfGiftsPerChild();
+					int giftindex = 0;
+//					while(giftindex < NUMBER_OF_WISHES_PER_CHILD && bGiftCardOnlyFamily)
+					while(giftindex < numGiftsPerChild && bGiftCardOnlyFamily)
+					{
+						ONCChildGift cw = childGiftDB.getCurrentChildGift(year, c.getID(), giftindex++);
+						if(cw.getGiftStatus().compareTo(GiftStatus.Assigned) < 0 || cw.getCatalogGiftID() != giftCardID)	//gift card?
+							bGiftCardOnlyFamily = false;
+					}	
+				}
 			}
-		}
 		
-		return bGiftCardOnlyFamily;
+			return bGiftCardOnlyFamily;
+		} 
+		catch (FileNotFoundException e) 
+		{
+			return false;
+		} 
+		catch (IOException e)
+		{
+			return false;
+		}
 	}
 	
 	/*************************************************************************************************************
@@ -1691,24 +1753,41 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 		//Check for all gifts selected
 		FamilyGiftStatus lowestfamstatus = FamilyGiftStatus.Verified;
-		for(ONCChild c : childDB.getChildList(year, famid))
+		
+		ServerChildGiftDB childGiftDB = null;
+		try 
 		{
-			for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
-			{
-				ONCChildGift cw = ServerChildGiftDB.getGift(year, c.getChildGiftID(wn));
-				
-				//if cw is null, it means that the wish doesn't exist yet. If that's the case, 
-				//set the status to the lowest status possible as if the wish existed
-				GiftStatus childwishstatus = GiftStatus.Not_Selected;	//Lowest possible child wish status
-				if(cw != null)
-					childwishstatus = ServerChildGiftDB.getGift(year, c.getChildGiftID(wn)).getGiftStatus();
-					
-				if(wishstatusmatrix[childwishstatus.statusIndex()].compareTo(lowestfamstatus) < 0)
-					lowestfamstatus = wishstatusmatrix[childwishstatus.statusIndex()];
-			}
-		}
+			childGiftDB = ServerChildGiftDB.getInstance();
+			int numGiftsPerChild = globalDB.getServerGlobalVariables(year).getNumberOfGiftsPerChild();
 			
-		return lowestfamstatus;
+			for(ONCChild c : childDB.getChildList(year, famid))
+			{
+//				for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
+				for(int wn=0; wn < numGiftsPerChild; wn++)	
+				{
+					ONCChildGift cw = childGiftDB.getCurrentChildGift(year, c.getID(), wn);
+					
+					//if cw is null, it means that the wish doesn't exist yet. If that's the case, 
+					//set the status to the lowest status possible as if the wish existed
+					GiftStatus childwishstatus = GiftStatus.Not_Selected;	//Lowest possible child wish status
+					if(cw != null)
+						childwishstatus = cw.getGiftStatus();
+						
+					if(wishstatusmatrix[childwishstatus.statusIndex()].compareTo(lowestfamstatus) < 0)
+						lowestfamstatus = wishstatusmatrix[childwishstatus.statusIndex()];
+				}
+			}
+				
+			return lowestfamstatus;
+		} 
+		catch (FileNotFoundException e) 
+		{
+			return FamilyGiftStatus.Requested;
+		} 
+		catch (IOException e) 
+		{
+			return FamilyGiftStatus.Requested;
+		}
 	}
 	
 	void updateFamilyHistory(int year, ONCFamilyHistory addedHistObj)
@@ -1775,7 +1854,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
 				"ODB Details", "Children Names", "Schools", "ODB WishList", "Adopted For",
 				"Agent ID", "GroupID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
-				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only"};
+				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only", "Gift Distribution"};
 		
 		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
 		if(fDBYear.isUnsaved())	
@@ -2438,18 +2517,30 @@ public class ServerFamilyDB extends ServerSeasonalDB
     
     int getNumberOfBikesSelectedForFamily(int year, ONCFamily f)
 	{
-		int nBikes = 0;
-		for(ONCChild c: childDB.getChildList(year, f.getID()))
-		{	
-			for(int wn=0; wn<NUMBER_OF_WISHES_PER_CHILD; wn++)
-			{
-				int childwishID = c.getChildGiftID(wn);
-				if(childwishID > -1 && ServerChildGiftDB.getGift(year, childwishID).getGiftID() == cat.getGiftID(year, "Bike"))
-					nBikes++;
-			}
+    	ServerChildGiftDB childGiftDB = null;
+    	try
+    	{
+			childGiftDB = ServerChildGiftDB.getInstance();
+			int numGiftsPerChild = globalDB.getServerGlobalVariables(year).getNumberOfGiftsPerChild();
+			
+			int nBikes = 0;
+			ONCChildGift cg;
+			for(ONCChild c: childDB.getChildList(year, f.getID()))
+//				for(int wn=0; wn < NUMBER_OF_WISHES_PER_CHILD; wn++)
+				for(int wn=0; wn < numGiftsPerChild; wn++)
+					if((cg = childGiftDB.getCurrentChildGift(year, c.getID(), wn)) != null && cg.getCatalogGiftID() == cat.getGiftID(year, "Bike"))
+						nBikes++;
+					
+			return nBikes;
+		} 
+    	catch (FileNotFoundException e) 
+    	{
+    		return 0;
 		}
-				
-		return nBikes;	
+    	catch (IOException e) 
+    	{
+			return 0;
+		}	
 	}
     
     private static class ONCFamilyONCNumComparator implements Comparator<ONCFamily>

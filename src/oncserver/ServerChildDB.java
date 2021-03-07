@@ -19,7 +19,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerChildDB extends ServerSeasonalDB
 {
-	private static final int CHILD_DB_HEADER_LENGTH = 12;
+	private static final int CHILD_DB_HEADER_LENGTH = 8;
 	public static final int NUMBER_GIFTS_PER_CHILD = 3;
 	
 	private static List<ChildDBYear> childDB;
@@ -89,10 +89,12 @@ public class ServerChildDB extends ServerSeasonalDB
 		//get references to wish catalog, partner data base
 		ServerGiftCatalog wishCatalog = null;
 		ServerPartnerDB serverPartnerDB = null;
+		ServerChildGiftDB childGiftDB = null;
 		try 
 		{
 			wishCatalog = ServerGiftCatalog.getInstance();
 			serverPartnerDB = ServerPartnerDB.getInstance();
+			childGiftDB = ServerChildGiftDB.getInstance();
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -115,38 +117,38 @@ public class ServerChildDB extends ServerSeasonalDB
 		for(ONCChild c: searchList)
 			if(c.getID() == childID)
 			{
-				//found child, now create child wish list
+				//found child, now create child gift list
 				for(int wn=0; wn < 3; wn++)
 				{
+					ONCChildGift cg = childGiftDB.getCurrentChildGift(year, c.getID(), wn);
 					//has the wish been created?
-					if(c.getChildGiftID(wn) == -1)
+					if(cg == null)
 					{
 						responseList.add(new WebChildWish());	//not created
 					}
 					else		
 					{
-						ONCChildGift cw = ServerChildGiftDB.getGift(year, c.getChildGiftID(wn));
-						int wishRestriction = cw.getIndicator();
+						int wishRestriction = cg.getIndicator();
 						String[] restrictions = {" ", "*", "#"};
 						String partner;
 						int partnerID;
-						if(cw.getPartnerID() < 1)
+						if(cg.getPartnerID() < 1)
 						{
 							partner = "";
 							partnerID = -1;
 						}
 						else
 						{
-							ONCPartner org = serverPartnerDB.getPartner(year,cw.getPartnerID());
+							ONCPartner org = serverPartnerDB.getPartner(year,cg.getPartnerID());
 							partner = org.getLastName();
 							partnerID = org.getID();
 						}
 						
-						responseList.add(new WebChildWish(wishCatalog.findGiftNameByID(year, cw.getGiftID()),
-															cw.getGiftID(),
-															cw.getDetail(), 
+						responseList.add(new WebChildWish(wishCatalog.findGiftNameByID(year, cg.getCatalogGiftID()),
+															cg.getCatalogGiftID(),
+															cg.getDetail(), 
 															restrictions[wishRestriction], 
-															partner, partnerID, cw.getGiftStatus()));
+															partner, partnerID, cg.getGiftStatus()));
 					}
 				}
 			}
@@ -276,19 +278,14 @@ public class ServerChildDB extends ServerSeasonalDB
 				//decrement partner gift assignment counts
 				for(int gn= 0; gn < NUMBER_GIFTS_PER_CHILD; gn++)
 				{
-					if(deletedChild.getChildGiftID(gn) != -1)	//does the gift exist?
+					ONCChildGift cg = cwDB.getCurrentChildGift(year, deletedChild.getID(),gn);
+					if(cg != null && cg.getGiftStatus() == GiftStatus.Assigned)	//does the gift exist?
 					{
-						ONCChildGift cg = ServerChildGiftDB.getGift(year, deletedChild.getChildGiftID(gn));
-
 						//if gift has been assigned, but not yet delivered or any subsequent status,
 						//decrement the partner assignee count
-						if(cg != null && cg.getGiftStatus() == GiftStatus.Assigned)
-							serverPartnerDB.decrementGiftsAssignedCount(year, cg.getPartnerID(), true);
+						serverPartnerDB.decrementGiftsAssignedCount(year, cg.getPartnerID(), true);
 					}
 				}
-				
-				//remove the child's gifts from the child gift data base
-				cwDB.deleteChildGifts(year, deletedChild.getID());
 			} 
 			catch (FileNotFoundException e) 
 			{
@@ -357,6 +354,7 @@ public class ServerChildDB extends ServerSeasonalDB
 	 * @param year - which year's data base is being changed
 	 * @param addedWish - the child wish object that was changed
 	 ************************************************************************************/
+/*	
 	ONCChild updateChildsWishID(int year, ONCChildGift addedWish)
 	{
 		//Find the child using the added wish child ID
@@ -377,7 +375,7 @@ public class ServerChildDB extends ServerSeasonalDB
 		else
 			return null;
 	}
-	
+*/	
 	List<ONCChild> getChildList(int year, int famid)
 	{
 		List<ONCChild> cAL = childDB.get(DBManager.offset(year)).getList();
@@ -390,16 +388,16 @@ public class ServerChildDB extends ServerSeasonalDB
 		return fChildrenAL;
 	}
 	
-	ONCChild getChild(int year, int childID)
-	{
-		List<ONCChild> cAL = childDB.get(DBManager.offset(year)).getList();
-		
-		int index = 0;
-		while(index < cAL.size() && cAL.get(index).getID() != childID)
-			index++;
-		
-		return index < cAL.size() ? cAL.get(index) : null;
-	}
+//	ONCChild getChild(int year, int childID)
+//	{
+//		List<ONCChild> cAL = childDB.get(DBManager.offset(year)).getList();
+//		
+//		int index = 0;
+//		while(index < cAL.size() && cAL.get(index).getID() != childID)
+//			index++;
+//		
+//		return index < cAL.size() ? cAL.get(index) : null;
+//	}
 	
 	List<ONCWebChild> getWebChildList(int year, int famid, boolean bIncludeSchool)
 	{
@@ -473,9 +471,8 @@ public class ServerChildDB extends ServerSeasonalDB
 		ChildDBYear cDBYear = childDB.get(DBManager.offset(year));
 		if(cDBYear.isUnsaved())
 		{
-			String[] header = {"Child ID", "Family ID", "Child #", "First Name", "Last Name",
-		 			"Gender", "DOB", "School", "Wish 1 ID", "Wish 2 ID",
-		 			"Wish 3 ID", "Prior Year Child ID"};
+			String[] header = {"Child ID", "Family ID", "First Name", "Last Name",
+		 						"Gender", "DOB", "School","Prior Year Child ID"};
 			
 //			System.out.println(String.format("ServerChildDB save() - Saving Server Child DB"));
 			String path = String.format("%s/%dDB/ChildDB.csv", System.getProperty("user.dir"), year);

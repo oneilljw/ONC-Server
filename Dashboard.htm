@@ -27,7 +27,8 @@
     	{
    	 		sessionStorage.setItem("dbyears", JSON.stringify(data));
    	 		
-			var yearCombo = document.getElementById('curryear');
+			var yearCombo = document.querySelector("#curryear");
+//			var yearCombo = document.getElementById('curryear');
     		for (var i = data.length-1; i >= 0; i--)
     			addComboBoxOption(yearCombo, data[i].id, data[i].id);
     			

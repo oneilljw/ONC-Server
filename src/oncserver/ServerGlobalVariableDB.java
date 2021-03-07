@@ -12,6 +12,7 @@ import java.util.TimeZone;
 
 import javax.swing.JOptionPane;
 
+import ourneighborschild.GiftDistribution;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ServerGVs;
@@ -23,8 +24,8 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class ServerGlobalVariableDB extends ServerSeasonalDB
 {
-	private static final int GV_HEADER_LENGTH = 11;
-	private static final int GV_ALTERNATE_HEADER_LENGTH = 24;
+	private static final int GV_HEADER_LENGTH = 15;
+	private static final int GV_ALTERNATE_HEADER_LENGTH = 30;
 	private static final String DEFAULT_ADDRESS = "6476+Trillium+House+Lane+Centreville,VA";
 	private static final int DEFAULT_GIFT = -1;
 	private static final int DEFAULT_GIFTCARD_ID = -1;
@@ -88,15 +89,16 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	
 	Long getSeasonStartDate(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getSeasonStartDateMillis(); }
 	int getGiftCardID(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getDefaultGiftCardID(); }
+	static int getNumGiftsPerChild(int year) { return globalDB.get(DBManager.offset(year)).getServerGVs().getNumberOfGiftsPerChild(); }
 
-	static HtmlResponse getDeadlineJSONP(int offset, String callbackFunction)
+	static HtmlResponse getSeasonParameterJSONP(int offset, String callbackFunction)
 	{		
 		Gson gson = new Gson();
 		
 		String response;
 		ServerGVs serverGVs = globalDB.get(DBManager.offset(DBManager.getCurrentSeason())).getServerGVs();
-		SeasonDeadlines sd = new SeasonDeadlines(serverGVs, offset);
-		response = gson.toJson(sd, SeasonDeadlines.class);
+		SeasonParameters sd = new SeasonParameters(serverGVs, offset);
+		response = gson.toJson(sd, SeasonParameters.class);
 		
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);	
@@ -184,51 +186,55 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
     	
 		if((header = reader.readNext()) != null)	//Does file have records? 
 		{
-    			//Read the User File
-    			if(header.length == GV_HEADER_LENGTH || 
-    				header.length == GV_ALTERNATE_HEADER_LENGTH)	//Does the record have the right # of fields? 
-    			{
-    				if((nextLine = reader.readNext()) != null)
-    				{
-    					Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    					xmasDay.set(year, Calendar.DECEMBER, 25, 0, 0, 0);
-    					xmasDay.set(Calendar.MILLISECOND, 0);
-    					
-    					Calendar seasonStart = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    					seasonStart.set(year, Calendar.SEPTEMBER, 1, 0, 0, 0);
-    					seasonStart.set(Calendar.MILLISECOND, 0);
-    					
-    					gvs = new ServerGVs(
-    							nextLine[0].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[0]),
-    							nextLine[1].isEmpty() ? seasonStart.getTimeInMillis() : parseSciNotationToLong(nextLine[1]),
-    							nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
-    							nextLine[3].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[3]),
-    							nextLine[4].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[4]),
-    							nextLine[5].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[5]),
-    							nextLine[6].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[6]),
-    							nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]),
-    							nextLine[8].isEmpty() ? DEFAULT_GIFTCARD_ID : Integer.parseInt(nextLine[8]),
-    							nextLine[9].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[9]),
-    							nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[10])
-    							);
-    				
-    				//Read the second line, it's the oncnumRegionRanges
+			//Read the User File
+			if(header.length == GV_HEADER_LENGTH || 
+				header.length == GV_ALTERNATE_HEADER_LENGTH)	//Does the record have the right # of fields? 
+			{
+				if((nextLine = reader.readNext()) != null)
+				{
+					Calendar xmasDay = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+					xmasDay.set(year, Calendar.DECEMBER, 25, 0, 0, 0);
+					xmasDay.set(Calendar.MILLISECOND, 0);
+					
+					Calendar seasonStart = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+					seasonStart.set(year, Calendar.SEPTEMBER, 1, 0, 0, 0);
+					seasonStart.set(Calendar.MILLISECOND, 0);
+					
+					gvs = new ServerGVs(
+							nextLine[0].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[0]),
+							nextLine[1].isEmpty() ? seasonStart.getTimeInMillis() : parseSciNotationToLong(nextLine[1]),
+							nextLine[2].isEmpty() ? DEFAULT_ADDRESS : nextLine[2],
+							nextLine[3].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[3]),
+							nextLine[4].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[4]),
+							nextLine[5].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[5]),
+							nextLine[6].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[6]),
+							nextLine[7].isEmpty() ? DEFAULT_GIFT : Integer.parseInt(nextLine[7]),
+							nextLine[8].isEmpty() ? DEFAULT_GIFTCARD_ID : Integer.parseInt(nextLine[8]),
+							nextLine[9].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[9]),
+							nextLine[10].isEmpty() ? xmasDay.getTimeInMillis() : parseSciNotationToLong(nextLine[10]),
+							nextLine[11].isEmpty() ? 3 : Integer.parseInt(nextLine[11]),
+							nextLine[12].isEmpty() ? 0xFFFF : Integer.parseInt(nextLine[12]),	//default is all agent selected	
+							nextLine[13].isEmpty() ? GiftDistribution.None : GiftDistribution.distribution(Integer.parseInt(nextLine[13])),
+							nextLine[14].isEmpty() ? 0 : Integer.parseInt(nextLine[14])
+							);
+				
+				//Read the second line, it's the oncnumRegionRanges
 //    				nextLine = reader.readNext();			
-    				}	
-    			}
-    			else
-    			{
-    				String error = String.format("GlobalVariablesDB file corrupted, %s header length = %d", file, header.length);
-    				JOptionPane.showMessageDialog(null, error,  "Global Variables Corrupted",
-    	       								JOptionPane.ERROR_MESSAGE);
-    			}		   			
-    		}
-    		else
-    		{
-    			String error = String.format("GlobalVariablesDB file is empty");
-    			JOptionPane.showMessageDialog(null, error,  "Global Variables DB Empty",
-       								JOptionPane.ERROR_MESSAGE);
-    		}
+				}	
+			}
+			else
+			{
+				String error = String.format("GlobalVariablesDB file corrupted, %s header length = %d", file, header.length);
+				JOptionPane.showMessageDialog(null, error,  "Global Variables Corrupted",
+	       								JOptionPane.ERROR_MESSAGE);
+			}		   			
+		}
+		else
+		{
+			String error = String.format("GlobalVariablesDB file is empty");
+			JOptionPane.showMessageDialog(null, error,  "Global Variables DB Empty",
+   								JOptionPane.ERROR_MESSAGE);
+		}
     	
 		reader.close();
 		return gvs;
@@ -276,70 +282,6 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 		xmasDay.set(Calendar.MINUTE, 0);
 		xmasDay.set(Calendar.SECOND, 0);
 		xmasDay.set(Calendar.MILLISECOND, 0);
-/*		
-		Calendar deliveryDate = Calendar.getInstance();
-		deliveryDate.set(Calendar.YEAR, newYear);
-		deliveryDate.set(Calendar.MONTH, Calendar.DECEMBER);
-		deliveryDate.set(Calendar.DAY_OF_MONTH, 25);
-		deliveryDate.set(Calendar.HOUR_OF_DAY, 0);
-		deliveryDate.set(Calendar.MINUTE, 0);
-		deliveryDate.set(Calendar.SECOND, 0);
-		deliveryDate.set(Calendar.MILLISECOND, 0);
-		
-		Calendar giftsreceivedDate = Calendar.getInstance();
-		giftsreceivedDate.set(Calendar.YEAR, newYear);
-		giftsreceivedDate.set(Calendar.MONTH, Calendar.DECEMBER);
-		giftsreceivedDate.set(Calendar.DAY_OF_MONTH, 25);
-		giftsreceivedDate.set(Calendar.HOUR_OF_DAY, 0);
-		giftsreceivedDate.set(Calendar.MINUTE, 0);
-		giftsreceivedDate.set(Calendar.SECOND, 0);
-		giftsreceivedDate.set(Calendar.MILLISECOND, 0);
-		
-		Calendar thanksgivingMealDeadline = Calendar.getInstance();
-		thanksgivingMealDeadline.set(Calendar.YEAR, newYear);
-		thanksgivingMealDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
-		thanksgivingMealDeadline.set(Calendar.DAY_OF_MONTH, 25);
-		thanksgivingMealDeadline.set(Calendar.HOUR_OF_DAY, 0);
-		thanksgivingMealDeadline.set(Calendar.MINUTE, 0);
-		thanksgivingMealDeadline.set(Calendar.SECOND, 0);
-		thanksgivingMealDeadline.set(Calendar.MILLISECOND, 0);
-		
-		Calendar decemberGiftDeadline = Calendar.getInstance();
-		decemberGiftDeadline.set(Calendar.YEAR, newYear);
-		decemberGiftDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
-		decemberGiftDeadline.set(Calendar.DAY_OF_MONTH, 25);
-		decemberGiftDeadline.set(Calendar.HOUR_OF_DAY, 0);
-		decemberGiftDeadline.set(Calendar.MINUTE, 0);
-		decemberGiftDeadline.set(Calendar.SECOND, 0);
-		decemberGiftDeadline.set(Calendar.MILLISECOND, 0);
-		
-		Calendar familyEditDeadline = Calendar.getInstance();
-		familyEditDeadline.set(Calendar.YEAR, newYear);
-		familyEditDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
-		familyEditDeadline.set(Calendar.DAY_OF_MONTH, 25);
-		familyEditDeadline.set(Calendar.HOUR_OF_DAY, 0);
-		familyEditDeadline.set(Calendar.MINUTE, 0);
-		familyEditDeadline.set(Calendar.SECOND, 0);
-		familyEditDeadline.set(Calendar.MILLISECOND, 0);
-		
-		Calendar decemberMealDeadline = Calendar.getInstance();
-		decemberMealDeadline.set(Calendar.YEAR, newYear);
-		decemberMealDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
-		decemberMealDeadline.set(Calendar.DAY_OF_MONTH, 25);
-		decemberMealDeadline.set(Calendar.HOUR_OF_DAY, 0);
-		decemberMealDeadline.set(Calendar.MINUTE, 0);
-		decemberMealDeadline.set(Calendar.SECOND, 0);
-		decemberMealDeadline.set(Calendar.MILLISECOND, 0);
-		
-		Calendar waitlistGiftDeadline = Calendar.getInstance();
-		waitlistGiftDeadline.set(Calendar.YEAR, newYear);
-		waitlistGiftDeadline.set(Calendar.MONTH, Calendar.DECEMBER);
-		waitlistGiftDeadline.set(Calendar.DAY_OF_MONTH, 25);
-		waitlistGiftDeadline.set(Calendar.HOUR_OF_DAY, 0);
-		waitlistGiftDeadline.set(Calendar.MINUTE, 0);
-		waitlistGiftDeadline.set(Calendar.SECOND, 0);
-		waitlistGiftDeadline.set(Calendar.MILLISECOND, 0);
-*/
 		
 		ServerGVs newYearServerGVs = new ServerGVs(xmasDay.getTimeInMillis(), seasonStartDate.getTimeInMillis(),
 													DEFAULT_ADDRESS, xmasDay.getTimeInMillis(),
@@ -347,7 +289,11 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 													xmasDay.getTimeInMillis(),
 													xmasDay.getTimeInMillis(), -1, -1,
 													xmasDay.getTimeInMillis(),
-													xmasDay.getTimeInMillis());
+													xmasDay.getTimeInMillis(), 3,
+													0xFFFF,	//initialize to all wish in take being Agent Selected
+													GiftDistribution.None,
+													0
+													);
 		
 		GlobalVariableDBYear newGVDBYear = new GlobalVariableDBYear(newYear, newYearServerGVs);
 		globalDB.add(newGVDBYear);
@@ -365,7 +311,9 @@ public class ServerGlobalVariableDB extends ServerSeasonalDB
 	{
 		String[] header = {"Delivery Date", "Season Start Date", "Warehouse Address", "Gifts Received Deadline",
 							"Thanksgiving Deadline", "December Deadline", "Info Edit Deadline", "Default Gift",
-							"Defalut Gift Card", "December Meal Deadline", "WaitList Gift Deadline"};
+							"Defalut Gift Card", "December Meal Deadline", "WaitList Gift Deadline",
+							"Number Gifts Per Child", "Wish Intake Config",
+							"Gift Distribution", "Meal Intake"};
 		
 		GlobalVariableDBYear gvDBYear = globalDB.get(DBManager.offset(year));
 		if(gvDBYear.isUnsaved())

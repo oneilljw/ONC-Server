@@ -257,30 +257,35 @@
 			paging: false
  		});
 
-   	 	//get the list of current seasons deadlines from the data base and use it to determine
-   	 	//what an agent can do
-   	 	const deadlineparams = "offset=" + new Date().getTimezoneOffset() + "&callback=?";
-		$.getJSON('deadlines', deadlineparams, function(deadlines)
+   	 	//get the list of current seasons parameters from the data base and use it to determine
+   	 	//what an agent can do and how webforms are configured
+   	 	const params = "offset=" + new Date().getTimezoneOffset() + "&callback=?";
+		$.getJSON('seasonparameters', params, function(parameters)
 		{
-			if(deadlines.hasOwnProperty('error'))
+			if(parameters.hasOwnProperty('error'))
 				window.location=document.getElementById('timeoutanchor').href;
 			else
 			{
-				sessionStorage.setItem('thanksgivingMealCutoff', deadlines.thanksgivingMealDeadline);
-				sessionStorage.setItem('decemberMealCutoff', deadlines.decemberMealDeadline);
-				sessionStorage.setItem('editDeadline', deadlines.editDeadline);
-				sessionStorage.setItem('decemberGiftDeadline', deadlines.decemberGiftDeadline);
-				sessionStorage.setItem('waitlistGiftDeadline', deadlines.waitlistDeadline);
+				console.log(parameters);
+				sessionStorage.setItem('thanksgivingMealCutoff', parameters.thanksgivingMealDeadline);
+				sessionStorage.setItem('decemberMealCutoff', parameters.decemberMealDeadline);
+				sessionStorage.setItem('editDeadline', parameters.editDeadline);
+				sessionStorage.setItem('decemberGiftDeadline', parameters.decemberGiftDeadline);
+				sessionStorage.setItem('waitlistGiftDeadline', parameters.waitlistDeadline);				
+				sessionStorage.setItem('numberGiftsPerChild', parameters.nGifts);
+				sessionStorage.setItem('intakeConfiguration', parameters.wishIntakeConfiguration);
+				sessionStorage.setItem('giftDistribution', parameters.giftDistribution);
+				sessionStorage.setItem('mealIntake', parameters.mealIntake);
 				
 				//remove the refer family buttons and family edit button if past referral/edit deadlines
 				const nowMillis = Date.now();
-				if(nowMillis >= deadlines.waitlistDeadline)
+				if(nowMillis >= parameters.waitlistDeadline)
 				{
 					let pytable = $('#pytable').DataTable();
 					pytable.buttons('btnReRefer:name').remove();
 					pytable.buttons('btnReferNew:name').remove();
 				}
-				if(nowMillis >= deadlines.editDeadline)
+				if(nowMillis >= parameters.editDeadline)
 				{
 					let cytable = $('#cytable').DataTable();
 					cytable.buttons('btnEdit:name').remove();

@@ -14,6 +14,7 @@ import java.util.UUID;
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.DNSCode;
+import ourneighborschild.GiftDistribution;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
@@ -31,7 +32,7 @@ import com.sun.net.httpserver.HttpsExchange;
 public class FamilyHandler extends ONCWebpageHandler
 {
 	private static final int FAMILY_STOPLIGHT_RED = 2;
-	private static final int NUM_OF_WISHES_PROVIDED = 4;
+	private static final int ALTERNATE_WISH_INEDEX = 3;
 	private static final String GIFTS_REQUESTED_KEY = "giftreq";
 	private static final String NO_WISH_PROVIDED_TEXT = "none";
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
@@ -361,9 +362,59 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
-		else if(requestURI.contains("/getdeliverycards"))
+		else if(requestURI.contains("/qrscanner"))
 		{
+			String response = webpageMap.get("qrscanner");
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/giftdelivery"))
+		{
+			String response = webpageMap.get("giftdelivery");
+			String line1 = "", line2 = "";
 			
+			if(params.containsKey("year") && params.containsKey("famid") && params.containsKey("refnum"))
+			{
+				try
+				{
+					int year = Integer.parseInt((String) params.get("year"));
+					int famID = Integer.parseInt((String) params.get("famid"));
+					String refNum = (String) params.get("refnum");
+					
+					ONCFamily family = ServerFamilyDB.getFamilyByReference(year,famID,refNum); 
+			
+					if(family != null)
+					{
+						line1 = String.format("Family #: %s", family.getONCNum());
+						line2 = String.format("Head of Household: %s %s",family.getFirstName(), family.getLastName());
+						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", line1);
+						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_TWO", line2);
+						
+						//add the hidden input content
+						response = response.replace("SEASON", (String) params.get("year"));
+						response = response.replace("TARGETID", Integer.toString(family.getID()));
+						response = response.replace("GIFT_STATUS", family.getGiftStatus().toString());
+					}
+					else
+						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERROR: Unable to locate family record");
+				}
+				catch (NumberFormatException nfe)
+				{
+					response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERROR: Invaild QR Code Content");
+				}
+			}
+			else
+				response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERROR: Invaild QR Code");
+			
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/deliveryconfirmed"))
+		{
+			//update the family status && return the update family object.
+//			ServerFamilyDB familyDB = ServerFamilyDB.getInstance();
+			
+//			HtmlResponse htmlResponse = familyDB.confirmFamilyGiftDelivery();
+			HtmlResponse htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			sendHTMLResponse(t, htmlResponse);
 		}
 		else if(requestURI.contains("/createdeliverycards"))
 		{
@@ -380,7 +431,7 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
-		else if(requestURI.contains("/deadlines"))
+		else if(requestURI.contains("/seasonparameters"))
 		{
 			HtmlResponse htmlResponse;
 			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
@@ -404,7 +455,7 @@ public class FamilyHandler extends ONCWebpageHandler
 				}
 			
 				//get the JSON for response to response submission
-				htmlResponse = ServerGlobalVariableDB.getDeadlineJSONP(offset, (String) params.get("callback"));			
+				htmlResponse = ServerGlobalVariableDB.getSeasonParameterJSONP(offset, (String) params.get("callback"));			
 			}
 			else
 				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
@@ -417,6 +468,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	{
 		//get the year
 		int year = Integer.parseInt((String) params.get("year"));
+		int numWishes = ServerGlobalVariableDB.getNumGiftsPerChild(year);
 		
 		//get database references
 		ServerMealDB mealDB = null;
@@ -449,7 +501,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		//create the family map
 		String[] familyKeys = {"targetid", "referencenum", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
 						   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
-						   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation", "uuid"};
+						   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation", "distpref","uuid"};
 				
 		Map<String, String> familyMap = createMap(params, familyKeys);
 
@@ -544,10 +596,11 @@ public class FamilyHandler extends ONCWebpageHandler
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
 					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
-					createWishList(params), agent.getID(), group, 
+					createWishList(params, numWishes), agent.getID(), group, 
 					addedMeal != null ? addedMeal.getID() : -1,
 					addedMeal != null ? MealStatus.Requested : MealStatus.None,
-					Transportation.valueOf(familyMap.get("transportation")));
+					Transportation.valueOf(familyMap.get("transportation")),
+					GiftDistribution.valueOf(familyMap.get("distpref")));
 		
 			//add the family and family history to the data base
 			ONCFamily addedFamily = serverFamilyDB.add(year, fam);
@@ -1033,7 +1086,7 @@ public class FamilyHandler extends ONCWebpageHandler
     	return gmtDOB.getTimeInMillis();
     }
 
-	String createWishList(Map<String, Object> params)
+	String createWishList(Map<String, Object> params, int numWishes)
 	{
 		//check to see if gift assistance was requested. If not, simply return a message saying that
 		if(params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"))
@@ -1052,15 +1105,18 @@ public class FamilyHandler extends ONCWebpageHandler
 				buff.append((String) params.get("childln" + Integer.toString(cn)));
 				buff.append(": ");
 				
-				for(int wn=0; wn<NUM_OF_WISHES_PROVIDED; wn++)
+				//for each regular wish, append. Alternate wish is always wish 3.
+				for(int wn=0; wn < numWishes; wn++)
 				{
 					String wishtext = (String) params.get("wish" + Integer.toString(cn) + Integer.toString(wn));
-					if(wishtext == null || wishtext.equals("null"))
-						buff.append(NO_WISH_PROVIDED_TEXT);
-					else
-						buff.append(wishtext);
-					buff.append(wn < NUM_OF_WISHES_PROVIDED-1 ? ", " : ";");
+					buff.append(wishtext == null || wishtext.equals("null") ? NO_WISH_PROVIDED_TEXT : wishtext);
+					buff.append(", ");
 				}
+				
+				//add the alternate wish
+				String wishtext = (String) params.get("wish" + Integer.toString(cn) + Integer.toString(ALTERNATE_WISH_INEDEX));
+				buff.append(wishtext == null || wishtext.equals("null") ? NO_WISH_PROVIDED_TEXT : wishtext);
+				buff.append(";");
 				
 				cn++;
 				key = "childfn" + Integer.toString(cn);	//get next child key

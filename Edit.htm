@@ -107,6 +107,22 @@
      	document.getElementById('city').setAttribute('onchange','cityChanged(this)');
      	document.getElementById('delcity').setAttribute('onchange','cityChanged(this)');
      	
+     	//set up whether gifts are being provided
+     	document.getElementById('giftassistfieldset').style.display = sessionStorage.getItem('numberGiftsPerChild') > 0 ? 'block' : 'none';
+     	
+  		//set up whether meal referrals are accepted
+  		document.getElementById('childtablediv').style.width = '65%';
+  		if(sessionStorage.getItem('mealIntake') > 0)
+  		{
+  			document.getElementById('adultsfieldset').style.display = 'block';	
+  			document.getElementById('mealsfieldset').style.display = 'block';	
+  		}
+  		else
+  		{
+  			document.getElementById('adultsfieldset').style.display = 'none';
+  			document.getElementById('mealsfieldset').style.display = 'none';
+  		}
+     	
      	//set the tooltip for locked HoH and delviery address inputs
      	$( ".address" ).tooltip(
      	{
@@ -125,9 +141,9 @@
   			
 		$.getJSON('getfamily', familyparams, function(family)
 		{
-//			console.log(family);
+			console.log(family);
+			
 	     	updateFamilyInfo(family);
-	     	
 	     	updateNewChildTable(family.childList);
 		    updateNewAdultTable(family.adultList);
 	     	
@@ -158,10 +174,10 @@
   	
   	function updateFamilyInfo(family)
   	{	
-  		var familyElements = [family.HOHFirstName, family.HOHLastName, family.Language, family.HouseNum, family.Street, 
-  			                    family.UnitNum, family.City, family.FamilyEmail, family.details, family.agent.name, family.groupName];
+  		var familyElements = [family.HOHFirstName, family.HOHLastName, family.Language, family.HouseNum, family.Street,family.UnitNum, 
+  			                  family.City, family.FamilyEmail, family.details, family.agent.name, family.groupName, family.distribution];
   			
-  		var formElements = ['hohfn', 'hohln','language', 'housenum', 'street', 'unit', 'city', 'email', 'detail', 'agentname', 'groupcb'];
+  		var formElements = ['hohfn', 'hohln','language', 'housenum', 'street', 'unit', 'city', 'email', 'detail', 'agentname', 'groupcb', 'distpref'];
   			
   		//set name, HoH address, email and detail elements
   		for(var i=0; i<familyElements.length; i++)
@@ -184,25 +200,37 @@
   		else if(otherphoneParts.length === 1)
   			document.getElementById('cellphone').value = otherphoneParts[0];
   			
-  		//set delivery adress elements
-  		var deliveryAddr = family.substituteDeliveryAddress.split('_');
-  		var delAddrElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
-  		if(deliveryAddr.length === delAddrElements.length)	//delivery address is different
+  		//If were not doing residential delivery uncheck the same addess checkbox. If we are
+  		//doing delivery, determine if the family has a differnt delivery address
+  		let giftDistribution = sessionStorage.getItem('giftDistribution');
+  		document.getElementById("distpreflbl").style.visibility = giftDistribution == 3 ? 'visible' : 'hidden';
+	  	document.getElementById('distpref').style.visibility = giftDistribution == 3 ? 'visible' : 'hidden';
+	  	
+  		if(giftDistribution < 2 || giftDistribution == 3 &&  family.distribution == 'Pickup')
   		{
-  			for(var i=0; i<deliveryAddr.length-1; i++)
-  				document.getElementById(delAddrElements[i]).value = deliveryAddr[i];
-  			
-	  		cityChanged(document.getElementById('delcity'));
-  			document.getElementById('delzipcode').value = deliveryAddr[4];
+  			document.getElementById('deladdrfieldset').style.display = 'none';
+  			document.getElementById('giftassistlegend').innerHTML = 'Gift Assistance: Review only. Email ONC with updates';
   		}
-  		else	//delivery address is the same. Copy and set same as checkbox
+  		else	//show deliver address if global is delivery or choice and family chose delivery
   		{
-  			let sameaddresscheckbox = document.getElementById('sameaddress');
-//			COVID 19 -- NO DELIVERIES SO NO DELIVERY ADDRESS. SO DELIVERY ADDRESS WILL ALWAYS BE HOH ADDRESS
-//			CHECKBOX IS LEFT UNCHECKED TO ALLOW USER TO UPDATE HOH ADDRESS. DELIVERY ADDRESS FIELDSET IS HIDDEN
-//  		sameaddresscheckbox.checked = true;
-  			sameaddresscheckbox.checked = false;
-  			sameAddressClicked(sameaddresscheckbox);	
+  			document.getElementById('deladdrfieldset').style.display = 'block';
+  			document.getElementById('giftassistlegend').innerHTML = 'Gift Assistance: Update delivery address as necessary. Otherwise, review only. Email ONC with ohter updates';
+	  		var deliveryAddr = family.substituteDeliveryAddress.split('_');
+	  		var delAddrElements = ['delhousenum', 'delstreet', 'delunit', 'delcity', 'delzipcode'];
+	  		if(deliveryAddr.length === delAddrElements.length)	//delivery address is different
+	  		{
+	  			for(var i=0; i<deliveryAddr.length-1; i++)
+	  				document.getElementById(delAddrElements[i]).value = deliveryAddr[i];
+	  			
+		  		cityChanged(document.getElementById('delcity'));
+	  			document.getElementById('delzipcode').value = deliveryAddr[4];
+	  		}
+	  		else	//delivery address is the same. Copy and set same as checkbox
+	  		{
+	  			let sameaddresscheckbox = document.getElementById('sameaddress');
+		  		sameaddresscheckbox.checked = true;
+		  		sameAddressClicked(sameaddresscheckbox);
+	  		}
   		}
   		
   		//set up family transportation and gifts requested check boxes
@@ -297,6 +325,7 @@
 		display: block;
 		margin: 0px 10px 0px 0px;
 	}
+	#transdiv { margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -359,29 +388,50 @@
 	  <button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
 	</div>
   </fieldset>
-  <fieldset class='covidfieldset'>
-  <legend class="legend-major">Delivery Address and Transportation: Update address that ONC will use for gift delivery and family's access to transportation</legend>	
-	<input id="sameaddress" type="checkbox" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">
-	<label class='checkbox-label'>Check if same as HOH address, else complete:</label>
-	<input id="delhousenum" class='address' title="Delivery House #" name="delhousenum" type="text" size="7" placeholder="House #" autocomplete="off" required>
-    <input id="delstreet" class='address' title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
-    <input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
-    <select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged(this)">	
-	</select>	
-    <select id="delzipcode" title="Deleivery Zip Code" name="delzipcode">
-	</select>
-	<button type="button" id='verifydeladdress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
-  <div>
-  	<input id="transYes" type="checkbox">
-	<label class='checkbox-label'>Check if family has their own transportation</label>	    
-  </div>	
+  <fieldset id='giftassistfieldset'>
+<!--  <legend class="legend-major">Delivery Preference &#38; Address: If family prefers gift delivery, provide address for ONC gift delivery</legend> -->
+	<legend id='giftassistlegend'class='legend-major'>Gift Assistance: Update delivery address as necessary, otherwise review only. Email ONC with other updates</legend>
+	<div>
+  		<label for='giftreq'>Gift Status: </label>
+  		<input type="text" id='giftreq' name='giftreq'readonly>
+  		<label id='distpreflbl' for='distpref'>Pickup or Delivery: </label>
+  		<input type="text" id='distpref'readonly>
+	</div>	
+	<fieldset id='deladdrfieldset'class="gray">
+  	<legend>Delivery Address: Address where ONC should deliver gifts</legend>
+		<input id="sameaddress" type="checkbox" title="Uncheck to edit HoH or Delivery address" onclick="sameAddressClicked(this)">
+		<label class='checkbox-label'>Check if same as HOH address, else complete:</label>
+		<input id="delhousenum" class='address' title="Delivery House #" name="delhousenum" type="text" size="7" placeholder="House #" autocomplete="off" required>
+    	<input id="delstreet" class='address' title="Delivery Street Name" name="delstreet" type="text" size="20" placeholder="Street Name" autocomplete="off" required>
+    	<input id="delunit" title="Deleivery Apt. or Unit #" name="delunit" type="text" size="8" placeholder="Apt #" autocomplete="off">
+    	<select id="delcity" title="Delivery City" name="delcity" onchange="cityChanged(this)"></select>	
+    	<select id="delzipcode" title="Deleivery Zip Code" name="delzipcode"></select>
+		<button type="button" id='verifydeladdress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
+	</fieldset>	
+  </fieldset>
+  <fieldset id='mealsfieldset'>
+  <legend class="legend-major">Meal Assistance - Review only. Email ONC with updates</legend>
+  	<div>
+  	  <label for='mealstatus'>Status:</label>
+	  <input id='mealstatus' type="text" size="16" title="Status of meal request" disabled>
+	  <label for='mealtype'>Requested For:</label>
+      <input id="mealtype" name="mealtype" size="34" title="Which holidays did the family request meal assistance: Thanksgiving, December or both, with priority shown first" readonly>
+	  <label for='mealpartner'>Provided By:</label>
+	  <input id='mealpartner' type="text" size="28" title="Organization providing this meal" disabled>
+    </div>
+    <div class='fieldsetdiv'>
+		<label for='dietres'>Dietary Restrictions:</label>
+		<input id="dietres" type="text" name="dietres" size="92" placeholder="Dietary restrictions for the family" title="Describe any family dietary restrictions" readonly>
+	</div>
+	<div id='transdiv'>
+  		<input id="transYes" type="checkbox">
+		<label class='checkbox-label'>Check if family has their own transportation</label>	    
+  	</div>
   </fieldset>
   <fieldset>
-  <legend class="legend-major">Family Members &#38; Gift Status - Review Only. Email ONC with updates</legend>
+  <legend class="legend-major">Family Members: Review only. Email ONC with updates</legend>
   <fieldset class="gray">
   	<legend>Children in family (ONC will serve children under 18, or 18+ if they are still enrolled in FCPS. Enter Pre-K for children not yet enrolled)</legend>
-  	<label for='giftreq'>Gift Status: </label>
-  	<input type="text" id='giftreq' name='giftreq' title="Check if family wants gift assistance" readonly>	
 	<div id='childtablediv'> 
 	  <table id="childtable" class='display compact' style="width:100%">
 		<thead>
@@ -392,10 +442,10 @@
         		<th>DoB</th>
         		<th>Age/Gen.</th>
         		<th>School</th>
-        		<th>Wish 1</th>	<!-- hidden, stores wishes entered by counselor -->
-        		<th>Wish 2</th>	<!-- hidden, stores wishes entered by counselor -->
-        		<th>Wish 3</th>	<!-- hidden, stores wishes entered by counselor -->
-        		<th>Alt. Wish</th>	<!-- hidden, stores wishes entered by counselor -->
+        		<th>Wish 1</th>
+        		<th>Wish 2</th>	
+        		<th>Wish 3</th>	
+        		<th>Alt. Wish</th>
     		</tr>
     	</thead>
     	<tbody>
@@ -403,7 +453,7 @@
       </table>
     </div>      
   </fieldset>
-  <fieldset class='covidfieldset'>>
+  <fieldset id='adultsfieldset'>
   	<legend>Other adults in family (in addition to the head of household)</legend>
    <div id='adulttablediv'> 		
 	 <table id="adulttable" class='display compact' style="width:100%">
@@ -420,27 +470,12 @@
     </div>  
   </fieldset>
   </fieldset>
-  <fieldset class='covidfieldset'>>
-  <legend class="legend-major">Meal Assistance - Review Only. Email ONC with updates</legend>
-  	<div>
-	  <label for='mealtype'>Requested For:</label>
-      <input id="mealtype" name="mealtype" size="34" title="Which holidays did the family request meal assistance: Thanksgiving, December or both, with priority shown first" readonly>
-      <label for='mealstatus'>Status:</label>
-	  <input id='mealstatus' type="text" size="12" title="Status of meal request" disabled>
-	  <label for='mealpartner'>Provided By:</label>
-	  <input id='mealpartner' type="text" size="28" title="Organization providing this meal" disabled>
-    </div>
-    <div class='fieldsetdiv'>
-		<label for='dietres'>Dietary Restrictions:</label>
-		<input id="dietres" type="text" name="dietres" size="92" placeholder="Dietary restrictions for the family" title="Describe any family dietary restrictions" readonly>
-	</div>
-  </fieldset>
   <fieldset>
-   <legend class="legend-major">Family Details: Update/Provide any additional details that may assist in serving this family</legend>
+   <legend class="legend-major">Family Details: Review only. Additional referral details provided to assist ONC in serving this family. Email ONC with updates</legend>
 	<input type="text" id='detail' name="detail" style='width:100%' placeholder="Details about family ONC should know" title="Provide ONC with information about the family you feel is important">
   </fieldset>
   <fieldset id='groupfs'>
-   <legend class="legend-major">Referring Agent &#38; School/Organization - Review Only: This referral's originating agent &#38; school/organization</legend>
+   <legend class="legend-major">Referring Agent &#38; School/Organization - Review only: This referral's originating agent &#38; school/organization</legend>
      <label for='agent'>Referred By:</label>
      <input id="agentname" size="34" title="Agent who submitted the referral" readonly>
      <label for='groupcb'>Organization:</label>

@@ -243,52 +243,82 @@ function onSubmitFamilyForm(bReferral)
 		var delUnitElement = [document.getElementById('delunit')];
 		
 		//phone numbers, schools are good and at least gift or meal assistance was requested.
-		//Check to see that we have first and last names and
-		//HoH and Delivery addresses are good. First check the delivery address
-		if(hohNameElement[0].value !== "" && hohNameElement[1].value !== "")
-		{
-			//COVID 19 -- ELIMINATE THE DELIVERY ADDRESS CHECK. ONLY CHECK HOH ADDRESS
-//			if(delAddrElement[0].value !== "" && delAddrElement[1].value !== ""  &&
-//				hohAddrElement[0].value !== "" && hohAddrElement[1].value != "")
-			if(hohAddrElement[0].value !== "" && hohAddrElement[1].value != "")
-			{
-				//form the address check url
-				//COVID 19 -- ONLY CHECK THE HOH ADDRESS
-//	       		$.getJSON('checkaddresses', createAllAddressParams(hohAddrElement, delAddrElement), function(addresponse)
-	       		$.getJSON('address', createAddressParams(hohAddrElement, ''), function(addresponse)
-	      		{
-	      			if(addresponse.hasOwnProperty('error'))
-	      			{
-						window.location=document.getElementById('timeoutanchor').href;
-	      			}
-	      			else if(addresponse.returnCode === 0)
-	      			{
-	      				var urlmode = window.location.href;
-	      				if(urlmode.indexOf('referral') >= 0 || urlmode.indexOf('newfamily') >= 0)
-	      					post('referfamily', createReferralParams(true));
-	      				else if(urlmode.indexOf('familyupdate') >= 0)
-	      					post('updatefamily', createReferralParams(false));
-	      			}
-	      			else
-	      				processAddressError(addresponse, delAddrElement, delUnitElement, 
-	      									hohAddrElement, hohUnitElement, errorElement);
-	      		});
+		//Check to see that we have first and last names and then check either or both the 
+		//HoH and Delivery addresses are good based on whether we're delivering gifts to family.
+		//The default for the distribution preference select is 'Pickup'.
+		if(hohNameElement[0].value != "" && hohNameElement[1].value != "")
+		{	
+			if(sessionStorage.getItem('distpref') == 'Delivery')
+			{			
+				if(delAddrElement[0].value !== "" && delAddrElement[1].value !== ""  &&
+					hohAddrElement[0].value !== "" && hohAddrElement[1].value != "")
+				{
+					//form the address check url
+		       		$.getJSON('checkaddresses', createAllAddressParams(hohAddrElement, delAddrElement), function(addresponse)
+		      		{
+		      			if(addresponse.hasOwnProperty('error'))
+		      			{
+							window.location=document.getElementById('timeoutanchor').href;
+		      			}
+		      			else if(addresponse.returnCode === 0)
+		      			{
+		      				var urlmode = window.location.href;
+		      				if(urlmode.indexOf('referral') >= 0 || urlmode.indexOf('newfamily') >= 0)
+		      					post('referfamily', createReferralParams(true));
+		      				else if(urlmode.indexOf('familyupdate') >= 0)
+		      					post('updatefamily', createReferralParams(false));
+		      			}
+		      			else
+		      				processAddressError(addresponse, delAddrElement, delUnitElement, 
+		      									hohAddrElement, hohUnitElement, errorElement);
+		      		});
+				}
+				else
+				{					
+					changeAddressBackground(delAddrElement, errorColor);
+					changeAddressBackground(hohAddrElement, errorColor);			
+					errorElement.textContent = "Submission Error: Delivery or HoH address is incomplete";
+					document.getElementById('badfammssg').textContent = "Submission Error: Delivery or HOH address incomplete";
+					window.location=document.getElementById('badfamanchor').href;
+				}
 			}
 			else
 			{
-//				COVID 19 -- ONLY HoH ADDRESS IS CHECKED					
-//				changeAddressBackground(delAddrElement, errorColor);
-				changeAddressBackground(hohAddrElement, errorColor);			
-//				errorElement.textContent = "Submission Error: Delivery or HoH address is incomplete";
-//				document.getElementById('badfammssg').textContent = "Submission Error: Delivery or HOH address incomplete";
-				errorElement.textContent = "Submission Error: HoH address is incomplete";
-				document.getElementById('badfammssg').textContent = "Submission Error: HOH address incomplete";
-				window.location=document.getElementById('badfamanchor').href;
+				//Not delivering to this family so only check HOH address
+				if(hohAddrElement[0].value !== "" && hohAddrElement[1].value != "")
+				{
+					//form the address check url
+		       		$.getJSON('address', createAddressParams(hohAddrElement, ''), function(addresponse)
+		      		{
+		      			if(addresponse.hasOwnProperty('error'))
+		      			{
+							window.location=document.getElementById('timeoutanchor').href;
+		      			}
+		      			else if(addresponse.returnCode === 0)
+		      			{
+		      				var urlmode = window.location.href;
+		      				if(urlmode.indexOf('referral') >= 0 || urlmode.indexOf('newfamily') >= 0)
+		      					post('referfamily', createReferralParams(true));
+		      				else if(urlmode.indexOf('familyupdate') >= 0)
+		      					post('updatefamily', createReferralParams(false));
+		      			}
+		      			else
+		      				processAddressError(addresponse, delAddrElement, delUnitElement, 
+		      									hohAddrElement, hohUnitElement, errorElement);
+		      		});
+				}
+				else
+				{
+					changeAddressBackground(hohAddrElement, errorColor);			
+					errorElement.textContent = "Submission Error: HoH address is incomplete";
+					document.getElementById('badfammssg').textContent = "Submission Error: HOH address incomplete";
+					window.location=document.getElementById('badfamanchor').href;
+				}
 			}
 		}
 		else
 		{
-			changeAddressBackground(hohAddrElement, errorColor);
+			changeAddressBackground(hohNameElement, errorColor);
 			changeAddressBackground(delAddrElement, '#FFFFFF');
 			changeAddressBackground(hohAddrElement, '#FFFFFF');
 			errorElement.textContent = "Submission Error: HOH First and/or Last Name is missing";
@@ -320,27 +350,35 @@ function processAddressError(addresponse, delAddrElement, delAddrUnitElement, ho
 	if(hohMissing > 0)	
 	{
 		changeAddressBackground(hohAddrUnitElement, errorColor);
-//		errorElement.textContent = "Error: Delivery and/or HoH address missing Apt#"; COVID 19 NO DELIVERY ADDRESS
-		errorElement.textContent = "Error: HoH address is missing Apt#";
+		if(sessionStorage.getItem('homeDelvery') == 'true')
+			errorElement.textContent = "Error: Delivery and/or HoH address missing Apt#";
+		else
+			errorElement.textContent = "Error: HoH address is missing Apt#";
 	}
 	else if(hohInvalid > 0)	
 	{
 		changeAddressBackground(hohAddrElement, errorColor);
-//		errorElement.textContent = "Error: Delivery and/or HOH address incomplete or does not exist";	COVID 19 NO DELIVERY ADDRESS
-		errorElement.textContent = "Error: HOH address incomplete, does not exist or is an invalid HoH address";
+		if(sessionStorage.getItem('homeDelvery') == 'true')
+			errorElement.textContent = "Error: Delivery and/or HOH address incomplete or does not exist";
+		else
+			errorElement.textContent = "Error: HOH address incomplete, does not exist or is an invalid HoH address";
 	}
 	
 	if(delMissing > 0)	//address found, missing unit
 	{
 		changeAddressBackground(delAddrUnitElement, errorColor);
-//		errorElement.textContent = "Error: Delivery and/or HoH missing Apt#";	COVID 19 NO DELIVERY ADDRESS
-		errorElement.textContent = "Error: HoH missing Apt#";
+		if(sessionStorage.getItem('homeDelvery') == 'true')
+			errorElement.textContent = "Error: Delivery and/or HoH missing Apt#";
+		else
+			errorElement.textContent = "Error: HoH missing Apt#";
 	}
 	else if(delInvalid > 0)	//del address was not found
 	{
 		changeAddressBackground(delAddrElement, errorColor);
-//		errorElement.textContent = "Error: Delivery and/or HoH address incomplete or does not exist";	COVID 19 NO DELIVERY ADDRESS
-		errorElement.textContent = "Error: HoH address incomplete, does not exist or is an invalid HoH address";
+		if(sessionStorage.getItem('homeDelvery') == 'true')
+			errorElement.textContent = "Error: Delivery and/or HoH address incomplete or does not exist";
+		else
+			errorElement.textContent = "Error: HoH address incomplete, does not exist or is an invalid HoH address";
 	}
 	else if(delOutOfArea > 0)
 	{
@@ -418,9 +456,9 @@ function verifyGiftsAndMeals()
 	{
 		errorMssg = "Neither gift nor meal assistance requested";
 	}
-	else if(document.getElementById('giftreq').checked === true && nChildren === 0)	//COVID 19 - GIFTS ONLY, MUST HAVE CHILD
+	else if(document.getElementById('giftreq').checked === true && nChildren === 0)
 	{
-		errorMssg = "No children in family, minimum is one child.";
+		errorMssg = "No children. Must have at least one child in family if gift assistance is requested";
 	}
 	
 	return errorMssg;
@@ -469,8 +507,6 @@ function verifyPhoneNumber(elementNum)
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
 	else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.' && isNumericPhoneNumber(number, '.'))
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
-//	else if(number.length===12 && number.charAt(3)===' ' && number.charAt(7)==='.' && isNumericPhoneNumber(number, '.'))
-//		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
 	else if(number.length===10 && !isNaN(number))
 		phoneElement[elementNum].style.backgroundColor = '#FFFFFF';
 	else
@@ -484,17 +520,12 @@ function verifyPhoneNumber(elementNum)
 
 function isNumericPhoneNumber(phonenumber, separator)
 {
-//	var testNumberA = phonenumber.replace(/-/g, '');
-//	var testNumberB = testNumberA.replace(/./g, '');
-//	var testNumberC = testNumberB.replace(/\s/g, '');
-//	console.log(testNumberC);
 	var testNumber = phonenumber;
 	if(separator === '-')
 		testNumber = phonenumber.replace(/-/g, '');
 	else if(separator === '.')
 		testNumber = phonenumber.replace(/./g, '');
 
-//	console.log('phonenumber= ' + phonenumber + ', testnumberC= ' + testNumberC);
 	return !isNaN(testNumber);	
 }
 
@@ -589,35 +620,32 @@ function createReferralParams(bReferral)
 	params["targetid"] = sessionStorage.getItem("targetid");
 	params["referencenum"] = sessionStorage.getItem("referencenum");
 	
-	//create the common parameters -- COVID 19 -- SEPARATED element names and parameter names so the
-	//delivery address will be created from the HOH address text field elements.
-//	var commonelementname = ['language','hohfn','hohln','housenum','street','unit','city',
-//							 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
-//							 'email','homephone','cellphone', 'altphone','detail'];
-	
-	var commonelementname = ['language','hohfn','hohln','housenum','street','unit','city',
-		 'zipcode','city','zipcode', 'housenum','street','unit',
-		 'email','homephone','cellphone', 'altphone','detail'];
-	
+	//create the common parameters. If not doing home delivery, substitute the HoH address elements
+	//for the delivery address elements
 	var paramname = ['language','hohfn','hohln','housenum','street','unit','city',
 		 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
-		 'email','homephone','cellphone', 'altphone','detail'];
+		 'email','homephone','cellphone', 'altphone','detail','distpref'];
+
+	var noDeliveryElementNames = ['language','hohfn','hohln','housenum','street','unit','city',
+		 'zipcode','city','zipcode', 'housenum','street','unit',
+		 'email','homephone','cellphone', 'altphone','detail','distpref'];
 	
-	for(cen=0; cen < commonelementname.length; cen++)
-	{		
-//		params[commonelementname[cen]] = document.getElementById(commonelementname[cen]).value; COVID 19
-		params[paramname[cen]] = document.getElementById(commonelementname[cen]).value;
+	for(cen=0; cen < paramname.length; cen++)
+	{
+		//if pickup, not delivery, make the referral address the same as HoH
+		if(document.getElementById('distpref').value == 'Delivery')
+			params[paramname[cen]] = document.getElementById(paramname[cen]).value;
+		else
+			params[paramname[cen]] = document.getElementById(noDeliveryElementNames[cen]).value;
 	}	
 		
-	
 	if(bReferral)	//is this a referral or just an update? Create the unique parameters
 	{	
 		//create transportation and gift required parameters
-		//COVID 19 -- transportation will always not be assessed -- check box fieldset is hidden
-//		if(document.getElementById('transYes').checked)
+		if(sessionStorage.getItem('homeDelivery') == 'false' || document.getElementById('transYes').checked)
 			params['transportation'] = 'Yes';
-//		else
-//			params['transportation'] = 'No';
+		else
+			params['transportation'] = 'No';
 		
 		if(document.getElementById('giftreq').checked)
 			params['giftreq'] = 'on';
@@ -630,7 +658,8 @@ function createReferralParams(bReferral)
 		
 		//create the child and wish parameters
 		let childTable = $('#childtable').DataTable();
-		let children = childTable.rows().data();	
+		let children = childTable.rows().data();
+		let numWishes = sessionStorage.getItem('numberGiftsPerChild');
 		
 		for(cn=0; cn<childTable.rows().count(); cn++)
 		{
@@ -639,10 +668,16 @@ function createReferralParams(bReferral)
 			params["childdob"+cn] = children[cn].sDOB;
 			params["childgender"+cn] = children[cn].gender;
 			params["childschool"+cn] = children[cn].school;
-			params["wish"+cn+"0"] = children[cn].wish0;
-			params["wish"+cn+"1"] = children[cn].wish1;
-			params["wish"+cn+"2"] = children[cn].wish2;
-			params["wish"+cn+"3"] = children[cn].wish3;
+			
+			if(numWishes > 0)
+			{	
+				params["wish"+cn+"0"] = children[cn].wish0;
+				params["wish"+cn+"3"] = children[cn].wish3;	//alternate wish
+			}
+			if(numWishes > 1)
+				params["wish"+cn+"1"] = children[cn].wish1;
+			if(numWishes > 2)
+				params["wish"+cn+"2"] = children[cn].wish2;
 		}
 	
 		//create the adult parameters

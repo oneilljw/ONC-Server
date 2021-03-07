@@ -54,6 +54,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String LOGIN_ERROR_HTML = "LoginError.htm";
 	private static final String RECOVERY_LOGIN_HTML = "LoginRecovery.htm";
 	private static final String PDF_VIEWER_HTML = "PDFViewer.htm";
+	private static final String GIFT_DELIVERY_HTML = "GiftDelivery.htm";
+	private static final String CONFIRM_DELIVERY_HTML = "ConfirmGiftDelivery.htm";
+	private static final String QRSCANNER_HTML = "QRScanner.htm";
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
 	private static final String CLEAR_X_FILE = "clear_x.gif";
@@ -128,6 +131,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("loginerror", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOGIN_ERROR_HTML)));
 			webpageMap.put("recoverylogin", readFile(String.format("%s/%s",System.getProperty("user.dir"), RECOVERY_LOGIN_HTML)));
 			webpageMap.put("getdeliverycards", readFile(String.format("%s/%s",System.getProperty("user.dir"), PDF_VIEWER_HTML)));
+			webpageMap.put("giftdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), GIFT_DELIVERY_HTML)));
+			webpageMap.put("confirmdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), CONFIRM_DELIVERY_HTML)));
+			webpageMap.put("qrscanner", readFile(String.format("%s/%s",System.getProperty("user.dir"), QRSCANNER_HTML)));
 			
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
 			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
