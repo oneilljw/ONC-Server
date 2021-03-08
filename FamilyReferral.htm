@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>ONC Family Assistance Request</title>
+  <title>ONC Holiday Assistance Request</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
@@ -426,7 +426,7 @@
   		document.getElementById('childwish0div').style.display = numGifts > 0 && intakeType(0) > 0 ? 'block' :'none';
   		document.getElementById('childwish1div').style.display = numGifts > 1 && intakeType(1) > 0 ? 'block' :'none';
   		document.getElementById('childwish2div').style.display = numGifts > 2 && intakeType(2) > 0 ? 'block' :'none';
-  		document.getElementById('childwish3div').style.display = intakeType(3) > 0 ? 'block' :'none';
+  		document.getElementById('childwish3div').style.display = numGifts > 0 && intakeType(3) > 0 ? 'block' :'none';
   	}
   	
   	function setEnabledChildTableWishes(bEnableChildWishes)

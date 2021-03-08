@@ -690,7 +690,7 @@ public class FamilyHandler extends ONCWebpageHandler
 //						addedFamily.getHOHLastName(), addedFamily.getODBFamilyNum()));
 				
 					//family is in current year already with an ODB referred target ID
-					addedFamily.setONCNum("DEL");
+//					addedFamily.setONCNum("DEL");
 					addedFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 					addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
@@ -708,7 +708,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					//family is already in current year with an ONC referred target ID and added family 
 					//does not have an ONC target id. In this situation, we can't decrement the assigned
 					//ONC based target id and will just have to burn one.
-					dupFamily.setONCNum("DEL");
+//					dupFamily.setONCNum("DEL");
 					dupFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 					dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
@@ -725,7 +725,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					if(dupNumber < addedNumber)
 					{
 						//dup family has the correct ref #, so added family is duplicate
-						addedFamily.setONCNum("DEL");
+//						addedFamily.setONCNum("DEL");
 						addedFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 						addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 						addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
@@ -736,7 +736,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					else
 					{
 						//added family has the correct ref #, so dup family is the duplicate
-						dupFamily.setONCNum("DEL");
+//						dupFamily.setONCNum("DEL");
 						dupFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 						dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 						dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
