@@ -624,11 +624,11 @@ function createReferralParams(bReferral)
 	//for the delivery address elements
 	var paramname = ['language','hohfn','hohln','housenum','street','unit','city',
 		 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
-		 'email','homephone','cellphone', 'altphone','detail','distpref'];
+		 'email','homephone','cellphone', 'altphone'];
 
 	var noDeliveryElementNames = ['language','hohfn','hohln','housenum','street','unit','city',
 		 'zipcode','city','zipcode', 'housenum','street','unit',
-		 'email','homephone','cellphone', 'altphone','detail','distpref'];
+		 'email','homephone','cellphone', 'altphone'];
 	
 	for(cen=0; cen < paramname.length; cen++)
 	{
@@ -642,7 +642,7 @@ function createReferralParams(bReferral)
 	if(bReferral)	//is this a referral or just an update? Create the unique parameters
 	{	
 		//create transportation and gift required parameters
-		if(sessionStorage.getItem('homeDelivery') == 'false' || document.getElementById('transYes').checked)
+		if(document.getElementById('distpref').value == 'Pickup' || document.getElementById('transYes').checked)
 			params['transportation'] = 'Yes';
 		else
 			params['transportation'] = 'No';
@@ -652,7 +652,7 @@ function createReferralParams(bReferral)
 		else
 			params['giftreq'] = 'off';
 		
-		var uniqueementname = ['mealtype','dietres','groupcb','uuid'];
+		var uniqueementname = ['mealtype','dietres','groupcb','uuid', 'detail', 'distpref'];
 		for(uen=0; uen < uniqueementname.length; uen++)
 			params[uniqueementname[uen]] = document.getElementById(uniqueementname[uen]).value;
 		

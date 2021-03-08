@@ -203,10 +203,10 @@
   		//If were not doing residential delivery uncheck the same addess checkbox. If we are
   		//doing delivery, determine if the family has a differnt delivery address
   		let giftDistribution = sessionStorage.getItem('giftDistribution');
-  		document.getElementById("distpreflbl").style.visibility = giftDistribution == 3 ? 'visible' : 'hidden';
-	  	document.getElementById('distpref').style.visibility = giftDistribution == 3 ? 'visible' : 'hidden';
+  		document.getElementById("distpreflbl").style.visibility = giftDistribution == 'Pickup_Delivery' ? 'visible' : 'hidden';
+	  	document.getElementById('distpref').style.visibility = giftDistribution == 'Pickup_Delivery' ? 'visible' : 'hidden';
 	  	
-  		if(giftDistribution < 2 || giftDistribution == 3 &&  family.distribution == 'Pickup')
+  		if(giftDistribution == 'None' || giftDistribution == 'Pickup' || giftDistribution == 'Pickup_Delivery' &&  family.distribution == 'Pickup')
   		{
   			document.getElementById('deladdrfieldset').style.display = 'none';
   			document.getElementById('giftassistlegend').innerHTML = 'Gift Assistance: Review only. Email ONC with updates';

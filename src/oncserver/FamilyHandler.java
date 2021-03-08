@@ -951,7 +951,7 @@ public class FamilyHandler extends ONCWebpageHandler
 			//family was found, continue processing to see if any data was changed
 			String[] familyKeys = {"targetid", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
 								"zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
-								"delstreet","detail", "delunit", "delcity", "delzipcode"};
+								"delstreet","delunit", "delcity", "delzipcode"};
 			
 			Map<String, String> familyMap = createMap(params, familyKeys);
 			
