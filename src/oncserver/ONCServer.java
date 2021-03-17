@@ -147,7 +147,7 @@ public class ONCServer
     		serverMenuBar.createHistMI.addActionListener(mbl);
     		serverMenuBar.updateUserNameMI.addActionListener(mbl);
     		serverMenuBar.createDelCardsMI.addActionListener(mbl);
-    		serverMenuBar.convertChildGiftsMI.addActionListener(mbl);
+    		serverMenuBar.convertMealsMI.addActionListener(mbl);
     		serverUI = ServerUI.getInstance();
     	
     		oncFrame =  new JFrame(APPNAME);
@@ -344,14 +344,14 @@ public class ONCServer
 //					e1.printStackTrace();
 //				}
 			}
-			else if(e.getSource() == serverMenuBar.convertChildGiftsMI)
+			else if(e.getSource() == serverMenuBar.convertMealsMI)
 			{
 				//convert the child gift list structure to a linked list
-				ServerChildGiftDB giftDB;
+				ServerMealDB mealDB;
 				try
 				{
-					giftDB = ServerChildGiftDB.getInstance();
-					giftDB.convertToLinkedLists();
+					mealDB = ServerMealDB.getInstance();
+					mealDB.convertToLinkedLists();
 				}
 				catch (IOException e1)
 				{

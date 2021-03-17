@@ -22,18 +22,15 @@ import ourneighborschild.MealStatus;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
-import ourneighborschild.ONCFamilyHistory;
+import ourneighborschild.FamilyHistory;
 import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
-import ourneighborschild.ONCSMS;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
-import ourneighborschild.SMSStatus;
 import ourneighborschild.UserPermission;
-import ourneighborschild.GiftStatus;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -61,7 +58,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 45;
+	private static final int FAMILYDB_HEADER_LENGTH = 44;
 	
 	private static final int FAMILY_STOPLIGHT_RED = 2;
 //	private static final int NUMBER_OF_WISHES_PER_CHILD = 2;	//COVID 19 - Two gifts/child not three
@@ -169,186 +166,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson(familyDB.get(DBManager.offset(year)).getList(), listOfFamilies);
 		return response;	
 	}
-/*	
-	static HtmlResponse getFamiliesJSONP(int year, String callbackFunction)
-	{		
-		Gson gson = new Gson();
-		Type listOfWebsiteFamilies = new TypeToken<ArrayList<ONCWebsiteFamily>>(){}.getType();
-		
-		List<ONCFamily> searchList = familyDB.get(year-BASE_YEAR).getList();
-		ArrayList<ONCWebsiteFamily> responseList = new ArrayList<ONCWebsiteFamily>();
-		
-		for(int i=0; i<searchList.size(); i++)
-		{
-			ONCWebsiteFamily webFam = new ONCWebsiteFamily(searchList.get(i), ServerNoteDB.lastNoteStatus(year, searchList.get(i).getID()));
-			responseList.add(webFam);
-		}
-		
-		//sort the list by HoH last name
-		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
-		
-		String response = gson.toJson(responseList, listOfWebsiteFamilies);
 
-		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
-	}
-	
-	static HtmlResponse getFamiliesJSONP(int year, Integer reqAgentID, ONCServerUser loggedInUser, Integer reqGroupID, String callbackFunction)
-	{	
-		Gson gson = new Gson();
-		Type listOfWebsiteFamilies = new TypeToken<ArrayList<ONCWebsiteFamily>>(){}.getType();
-		
-		List<ONCFamily> searchList = familyDB.get(DBManager.offset(year)).getList();
-		ArrayList<ONCWebsiteFamily> responseList = new ArrayList<ONCWebsiteFamily>();
-		
-		if(reqAgentID == null || reqGroupID == null)
-		{
-			
-		}
-		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
-			reqAgentID < 0 && reqGroupID < 0)
-		{
-			//case: admin or higher login, requested agent = ANY, request group = ANY
-			//can only happen if loggedInUser permission > AGENT. If the requested agent is
-			//the logged-in user and their permissions are higher then Agent return all families
-			for(ONCFamily f : searchList)
-				responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
-									ServerNoteDB.lastNoteStatus(year, f.getID())));
-			
-		}
-		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
-				reqAgentID >= 0 && reqGroupID < 0)
-		{
-			//case: admin or higher login, logged in user, specific agent, any group
-			//return all referrals from the agent.
-			for(ONCFamily f : searchList)
-				if(f.getAgentID() == reqAgentID)
-					responseList.add(new ONCWebsiteFamily(f,dnsCodeDB.getDNSCode(f.getDNSCode()), 
-							ServerNoteDB.lastNoteStatus(year, f.getID())));
-		}
-		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
-				reqAgentID < 0 && reqGroupID >= 0)
-		{
-			//case: admin or higher login, logged in user, any agent, specific group
-			//return all referrals from the group.
-			for(ONCFamily f : searchList)
-				if(f.getGroupID() == reqGroupID)
-					responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
-											ServerNoteDB.lastNoteStatus(year, f.getID())));
-			
-		}
-		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) > 0 &&
-				reqAgentID >= 0 && reqGroupID >= 0)
-		{
-			//case: admin or higher login, logged in user, any agent, specific group
-			//return all referrals from the group.
-			for(ONCFamily f : searchList)
-				if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-					responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
-										ServerNoteDB.lastNoteStatus(year, f.getID())));
-		}
-		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
-				reqAgentID < 0 && reqGroupID >= 0)
-		{
-			//case: agent logged in, requested agent = ANY, specific group request
-			//if logged in user is a member of the requested group and the group is sharing, 
-			//return all families referred in the group
-			ONCGroup group = ServerGroupDB.getGroup(reqGroupID);
-			if(loggedInUser.isInGroup(reqGroupID) && group.groupSharesInfo())
-				for(ONCFamily f : searchList)
-				{
-					if(f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
-												ServerNoteDB.lastNoteStatus(year, f.getID())));
-				}
-		}
-		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
-				 reqAgentID >= 0 && reqGroupID < 0)
-		{
-			//case: agent logged in, specific requested agent, requested group = ANY
-			//if the requested user is the logged in user, return all families referred by the agent
-			//regardless of group. 
-			for(ONCFamily f : searchList)
-				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
-											ServerNoteDB.lastNoteStatus(year, f.getID())));
-		}
-		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0 && 
-				 reqAgentID >= 0 && reqGroupID >=0)
-		{
-			//case: agent logged in, specific requested agent, specific requested group
-			//if the requested agent is the logged in user and is in the requested group, return the
-			//families referred by the agent. If the requested agent is not the logged in user and the
-			//requested agent is in the requested group and the group is sharing, return the requested 
-			//agents referrals in the group.
-			ONCGroup reqGroup = ServerGroupDB.getGroup(reqGroupID);
-			ONCServerUser reqAgent = ServerUserDB.getServerUser(reqAgentID);
-			if(reqAgentID == loggedInUser.getID() && loggedInUser.isInGroup(reqGroupID))
-			{	
-				for(ONCFamily f : searchList)
-					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
-												ServerNoteDB.lastNoteStatus(year, f.getID())));
-			}
-			else if(reqAgentID != loggedInUser.getID() && reqAgent.isInGroup(reqGroupID) && 
-					reqGroup.groupSharesInfo())
-			{	
-				for(ONCFamily f : searchList)
-					if(f.getAgentID() == reqAgentID && f.getGroupID() == reqGroupID)
-						responseList.add(new ONCWebsiteFamily(f, dnsCodeDB.getDNSCode(f.getDNSCode()),
-												ServerNoteDB.lastNoteStatus(year, f.getID())));
-			}
-		}
-		
-		if(loggedInUser.getID() > -1)
-		{
-			//add only the families referred by that agent
-			for(ONCFamily f : searchList)
-				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f));
-		}
-		else if(loggedInUser.getID() == -1 && groupID <= -1)
-		{
-			//This is only allowed for users with permission > AGENT. If so, add all families 
-			//referred in that year, else send back all families from the logged in agent
-			for(ONCFamily f : searchList)
-				responseList.add(new ONCWebsiteFamily(f));
-		}
-		else if(groupID > -1)
-		{
-			//add only the families referred by each agent in the group that referred that year
-//			for(Integer userID : userDB.getUserIDsInGroup(groupID))
-//				if(didAgentReferInYear(year, userID))
-//					for(ONCFamily f : searchList)
-//						if(f.getAgentID() == userID)
-//							responseList.add(new ONCWebsiteFamily(f));
-			
-			//check to see if group is sharing. If it is, add all families in the group. If 
-			//it's not sharing, add the families referred by the agent.
-			ONCGroup group = ServerGroupDB.getGroup(groupID);
-			if(group.getPermission() == ONCGroup.SHARING )
-			{
-				for(ONCFamily f : searchList)
-					if(f.getGroupID() == groupID)
-						responseList.add(new ONCWebsiteFamily(f));	
-			}
-			else
-			{
-				for(ONCFamily f : searchList)
-				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f));
-			}	
-		}
-		
-		//sort the list by HoH last name
-		Collections.sort(responseList, new ONCWebsiteFamilyLNComparator());
-		
-		String response = gson.toJson(responseList, listOfWebsiteFamilies);
-
-		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
-	}
-*/	
 	static HtmlResponse getFamiliesJSONP(int year, ONCServerUser loggedInUser, String callbackFunction)
 	{	
 		Gson gson = new Gson();
@@ -367,9 +185,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//the logged-in user and their permissions are higher then Agent return all families			
 			for(ONCFamily f : searchList)
 			{
+				FamilyHistory fh = ServerFamilyHistoryDB. getCurrentFamilyHistory(year, f.getID());
+				ONCMeal meal = mealDB.getFamiliesCurrentMeal(year, f.getID());
 				boolean bAlreadyReferred = year == DBManager.getCurrentSeason() ? true : alreadyReferredInCurrentSeason(year, f, currentSeasonList);
 				
-				responseList.add(new ONCWebsiteFamily(f, bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()),
+				responseList.add(new ONCWebsiteFamily(f, fh, bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), meal,
 									ServerNoteDB.lastNoteStatus(year, f.getID())));
 			}
 		}
@@ -379,14 +199,16 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//from shared groups the agent is in.
 			for(ONCFamily f : searchList)
 			{
+				FamilyHistory fh = ServerFamilyHistoryDB. getCurrentFamilyHistory(year, f.getID());
+				ONCMeal meal = mealDB.getFamiliesCurrentMeal(year, f.getID());
 				boolean bAlreadyReferred = year == DBManager.getCurrentSeason() ? true : alreadyReferredInCurrentSeason(year, f, currentSeasonList);
 				
 				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f,bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), ServerNoteDB.lastNoteStatus(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f,fh,bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), meal, ServerNoteDB.lastNoteStatus(year, f.getID())));
 				else
 					for(ONCGroup agentGroup : agentsGroupList)
 						if(agentGroup.groupSharesInfo() && f.getGroupID() == agentGroup.getID())
-							responseList.add(new ONCWebsiteFamily(f, bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), 
+							responseList.add(new ONCWebsiteFamily(f, fh,bAlreadyReferred, dnsCodeDB.getDNSCode(f.getDNSCode()), meal,
 									ServerNoteDB.lastNoteStatus(year, f.getID())));
 			}
 		}
@@ -412,7 +234,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		{
 			//case: admin or higher login			
 			for(ONCFamily f : searchList)
-				responseList.add(new ONCWebsiteFamilyFull(f, dnsCodeDB.getDNSCode(f.getDNSCode())));
+			{
+				FamilyHistory fh = ServerFamilyHistoryDB. getCurrentFamilyHistory(year, f.getID());
+				ONCMeal meal = mealDB.getFamiliesCurrentMeal(year, f.getID());
+				responseList.add(new ONCWebsiteFamilyFull(f, fh, dnsCodeDB.getDNSCode(f.getDNSCode()), meal));
+			}
 		}
 		
 		String response = gson.toJson(responseList, listOfWebsiteFamilies);
@@ -495,53 +321,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
-/*	
-	static HtmlResponse getAgentsWhoReferredJSONP(int year, ONCServerUser loggedInAgent, int groupID, String callbackFunction)
-	{
-		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<ONCWebAgent>>(){}.getType();
-		List<ONCWebAgent> agentReferredInYearList = new LinkedList<ONCWebAgent>();
-		
-		List<ONCFamily> searchList = familyDB.get(DBManager.offset(year)).getList();
-		
-		if(loggedInAgent.getPermission().compareTo(UserPermission.Admin) >= 0 && groupID == -1)
-		{
-			//Admin or higher user, group selection was "All"
-			for(ONCFamily f : searchList)
-				if(!isInList(f.getAgentID(), agentReferredInYearList))
-					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
-		}
-		else if(loggedInAgent.getPermission().compareTo(UserPermission.Admin) >= 0 && groupID > -1)
-		{
-			//Admin or higher user, specific group selected
-			for(ONCFamily f : searchList)
-				if(f.getGroupID() == groupID && !isInList(f.getAgentID(), agentReferredInYearList))
-					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
-		}
-		else if(loggedInAgent.getPermission() == UserPermission.Agent && groupID > -1 &&
-				ServerGroupDB.getGroup(groupID).groupSharesInfo())
-		{
-			//Agent user, specific group selected and group is sharing
-			for(ONCFamily f : searchList)
-				if(f.getGroupID() == groupID && !isInList(f.getAgentID(), agentReferredInYearList))
-					agentReferredInYearList.add(new ONCWebAgent(ServerUserDB.getServerUser(f.getAgentID())));
-		}
-		else
-		{
-			//just return a list with only the user, regardless of who referred, group, etc.
-			agentReferredInYearList.add(new ONCWebAgent(loggedInAgent));
-		}
-		
-		//sort the list by name and add an "anyone" to the top of the list
-		if(agentReferredInYearList.size() > 1)
-			Collections.sort(agentReferredInYearList, new ONCAgentNameComparator());
-
-		String response = gson.toJson(agentReferredInYearList, listtype);
 	
-		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
-	}
-*/	
 	private static class ONCAgentNameComparator implements Comparator<ONCWebAgent>
 	{
 		@Override
@@ -653,11 +433,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				}
 				else
 				{
-					if(f.getFamilyStatus() == FamilyStatus.Unverified) {unverified++; }
-					else if(f.getFamilyStatus() == FamilyStatus.Waitlist) { servwaitlist++; }
-					else if(f.getFamilyStatus() == FamilyStatus.Verified) { verified++; }
-					else if(f.getFamilyStatus() == FamilyStatus.Contacted) { contacted++; }
-					else if(f.getFamilyStatus() == FamilyStatus.Confirmed) { confirmed++; }
+					FamilyHistory lastHistoryObj = familyHistoryDB.getLastFamilyHistory(year, f.getID());
+					if(lastHistoryObj.getFamilyStatus() == FamilyStatus.Unverified) {unverified++; }
+					else if(lastHistoryObj.getFamilyStatus() == FamilyStatus.Waitlist) { servwaitlist++; }
+					else if(lastHistoryObj.getFamilyStatus() == FamilyStatus.Verified) { verified++; }
+					else if(lastHistoryObj.getFamilyStatus() == FamilyStatus.Contacted) { contacted++; }
+					else if(lastHistoryObj.getFamilyStatus() == FamilyStatus.Confirmed) { confirmed++; }
 					served++;
 				}
 			}
@@ -680,18 +461,19 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				if(f.getDNSCode() == -1 && isNumeric(f.getONCNum()))
 				{
 					//served families only
-					if(f.getGiftStatus() == FamilyGiftStatus.NotRequested) { notreq++; }
-					else if(f.getGiftStatus() == FamilyGiftStatus.Requested) { req++; }
-					else if(f.getGiftStatus() == FamilyGiftStatus.Selected) { sel++; }
-					else if(f.getGiftStatus() == FamilyGiftStatus.Received) { rec++; }
+					FamilyHistory lastHistoryObj = familyHistoryDB.getLastFamilyHistory(year, f.getID());
+					if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.NotRequested) { notreq++; }
+					else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Requested) { req++; }
+					else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Selected) { sel++; }
+					else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Received) { rec++; }
 					
 					//if gift status is PACKAGED or higher, but not REFERRED, count it as PACKAGED
-					else if(f.getGiftStatus().compareTo(FamilyGiftStatus.Packaged) >= 0 &&
-							f.getGiftStatus().compareTo(FamilyGiftStatus.Referred) < 0)
+					else if(lastHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Packaged) >= 0 &&
+							lastHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Referred) < 0)
 					{
 						pck++;
 					}
-					else if(f.getGiftStatus() == FamilyGiftStatus.Referred) { ref++; }
+					else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Referred) { ref++; }
 				}
 			}
 			
@@ -712,18 +494,20 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				if(f.getDNSCode() == -1 && isNumeric(f.getONCNum()))
 				{
-					//served families only
-					if(f.getMealStatus() == MealStatus.None) { notreq++; }
-					else if(f.getMealStatus() == MealStatus.Requested) { req++; }
-					else if(f.getMealStatus() == MealStatus.Assigned) { assg++; }
-					else if(f.getMealStatus() == MealStatus.Referred) {ref++; }
+					//served families only. Get current meal for family
+					ONCMeal meal =  mealDB.getFamiliesCurrentMeal(year, f.getID());
+					if(meal == null)  { notreq++; }
+					else if(meal.getStatus() == MealStatus.None) { notreq++; }
+					else if(meal.getStatus() == MealStatus.Requested) { req++; }
+					else if(meal.getStatus() == MealStatus.Assigned) { assg++; }
+					else if(meal.getStatus() == MealStatus.Referred) {ref++; }
 				}	
 			}
 			
 			metricList.add(new Metric("Not Requested", notreq));
 			metricList.add(new Metric("Requested", req));
 			metricList.add(new Metric("Assigned", assg));
-			metricList.add(new Metric("Referred", ref));		
+			metricList.add(new Metric("Referred", ref));
 		}
 		else if(maptype.equals("delivery"))
 		{
@@ -735,11 +519,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				{
 					//served families only
 					served++;
-					if(f.getGiftStatus() == FamilyGiftStatus.Assigned) { assg++; }
-					else if(f.getGiftStatus() == FamilyGiftStatus.Delivered) { del++; }
-					else if(f.getGiftStatus() == FamilyGiftStatus.Attempted) {att++; }
-					else if(f.getGiftStatus() == FamilyGiftStatus.Returned) { ret++; }
-					else if(f.getGiftStatus() == FamilyGiftStatus.CounselorPickUp) { cpu++; }
+					FamilyHistory lastHistoryObj = familyHistoryDB.getLastFamilyHistory(year, f.getID());
+					if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned) { assg++; }
+					else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Delivered) { del++; }
+					else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Attempted) {att++; }
+					else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Returned) { ret++; }
+					else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.CounselorPickUp) { cpu++; }
 				}	
 			}
 			
@@ -755,47 +540,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
-	}
-	
-	HtmlResponse confirmFamilyGiftDelivery(int year, int id, WebClient wc, String callbackFunction)
-	{
-		String response;
-		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
-		List<ONCFamily> fAL = fDBYear.getList();
-		
-		int index=0;
-		while(index < fAL.size() && fAL.get(index).getID() != id)
-			index++;
-
-		if(index < fAL.size())
-		{
-			if(fAL.get(index).getGiftStatus() == FamilyGiftStatus.Assigned)
-			{
-				ONCFamily updatedFamily = new ONCFamily(fAL.get(index));	//make a copy
-				updatedFamily.setGiftStatus(FamilyGiftStatus.Delivered);
-				
-				//add a history item
-				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-						updatedFamily.getGiftStatus(), null, updatedFamily.getDNSCode(),"Gift Status Change", wc.getWebUser().getLNFI(), true);
-				updatedFamily.setDeliveryID(histItem.getID());
-				
-				fAL.set(index, updatedFamily);
-				fDBYear.setChanged(true);
-				
-				response = "{\"message\":\"Gifts Successfully Delivered!\"}"; 
-			}
-			else if(fAL.get(index).getGiftStatus() == FamilyGiftStatus.Delivered)
-				response = "{\"message\":\"Gifts Already Delivered\"}"; 
-			else
-				response = String.format("{\"message\":\"Error: Invalid Family Gift Status: %s\"}",
-						fAL.get(index).getGiftStatus().toString());
-		}
-		else
-		{
-			response = "{\"message\":\"Error: Family Not Found\"}";
-		}
-		
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
 	
 	String update(int year, String familyjson, ONCUser clientUser, boolean bAutoAssign)
@@ -838,19 +582,20 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getSchoolCode()));
 			}
 			
-			//check to see if either status or DNS code is changing, if so, add a history item
-			if(currFam != null && 
-				(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
-				 currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
-				  currFam.getDNSCode() != updatedFamily.getDNSCode()))
-			{
-				DNSCode updatedFamCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
-					
-				ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-						updatedFamily.getGiftStatus(), null, updatedFamCode.getID(), "Status Changed", updatedFamily.getChangedBy(), true);
-				
-				updatedFamily.setDeliveryID(histItem.getID());
-			}
+//			//check to see if either status or DNS code is changing, if so, add a history item
+//			FamilyHistory famHist = familyHistoryDB.getLastFamilyHistory(year, updatedFamily.getID());
+//			if(currFam != null && famHist != null &&
+//				(famHist != updatedFamily.getFamilyStatus() || 
+//				  famHist != updatedFamily.getGiftStatus() ||
+//				   currFam.getDNSCode() != updatedFamily.getDNSCode()))
+//			{
+//				DNSCode updatedFamCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
+//					
+//				addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+//						updatedFamily.getGiftStatus(), null, updatedFamCode.getID(), "Status Changed", updatedFamily.getChangedBy(), true);
+//				
+//				updatedFamily.setDeliveryID(histItem.getID());
+//			}
 			updatedFamily.setChangedBy(clientUser.getLNFI());
 			updatedFamily.setDateChanged(System.currentTimeMillis());
 			
@@ -862,94 +607,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return "UPDATE_FAILED";
 	}
 	
-	List<String> updateListOfFamilies(Map<String, Object> params, ONCServerUser client)
-	{
-		//process the request
-		int year = Integer.parseInt((String) params.get("year"));
-		
-		//get the list of family id's the web client requested to update
-		List<Integer> famIDList = new ArrayList<Integer>();
-		int index = 0;
-		while(params.containsKey("famid" + Integer.toString(index)))
-		{
-			String zID = (String) params.get("famid" + Integer.toString(index++));
-			famIDList.add(Integer.parseInt(zID));
-		}
-		
-		Gson gson = new Gson();
-		List<String> responseJsonList = new ArrayList<String>();
-		
-		//retrieve the family data base for the year
-		FamilyDBYear familyDBYear = familyDB.get(DBManager.offset(year));
-		List<ONCFamily> fAL = familyDBYear.getList();
-			
-		for(Integer famID : famIDList)
-		{
-			//Find the position for the current family being updated
-			index = 0;
-			while(index < fAL.size() && fAL.get(index).getID() != famID)
-				index++;
-			
-			//replace the current family object with the update. First, check for address change.
-			//if address has changed, update the region. 
-			if(index < fAL.size())
-			{	
-				ONCFamily currFam = fAL.get(index);
-				ONCFamily updatedFamily = new ONCFamily(currFam);
-				
-				updatedFamily.setDateChanged(System.currentTimeMillis());
-				updatedFamily.setChangedBy(client.getLNFI());
-				
-				//try to set the new DNS Code if it was requested by the web client
-				if(params.containsKey("dnschangeselect"))
-				{
-					String zDNSCode = (String) params.get("dnschangeselect");
-					if(isNumeric(zDNSCode))
-					{
-						int dnsCode = Integer.parseInt(zDNSCode);
-						if(dnsCode > -2)
-							updatedFamily.setDNSCode(dnsCode);
-					}
-				}
-				
-				//set the new family status if the fam status key was sent from web page
-				if(params.containsKey("famstatuschangeselect"))
-				{
-					String updatedFamStatus = (String) params.get("famstatuschangeselect");
-					if(!updatedFamStatus.contentEquals("No_Change"))
-						updatedFamily.setFamilyStatus(FamilyStatus.valueOf(updatedFamStatus));
-				}
-				
-				//set the new family gift status if the fam gift status key was sent from web page
-				if(params.containsKey("giftstatuschangeselect"))
-				{
-					String updatedFamGiftStatus = (String) params.get("giftstatuschangeselect");
-					if(!updatedFamGiftStatus.contentEquals("No_Change"))
-						updatedFamily.setGiftStatus(FamilyGiftStatus.valueOf(updatedFamGiftStatus));
-				}
-				
-				//check to see if either status or DNS code is changing, if so, add a history item
-				if(currFam != null && 
-					(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
-					  currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
-					   currFam.getDNSCode() != updatedFamily.getDNSCode()))
-				{
-					ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-																updatedFamily.getGiftStatus(), null, updatedFamily.getDNSCode(),
-																"Status Changed", updatedFamily.getChangedBy(), true);
-						
-					updatedFamily.setDeliveryID(histItem.getID());
-				}
-					
-				fAL.set(index, updatedFamily);
-				familyDBYear.setChanged(true);
-
-				responseJsonList.add("UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class));
-			}
-		}
-		
-		return responseJsonList;
-	}
+	
 	
 	String updateListOfFamilies(int year, String giftListJson, ONCUser client)
 	{
@@ -974,23 +632,23 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//if address has changed, update the region. 
 			if(index < fAL.size())
 			{
-				//update timestamp and changed by info
+				//update time stamp and changed by info
 				updatedFamily.setDateChanged(System.currentTimeMillis());
 				updatedFamily.setChangedBy(client.getLNFI());
 				
-				//check to see if either status or DNS code is changing, if so, add a history item
-				ONCFamily currFam = fAL.get(index);
-				if(currFam != null && 
-					(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
-					  currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
-					   currFam.getDNSCode() != updatedFamily.getDNSCode()))
-				{
-					ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-																updatedFamily.getGiftStatus(), null, updatedFamily.getDNSCode(),
-																"Status Changed", updatedFamily.getChangedBy(), true);
-						
-					updatedFamily.setDeliveryID(histItem.getID());
-				}
+//				//check to see if either status or DNS code is changing, if so, add a history item
+//				ONCFamily currFam = fAL.get(index);
+//				if(currFam != null && 
+//					(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
+//					  currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
+//					   currFam.getDNSCode() != updatedFamily.getDNSCode()))
+//				{
+//					addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+//																updatedFamily.getGiftStatus(), null, updatedFamily.getDNSCode(),
+//																"Status Changed", updatedFamily.getChangedBy(), true);
+//						
+//					updatedFamily.setDeliveryID(histItem.getID());
+//				}
 					
 				fAL.set(index, updatedFamily);
 				familyDBYear.setChanged(true);
@@ -1027,11 +685,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getSchoolCode()));
 			}
 			
-			//add a history item so change can be tracked. Changed by is the web user who made the change
-			DNSCode famDNSCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
-			ONCFamilyHistory histItem = addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-								updatedFamily.getGiftStatus(), null, famDNSCode.getID(), updateNote, wc.getWebUser().getLNFI(), true);
-			updatedFamily.setDeliveryID(histItem.getID());
+//			//add a history item so change can be tracked. Changed by is the web user who made the change
+//			DNSCode famDNSCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
+//			addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
+//								updatedFamily.getGiftStatus(), null, famDNSCode.getID(), updateNote, wc.getWebUser().getLNFI(), true);
+//			updatedFamily.setDeliveryID(histItem.getID());
 			
 			fAL.set(index, updatedFamily);
 			fDBYear.setChanged(true);
@@ -1137,24 +795,25 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				//if family was added successfully, add the family history object 
 				//and update the family history object id
+				FamilyHistory famHist = familyHistoryDB.getLastFamilyHistory(year, addedFam.getID());
 				DNSCode famDNSCode = dnsCodeDB.getDNSCode(addedFam.getDNSCode());
-				ONCFamilyHistory famHistory = new ONCFamilyHistory(-1, addedFam.getID(), 
-																addedFam.getFamilyStatus(),
-																addedFam.getGiftStatus(),
+				FamilyHistory famHistory = new FamilyHistory(-1, addedFam.getID(), 
+																famHist.getFamilyStatus(),
+																famHist.getGiftStatus(),
 																"", "Family Referred thru Britepaths", 
 																addedFam.getChangedBy(), 
 																System.currentTimeMillis(),
 																famDNSCode.getID());
 			
-				ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, famHistory, false);
-				if(addedFamHistory != null)
-					addedFam.setDeliveryID(addedFamHistory.getID());
+				FamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, famHistory, currClient.getClientUser(), false);
+//				if(addedFamHistory != null)
+//					addedFam.setDeliveryID(addedFamHistory.getID());
 				
 				//if the family was added successfully, add the history item, adults and children
 				jsonResponseList.add("ADDED_FAMILY" + gson.toJson(addedFam, ONCFamily.class));
 				
 				if(addedFamHistory != null)
-					jsonResponseList.add("ADDED_DELIVERY" + gson.toJson(addedFamHistory, ONCFamilyHistory.class));
+					jsonResponseList.add("ADDED_DELIVERY" + gson.toJson(addedFamHistory, FamilyHistory.class));
 		
 				String[] members = bpFam.getFamilyMembers().trim().split("\n");					
 				for(int i=0; i<members.length; i++)
@@ -1237,56 +896,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	String addFamilyHistoryList(int year, String historyGroupJson)
-	{
-		ClientManager clientMgr = ClientManager.getInstance();
-		
-		//un-bundle to list of ONCFamilyHistory objects
-		Gson gson = new Gson();
-		Type listOfHistoryObjects = new TypeToken<ArrayList<ONCFamilyHistory>>(){}.getType();
-		
-		List<ONCFamilyHistory> famHistoryList = gson.fromJson(historyGroupJson, listOfHistoryObjects);
-		
-		ServerFamilyHistoryDB famHistDB;
-		try 
-		{
-			famHistDB = ServerFamilyHistoryDB.getInstance();
-			
-			//for each history object in the list, add it to the history database 
-			for(ONCFamilyHistory reqFamHistoryObj:famHistoryList)
-			{
-				ONCFamilyHistory addedFamHistObj = famHistDB.addFamilyHistoryObject(year, reqFamHistoryObj, false);
-				
-				//find the family
-				FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
-				ONCFamily updatedFam = (ONCFamily) find(fDBYear.getList(), addedFamHistObj.getFamID());
-				
-				if(updatedFam != null)
-				{
-					updatedFam.setDeliveryID(addedFamHistObj.getID());
-					updatedFam.setFamilyStatus(addedFamHistObj.getFamilyStatus());
-					fDBYear.setChanged(true);
-					
-					//if update was successful, need to q the change to all in-year clients
-					//notify in year clients of change
-					String response = "UPDATED_FAMILY" + gson.toJson(updatedFam, ONCFamily.class);
-					clientMgr.notifyAllInYearClients(year, response);
-					response = "ADDED_DELIVERY"+ gson.toJson(addedFamHistObj, ONCFamilyHistory.class);
-					clientMgr.notifyAllInYearClients(year, response);
-				}
-			}
-			
-			return "ADDED_GROUP_DELIVERIES";
-		}
-		catch (FileNotFoundException e) 
-		{
-			return "ADD_GROUP_DELIVERIES_FAILED";
-		} 
-		catch (IOException e) 
-		{
-			return "ADD_GROUP_DELIVERIES_FAILED";
-		}
-	}
 	
 	String checkForDuplicateFamily(int year, String json, ONCUser user)
 	{
@@ -1401,11 +1010,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				}
 			}	
 			
+			FamilyHistory fh = ServerFamilyHistoryDB.getCurrentFamilyHistory(year, fam.getID());
 			ONCWebAgent famAgent = userDB.getWebAgent(fam.getAgentID());
-			ONCMeal famMeal = fam.getMealID() > -1 ? mealDB.getMeal(year,  fam.getMealID()) : null;
+			ONCMeal famMeal =  mealDB.getFamiliesCurrentMeal(year, fam.getID());
 			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fam.getDNSCode());
 			
-			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam,
+			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam, fh,
 													ServerRegionDB.getRegion(fam.getRegion()),
 													ServerGroupDB.getGroup(fam.getGroupID()).getName(),
 													adjustedAgeChildList, adultList, famAgent, famMeal, famDNSCode);
@@ -1472,31 +1082,32 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return null;
 	}
 	
-	ONCFamily getFamilyByMealID(int year, int mealID)
-	{
-		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
-		int index = 0;	
-		while(index < fAL.size() && fAL.get(index).getMealID() != mealID)
-			index++;
-		
-		if(index < fAL.size())
-			return fAL.get(index);
-		else
-			return null;
-	}
-	
+//	ONCFamily getFamilyByMealID(int year, int mealID)
+//	{
+//		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
+//		int index = 0;	
+//		while(index < fAL.size() && fAL.get(index).getMealID() != mealID)
+//			index++;
+//		
+//		if(index < fAL.size())
+//			return fAL.get(index);
+//		else
+//			return null;
+//	}
+/*	
 	void checkFamilyStatusOnSmsReceived(int year, ONCFamily fam, boolean bDeliveryTimeframe, boolean bConfirmingBody,
 										boolean bDecliningBody)
 	{
 		if(fam != null);
 		{
-			if(!(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed))
+			FamilyHistory lastHistoryObj = familyHistoryDB.getLastFamilyHistory(year, fam.getID());
+			if(!(bDeliveryTimeframe && lastHistoryObj.getFamilyStatus() == FamilyStatus.Confirmed))
 			{
 				//it's not around delivery day or the family wasn't already confirmed, 
 				//so we potentially want to change family status.
-				if(bConfirmingBody && (fam.getFamilyStatus() == FamilyStatus.Contacted ||
-										fam.getFamilyStatus() == FamilyStatus.Verified ||
-										 fam.getFamilyStatus() == FamilyStatus.Waitlist))
+				if(bConfirmingBody && (lastHistoryObj.getFamilyStatus() == FamilyStatus.Contacted ||
+										lastHistoryObj.getFamilyStatus() == FamilyStatus.Verified ||
+										 lastHistoryObj.getFamilyStatus() == FamilyStatus.Waitlist))
 				{
 					fam.setFamilyStatus(FamilyStatus.Confirmed);
 					familyDB.get(DBManager.offset(year)).setChanged(true);
@@ -1522,7 +1133,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		}
 	}
 
-	
+*/	
 	ONCFamily getFamilyByTargetID(int year, String targetID)	//Persistent onc id number string
 	{
 		//Verify targetID is numeric and convert to string
@@ -1559,7 +1170,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		else
 			return null;
 	}
-	
+/*	
 	void checkFamilyStatusOnSMSStatusCallback(int year, ONCSMS receivedSMS)
 	{
 		ONCFamily fam = getFamily(year, receivedSMS.getEntityID());
@@ -1596,64 +1207,44 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			}
 		}
 	}
-	
-	void checkFamilyGiftStatusAndGiftCardOnlyOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)
+*/	
+	void checkFamilyGiftCardOnlyOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)
 	{
 		int famID = childDB.getChildsFamilyID(year, addedGift.getChildID());
 		
 		ONCFamily fam = getFamily(year, famID);
-		
-	    //determine the proper family gift status for the family after adding the wish. If the
-		//family gifts have already been packaged, then don't perform the test
-	    FamilyGiftStatus newGiftStatus;
-	    if(fam.getGiftStatus().compareTo(FamilyGiftStatus.Packaged) < 0)
-	    	newGiftStatus = getLowestGiftStatus(year, famID);
-	    else
-	    	newGiftStatus = fam.getGiftStatus();
-	    
+
 	    //determine if the families gift card only status could change after adding the wish.
 	    int giftCardGiftID = globalDB.getGiftCardID(year);
 	    boolean bGCStatusCouldChange = giftCardGiftID > -1 && 
 	    									((priorGift != null && priorGift.getCatalogGiftID() == giftCardGiftID) || 
 	    									(addedGift.getCatalogGiftID() == giftCardGiftID));
 	    
-	    //if gift status has changed or the gift card only status has changed update the data base
-	    //and notify clients
-	    if(newGiftStatus != fam.getGiftStatus() || 
-	    		(bGCStatusCouldChange && isGiftCardOnlyFamily(year, famID) != fam.isGiftCardOnly()))
-	    {
-    		if(newGiftStatus != fam.getGiftStatus())
+    	if(bGCStatusCouldChange)
+    	{
+    		boolean bGiftCardOnlyFamilyNow = isGiftCardOnlyFamily(year, famID);
+    		if(fam.isGiftCardOnly() != bGiftCardOnlyFamilyNow)
     		{
-    			//create a family history change
-    			fam.setGiftStatus(newGiftStatus);
-    			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fam.getDNSCode());
-    			ONCFamilyHistory addedHistItem = addHistoryItem(year, fam.getID(), fam.getFamilyStatus(), newGiftStatus, 
-					null, famDNSCode.getID(), "Gift Status Change", fam.getChangedBy(), true);
-    			fam.setDeliveryID(addedHistItem.getID());
+    			fam.setGiftCardOnly(bGiftCardOnlyFamilyNow);
+    			familyDB.get(DBManager.offset(year)).setChanged(true);
+    			Gson gson = new Gson();
+        		String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+        		clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients	
     		}
-    	
-    		if(bGCStatusCouldChange)
-    			fam.setGiftCardOnly(isGiftCardOnlyFamily(year, famID));
-    	
-    		familyDB.get(DBManager.offset(year)).setChanged(true);
-    	
-    		Gson gson = new Gson();
-    		String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-    		clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 	    }
 	}
-	
-	ONCFamilyHistory addHistoryItem(int year, int famID, FamilyStatus fs, FamilyGiftStatus fgs, String driverID,
+/*	
+	FamilyHistory addHistoryItem(int year, int famID, FamilyStatus fs, FamilyGiftStatus fgs, String driverID,
 						int dnsCode, String reason, String changedBy, boolean bNotify)
 	{
-		ONCFamilyHistory reqFamHistObj = new ONCFamilyHistory(-1, famID, fs, fgs, driverID, reason,
+		FamilyHistory reqFamHistObj = new FamilyHistory(-1, famID, fs, fgs, driverID, reason,
 				 changedBy, System.currentTimeMillis(), dnsCode);
 		
-		ONCFamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, reqFamHistObj, bNotify);
+		FamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, reqFamHistObj, bNotify);
 		
 		return addedFamHistory;
 	}
-	
+*/	
 	/********
 	 * Whenever meal is added, the meal database notifies the family database to update
 	 * the id for the families meal and the meal status field.
@@ -1661,20 +1252,20 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	 * @param year
 	 * @param addedMeal
 	 */
-	void familyMealAdded(int year, ONCMeal addedMeal)
-	{
-		ONCFamily fam = getFamily(year, addedMeal.getFamilyID());
-		if(fam != null)
-		{
-			fam.setMealID(addedMeal.getID());
-			fam.setMealStatus(addedMeal.getStatus());
-			familyDB.get(DBManager.offset(year)).setChanged(true);
-			
-			Gson gson = new Gson();
-	    		String changeJson = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-	    		clientMgr.notifyAllInYearClients(year, changeJson);	//null to notify all clients
-		}
-	}
+//	void familyMealAdded(int year, ONCMeal addedMeal)
+//	{
+//		ONCFamily fam = getFamily(year, addedMeal.getFamilyID());
+//		if(fam != null)
+//		{
+//			fam.setMealID(addedMeal.getID());
+//			fam.setMealStatus(addedMeal.getStatus());
+//			familyDB.get(DBManager.offset(year)).setChanged(true);
+//			
+//			Gson gson = new Gson();
+//	    		String changeJson = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+//	    		clientMgr.notifyAllInYearClients(year, changeJson);	//null to notify all clients
+//		}
+//	}
 	
 	boolean isGiftCardOnlyFamily(int year, int famid)
 	{
@@ -1736,6 +1327,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	* The seven correspond to five family status choices. The method finds the lowest family
 	* status setting based on the children's wish status and returns it. 
 	**********************************************************************************************************/
+/*	
 	FamilyGiftStatus getLowestGiftStatus(int year, int famid)
 	{
 		//This matrix correlates a child wish status to the family status.
@@ -1789,16 +1381,17 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return FamilyGiftStatus.Requested;
 		}
 	}
-	
-	void updateFamilyHistory(int year, ONCFamilyHistory addedHistObj)
+*/	
+/*	
+	void updateFamilyHistory(int year, FamilyHistory addedHistObj)
 	{
 		//find the family
 		FamilyDBYear famDBYear = familyDB.get(DBManager.offset(year));
 		ONCFamily fam = getFamily(year, addedHistObj.getFamID());
 		
 		//update the delivery ID and delivery status
-		fam.setDeliveryID(addedHistObj.getID());
-		fam.setGiftStatus(addedHistObj.getGiftStatus());
+//		fam.setDeliveryID(addedHistObj.getID());
+		fam.setFamilyGiftStatus(addedHistObj.getGiftStatus());
 		famDBYear.setChanged(true);
 		
 		//notify in year clients of change
@@ -1806,7 +1399,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
     	String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
     	clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients	
 	}
-/*	
+	
 	void updateFamilyMeal(int year, ONCMeal addedMeal)
 	{
 		//try to find the family the meal belongs to. In order to add the meal, the family
@@ -1853,7 +1446,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				"Client Family", "First Name", "Last Name", "House #", "Street", "Unit #", "City", "Zip Code",
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
 				"ODB Details", "Children Names", "Schools", "ODB WishList", "Adopted For",
-				"Agent ID", "GroupID", "Delivery ID", "Meal ID", "Meal Status", "# of Bags", "# of Large Items", 
+				"Agent ID", "GroupID", "Delivery ID", "Phone Code", "# of Bags", "# of Large Items", 
 				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only", "Gift Distribution"};
 		
 		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
@@ -2269,30 +1862,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
     }
     
     int getDelAttemptedCounts(int year, String drvNum)
-    {
-    		//get family data base for the year
-    		ServerFamilyHistoryDB deliveryDB = null;
-    		try
-    		{
-    			deliveryDB = ServerFamilyHistoryDB.getInstance();
-    		} 
-    		catch (FileNotFoundException e1)
-    		{
-    			e1.printStackTrace();
-    		} 
-    		catch (IOException e1)
-    		{
-    			e1.printStackTrace();
-    		}
-    			
+    {			
     		int delCount = 0;
-    		for(ONCFamily f:familyDB.get(DBManager.offset(year)).getList())
+    		for(ONCFamily f : familyDB.get(DBManager.offset(year)).getList())
     		{
-    			if(f.getDeliveryID() > -1 && f.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0)
+    			FamilyHistory lastFamHistObj = familyHistoryDB.getLastFamilyHistory(year, f.getID());
+    			if(lastFamHistObj != null && lastFamHistObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0 &&
+    					lastFamHistObj.getdDelBy().equals(drvNum))
     			{
-    				//get delivery for family
-    				ONCFamilyHistory del = deliveryDB.getHistoryObject(year, f.getDeliveryID());
-    				if(del != null && del.getdDelBy().equals(drvNum))
     					delCount++;
     			}
     		}

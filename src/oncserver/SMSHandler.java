@@ -11,6 +11,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 
 import ourneighborschild.EntityType;
+import ourneighborschild.FamilyHistory;
 import ourneighborschild.FamilyStatus;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCSMS;
@@ -23,17 +24,14 @@ public class SMSHandler extends ONCWebpageHandler
 	private ServerInboundSMSDB inboundSMSDB;
 	private ServerSMSDB smsDB;
 	private ServerFamilyDB familyDB;
-//	private ServerGlobalVariableDB globalVarDB;
+	private ServerFamilyHistoryDB familyHistoryDB;
 	
 	public SMSHandler() throws FileNotFoundException, IOException
 	{
 		this.inboundSMSDB = ServerInboundSMSDB.getInstance();
 		this.smsDB = ServerSMSDB.getInstance();
 		this.familyDB = ServerFamilyDB.getInstance();
-//		this.globalVarDB = ServerGlobalVariableDB.getInstance();
-//		this.partnerDB = ServerPartnerDB.getInstance();
-		
-//		simulateSMSReceive();
+		this.familyHistoryDB = ServerFamilyHistoryDB.getInstance();
 	}
 	
 	public void handle(HttpExchange te) throws IOException 
@@ -85,15 +83,15 @@ public class SMSHandler extends ONCWebpageHandler
 	
 			//search the familyDB for the incoming phone number
 			ONCFamily fam = familyDB.getFamilyBySMS(DBManager.getCurrentSeason(), rec_SMS);
+			FamilyHistory lastFamHistory = familyHistoryDB.getLastFamilyHistory(DBManager.getCurrentSeason(), fam.getID());
 
 			if(fam != null)
 			{
 				id = fam.getID();
 				type = EntityType.FAMILY;
 				name = fam.getFirstName() + " " + fam.getLastName();
-//				String zDeliveryDate = globalVarDB.getDeliveryDayOfMonth(DBManager.getCurrentSeason(),  fam.getLanguage());
-				
-				if(bDeliveryTimeframe && fam.getFamilyStatus() == FamilyStatus.Confirmed)
+		
+				if(bDeliveryTimeframe && lastFamHistory.getFamilyStatus() == FamilyStatus.Confirmed)
 					replyContent = String.format("%s, our automated messaging system is not monitored and not able to process your response. Thank you.", name);
 				else if(bConfirmingBody)
 					replyContent = String.format("%s, thank you for your response", name);
@@ -102,20 +100,9 @@ public class SMSHandler extends ONCWebpageHandler
 				else
 					replyContent = "Thank you for your response";
 				
-				familyDB.checkFamilyStatusOnSmsReceived(DBManager.getCurrentSeason(), fam, bDeliveryTimeframe,
+				familyHistoryDB.checkFamilyStatusOnSmsReceived(DBManager.getCurrentSeason(), fam, bDeliveryTimeframe,
 														bConfirmingBody, bDecliningBody);
 			}
-//			else
-//			{
-//				//search partner DB
-//				ONCPartner partner = partnerDB.getPartnerByPhoneNumber(DBManager.getCurrentSeason(), rec_SMS.getFrom().substring(2));
-//				if(partner != null)
-//				{
-//					id = partner.getID();
-//					type = EntityType.PARTNER;
-//					name = partner.getLastName();
-//				}
-//			}
 			
 			//add the received message to the SMS DB
 			ONCSMS sms = new ONCSMS(-1,messageID, type, id, rec_SMS.getFrom(), SMSDirection.INBOUND, body, status);

@@ -14,13 +14,15 @@ import java.util.UUID;
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.DNSCode;
+import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.GiftDistribution;
 import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCFamily;
-import ourneighborschild.ONCFamilyHistory;
+import ourneighborschild.FamilyHistory;
+import ourneighborschild.FamilyStatus;
 import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.Transportation;
@@ -268,8 +270,8 @@ public class FamilyHandler extends ONCWebpageHandler
 				//process the request
 				int year = Integer.parseInt((String) params.get("year"));
 
-				ServerFamilyDB familyDB = ServerFamilyDB.getInstance();
-				List<String> jsonResponseList = familyDB.updateListOfFamilies(params, wc.getWebUser());
+				ServerFamilyHistoryDB familyHistoryDB = ServerFamilyHistoryDB.getInstance();
+				List<String> jsonResponseList = familyHistoryDB.updateListOfFamilies(params, wc.getWebUser());
 				
 				ResponseCode frc;
 				if(!jsonResponseList.isEmpty())
@@ -380,10 +382,11 @@ public class FamilyHandler extends ONCWebpageHandler
 					int famID = Integer.parseInt((String) params.get("famid"));
 					String refNum = (String) params.get("refnum");
 					
-					ONCFamily family = ServerFamilyDB.getFamilyByReference(year,famID,refNum); 
-			
+					ONCFamily family = ServerFamilyDB.getFamilyByReference(year,famID,refNum);
+
 					if(family != null)
 					{
+						FamilyHistory famHist = ServerFamilyHistoryDB.getInstance().getLastFamilyHistory(year, famID);
 						line1 = String.format("Family #: %s", family.getONCNum());
 						line2 = String.format("Head of Household: %s %s",family.getFirstName(), family.getLastName());
 						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", line1);
@@ -392,7 +395,7 @@ public class FamilyHandler extends ONCWebpageHandler
 						//add the hidden input content
 						response = response.replace("SEASON", (String) params.get("year"));
 						response = response.replace("TARGETID", Integer.toString(family.getID()));
-						response = response.replace("GIFT_STATUS", family.getGiftStatus().toString());
+						response = response.replace("GIFT_STATUS", famHist.getGiftStatus().toString());
 					}
 					else
 						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERROR: Unable to locate family record");
@@ -509,6 +512,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		//return the appropriate success message. If it's not the last family, process it.
 		if(!lastReferralUUIDAccepted.equals(familyMap.get("uuid")))
 		{
+/*			
 			//create a meal request, if meal was requested
 			ONCMeal mealReq = null, addedMeal = null;
 			String[] mealKeys = {"mealtype", "dietres"};
@@ -546,7 +550,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					}
 				}
 			}
-			
+*/			
 			//check to see if this is a new family or a re-referral. Need to know this to determine 
 			//whether to perform a prior year check after the family and children objects are created
 			boolean bNewFamily = familyMap.get("targetid").contains("NNA") || familyMap.get("targetid").equals("");
@@ -572,8 +576,8 @@ public class FamilyHandler extends ONCWebpageHandler
 									    timeNow < globalDB.getDeadlineMillis(year, "Waitlist Gift");
 			
 			//determine if this is a food only request
-			boolean bFoodOnly = timeNow < globalDB.getDeadlineMillis(year, "December Meal") && 
-					 addedMeal != null && 
+			boolean bFoodOnly = timeNow < globalDB.getDeadlineMillis(year, "December Meal") &&
+					params.containsKey("mealtype") && !params.get("mealtype").equals("No Assistance Rqrd") && 
 					  (!params.containsKey(GIFTS_REQUESTED_KEY) ||
 					  params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("off"));
 			
@@ -597,8 +601,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
 					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
 					createWishList(params, numWishes), agent.getID(), group, 
-					addedMeal != null ? addedMeal.getID() : -1,
-					addedMeal != null ? MealStatus.Requested : MealStatus.None,
+					0,	//phone code
 					Transportation.valueOf(familyMap.get("transportation")),
 					GiftDistribution.valueOf(familyMap.get("distpref")));
 		
@@ -611,26 +614,56 @@ public class FamilyHandler extends ONCWebpageHandler
 				
 				//add the family history object and update the family history object id
 				DNSCode famDNSCode = dnsCodeDB.getDNSCode(addedFamily.getDNSCode());
-				ONCFamilyHistory famHistory = new ONCFamilyHistory(-1, addedFamily.getID(), 
-															addedFamily.getFamilyStatus(),
-															addedFamily.getGiftStatus(),
+				boolean bGiftsRequested = params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on");
+				FamilyHistory famHistory = new FamilyHistory(-1, addedFamily.getID(), 
+															FamilyStatus.Unverified,
+															bGiftsRequested ? FamilyGiftStatus.Requested : FamilyGiftStatus.NotRequested,
 															"", "Family Referred", 
 															addedFamily.getChangedBy(), 
 															System.currentTimeMillis(),
 															famDNSCode.getID());
 		
-				ONCFamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, false);
-				if(addedFamHistory != null)
-					addedFamily.setDeliveryID(addedFamHistory.getID());
+				FamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, wc.getWebUser(), false);
 		
 				List<ONCChild> addedChildList = new ArrayList<ONCChild>();
 				List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
 		
-				//update the family id for the meal, if a meal was requested
-				if(addedMeal != null)
+				//create a meal request, if meal was requested
+				ONCMeal mealReq = null, addedMeal = null;
+				String[] mealKeys = {"mealtype", "dietres"};
+			
+				if(params.containsKey("mealtype"))
 				{
-					addedMeal.setFamilyID(addedFamily.getID());
-					mealDB.update(year, addedMeal);
+					Map<String, String> mealMap = createMap(params, mealKeys);
+					String dietRestrictions = "";
+					
+					//check to see that the meal was a valid request. If no meal is requested, the mealtype is
+					//"No Assistance Rqrd". If past a deadline, the mealtype is "Unavailable"
+					if(!mealMap.get("mealtype").equals("No Assistance Rqrd") && 
+						!mealMap.get("mealtype").equals("Unavailable"))
+					{
+						if(mealMap.containsKey("dietres"))
+							dietRestrictions = mealMap.get("dietres");
+						
+						//check to see that we have a valid meal type
+						try
+						{
+							MealType reqMealType = MealType.valueOf(mealMap.get("mealtype"));
+							mealReq = new ONCMeal(-1, -1, MealStatus.Requested, reqMealType,
+									dietRestrictions, -1, wc.getWebUser().getLNFI(), System.currentTimeMillis(), 3,
+									"Family Referred", wc.getWebUser().getLNFI());
+				
+							addedMeal = mealDB.add(year, mealReq);
+						}
+						catch (IllegalArgumentException iae)
+						{
+							ServerUI.addLogMessage("Invalid MealType referred");
+						}
+						catch (NullPointerException npe)
+						{
+							ServerUI.addLogMessage("Invalid MealType: MealType or name is null");
+						}
+					}
 				}
 			
 				//create the children for the family
@@ -780,7 +813,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					mssgList.add("ADDED_ADULT" + gson.toJson(addedAdult, ONCAdult.class));
 		
 				if(addedFamHistory != null)
-					mssgList.add("ADDED_DELIVERY" + gson.toJson(addedFamHistory, ONCFamilyHistory.class));
+					mssgList.add("ADDED_DELIVERY" + gson.toJson(addedFamHistory, FamilyHistory.class));
 				
 				if(addedMeal != null)
 					mssgList.add("ADDED_MEAL" + gson.toJson(addedMeal, ONCMeal.class));

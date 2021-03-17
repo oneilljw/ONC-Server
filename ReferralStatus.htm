@@ -238,7 +238,12 @@
 				  width: '80px',
 				  render: function (data, type, row)
 				  {
-					  return (data === 'Referred') ? data + ' &#x2713;' : data;
+				  	if(data === 'Referred')
+						return data + ' &#x2713;';
+					else if(data === 'None')
+						return 'Not Requested';
+					else 
+						return data;
 				  },
 				  className: 'dt-body-center'
 				},

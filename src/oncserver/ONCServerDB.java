@@ -33,11 +33,14 @@ public abstract class ONCServerDB
 	    		CSVWriter writer = new CSVWriter(new FileWriter(path));
 	    		writer.writeNext(header);
 	    	 
-	    		for(int index=0; index < list.size(); index++)
-	    		{
-	    			ONCObject oncObj = (ONCObject)list.get(index);
-	    			writer.writeNext(oncObj.getExportRow());	//Get ONCObject row
-	    		}
+//	    		for(int index=0; index < list.size(); index++)
+//	    		{
+//	    			ONCObject oncObj = (ONCObject)list.get(index);
+//	    			writer.writeNext(oncObj.getExportRow());	//Get ONCObject row
+//	    		}
+	    		
+	    		for(ONCObject o : list)
+	    			writer.writeNext(o.getExportRow());	//Get ONCObject row
 	    		
 	    		writer.close();
 	    	
@@ -76,11 +79,13 @@ public abstract class ONCServerDB
 			return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
 	}
 	
-	Long parseSciNotationToLong(String input)
+	long parseSciNotationToLong(String input)
 	{
 		//determine if the input string is in scientific notation or not
 		if(input.indexOf('E') > -1)
 			return Long.parseLong(String.format("%.0f", Double.parseDouble(input)));
+		else if(input.indexOf('.') > 1)
+			return Long.parseLong(input.substring(0, input.indexOf('.')));
 		else
 			return Long.parseLong(input);
 	}

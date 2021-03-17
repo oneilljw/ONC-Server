@@ -24,6 +24,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 
 	private static List<ChildGiftDBYear> childGiftDB;
 	private ServerFamilyDB familyDB;
+	private ServerFamilyHistoryDB familyHistoryDB;
 	private ServerChildDB childDB; //Reference used to update ChildGiftID's 
 	private ServerPartnerDB serverPartnerDB;
 	
@@ -51,6 +52,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		}
 
 		familyDB = ServerFamilyDB.getInstance();
+		familyHistoryDB = ServerFamilyHistoryDB.getInstance();
 		childDB = ServerChildDB.getInstance();
 		serverPartnerDB = ServerPartnerDB.getInstance();
 	}
@@ -355,7 +357,10 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	{
 		//ask the family data base to check to see if the new gift changes either the family gift status or
 		//now qualifies the family as a gift card only family
-		familyDB.checkFamilyGiftStatusAndGiftCardOnlyOnGiftAdded(year, priorGift, addedGift);
+		familyDB.checkFamilyGiftCardOnlyOnGiftAdded(year, priorGift, addedGift);
+		
+		int famID = childDB.getChildsFamilyID(year, addedGift.getChildID());
+		familyHistoryDB.checkFamilyGiftStatusOnGiftAdded(year, priorGift, addedGift, famID);
 		
 		//test to see if gift assignee is changing, if the prior gift exists	
 		if(priorGift != null && priorGift.getPartnerID() != addedGift.getPartnerID())

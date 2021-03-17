@@ -282,7 +282,7 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
 			{
 				int year = Integer.parseInt((String) params.get("year"));
-    			String targetID = (String) params.get("mealid");
+    			String targetID = (String) params.get("famid");
 				htmlResponse = ServerMealDB.getMealJSONP(year, targetID, (String) params.get("callback"));
 			}
 			else

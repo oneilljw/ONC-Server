@@ -4,13 +4,25 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import ourneighborschild.DNSCode;
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.HistoryRequest;
-import ourneighborschild.ONCFamilyHistory;
+import ourneighborschild.ONCChild;
+import ourneighborschild.ONCChildGift;
+import ourneighborschild.FamilyHistory;
+import ourneighborschild.FamilyStatus;
+import ourneighborschild.GiftStatus;
 import ourneighborschild.ONCUser;
+import ourneighborschild.SMSStatus;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCSMS;
+import ourneighborschild.ONCServerUser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -20,7 +32,11 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	private static final int FAMILY_HISTORY_DB_HEADER_LENGTH = 9;
 
 	private static List<FamilyHistoryDBYear> famHistDB;
+	private static ServerGlobalVariableDB globalDB;
 	private static ServerFamilyHistoryDB instance = null;
+	private static FamilyHistoryTimestampComparator familyHistoryTimestampComparator;
+	
+	private static ClientManager clientMgr;
 	
 	private ServerFamilyHistoryDB() throws FileNotFoundException, IOException
 	{
@@ -31,10 +47,10 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		for(int year = DBManager.getBaseSeason(); year <DBManager.getBaseSeason() + DBManager.getNumberOfYears(); year++)
 		{
 			//create the family history list for each year
-			FamilyHistoryDBYear delDBYear = new FamilyHistoryDBYear(year);
+			FamilyHistoryDBYear fhDBYear = new FamilyHistoryDBYear(year);
 							
 			//add the list of children for the year to the db
-			famHistDB.add(delDBYear);
+			famHistDB.add(fhDBYear);
 							
 			//import the children from persistent store
 			importDB(year, String.format("%s/%dDB/FamilyHistoryDB.csv",
@@ -42,7 +58,16 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 						year), "Delivery DB", FAMILY_HISTORY_DB_HEADER_LENGTH);
 							
 			//set the next id
-			delDBYear.setNextID(getNextID(delDBYear.getList()));
+			fhDBYear.setNextID(getNextID(fhDBYear.getList()));
+			
+			//initialize reference to client manager
+			clientMgr = ClientManager.getInstance();
+			
+			//reference to global variables
+			globalDB = ServerGlobalVariableDB.getInstance();
+			
+			//create a time stamp comparator
+			familyHistoryTimestampComparator = new FamilyHistoryTimestampComparator();
 		}
 	}
 	
@@ -53,28 +78,35 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		
 		return instance;
 	}
-	
+/*	
 	//Search the database for the family. Return a json if the family is found. 
 	String getFamilyHistory(int year)
 	{
 		Gson gson = new Gson();
-		Type listtype = new TypeToken<ArrayList<ONCFamilyHistory>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<FamilyHistory>>(){}.getType();
 			
 		String response = gson.toJson(famHistDB.get(DBManager.offset(year)).getList(), listtype);
 		return response;	
 	}
-	
-	ONCFamilyHistory getLastFamilyHistory(int year, int famID)
+*/	
+	String getFamilyHistories(int year)
 	{
-		ONCFamilyHistory latestFamilyHistoryObj = null;
+		Gson gson = new Gson();
+		Type mapOfFamilyHistories = new TypeToken<HashMap<Integer,List<FamilyHistory>>>(){}.getType();
+		return gson.toJson(famHistDB.get(DBManager.offset(year)).getMap(), mapOfFamilyHistories);	
+	}
+/*	
+	FamilyHistory getLastFamilyHistory(int year, int famID)
+	{
+		FamilyHistory latestFamilyHistoryObj = null;
 		
 		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
-		for(ONCFamilyHistory fhObj : histDBYear.getList())
+		for(FamilyHistory fhObj : histDBYear.getList())
 		{
 			if(fhObj.getFamID() == famID)
 			{
 				if(latestFamilyHistoryObj == null ||
-				    fhObj.getDateChanged().after(latestFamilyHistoryObj.getDateChanged()))
+				    fhObj.getTimestamp() > latestFamilyHistoryObj.getTimestamp())
 				{
 					latestFamilyHistoryObj = fhObj;
 				}
@@ -83,18 +115,59 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		
 		return latestFamilyHistoryObj;
 	}
-
-	@Override
+*/
+	
+	static FamilyHistory getCurrentFamilyHistory(int year, int famID)
+	{
+		List<FamilyHistory> familyHistoryList = famHistDB.get(DBManager.offset(year)).getFamilyHistoryList(famID);
+		if(familyHistoryList != null && !familyHistoryList.isEmpty())
+		{
+			if(familyHistoryList.size() == 1)
+				return familyHistoryList.get(0);
+			else
+			{
+				Collections.sort(familyHistoryList, familyHistoryTimestampComparator);
+				return familyHistoryList.get(familyHistoryList.size()-1);
+			}
+		}
+		else
+			return null;
+	}
+	
+	FamilyHistory getLastFamilyHistory(int year, int famID)
+	{
+		List<FamilyHistory> familyHistoryList = famHistDB.get(DBManager.offset(year)).getFamilyHistoryList(famID);
+		if(familyHistoryList != null && !familyHistoryList.isEmpty())
+		{
+			if(familyHistoryList.size() == 1)
+				return familyHistoryList.get(0);
+			else
+			{
+				Collections.sort(familyHistoryList, familyHistoryTimestampComparator);
+				return familyHistoryList.get(familyHistoryList.size()-1);
+			}
+		}
+		else
+			return null;
+	}
+	
+	@Override 
 	String add(int year, String json, ONCUser client)
 	{
 		//Create a history object for the new delivery
 		Gson gson = new Gson();
-		ONCFamilyHistory addedHistoryObj = gson.fromJson(json, ONCFamilyHistory.class);
+		FamilyHistory addedHistoryObj = gson.fromJson(json, FamilyHistory.class);
 		
+		return add(year, addedHistoryObj, client);
+	}
+
+	String add(int year, FamilyHistory addedHistoryObj, ONCUser client)
+	{
 		//add the new object to the data base
 		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
 		addedHistoryObj.setID(histDBYear.getNextID());
 		addedHistoryObj.setDateChanged(System.currentTimeMillis());
+		addedHistoryObj.setChangedBy(client.getLNFI());
 		
 		//If requested delivered by field is null or the requested family gift status is Delivered,
 		//Attempted or Counselor Pickup, retain the assignee
@@ -102,10 +175,13 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Attempted ||
 			 addedHistoryObj.getGiftStatus() == FamilyGiftStatus.CounselorPickUp)
 		{
-			ONCFamilyHistory latestFHObj = getLastFamilyHistory(year, addedHistoryObj.getFamID());
+			FamilyHistory latestFHObj = getLastFamilyHistory(year, addedHistoryObj.getFamID());
 			if(latestFHObj != null)
-				addedHistoryObj.setdDelBy(latestFHObj.getdDelBy());
+				addedHistoryObj.setDeliveredBy(latestFHObj.getdDelBy());
 		}
+		
+		//get the prior family history object before adding the new one
+		FamilyHistory priorHistoryObj = getHistoryObject(year, addedHistoryObj.getFamID());
 		
 		//add the item to the proper year's list and mark the list as changed
 		histDBYear.add(addedHistoryObj);
@@ -113,14 +189,10 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		
 		//notify the corresponding family that delivery has changed and
 		//check to see if new delivery assigned or removed a delivery from a driver
-		ServerFamilyDB serverFamilyDB = null;
 		ServerVolunteerDB volunteerDB = null;
 		try 
 		{
-			serverFamilyDB = ServerFamilyDB.getInstance();
-			volunteerDB = ServerVolunteerDB.getInstance();
-			
-			
+			volunteerDB = ServerVolunteerDB.getInstance();	
 		} catch (FileNotFoundException e) 
 		{
 			// TODO Auto-generated catch block
@@ -132,8 +204,8 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		}
 		
 		//get prior delivery for this family
-		ONCFamily fam = serverFamilyDB.getFamily(year, addedHistoryObj.getFamID());
-		ONCFamilyHistory priorHistoryObj = getHistoryObject(year, fam.getDeliveryID());
+//		ONCFamily fam = serverFamilyDB.getFamily(year, addedHistoryObj.getFamID());
+//		FamilyHistory priorHistoryObj = getHistoryObject(year, fam.getDeliveryID());
 		
 		//if there was a prior history and the gift status was associated with a delivery, update the 
 		//status and counts
@@ -161,12 +233,39 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			}
 		}
 		
-		//Update the family object with new delivery
-		if(serverFamilyDB != null)
-			serverFamilyDB.updateFamilyHistory(year, addedHistoryObj);
-					
-		return "ADDED_DELIVERY" + gson.toJson(addedHistoryObj, ONCFamilyHistory.class);
+//		//Update the family object with new delivery
+//		if(serverFamilyDB != null)
+//			serverFamilyDB.updateFamilyHistory(year, addedHistoryObj);
+		
+		Gson gson = new Gson();
+		return "ADDED_DELIVERY" + gson.toJson(addedHistoryObj, FamilyHistory.class);
 	}
+	
+	String addFamilyHistoryList(int year, String historyGroupJson, ONCUser client)
+	{
+		ClientManager clientMgr = ClientManager.getInstance();
+		
+		//un-bundle to list of ONCFamilyHistory objects
+		Gson gson = new Gson();
+		Type listOfHistoryObjects = new TypeToken<ArrayList<FamilyHistory>>(){}.getType();
+		List<FamilyHistory> famHistoryList = gson.fromJson(historyGroupJson, listOfHistoryObjects);
+		
+		//create a list of response strings to send to clients
+		List<String> responseList = new ArrayList<String>();
+		
+		//for each history object in the list, add it to the history database 		
+		for(FamilyHistory addFamHistReq : famHistoryList)
+			responseList.add(add(year, addFamHistReq, client));
+		
+		if(responseList.isEmpty())
+		{
+			clientMgr.notifyAllInYearClients(year, responseList);
+			return "ADDED_FAMILY_HISTORY_GROUP";
+		}
+		else
+			return "ADD_FAMILY_HISTORY_GROUP_FAILED";
+	}
+	
 /*	
 	//used when adding processing automated call results
 	String add(int year, ONCFamilyHistory addedHisoryObj)
@@ -253,7 +352,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		return "ADDED_GROUP_DELIVERIES";
 	}
 */	
-	ONCFamilyHistory addFamilyHistoryObject(int year, ONCFamilyHistory addedFamHistObj, boolean bNotify)
+	FamilyHistory addFamilyHistoryObject(int year, FamilyHistory addedFamHistObj, ONCUser user, boolean bNotify)
 	{
 		ClientManager clientMgr = ClientManager.getInstance();
 		
@@ -262,6 +361,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		
 		addedFamHistObj.setID(histDBYear.getNextID());
 		addedFamHistObj.setDateChanged(System.currentTimeMillis());
+		addedFamHistObj.setChangedBy(user.getLNFI());
 		
 		if(addedFamHistObj.getdDelBy() == null || 
 			addedFamHistObj.getGiftStatus() == FamilyGiftStatus.Delivered || 
@@ -269,9 +369,9 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			  addedFamHistObj.getGiftStatus() == FamilyGiftStatus.CounselorPickUp)
 		{
 			//find the last object, there has to be one for the status > Assigned
-			ONCFamilyHistory latestFHObj = getLastFamilyHistory(year, addedFamHistObj.getFamID());
+			FamilyHistory latestFHObj = getLastFamilyHistory(year, addedFamHistObj.getFamID());
 			if(latestFHObj != null)
-				addedFamHistObj.setdDelBy(latestFHObj.getdDelBy());
+				addedFamHistObj.setDeliveredBy(latestFHObj.getdDelBy());
 		}
 		
 		histDBYear.add(addedFamHistObj);
@@ -280,15 +380,15 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		if(bNotify)
 		{	
 			Gson gson = new Gson();
-			clientMgr.notifyAllInYearClients(year, "ADDED_DELIVERY"+ gson.toJson(addedFamHistObj, ONCFamilyHistory.class));
+			clientMgr.notifyAllInYearClients(year, "ADDED_DELIVERY"+ gson.toJson(addedFamHistObj, FamilyHistory.class));
 		}
 		
 		return addedFamHistObj;
 	}
 	
-	ONCFamilyHistory getHistoryObject(int year, int histID)
+	FamilyHistory getHistoryObject(int year, int histID)
 	{
-		List<ONCFamilyHistory> histAL = famHistDB.get(DBManager.offset(year)).getList();
+		List<FamilyHistory> histAL = famHistDB.get(DBManager.offset(year)).getList();
 		int index = 0;	
 		while(index < histAL.size() && histAL.get(index).getID() != histID)
 			index++;
@@ -303,11 +403,11 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	{
 		//Create an object for the updated family history
 		Gson gson = new Gson();
-		ONCFamilyHistory updatedHistory = gson.fromJson(json, ONCFamilyHistory.class);
+		FamilyHistory updatedHistory = gson.fromJson(json, FamilyHistory.class);
 		
 		//Find the position for the current object being replaced
 		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
-		List<ONCFamilyHistory> histAL = histDBYear.getList();
+		List<FamilyHistory> histAL = histDBYear.getList();
 		int index = 0;
 		while(index < histAL.size() && histAL.get(index).getID() != updatedHistory.getID())
 			index++;
@@ -317,10 +417,84 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		{
 			histAL.set(index, updatedHistory);
 			histDBYear.setChanged(true);
-			return "UPDATED_DELIVERY" + gson.toJson(updatedHistory, ONCFamilyHistory.class);
+			return "UPDATED_DELIVERY" + gson.toJson(updatedHistory, FamilyHistory.class);
 		}
 		else
 			return "UPDATE_FAILED";
+	}
+	
+	List<String> updateListOfFamilies(Map<String, Object> params, ONCServerUser client)
+	{
+		//process the request
+		int year = Integer.parseInt((String) params.get("year"));
+		
+		//get the list of family id's the web client requested to update
+		List<Integer> famIDList = new ArrayList<Integer>();
+		int index = 0;
+		while(params.containsKey("famid" + Integer.toString(index)))
+		{
+			String zID = (String) params.get("famid" + Integer.toString(index++));
+			famIDList.add(Integer.parseInt(zID));
+		}
+		
+		Gson gson = new Gson();
+		List<String> responseJsonList = new ArrayList<String>();
+		
+		//retrieve the family data base for the year
+		FamilyHistoryDBYear famHistDBYear = famHistDB.get(DBManager.offset(year));
+			
+		for(Integer famID : famIDList)
+		{
+			FamilyHistory currHistoryObj = getLastFamilyHistory(year, famID);
+			FamilyHistory addedHistoryObj = new FamilyHistory(currHistoryObj);
+			
+			addedHistoryObj.setDateChanged(System.currentTimeMillis());
+			addedHistoryObj.setChangedBy(client.getLNFI());
+			
+			//try to set the new DNS Code if it was requested by the web client
+			if(params.containsKey("dnschangeselect"))
+			{
+				String zDNSCode = (String) params.get("dnschangeselect");
+				if(isNumeric(zDNSCode))
+				{
+					int dnsCode = Integer.parseInt(zDNSCode);
+					if(dnsCode > -2)
+					{	
+						addedHistoryObj.setDNSCode(dnsCode);
+						addedHistoryObj.setdNotes("DNS Code Change");
+					}
+				}
+			}
+			
+			//set the new family status if the fam status key was sent from web page
+			if(params.containsKey("famstatuschangeselect"))
+			{
+				String updatedFamStatus = (String) params.get("famstatuschangeselect");
+				if(!updatedFamStatus.contentEquals("No_Change"))
+				{
+					addedHistoryObj.setFamilyStatus(FamilyStatus.valueOf(updatedFamStatus));
+					addedHistoryObj.setdNotes("Status Change");
+				}
+			}
+			
+			//set the new family gift status if the fam gift status key was sent from web page
+			if(params.containsKey("giftstatuschangeselect"))
+			{
+				String updatedFamGiftStatus = (String) params.get("giftstatuschangeselect");
+				if(!updatedFamGiftStatus.contentEquals("No_Change"))
+				{
+					addedHistoryObj.setFamilyGiftStatus(FamilyGiftStatus.valueOf(updatedFamGiftStatus));
+					addedHistoryObj.setdNotes("Status Change");
+				}
+			}
+				
+			famHistDBYear.add(addedHistoryObj);
+			famHistDBYear.setChanged(true);
+
+			responseJsonList.add("ADDED_DELIVERY" + gson.toJson(addedHistoryObj, FamilyHistory.class));
+		}
+		
+		return responseJsonList;
 	}
 	
 	//Search the database for the family history. Return a json of List<ONCDelivery>
@@ -330,29 +504,234 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		Gson gson = new Gson();
 		HistoryRequest histReq = gson.fromJson(reqjson, HistoryRequest.class);
 			
-		List<ONCFamilyHistory> famHistory = new ArrayList<ONCFamilyHistory>();
-		List<ONCFamilyHistory> famHistAL = famHistDB.get(DBManager.offset(year)).getList();
+		List<FamilyHistory> famHistory = new ArrayList<FamilyHistory>();
+		List<FamilyHistory> famHistAL = famHistDB.get(DBManager.offset(year)).getList();
 			
 		//Search for deliveries that match the delivery Family ID
-		for(ONCFamilyHistory fh:famHistAL)
+		for(FamilyHistory fh:famHistAL)
 			if(fh.getFamID() == histReq.getID())
 				famHistory.add(fh);
 			
 		//Convert list to json and return it
-		Type listtype = new TypeToken<ArrayList<ONCFamilyHistory>>(){}.getType();
+		Type listtype = new TypeToken<ArrayList<FamilyHistory>>(){}.getType();
 			
 		String response = gson.toJson(famHistory, listtype);
 		return response;
 	}
 	
+	void checkFamilyGiftStatusOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift, int famID)
+	{
+		FamilyHistory fh = getLastFamilyHistory(year,  famID);
+		
+	    //determine the proper family gift status for the family after adding the wish. If the
+		//family gifts have already been packaged, then don't perform the test
+	    FamilyGiftStatus newGiftStatus;
+	    if(fh.getGiftStatus().compareTo(FamilyGiftStatus.Packaged) < 0)
+	    	newGiftStatus = getLowestGiftStatus(year, famID);
+	    else
+	    	newGiftStatus = fh.getGiftStatus();
+	    
+	    
+    	if(newGiftStatus != fh.getGiftStatus())
+    	{
+    		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
+    		
+    		//add a new family history with gift status change
+    		FamilyHistory addedHistoryObj = new FamilyHistory(fh);
+    		addedHistoryObj.setID(histDBYear.getNextID());
+    		addedHistoryObj.setDateChanged(System.currentTimeMillis());
+    	
+    		Gson gson = new Gson();
+    		String change = "ADDED_DELIVERY" + gson.toJson(addedHistoryObj, FamilyHistory.class);
+    		clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+	    }
+	}
+	
+	/*************************************************************************************************************
+	* This method is called when a child's wish status changes due to a user change. The method
+	* implements a set of rules that returns the family status when all children in the family
+	* wishes/gifts attain a certain status. For example, when all children's gifts are selected,
+	* the returned family status is FAMILY_STATUS_GIFTS_SELECTED. A matrix that correlates child
+	* gift status to family status is used. There are 7 possible setting for child wish status.
+	* The seven correspond to five family status choices. The method finds the lowest family
+	* status setting based on the children's wish status and returns it. 
+	**********************************************************************************************************/
+	FamilyGiftStatus getLowestGiftStatus(int year, int famid)
+	{
+		//This matrix correlates a child wish status to the family status.
+		FamilyGiftStatus[] wishstatusmatrix = {FamilyGiftStatus.Requested,	//WishStatus Index = 0;
+								FamilyGiftStatus.Requested,	//WishStatus Index = 1;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 2;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 3;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 4;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 5;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 6;
+								FamilyGiftStatus.Received,	//WishStatus Index = 7;
+								FamilyGiftStatus.Received,	//WishStatus Index = 8;
+								FamilyGiftStatus.Selected,	//WishStatus Index = 9;
+								FamilyGiftStatus.Verified};	//WishStatus Index = 10;
+			
+		//Check for all gifts selected
+		FamilyGiftStatus lowestfamstatus = FamilyGiftStatus.Verified;
+		
+		ServerChildGiftDB childGiftDB = null;
+		ServerChildDB childDB = null; 
+		try 
+		{
+			childGiftDB = ServerChildGiftDB.getInstance();
+			childDB = ServerChildDB.getInstance();
+			int numGiftsPerChild = globalDB.getServerGlobalVariables(year).getNumberOfGiftsPerChild();
+			
+			for(ONCChild c : childDB.getChildList(year, famid))
+			{
+//				for(int wn=0; wn< NUMBER_OF_WISHES_PER_CHILD; wn++)
+				for(int wn=0; wn < numGiftsPerChild; wn++)	
+				{
+					ONCChildGift cw = childGiftDB.getCurrentChildGift(year, c.getID(), wn);
+					
+					//if cw is null, it means that the wish doesn't exist yet. If that's the case, 
+					//set the status to the lowest status possible as if the wish existed
+					GiftStatus childwishstatus = GiftStatus.Not_Selected;	//Lowest possible child wish status
+					if(cw != null)
+						childwishstatus = cw.getGiftStatus();
+						
+					if(wishstatusmatrix[childwishstatus.statusIndex()].compareTo(lowestfamstatus) < 0)
+						lowestfamstatus = wishstatusmatrix[childwishstatus.statusIndex()];
+				}
+			}
+				
+			return lowestfamstatus;
+		} 
+		catch (FileNotFoundException e) 
+		{
+			return FamilyGiftStatus.Requested;
+		} 
+		catch (IOException e) 
+		{
+			return FamilyGiftStatus.Requested;
+		}
+	}
+	
+	void checkFamilyStatusOnSmsReceived(int year, ONCFamily fam, boolean bDeliveryTimeframe, boolean bConfirmingBody,
+			boolean bDecliningBody)
+	{
+		if(fam != null);
+		{
+			FamilyHistory lastHistoryObj = getLastFamilyHistory(year, fam.getID());
+			FamilyHistory updatedHistoryObj = new FamilyHistory(lastHistoryObj);
+			
+			if(!(bDeliveryTimeframe && lastHistoryObj.getFamilyStatus() == FamilyStatus.Confirmed))
+			{
+				//it's not around delivery day or the family wasn't already confirmed, 
+				//so we potentially want to change family status.
+				if(bConfirmingBody && (lastHistoryObj.getFamilyStatus() == FamilyStatus.Contacted ||
+							lastHistoryObj.getFamilyStatus() == FamilyStatus.Verified ||
+							 lastHistoryObj.getFamilyStatus() == FamilyStatus.Waitlist))
+				{
+					updatedHistoryObj.setFamilyStatus(FamilyStatus.Confirmed);
+					FamilyHistoryDBYear fhDBYear = famHistDB.get(DBManager.offset(year));
+					fhDBYear.add(updatedHistoryObj);
+					fhDBYear.setChanged(true);
+					
+					//notify all in-year clients of the status change
+					Gson gson = new Gson();
+					String change = "UPDATED_DELIVERY" + gson.toJson(updatedHistoryObj, FamilyHistory.class);
+					clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+				}
+				else if(bDecliningBody && (lastHistoryObj.getFamilyStatus() == FamilyStatus.Confirmed ||
+											lastHistoryObj.getFamilyStatus() == FamilyStatus.Verified ||
+											 lastHistoryObj.getFamilyStatus() == FamilyStatus.Waitlist))
+				{
+					updatedHistoryObj.setFamilyStatus(FamilyStatus.Contacted);
+					FamilyHistoryDBYear fhDBYear = famHistDB.get(DBManager.offset(year));
+					fhDBYear.add(updatedHistoryObj);
+					fhDBYear.setChanged(true);
+					
+					//notify all in-year clients of the status change
+					Gson gson = new Gson();
+					String change = "UPDATED_DELIVERY" + gson.toJson(fam, FamilyHistory.class);
+					clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+				}
+			}
+		}
+	}
+	
+	void checkFamilyStatusOnSMSStatusCallback(int year, ONCSMS receivedSMS)
+	{
+		FamilyHistory fam = getLastFamilyHistory(year, receivedSMS.getEntityID());
+		
+		//we only consider changing family status to Contacted based on outgoing message status if the family 
+		//has not yet confirmed delivery
+		if(fam != null && fam.getFamilyStatus() != FamilyStatus.Confirmed)
+		{	
+			if((receivedSMS.getStatus() == SMSStatus.SENT ||  receivedSMS.getStatus() == SMSStatus.DELIVERED) && 
+				(fam.getFamilyStatus() == FamilyStatus.Waitlist || fam.getFamilyStatus() == FamilyStatus.Verified))
+			{
+				//sometimes we don't get a DELIVERD status from the super carrier, so we'll accept a SENT status.
+				fam.setFamilyStatus(FamilyStatus.Contacted);
+				famHistDB.get(DBManager.offset(year)).setChanged(true);
+			
+				//notify all in-year clients of the status change
+				Gson gson = new Gson();
+    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+			}
+			else if((receivedSMS.getStatus() == SMSStatus.UNDELIVERED || receivedSMS.getStatus() == SMSStatus.FAILED) && 
+					fam.getFamilyStatus() == FamilyStatus.Contacted )
+			{
+				//message status updated to UNDELIVERED. If we already changed the family status to Contacted, change
+				//it back to either Waitlist or Verified.
+				FamilyStatus newStatus = fam.getDNSCode() == DNSCode.WAITLIST ? FamilyStatus.Waitlist : FamilyStatus.Verified;
+				fam.setFamilyStatus(newStatus);
+				famHistDB.get(DBManager.offset(year)).setChanged(true);
+			
+				//notify all in-year clients of the status change
+				Gson gson = new Gson();
+    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
+    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+			}
+		}
+	}
+	
+	HtmlResponse confirmFamilyGiftDelivery(int year, int famid, WebClient wc, String callbackFunction)
+	{
+		String response;
+		FamilyHistory lastHistoryObj =  getLastFamilyHistory(year, famid);
+
+		if(lastHistoryObj != null)
+		{
+			if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned)
+			{
+				
+				//add a history item
+				FamilyHistory reqFamHistObj = new FamilyHistory(lastHistoryObj);
+				reqFamHistObj.setFamilyGiftStatus(FamilyGiftStatus.Delivered);
+				reqFamHistObj.setdNotes("Gift Status Change");
+				
+				addFamilyHistoryObject(year, reqFamHistObj, wc.getWebUser(), true);
+
+				response = "{\"message\":\"Gifts Successfully Delivered!\"}"; 
+			}
+			else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Delivered)
+				response = "{\"message\":\"Gifts Already Delivered\"}"; 
+			else
+				response = String.format("{\"message\":\"Error: Invalid Family Gift Status: %s\"}",
+						lastHistoryObj.getGiftStatus().toString());
+		}
+		else
+		{
+			response = "{\"message\":\"Error: Family Not Found\"}";
+		}
+		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+	}
 	
 	@Override
 	void addObject(int year, String[] nextLine)
 	{
 		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
-		histDBYear.add(new ONCFamilyHistory(nextLine));	
+		histDBYear.add(new FamilyHistory(nextLine));	
 	}
-	
 	
 	@Override
 	void createNewSeason(int newYear)
@@ -364,23 +743,23 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		famHistDB.add(famHistDBYear);
 		famHistDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
-	
+/*	
 	 private class FamilyHistoryDBYear extends ServerDBYear
 	 {
-		private List<ONCFamilyHistory> histList;
+		private List<FamilyHistory> histList;
 	    	
 	    FamilyHistoryDBYear(int year)
 	    {
 	    	super();
-	    	histList = new ArrayList<ONCFamilyHistory>();
+	    	histList = new ArrayList<FamilyHistory>();
 	    }
 	    
 	    //getters
-	    List<ONCFamilyHistory> getList() { return histList; }
+	    List<FamilyHistory> getList() { return histList; }
 	    
-	    void add(ONCFamilyHistory addedHistObj) { histList.add(addedHistObj); }
+	    void add(FamilyHistory addedHistObj) { histList.add(addedHistObj); }
 	 }
-
+*/
 	@Override
 	void save(int year)
 	{
@@ -394,6 +773,64 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			String path = String.format("%s/%dDB/FamilyHistoryDB.csv", System.getProperty("user.dir"), year);
 			exportDBToCSV(histDBYear.getList(),  header, path);
 			histDBYear.setChanged(false);
+		}
+	}
+	
+	private class FamilyHistoryDBYear extends ServerDBYear
+    {
+//    	private List<ONCMeal> mealList;
+    	private Map<Integer, List<FamilyHistory>> familyHistoryMap;
+    	
+    	FamilyHistoryDBYear(int year)
+    	{
+    		super();
+//    		mealList = new ArrayList<ONCMeal>();
+    		familyHistoryMap = new HashMap<Integer, List<FamilyHistory>>();
+    	}
+    	
+    	//getters
+    	List<FamilyHistory> getList()
+    	{ 
+    		List<FamilyHistory> allFamilyHistoryList = new ArrayList<FamilyHistory>();
+    		for(Map.Entry<Integer,List<FamilyHistory>> entry : familyHistoryMap.entrySet())
+    			for(FamilyHistory fh : entry.getValue())
+    				allFamilyHistoryList.add(fh);
+    		
+    		return allFamilyHistoryList;
+    	}
+    	
+    	List<FamilyHistory> getFamilyHistoryList(int famID) { return familyHistoryMap.get(famID); }
+    	Map<Integer, List<FamilyHistory>> getMap() { return familyHistoryMap; }
+    	
+    	void add(FamilyHistory addedFamilyHistory)
+    	{
+    		
+    		//check to see if famID is a key in the map, if not, add a new linked list
+    		if(familyHistoryMap.containsKey(addedFamilyHistory.getFamID()))
+    		{
+    			familyHistoryMap.get(addedFamilyHistory.getFamID()).add(addedFamilyHistory);
+    		}
+    		else
+    		{
+    			List<FamilyHistory> famMealList = new ArrayList<FamilyHistory>();
+    			famMealList.add(addedFamilyHistory);
+    			familyHistoryMap.put(addedFamilyHistory.getFamID(), famMealList);
+    		}
+    	}
+    }
+	
+	private static class FamilyHistoryTimestampComparator implements Comparator<FamilyHistory>
+	{
+		@Override
+		public int compare(FamilyHistory o1, FamilyHistory o2)
+		{
+			
+			if(o2.getTimestamp() > o1.getTimestamp())
+				return -1;
+			else if(o2.getTimestamp() == o1.getTimestamp())
+				return 0;
+			else
+				return 1;
 		}
 	}
 /*	

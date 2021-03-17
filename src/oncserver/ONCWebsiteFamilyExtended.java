@@ -7,6 +7,7 @@ import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.Transportation;
 import ourneighborschild.DNSCode;
+import ourneighborschild.FamilyHistory;
 import ourneighborschild.GiftDistribution;
 
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.List;
 		private String  transportation;
 //		private int		groupID;
 		private String	groupName;
-		private int		mealID;
+//		private int		mealID;
 		private String 	notes;
 		private String  delInstr;
 		private boolean bGiftCardOnly;
@@ -39,10 +40,10 @@ import java.util.List;
 		private ONCMeal meal;
 		private GiftDistribution distribution;
 		
-		public ONCWebsiteFamilyExtended(ONCFamily f, String region, String groupname, List<ONCWebChild> childList, 
+		public ONCWebsiteFamilyExtended(ONCFamily f, FamilyHistory fh, String region, String groupname, List<ONCWebChild> childList, 
 										List<ONCAdult> adultList, ONCWebAgent agent, ONCMeal meal, DNSCode dnsCode)
 		{
-			super(f, dnsCode);
+			super(f, fh, dnsCode, meal);
 			this.BatchNum = f.getBatchNum();
 			this.Language = f.getLanguage();
 			this.HouseNum = f.getHouseNum();
@@ -59,7 +60,7 @@ import java.util.List;
 			this.transportation = f.getTransportation().toString();
 //			this.groupID = f.getGroupID();
 			this.groupName = groupname;
-			this.mealID = f.getMealID();
+//			this.mealID = f.getMealID();
 			this.notes = f.getNotes();
 			this.delInstr = f.getDeliveryInstructions();
 			this.bGiftCardOnly = f.isGiftCardOnly();
@@ -87,7 +88,7 @@ import java.util.List;
 		String getTransportation() { return transportation; }
 //		int getGroupID() {return groupID;}
 		String getGroupName() { return groupName; }
-		int getMealID() {return mealID;}
+//		int getMealID() {return mealID;}
 		String getNotes() { return notes; }
 		String getDeliveryInstructions() { return delInstr; }
 		boolean isGiftCardOnly() { return bGiftCardOnly; }
@@ -114,7 +115,7 @@ import java.util.List;
 		void setTransportation(Transportation t) {this.transportation = t.toString(); }
 //		void setGroupID(int groupID) {this.groupID = groupID;}
 		void setGroupName( String name) { this.groupName = name; }
-		void setMealID(int mealID) {this.mealID = mealID;}
+//		void setMealID(int mealID) {this.mealID = mealID;}
 		void setNotes( String notes) { this.notes = notes; }
 		void setDeliveryInstructions( String di) { this.delInstr = di; }
 		void setGiftCardOnly( boolean gco) { this.bGiftCardOnly = gco; }

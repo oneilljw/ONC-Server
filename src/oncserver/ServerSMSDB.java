@@ -25,6 +25,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 	private static List<SMSDBYear> smsDB;
 	
 	private ServerFamilyDB familyDB;
+	private ServerFamilyHistoryDB familyHistoryDB;
 //	private ServerGlobalVariableDB globalVarDB;
 	
 	private ServerSMSDB() throws FileNotFoundException, IOException
@@ -52,6 +53,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		
 		//initialize the FamilyDB and GlobalVariableDB interface
 		familyDB = ServerFamilyDB.getInstance();
+		familyHistoryDB = ServerFamilyHistoryDB.getInstance();
 //		globalVarDB = ServerGlobalVariableDB.getInstance();
 	}
 	
@@ -456,9 +458,13 @@ public class ServerSMSDB extends ServerSeasonalDB
 			//if the SMS Status has changed to "Delivered" notify the Family DB to check to see if
 			//the family status should change
 			if(updateSMS.getStatus() == SMSStatus.DELIVERED)
-				familyDB.checkFamilyStatusOnSMSStatusCallback(year, updateSMS);
+			{
+				familyHistoryDB.checkFamilyStatusOnSMSStatusCallback(year, updateSMS);
 			
-			return updateSMS;
+				return updateSMS;
+			}
+			else
+				return null;
 		}
 		else
 		{

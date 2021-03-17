@@ -332,10 +332,10 @@ public class DesktopClient extends Thread
                 	String response = volunteerActivityDB.getVolunteerActivities(year);
                 	output.println(response);
                 }
-                else if(command.startsWith("GET<deliveries>"))
+                else if(command.startsWith("GET<family_histories>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = famHistoryDB.getFamilyHistory(year);
+                	String response = famHistoryDB.getFamilyHistories(year);
                 	output.println(response);
                 }
                 else if(command.startsWith("GET<catalog>"))
@@ -795,10 +795,10 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
-                else if(command.startsWith("POST<delivery_group>"))
+                else if(command.startsWith("POST<family_history_group>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = serverFamilyDB.addFamilyHistoryList(year, command.substring(20));
+                	String response = famHistoryDB.addFamilyHistoryList(year, command.substring(26), clientUser);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
@@ -883,7 +883,7 @@ public class DesktopClient extends Thread
                 	clientMgr.notifyAllInYearClients(year, responseList);
                 }
                 
-/*MEALS ARE NOT UPDATED BY DESKTOP CLIENTS - NEW MEALS ARE ADDED
+/* MEALS ARE NOT UPDATED OR DELETED BY DESKTOP CLIENTS - NEW MEALS ARE ADDED TO THE END OF THE LINKED LIST
                 else if(command.startsWith("POST<update_meal>"))
                 {
                 		clientMgr.addLogMessage(command);
@@ -891,8 +891,7 @@ public class DesktopClient extends Thread
                 		output.println(response);
                 		clientMgr.addLogMessage(response);
                 		clientMgr.dataChanged(this, response);
-                }
-*/                
+                }                
                 else if(command.startsWith("POST<delete_meal>"))
                 {
                 	clientMgr.addLogMessage(command);
@@ -901,6 +900,7 @@ public class DesktopClient extends Thread
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
                 }
+*/                
                 else if(command.startsWith("POST<add_adult>"))
                 {
                 	clientMgr.addLogMessage(command);

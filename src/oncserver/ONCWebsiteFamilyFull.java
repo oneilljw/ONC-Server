@@ -1,7 +1,9 @@
 package oncserver;
 
 import ourneighborschild.DNSCode;
+import ourneighborschild.FamilyHistory;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCWebsiteFamily;
 
 public class ONCWebsiteFamilyFull extends ONCWebsiteFamily
@@ -15,9 +17,9 @@ public class ONCWebsiteFamilyFull extends ONCWebsiteFamily
 	private String	OtherPhone;
 	private String	email;	
 	
-	public ONCWebsiteFamilyFull(ONCFamily f, DNSCode dnsCode)
+	public ONCWebsiteFamilyFull(ONCFamily f, FamilyHistory fh, DNSCode dnsCode, ONCMeal meal)
 	{
-		super(f, dnsCode);
+		super(f, fh, dnsCode, meal);
 		this.zipcode = f.getZipCode();
 		this.schoolcode = f.getSchoolCode();
 		this.changedBy = f.getChangedBy();		

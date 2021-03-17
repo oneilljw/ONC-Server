@@ -141,34 +141,34 @@
   			
 		$.getJSON('getfamily', familyparams, function(family)
 		{
-			console.log(family);
-			
 	     	updateFamilyInfo(family);
 	     	updateNewChildTable(family.childList);
 		    updateNewAdultTable(family.adultList);
 	     	
 	     	//get meal and update if family meal id > 1
-	     	if(family.mealID > -1)
+	     	var mealparams = "year=" + sessionStorage.getItem('curryear') + "&" +
+	     						"famid=" + family.id + "&" + "callback=?";				
+	     	$.getJSON('getmeal', mealparams, function(meal)
 	     	{
-	     		var mealparams = "year=" + sessionStorage.getItem('curryear') + "&" +
-	     						"mealid=" + family.mealID.toString() + "&" + "callback=?";				
-	     		$.getJSON('getmeal', mealparams, function(meal)
-	     	  	{
-	     			updateMealRequest(family, meal);
-	     			
-	     			let partnerparams = "year=" + sessionStorage.getItem('curryear') + "&" +
+	     		if(meal.hasOwnProperty('no_meal_req'))
+	     		{
+	     			document.getElementById('mealstatus').value = meal.no_meal_req;	
+	     		}
+	     		else
+	     		{	
+		     		updateMealRequest(family, meal);
+		     			
+		     		let partnerparams = "year=" + sessionStorage.getItem('curryear') + "&" +
 						"partnerid=" + meal.partnerID.toString() + "&" + "callback=?";
-	     			if(meal.partnerID > -1)
-	     			{
-	     				$.getJSON('getpartner', partnerparams, function(partner)
-	     				{
-	     					document.getElementById('mealpartner').value = partner.name;
-	     				});
-	     			}
-	     		});
-	     	}
-	     	else
-	     		document.getElementById('mealstatus').value = "None Requested";
+		     		if(meal.partnerID > -1)
+		     		{
+		     			$.getJSON('getpartner', partnerparams, function(partner)
+		     			{
+		     				document.getElementById('mealpartner').value = partner.name;
+		     			});
+		     		}
+	     		}
+		    });	
 		});
 	});
   	
