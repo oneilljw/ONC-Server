@@ -58,7 +58,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 44;
+	private static final int FAMILYDB_HEADER_LENGTH = 40;
 	
 //	private static final int FAMILY_STOPLIGHT_RED = 2;
 //	private static final int NUMBER_OF_WISHES_PER_CHILD = 2;	//COVID 19 - Two gifts/child not three
@@ -1441,12 +1441,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	void save(int year)
 	{
 		String[] header = {"ONC ID", "ONCNum", "Region", "School Code", "ODB Family #", "Batch #", 
-				"DNS Code", "Family Status", "Delivery Status",
+//				"DNS Code", "Family Status", "Delivery Status",
 				"Speak English?","Language if No", "Caller", "Notes", "Delivery Instructions",
 				"Client Family", "First Name", "Last Name", "House #", "Street", "Unit #", "City", "Zip Code",
 				"Substitute Delivery Address", "All Phone #'s", "Home Phone", "Other Phone", "Family Email", 
 				"ODB Details", "Children Names", "Schools", "ODB WishList", "Adopted For",
-				"Agent ID", "GroupID", "Delivery ID", "Phone Code", "# of Bags", "# of Large Items", 
+				"Agent ID", "GroupID",
+//				"Delivery ID",
+				"Phone Code", "# of Bags", "# of Large Items", 
 				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only", "Gift Distribution"};
 		
 		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
