@@ -27,11 +27,11 @@
   		popluateCitySelects();
   	
   		//set the hidden values
-  		document.getElementById('year').value= sessionStorage.getItem("curryear");
+  		document.getElementById('year').value= sessionStorage.getItem("currseason");
   		document.getElementById('targetid').value= sessionStorage.getItem("targetid");
   			
   		//setup the add child DoB year parameters with a 20 year window
-  		let currentyear = sessionStorage.getItem("curryear");
+  		let currentyear = sessionStorage.getItem("currseason");
   		for(year = currentyear; year > currentyear-21; year-- )
   			addComboBoxOption(document.getElementById('dobyear'), year, year);
   		
@@ -501,7 +501,7 @@
     		document.getElementById('dobyear').value = parts[2];
     		
 			document.getElementById('childage-span').textContent = getAge(selectedRow.sDOB);
-			document.getElementById('childyear-span').textContent = 'on 12/25/' +  sessionStorage.getItem('curryear');
+			document.getElementById('childyear-span').textContent = 'on 12/25/' +  sessionStorage.getItem('currseason');
     		
     		editedChild["childgender"] = selectedRow.gender;
     		document.getElementById('childgender').value = selectedRow.gender;
@@ -541,7 +541,7 @@
     		 			 document.getElementById('dobyear').value;
     		
     		document.getElementById('childage-span').textContent = getAge(sDoB);
-    		document.getElementById('childyear-span').textContent = 'on 12/25/' +  sessionStorage.getItem('curryear');
+    		document.getElementById('childyear-span').textContent = 'on 12/25/' +  sessionStorage.getItem('currseason');
     		
     		document.getElementById('childgender').selectedIndex = 0;
 	    	setInput('childschool', '');
@@ -620,7 +620,8 @@
   	function verifyAddedOrUpdatedChild()
   	{
 		let child = getChild();
-		var age = calculateAge(child.sDOB);
+		let age = calculateAge(child.sDOB);
+		let numGifts = sessionStorage.getItem('numberGiftsPerChild');
 		if(age === 0 || child.gender === 'Unknown')
 		{
 			//show pop-up asking to verify birthdate and gender
@@ -629,32 +630,59 @@
 			
 			window.location=document.getElementById('childwarninganchor').href;
 		}
-		else if(document.getElementById('giftreq').checked === true && 
-				(document.getElementById('childwish0').value === '' || 
-				document.getElementById('childwish1').value === '' ||
-				document.getElementById('childwish2').value === '' ||
-				document.getElementById('childwish3').value === ''))
+		else if(document.getElementById('giftreq').checked === true && numGifts == 0)
 		{
-			//show pop-up asking to verify that wish is blank and to use age appropriate gift
-			document.getElementById('wishwarningmssg').textContent = "One or more wish entries is blank. ONC will select" + 
-			" age appropriate gifts if wish choices aren't provided.";
-			
-			window.location=document.getElementById('wishwarninganchor').href;
+			//show pop-up informing of error. Can't have gift requests the number of gifts is zero
+			document.getElementById('childwarningmssg').textContent = "Error: Not providing gift assistance. Please contact ONC's school contact.";
+			window.location=document.getElementById('childwarninganchor').href;
 		}
 		else
-			addOrUpdateValidatatedChild();
+		{	
+			//We are providing at least one gift per child, make sure corresponding gift fields are not empty
+			if(document.getElementById('giftreq').checked === true && numGifts == 1 && 
+				document.getElementById('childwish0').value !== '' && 
+				 document.getElementById('childwish3').value !== '')
+			{
+				addOrUpdateValidatatedChild();
+			}
+			else if(document.getElementById('giftreq').checked === true && numGifts == 2 && 
+					 document.getElementById('childwish0').value !== '' && 
+				 	  document.getElementById('childwish3').value !== '' &&
+				 	   document.getElementById('childwish1').value !== '')
+			{
+				addOrUpdateValidatatedChild();
+			}
+			else if(document.getElementById('giftreq').checked === true && numGifts > 2 && 
+					 document.getElementById('childwish0').value !== '' && 
+				 	  document.getElementById('childwish3').value !== '' &&
+				 	   document.getElementById('childwish1').value !== '' &&
+				 	    document.getElementById('childwish2').value !== '')
+			{
+				addOrUpdateValidatatedChild();
+			}
+			else
+			{	
+				//show pop-up asking to verify that wish is blank and to use age appropriate gift
+				document.getElementById('wishwarningmssg').textContent = "One or more wish entries is blank. ONC will select" + 
+				" age appropriate gifts if wish choices aren't provided.";
+			
+				window.location=document.getElementById('wishwarninganchor').href;
+			}
+		}
   	}
   	
   	function addAgeAppropriateGiftForMissingWishes()
   	{
-  		if(document.getElementById('childwish0').value === '')
+  		let numGifts = sessionStorage.getItem('numberGiftsPerChild');
+  		if(numGift > 0 && document.getElementById('childwish0').value === '')
+  		{
   			document.getElementById('childwish0').value = 'Age Appropriate Gift';
-  		if(document.getElementById('childwish1').value === '')
-  			document.getElementById('childwish1').value = 'Age Appropriate Gift';
-	  	if(document.getElementById('childwish2').value === '')
-  			document.getElementById('childwish2').value = 'Age Appropriate Gift';
-  		if(document.getElementById('childwish3').value === '')
   			document.getElementById('childwish3').value = 'Age Appropriate Gift';
+  		}
+  		if(numGifts > 1 && document.getElementById('childwish1').value === '')
+  			document.getElementById('childwish1').value = 'Age Appropriate Gift';
+	  	if(numGifts > 2 && document.getElementById('childwish2').value === '')
+  			document.getElementById('childwish2').value = 'Age Appropriate Gift';
   		
   		addOrUpdateValidatatedChild();
   	}
@@ -783,9 +811,9 @@
 	
 	function calculateAge(birthday)
 	{	
-		var curryear = sessionStorage.getItem('curryear');
-		var xmasday = new Date(curryear,11,25,0,0,0,0);
-		var birthdate= new Date(birthday);
+		let currseason = sessionStorage.getItem('curryseason');
+		let xmasday = new Date(currseason,11,25,0,0,0,0);
+		let birthdate= new Date(birthday);
 		
 		if(birthdate >= xmasday)
 		{
@@ -818,8 +846,8 @@
 	
 	function getAge(birthday)
 	{
-		var curryear = sessionStorage.getItem('curryear');
-		var xmasday = new Date(curryear,11,25,0,0,0,0);
+		var currseason = sessionStorage.getItem('currseason');
+		var xmasday = new Date(currseason,11,25,0,0,0,0);
 		var birthdate= new Date(birthday);
 		
 		var age= [];

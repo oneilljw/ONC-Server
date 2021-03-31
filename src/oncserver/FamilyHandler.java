@@ -13,7 +13,6 @@ import java.util.UUID;
 
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
-import ourneighborschild.DNSCode;
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.GiftDistribution;
 import ourneighborschild.MealStatus;
@@ -512,45 +511,6 @@ public class FamilyHandler extends ONCWebpageHandler
 		//return the appropriate success message. If it's not the last family, process it.
 		if(!lastReferralUUIDAccepted.equals(familyMap.get("uuid")))
 		{
-/*			
-			//create a meal request, if meal was requested
-			ONCMeal mealReq = null, addedMeal = null;
-			String[] mealKeys = {"mealtype", "dietres"};
-		
-			if(params.containsKey("mealtype"))
-			{
-				Map<String, String> mealMap = createMap(params, mealKeys);
-				String dietRestrictions = "";
-				
-				//check to see that the meal was a valid request. If no meal is requested, the mealtype is
-				//"No Assistance Rqrd". If past a deadline, the mealtype is "Unavailable"
-				if(!mealMap.get("mealtype").equals("No Assistance Rqrd") && 
-					!mealMap.get("mealtype").equals("Unavailable"))
-				{
-					if(mealMap.containsKey("dietres"))
-						dietRestrictions = mealMap.get("dietres");
-					
-					//check to see that we have a valid meal type
-					try
-					{
-						MealType reqMealType = MealType.valueOf(mealMap.get("mealtype"));
-						mealReq = new ONCMeal(-1, -1, MealStatus.Requested, reqMealType,
-								dietRestrictions, -1, wc.getWebUser().getLNFI(), System.currentTimeMillis(), 3,
-								"Family Referred", wc.getWebUser().getLNFI());
-			
-						addedMeal = mealDB.add(year, mealReq);
-					}
-					catch (IllegalArgumentException iae)
-					{
-						ServerUI.addLogMessage("Invalid MealType referred");
-					}
-					catch (NullPointerException npe)
-					{
-						ServerUI.addLogMessage("Invalid MealType: MealType or name is null");
-					}
-				}
-			}
-*/			
 			//check to see if this is a new family or a re-referral. Need to know this to determine 
 			//whether to perform a prior year check after the family and children objects are created
 			boolean bNewFamily = familyMap.get("targetid").contains("NNA") || familyMap.get("targetid").equals("");
@@ -589,7 +549,7 @@ public class FamilyHandler extends ONCWebpageHandler
 				dnsCode = DNS_CODE_FOOD_ONLY;
 			
 			ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
-					familyMap.get("referencenum"), "B-DI", dnsCode,
+					familyMap.get("referencenum"), "B-DI",
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
 					familyMap.get("hohfn"), familyMap.get("hohln"), familyMap.get("housenum"),
 					ensureUpperCaseStreetName(familyMap.get("street")),
@@ -599,7 +559,8 @@ public class FamilyHandler extends ONCWebpageHandler
 					familyMap.get("delunit"), familyMap.get("delcity"), familyMap.get("delzipcode"),
 					familyMap.get("homephone"), familyMap.get("cellphone"), familyMap.get("altphone"),
 					familyMap.get("email"), familyMap.get("detail"), createFamilySchoolList(params),
-					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
+//					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
+//					bWaitlistFamily,
 					createWishList(params, numWishes), agent.getID(), group, 
 					0,	//phone code
 					Transportation.valueOf(familyMap.get("transportation")),
@@ -613,20 +574,16 @@ public class FamilyHandler extends ONCWebpageHandler
 				lastReferralUUIDAccepted = familyMap.get("uuid");
 				
 				//add the family history object and update the family history object id
-				DNSCode famDNSCode = dnsCodeDB.getDNSCode(addedFamily.getDNSCode());
 				boolean bGiftsRequested = params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on");
 				FamilyHistory famHistory = new FamilyHistory(-1, addedFamily.getID(), 
-															FamilyStatus.Unverified,
+															bWaitlistFamily ? FamilyStatus.Waitlist : FamilyStatus.Unverified,
 															bGiftsRequested ? FamilyGiftStatus.Requested : FamilyGiftStatus.NotRequested,
 															"", "Family Referred", 
 															addedFamily.getChangedBy(), 
 															System.currentTimeMillis(),
-															famDNSCode.getID());
+															dnsCode);
 		
 				FamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, wc.getWebUser(), false);
-		
-				List<ONCChild> addedChildList = new ArrayList<ONCChild>();
-				List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
 		
 				//create a meal request, if meal was requested
 				ONCMeal mealReq = null, addedMeal = null;
@@ -649,7 +606,7 @@ public class FamilyHandler extends ONCWebpageHandler
 						try
 						{
 							MealType reqMealType = MealType.valueOf(mealMap.get("mealtype"));
-							mealReq = new ONCMeal(-1, -1, MealStatus.Requested, reqMealType,
+							mealReq = new ONCMeal(-1, addedFamily.getID(), MealStatus.Requested, reqMealType,
 									dietRestrictions, -1, wc.getWebUser().getLNFI(), System.currentTimeMillis(), 3,
 									"Family Referred", wc.getWebUser().getLNFI());
 				
@@ -665,6 +622,10 @@ public class FamilyHandler extends ONCWebpageHandler
 						}
 					}
 				}
+				
+				//add children, gift wishes and adults
+				List<ONCChild> addedChildList = new ArrayList<ONCChild>();
+				List<ONCAdult> addedAdultList = new ArrayList<ONCAdult>();
 			
 				//create the children for the family
 				String childfn, childln, childDoB, childGender, childSchool;
@@ -690,8 +651,30 @@ public class FamilyHandler extends ONCWebpageHandler
 					}
 					key = "childln" + Integer.toString(++cn);	//get next child key
 				}
+				
+				//create the other adults in the family
+				String adultName;
+				AdultGender adultGender;
+				int an = 0;
+				key = "adultname0";
 			
-				//now that we have added children, we can check for duplicate family in this year.
+				//using adult name as the iterator, create a db entry for each
+				//adult in the family
+				while(params.containsKey(key))
+				{
+					adultName = params.get(key) != null ? (String) params.get(key) : "";
+					adultGender = params.get("adultgender" + Integer.toString(an)) != null ?
+							AdultGender.valueOf((String) params.get("adultgender" + Integer.toString(an))) : AdultGender.Unknown;
+				
+					if(!adultName.isEmpty())
+					{
+						ONCAdult adult = new ONCAdult(-1, addedFamily.getID(), adultName, adultGender); 
+						addedAdultList.add(adultDB.add(year, adult));
+					}
+					key = "adultname" + Integer.toString(++an);	//get next adult key
+				}
+			
+				//now that we have added children and adults, we can check for duplicate family in this year.
 				ONCFamily dupFamily = serverFamilyDB.getDuplicateFamily(year, addedFamily, addedChildList);	
 				if(dupFamily == null)	//if not a dup, then for new families, check for prior year
 				{
@@ -724,7 +707,7 @@ public class FamilyHandler extends ONCWebpageHandler
 				
 					//family is in current year already with an ODB referred target ID
 //					addedFamily.setONCNum("DEL");
-					addedFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
+					addedFamHistory.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 					addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
 					addedFamily.setReferenceNum(dupFamily.getReferenceNum());
@@ -742,7 +725,8 @@ public class FamilyHandler extends ONCWebpageHandler
 					//does not have an ONC target id. In this situation, we can't decrement the assigned
 					//ONC based target id and will just have to burn one.
 //					dupFamily.setONCNum("DEL");
-					dupFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
+					FamilyHistory dupFamilyHistory = ServerFamilyHistoryDB.getCurrentFamilyHistory(year, dupFamily.getID());
+					dupFamilyHistory.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 					dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 					dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
 					dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
@@ -759,7 +743,7 @@ public class FamilyHandler extends ONCWebpageHandler
 					{
 						//dup family has the correct ref #, so added family is duplicate
 //						addedFamily.setONCNum("DEL");
-						addedFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
+						addedFamHistory.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 						addedFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 						addedFamily.setStoplightMssg("DUP of " + dupFamily.getReferenceNum());
 						addedFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
@@ -770,7 +754,8 @@ public class FamilyHandler extends ONCWebpageHandler
 					{
 						//added family has the correct ref #, so dup family is the duplicate
 //						dupFamily.setONCNum("DEL");
-						dupFamily.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
+						FamilyHistory dupFamilyHistory = ServerFamilyHistoryDB.getCurrentFamilyHistory(year, dupFamily.getID());
+						dupFamilyHistory.setDNSCode(dnsCodeDB.getDNSCode("DUP").getID());
 						dupFamily.setStoplightPos(FAMILY_STOPLIGHT_RED);
 						dupFamily.setStoplightMssg("DUP of " + addedFamily.getReferenceNum());
 						dupFamily.setStoplightChangedBy(wc.getWebUser().getLNFI());
@@ -778,28 +763,6 @@ public class FamilyHandler extends ONCWebpageHandler
 					}
 				}
 			
-				//create the other adults in the family
-				String adultName;
-				AdultGender adultGender;
-				int an = 0;
-				key = "adultname0";
-			
-				//using adult name as the iterator, create a db entry for each
-				//adult in the family
-				while(params.containsKey(key))
-				{
-					adultName = params.get(key) != null ? (String) params.get(key) : "";
-					adultGender = params.get("adultgender" + Integer.toString(an)) != null ?
-							AdultGender.valueOf((String) params.get("adultgender" + Integer.toString(an))) : AdultGender.Unknown;
-				
-						if(!adultName.isEmpty())
-						{
-							ONCAdult adult = new ONCAdult(-1, addedFamily.getID(), adultName, adultGender); 
-							addedAdultList.add(adultDB.add(year, adult));
-						}
-						key = "adultname" + Integer.toString(++an);	//get next adult key
-					}
-		
 				//successfully process meals, family, history, children and adults. Notify the desktop
 				//clients so they refresh
 				Gson gson = new Gson();

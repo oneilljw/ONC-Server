@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import ourneighborschild.FamilyHistory;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCFamily;
@@ -204,12 +205,14 @@ public class PriorYearDB extends ServerSeasonalDB
 		
 		//get references to last years family, child, child wish and wish catalog data bases
 		ServerFamilyDB serverFamilyDB = null;
+		ServerFamilyHistoryDB serverFamilyHistoryDB = null;
 		ServerChildDB serverChildDB = null;
 //		ServerChildWishDB childwishDB = null;
 		ServerGiftCatalog cat = null;
 		try 
 		{
 			serverFamilyDB = ServerFamilyDB.getInstance();
+			serverFamilyHistoryDB = ServerFamilyHistoryDB.getInstance();
 			serverChildDB = ServerChildDB.getInstance();
 //			childwishDB = ServerChildWishDB.getInstance();
 			cat = ServerGiftCatalog.getInstance();
@@ -235,6 +238,7 @@ public class PriorYearDB extends ServerSeasonalDB
 		for(ONCChild lyc:lycList)
 		{
 			ONCFamily lyfam = serverFamilyDB.getFamily(newYear-1, lyc.getFamID());
+			FamilyHistory lyFamHist = serverFamilyHistoryDB.getLastFamilyHistory(newYear-1, lyfam.getID());
 			int lyONCFamONCNum;
 			
 /* DEBUG CODE *****************			
@@ -268,7 +272,7 @@ public class PriorYearDB extends ServerSeasonalDB
 			
 			if(lyfam != null && isNumeric(lyfam.getONCNum()) && 
 				(lyONCFamONCNum = Integer.parseInt(lyfam.getONCNum())) >= minONCNum &&
-				 lyONCFamONCNum <= maxONCNum && (lyfam.getDNSCode() == -1 || lyfam.getDNSCode() == WAITLIST_DNS_CODE))	
+				 lyONCFamONCNum <= maxONCNum && (lyFamHist.getDNSCode() == -1 || lyFamHist.getDNSCode() == WAITLIST_DNS_CODE))	
 			{
 				ONCChildGift lyChildWish1 = childGiftDB.getCurrentChildGift(newYear-1, lyc.getID(),0);
 				ONCChildGift lyChildWish2 = childGiftDB.getCurrentChildGift(newYear-1, lyc.getID(),1);

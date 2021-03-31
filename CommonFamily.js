@@ -616,7 +616,7 @@ function createReferralParams(bReferral)
 	var params = {};
 	
 	//create the year, reference and target id parameters
-	params["year"] = sessionStorage.getItem("curryear");
+	params["year"] = sessionStorage.getItem("currseason");
 	params["targetid"] = sessionStorage.getItem("targetid");
 	params["referencenum"] = sessionStorage.getItem("referencenum");
 	

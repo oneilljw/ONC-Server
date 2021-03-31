@@ -13,6 +13,7 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import ourneighborschild.Address;
+import ourneighborschild.FamilyHistory;
 import ourneighborschild.ONCFamily;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -33,7 +34,6 @@ public class ApartmentDB
 		if(aptList.size() == 0)
 		{
 			readApartmentDBFromFile(System.getProperty("user.dir") +"/PermanentDB/ApartmentDB.csv");
-//			Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
 			createHashTable();
 		}
 	}
@@ -132,28 +132,49 @@ public class ApartmentDB
     	reader.close();
 	}
 	
-	static void addPriorYearApartments(List<ONCFamily> famList)
+	static void addPriorYearApartments(int priorYear)
 	{
-		//add the prior year addresses that had units that weren't already in the db
-		for(ONCFamily f:famList)
+		ServerFamilyDB familyDB;
+		ServerFamilyHistoryDB familyHistoryDB;
+		try 
 		{
-			//see if the family was served and address had a unit and  already in the data base
-			//if they aren't in the database add them.
-			if(f.getDNSCode() == -1 && f.getUnit().trim().length() > 0)
+			familyDB = ServerFamilyDB.getInstance();
+			familyHistoryDB = ServerFamilyHistoryDB.getInstance();
+			
+			List<ONCFamily> famList = familyDB.getList(priorYear);
+			
+			//add the prior year addresses that had units that weren't already in the db
+			for(ONCFamily f:famList)
 			{
-				//family was served and had a unit number in prior year, so need to check to see if it's in the
-				//apartment list already. Convert family address into an Address Object
-				Address famAddress = new Address(f.getHouseNum(), f.getStreet(), f.getUnit(), f.getCity(), f.getZipCode());
+				//see if the family was served and address had a unit and  already in the data base
+				//if they aren't in the database add them
+				FamilyHistory pyFamHistory = familyHistoryDB.getLastFamilyHistory(priorYear, f.getID());
+				if(pyFamHistory != null && pyFamHistory.getDNSCode() == -1 && f.getUnit().trim().length() > 0)
+				{
+					//family was served and had a unit number in prior year, so need to check to see if it's in the
+					//apartment list already. Convert family address into an Address Object
+					Address famAddress = new Address(f.getHouseNum(), f.getStreet(), f.getUnit(), f.getCity(), f.getZipCode());
+					
+					if(!isAddressAnApartment(famAddress))
+						aptList.add(famAddress); //its not in the list, we need to add it
+				}
 				
-				if(!isAddressAnApartment(famAddress))
-					aptList.add(famAddress); //its not in the list, we need to add it
+				Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
+				createHashTable();
 			}
 			
-			Collections.sort(aptList, new AddressStreetNameComparator());	//sort region list by street name
-			createHashTable();
-		}
-		
-		save();
+			save();
+		} 
+		catch (FileNotFoundException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 	}
 	
 	static void save()

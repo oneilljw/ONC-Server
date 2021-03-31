@@ -271,7 +271,6 @@
 				window.location=document.getElementById('timeoutanchor').href;
 			else
 			{
-				console.log(parameters);
 				sessionStorage.setItem('thanksgivingMealCutoff', parameters.thanksgivingMealDeadline);
 				sessionStorage.setItem('decemberMealCutoff', parameters.decemberMealDeadline);
 				sessionStorage.setItem('editDeadline', parameters.editDeadline);
@@ -321,12 +320,13 @@
 	        	else
 	        		combo.value = sessionStorage.getItem('prioryear');
 	   			
-	   			//check to ensure the current year is stored in session storage
-	   			if(sessionStorage.getItem('curryear') === null)
-	   				sessionStorage.setItem('curryear', data[data.length-1].id);
+//	   			//check to ensure the current year is stored in session storage
+//	   			if(sessionStorage.getItem('curryear') === null)
+//	   				sessionStorage.setItem('curryear', data[data.length-1].id);
 	   			
-	   			//set the current season combo
+	   			//set the current season combo. This is not changeable and is used to refer or edit families
 	   			combo = document.getElementById("currseason");
+	   			sessionStorage.setItem('currseason', data[data.length-1].id);
 	   			addComboBoxOption(combo, data[data.length-1].id, data[data.length-1].id);
 	   			
 	   			//set the prior season already referred column header and current season filter legend
@@ -440,7 +440,7 @@
 	    			setEnabledPYTableRowSelection()
 	    			
 	    			//get current year families
-	    			const cyfamilyparams = "year=" + sessionStorage.getItem('curryear') + "&callback=?";
+	    			const cyfamilyparams = "year=" + sessionStorage.getItem('currseason') + "&callback=?";
 	    			$.getJSON('families', cyfamilyparams, function(data)
 	    			{
 	    				if(data.hasOwnProperty('error'))
@@ -607,7 +607,7 @@
 		if(table=== document.getElementById('pyTable'))
 			year = sessionStorage.getItem('prioryear');
 		else
-			year =  sessionStorage.getItem('curryear');
+			year =  sessionStorage.getItem('currseason');
 		
 		document.getElementById("notesfamheader").textContent = 'Notes for ' + family.HOHLastName + ' family';
 		
@@ -651,7 +651,7 @@
     }   
     function submitNoteResponse(button)
     {
-   		var year =  sessionStorage.getItem('curryear');
+   		var year =  sessionStorage.getItem('currseason');
    		var response = document.getElementById('notesresponse').value;
    		if(response.length > 0)
    		{
@@ -861,7 +861,6 @@
     <fieldset>
   		<legend id='cyFilterLegend'>Current Season Filters</legend>
 		<span id='cyfilterspan'>
-		  <!-- 'currseason' vs 'curryear' since it never changes. Prevents interference with curryear selects that change -->
 		  <label for='currseason' class='filterlabel'>Season:</label>
 		  <select id="currseason" title="Select season to display" data-type='tabledata' data-column='-1' data-table='cytable' data-reset='cyresetbtn' onchange='executeFilter(this)' disabled></select>
 		  <label for='curragents' class='filterlabel'>Families Referred By:</label>

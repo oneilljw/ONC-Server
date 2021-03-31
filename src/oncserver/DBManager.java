@@ -160,6 +160,19 @@ public class DBManager
 		else
 			return "UPDATE_FAILED";
 	}
+	
+	static void setDBYearLock(int year, boolean bLock)
+	{
+		//find the year in the dbYearList and update the lock status
+		int index=0;
+		while(index < dbYearList.size() && dbYearList.get(index).getYear() != year)
+			index++;
+		
+		if(index < dbYearList.size())
+		{
+			dbYearList.get(index).setLock(bLock);
+		}
+	}
 
 	String createNewYear()
 	{

@@ -288,7 +288,10 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			//code modified 10-18-16 to prevent null value exception if input map does not contain a key
 			//if key is missing in input map, it is added with an empty string;
 			if(params.containsKey(key) && params.get(key) != null)
-				map.put(key, (String) params.get(key));
+			{
+				String value = (String) params.get(key);
+				map.put(key, value.trim());
+			}
 			else
 				map.put(key, "");
 		}
@@ -304,7 +307,10 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			//code modified 10-18-16 to prevent null value exception if input map does not contain a key
 			//if key is missing in input map, it is added with an empty string;
 			if(params.containsKey(key) && params.get(key) != null)
-				map.put(key, (String) params.get(key));
+			{
+				String value = (String) params.get(key);
+				map.put(key, value.trim());
+			}
 			else
 				map.put(key, "");
 		}

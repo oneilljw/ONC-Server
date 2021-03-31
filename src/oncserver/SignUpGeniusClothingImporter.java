@@ -206,7 +206,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 					}
 						
 					//add the gift to the child gift data base, no client notification
-					List<String> addedGiftsResponseList = childGiftDB.addListOfSignUpGeniusImportedGifts(year, cp.getGiftList());
+					List<String> addedGiftsResponseList = childGiftDB.addListOfSignUpGeniusImportedGifts(year, cp.getGiftList(), null);
 					for(String responseJson : addedGiftsResponseList)
 						clientResponseList.add(responseJson);	
 				}
@@ -241,7 +241,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 					if(!newGeniusClothingAdoptionsList.isEmpty())
 					{
 						//add the gift to the child gift data base, no client notification
-						List<String> addedGiftsResponseList = childGiftDB.addListOfSignUpGeniusImportedGifts(year, newGeniusClothingAdoptionsList);
+						List<String> addedGiftsResponseList = childGiftDB.addListOfSignUpGeniusImportedGifts(year, newGeniusClothingAdoptionsList, null);
 						for(String responseJson : addedGiftsResponseList)
 							clientResponseList.add(responseJson);
 						

@@ -161,84 +161,72 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		return add(year, addedHistoryObj, client);
 	}
 
-	String add(int year, FamilyHistory addedHistoryObj, ONCUser client)
+	String add(int year, FamilyHistory addHistoryReq, ONCUser client)
 	{
-		//add the new object to the data base
+		
 		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
-		addedHistoryObj.setID(histDBYear.getNextID());
-		addedHistoryObj.setDateChanged(System.currentTimeMillis());
-		addedHistoryObj.setChangedBy(client.getLNFI());
+		FamilyHistory priorFHObj = getLastFamilyHistory(year, addHistoryReq.getFamID());
 		
-		//If requested delivered by field is null or the requested family gift status is Delivered,
-		//Attempted or Counselor Pickup, retain the assignee
-		if(addedHistoryObj.getdDelBy() == null || addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Delivered || 
-			addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Attempted ||
-			 addedHistoryObj.getGiftStatus() == FamilyGiftStatus.CounselorPickUp)
+		//add the new object to the data base
+		addHistoryReq.setID(histDBYear.getNextID());
+		addHistoryReq.setDateChanged(System.currentTimeMillis());
+		addHistoryReq.setChangedBy(client.getLNFI());
+		
+		if(priorFHObj != null)
 		{
-			FamilyHistory latestFHObj = getLastFamilyHistory(year, addedHistoryObj.getFamID());
-			if(latestFHObj != null)
-				addedHistoryObj.setDeliveredBy(latestFHObj.getdDelBy());
+			//If requested delivered by field is null or the requested family gift status is Delivered,
+			//Attempted or Counselor Pickup, retain the assignee
+			if(addHistoryReq.getdDelBy() == null || addHistoryReq.getGiftStatus() == FamilyGiftStatus.Delivered || 
+				addHistoryReq.getGiftStatus() == FamilyGiftStatus.Attempted ||
+				 addHistoryReq.getGiftStatus() == FamilyGiftStatus.CounselorPickUp)
+			{
+				addHistoryReq.setDeliveredBy(priorFHObj.getdDelBy());
+			}
+			
+			//notify the corresponding family that delivery has changed and
+			//check to see if new delivery assigned or removed a delivery from a driver
+			ServerVolunteerDB volunteerDB = null;
+			try 
+			{
+				volunteerDB = ServerVolunteerDB.getInstance();
+				
+				//If prior status == ASSIGNED && new status < ASSIGNED, decrement the prior delivery driver
+				//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
+				//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
+				//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
+				if(priorFHObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0 && 
+						addHistoryReq.getGiftStatus() == FamilyGiftStatus.Assigned)
+				{
+					volunteerDB.updateVolunteerDriverDeliveryCounts(year, null, addHistoryReq.getdDelBy());
+				}
+				else if(priorFHObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0 && 
+						 addHistoryReq.getGiftStatus() == FamilyGiftStatus.Assigned && 
+						  !priorFHObj.getdDelBy().equals(addHistoryReq.getdDelBy()))
+				{
+					volunteerDB.updateVolunteerDriverDeliveryCounts(year, priorFHObj.getdDelBy(), addHistoryReq.getdDelBy());
+				}
+				else if(priorFHObj.getGiftStatus() == FamilyGiftStatus.Assigned && 
+						 addHistoryReq.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0)
+				{
+					volunteerDB.updateVolunteerDriverDeliveryCounts(year, priorFHObj.getdDelBy(), null);
+				}
+			}
+			catch (FileNotFoundException e) 
+			{
+				e.printStackTrace();
+			}
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
 		}
-		
-		//get the prior family history object before adding the new one
-		FamilyHistory priorHistoryObj = getHistoryObject(year, addedHistoryObj.getFamID());
 		
 		//add the item to the proper year's list and mark the list as changed
-		histDBYear.add(addedHistoryObj);
+		histDBYear.add(addHistoryReq);
 		histDBYear.setChanged(true);
 		
-		//notify the corresponding family that delivery has changed and
-		//check to see if new delivery assigned or removed a delivery from a driver
-		ServerVolunteerDB volunteerDB = null;
-		try 
-		{
-			volunteerDB = ServerVolunteerDB.getInstance();	
-		} catch (FileNotFoundException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		//get prior delivery for this family
-//		ONCFamily fam = serverFamilyDB.getFamily(year, addedHistoryObj.getFamID());
-//		FamilyHistory priorHistoryObj = getHistoryObject(year, fam.getDeliveryID());
-		
-		//if there was a prior history and the gift status was associated with a delivery, update the 
-		//status and counts
-		if(priorHistoryObj != null)
-		{
-			//If prior status == ASSIGNED && new status < ASSIGNED, decrement the prior delivery driver
-			//else if the prior status == ASSIGNED and new status == ASSIGNED and the driver number changed,
-			//Decrement the prior driver deliveries and increment the new driver deliveries. Else, if the 
-			//prior status < ASSIGNED and the new status == ASSIGNED, increment the new driver deliveries
-			if(priorHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0 && 
-					addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned)
-			{
-				volunteerDB.updateVolunteerDriverDeliveryCounts(year, null, addedHistoryObj.getdDelBy());
-			}
-			else if(priorHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) >= 0 && 
-					 addedHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned && 
-					  !priorHistoryObj.getdDelBy().equals(addedHistoryObj.getdDelBy()))
-			{
-				volunteerDB.updateVolunteerDriverDeliveryCounts(year, priorHistoryObj.getdDelBy(), addedHistoryObj.getdDelBy());
-			}
-			else if(priorHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned && 
-					 addedHistoryObj.getGiftStatus().compareTo(FamilyGiftStatus.Assigned) < 0)
-			{
-				volunteerDB.updateVolunteerDriverDeliveryCounts(year, priorHistoryObj.getdDelBy(), null);
-			}
-		}
-		
-//		//Update the family object with new delivery
-//		if(serverFamilyDB != null)
-//			serverFamilyDB.updateFamilyHistory(year, addedHistoryObj);
-		
 		Gson gson = new Gson();
-		return "ADDED_DELIVERY" + gson.toJson(addedHistoryObj, FamilyHistory.class);
+		return "ADDED_DELIVERY" + gson.toJson(addHistoryReq, FamilyHistory.class);
 	}
 	
 	String addFamilyHistoryList(int year, String historyGroupJson, ONCUser client)
@@ -257,7 +245,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		for(FamilyHistory addFamHistReq : famHistoryList)
 			responseList.add(add(year, addFamHistReq, client));
 		
-		if(responseList.isEmpty())
+		if(!responseList.isEmpty())
 		{
 			clientMgr.notifyAllInYearClients(year, responseList);
 			return "ADDED_FAMILY_HISTORY_GROUP";
@@ -382,6 +370,20 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			Gson gson = new Gson();
 			clientMgr.notifyAllInYearClients(year, "ADDED_DELIVERY"+ gson.toJson(addedFamHistObj, FamilyHistory.class));
 		}
+		
+		return addedFamHistObj;
+	}
+	
+	FamilyHistory addFamilyHistoryObject(int year, FamilyHistory addedFamHistObj)
+	{
+		//add the new object to the data base
+		FamilyHistoryDBYear histDBYear = famHistDB.get(DBManager.offset(year));
+		
+		addedFamHistObj.setID(histDBYear.getNextID());
+		
+		histDBYear.add(addedFamHistObj);
+		histDBYear.setChanged(true);
+		
 		
 		return addedFamHistObj;
 	}
@@ -519,7 +521,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		return response;
 	}
 	
-	void checkFamilyGiftStatusOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift, int famID)
+	void checkFamilyGiftStatusOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift, int famID, ONCUser client)
 	{
 		FamilyHistory fh = getLastFamilyHistory(year,  famID);
 		
@@ -539,7 +541,13 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
     		//add a new family history with gift status change
     		FamilyHistory addedHistoryObj = new FamilyHistory(fh);
     		addedHistoryObj.setID(histDBYear.getNextID());
+    		addedHistoryObj.setFamilyGiftStatus(newGiftStatus);
+    		if(client != null)
+    			addedHistoryObj.setChangedBy(client.getLNFI());
     		addedHistoryObj.setDateChanged(System.currentTimeMillis());
+    		
+    		histDBYear.add(addedHistoryObj);
+    		histDBYear.setChanged(true);
     	
     		Gson gson = new Gson();
     		String change = "ADDED_DELIVERY" + gson.toJson(addedHistoryObj, FamilyHistory.class);
@@ -743,23 +751,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		famHistDB.add(famHistDBYear);
 		famHistDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
 	}
-/*	
-	 private class FamilyHistoryDBYear extends ServerDBYear
-	 {
-		private List<FamilyHistory> histList;
-	    	
-	    FamilyHistoryDBYear(int year)
-	    {
-	    	super();
-	    	histList = new ArrayList<FamilyHistory>();
-	    }
-	    
-	    //getters
-	    List<FamilyHistory> getList() { return histList; }
-	    
-	    void add(FamilyHistory addedHistObj) { histList.add(addedHistObj); }
-	 }
-*/
+
 	@Override
 	void save(int year)
 	{
@@ -775,7 +767,51 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			histDBYear.setChanged(false);
 		}
 	}
-	
+/*	
+	void updateDNSCodes()
+	{
+		try
+		{
+			ServerFamilyDB familyDB = ServerFamilyDB.getInstance();
+			int[] years = {2012,2013,2014,2015, 2016,2017,2018};
+			for(int year : years)
+			{
+				List<FamilyHistory> updatedFHList = new ArrayList<FamilyHistory>();
+				
+				for(FamilyHistory fh: famHistDB.get(DBManager.offset(year)).getList())
+				{	
+					//find the family in the family list
+					ONCFamily fam = familyDB.getFamily(year, fh.getFamID());
+					if(fam != null)
+						fh.setDNSCode(fam.getDNSCode());
+					else
+						fh.setDNSCode(-1);
+					
+					updatedFHList.add(fh);
+				}
+					
+				if(!updatedFHList.isEmpty())
+				{
+					//save it to a new file
+					String[] header = {"History ID", "Family ID", "Family Status", "Gift Status", "Del By", 
+				 			"Notes", "Changed By", "Time Stamp", "DNS Code"};
+					
+					String path = String.format("%s/%dDB/UpdatedFamilyHistoryDB.csv", System.getProperty("user.dir"), year);
+					exportDBToCSV(updatedFHList, header, path);		
+						
+				}	
+			}
+		}
+		catch (FileNotFoundException e) 
+		{
+			
+		}
+		catch (IOException e) 
+		{
+			
+		}
+	}
+*/	
 	private class FamilyHistoryDBYear extends ServerDBYear
     {
 //    	private List<ONCMeal> mealList;
@@ -824,7 +860,6 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		@Override
 		public int compare(FamilyHistory o1, FamilyHistory o2)
 		{
-			
 			if(o2.getTimestamp() > o1.getTimestamp())
 				return -1;
 			else if(o2.getTimestamp() == o1.getTimestamp())
@@ -834,81 +869,6 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		}
 	}
 /*	
-	 void convertDeliveryDBForStatusChanges(int year)
-	    {
-	    	String[] header, nextLine;
-	    	List<FamilyHistory> histList = new ArrayList<FamilyHistory>();
-	    	
-	    	//open the current year file
-	    	String path = String.format("%s/%dDB/DeliveryDB.csv", System.getProperty("user.dir"), year);
-	    	CSVReader reader;
-			try 
-			{
-				reader = new CSVReader(new FileReader(path));
-				if((header = reader.readNext()) != null)	//Does file have records? 
-		    	{
-		    		//Read the User File
-		    		if(header.length == FAMILY_HISTORY_DB_HEADER_LENGTH)	//Does the record have the right # of fields? 
-		    		{
-		    			while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record
-		    			{
-		    				NewFamStatus nfs = getNewFamStatus(nextLine[2]);				
-		    				histList.add(new FamilyHistory(Integer.parseInt(nextLine[0]), Integer.parseInt(nextLine[1]),
-		    						nfs.getNewFamStatus(), nfs.getNewGiftStatus(), nextLine[3], nextLine[4], 
-		    						nextLine[5], Long.parseLong(nextLine[6])));
-		    			}
-		    		}
-		    		else
-		    		{
-		    			String error = String.format("%s file corrupted, header length = %d", path, header.length);
-		    	       	JOptionPane.showMessageDialog(null, error,  path + "Corrupted", JOptionPane.ERROR_MESSAGE);
-		    		}		   			
-		    	}
-		    	else
-		    	{
-		    		String error = String.format("%s file is empty", path);
-		    		JOptionPane.showMessageDialog(null, error,  path + " Empty", JOptionPane.ERROR_MESSAGE);
-		    	}
-		    	
-		    	reader.close();
-		    	
-			} 
-			catch (FileNotFoundException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			catch (IOException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			//now that we should have an output list of converted String[] for each family, write it
-			
-			String[] outHeader = {"History ID", "Family ID", "Fam Status", "Gift Status", "Del By", 
-		 			"Notes", "Changed By", "Time Stamp"};
-			
-			System.out.println(String.format("FamilyHistoryDB saveDB - Saving %d New FamilyHistory DB", year));
-			String outPath = String.format("%s/%dDB/FamilyHistoryDB.csv", System.getProperty("user.dir"), year);
-			
-			 try 
-			    {
-			    	CSVWriter writer = new CSVWriter(new FileWriter(outPath));
-			    	writer.writeNext(outHeader);
-			    	 
-			    	for(FamilyHistory fh : histList)
-			    		writer.writeNext(fh.getExportRow());
-			    	
-			    	writer.close();
-			    	       	    
-			    } 
-			    catch (IOException x)
-			    {
-			    	System.err.format("IO Exception: %s%n", x);
-			    }	
-	    }	
-	 
     NewFamStatus getNewFamStatus(String odels)
     {
     	int oldGiftStatus = Integer.parseInt(odels);
@@ -982,8 +942,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
     							  dDelBy, dNotes, dChangedBy, Long.toString(dDateChanged)};
     		
     		return exportRow;
-    		
     	}
     }
-*/    
+*/        
 }

@@ -118,7 +118,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		
 		//process new gift to see if other data bases require update. They do if the gift
 		//status has caused a family status change or if a partner assignment has changed
-		processGiftAdded(year, oldGift, addedGift);
+		processGiftAdded(year, oldGift, addedGift, client);
 		
 		return "WISH_ADDED" + gson.toJson(addedGift, ONCChildGift.class);
 	}
@@ -159,7 +159,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		
 			//process added gift to see if other data bases require update. They do if the gift
 			//status has caused a family status change or if a partner assignment has changed
-			processGiftAdded(year, oldGift, addedGift);
+			processGiftAdded(year, oldGift, addedGift, client);
 			responseJsonList.add("WISH_ADDED" + gson.toJson(addedGift, ONCChildGift.class));
 		}
 		
@@ -169,7 +169,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		return "ADDED_GIFT_LIST" + gson.toJson(responseJsonList, responseListType);
 	}
 	
-	List<String> addListOfSignUpGeniusImportedGifts(int year, List<ONCChildGift> addedChildGiftList)
+	List<String> addListOfSignUpGeniusImportedGifts(int year, List<ONCChildGift> addedChildGiftList, ONCUser client)
 	{
 		Gson gson = new Gson();
 		List<String> responseJsonList = new ArrayList<String>();
@@ -202,7 +202,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		
 			//process added gift to see if other data bases require update. They do if the gift
 			//status has caused a family status change or if a partner assignment has changed
-			processGiftAdded(year, oldGift, addedGift);
+			processGiftAdded(year, oldGift, addedGift, client);
 			responseJsonList.add("WISH_ADDED" + gson.toJson(addedGift, ONCChildGift.class));
 		}
 		
@@ -353,14 +353,14 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			return addedWish.getDetail();
 	}
 */	
-	void processGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)
+	void processGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift, ONCUser client)
 	{
 		//ask the family data base to check to see if the new gift changes either the family gift status or
 		//now qualifies the family as a gift card only family
 		familyDB.checkFamilyGiftCardOnlyOnGiftAdded(year, priorGift, addedGift);
 		
 		int famID = childDB.getChildsFamilyID(year, addedGift.getChildID());
-		familyHistoryDB.checkFamilyGiftStatusOnGiftAdded(year, priorGift, addedGift, famID);
+		familyHistoryDB.checkFamilyGiftStatusOnGiftAdded(year, priorGift, addedGift, famID, client);
 		
 		//test to see if gift assignee is changing, if the prior gift exists	
 		if(priorGift != null && priorGift.getPartnerID() != addedGift.getPartnerID())

@@ -556,13 +556,13 @@ public class DesktopClient extends Thread
             		output.println(response);
             		clientMgr.addLogMessage(response);
                 }
-                else if(command.startsWith("POST<check_duplicatefamily>"))
-                {
-            		clientMgr.addLogMessage(command);
-            		String response = serverFamilyDB.checkForDuplicateFamily(year, command.substring(27), clientUser);
-            		output.println(response);
-            		clientMgr.addLogMessage(response);
-                }
+//              else if(command.startsWith("POST<check_duplicatefamily>"))
+//              {
+//            		clientMgr.addLogMessage(command);
+//            		String response = serverFamilyDB.checkForDuplicateFamily(year, command.substring(27), clientUser);
+//            		output.println(response);
+//            		clientMgr.addLogMessage(response);
+//              }
                 else if(command.startsWith("POST<update_child>"))
                 {
             		clientMgr.addLogMessage(command);

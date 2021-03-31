@@ -12,6 +12,11 @@
   <script type="text/javascript" src="onccommon.js"></script>
   <script type="text/javascript" src="onctable.js"></script>  
   <script>
+	var charts = [{title: 'Family Status', type: 'family', div: 'famstatus_div', chartdata: {}},
+		  		  {title: 'Gift Status', type: 'gift', div: 'giftstatus_div',  chartdata: {}},
+		 		  {title: 'Meal Status', type: 'meal', div: 'mealstatus_div', chartdata: {}},
+		 		  {title: 'Delivery Status', type: 'delivery', div: 'delstatus_div',  chartdata: {}}];
+
     $( document ).ready(function()
     {
     	//get filter selects, reset buttons and tables 
@@ -28,7 +33,6 @@
    	 		sessionStorage.setItem("dbyears", JSON.stringify(data));
    	 		
 			var yearCombo = document.querySelector("#curryear");
-//			var yearCombo = document.getElementById('curryear');
     		for (var i = data.length-1; i >= 0; i--)
     			addComboBoxOption(yearCombo, data[i].id, data[i].id);
     			
@@ -36,6 +40,7 @@
             {
             	yearCombo.selectedIndex = 0;
             	sessionStorage.setItem('curryear', yearCombo.value);
+            	sessionStorage.setItem('currseason', yearCombo.value);
             }
             else
             	yearCombo.value = sessionStorage.getItem('curryear');	
@@ -56,15 +61,27 @@
     	});
 
    	 	createGroupTable();	//create profile dialog group table
+   	 	
+	   	//create trigger to resizeEnd event     
+	   	$(window).resize(function()
+	   	{
+	   	    if(this.resizeTO) clearTimeout(this.resizeTO);
+	   	    this.resizeTO = setTimeout(function()
+	   	    {
+	   	         $(this).trigger('resizeEnd');
+	   	    }, 100);
+	   	});
+	
+	   	//redraw graph when window resize is completed  
+	   	$(window).on('resizeEnd', function()
+	   	{
+	   		for(let i=0; i< charts.length; i++)
+				drawChart(charts[i]);
+	   	});
     });
     
     function drawStatusCharts() 
-    {
-        var charts = [{title: 'Family Status', type: 'family', width: '70%', div: 'famstatus_div'},
-        			  {title: 'Gift Status', type: 'gift', width: '65%', div: 'giftstatus_div'},
-        			  {title: 'Meal Status', type: 'meal', width: '65%', div: 'mealstatus_div'},
-        			  {title: 'Delivery Status', type: 'delivery', width: '65%', div: 'delstatus_div'}];
-        
+    { 
     	var params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[0].type + "&callback=?";    	
     	$.getJSON('metrics', params, function(data)
         {
@@ -72,22 +89,26 @@
 				window.location=document.getElementById('timeoutanchor').href;
     		else
     		{
-    			drawChart(charts[0], data);
+    			charts[0].chartdata = data;
+    			drawChart(charts[0]);
     			
     			params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[1].type + "&callback=?";
     			$.getJSON('metrics', params, function(data)
     			{
-    				drawChart(charts[1], data);
+    				charts[1].chartdata = data;
+    				drawChart(charts[1]);
     				
     				params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[2].type + "&callback=?";
         			$.getJSON('metrics', params, function(data)
         			{
-        				drawChart(charts[2], data);
+        				charts[2].chartdata = data;
+        				drawChart(charts[2]);
         				
         				params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[3].type + "&callback=?";
             			$.getJSON('metrics', params, function(data)
             			{
-            				drawChart(charts[3], data);
+            				charts[3].chartdata = data;
+            				drawChart(charts[3]);
             			});
         			});
     			});
@@ -95,16 +116,13 @@
         });
     }    			
 
-	function getExternalData()
-	{
-		drawStatusCharts();
-	}
-
-	function drawChart(chart, data)
+	function drawChart(chart)
 	{
 		// Create our data table out of JSON data loaded from server.
-		var table = new google.visualization.DataTable(data);
-		var view = new google.visualization.DataView(table);
+		let table = new google.visualization.DataTable(chart.chartdata);
+		let view = new google.visualization.DataView(table);
+		let chartwidth = (document.getElementById('filtersfieldset').offsetWidth/2)*.95;
+		
 		view.setColumns([0, 1,
 			{
 		    	calc: "stringify",
@@ -115,7 +133,7 @@
 
 		var options = 
 		{
-		    width: 480,
+		    width: chartwidth,
 		    height: 240,
 		    title: sessionStorage.getItem('curryear') + ' ' + chart.title,
 		    titleTextStyle: 
@@ -123,15 +141,20 @@
 		    	fontSize: 16, // 12, 18 whatever you want (don't specify px)
 		    	bold: true,    // true or false
 		    },
-		    chartArea: { width: chart.width},
+		    chartArea: { width: '65%'},
 		    hAxis: { minValue: 0 },
 		    legend: { position: 'none'},
-//			bars: 'horizontal' // Required for Material Bar Charts.
 		};
 		    	
 		var chart = new google.visualization.BarChart(document.getElementById(chart.div));
 		chart.draw(view, options);
 	}
+	
+	function getExternalData()
+	{
+		drawStatusCharts();
+	}
+	
 	function onFamilyDetailClicked()
 	{
 		let params = {'year': sessionStorage.getItem('curryear'), 'type':'full'};
@@ -139,15 +162,6 @@
 	}
   </script>
   <style type="text/css">
-/*  	
-	.header-links a
-	{
-		color: white;
-		font-size: 18px;
-		margin-right: 40px;
-		text-decoration: none;
-	}
-*/	
 	.header-button-div
 	{
 		display: inline-block;
@@ -216,7 +230,7 @@
     <p id='banner-message'>BANNER_MESSAGE</p>
   </div>
   <form>
-  	<fieldset>
+  	<fieldset id='filtersfieldset'>
   		<legend>Filters</legend>
 		<span id='filterspan'>
 		  <label for='curryear' class='filterlabel'>Season:</label>
