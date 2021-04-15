@@ -30,7 +30,8 @@ public class ONCSecureWebServer
 {
 	private static final int SECURE_WEB_SERVER_PORT = 8902;
 	private static final int CONCURRENT_THREADS = 5;
-	private static final String ONC_SERVER_KEYSTORE = "/Certs/2019Certs/oncdms.keystore";
+	private static final String ONC_SERVER_KEYSTORE = "/Certs/2021Certs/oncdms.p12";
+//	private static final String ONC_SERVER_KEYSTORE = "/Certs/2019Certs/oncdms.keystore";
 //	private static final String ONC_SERVER_KEYSTORE = "oncdms.jks";
 	private static final String ONC_STORE_PASSWORD = "oncpassword";
 //	private static final String ONC_KEYSTORE_ALIAS = "mykey";
@@ -51,7 +52,8 @@ public class ONCSecureWebServer
 		{	
 			// load certificate
 			FileInputStream fIn = new FileInputStream(keystoreFN);
-			KeyStore keystore = KeyStore.getInstance("JKS");
+			KeyStore keystore = KeyStore.getInstance("PKCS12");
+//			KeyStore keystore = KeyStore.getInstance("JKS");
 			keystore.load(fIn, storepass);
 			
 			// display certificate
