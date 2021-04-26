@@ -169,7 +169,7 @@ public class ONCSecureWebServer
 								   "/checkmarkicon", "/oncloginstylesheet", "/vanilla", "/editprofile.js",
 								   "/login.js","/onccommon.js", "/onctable", "/giftcardicon", "/stoplighticon-any",
 								   "/stoplighticon-gray", "/stoplighticon-green", "/stoplighticon-yellow",
-								   "/stoplighticon-red","/deliverycards"};
+								   "/stoplighticon-red","/deliverycards", "/webcam-easy.js", "/snap.wav"};
 		
 		CommonHandler commonHandler = new CommonHandler();
 		for(String contextname: commonContexts)

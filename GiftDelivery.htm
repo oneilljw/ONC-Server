@@ -3,28 +3,32 @@
 <head lang="en">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ONC Gift Delivery</title>
- <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
- <script>
+<script src="jquery.js"></script>
+<!-- <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
+<script>
  	var year = SEASON;
  	var targetID = TARGETID;
- 	var giftStatus = GIFT_STATUS;
  	
 	function onConfirm()
 	{
 		//request the server change the delivery status
-		let partnerparams = "year=" + year + "&" + "targetid=" + targetid + "&" + "callback=?";
-		$.post('deliveryconfirmed', partnerparams, function(family)
- 		{
- 			console.log(family);
- 		});
+		let partnerparams = "year=" + year + "&targetid=" + targetID + "&callback=?";
+		console.log(partnerparams);
+		let snapsound = document.getElementById('snapSound');
+		snapsound.play();
+		
+//		$.post('deliveryconfirmed', partnerparams, function(family)
+//		{
+//			console.log(family);
+// 		});
 	}
 	function onUndoConfirm()
 	{
-
+		return false;
 	}
 	function onClose()
 	{
-		window.close();
+		return false;
 	}
   </script>
   <style>
@@ -68,9 +72,13 @@
 	 	padding: 4px 6px;
 	 	font-size: 20px;
 	}
-	.confirmdiv { display: block; }
-	.undodiv { display: none; }
-	.closediv { display: none; }
+	#confirmdiv { display: block; }
+	#undodiv { display: none; }
+	#canceldiv
+	{
+		margin-top: 5px;
+		display: block;
+	}
   </style>
 </head>
 <body>
@@ -80,17 +88,24 @@
 	  <a id='breadcrumb' class='breadcrumb-first' href='dashboard'>Gift Delivery</a>
     </span>   
   </div>
-  <form id='confirm' action="/deliveryconfirmed" method="post">
+  <form>
     <div class='center'>
-      <p>GIFT_DEL_MSSG_LINE_ONE</p>
-      <p>GIFT_DEL_MSSG_LINE_TWO</p>
-      <div id='confirmdiv'><button onclick='onConfirm()'>Confirm Gift Delivery</button></div>
-      <div id='undodiv'><span>
-        <button onclick='onUndo()'>Undo</button>
-        <button onclick='onClose'>Close</button>
-      </span></div>
-      <div id='cloasediv'><button onclick='onClose()'>Close</button></div>
+      <p>GIFT_DELIVERY_MESSAGE_LINE_ONE</p>
+      <p>GIFT_DELIVERY_MESSAGE_LINE_TWO</p>
+      <div id='confirmdiv'>
+        <button type='button' onclick='onConfirm()'>Confirm Gift Delivery</button>
+      </div>
+      <div id='undodiv'>
+        <span>
+          <button type='button' onclick='onUndo()'>Undo</button>
+          <button type='button' onclick='onClose'>Close</button>
+        </span>
+      </div>
+      <div id='canceldiv'>
+      <button onclick='onClose()'>Cancel</button>
+      </div>
     </div>
   </form>
+  <audio id="snapSound" src="snap.wav" preload = "auto"></audio>
 </body>
 </html>

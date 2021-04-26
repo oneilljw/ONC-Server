@@ -70,9 +70,11 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String ONC_STYLE_SHEET_CSS = "ONCStyleSheet.css";
 	private static final String ONC_DIALOG__STYLE_SHEET_CSS = "ONCDialogStyleSheet.css";
 	private static final String ONC_LOGIN__STYLE_SHEET_CSS = "ONCLoginStyleSheet.css";
-	private static final String JQUERY_JS_FILE = "jquery-1.11.3.js";
+	private static final String JQUERY_JS_FILE = "jquery-3.6.0.min.js";
 	private static final String LOGIN_JS_FILE = "login.js";
 	private static final String STATIC_CHARTS_JS_FILE = "staticcharts.js";
+	private static final String WEBCAM_EASY_JS_FILE = "webcam-easy.min.js";
+	private static final String SNAP_WAV_FILE = "snap.wav";
 	private static final String STOPLIGHT_ANY_FILE = "Button-Blank-Any-icon.png";
 	private static final String STOPLIGHT_GRAY_FILE = "Button-Blank-Gray-icon.png";
 	private static final String STOPLIGHT_GREEN_FILE = "Button-Blank-Green-icon.png";
@@ -154,6 +156,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("login", readFileToByteArray(LOGIN_JS_FILE));
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
 			webfileMap.put("staticcharts", readFileToByteArray(STATIC_CHARTS_JS_FILE));
+			webfileMap.put("webcam-easy", readFileToByteArray(WEBCAM_EASY_JS_FILE));
+			webfileMap.put("snap", readFileToByteArray(SNAP_WAV_FILE));
 			webfileMap.put("stoplighticon-any", readFileToByteArray(STOPLIGHT_ANY_FILE));
 			webfileMap.put("stoplighticon-gray", readFileToByteArray(STOPLIGHT_GRAY_FILE));
 			webfileMap.put("stoplighticon-green", readFileToByteArray(STOPLIGHT_GREEN_FILE));
