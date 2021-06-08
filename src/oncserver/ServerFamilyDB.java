@@ -1,5 +1,8 @@
 package oncserver;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -11,6 +14,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
+import javax.xml.bind.DatatypeConverter;
 
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
@@ -401,7 +407,42 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		String response = gson.toJson(resultList, listOfFamilyReferences);
 		
 		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+	}
+	
+	static HtmlResponse confirmGiftDelivery(int year, int famID, String dataURI, String callbackFunction)
+	{
+		String response = "{\"success\":false}";
+		//find the family
+		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
+		
+		int index=0;
+		while(index<fAL.size() && fAL.get(index).getID() != famID)
+			index++;
+					
+		if(index<fAL.size())
+		{
+			//found the family, extract the image from the dataURI
+			byte[] imagedata = DatatypeConverter.parseBase64Binary(dataURI.substring(dataURI.indexOf(",")+1));
+			
+			BufferedImage bufferedImage;
+			try 
+			{
+				bufferedImage = ImageIO.read(new ByteArrayInputStream(imagedata));
+				ImageIO.write(bufferedImage, "png", new File(String.format("%s/%dDB/Confirm%d.png",
+														System.getProperty("user.dir"),year,famID)));
+				response = "{\"success\":true}";
+			}
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				response = "{\"success\":false,\"error\":\"ioexception\"}";
+			}	
+		}
+		
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
 	
 	/***

@@ -72,8 +72,10 @@ public class ONCSecureWebServer
 			server = HttpsServer.create(new InetSocketAddress(SECURE_WEB_SERVER_PORT), 0);
 			
 			// create ssl context
-			SSLContext sslContext = SSLContext.getInstance("TLSv1");
+			SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+//			SSLContext sslContext = SSLContext.getInstance("TLS");
 			sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+			SSLContext.setDefault(sslContext);
 			
 			// setup the HTTPS context and parameters
 			server.setHttpsConfigurator(new HttpsConfigurator(sslContext) 
@@ -84,6 +86,7 @@ public class ONCSecureWebServer
 					{
 						//Initialize the SSL context
 						SSLContext c = SSLContext.getDefault();
+//						System.out.println(String.join(" ", SSLContext.getDefault().getSupportedSSLParameters().getProtocols()));
 						SSLEngine engine = c.createSSLEngine();
 						
 						// get the default parameters

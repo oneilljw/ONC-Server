@@ -134,6 +134,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("recoverylogin", readFile(String.format("%s/%s",System.getProperty("user.dir"), RECOVERY_LOGIN_HTML)));
 			webpageMap.put("getdeliverycards", readFile(String.format("%s/%s",System.getProperty("user.dir"), PDF_VIEWER_HTML)));
 			webpageMap.put("giftdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), GIFT_DELIVERY_HTML)));
+//			webpageMap.put("giftdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), AUDIO_TEST_HTML)));
 			webpageMap.put("confirmdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), CONFIRM_DELIVERY_HTML)));
 			webpageMap.put("qrscanner", readFile(String.format("%s/%s",System.getProperty("user.dir"), QRSCANNER_HTML)));
 			
@@ -157,7 +158,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("jquery", readFileToByteArray(JQUERY_JS_FILE));
 			webfileMap.put("staticcharts", readFileToByteArray(STATIC_CHARTS_JS_FILE));
 			webfileMap.put("webcam-easy", readFileToByteArray(WEBCAM_EASY_JS_FILE));
-			webfileMap.put("snap", readFileToByteArray(SNAP_WAV_FILE));
+			webfileMap.put("snap.wav", readFileToByteArray(SNAP_WAV_FILE));
 			webfileMap.put("stoplighticon-any", readFileToByteArray(STOPLIGHT_ANY_FILE));
 			webfileMap.put("stoplighticon-gray", readFileToByteArray(STOPLIGHT_GRAY_FILE));
 			webfileMap.put("stoplighticon-green", readFileToByteArray(STOPLIGHT_GREEN_FILE));
@@ -241,9 +242,64 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		t.close();
 	}
 	
+	Integer[] getRange(Headers requestHeaders)
+	{
+		int startbyte = -1, endbyte = -1;
+		if(requestHeaders.containsKey("Range"))
+		{
+			List<String> rangeValue = requestHeaders.get("Range");
+//			System.out.println(rangeValue);
+			if(rangeValue.size() == 1)	//value should have format "[bytes=x-y]". y can be an empty space
+			{
+				String range = rangeValue.get(0);
+//				System.out.println(range);
+				
+				String[] rangeParts = range.split("bytes=");	//should yield "x-y"
+//				System.out.println(rangeParts.length);
+//				System.out.println(rangeParts[0]);
+//				System.out.println(rangeParts[1]);
+				
+				if(rangeParts.length == 2)
+				{
+					String[] values = rangeParts[1].split("-");	//should yield a two string array of "x" and "y"
+//					System.out.println(values.length);
+					
+					if(values.length > 0 && values.length < 3)
+					{
+						try
+						{
+							startbyte = Integer.parseInt(values[0]);
+							if(values.length == 2)
+								endbyte = Integer.parseInt(values[1]);
+							
+							return new Integer[] {startbyte, endbyte};
+						}
+						catch (NumberFormatException nfe)
+						{
+							return null;
+						}
+					}
+					else
+						return null;
+				}
+				else
+					return null;
+			}
+			else
+				return null;			
+		}
+		else
+			return null;
+	}
+	
 	void sendNoContentResponseHeader(HttpExchange t) throws IOException
 	{
 		t.sendResponseHeaders(HttpCode.No_Body.code(), -1);
+	}
+	
+	void sendBadRequestResponseHeader(HttpExchange t) throws IOException
+	{
+		t.sendResponseHeaders(HttpCode.Invalid.code(), -1);
 	}
 	
 	static String readFile(String file) throws IOException
@@ -521,9 +577,15 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	{
 		//send an error message json that will trigger a dialog box in the client
 		String json = "{\"error\":\"Your session expired due to inactivity\"}";
-		
-//		return callback +"(" + json +")";
-		
+
+		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
+	}
+	
+	HtmlResponse invalidParameterReceivedToJsonRequest(String callback)
+	{
+		//send an error message json that will trigger a dialog box in the client
+		String json = "{\"error\":\"Your request contains an invalid parameter\"}";
+
 		return new HtmlResponse(callback +"(" + json +")", HttpCode.Ok);
 	}
 	

@@ -412,10 +412,27 @@ public class FamilyHandler extends ONCWebpageHandler
 		else if(requestURI.contains("/deliveryconfirmed"))
 		{
 			//update the family status && return the update family object.
-//			ServerFamilyDB familyDB = ServerFamilyDB.getInstance();
+			HtmlResponse htmlResponse = null;
 			
-//			HtmlResponse htmlResponse = familyDB.confirmFamilyGiftDelivery();
-			HtmlResponse htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			if(params.containsKey("year") && params.containsKey("famid") && 
+				params.containsKey("imgBase64"))
+			{
+				try
+				{
+					int year = Integer.parseInt((String) params.get("year"));
+					int famID = Integer.parseInt((String) params.get("famid"));
+					String imgBase64 = (String) params.get("imgBase64");
+					
+					htmlResponse = ServerFamilyDB.confirmGiftDelivery(year, famID, imgBase64, (String) params.get("callback")); 
+				}
+				catch (NumberFormatException nfe)
+				{
+					htmlResponse = invalidParameterReceivedToJsonRequest((String) params.get("callback"));
+				} 
+			}			
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
 			sendHTMLResponse(t, htmlResponse);
 		}
 		else if(requestURI.contains("/createdeliverycards"))

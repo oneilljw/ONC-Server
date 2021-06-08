@@ -3,36 +3,115 @@
 <head lang="en">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ONC Gift Delivery</title>
-<script src="jquery.js"></script>
+<script type="text/javascript"src="jquery.js"></script>
 <!-- <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
 <script>
  	var year = SEASON;
  	var targetID = TARGETID;
+	var webcam;
+	var picture;
  	
 	function onConfirm()
 	{
 		//request the server change the delivery status
 		let partnerparams = "year=" + year + "&targetid=" + targetID + "&callback=?";
-		console.log(partnerparams);
-		let snapsound = document.getElementById('snapSound');
-		snapsound.play();
 		
-//		$.post('deliveryconfirmed', partnerparams, function(family)
-//		{
-//			console.log(family);
-// 		});
+		const webcamElement = document.getElementById('webcam');
+		const canvasElement = document.getElementById('canvas');
+		const snapSoundElement = document.getElementById('snapSound');
+		webcam = new Webcam(webcamElement, 'environment', canvasElement, snapSoundElement);
+		
+		document.getElementById('confirmdiv').style.display='none';
+		document.getElementById('videodiv').style.display='block';
+		document.getElementById('takephotodiv').style.display='block';
+		
+		webcam.start()
+		   .then(result =>{
+		      console.log("webcam started");
+		   })
+		   .catch(err => {
+		       console.log(err);
+		   });
 	}
-	function onUndoConfirm()
+	function onRetake()
 	{
-		return false;
+		document.getElementById('videodiv').style.display='block';
+		document.getElementById('photodiv').style.display='none';
+		webcam.start()
+		   .then(result =>{
+		      console.log("webcam started");
+		   })
+		   .catch(err => {
+		       console.log(err);
+		   });
 	}
-	function onClose()
+	function takePhoto()
 	{
-		return false;
+		picture = webcam.snap();
+		webcam.stop();
+		console.log('webcam stopped');
+		
+		document.getElementById('videodiv').style.display='none';
+		document.getElementById('photodiv').style.display='block';
+		
+		document.getElementById('takephotodiv').style.display='none';
+		document.getElementById('canceldiv').style.display='none';
+		document.getElementById('retakephotodiv').style.display='block';
+		document.getElementById('submitdiv').style.display='block';
+	}
+	
+	function retakePhoto()
+	{
+		document.getElementById('confirmdiv').style.display='none';
+		document.getElementById('photodiv').style.display='none';
+		document.getElementById('retakephotodiv').style.display='none';
+		document.getElementById('submitdiv').style.display='none';
+		
+		document.getElementById('videodiv').style.display='block';
+		document.getElementById('takephotodiv').style.display='block';
+		document.getElementById('canceldiv').style.display='block';
+		
+		webcam.start()
+		   .then(result =>{
+		      console.log("webcam started");
+		   })
+		   .catch(err => {
+		       console.log(err);
+		   });
+	}
+	function submitPhoto()
+	{
+//		console.log(picture);
+//		let params = "year=" + year + "&famid=" + targetID + "&imgBase64=" + picture + "&callback=?";
+//		$.post( "deliveryconfirmed", params, function( data ) {
+//			  console.log( data );
+//			}, "json");
+		$.ajax({
+		      type: "POST",
+		      url: "deliveryconfirmed",
+		      data: { 
+		         imgBase64: picture,
+		         "year": year,
+		         "famid": targetID
+		      },
+		      dataType: 'jsonp',
+			  contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		    }).done(function(response) {
+		      console.log(response); 
+		      // If you want the file to be visible in the browser 
+		      // - please modify the callback in javascript. All you
+		      // need is to return the url to the file, you just saved 
+		      // and than put the image in your browser.
+		    });
 	}
   </script>
   <style>
-	.center { text-align: center; }
+	.center
+	{ 
+		text-align: center;
+		margin: 0 auto; 
+		width: 240px;
+	}
 	p {font-size: 20px; }
 	.header 
 	{
@@ -72,12 +151,29 @@
 	 	padding: 4px 6px;
 	 	font-size: 20px;
 	}
-	#confirmdiv { display: block; }
-	#undodiv { display: none; }
+	#confirmdiv
+	{
+		display: block;
+	}
 	#canceldiv
 	{
 		margin-top: 5px;
 		display: block;
+	}
+	#videodiv, #photodiv, #takephotodiv, #retakephotodiv, #submitdiv
+	{
+		display: none;
+		margin-top: 5px;
+	}
+	#webcam
+	{
+		width: 240px;
+    	height: 240px;
+	}
+	#canvas
+	{
+   		width: 240px;
+    	height: 200px;
 	}
   </style>
 </head>
@@ -85,7 +181,7 @@
   <div class='header'> 
     <img class='logo-img' src="onclogo">
     <span class='header-links'>
-	  <a id='breadcrumb' class='breadcrumb-first' href='dashboard'>Gift Delivery</a>
+	  <a id='breadcrumb' class='breadcrumb-first'>Confirm Gift Delivery</a>
     </span>   
   </div>
   <form>
@@ -95,17 +191,27 @@
       <div id='confirmdiv'>
         <button type='button' onclick='onConfirm()'>Confirm Gift Delivery</button>
       </div>
-      <div id='undodiv'>
-        <span>
-          <button type='button' onclick='onUndo()'>Undo</button>
-          <button type='button' onclick='onClose'>Close</button>
-        </span>
+      <div id='videodiv'>
+      	<video id="webcam" class='center' playsinline autoplay></video>
+      </div>
+      <div id=photodiv>	
+		<canvas id="canvas"></canvas>
+		<audio id="snapSound" src="/snap.wav" preload = "auto"></audio>
+	  </div>
+      <div id='retakephotodiv'>
+        <button id='retakebtn' type='button' onclick='retakePhoto()'>Retake Photo</button>
+      </div>
+      <div id='takephotodiv'>
+        <button id='takephotobtn' type='button' onclick='takePhoto()'>Take Photo</button>
       </div>
       <div id='canceldiv'>
-      <button onclick='onClose()'>Cancel</button>
+        <button id='cancelbtn' type='button' onclick='onCancel()'>Cancel</button>
+      </div>
+      <div id='submitdiv'>
+        <button id='submitbtn' type='button' onclick='submitPhoto()'>Submit Confirmation</button>
       </div>
     </div>
   </form>
-  <audio id="snapSound" src="snap.wav" preload = "auto"></audio>
+<script type="text/javascript" src="webcam-easy.js"></script>
 </body>
 </html>

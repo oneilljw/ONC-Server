@@ -1,7 +1,9 @@
 package oncserver;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 
@@ -49,7 +51,46 @@ public class CommonHandler extends ONCWebpageHandler
 		else if(requestURI.contains("/webcam-easy.js"))
 			sendCachedFile(t, "text/javascript", "webcam-easy", false);
 		else if(requestURI.contains("/snap.wav"))
-			sendCachedFile(t, "text/javascript", "snap", false);
+		{
+			Headers reqHeaders = t.getRequestHeaders();
+			Headers respHeaders = t.getResponseHeaders();
+		   
+			Integer[] range = getRange(reqHeaders);
+			if(range != null)
+			{
+				//Get the actual byte range from the range header string, and set the starting byte.
+				byte[] bytearray = webfileMap.get("snap.wav");
+				int fSize = bytearray.length;
+				HttpCode retCode = HttpCode.Ok;
+				
+				int startbyte = range[0];
+				int endbyte = bytearray.length-1;	//
+				
+				//if only one range parameter, i.e. "[bytes:0-]", send the entire file
+	            if (range[1] != -1)
+	            	endbyte = range[1];
+	             
+	            //If the start byte is not equal to zero, that means the user is requesting partial content.
+	            if (startbyte != 0 || endbyte != fSize - 1)
+	            	retCode = HttpCode.Partial_Content;
+	            	
+	            int desSize = endbyte - startbyte + 1;
+	            
+	            respHeaders.add("Content-Type", "audio/wav");
+	            respHeaders.add("Accpet-Ranges", "bytes");
+	            respHeaders.add("Content-Length", Integer.toString(desSize)); 
+	            respHeaders.add("Content-Range", String.format("bytes %d-%d/%d", startbyte, endbyte , fSize));
+	            t.sendResponseHeaders(retCode.code(), desSize);
+	            
+	            OutputStream os = t.getResponseBody();
+	    	    os.write(bytearray, startbyte, desSize);
+	    	    os.close();
+	    	    
+	    	    t.close();
+			}	
+			else
+				sendBadRequestResponseHeader(t);	//couldn't parse the Range request header	
+		}
 		else if(requestURI.contains("/editprofile.js"))
 			sendCachedFile(t, "text/javascript", "editprofile", false);
 		else if(requestURI.contains("/onccommon.js"))
