@@ -363,15 +363,9 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
-		else if(requestURI.contains("/qrscanner"))
-		{
-			String response = webpageMap.get("qrscanner");
-			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
-		}
 		else if(requestURI.contains("/giftdelivery"))
 		{
 			String response = webpageMap.get("giftdelivery");
-			String line1 = "", line2 = "";
 			
 			if(params.containsKey("year") && params.containsKey("famid") && params.containsKey("refnum"))
 			{
@@ -386,8 +380,8 @@ public class FamilyHandler extends ONCWebpageHandler
 					if(family != null)
 					{
 						FamilyHistory famHist = ServerFamilyHistoryDB.getInstance().getLastFamilyHistory(year, famID);
-						line1 = String.format("Family #: %s", family.getONCNum());
-						line2 = String.format("Head of Household: %s %s",family.getFirstName(), family.getLastName());
+						String line1 = String.format("Family #: %s", family.getONCNum());
+						String line2 = String.format("Name: %s %s",family.getFirstName(), family.getLastName());
 						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", line1);
 						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_TWO", line2);
 						
@@ -397,15 +391,22 @@ public class FamilyHandler extends ONCWebpageHandler
 						response = response.replace("GIFT_STATUS", famHist.getGiftStatus().toString());
 					}
 					else
-						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERROR: Unable to locate family record");
+					{
+						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERR: Family Not Found");
+						response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_TWO", "");
+					}
 				}
 				catch (NumberFormatException nfe)
 				{
-					response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERROR: Invaild QR Code Content");
+					response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERR: Invalid QR Content");
+					response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_TWO", "");
 				}
 			}
 			else
-				response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERROR: Invaild QR Code");
+			{
+				response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_ONE", "ERR: Invalid QR Code");
+				response = response.replace("GIFT_DELIVERY_MESSAGE_LINE_TWO", "");
+			}
 			
 			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
@@ -600,7 +601,7 @@ public class FamilyHandler extends ONCWebpageHandler
 															System.currentTimeMillis(),
 															dnsCode);
 		
-				FamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, wc.getWebUser(), false);
+				FamilyHistory addedFamHistory = famHistDB.addFamilyHistoryObject(year, famHistory, wc.getWebUser().getLNFI(), false);
 		
 				//create a meal request, if meal was requested
 				ONCMeal mealReq = null, addedMeal = null;

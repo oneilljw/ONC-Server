@@ -290,6 +290,12 @@ public class DesktopClient extends Thread
                 	String response = serverFamilyDB.getFamily(year, command.substring(11));
                 	output.println(response);		
                 }
+                else if(command.startsWith("GET<confirmation>"))
+                {
+                	clientMgr.addLogMessage(command);               	
+                	String response = serverFamilyDB.getConfirmationPNG(year, command.substring(17));
+                	output.println(response);		
+                }
                 else if(command.startsWith("GET<children>"))
                 {
                 	clientMgr.addLogMessage(command);

@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -16,7 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
-import javax.xml.bind.DatatypeConverter;
+
+import org.apache.commons.io.FileUtils;
 
 import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
@@ -64,7 +66,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 40;
+	private static final int FAMILYDB_HEADER_LENGTH = 41;
 	
 //	private static final int FAMILY_STOPLIGHT_RED = 2;
 //	private static final int NUMBER_OF_WISHES_PER_CHILD = 2;	//COVID 19 - Two gifts/child not three
@@ -414,24 +416,43 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	{
 		String response = "{\"success\":false}";
 		//find the family
-		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
+		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
+		List<ONCFamily> fAL = fDBYear.getList();
 		
 		int index=0;
 		while(index<fAL.size() && fAL.get(index).getID() != famID)
 			index++;
 					
 		if(index<fAL.size())
-		{
+		{	
+			ONCFamily updatedFamily = fAL.get(index);
+		
 			//found the family, extract the image from the dataURI
-			byte[] imagedata = DatatypeConverter.parseBase64Binary(dataURI.substring(dataURI.indexOf(",")+1));
+			byte[] imagedata = Base64.getDecoder().decode(dataURI.substring(dataURI.indexOf(",")+1));
 			
 			BufferedImage bufferedImage;
 			try 
 			{
 				bufferedImage = ImageIO.read(new ByteArrayInputStream(imagedata));
-				ImageIO.write(bufferedImage, "png", new File(String.format("%s/%dDB/Confirm%d.png",
+				ImageIO.write(bufferedImage, "png", new File(String.format("%s/%dDB/Confirmations/confirmed%d.png",
 														System.getProperty("user.dir"),year,famID)));
 				response = "{\"success\":true}";
+				
+				if(!updatedFamily.hasDeliveryImage())
+				{
+					//if a confirmation signature image doesn't already exist, modify the family record and notify clients
+					updatedFamily.setGiftConfirmation(true);
+					fDBYear.setChanged(true);
+					
+					//notify the in-year clients
+					Gson gson = new Gson();
+					String json = "UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class);
+					clientMgr.notifyAllInYearClients(year, json);
+					
+					//notify the history database of delivery confirmation
+				}
+				
+				familyHistoryDB.checkDeliveryStatusOnConfirmation(year, famID);
 			}
 			catch (IOException e) 
 			{
@@ -846,7 +867,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 																System.currentTimeMillis(),
 																-1);
 			
-				FamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, famHistory, currClient.getClientUser(), false);
+				FamilyHistory addedFamHistory = familyHistoryDB.addFamilyHistoryObject(year, famHistory, currClient.getClientUser().getLNFI(), false);
 //				if(addedFamHistory != null)
 //					addedFam.setDeliveryID(addedFamHistory.getID());
 				
@@ -995,6 +1016,47 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		}
 		else
 			return "FAMILY_NOT_FOUND";
+	}
+	
+	String getConfirmationPNG(int year, String zFamID)
+	{
+		try
+		{
+			int oncID = Integer.parseInt(zFamID);
+			List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
+			
+			int index = 0;	
+			while(index < fAL.size() && fAL.get(index).getID() != oncID)
+				index++;
+			
+			if(index < fAL.size())
+			{
+				//family found, is there a confirmation?
+				if(fAL.get(index).hasDeliveryImage())
+				{
+					String path = String.format("%s/%dDB/Confirmations/confirmed%d.png", System.getProperty("user.dir"),year,oncID);
+					byte[] fileContent;
+					try 
+					{
+						fileContent = FileUtils.readFileToByteArray(new File(path));
+						String encodedString = Base64.getEncoder().encodeToString(fileContent);
+						return encodedString;
+					} 
+					catch (IOException e) 
+					{
+						return "ERROR: INVALID_IMAGE_FORMAT";
+					}
+				}
+				else
+					return "ERROR: CONFIRMATION_NOT_FOUND";
+			}
+			else
+				return "ERROR: FAMILY_NOT_FOUND";
+		}
+		catch (NumberFormatException nfe)
+		{
+			return "ERROR: INVALID_FAMILY_IDENTIFER";
+		}
 	}
 	
 	static HtmlResponse getFamilyJSONP(int year, boolean bByReference, String targetID, boolean bIncludeSchools, String callbackFunction)
@@ -1490,7 +1552,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				"Agent ID", "GroupID",
 //				"Delivery ID",
 				"Phone Code", "# of Bags", "# of Large Items", 
-				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only", "Gift Distribution"};
+				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only",
+				"Gift Distribution","Del Confirmation"};
 		
 		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
 		if(fDBYear.isUnsaved())	
@@ -1641,6 +1704,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		FamilyDBYear famDBYear = new FamilyDBYear(newYear);
 		familyDB.add(famDBYear);
 		famDBYear.setChanged(true);	//mark this db for persistent saving on the next save event
+		
+		//add a directory named Confirmations that will hold images of delivery receipt signatures
+		File confirmationDir = new File(String.format("%s/%dDB/Confirmations", System.getProperty("user.dir"), newYear));
+		if (!confirmationDir.exists())
+		    confirmationDir.mkdirs();
 	}
 	
 	 /******************************************************************************************

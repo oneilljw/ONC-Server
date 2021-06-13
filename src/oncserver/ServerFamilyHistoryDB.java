@@ -340,7 +340,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		return "ADDED_GROUP_DELIVERIES";
 	}
 */	
-	FamilyHistory addFamilyHistoryObject(int year, FamilyHistory addedFamHistObj, ONCUser user, boolean bNotify)
+	FamilyHistory addFamilyHistoryObject(int year, FamilyHistory addedFamHistObj, String userLNFI, boolean bNotify)
 	{
 		ClientManager clientMgr = ClientManager.getInstance();
 		
@@ -349,7 +349,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		
 		addedFamHistObj.setID(histDBYear.getNextID());
 		addedFamHistObj.setDateChanged(System.currentTimeMillis());
-		addedFamHistObj.setChangedBy(user.getLNFI());
+		addedFamHistObj.setChangedBy(userLNFI);
 		
 		if(addedFamHistObj.getdDelBy() == null || 
 			addedFamHistObj.getGiftStatus() == FamilyGiftStatus.Delivered || 
@@ -701,37 +701,19 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		}
 	}
 	
-	HtmlResponse confirmFamilyGiftDelivery(int year, int famid, WebClient wc, String callbackFunction)
+	void checkDeliveryStatusOnConfirmation(int year, int famid)
 	{
-		String response;
 		FamilyHistory lastHistoryObj =  getLastFamilyHistory(year, famid);
 
-		if(lastHistoryObj != null)
+		if(lastHistoryObj != null && lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned)
 		{
-			if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Assigned)
-			{
-				
-				//add a history item
-				FamilyHistory reqFamHistObj = new FamilyHistory(lastHistoryObj);
-				reqFamHistObj.setFamilyGiftStatus(FamilyGiftStatus.Delivered);
-				reqFamHistObj.setdNotes("Gift Status Change");
-				
-				addFamilyHistoryObject(year, reqFamHistObj, wc.getWebUser(), true);
-
-				response = "{\"message\":\"Gifts Successfully Delivered!\"}"; 
-			}
-			else if(lastHistoryObj.getGiftStatus() == FamilyGiftStatus.Delivered)
-				response = "{\"message\":\"Gifts Already Delivered\"}"; 
-			else
-				response = String.format("{\"message\":\"Error: Invalid Family Gift Status: %s\"}",
-						lastHistoryObj.getGiftStatus().toString());
+			//add a history item
+			FamilyHistory reqFamHistObj = new FamilyHistory(lastHistoryObj);
+			reqFamHistObj.setFamilyGiftStatus(FamilyGiftStatus.Delivered);
+			reqFamHistObj.setdNotes("Gift Status Change");
+			
+			addFamilyHistoryObject(year, reqFamHistObj, "Delivery Volunteer", true);
 		}
-		else
-		{
-			response = "{\"message\":\"Error: Family Not Found\"}";
-		}
-		
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
 	
 	@Override

@@ -183,7 +183,7 @@ public class ONCSecureWebServer
 		}
 		
 		//set up the family handler
-		String[] familyContexts = {"/referral","/referfamily","/familyupdate","/updatefamily","/qrscanner",
+		String[] familyContexts = {"/referral","/referfamily","/familyupdate","/updatefamily",
 									"/updatefamilies","/familyview","/getdeliverycards","/createdeliverycards",
 				 					"/families","/familystatus","/commonfamily.js","/familysearch","/deliveryconfirmed",
 				 					"/getfamily","/references","/newfamily", "/familynotes","/giftdelivery", 
@@ -214,7 +214,7 @@ public class ONCSecureWebServer
 		
 		//set up the SMS handler
 		SMSHandler smsHandler = new SMSHandler();
-		String[] smsContexts = {"/sms-receive", "/sms-update"};
+		String[] smsContexts = {"/sms-receive", "/sms-update", "/deliveryimage"};
 						
 		for(String contextname : smsContexts)
 		{

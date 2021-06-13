@@ -138,6 +138,29 @@ public class SMSHandler extends ONCWebpageHandler
 			//send a quick response back to the browser -- THIS MAY WANT TO MOVE TO THE TOP OF THE METHOD
 			sendNoContentResponseHeader(t);
 		}
+		else if(requestURI.startsWith("/deliveryimage"))
+		{
+			//callback to get the  MediaURL png image
+			this.printParameters(t);
+			
+			if(params.containsKey("year") && params.containsKey("famid"))
+			{
+				//get the png image from the file system
+				String year = (String) params.get("year");
+				String famid = (String) params.get("famid");
+				String path = String.format("%s/%sDB/Confirmations/confirmed%s.png", System.getProperty("user.dir"),year,famid);
+				try
+				{
+					sendFile(t, "image/png", path);
+				}
+				catch (IOException ioe)
+				{
+					sendCachedFile(t, "image/png", "error-404", false);
+				}
+			}
+			else
+				sendCachedFile(t, "image/png", "error-404", false);
+		}
     }
 /*	
 	void simulateSMSReceive()

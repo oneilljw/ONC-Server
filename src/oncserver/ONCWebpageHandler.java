@@ -56,7 +56,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String PDF_VIEWER_HTML = "PDFViewer.htm";
 	private static final String GIFT_DELIVERY_HTML = "GiftDelivery.htm";
 	private static final String CONFIRM_DELIVERY_HTML = "ConfirmGiftDelivery.htm";
-	private static final String QRSCANNER_HTML = "QRScanner.htm";
+//	private static final String QRSCANNER_HTML = "QRScanner.htm";
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
 	private static final String CLEAR_X_FILE = "clear_x.gif";
@@ -81,6 +81,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String STOPLIGHT_YELLOW_FILE = "Button-Blank-Yellow-icon.png";
 	private static final String STOPLIGHT_RED_FILE = "Button-Blank-Red-icon.png";
 	private static final String DELIVERY_CARD_FILE = "DeliveryCard.pdf";
+	private static final String ERROR_404_FILE = "error-404.png";
 	
 	protected static final String SESSION_ID_NAME = "SID=";
 	
@@ -134,9 +135,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("recoverylogin", readFile(String.format("%s/%s",System.getProperty("user.dir"), RECOVERY_LOGIN_HTML)));
 			webpageMap.put("getdeliverycards", readFile(String.format("%s/%s",System.getProperty("user.dir"), PDF_VIEWER_HTML)));
 			webpageMap.put("giftdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), GIFT_DELIVERY_HTML)));
-//			webpageMap.put("giftdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), AUDIO_TEST_HTML)));
 			webpageMap.put("confirmdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), CONFIRM_DELIVERY_HTML)));
-			webpageMap.put("qrscanner", readFile(String.format("%s/%s",System.getProperty("user.dir"), QRSCANNER_HTML)));
+//			webpageMap.put("qrscanner", readFile(String.format("%s/%s",System.getProperty("user.dir"), QRSCANNER_HTML)));
 			
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
 			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
@@ -165,6 +165,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("stoplighticon-yellow", readFileToByteArray(STOPLIGHT_YELLOW_FILE));
 			webfileMap.put("stoplighticon-red", readFileToByteArray(STOPLIGHT_RED_FILE));
 			webfileMap.put("deliverycards", readFileToByteArray(DELIVERY_CARD_FILE));
+			webfileMap.put("error-404", readFileToByteArray(GIFT_CARD_LOGO_FILE));
 			
 			return "UPDATED_WEBPAGES";
 		} 
@@ -242,27 +243,42 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		t.close();
 	}
 	
+	void sendImageResponse(HttpExchange t, HtmlResponse html) throws IOException
+	{
+		Headers header = t.getResponseHeaders();
+		if(html.getCookie() != null)
+		{
+    			ArrayList<String> headerList = new ArrayList<String>();
+    			headerList.add(html.getCookie().toString());
+    			header.put("Set-Cookie", headerList);
+		}
+		
+		ArrayList<String> contentTypeList = new ArrayList<String>();
+		contentTypeList.add("image/png");
+		header.put("Content-Type", contentTypeList);
+		
+		t.sendResponseHeaders(html.getCode(), html.getResponse().getBytes().length);
+		OutputStream os = t.getResponseBody();
+		os.write(html.getResponse().getBytes());
+		os.close();
+		t.close();
+	}
+	
 	Integer[] getRange(Headers requestHeaders)
 	{
 		int startbyte = -1, endbyte = -1;
 		if(requestHeaders.containsKey("Range"))
 		{
 			List<String> rangeValue = requestHeaders.get("Range");
-//			System.out.println(rangeValue);
 			if(rangeValue.size() == 1)	//value should have format "[bytes=x-y]". y can be an empty space
 			{
 				String range = rangeValue.get(0);
-//				System.out.println(range);
 				
 				String[] rangeParts = range.split("bytes=");	//should yield "x-y"
-//				System.out.println(rangeParts.length);
-//				System.out.println(rangeParts[0]);
-//				System.out.println(rangeParts[1]);
 				
 				if(rangeParts.length == 2)
 				{
 					String[] values = rangeParts[1].split("-");	//should yield a two string array of "x" and "y"
-//					System.out.println(values.length);
 					
 					if(values.length > 0 && values.length < 3)
 					{
@@ -528,14 +544,14 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	    		ServerUI.addDebugMessage(String.format("WebpageHldr.sendCachedFile: closed HttpExchange"));
 	}
 	
-	void sendFile(HttpExchange t, String mimetype, String sheetname) throws IOException
+	void sendFile(HttpExchange t, String mimetype, String path) throws IOException
 	{
 		// add the required response header
 	    Headers h = t.getResponseHeaders();
 	    h.add("Content-Type", mimetype);
 
 	    //get file   
-		String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
+//		String path = String.format("%s/%s", System.getProperty("user.dir"), sheetname);
 		File file = new File(path);
 		byte [] bytearray  = new byte [(int)file.length()];
 	      
