@@ -37,7 +37,7 @@ public class TwilioIF
     private ServerSMSDB smsDB;
     
     private String twilioPhoneNumber;
-    private String twilioSMSStatusCallbackURL;
+    private static String twilioSMSBaseURL;
     
     private TwilioIF() throws FileNotFoundException, IOException
     {	
@@ -66,6 +66,8 @@ public class TwilioIF
 		return instance;
 	}
     
+    static String getSMSBaseURL() { return twilioSMSBaseURL; }
+    
     /***
 	 * @param year - used to create a default date for the year if the file is empty
 	 * @param file
@@ -87,7 +89,7 @@ public class TwilioIF
     				{	
     					//Read first line, it's the parameters
     					twilioPhoneNumber = nextLine[0].isEmpty() ? null : "+1" + nextLine[0];
-    					twilioSMSStatusCallbackURL = nextLine[1].isEmpty() ? null : nextLine[1];		
+    					twilioSMSBaseURL = nextLine[1].isEmpty() ? null : nextLine[1];
     				}	
     			}
     			else
@@ -187,29 +189,43 @@ public class TwilioIF
      	void sendSMS(ONCSMS requestedSMS) 
      	{	
      		if(twilioPhoneNumber != null && twilioPhoneNumber.startsWith("+1") && twilioPhoneNumber.length() == 12 &&
-     			twilioSMSStatusCallbackURL != null && !twilioSMSStatusCallbackURL.isEmpty())
+     			twilioSMSBaseURL != null && !twilioSMSBaseURL.isEmpty())
      		{	
-     			Message message = Message.creator(
+     			Message message = null;
+     			if(requestedSMS.getMediaURL() != null)
+     			{
+     				message = Message.creator(
      	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
      	                new com.twilio.type.PhoneNumber(twilioPhoneNumber),
      	                requestedSMS.getBody())
-     	            .setStatusCallback(URI.create(twilioSMSStatusCallbackURL))
+     	            .setStatusCallback(URI.create(twilioSMSBaseURL +"sms-update"))
      	            .create();
-     	        
-     	        		if(message.getErrorCode() == null)
-     	        		{
-     	        			if(message.getDirection().toString().equals("outbound-api"))
-     	        				requestedSMS.setDirection(SMSDirection.OUTBOUND_API);
-     	        		
-     	        			requestedSMS.setMessageSID(message.getSid());
-     	        			requestedSMS.setStatus(SMSStatus.valueOf(message.getStatus().toString().toUpperCase()));
-     	        		}
-     	        
-     	        		ServerUI.addDebugMessage(String.format("SMS Mssg Sent %s %s", message.getSid(), message.getTo()));
+     			}
+     			else
+     			{
+     				message = Message.creator(
+         	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
+         	                new com.twilio.type.PhoneNumber(twilioPhoneNumber),
+         	                requestedSMS.getBody())
+     					.setMediaUrl(Arrays.asList(URI.create(requestedSMS.getMediaURL())))	
+     					.setStatusCallback(URI.create(twilioSMSBaseURL +"sms-update"))
+         	            .create();
+     			}
+     			
+        		if(message.getErrorCode() == null)
+        		{
+        			if(message.getDirection().toString().equals("outbound-api"))
+        				requestedSMS.setDirection(SMSDirection.OUTBOUND_API);
+        		
+        			requestedSMS.setMessageSID(message.getSid());
+        			requestedSMS.setStatus(SMSStatus.valueOf(message.getStatus().toString().toUpperCase()));
+        		}
+        
+        		ServerUI.addDebugMessage(String.format("SMS Mssg Sent %s %s", message.getSid(), message.getTo()));
      		}
      		else
      			ServerUI.addDebugMessage(String.format("SMS Mssg: Invalid Twilio phone number %s or URL %s",
-     					twilioPhoneNumber, twilioSMSStatusCallbackURL));
+     					twilioPhoneNumber, twilioSMSBaseURL+"sms-update"));
      	}
 /*     	    
      	   SMSStatus fetchMessage(String messageSID)

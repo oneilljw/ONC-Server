@@ -26,7 +26,6 @@ public class ServerSMSDB extends ServerSeasonalDB
 	
 	private ServerFamilyDB familyDB;
 	private ServerFamilyHistoryDB familyHistoryDB;
-//	private ServerGlobalVariableDB globalVarDB;
 	
 	private ServerSMSDB() throws FileNotFoundException, IOException
 	{
@@ -54,7 +53,6 @@ public class ServerSMSDB extends ServerSeasonalDB
 		//initialize the FamilyDB and GlobalVariableDB interface
 		familyDB = ServerFamilyDB.getInstance();
 		familyHistoryDB = ServerFamilyHistoryDB.getInstance();
-//		globalVarDB = ServerGlobalVariableDB.getInstance();
 	}
 	
 	public static ServerSMSDB getInstance() throws FileNotFoundException, IOException
@@ -107,11 +105,40 @@ public class ServerSMSDB extends ServerSeasonalDB
 
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
-		if(request.getMessageID() > 0  && request.getMessageID() < 6 &&
+		if(request.getMessageID() == -1 && request.getPhoneChoice() > 0  && request.getPhoneChoice() < 3 &&
+				 request.getEntityType() == EntityType.FAMILY)
+		{
+			//single sms message
+			//for each family in the request, create a ONCSMS request 
+			for(Integer famID : request.getEntityIDList() )
+			{
+				ONCFamily f = familyDB.getFamily(request.getYear(), famID);
+				
+				if(f != null)
+				{
+					String twilioFormattedPhoneNum = getTwilioFormattedPhoneNumber(f, request.getPhoneChoice());
+					
+					if(twilioFormattedPhoneNum != null && request.hasAttachment())
+					{
+						String mediaURL = String.format("https://%s/deliveryimage?year=%d&famid=%d",
+								TwilioIF.getSMSBaseURL(), request.getYear(), f.getID());
+						
+						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
+							SMSDirection.OUTBOUND_API, request.getMessage(), mediaURL, SMSStatus.REQUESTED));
+					}
+					else if(twilioFormattedPhoneNum != null && !request.hasAttachment())
+					{
+						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
+								SMSDirection.OUTBOUND_API, request.getMessage(), SMSStatus.REQUESTED));
+					}
+				}
+			}
+		}
+		else if(request.getMessageID() > 0  && request.getMessageID() < 6 &&
 			request.getPhoneChoice() > 0  && request.getPhoneChoice() < 3 &&
 			 request.getEntityType() == EntityType.FAMILY)
 	    {
-			
+			//multiple sms message
 			//get the pickup locations
 			PickUpLocations puLocations = new PickUpLocations();
 			
