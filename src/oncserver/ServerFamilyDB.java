@@ -412,9 +412,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
 	}
 	
-	static HtmlResponse confirmGiftDelivery(int year, int famID, String dataURI, String callbackFunction)
+	static List<String> confirmGiftDelivery(int year, int famID, String dataURI)
 	{
-		String response = "{\"success\":false}";
+		//create the response list of strings
+		List<String> responseList = new ArrayList<String>();
+		
 		//find the family
 		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
 		List<ONCFamily> fAL = fDBYear.getList();
@@ -436,12 +438,11 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				bufferedImage = ImageIO.read(new ByteArrayInputStream(imagedata));
 				ImageIO.write(bufferedImage, "png", new File(String.format("%s/%dDB/Confirmations/confirmed%d.png",
 														System.getProperty("user.dir"),year,famID)));
-				response = "{\"success\":true}";
 				
 				if(!updatedFamily.hasDeliveryImage())
 				{
 					//if a confirmation signature image doesn't already exist, modify the family record and notify clients
-					updatedFamily.setGiftConfirmation(true);
+					updatedFamily.setDeliveryConfirmation(true);
 					fDBYear.setChanged(true);
 					
 					//notify the in-year clients
@@ -449,21 +450,27 @@ public class ServerFamilyDB extends ServerSeasonalDB
 					String json = "UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class);
 					clientMgr.notifyAllInYearClients(year, json);
 					
-					//notify the history database of delivery confirmation
 				}
 				
-				familyHistoryDB.checkDeliveryStatusOnConfirmation(year, famID);
+				//notify the history database of delivery confirmation
+				familyHistoryDB.checkFamilyGiftStatusOnDeliveryConfirmation(year, famID);
+				
+				responseList.add(String.format("ONC #%s, %s %s", updatedFamily.getONCNum(), updatedFamily.getFirstName(), updatedFamily.getLastName()));
+				responseList.add("Gift Delivery Confirmed");
 			}
 			catch (IOException e) 
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				response = "{\"success\":false,\"error\":\"ioexception\"}";
+				responseList.add("Delivery Confirmation Unsucessful");
+				responseList.add("Error Code: 1, Please contact ONC director");
 			}	
 		}
+		else
+		{
+			responseList.add("Delivery Confirmation Unsucessful");
+			responseList.add("Error Code: 2, Please contact ONC director");
+		}
 		
-		//wrap the json in the callback function per the JSONP protocol
-		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+		return responseList;
 	}
 	
 	/***
@@ -858,7 +865,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				//if family was added successfully, add the family history object 
 				//and update the family history object id
-				FamilyHistory famHist = familyHistoryDB.getLastFamilyHistory(year, addedFam.getID());
+//				FamilyHistory famHist = familyHistoryDB.getLastFamilyHistory(year, addedFam.getID());
 				FamilyHistory famHistory = new FamilyHistory(-1, addedFam.getID(), 
 																FamilyStatus.Unverified,
 																FamilyGiftStatus.Requested,

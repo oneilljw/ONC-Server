@@ -6,16 +6,10 @@
 <script type="text/javascript"src="jquery.js"></script>
 <!-- <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
 <script>
- 	var year = SEASON;
- 	var targetID = TARGETID;
 	var webcam;
-	var picture;
  	
 	function onConfirm()
 	{
-		//request the server change the delivery status
-		let partnerparams = "year=" + year + "&targetid=" + targetID + "&callback=?";
-		
 		const webcamElement = document.getElementById('webcam');
 		const canvasElement = document.getElementById('canvas');
 		const snapSoundElement = document.getElementById('snapSound');
@@ -47,7 +41,8 @@
 	}
 	function takePhoto()
 	{
-		picture = webcam.snap();
+		document.getElementById('imgBase64').value = webcam.snap();
+//		picture = webcam.snap();
 		webcam.stop();
 		console.log('webcam stopped');
 		
@@ -77,40 +72,45 @@
 		       console.log(err);
 		   });
 	}
-	function submitPhoto()
-	{
-		$.ajax({
-		      type: "POST",
-		      url: "deliveryconfirmed",
-		      data: { 
-		         imgBase64: picture,
-		         "year": year,
-		         "famid": targetID
-		      },
-		      dataType: 'jsonp',
-			  contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-		    })
-		    .done(function(response)
-		    {
-		    	console.log(response);
-		    	document.getElementById('confirmdiv').style.display='none';
-				document.getElementById('photodiv').style.display='none';
-				document.getElementById('retakephotodiv').style.display='none';
-				document.getElementById('submitdiv').style.display='none';		
-				document.getElementById('videodiv').style.display='none';
-				document.getElementById('takephotodiv').style.display='none';
-				document.getElementById('canceldiv').style.display='none';
-		    	if(response.success)
-		    	{
-		    		document.getElementById('resultmssg').innerHTML = 'Delivery Confirmed!!';
-		    	}
-		    	else
-		    	{
-		    		document.getElementById('resultmssg').innerHTML = 'Confirmation Failed, contact ONC';
-		    	}
-		    	document.getElementById('resultdiv').style.display='block';
-		    });
-	}
+//	function submitPhoto()
+//	{
+//		//submit the form
+//		console.log('Submitting image to server');
+//		document.getElementById("image-form").submit();
+//		
+//		$.ajax({
+//		      type: "POST",
+//		      url: "deliveryconfirmed",
+//		      data: { 
+//		         imgBase64: picture,
+//		         "year": year,
+//		         "famid": targetID
+//		      },
+//		      dataType: 'jsonp',
+//			  contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+//		    })
+//		    .done(function(response)
+//		    {
+//		    	console.log(response);
+//		    	document.getElementById('confirmdiv').style.display='none';
+//				document.getElementById('photodiv').style.display='none';
+//				document.getElementById('retakephotodiv').style.display='none';
+//				document.getElementById('submitdiv').style.display='none';		
+//				document.getElementById('videodiv').style.display='none';
+//				document.getElementById('takephotodiv').style.display='none';
+//				document.getElementById('canceldiv').style.display='none';
+//		    	if(response.success)
+//		    	{
+//		    		document.getElementById('resultmssg').innerHTML = 'Delivery Confirmed!!';
+//		    	}
+//		    	else
+//		    	{
+//		    		document.getElementById('resultmssg').innerHTML = 'Confirmation Failed, contact ONC';
+//		    	}
+//		    	
+//		    	document.getElementById('resultdiv').style.display='block';
+//		    });
+//	}
   </script>
   <style>
 	.center
@@ -189,7 +189,10 @@
 	  <a id='breadcrumb' class='breadcrumb-first'>Confirm Gift Delivery</a>
     </span>   
   </div>
-  <form>
+  <form id='image-form' action="/deliveryconfirmed" method="post">
+  	<input name='year' type="hidden" value="SEASON">
+  	<input name='famid' type="hidden" value="TARGETID">
+  	<input id='imgBase64' name='imgBase64' type="hidden" value="">
     <div class='center'>
       <p>GIFT_DELIVERY_MESSAGE_LINE_ONE</p>
       <p>GIFT_DELIVERY_MESSAGE_LINE_TWO</p>
@@ -217,7 +220,7 @@
         <button id='cancelbtn' type='button' onclick='onCancel()'>Cancel</button>
       </div>
       <div id='submitdiv'>
-        <button id='submitbtn' type='button' onclick='submitPhoto()'>Submit Confirmation</button>
+        <button id='submitbtn' type='submit'>Submit Confirmation</button>
       </div>
     </div>
   </form>

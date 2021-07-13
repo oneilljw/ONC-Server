@@ -701,7 +701,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		}
 	}
 	
-	void checkDeliveryStatusOnConfirmation(int year, int famid)
+	void checkFamilyGiftStatusOnDeliveryConfirmation(int year, int famid)
 	{
 		FamilyHistory lastHistoryObj =  getLastFamilyHistory(year, famid);
 
@@ -710,7 +710,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			//add a history item
 			FamilyHistory reqFamHistObj = new FamilyHistory(lastHistoryObj);
 			reqFamHistObj.setFamilyGiftStatus(FamilyGiftStatus.Delivered);
-			reqFamHistObj.setdNotes("Gift Status Change");
+			reqFamHistObj.setdNotes("Gifts Delivered");
 			
 			addFamilyHistoryObject(year, reqFamHistObj, "Delivery Volunteer", true);
 		}

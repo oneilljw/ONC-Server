@@ -165,7 +165,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("stoplighticon-yellow", readFileToByteArray(STOPLIGHT_YELLOW_FILE));
 			webfileMap.put("stoplighticon-red", readFileToByteArray(STOPLIGHT_RED_FILE));
 			webfileMap.put("deliverycards", readFileToByteArray(DELIVERY_CARD_FILE));
-			webfileMap.put("error-404", readFileToByteArray(GIFT_CARD_LOGO_FILE));
+			webfileMap.put("error-404", readFileToByteArray(ERROR_404_FILE));
 			
 			return "UPDATED_WEBPAGES";
 		} 

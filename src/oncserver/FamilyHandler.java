@@ -412,8 +412,8 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 		else if(requestURI.contains("/deliveryconfirmed"))
 		{
-			//update the family status && return the update family object.
-			HtmlResponse htmlResponse = null;
+			//update the family status
+			String response = webpageMap.get("confirmdelivery");
 			
 			if(params.containsKey("year") && params.containsKey("famid") && 
 				params.containsKey("imgBase64"))
@@ -424,17 +424,24 @@ public class FamilyHandler extends ONCWebpageHandler
 					int famID = Integer.parseInt((String) params.get("famid"));
 					String imgBase64 = (String) params.get("imgBase64");
 					
-					htmlResponse = ServerFamilyDB.confirmGiftDelivery(year, famID, imgBase64, (String) params.get("callback")); 
+					List<String> result = ServerFamilyDB.confirmGiftDelivery(year, famID, imgBase64);
+					
+					response = response.replace("DEL_MSSG_LINE_ONE", result.get(0));
+					response = response.replace("DEL_MSSG_LINE_TWO", result.get(1));
 				}
 				catch (NumberFormatException nfe)
 				{
-					htmlResponse = invalidParameterReceivedToJsonRequest((String) params.get("callback"));
+					response = response.replace("DEL_MSSG_LINE_ONE", "Delivery Confirmation Unsucessful");
+					response = response.replace("DEL_MSSG_LINE_TWO", "Error Code: 3, Please contact ONC director");
 				} 
 			}			
 			else
-				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			{
+				response = response.replace("DEL_MSSG_LINE_ONE", "Delivery Confirmation Unsucessful");
+				response = response.replace("DEL_MSSG_LINE_TWO", "Error Code: 4, Please contact ONC director");
+			}
 			
-			sendHTMLResponse(t, htmlResponse);
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
 		else if(requestURI.contains("/createdeliverycards"))
 		{
