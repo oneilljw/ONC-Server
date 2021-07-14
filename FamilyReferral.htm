@@ -335,7 +335,6 @@
 
 			$.getJSON('getfamily', familyparams, function(family)
 			{
-				console.log(family);
 				document.getElementById('hohfn').value= family.HOHFirstName;
 				document.getElementById('hohln').value= family.HOHLastName;
 				
@@ -547,7 +546,6 @@
 	    	setInput('childschool', '');
 	    	
 	    	var wishOptions = ["Unused", "Age Appropriate Gift", "Selected by ONC", ""];
-	    	
 	    	setInput('childwish0', wishOptions[intakeType(0)]);
   			setInput('childwish1', wishOptions[intakeType(1)]);
     		setInput('childwish2', wishOptions[intakeType(2)]);
@@ -622,6 +620,7 @@
 		let child = getChild();
 		let age = calculateAge(child.sDOB);
 		let numGifts = sessionStorage.getItem('numberGiftsPerChild');
+
 		if(age === 0 || child.gender === 'Unknown')
 		{
 			//show pop-up asking to verify birthdate and gender
@@ -811,7 +810,7 @@
 	
 	function calculateAge(birthday)
 	{	
-		let currseason = sessionStorage.getItem('curryseason');
+		let currseason = sessionStorage.getItem('currseason');
 		let xmasday = new Date(currseason,11,25,0,0,0,0);
 		let birthdate= new Date(birthday);
 		
@@ -903,7 +902,7 @@
 		//force a redraw of the child table
 		childtable.rows().invalidate('data').draw(false);
 		
-		//show or hide distribution preference, delivery address and set the edit child dialog to show the wishes or not
+		//show or hide distribution preference, delivery address and set the edit child dialog to show/hide wishes
 		let distPrefEl = document.getElementById('distprefdiv');
 		let distPrefSelEl = document.getElementById('distpref');
 		let delAddrEl = document.getElementById('deladdrfieldset');
@@ -1193,6 +1192,10 @@
 		display: none;
 	}
 	#transdiv
+	{
+		display: none;
+	}
+	#childwishfieldset
 	{
 		display: none;
 	}
