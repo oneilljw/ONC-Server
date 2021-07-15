@@ -141,11 +141,9 @@ public class SMSHandler extends ONCWebpageHandler
 		else if(requestURI.startsWith("/deliveryimage"))
 		{
 			//callback to get the  MediaURL png image
-			this.printParameters(t);
-			
 			if(params.containsKey("year") && params.containsKey("famid"))
 			{
-				//get the png image from the file system
+				//get the .png image from the database
 				String year = (String) params.get("year");
 				String famid = (String) params.get("famid");
 				String path = String.format("%s/%sDB/Confirmations/confirmed%s.png", System.getProperty("user.dir"),year,famid);
