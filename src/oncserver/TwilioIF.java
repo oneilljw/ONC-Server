@@ -199,7 +199,7 @@ public class TwilioIF
      	                new com.twilio.type.PhoneNumber(twilioPhoneNumber),
      	                requestedSMS.getBody())
      				.setMediaUrl(Arrays.asList(URI.create(requestedSMS.getMediaURL())))	
-     	            .setStatusCallback(URI.create(twilioSMSBaseURL +"/sms-update"))
+     	            .setStatusCallback(URI.create(twilioSMSBaseURL +"sms-update"))
      	            .create();
      			}
      			else
@@ -208,7 +208,7 @@ public class TwilioIF
          	                new com.twilio.type.PhoneNumber(requestedSMS.getPhoneNum()),
          	                new com.twilio.type.PhoneNumber(twilioPhoneNumber),
          	                requestedSMS.getBody())
-     					.setStatusCallback(URI.create(twilioSMSBaseURL +"/sms-update"))
+     					.setStatusCallback(URI.create(twilioSMSBaseURL +"sms-update"))
          	            .create();
      			}
      			

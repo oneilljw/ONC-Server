@@ -120,7 +120,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 					
 					if(twilioFormattedPhoneNum != null && request.hasAttachment())
 					{
-						String mediaURL = String.format("https://%s/deliveryimage?year=%d&famid=%d",
+						String mediaURL = String.format("https://oncdms.org:8902/deliveryimage?year=%d&famid=%d",
 								TwilioIF.getSMSBaseURL(), request.getYear(), f.getID());
 						
 						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
