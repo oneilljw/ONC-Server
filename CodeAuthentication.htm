@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ONC Account Recovery</title>
+<link rel="stylesheet" type="text/css" href="oncloginstylesheet.css">
+<script>
+function onInputChange()
+{
+	loginButton = document.getElementById('submit');
+		
+	if(document.getElementById('code').value.length === 6)
+	{
+		//set the offset so server knows time zone
+		document.getElementById('offset').value = new Date().getTimezoneOffset();
+		loginButton.disabled = false;
+	}
+	else
+		loginButton.disabled = true;
+}
+</script>
+<style></style>
+</head>
+<body>
+  <div id="inner">
+	<form action="authenticatecode" method="post">
+    <fieldset>
+    	<input type='text' name='recoveryID' value='RECOVERY_ID' style="visibility: hidden">
+    	<input type='text' id='offset' name='offset' style="visibility: hidden">
+    	<legend class='legend-major'>Account Recovery</legend>
+    	<p align="center"><b><i>Success! We found your account, please check your text messages. We sent you an authentication code, please enter it below.</i></b></p>
+    	<label for="code">Code:</label>
+    	<input type="text" id="code" name="code" oninput='onInputChange()' autofocus/>
+    	<div>
+    	  <button id="submit" type="submit" disabled>Submit Code</button>
+    	</div>
+    </fieldset>
+    </form>
+  </div>  
+</body>
+</html>

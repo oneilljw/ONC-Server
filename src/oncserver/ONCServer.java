@@ -27,7 +27,6 @@ public class ONCServer
 	 * @param args
 	 * @throws IOException 
 	 */
-	
 	private static final String APPNAME = "Our Neighbor's Child Server v8.02";
 	private static final String ONC_COPYRIGHT = "\u00A92018 John W. O'Neill";
 	private static final int JAVA_VERSION_NINE = 9;
@@ -225,7 +224,7 @@ public class ONCServer
     }
 
     public static void main(String args[])
-	{   
+	{ 
 		 SwingUtilities.invokeLater(new Runnable()
 		 {
 			 public void run()
@@ -235,7 +234,8 @@ public class ONCServer
 					new ONCServer();
 					ONCSecureWebServer.getInstance();
 					ONCWebServer.getInstance();
-					BasicConfigurator.configure();
+//					BasicConfigurator.configure();
+					
 				} 
 				catch (IOException e)
 				{

@@ -18,7 +18,9 @@ public class WebUser
 	@SuppressWarnings("unused")
 	private String email;
 	@SuppressWarnings("unused")
-	private String phone;
+	private String workphone;
+	@SuppressWarnings("unused")
+	private String cellphone;
 	@SuppressWarnings("unused")
 	private String permission;
 	@SuppressWarnings("unused")
@@ -31,7 +33,8 @@ public class WebUser
 		this.title = u.getTitle();
 		this.org = u.getOrganization();
 		this.email = u.getEmail();
-		this.phone = u.getCellPhone();
+		this.workphone = u.getHomePhone();
+		this.cellphone = u.getCellPhone();
 		this.permission = u.getPermission().toString();
 		this.groups = groupList;
 	}	

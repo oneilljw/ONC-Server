@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 import ourneighborschild.EntityType;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCSMS;
+import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.SMSDirection;
 import ourneighborschild.SMSRequest;
@@ -92,17 +93,21 @@ public class ServerSMSDB extends ServerSeasonalDB
 							
 		return addedSMS;
 	}
+	String processSMSRequest(String json)
+	{
+		Gson gson = new Gson();
+		SMSRequest request = gson.fromJson(json, SMSRequest.class);
+		
+		return processSMSRequest(request);
+	}
 	
 	/*****
 	 * Must add to the DB and send back to clients before asking twilio to send. 
 	 * @param json
 	 * @return
 	 */
-	String processSMSRequest(String json)
+	String processSMSRequest(SMSRequest request)
 	{
-		Gson gson = new Gson();
-		SMSRequest request = gson.fromJson(json, SMSRequest.class);
-
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
 		if(request.getMessageID() == -1 && request.getPhoneChoice() > 0  && request.getPhoneChoice() < 3 &&
@@ -160,7 +165,23 @@ public class ServerSMSDB extends ServerSeasonalDB
 							SMSDirection.OUTBOUND_API, message, SMSStatus.ERR_NO_PHONE));
 				}
 			}
-	    }	
+	    }
+		else if(request.getMessageID() == -1 && request.getEntityType() == EntityType.USER)
+		{
+			//find the user and create a ONCSMS request 
+			if(request.getEntityIDList().size()== 1)
+			{
+				ONCServerUser su = ServerUserDB.getServerUser(request.getEntityIDList().get(0));
+				
+				if(su != null)
+				{
+					String twilioFormattedPhoneNum = getTwilioFormattedPhoneNumber(su);
+					if(twilioFormattedPhoneNum != null)
+						smsRequestList.add(new ONCSMS(-1, "", EntityType.USER, su.getID(), twilioFormattedPhoneNum,
+						SMSDirection.OUTBOUND_API, request.getMessage(), SMSStatus.REQUESTED));
+				}
+			}
+		}
 
 		//if the request list isn't empty, ask twilio to validate the phone numbers in the request list
 		//can accept SMS messages.
@@ -213,6 +234,14 @@ public class ServerSMSDB extends ServerSeasonalDB
 		}
 		
 		return twilioFormattedPhoneNum;
+	}
+	
+	String getTwilioFormattedPhoneNumber(ONCServerUser su)
+	{	
+		if(!su.getCellPhone().isEmpty() && su.getCellPhone().trim().length() == 12)
+			return String.format("+1%s", formatPhoneNumber(su.getCellPhone()));
+		else
+			return null;
 	}
 /*	
 	String getSMSBody(ONCFamily f, SMSRequest request) //int messageID)

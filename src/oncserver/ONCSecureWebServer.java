@@ -156,7 +156,7 @@ public class ONCSecureWebServer
 
 		//set up the login handler
 		String[] loginContexts = {"/welcome", "/logout", "/login", "/onchomepage", "/metrics",
-								  "/timeout", "/lostcredentials", "/verifyidentity", "/recoverylogin"};
+								  "/timeout", "/lostcredentials", "/verifyidentity", "/authenticatecode"};
 		
 		LoginHandler loginHandler = new LoginHandler();
 		for(String contextname: loginContexts)

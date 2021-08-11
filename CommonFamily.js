@@ -517,18 +517,6 @@ function verifyPhoneNumber(elementNum)
 	
 	return numberGood;
 }
-
-function isNumericPhoneNumber(phonenumber, separator)
-{
-	var testNumber = phonenumber;
-	if(separator === '-')
-		testNumber = phonenumber.replace(/-/g, '');
-	else if(separator === '.')
-		testNumber = phonenumber.replace(/./g, '');
-
-	return !isNaN(testNumber);	
-}
-
 function verifyEmail()
 {
 	var emailElement= document.getElementById('email');

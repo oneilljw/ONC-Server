@@ -56,6 +56,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String PDF_VIEWER_HTML = "PDFViewer.htm";
 	private static final String GIFT_DELIVERY_HTML = "GiftDelivery.htm";
 	private static final String CONFIRM_DELIVERY_HTML = "ConfirmGiftDelivery.htm";
+	private static final String CODE_AUTHENTICATION_HTML =  "CodeAuthentication.htm";
 //	private static final String QRSCANNER_HTML = "QRScanner.htm";
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
@@ -136,6 +137,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("getdeliverycards", readFile(String.format("%s/%s",System.getProperty("user.dir"), PDF_VIEWER_HTML)));
 			webpageMap.put("giftdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), GIFT_DELIVERY_HTML)));
 			webpageMap.put("confirmdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), CONFIRM_DELIVERY_HTML)));
+			webpageMap.put("codeauthentication", readFile(String.format("%s/%s",System.getProperty("user.dir"), CODE_AUTHENTICATION_HTML)));
 //			webpageMap.put("qrscanner", readFile(String.format("%s/%s",System.getProperty("user.dir"), QRSCANNER_HTML)));
 			
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));

@@ -28,7 +28,7 @@ import com.google.gson.reflect.TypeToken;
 public class DesktopClient extends Thread 
 {
 	private static final int BASE_YEAR = 2012;
-	private static final float MINIMUM_CLIENT_VERSION = 8.17f;
+	private static final float MINIMUM_CLIENT_VERSION = 8.18f;
 	
 	private int id;
 	private String version;

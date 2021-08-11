@@ -9,10 +9,14 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.ChangePasswordRequest;
 import ourneighborschild.EmailAddress;
+import ourneighborschild.EntityType;
 import ourneighborschild.ONCEmail;
 import ourneighborschild.ONCEmailAttachment;
 import ourneighborschild.ONCFamily;
@@ -21,6 +25,7 @@ import ourneighborschild.ONCNote;
 import ourneighborschild.ONCObject;
 import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
+import ourneighborschild.SMSRequest;
 import ourneighborschild.ServerCredentials;
 import ourneighborschild.UserAccess;
 import ourneighborschild.UserPermission;
@@ -32,7 +37,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class ServerUserDB extends ServerPermanentDB
 {
-	private static final int USER_RECORD_LENGTH = 26;
+	private static final int USER_RECORD_LENGTH = 27;
 	private static final String USER_PASSWORD_PREFIX = "onc";
 	private static final String USERDB_FILENAME = "newuser.csv";
 	private static final int RECOVERY_ID_LENGTH = 16;
@@ -82,18 +87,18 @@ public class ServerUserDB extends ServerPermanentDB
 		}
 	}
 	
-	ONCServerUser findUserByRecoveryID(String recoveryID)
+	ONCServerUser findUserByRecoveryIDAndCode(String recoveryID, String code)
 	{
-		if(recoveryID.length() != RECOVERY_ID_LENGTH)
-			return null;
-		else
-		{
-			int index = 0;
-			while(index < userAL.size() && !userAL.get(index).getRecoveryID().equals(recoveryID))
-				index++;
+		ONCServerUser user = null;
+		if(recoveryID.length() == RECOVERY_ID_LENGTH || code.length() == 6)
+			for(ONCServerUser su : userAL)
+				if(su.getRecoveryID().equals(recoveryID) && su.getUserPW().equals(code))
+				{
+					user = su;
+					break;
+				}
 			
-			return index < userAL.size() ? userAL.get(index) : null;
-		}
+		return user;
 	}
 	
 	@Override
@@ -137,6 +142,7 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setPermission(updatedUser.getPermission());
 			su.setOrganization(updatedUser.getOrganization());
 			su.setTitle(updatedUser.getTitle());
+			su.setHomePhone(updatedUser.getHomePhone());
 			su.setCellPhone(updatedUser.getCellPhone());
 			
 			if(!su.getEmail().equals(updatedUser.getEmail()))
@@ -197,7 +203,8 @@ public class ServerUserDB extends ServerPermanentDB
 		if(!su.getOrganization().equals(getStringParam(params, "org"))) { bCD = bCD | 4; }
 		if(!su.getTitle().equals(getStringParam(params, "title"))) { bCD = bCD | 8; }
 		if(!su.getEmail().equals(getStringParam(params, "email"))) { bCD = bCD | 16; }
-		if(!su.getCellPhone().equals(getStringParam(params, "phone"))) { bCD = bCD | 32; }
+		if(!su.getHomePhone().equals(getStringParam(params, "workphone"))) { bCD = bCD | 32; }
+		if(!su.getCellPhone().equals(getStringParam(params, "cellphone"))) { bCD = bCD | 64; }
 		
 		List<Integer> websiteGroupList = new ArrayList<Integer>();
 		//if user belongs to groups, check for group change
@@ -223,7 +230,7 @@ public class ServerUserDB extends ServerPermanentDB
 		
 			if(userGroupListCopy.size() != websiteGroupList.size())
 			{
-				bCD = bCD | 64;
+				bCD = bCD | 128;
 			}
 			else
 			{
@@ -231,7 +238,7 @@ public class ServerUserDB extends ServerPermanentDB
 				{
 					if(userGroupListCopy.get(i) != websiteGroupList.get(i))
 					{
-						bCD = bCD | 128;
+						bCD = bCD | 256;
 						break;
 					}
 				}
@@ -246,7 +253,8 @@ public class ServerUserDB extends ServerPermanentDB
 			su.setOrganization(getStringParam(params, "org"));
 			su.setTitle((String) getStringParam(params,"title"));
 			updateUserEmail(su, getStringParam(params,"email"));
-			su.setCellPhone(getStringParam(params,"phone"));
+			su.setHomePhone(getStringParam(params,"workphone"));
+			su.setCellPhone(getStringParam(params,"cellphone"));
 			if(bCD >= 64)
 				su.setGroupList(websiteGroupList);
 			
@@ -420,8 +428,8 @@ public class ServerUserDB extends ServerPermanentDB
 	{
 		nextLine[1] = ServerEncryptionManager.decrypt(nextLine[1]);
 		nextLine[2] = ServerEncryptionManager.decrypt(nextLine[2]);
-			
-		userAL.add(new ONCServerUser(nextLine));	
+		
+		userAL.add(new ONCServerUser(nextLine));
 	}
 	
 	void requestSave()
@@ -460,7 +468,7 @@ public class ServerUserDB extends ServerPermanentDB
 		return new String[] {"ID", "Username", "Password", "Status", "Access", "Permission", "First Name",
 				"Last Name", "Date Changed", "Changed By", "SL Position", "SL Message", 
 				"SL Changed By", "Sessions", "Last Login", "Orginization", "Title",
-				"Email", "Phone", "Groups", "Font Size", "Wish Assignee Filter",
+				"Email", "Work Phone","Cell Phone", "Groups", "Font Size", "Wish Assignee Filter",
 				"Family DNS Filter", "Failed Count", "RecoveryID", "RecoveryID Time"};
 	}
 	
@@ -691,27 +699,42 @@ public class ServerUserDB extends ServerPermanentDB
 				bpFam.getReferringAgentEmail(), USER_PASSWORD_PREFIX + UserPermission.Agent.toString(),
 				0, System.currentTimeMillis(), true, bpFam.getReferringAgentOrg(), 
 				bpFam.getReferringAgentTitle(), bpFam.getReferringAgentEmail(),
-				bpFam.getReferringAgentPhone(), new LinkedList<Integer>());	
+				bpFam.getReferringAgentPhone(),"", new LinkedList<Integer>());	
 	}
 	
 	ONCServerUser findUserByEmailAndPhone(String email, String phone)
 	{
-		int index = 0;
-		while(index < userAL.size() && !(userAL.get(index).getEmail().equalsIgnoreCase(email) &&
-				getDigits(userAL.get(index).getHomePhone()).equals(getDigits(phone))))
-			index++;
+		if(isValidPhoneNumber(phone))
+		{
+			int index = 0;
+			while(index < userAL.size() && !(userAL.get(index).getEmail().equalsIgnoreCase(email) &&
+					getDigits(userAL.get(index).getCellPhone()).equals(getDigits(phone))))
+				index++;
 		
-		if(index < userAL.size())
-			return userAL.get(index);
+			if(index < userAL.size())
+				return userAL.get(index);
+			else
+				return null;
+		}
 		else
 			return null;
+	}
+	
+	boolean isValidPhoneNumber(String phone)
+	{
+		String regex = "^\\(?([0-9]{3})\\)?[-.\\s]?([0-9]{3})[-.\\s]?([0-9]{4})$";
+	
+		Pattern pattern = Pattern.compile(regex);
+		
+		Matcher matcher = pattern.matcher(phone);
+		
+		return matcher.matches();
 	}
 	
 	String getDigits(String pn)
 	{
 		return pn.replaceAll("\\D+","");
 	}
-	
 	
 	ImportONCObjectResponse processImportedReferringAgent(BritepathFamily bpFam, DesktopClient currClient)
 	{		
@@ -864,6 +887,35 @@ public class ServerUserDB extends ServerPermanentDB
 		String emailBody = createRecoveryEmail(recUser);
 		createAndSendUserEmail(subject, emailBody, recUser.getUserFromServerUser());
 	}
+	
+	void createAndSendAccountRecoverySMS(ONCServerUser recUser)
+	{
+		ServerSMSDB smsDB;
+		try
+		{
+			smsDB = ServerSMSDB.getInstance();
+			List<Integer> userIDList = new ArrayList<Integer>();
+			userIDList.add(recUser.getID());
+			
+			String msg = String.format("ONC received your account recovery request. Your account recovery code is: %s."
+					+ " Please enter the code in the account recovery webpage within 10 minutes.", recUser.getUserPW());
+			
+			SMSRequest request = new SMSRequest(DBManager.getCurrentSeason(), msg, false, 0, EntityType.USER, userIDList);
+					
+			smsDB.processSMSRequest(request);
+		}
+		catch (FileNotFoundException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	    
+	}
+	
 	
 	boolean createAndSendNoteNotificationEmail(int year, ONCNote note)
 	{

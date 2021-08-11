@@ -3,42 +3,71 @@
 <head>
 	<meta charset="UTF-8">
     <title>ONC Password Change</title>
+    <link rel="stylesheet" type="text/css" href="oncloginstylesheet.css">
     <script>
+    function configureCurrPW() 
+    {
+    	let mode = CHANGE_PW_MODE;
+        if(mode === 'RECOVERY')
+        {
+        	document.getElementById('currpw').value = "RECOVERY_CODE";
+        	document.getElementById('currpwdiv').style.display = 'none';
+        }
+        else
+        {
+        	document.getElementById('currpw').value = "";
+        	document.getElementById('currpwdiv').style.display = 'block';
+        }
+    }
+    
+    window.onload = configureCurrPW;
+    
+    function onInputChange()
+    {
+    	loginButton = document.getElementById('submit');
+    		
+    	if(document.getElementById('currpw').value !== "" && document.getElementById('pass1').value !== '' &&
+    		document.getElementById('pass2').value !== "")
+    	{	
+    		loginButton.disabled = false;
+    	}
+    	else
+    		loginButton.disabled = true;
+    }
     function validate()
     {
-    		var currpw = document.getElementById("currpw").value;
-        var pass1 = document.getElementById("pass1").value;
-        var pass2 = document.getElementById("pass2").value;
-        var ok = true;
+    	let currpw = document.getElementById("currpw").value;
+        let pass1 = document.getElementById("pass1").value;
+        let pass2 = document.getElementById("pass2").value;
+        let ok = true;
+        
+        let mssg = document.getElementById("mssg");
         
         if(currpw == "")
         {
-        		//alert("current password field empty");
+        	//alert("current password field empty");
             document.getElementById("currpw").style.borderColor = "#E34234";
             
-            var mssg = document.getElementById("mssg");
             mssg.style.color = "Red";
             mssg.innerHTML = "Current password not provided, please try again!";
             ok = false;
         }
         else if(pass1.length == 0 || pass2.length == 0)
-        	{
-        		//alert("Pme of the passwords is blank");
+        {
+        	//alert("Pme of the passwords is blank");
             document.getElementById("pass1").style.borderColor = "#E34234";
             document.getElementById("pass2").style.borderColor = "#E34234";
             
-            var mssg = document.getElementById("mssg");
             mssg.style.color = "Red";
             mssg.innerHTML = "Please fill out both New and Confirm, try again!";
             ok = false;
-        	}
+        }
         else if(pass1 != pass2)
         {
             //alert("Passwords Do not match");
             document.getElementById("pass1").style.borderColor = "#E34234";
             document.getElementById("pass2").style.borderColor = "#E34234";
             
-            var mssg = document.getElementById("mssg");
             mssg.style.color = "Red";
             mssg.innerHTML = "New and Confirm passwords don't match, please try again!";
             ok = false;
@@ -48,7 +77,6 @@
             document.getElementById("currpw").style.borderColor = "#E34234";
             document.getElementById("pass2").style.borderColor = "#E34234";
             
-            var mssg = document.getElementById("mssg");
             mssg.style.color = "Red";;
             mssg.innerHTML = "You must change to a new password, please try again!";
             ok = false;
@@ -58,81 +86,139 @@
     }
     </script>
     <style>
-    body
-    {
-		height: 0;
-    		padding: 0;
-    		padding-bottom: 75%;
-    		background-image: url(oncsplash.gif);
-    		background-position: center center;
-    		background-size: 100%;
-    		background-repeat: no-repeat;
-    }
-    label
-    {
-    		width: 10em;
-    		float: left;
-    		text-align: right;
-    		margin-right: 0.5em;
-    		display: block;
-    		color: black;
-    }
-    input
-    {
-    		color: black;
-    		background: #FFFFE4;
-    		border: 1px solid #781351;
-    		width: 15em;
-    }
-    #submit
-    {
-    		display: block;
-    		margin: 0px auto;
-    		color: #000;
-    		background: #ffa20c;
-    		border: 4px outset #d7b9c9
-    } 
-   	fieldset
-    {
-  		border: 4px solid #781351;
-    		color: #00F;
-    		background: #F2F2FA;
-    		width: 26em
-    }
-    legend
-    {
-    		color: black;
-    		background: #ffa20c;
-    		border: 1px solid #781351;
-    		padding: 2px 6px
-    }
-    #inner
-    {
-    		width:300px;
-		height:200px;
-		position:absolute;
-		left:45%;
-		top:60%;
-		margin:-100px 0 0 -150px;
+    body {background-color: white;}
+	.header 
+	{
+		height: 70px;
+		width: 90% ;
+		margin: 0 auto;
+		background-color: #484e78;
+	}
+	.header-links
+	{
+		display: inline-block;
+	   	margin-top: 25px;   
+	}
+	.logo-img
+	{
+		vertical-align: middle;
+	   	margin-top: -8px;
+	   	margin-left: 5px;
+	   	margin-right: 10px;
+	   	max-height: 55px;
+	   	max-width: 75px;
+	}
+	.breadcrumb-first
+	{
+		color: white;
+		font-size: 18px;
+		text-decoration: none;
+		font-style: italic;
+	}
+	label
+	{
+		margin-top: 5px;
+	  	width: 10em;
+	  	float: left;
+	  	text-align: right;
+	  	margin-right: 5px;
+	  	display: block;
+	  	color: black;
+	}
+	input
+	{
+		height: 24px;
+	  	color: black;
+	  	font-weight:bold;
+	  	background: #FFFFFF;
+	  	border: 1px solid #781351;
+	  	width: 160px;
+	  	font-size: 14px;
+	  	line-height: 18px;
+	}
+	button
+	{
+	  	display: block;
+	  	margin: 0px auto;
+	  	margin-top: 12px;
+	  	background-color: #484e78; /* was #336699; */
+	  	color: #ffffff;
+	  	border: 4px outset white;
+	  	width: 104px;
+	}
+	button:disabled { background-color: gray; }
+	fieldset
+	{
+		margin: 0;
+		position: absolute;            
+		top: 55%; 
+		left: 52%;                    
+	 	transform: translate(-50%, -50%); 
+		border: 4px solid #781351;
+	  	color: #00F;
+	  	background-color: #E8E8E8;
+	  	width: 21em
+	}
+	legend
+	{
+	  	color: black;
+	  	background: #ffa20c;
+	  	border: 1px solid #781351;
+	  	padding: 2px 6px
+	}
+	#inner
+	{
+		height:600px;
+		position: relative;
+		background-image: url(oncsplash);
+		background-repeat: no-repeat;
+	 	background-position: center;
+	}
+	.legend-major
+	{
+	 	padding: 0.2em 0.5em;
+	 	border:2px solid black;
+	 	background-color: #E5FFCC;
+	 	font-size:80%;
+	 	text-align:left;
+	 }
+	.linetwo
+	{
+	 	margin-top: 14px;
+	}
+	p 
+	{ 
+		text-align: center;
+		font-weight: bold;
+		font-style: italic;
 	}
     </style>
 </head>
 <body>
-  <div id="outer" style="width:100%">
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='dashboard-anchor' class='breadcrumb-first'>ONC Password Change</a>
+	</span>
+  </div>
 	<div id="inner">
     	<form action="changepw" onsubmit="return validate()" method="post">
     		<fieldset>
-    			<legend>Change Password</legend>
-    			<p id="mssg" align="center"><b><i>USERFN, your password expired, please change it now:</i></b></p>
-    		    <p><label for="currpw">Current Password:</label> <input type="password" id="currpw" name="field1" autofocus/></p>
-    		    <p><label for="password1">New Password:</label> <input type="password" id="pass1" name="field2"/></p>
-    		    <p><label for="password2">Confirm New Password:</label> <input type="password" id="pass2"/><br></p>
-    		    	<div>
-   		 		<button id="submit" type="submit">Submit</button>
-    			</div>
+    			<legend class='legend-major'>Change Password</legend>
+    			<p id='mssg'>USERFN, you must change your password now:</p>
+    			<div id='currpwdiv'>
+    		    	<label for="currpw">Current Password:</label>
+    		    	<input type="password" id="currpw" name="field1" autofocus oninput='onInputChange()'>
+    		    </div>
+    		    	<label for="password1" class='linetwo'>New Password:</label>
+    		    	<input class='linetwo'type="password" id="pass1" name="field2" oninput='onInputChange()'>
+    		    	<label for="password2"class='linetwo' >Confirm New Password:</label>
+    		    	<input class='linetwo'type="password" id="pass2" oninput='onInputChange()'>
+    		    <div>
+   		 			<button id="submit" type="submit" disabled>Submit</button>
+   				</div>
     		</fieldset>
     	</form>
     </div>
-  </div>
 </body>
 </html>

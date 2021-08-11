@@ -124,7 +124,8 @@ function showEditProfileDialog()
     		setInput('userorg', user.org);
 	    	setInput('usertitle', user.title);
 	    	setInput('useremail', user.email);
-	    	setInput('userphone', user.phone);
+	    	setInput('workphone', user.workphone);
+	    	setInput('cellphone', user.cellphone);
     	    			
     	    //clear & populate the profileTable array with groups from user profile, if
     	    //user has Agent, Admin or Sys_Admin permission	
@@ -211,52 +212,107 @@ function checkForProfileChange()
     	  document.getElementById('userorg').value == userJson.org &&
     	   document.getElementById('usertitle').value == userJson.title &&
     	    document.getElementById('useremail').value == userJson.email &&
-    	     document.getElementById('userphone').value == userJson.phone;
-}   
+    	     document.getElementById('workphone').value == userJson.workphone &&
+    	      document.getElementById('cellphone').value == userJson.cellphone;
+} 
+function verifyCellPhone()
+{
+	let number = document.getElementById('cellphone').value;
+	
+	if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-' && isNumericPhoneNumber(number, '-'))
+		return true;
+	else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.' && isNumericPhoneNumber(number, '.'))
+		return true;
+	else if(number.length===10 && !isNaN(number))
+		return true;
+	else
+		return false;
+}
+function isNumericPhoneNumber(phonenumber, separator)
+{
+	var testNumber = phonenumber;
+	if(separator === '-')
+		testNumber = phonenumber.replace(/-/g, '');
+	else if(separator === '.')
+		testNumber = phonenumber.replace(/./g, '');
+
+	return !isNaN(testNumber);	
+}
 function onUpdateProfile()
 {
-    var params = "firstname=" + document.getElementById('userfirstname').value
-		+ "&" + "lastname=" + document.getElementById('userlastname').value
-		+ "&" + "org=" + document.getElementById('userorg').value
-		+ "&" + "title=" + document.getElementById('usertitle').value
-		+ "&" + "email=" + document.getElementById('useremail').value
-		+ "&" + "phone=" + document.getElementById('userphone').value;
-
-    var table = $('#profiletable').DataTable();
-	var data = table.data().toArray();
-	for(var index=0; index<data.length; index++)
-    	params= params.concat("&group",  index, "=", data[index].id);
-    				
-	params= params.concat("&", "callback=?");	
-
-	$.getJSON('updateuser', params, function(responseJson)
+	if(verifyCellPhone())
+	{	
+	    var params = "firstname=" + document.getElementById('userfirstname').value
+			+ "&" + "lastname=" + document.getElementById('userlastname').value
+			+ "&" + "org=" + document.getElementById('userorg').value
+			+ "&" + "title=" + document.getElementById('usertitle').value
+			+ "&" + "email=" + document.getElementById('useremail').value
+			+ "&" + "workphone=" + document.getElementById('workphone').value
+	    	+ "&" + "cellphone=" + document.getElementById('cellphone').value;
+	
+	    var table = $('#profiletable').DataTable();
+		var data = table.data().toArray();
+		for(var index=0; index<data.length; index++)
+	    	params= params.concat("&group",  index, "=", data[index].id);
+	    				
+		params= params.concat("&", "callback=?");	
+	
+		$.getJSON('updateuser', params, function(responseJson)
+		{
+			document.getElementById('cancel').disabled = false;
+			document.getElementById('update').disabled = true;
+	    	
+	    	if(responseJson.hasOwnProperty('message'))
+	    	{
+				document.getElementById('banner-message').textContent= responseJson.message;
+	    	}
+	    	else
+	    	{
+	    	    userJson = responseJson;
+	    	    document.getElementById('banner-message').textContent= "User profile successfully updated!";
+	    	}
+	    	document.getElementById('welcome-div').style.display = "block";
+	    	
+	    	window.location = '#close'; 
+		});
+	}
+	else
 	{
-		var updateButton = document.getElementById('update');
-		updateButton.disabled = true;
-    	
-    	if(responseJson.hasOwnProperty('message'))
-    	{
-			document.getElementById('banner-message').textContent= responseJson.message;
-    	}
-    	else
-    	{
-    	    userJson = responseJson;
-    	    document.getElementById('banner-message').textContent= "User profile successfully updated!";
-    	}
-    	document.getElementById('welcome-div').style.display = "block";
-    	
-    	window.location = '#close'; 
-	});		
+		//disable update and the no change button
+		document.getElementById('cancel').disabled = true;
+		document.getElementById('update').disabled = true;
+		
+		//show pop-up prompting for cell phone
+		document.getElementById('cellwarningmssg').textContent = "Each user MUST have a valid cellphone #. ONC relies on cell phones " +
+		"for account recovery and two-factor authentication purposes.";
+		
+		window.location=document.getElementById('cellwarninganchor').href;
+	}
 }
 function onProfileNotChanged()
 {
-	var params = {}	
-	$.post('profileunchanged', params, function(response)
+	if(verifyCellPhone())
 	{
-		document.getElementById('banner-message').textContent= response.message;
-	}, "jsonp");
+		var params = {}	
+		$.post('profileunchanged', params, function(response)
+		{
+			document.getElementById('banner-message').textContent= response.message;
+		}, "jsonp");
 	
-	window.location = '#close'; 
+		window.location = '#close';
+	}
+	else
+	{
+		//disable update and the no change button
+		document.getElementById('cancel').disabled = true;
+		document.getElementById('update').disabled = true;
+		
+		//show pop-up prompting for cell phone
+		document.getElementById('cellwarningmssg').textContent = "Each user MUST have a valid cellphone #. ONC relies on cell phones " +
+		"for account recovery and two-factor authentication purposes.";
+		
+		window.location=document.getElementById('cellwarninganchor').href;
+	}
 }
 function checkChangePWEnable()
 {

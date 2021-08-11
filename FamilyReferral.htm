@@ -14,7 +14,7 @@
   <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/sorting/natural.js"></script>
   <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script type="text/javascript" src="onccommon.js"></script>
-  <script src="commonfamily.js"></script>
+  <script type="text/javascript" src="commonfamily.js"></script>
   <script>
   	var editedChild = {};	//holds original state of child when edit starts
   	var editedAdult = {};
@@ -1212,6 +1212,7 @@
   <a href="#editChild" id="editchildanchor" style="visibility: hidden">Edit Child</a>
   <a href="#editAdult" id="editadultanchor" style="visibility: hidden">Edit Adult</a>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
+  <a href="#cellwarningdlg" id="cellwarninganchor" style="visibility: hidden">Cell Phone Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div class='header'> 
     <img class='logo-img' src="onclogo">
@@ -1470,7 +1471,7 @@
 		</div>
 		  <p id='giftcardmssg'></p>
 		<div class='buttonbar'>
-    	<button onclick="window.location=document.getElementById('editchildanchor').href">Ok</button>
+    	<button onclick="window.location=document.getElementById('editchildanchor').href">OK</button>
       </div>
 	</div>
   </div>
@@ -1502,8 +1503,9 @@
     	  		<input id='useremail' type="text" size="34" placeholder="Email address" onchange='checkForProfileChange()'>
     	      </p>
     	 	  <p>
-    	  		<label for="userphone">Phone:</label>
-    	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  		<label for="workphone">Phones:</label>
+    	  		<input id='workphone' type="text" size="16" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  		<input id='cellphone' type="text" size="16" placeholder="Cell Phone #" onchange='checkForProfileChange()'>
     	  	  </p>
       	</fieldset>      
 		<fieldset>
@@ -1529,6 +1531,20 @@
       </div> 
 	</div>
   </div>
+ <!-- Cell phone Warning Dialog -->
+  <div id="cellwarningdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<a href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class="logospan">Invalid Cell Phone</span>
+		</div>	
+		<span id='cellwarningmssg'></span>
+		<div class='buttonbar'>
+      	  <button onclick="window.location=document.getElementById('editprofileanchor').href">I'll fix it</button>
+    	</div>
+	</div>
+  </div> 
 <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
 	<div class='inner extended-width'>
@@ -1682,6 +1698,6 @@
         </span>
       </div> 
 	</div>
-  </div>  
+  </div>    
 </body>
 </html>

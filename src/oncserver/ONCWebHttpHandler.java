@@ -200,8 +200,8 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			//determine if a valid request from a logged in user. If so, process the update
 			if((wc=clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
 			{
-				ServerUserDB userDB = ServerUserDB.getInstance();
-				ONCUser updatedUser = userDB.updateProfile(wc.getWebUser(), params);
+				ServerUserDB serveruserDB = ServerUserDB.getInstance();
+				ONCUser updatedUser = serveruserDB.updateProfile(wc.getWebUser(), params);
 			
 				if(updatedUser != null)	//test to see if the update was required and successful
 				{

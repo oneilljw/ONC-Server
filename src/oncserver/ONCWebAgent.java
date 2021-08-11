@@ -14,7 +14,8 @@ public class ONCWebAgent
 	private String org;
 	private String title;
 	private String email;
-	private String phone;
+	private String workphone;
+	private String cellphone;
 
 	//Agent from ONCServerUser
 	public ONCWebAgent(ONCServerUser su)
@@ -26,7 +27,8 @@ public class ONCWebAgent
 		org = su.getOrganization();
 		title = su.getTitle();
 		email = su.getEmail();
-		phone = su.getCellPhone();
+		workphone = su.getHomePhone();
+		cellphone = su.getCellPhone();
 	}
 	
 	//getters
@@ -37,5 +39,6 @@ public class ONCWebAgent
 	String getOrg() { return org; }
 	String getTitle() { return title; }
 	String getEmail() { return email; }
-	String getPhone() { return phone; }
+	String getWorkPhone() { return workphone; }
+	String getCellPhone() { return cellphone; }
 }

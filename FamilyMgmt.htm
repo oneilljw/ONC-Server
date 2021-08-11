@@ -440,6 +440,7 @@
 </head>
 <body>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
+  <a href="#cellwarningdlg" id="cellwarninganchor" style="visibility: hidden">Cell Phone Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <a href="#successdlg" id="successanchor" style="visibility: hidden">Success</a>
   <a href="#printdlg" id="printanchor" style="visibility: hidden">Success</a>
@@ -636,9 +637,10 @@
     	  		<label for="useremail">Email:</label>
     	  		<input id='useremail' type="text" size="34" placeholder="Email address" onchange='checkForProfileChange()'>
     	      </p>
-    	 	  <p>
-    	  		<label for="userphone">Phone:</label>
-    	  		<input id='userphone' type="text" size="24" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	 	 <p>
+    	  		<label for="workphone">Phones:</label>
+    	  		<input id='workphone' type="text" size="16" placeholder="Work Phone #" onchange='checkForProfileChange()'>
+    	  		<input id='cellphone' type="text" size="16" placeholder="Cell Phone #" onchange='checkForProfileChange()'>
     	  	  </p>
       	</fieldset>      
 		<fieldset>
@@ -664,6 +666,19 @@
       </div> 
 	</div>
   </div>
+<!-- Cell phone Warning Dialog -->
+  <div id="cellwarningdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class="logospan">Invalid Cell Phone</span>
+		</div>	
+		<span id='cellwarningmssg'></span>
+		<div class='buttonbar'>
+      	  <button onclick="window.location=document.getElementById('editprofileanchor').href">I'll fix it</button>
+    	</div>
+	</div>
+  </div>  
 <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
 	<div class='inner extended-width'>

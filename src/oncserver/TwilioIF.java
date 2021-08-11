@@ -44,18 +44,7 @@ public class TwilioIF
     		smsDB = ServerSMSDB.getInstance();
     		
     		String paramFile = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), TWILIO_PARAMS_FILENAME);
-    		readParamaters(paramFile);
-/*   		
-    		//turn off logging
-    		 Set<String> loggers = new HashSet<>(Arrays.asList("org.apache.http", "groovyx.net.http"));
-    		    
-    		 for(String log:loggers)
-    		 { 
-    		    Logger logger = (Logger)LoggerFactory.getLogger(log);
-    		    logger.setLevel(Level.INFO);
-    		    logger.setAdditive(false);
-    		 }
-*/   		 
+    		readParamaters(paramFile);	 
     }
     
     public static TwilioIF getInstance() throws FileNotFoundException, IOException
@@ -113,8 +102,8 @@ public class TwilioIF
      */
     String validateSMSList(SMSRequest request, List<ONCSMS> smsList)
     {
-    		//initialize the background task
-    		TwilioSMSValidator validator = new TwilioSMSValidator(request, smsList);
+    	//initialize the background task
+    	TwilioSMSValidator validator = new TwilioSMSValidator(request, smsList);
 		validator.execute();
 		
 		return "SMS_REQUEST_INITIATED";
@@ -146,7 +135,7 @@ public class TwilioIF
     
     void twilioSendRequestComplete(SMSRequest request, List<ONCSMS> resultList)
     {
-    		//notify the SMS DB that the request has been processed
+    	//notify the SMS DB that the request has been processed
 //    	smsDB.twilioRequestComplete(request, resultList);
     }
  

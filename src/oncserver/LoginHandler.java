@@ -25,7 +25,7 @@ import com.sun.net.httpserver.HttpsExchange;
  */
 public class LoginHandler extends ONCWebpageHandler
 {	
-	private static final long ID_VALIDITY_TIME = 1000 * 60 * 60;
+	private static final long ID_VALIDITY_TIME = 1000 * 60 * 10;
 	private static final int LOGIN_FAILURE_LIMIT = 4;
 	private ServerUserDB userDB;
 	
@@ -181,6 +181,59 @@ public class LoginHandler extends ONCWebpageHandler
     		
     			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
 		}
+		else if(requestURI.startsWith("/authenticatecode"))
+		{
+			//if user has sent the correct recovery code from a web page with a matching recover ID within the
+			//recovery time period, respond with a change password web page
+			String html;
+			if(params.containsKey("recoveryID") && params.containsKey("code") && params.containsKey("offset"))
+			{
+				String recoveryID = (String) params.get("recoveryID");
+				String code = (String) params.get("code");
+			
+				//find the user based on recoveryID
+				ONCServerUser su = userDB.findUserByRecoveryIDAndCode(recoveryID, code);
+				if(su != null)
+				{
+					//found user, now check if recovery id was used before time limit
+					long timeNow = Calendar.getInstance().getTimeInMillis();
+					if(timeNow - su.getRecoveryIDTime() <= ID_VALIDITY_TIME)
+					{
+						//recovery ID is still valid, user has successfully authenticated. Process their login request.
+						HtmlResponse htmlResponse = processUserLoginRequest(t, params, su);
+						sendHTMLResponse(t, htmlResponse);
+					}
+					else
+					{
+						//send an error message web page that time expired
+						html = webpageMap.get("loginerror");
+    					html = html.replace("COLOR", "red");
+    					html = html.replace("LEGEND_MESSAGE", "Recovery Period Expired");
+    					html = html.replace("ERROR_MESSAGE", "We are unable to process your request, please contact ONC at schoolcontact@ourneighborschild.org");
+    					sendHTMLResponse(t, new HtmlResponse(html, HttpCode.Ok));
+					}
+				}
+				else
+				{
+					//send an error message web page that user wasn't found
+					html = webpageMap.get("loginerror");
+					html = html.replace("COLOR", "red");
+					html = html.replace("LEGEND_MESSAGE", "Recovery Unavailable");
+					html = html.replace("ERROR_MESSAGE", "We are unable process your request, please contact ONC at schoolcontact@ourneighborschild.org");
+					sendHTMLResponse(t, new HtmlResponse(html, HttpCode.Ok));
+				}
+			}
+			else
+			{
+				//send an error message web page
+				html = webpageMap.get("loginerror");
+				html = html.replace("COLOR", "red");
+				html = html.replace("LEGEND_MESSAGE", "Recovery Error");
+				html = html.replace("ERROR_MESSAGE", "We are unable to process your request, please contact ONC at schoolcontact@ourneighborschild.org");
+				sendHTMLResponse(t, new HtmlResponse(html, HttpCode.Ok));
+			}	
+		}
+/*		
 		else if(requestURI.startsWith("/recoverylogin"))
 		{
 			String html;
@@ -233,6 +286,7 @@ public class LoginHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, new HtmlResponse(html, HttpCode.Ok));
 		}
+*/		
 	}
 	
 	HtmlResponse loginRequest(HttpExchange t, Map<String, Object> params)
@@ -246,16 +300,16 @@ public class LoginHandler extends ONCWebpageHandler
 	    	
 		ONCServerUser serverUser = (ONCServerUser) userDB.find(userID);
 		if(serverUser == null)	//can't find the user in the data base
-	    	{
+	    {
 			html = webpageMap.get("online");
 			html = html.replace("COLOR", "red");
 			html = html.replace("LEGEND_MESSAGE", "Invalid  User Name or Password");
 			html = html.replace("WELCOME_MESSAGE", "You have entered an incorrect User Name<br>or Password. Please try again.");
 			html = html.replace("LOGIN_ATTEMPT", "");
-	    		response = new HtmlResponse(html, HttpCode.Ok);
-	    	}
+	    	response = new HtmlResponse(html, HttpCode.Ok);
+	    }
 		else if(serverUser != null && !serverUser.pwMatch(password))	//found the user but pw is incorrect
-    		{
+    	{
 			serverUser.setFailedLoginCount(serverUser.getFailedLoginCount() + 1);
 			
 			if(serverUser.getFailedLoginCount() >= LOGIN_FAILURE_LIMIT)
@@ -264,114 +318,217 @@ public class LoginHandler extends ONCWebpageHandler
 				//notifying clients of updated user object
 				serverUser.setStatus(UserStatus.Inactive);
 
-    				Gson gson = new Gson();
-    				String loginJson = gson.toJson(serverUser.getUserFromServerUser(), ONCUser.class);
+    			Gson gson = new Gson();
+    			String loginJson = gson.toJson(serverUser.getUserFromServerUser(), ONCUser.class);
 				String mssg = "UPDATED_USER" + loginJson;
-    				clientMgr.notifyAllClients(mssg);
+    			clientMgr.notifyAllClients(mssg);
 				
 				html = webpageMap.get("loginerror");
-	    			html = html.replace("COLOR", "red");
-	    			html = html.replace("LEGEND_MESSAGE", "Failed Login Limit Exceded");
-	    			html = html.replace("ERROR_MESSAGE", "To protect you, we've locked your account, please contact ONC at schoolcontact@ourneighborschild.org");
-	    			response = new HtmlResponse(html, HttpCode.Ok);
+	    		html = html.replace("COLOR", "red");
+	    		html = html.replace("LEGEND_MESSAGE", "Failed Login Limit Exceded");
+	    		html = html.replace("ERROR_MESSAGE", "To protect you, we've locked your account, please contact ONC at schoolcontact@ourneighborschild.org");
+	    		response = new HtmlResponse(html, HttpCode.Ok);
 			}
 			else
 			{	
-    				html = webpageMap.get("online");
-    				html = html.replace("COLOR", "red");
-    				html = html.replace("LEGEND_MESSAGE", "Invalid  User Name/Password");
-    				html = html.replace("WELCOME_MESSAGE", "You have entered an incorrect User Name<br>or Password. Please try again.");
-    				String plural = LOGIN_FAILURE_LIMIT - serverUser.getFailedLoginCount() > 1 ? "attempts":"attempt";
-    				String attMssg = String.format("You have %d %s remaining", LOGIN_FAILURE_LIMIT - serverUser.getFailedLoginCount(), plural);
-    				html = html.replace("LOGIN_ATTEMPT", attMssg);
-    				response = new HtmlResponse(html, HttpCode.Ok);
+				html = webpageMap.get("online");
+				html = html.replace("COLOR", "red");
+				html = html.replace("LEGEND_MESSAGE", "Invalid  User Name/Password");
+				html = html.replace("WELCOME_MESSAGE", "You have entered an incorrect User Name<br>or Password. Please try again.");
+				String plural = LOGIN_FAILURE_LIMIT - serverUser.getFailedLoginCount() > 1 ? "attempts":"attempt";
+				String attMssg = String.format("You have %d %s remaining", LOGIN_FAILURE_LIMIT - serverUser.getFailedLoginCount(), plural);
+				html = html.replace("LOGIN_ATTEMPT", attMssg);
+				response = new HtmlResponse(html, HttpCode.Ok);
 			}
 			
 			userDB.requestSave();
-    		}
-	    	else if(serverUser != null && serverUser.pwMatch(password) && 
-	    			serverUser.getStatus() == UserStatus.Inactive)	//found user but account is locked
-	    	{
-	    		html = webpageMap.get("loginerror");
-	    		html = html.replace("COLOR", "red");
-    			html = html.replace("LEGEND_MESSAGE", "Locked Account");
-    			html = html.replace("ERROR_MESSAGE", "This account is locked, please contact ONC at schoolcontact@ourneighborschild.org");
-    			response = new HtmlResponse(html, HttpCode.Forbidden);
-	    	}
-	    	else if(serverUser != null && serverUser.pwMatch(password) && 
-	    			!(serverUser.getAccess().equals(UserAccess.Website) || serverUser.getAccess().equals(UserAccess.AppAndWebsite)))
-	    	{
-	    		html = webpageMap.get("loginerror");	//found user, but they don't have web site access
-	    		html = html.replace("COLOR", "red");
-    			html = html.replace("LEGEND_MESSAGE", "Unauthorized Access");
-    			html = html.replace("ERROR_MESSAGE", "Website access not authorized for this account,<br>please contact ONC at volunteer@ourneighborschild.org");
-    			response = new HtmlResponse(html, HttpCode.Forbidden);
-	    	}
-	    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
-	    	{
-	    		//get prior last login time for welcome message before setting new
-	    		//last login time
-	    		long priorLastLogin = serverUser.getLastLogin();
-	    		serverUser.setLastLogin(System.currentTimeMillis());
-//	    		System.out.println(String.format("Prior LL: %d, curr LL: %d", priorLastLogin, serverUser.getLastLogin()));
-	    	
-	    		serverUser.incrementSessions();
-	    		serverUser.setFailedLoginCount(0);
-	    		serverUser.setClientYear(DBManager.getCurrentSeason());
-	    		
-	    		userDB.requestSave();
-	    		
-	    		ONCUser webUser = serverUser.getUserFromServerUser();
-	    		WebClient wc = clientMgr.addWebClient(t, serverUser);
-    			
-	    		//has the current password expired? If so, send change password page
-	    		if(serverUser.changePasswordRqrd())
-	    		{
-	    			Gson gson = new Gson();
-	    			String loginJson = gson.toJson(webUser, ONCUser.class);
-	    		
-	    			String mssg = "UPDATED_USER" + loginJson;
-	    			clientMgr.notifyAllClients(mssg);
-	    			
-	    			html = webpageMap.get("changepw");
-	    			html = html.replaceAll("USERFN", getUserFirstName(wc));
-	    				
-	    			response = new HtmlResponse(html, HttpCode.Ok, getSIDCookie(wc));
-	    		}
-	    		else //send the home page
-	    		{
-	    			Gson gson = new Gson();
-	    			String loginJson = gson.toJson(webUser, ONCUser.class);
-	    		
-	    			String mssg = "UPDATED_USER" + loginJson;
-	    			clientMgr.notifyAllClients(mssg);
-	    			
-	    			//determine if user never visited or last login date
-	    			String userMssg;
-	    			if(serverUser.getNSessions() == 1)
-	    				userMssg = "This is your first visit!";
-	    			else
-	    			{
-	    				//get UTC offset to where the user is located
-	    	    		long userOffsetInMillis = 0;
-	   					if(params.containsKey("offset") && isNumeric((String)params.get("offset")))
-	    					userOffsetInMillis = (Integer.parseInt((String)params.get("offset"))) * 60 * 1000 * -1;
-	    				
-	    				Calendar lastLoginCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-	    				lastLoginCal.setTimeInMillis(priorLastLogin + userOffsetInMillis);
-	    				
-	    				SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy, h:mm a");
-//	    				System.out.println(String.format("Last Login Millis: %d, Time: %s", priorLastLogin, sdf.format(lastLoginCal.getTime())));
-//	    				System.out.println(lastLoginCal);
-	    				sdf.setTimeZone(TimeZone.getDefault());
-	    				userMssg = "Your last login was on " + sdf.format(lastLoginCal.getTime()) +".";
-	    			}
-
-	    			response = new HtmlResponse(getHomePageHTML(wc, userMssg, false), HttpCode.Ok, getSIDCookie(wc));
-	    		}
-	    	}   	
+    	}
+		else if(serverUser != null && serverUser.pwMatch(password))
+		{
+			response = processUserLoginRequest(t, params, serverUser);
+		}
+//		Code broken into login request and processUserLoginRequest methods		
+//	    else if(serverUser != null && serverUser.pwMatch(password) && 
+//	    			serverUser.getStatus() == UserStatus.Inactive)	//found user but account is locked
+//	    {
+//	    	html = webpageMap.get("loginerror");
+//	    	html = html.replace("COLOR", "red");
+//  		html = html.replace("LEGEND_MESSAGE", "Locked Account");
+//    		html = html.replace("ERROR_MESSAGE", "This account is locked, please contact ONC at schoolcontact@ourneighborschild.org");
+//    		response = new HtmlResponse(html, HttpCode.Forbidden);
+//	    }
+//	    else if(serverUser != null && serverUser.pwMatch(password) && 
+//	    			!(serverUser.getAccess().equals(UserAccess.Website) || serverUser.getAccess().equals(UserAccess.AppAndWebsite)))
+//	    {
+//  		html = webpageMap.get("loginerror");	//found user, but they don't have web site access
+//    		html = html.replace("COLOR", "red");
+//			html = html.replace("LEGEND_MESSAGE", "Unauthorized Access");
+//			html = html.replace("ERROR_MESSAGE", "Website access not authorized for this account,<br>please contact ONC at volunteer@ourneighborschild.org");
+//			response = new HtmlResponse(html, HttpCode.Forbidden);
+//    	}
+//    	else if(serverUser != null && serverUser.pwMatch(password))	//user found, password matches
+//    	{
+//    		//get prior last login time for welcome message before setting new
+//    		//last login time
+//    		long priorLastLogin = serverUser.getLastLogin();
+//    		serverUser.setLastLogin(System.currentTimeMillis());
+//
+//    		serverUser.incrementSessions();
+//    		serverUser.setFailedLoginCount(0);
+//    		serverUser.setClientYear(DBManager.getCurrentSeason());
+//    		
+//    		userDB.requestSave();
+//	    		
+//    		ONCUser webUser = serverUser.getUserFromServerUser();
+//    		WebClient wc = clientMgr.addWebClient(t, serverUser);
+//			
+//    		//has the current password expired? If so, send change password page
+//    		if(serverUser.changePasswordRqrd())
+//    		{
+//    			Gson gson = new Gson();
+//    			String loginJson = gson.toJson(webUser, ONCUser.class);
+//    		
+//    			String mssg = "UPDATED_USER" + loginJson;
+//    			clientMgr.notifyAllClients(mssg);
+//    			
+//    			html = webpageMap.get("changepw");
+//    			html = html.replaceAll("USERFN", getUserFirstName(wc));
+//    				
+//   			response = new HtmlResponse(html, HttpCode.Ok, getSIDCookie(wc));
+//    		}
+//    		else //send the home page
+//    		{
+//    			Gson gson = new Gson();
+//    			String loginJson = gson.toJson(webUser, ONCUser.class);
+//    		
+//    			String mssg = "UPDATED_USER" + loginJson;
+//    			clientMgr.notifyAllClients(mssg);
+//    			
+//    			//determine if user never visited or last login date
+//    			String userMssg;
+//    			if(serverUser.getNSessions() == 1)
+//    				userMssg = "This is your first visit!";
+//    			else
+//    			{
+//    				//get UTC offset to where the user is located
+//    	    		long userOffsetInMillis = 0;
+//   					if(params.containsKey("offset") && isNumeric((String)params.get("offset")))
+//    					userOffsetInMillis = (Integer.parseInt((String)params.get("offset"))) * 60 * 1000 * -1;
+//    				
+//    				Calendar lastLoginCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+//    				lastLoginCal.setTimeInMillis(priorLastLogin + userOffsetInMillis);
+//    				
+//    				SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy, h:mm a");
+//    				sdf.setTimeZone(TimeZone.getDefault());
+//    				userMssg = "Your last login was on " + sdf.format(lastLoginCal.getTime()) +".";
+//    			}
+//
+//    			response = new HtmlResponse(getHomePageHTML(wc, userMssg, false), HttpCode.Ok, getSIDCookie(wc));
+//    		}
+//    	}   	
 		
 		return response;
+	}
+	
+	HtmlResponse processUserLoginRequest(HttpExchange t, Map<String, Object> params, ONCServerUser serverUser)
+	{
+		HtmlResponse response = null;
+		String html;
+		
+	    if(serverUser.getStatus() == UserStatus.Inactive)	//found user but account is locked
+	    {
+	    	html = webpageMap.get("loginerror");
+	    	html = html.replace("COLOR", "red");
+    		html = html.replace("LEGEND_MESSAGE", "Locked Account");
+    		html = html.replace("ERROR_MESSAGE", "This account is locked, please contact ONC at schoolcontact@ourneighborschild.org");
+    		response = new HtmlResponse(html, HttpCode.Forbidden);
+	    }
+	    else if(!(serverUser.getAccess().equals(UserAccess.Website) || serverUser.getAccess().equals(UserAccess.AppAndWebsite)))
+	    {
+    		html = webpageMap.get("loginerror");	//found user, but they don't have web site access
+    		html = html.replace("COLOR", "red");
+			html = html.replace("LEGEND_MESSAGE", "Unauthorized Access");
+			html = html.replace("ERROR_MESSAGE", "Website access not authorized for this account,<br>please contact ONC at volunteer@ourneighborschild.org");
+			response = new HtmlResponse(html, HttpCode.Forbidden);
+    	}
+    	else
+    	{
+    		//get prior last login time for welcome message before setting new
+    		//last login time
+    		long priorLastLogin = serverUser.getLastLogin();
+    		serverUser.setLastLogin(System.currentTimeMillis());
+
+    		serverUser.incrementSessions();
+    		serverUser.setFailedLoginCount(0);
+    		serverUser.setClientYear(DBManager.getCurrentSeason());
+    		
+    		userDB.requestSave();
+	    		
+    		ONCUser webUser = serverUser.getUserFromServerUser();
+    		WebClient wc = clientMgr.addWebClient(t, serverUser);
+			
+    		//has the current password expired? If so, send change password page
+    		if(serverUser.changePasswordRqrd() || serverUser.getStatus() == UserStatus.Recovery)
+    		{
+    			Gson gson = new Gson();
+    			String loginJson = gson.toJson(webUser, ONCUser.class);
+    		
+    			String mssg = "UPDATED_USER" + loginJson;
+    			clientMgr.notifyAllClients(mssg);
+    			
+    			html = webpageMap.get("changepw");
+    			html = html.replaceAll("USERFN", getUserFirstName(wc));
+    			if(serverUser.getStatus() == UserStatus.Recovery)
+    			{
+    				html = html.replace("CHANGE_PW_MODE", "'RECOVERY'");
+    				html = html.replace("RECOVERY_CODE", serverUser.getUserPW());
+    				
+    				serverUser.setStatus(UserStatus.Change_PW);
+        			userDB.requestSave();
+    			}
+    			else
+    			{
+    				//clear the current password and set the display to block
+    				html = html.replace("CHANGE_PW_MODE", "'NORMAL'");
+    				html = html.replace("RECOVERY_CODE", "");
+    			}
+    			
+    			response = new HtmlResponse(html, HttpCode.Ok, getSIDCookie(wc));
+    		}
+    		else //send the home page
+    		{
+    			Gson gson = new Gson();
+    			String loginJson = gson.toJson(webUser, ONCUser.class);
+    		
+    			String mssg = "UPDATED_USER" + loginJson;
+    			clientMgr.notifyAllClients(mssg);
+    			
+    			//determine if user never visited or last login date
+    			String userMssg;
+    			if(serverUser.getNSessions() == 1)
+    				userMssg = "This is your first visit!";
+    			else
+    			{
+    				//get UTC offset to where the user is located
+    	    		long userOffsetInMillis = 0;
+   					if(params.containsKey("offset") && isNumeric((String)params.get("offset")))
+    					userOffsetInMillis = (Integer.parseInt((String)params.get("offset"))) * 60 * 1000 * -1;
+    				
+    				Calendar lastLoginCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    				lastLoginCal.setTimeInMillis(priorLastLogin + userOffsetInMillis);
+    				
+    				SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d, yyyy, h:mm a");
+//	    				System.out.println(String.format("Last Login Millis: %d, Time: %s", priorLastLogin, sdf.format(lastLoginCal.getTime())));
+//	    				System.out.println(lastLoginCal);
+    				sdf.setTimeZone(TimeZone.getDefault());
+    				userMssg = "Your last login was on " + sdf.format(lastLoginCal.getTime()) +".";
+    			}
+
+    			response = new HtmlResponse(getHomePageHTML(wc, userMssg, false), HttpCode.Ok, getSIDCookie(wc));
+    		}
+    	}
+	    
+	    return response;
 	}
 	
 	HttpCookie getSIDCookie(WebClient wc)
@@ -393,8 +550,8 @@ public class LoginHandler extends ONCWebpageHandler
 		String email = (String) params.get("field1");
 		String phone = (String) params.get("field2");
 	    	
-	    	//don't want a reference here, want a new object. A user can be logged in more then once.
-	    	//However, never can use this object to update a user's info
+	    //don't want a reference here, want a new object. A user can be logged in more then once.
+	    //However, never use this object to update a user's info
 		ONCServerUser serverUser = (ONCServerUser) userDB.findUserByEmailAndPhone(email, phone);
 		if(serverUser != null)
 	    {
@@ -405,8 +562,7 @@ public class LoginHandler extends ONCWebpageHandler
 				html = html.replace("COLOR", "red");
 				html = html.replace("LEGEND_MESSAGE", "Identity Verified, Access Unauthorized");
 				html = html.replace("ERROR_MESSAGE", "We found your account, however, website access isn't authorized. "
-									+ "You'll need to contact ONC at schoolcontact@ourneighborschild.org "
-									+ "to authorize website access.");
+									+ "Please contact ONC at schoolcontact@ourneighborschild.org to authorize website access.");
 				response = new HtmlResponse(html, HttpCode.Ok);
 			}
 			else if(serverUser.getStatus() == UserStatus.Inactive)
@@ -415,18 +571,15 @@ public class LoginHandler extends ONCWebpageHandler
 				html = webpageMap.get("loginerror");
 				html = html.replace("COLOR", "red");
 				html = html.replace("LEGEND_MESSAGE", "Identity Verified, Account Locked");
-				html = html.replace("ERROR_MESSAGE", "We found your account, however, it's locked. "
-									+ "You'll need to contact ONC at schoolcontact@ourneighborschild.org "
-									+ "to unlock your account.");
+				html = html.replace("ERROR_MESSAGE", "Please contact ONC at schoolcontact@ourneighborschild.org to unlock your account.");
 				response = new HtmlResponse(html, HttpCode.Ok);
 			}
 			
 			else
 			{	
-				//send a reset email to the user's email address from school contact
-				serverUser.createRecoveryID();
-				serverUser.createTemporaryPassword();
-				serverUser.setStatus(UserStatus.Change_PW);
+				//send a authentication code text to the user's cell phone
+				serverUser.createRecoveryIDAndTime();
+				serverUser.setRecoveryStatusAndPassword();
 				userDB.requestSave();
 			
 				Gson gson = new Gson();
@@ -434,17 +587,15 @@ public class LoginHandler extends ONCWebpageHandler
 				String mssg = "UPDATED_USER" + loginJson;
 				clientMgr.notifyAllClients(mssg);
 			
-				userDB.createAndSendRecoveryEmail(serverUser);
+//				userDB.createAndSendRecoveryEmail(serverUser);
+				userDB.createAndSendAccountRecoverySMS(serverUser);
 			
-				//send a webpage that informs user that we've sent them an email
-    				html = webpageMap.get("loginerror");
-    				html = html.replace("COLOR", "blue");
-    				html = html.replace("LEGEND_MESSAGE", "Identity Successfully Verified");
-    				html = html.replace("ERROR_MESSAGE", "Success! We found your account. Please check your "
-    													+ "email. We've sent you a message containing a "
-    													+ "temporary password and a link to unlock access "
-    													+ "to the website.");
-    				response = new HtmlResponse(html, HttpCode.Ok);
+				//send a webpage that informs user that we've sent them a text message and allows them to enter
+				//a verification code
+    			html = webpageMap.get("codeauthentication");
+    			html = html.replace("RECOVERY_ID", serverUser.getRecoveryID());
+
+    			response = new HtmlResponse(html, HttpCode.Ok);
 			}
 	    }
 	    else
