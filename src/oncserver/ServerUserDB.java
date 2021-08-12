@@ -898,7 +898,7 @@ public class ServerUserDB extends ServerPermanentDB
 			userIDList.add(recUser.getID());
 			
 			String msg = String.format("ONC received your account recovery request. Your account recovery code is: %s."
-					+ " Please enter the code in the account recovery webpage within 10 minutes.", recUser.getUserPW());
+					+ " Please enter the code in the account recovery webpage within 10 minutes. Thank you.", recUser.getUserPW());
 			
 			SMSRequest request = new SMSRequest(DBManager.getCurrentSeason(), msg, false, 0, EntityType.USER, userIDList);
 					

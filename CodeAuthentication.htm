@@ -19,14 +19,18 @@ function onInputChange()
 		loginButton.disabled = true;
 }
 </script>
-<style></style>
+<style>
+	#hidden { display: none; }
+</style>
 </head>
 <body>
   <div id="inner">
 	<form action="authenticatecode" method="post">
     <fieldset>
-    	<input type='text' name='recoveryID' value='RECOVERY_ID' style="visibility: hidden">
-    	<input type='text' id='offset' name='offset' style="visibility: hidden">
+    	<div id='hidden'>
+    		<input type='text' name='recoveryID' value='RECOVERY_ID'>
+    		<input type='text' id='offset' name='offset'>
+    	</div>
     	<legend class='legend-major'>Account Recovery</legend>
     	<p align="center"><b><i>Success! We found your account, please check your text messages. We sent you an authentication code, please enter it below.</i></b></p>
     	<label for="code">Code:</label>
