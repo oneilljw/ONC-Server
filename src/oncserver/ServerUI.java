@@ -112,22 +112,22 @@ public class ServerUI extends JPanel implements ClientListener
 //    	rbStoplight.setToolTipText("");
 //    	statusPanelRight.add(rbStoplight);
     	
-    		statusPanel.add(statusPanelLeft);
-    		statusPanel.add(statusPanelRight);
-    	
-    		//Set up the desktop client table panel and website client table panel
-    		JPanel desktoptablepanel = new JPanel();
-    		desktoptablepanel.setLayout(new BorderLayout());
-    	
-    		desktopClientTM = new DesktopClientTableModel();
-    		desktopClientTable = new JTable();
+		statusPanel.add(statusPanelLeft);
+		statusPanel.add(statusPanelRight);
+	
+		//Set up the desktop client table panel and website client table panel
+		JPanel desktoptablepanel = new JPanel();
+		desktoptablepanel.setLayout(new BorderLayout());
+	
+		desktopClientTM = new DesktopClientTableModel();
+		desktopClientTable = new JTable();
 
-    		//Set the table model, select ability to select multiple rows and add a listener to 
-    		//check if the user has selected a row. 
-    		desktopClientTable.setModel(desktopClientTM);
-    		desktopClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    		
-    		//set up a cell renderer for the TIMESTAMP column to display the date 
+		//Set the table model, select ability to select multiple rows and add a listener to 
+		//check if the user has selected a row. 
+		desktopClientTable.setModel(desktopClientTM);
+		desktopClientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		//set up a cell renderer for the TIMESTAMP column to display the date 
         TableCellRenderer tableCellRenderer = new DefaultTableCellRenderer()
         {
           	private static final long serialVersionUID = 1L;

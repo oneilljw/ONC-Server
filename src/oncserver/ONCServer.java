@@ -9,15 +9,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-
-import org.apache.log4j.BasicConfigurator;
 
 import ourneighborschild.OSXAdapter;
 
@@ -147,6 +147,7 @@ public class ONCServer
     		serverMenuBar.updateUserNameMI.addActionListener(mbl);
     		serverMenuBar.createDelCardsMI.addActionListener(mbl);
     		serverMenuBar.missingHistoriesMI.addActionListener(mbl);
+    		serverMenuBar.lookupMI.addActionListener(mbl);
     		serverUI = ServerUI.getInstance();
     	
     		oncFrame =  new JFrame(APPNAME);
@@ -234,8 +235,7 @@ public class ONCServer
 					new ONCServer();
 					ONCSecureWebServer.getInstance();
 					ONCWebServer.getInstance();
-//					BasicConfigurator.configure();
-					
+//					BasicConfigurator.configure();	//Initialize log4j for Twilio. Superseded by log4j.properties file					
 				} 
 				catch (IOException e)
 				{
@@ -358,6 +358,31 @@ public class ONCServer
 //					// TODO Auto-generated catch block
 //					e1.printStackTrace();
 //				}	
+			}
+			else if(e.getSource() == serverMenuBar.lookupMI)
+			{
+				String number = JOptionPane.showInputDialog(oncFrame,"Number to lookup:");
+				if(number != null)
+				{
+					try 
+					{
+						TwilioIF twilioIF = TwilioIF.getInstance();
+//						String number = "+17037893871";
+						Map<String, Object> result = twilioIF.lookup(number);
+				    	String mssg = String.format("<html>number= %s<br>carrier= %s<br>type= %s<br></html>",
+				    						number, result.get("name"), result.get("type"));
+				    	
+				    	JOptionPane.showMessageDialog(oncFrame, mssg);
+					} 
+					catch (FileNotFoundException e1) 
+					{
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}	
 			}
 		}
     }

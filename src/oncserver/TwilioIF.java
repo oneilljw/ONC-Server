@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +45,7 @@ public class TwilioIF
     		smsDB = ServerSMSDB.getInstance();
     		
     		String paramFile = String.format("%s/PermanentDB/%s", System.getProperty("user.dir"), TWILIO_PARAMS_FILENAME);
-    		readParamaters(paramFile);	 
+    		readParamaters(paramFile);
     }
     
     public static TwilioIF getInstance() throws FileNotFoundException, IOException
@@ -97,7 +98,7 @@ public class TwilioIF
 	}
     
     /***
-     * Encapsulates background SMS worker that validates SMS phone numbers
+     * Wraps background SMS worker that validates SMS phone numbers
      * @param smsList
      */
     String validateSMSList(SMSRequest request, List<ONCSMS> smsList)
@@ -109,8 +110,40 @@ public class TwilioIF
 		return "SMS_REQUEST_INITIATED";
     }
     
+    /*****
+     * Accesses Twilio ONC account to lookup a phone number and return info about the number.
+     * Does not use a Swing background worker, instead it executes in the event dispatch thread
+     * @param lookup_number: phone number to lookup, formated as 10 digits 
+     * @return Map with phone number info, including carrier and phone type
+     */
+    Map<String,Object> lookup(String lookup_number)
+    {	
+    	Twilio.init(ServerEncryptionManager.getKey("key3"),ServerEncryptionManager.getKey("key4"));
+    	
+    	try
+    	{
+			PhoneNumber number = PhoneNumber
+				        .fetcher(new com.twilio.type.PhoneNumber(lookup_number))
+				        .setType("carrier")
+				        .fetch();
+			 
+			return number.getCarrier();
+    	}
+		catch(com.twilio.exception.ApiException e) 
+    	{
+			Map<String,Object> errMap = new HashMap<String,Object>();
+
+			if(e.getStatusCode() == 404) 
+		        errMap.put("error", "Phone number not found");
+		    else
+		        errMap.put("error", "Phone number lookup failed");
+		    
+		    return errMap;
+		}	
+    }
+    
     /***
-     * Encapsulates background SMS worker
+     * Wraps background SMS worker
      * @param smsList
      */
     String sendSMSList(SMSRequest request, List<ONCSMS> smsList)
@@ -259,8 +292,8 @@ public class TwilioIF
       		{
       			//verify the phone type. If a mobile phone, set status to VALIDATED, else
       			//set status to ERR_NOT_MOBILE
-      			Map<String,String> lookupMap = lookupPhoneNumber(smsRequest.getPhoneNum());
-      			if(lookupMap.containsKey("type") && lookupMap.get("type").equals("mobile"))	
+      			Map<String,Object> lookupMap = lookupPhoneNumber(smsRequest.getPhoneNum());
+      			if(lookupMap.containsKey("type") && lookupMap.get("type").toString().equals("mobile"))	
       				smsRequest.setStatus(SMSStatus.VALIDATED);
       			else
       				smsRequest.setStatus(SMSStatus.ERR_NOT_MOBILE);
@@ -269,7 +302,7 @@ public class TwilioIF
       		return null;
       	}
       		
-      	Map<String, String> lookupPhoneNumber(String lookupNumber) 
+      	Map<String, Object> lookupPhoneNumber(String lookupNumber) 
       	{
       		PhoneNumber phoneNumber = PhoneNumber.fetcher(new com.twilio.type.PhoneNumber(lookupNumber))
       		           .setType(Arrays.asList("carrier")).fetch();
