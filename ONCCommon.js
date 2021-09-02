@@ -248,7 +248,7 @@ function onUpdateProfile()
 			+ "&" + "title=" + document.getElementById('usertitle').value
 			+ "&" + "email=" + document.getElementById('useremail').value
 			+ "&" + "workphone=" + document.getElementById('workphone').value
-	    	+ "&" + "cellphone=" + document.getElementById('cellphone').value;
+	    	+ "&" + "cellphone=" + document.getElementById('usercellphone').value;
 	
 	    var table = $('#profiletable').DataTable();
 		var data = table.data().toArray();

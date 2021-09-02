@@ -56,7 +56,7 @@ public abstract class ServerSeasonalDB extends ONCServerDB
 	 * @param num
 	 * @return
 	 */
-	String formatPhoneNumber(String num)
+	String removeNonDigitsFromPhoneNumber(String num)
 	{
 		//remove all but digits of a phone number
 		String noNonDigits = num.replaceAll("[\\D]", "");

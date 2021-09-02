@@ -60,7 +60,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		if(requestURI.contains("/families"))
 		{
 			HtmlResponse htmlResponse;
-    			WebClient wc = clientMgr.findAndValidateClient(t.getRequestHeaders());
+    		WebClient wc = clientMgr.findAndValidateClient(t.getRequestHeaders());
 			if(wc != null)
 			{
 				int year = Integer.parseInt((String) params.get("year"));
@@ -527,7 +527,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		
 		//create the family map
 		String[] familyKeys = {"targetid", "referencenum", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
-						   "zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
+						   "zipcode", "homephone", "cellphone", "altphone", "phonecode","email","delhousenum", 
 						   "delstreet","detail", "delunit", "delcity", "delzipcode", "transportation", "distpref","uuid"};
 				
 		Map<String, String> familyMap = createMap(params, familyKeys);
@@ -573,6 +573,8 @@ public class FamilyHandler extends ONCWebpageHandler
 			else if(bFoodOnly)
 				dnsCode = DNS_CODE_FOOD_ONLY;
 			
+//			System.out.println(String.format("FamHdlr.processFamRef: phoneCode= %s", familyMap.get("phonecode")));
+			
 			ONCFamily fam = new ONCFamily(-1, wc.getWebUser().getLNFI(), "NNA",
 					familyMap.get("referencenum"), "B-DI",
 					familyMap.get("language").equals("English") ? "Yes" : "No", familyMap.get("language"),
@@ -587,7 +589,7 @@ public class FamilyHandler extends ONCWebpageHandler
 //					params.containsKey(GIFTS_REQUESTED_KEY) && params.get(GIFTS_REQUESTED_KEY).equals("on"),
 //					bWaitlistFamily,
 					createWishList(params, numWishes), agent.getID(), group, 
-					0,	//phone code
+					convertFamilyPhoneCode(familyMap.get("phonecode")),	//phone code
 					Transportation.valueOf(familyMap.get("transportation")),
 					GiftDistribution.valueOf(familyMap.get("distpref")));
 		
@@ -971,7 +973,7 @@ public class FamilyHandler extends ONCWebpageHandler
 		
 			//family was found, continue processing to see if any data was changed
 			String[] familyKeys = {"targetid", "language", "hohfn", "hohln", "housenum", "street", "unit", "city",
-								"zipcode", "homephone", "cellphone", "altphone", "email","delhousenum", 
+								"zipcode", "homephone", "cellphone", "altphone", "phonecode", "email","delhousenum", 
 								"delstreet","delunit", "delcity", "delzipcode"};
 			
 			Map<String, String> familyMap = createMap(params, familyKeys);
@@ -1010,20 +1012,15 @@ public class FamilyHandler extends ONCWebpageHandler
 			}
 		
 			if(!updateFam.getSubstituteDeliveryAddress().equals(editedFam.getSubstituteDeliveryAddress())) {cc = cc | 256; }
-		
-			//create the home and cell phones, then check the home and alt phones to see if they have changed.
-			//check the email and detail fields as well
-			updateFam.setHomePhone(familyMap.get("homephone"));
+			if(!updateFam.getHomePhone().equals(familyMap.get("homephone"))) {updateFam.setHomePhone(familyMap.get("homephone")); cc = cc | 512; }
+			if(!updateFam.getCellPhone().equals(familyMap.get("cellphone"))) {updateFam.setOtherPhon(familyMap.get("cellphone")); cc = cc | 1024; }
+			if(!updateFam.getAlt2Phone().equals(familyMap.get("altphone"))) {updateFam.setAlt2Phone(familyMap.get("altphone")); cc = cc | 2048; }
+			int phoneCode = convertFamilyPhoneCode(familyMap.get("phonecode"));
+			if(updateFam.getPhoneCode() != phoneCode) {updateFam.setPhoneCode(phoneCode); cc = cc | 4096; }
+			if(!updateFam.getEmail().equals(familyMap.get("email"))) {updateFam.setFamilyEmail(familyMap.get("email")); cc = cc | 8192;}
 			
-			if(familyMap.get("altphone").equals(""))
-				updateFam.setOtherPhon(familyMap.get("cellphone"));
-			else
-				updateFam.setOtherPhon(familyMap.get("cellphone") +"\n" + familyMap.get("altphone"));
-		
-			if(!updateFam.getHomePhone().equals(editedFam.getHomePhone())) {cc = cc | 512; }
-			if(!updateFam.getCellPhone().equals(editedFam.getCellPhone())) {cc = cc | 1024; }
-			if(!updateFam.getEmail().equals(familyMap.get("email"))) {updateFam.setFamilyEmail(familyMap.get("email")); cc = cc | 2048;}
-			if(!updateFam.getDetails().equals(familyMap.get("detail"))) {updateFam.setDetails(familyMap.get("detail")); cc = cc | 4096;}	
+//			AS OF 2021 SEASON, Family Details cannot be edited by webuser			
+//			if(!updateFam.getDetails().equals(familyMap.get("detail"))) {updateFam.setDetails(familyMap.get("detail")); cc = cc | 16384;}	
 			
 			//test to see if a change was detected, if so, process it
 			if(cc > 0)
@@ -1105,6 +1102,18 @@ public class FamilyHandler extends ONCWebpageHandler
 
     	//then convert the Calendar to a Date in Millis and return it
     	return gmtDOB.getTimeInMillis();
+    }
+    
+    int convertFamilyPhoneCode(String pc)
+    {
+    	try
+    	{ 
+    		return Integer.parseInt(pc);
+    	}
+    	catch (NumberFormatException nfe)
+    	{
+    		return 0;
+    	}
     }
 
 	String createWishList(Map<String, Object> params, int numWishes)

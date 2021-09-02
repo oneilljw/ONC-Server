@@ -25,6 +25,8 @@ import java.util.List;
 		private String	substituteDeliveryAddress;	//in Google Map Address format		
 		private String	HomePhone;
 		private String	OtherPhone;
+		private String  altPhone2;
+		private int		phonecode;
 		private String	FamilyEmail;
 		private String	details;
 		private String  transportation;
@@ -55,6 +57,8 @@ import java.util.List;
 			this.substituteDeliveryAddress = f.getSubstituteDeliveryAddress();	//in Google Map Address format		
 			this.HomePhone = f.getHomePhone();
 			this.OtherPhone = f.getCellPhone();
+			this.altPhone2 = f.getAlt2Phone();
+			this.phonecode = f.getPhoneCode();
 			this.FamilyEmail = f.getEmail();
 			this.details = f.getDetails();
 			this.transportation = f.getTransportation().toString();
@@ -83,6 +87,8 @@ import java.util.List;
 		String getSubstituteDeliveryAddress() {return substituteDeliveryAddress;}
 		String getHomePhone() {return HomePhone;}
 		String getOtherPhone() {return OtherPhone;}
+		String getAlt2Phone() { return altPhone2; }
+		int getPhoneCode() { return phonecode; }
 		String getFamilyEmail() {return FamilyEmail;}
 		String getDetails() {return details;}
 		String getTransportation() { return transportation; }
@@ -110,6 +116,8 @@ import java.util.List;
 		void setSubstituteDeliveryAddress(String substituteDeliveryAddress) {this.substituteDeliveryAddress = substituteDeliveryAddress;}
 		void setHomePhone(String homePhone) {HomePhone = homePhone;}
 		void setOtherPhone(String otherPhone) {OtherPhone = otherPhone;}
+		void setAltPhone2(String number) { this.altPhone2 = number; } 
+		void setPhoneCode(int code) { this.phonecode = code; }
 		void setFamilyEmail(String familyEmail) {FamilyEmail = familyEmail;}
 		void setDetails(String details) {this.details = details;}
 		void setTransportation(Transportation t) {this.transportation = t.toString(); }

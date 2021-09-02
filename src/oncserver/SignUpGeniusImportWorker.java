@@ -87,6 +87,7 @@ public abstract class SignUpGeniusImportWorker extends SwingWorker <Void, Void>
 	/****
 	 * reads a previously stored json from SignUp Genius from a file and returns it as a String
 	 */
+/*	
 	String simulateGeniusReportFetch(String filename)
     	{
     		InputStream is = null;
@@ -145,7 +146,7 @@ public abstract class SignUpGeniusImportWorker extends SwingWorker <Void, Void>
 			}
 		}
 	}
-	
+*/	
 	protected class SignUpCommon
 	{
 		private String[] message;

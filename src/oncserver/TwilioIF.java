@@ -84,7 +84,7 @@ public class TwilioIF
     			}
     			else
     			{
-    				String error = String.format("Twilio Paramaters file corrupted, header lentgth = %d", header.length);
+    				String error = String.format("Twilio Parameters file corrupted, header length = %d", header.length);
     				ServerUI.addDebugMessage(error);
     			}		   			
     		}

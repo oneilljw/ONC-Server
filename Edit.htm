@@ -175,9 +175,9 @@
   	function updateFamilyInfo(family)
   	{	
   		var familyElements = [family.HOHFirstName, family.HOHLastName, family.Language, family.HouseNum, family.Street,family.UnitNum, 
-  			                  family.City, family.FamilyEmail, family.details, family.agent.name, family.groupName, family.distribution];
+  			                  family.City, family.FamilyEmail, family.details, family.agent.name, family.groupName, family.distribution, family.phonecode];
   			
-  		var formElements = ['hohfn', 'hohln','language', 'housenum', 'street', 'unit', 'city', 'email', 'detail', 'agentname', 'groupcb', 'distpref'];
+  		var formElements = ['hohfn', 'hohln','language', 'housenum', 'street', 'unit', 'city', 'email', 'detail', 'agentname', 'groupcb', 'distpref', 'phonecode'];
   			
   		//set name, HoH address, email and detail elements
   		for(var i=0; i<familyElements.length; i++)
@@ -188,17 +188,16 @@
 	  	document.getElementById('zipcode').value = family.ZipCode;
   	
   		//set phone elements
-  		var homephoneParts= family.HomePhone.split(/\r\n|\r|\n/g);
+  		let homephoneParts= family.HomePhone.split(/\r\n|\r|\n/g);
   		document.getElementById('homephone').value = homephoneParts[0];
   		
-  		var otherphoneParts= family.OtherPhone.split(/\r\n|\r|\n/g);
-  		if(otherphoneParts.length > 1)
-  		{
-  			document.getElementById('cellphone').value = otherphoneParts[0];
-  			document.getElementById('altphone').value = otherphoneParts[1];
-  		}
-  		else if(otherphoneParts.length === 1)
-  			document.getElementById('cellphone').value = otherphoneParts[0];
+  		let otherphoneParts= family.OtherPhone.split(/\r\n|\r|\n/g);
+  		document.getElementById('cellphone').value = otherphoneParts[0];
+  		
+  		document.getElementById('altphone').value = family.altPhone2;
+  		
+  		//highlight phone element backgrounds
+  		setPhoneElementBackgrounds(family.phonecode);
   			
   		//If were not doing residential delivery uncheck the same addess checkbox. If we are
   		//doing delivery, determine if the family has a differnt delivery address
@@ -236,6 +235,34 @@
   		//set up family transportation and gifts requested check boxes
   		document.getElementById("transYes").checked = family.transportation === 'Yes';
   		document.getElementById("giftreq").value = family.giftStatus;
+  	}
+  	
+  	function setPhoneElementBackgrounds(phonecode)
+  	{
+  		let phoneElements = ['homephone', 'cellphone', 'altphone'];
+  	
+  		for(var i=0; i<phoneElements.length; i++)
+  		{
+  			let element = document.getElementById(phoneElements[i]);
+  			let mask = phonecodesetmask[i];
+  			let code = phonecode & mask;
+  			  			
+  			if(code == 1 || code == 4 || code == 16)	//valid mobile for id's 0,1,2
+  			{
+  				element.style.backgroundColor = '#65D02F';
+  				element.title = 'Valid mobile phone number';
+  			}
+  			else if(code == 3 || code == 12 || code == 48)	//valid other for id's 0,1,2
+  			{
+  				element.style.backgroundColor = '#FFE561';
+  				element.title = 'Valid landline or other phone number';
+  			}
+  			else
+  			{
+  				element.style.backgroundColor = '#FFFFFF';
+  				element.title = 'Enter valid phone number';
+  			}
+  		}
   	}
   	
   	function updateMealRequest(family, meal)
@@ -332,7 +359,6 @@
   <a href="#badfamdlg" id="badfamanchor" style="visibility: hidden">Bad Family Referral</a>
   <a href="#verifdlg" id="verifanchor" style="visibility: hidden">Address Verification</a>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
-  <a href="#cellwarningdlg" id="cellwarninganchor" style="visibility: hidden">Cell Phone Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div class='header'> 
     <img class='logo-img' src="onclogo">
@@ -359,14 +385,15 @@
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
   <input id='uuid' type="hidden" name="uuid" value= 'SERVER_GENERATED_UUID'>
+  <input id='phonecode' type="hidden" name="phonecode" value=0>
   <fieldset>
   <legend class="legend-major">Head of Household (HOH) Information - Update as necessary</legend>
     <div>
       <input id='hohfn' title="First Name" name="hohfn" type="text" size="18" placeholder="First Name" required>
       <input id='hohln' title="Last Name" name="hohln" type="text" size="20" placeholder="Last Name" required>
-      <input id="homephone" title="Home Phone #" name="homephone" type="text" size="16" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
-	  <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="16" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
-	  <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="16" placeholder="2nd Alt Phone #" onchange="verifyPhoneNumber(2)">
+      <input id="homephone" title="Home Phone #" name="homephone" type="text" size="16" placeholder="Primary Phone #" onchange="verifyPhone(0)" required>
+	  <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="16" placeholder="Alternate Phone #" onchange="verifyPhone(1)">
+	  <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="16" placeholder="2nd Alt Phone #" onchange="verifyPhone(2)">
 	  <select id='language' title='Primary language' name='language'>
 		<option value="English">English</option>
 		<option value="Spanish">Spanish</option>
@@ -385,8 +412,8 @@
 	  </select>   
       <select id="zipcode" title="Zip Code" name="zipcode">	
 	  </select>
-	  <input id='email' title="Email address" name="email" type="email" size="30" onchange='verifyEmail()' placeholder="email address">
 	  <button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
+	  <input id='email' title="Email address" name="email" type="email" size="30" onchange='verifyEmail()' placeholder="email address">
 	</div>
   </fieldset>
   <fieldset id='giftassistfieldset'>
@@ -548,7 +575,7 @@
     	 	  <p>
     	  		<label for="workphone">Phone #'s: (Work &amp; Cell):</label>
     	  		<input id='workphone' type="text" size="16" placeholder="Work Phone #" oninput='checkForProfileChange()'>
-    	  		<input id='cellphone' type="text" size="16" placeholder="Cell Phone #" oninput='checkForProfileChange()'>
+    	  		<input id='usercellphone' type="text" size="16" placeholder="Cell Phone #" oninput='checkForProfileChange()'>
     	  	  </p>
       	</fieldset>      
 		<fieldset>
@@ -574,19 +601,6 @@
       </div> 
 	</div>
   </div>
-<!-- Cell phone Warning Dialog -->
-  <div id="cellwarningdlg" class="modalDialog">
-	<div class='inner regular-width'>
-		<div class='dialogtopbar'>
-		  <img class='logo-img' src="onclogo">
-		  <span class="logospan">Invalid Cell Phone</span>
-		</div>	
-		<span id='cellwarningmssg'></span>
-		<div class='buttonbar'>
-      	  <button onclick="window.location=document.getElementById('editprofileanchor').href">I'll fix it</button>
-    	</div>
-	</div>
-  </div>  
 <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
 	<div class='inner extended-width'>

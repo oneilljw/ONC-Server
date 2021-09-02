@@ -159,6 +159,20 @@ public class SMSHandler extends ONCWebpageHandler
 			else
 				sendCachedFile(t, "image/png", "error-404", false);
 		}
+		else if(requestURI.startsWith("/lookup"))
+		{
+			//callback to perform a phone number lookup
+    		WebClient wc = clientMgr.findAndValidateClient(t.getRequestHeaders());
+			if(wc != null & params.containsKey("phonenumber"))
+			{
+				htmlResponse = ServerSMSDB.getPhoneNumberJSONP((String) params.get("phonenumber"), (String) params.get("callback"));
+				
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+    		sendHTMLResponse(t, htmlResponse);
+		}
     }
 /*	
 	void simulateSMSReceive()

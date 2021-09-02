@@ -73,6 +73,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static final String ODB_FAMILY_MEMBER_COLUMN_SEPARATOR = " - ";
 	private static final int DEFAULT_GROUP_ID = 62;
 	private static final int DNS_WAITLIST_CODE = 1;
+	private static final int[] PHONECODES = {1,3,4,12,16,48};
+	private static final int[] PHONECODE_CLEAR_MASK = {60,51,15};
 	
 	private static List<FamilyDBYear> familyDB;
 	private static ServerFamilyDB instance = null;
@@ -652,20 +654,31 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				updatedFamily.setONCNum(generateONCNumber(year, updatedFamily.getSchoolCode()));
 			}
 			
-//			//check to see if either status or DNS code is changing, if so, add a history item
-//			FamilyHistory famHist = familyHistoryDB.getLastFamilyHistory(year, updatedFamily.getID());
-//			if(currFam != null && famHist != null &&
-//				(famHist != updatedFamily.getFamilyStatus() || 
-//				  famHist != updatedFamily.getGiftStatus() ||
-//				   currFam.getDNSCode() != updatedFamily.getDNSCode()))
-//			{
-//				DNSCode updatedFamCode = dnsCodeDB.getDNSCode(updatedFamily.getDNSCode());
-//					
-//				addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-//						updatedFamily.getGiftStatus(), null, updatedFamCode.getID(), "Status Changed", updatedFamily.getChangedBy(), true);
-//				
-//				updatedFamily.setDeliveryID(histItem.getID());
-//			}
+			//check to see if any of the three phone numbers changed, if so, update the phone code
+			int updatedCode = currFam.getPhoneCode();
+			if(!updatedFamily.getHomePhone().equals(currFam.getHomePhone()))
+			{
+				if(updatedFamily.getHomePhone().length() > 9)
+					updatedCode = createOrUpdatePhoneCode(updatedFamily.getHomePhone(), updatedCode, 0);
+				else
+					updatedCode = updatedCode & PHONECODE_CLEAR_MASK[0];
+			}
+			if(!updatedFamily.getCellPhone().equals(currFam.getCellPhone()))
+			{
+				if(updatedFamily.getCellPhone().length() > 9)
+					updatedCode = createOrUpdatePhoneCode(updatedFamily.getCellPhone(), updatedCode, 1);
+				else
+					updatedCode = updatedCode & PHONECODE_CLEAR_MASK[1];
+			}
+			if(!updatedFamily.getAlt2Phone().equals(currFam.getAlt2Phone()))
+			{
+				if(updatedFamily.getAlt2Phone().length() > 9)
+					updatedCode = createOrUpdatePhoneCode(updatedFamily.getAlt2Phone(), updatedCode, 2);
+				else
+					updatedCode = updatedCode & PHONECODE_CLEAR_MASK[2];
+			}
+			updatedFamily.setPhoneCode(updatedCode);
+
 			updatedFamily.setChangedBy(clientUser.getLNFI());
 			updatedFamily.setDateChanged(System.currentTimeMillis());
 			
@@ -676,8 +689,6 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		else
 			return "UPDATE_FAILED";
 	}
-	
-	
 	
 	String updateListOfFamilies(int year, String giftListJson, ONCUser client)
 	{
@@ -807,6 +818,16 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			
 			//set region and school code for family
 			updateRegionAndSchoolCode(addedFam);
+			
+			//create the phone code
+			int phoneCode = 0;
+			if(!addedFam.getHomePhone().isEmpty())
+				phoneCode = createOrUpdatePhoneCode(addedFam.getHomePhone(), phoneCode, 0);
+			if(!addedFam.getCellPhone().isEmpty())
+				phoneCode = createOrUpdatePhoneCode(addedFam.getCellPhone(), phoneCode, 1);
+			if(!addedFam.getAlt2Phone().isEmpty())
+				phoneCode = createOrUpdatePhoneCode(addedFam.getAlt2Phone(), phoneCode, 2);
+			addedFam.setPhoneCode(phoneCode);
 		
 			//create the ONC number
 			addedFam.setONCNum(generateONCNumber(year, addedFam.getSchoolCode()));
@@ -1167,13 +1188,13 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	}
 	ONCFamily getFamilyBySMS(int year, TwilioSMSReceive receivedSMS)
 	{
-		String formatedPhoneNum = formatPhoneNumber(receivedSMS.getFrom().substring(2));
+		String formatedPhoneNum = removeNonDigitsFromPhoneNumber(receivedSMS.getFrom().substring(2));
 		
 		List<ONCFamily> fAL = familyDB.get(DBManager.offset(year)).getList();
 		int i;
 		for(i=0; i<fAL.size(); i++)
-			if(formatPhoneNumber(fAL.get(i).getHomePhone()).equals(formatedPhoneNum) ||
-				formatPhoneNumber(fAL.get(i).getCellPhone()).equals(formatedPhoneNum))
+			if(removeNonDigitsFromPhoneNumber(fAL.get(i).getHomePhone()).equals(formatedPhoneNum) ||
+				removeNonDigitsFromPhoneNumber(fAL.get(i).getCellPhone()).equals(formatedPhoneNum))
 				break;
 		
 		return i < fAL.size() ? fAL.get(i) : null;	
@@ -1317,7 +1338,42 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			}
 		}
 	}
-*/	
+*/
+	/****
+	 * Using the SMS service provider, looks up a phone number to determine validity and type of phone
+	 * and returns a single six bit integer phone code that indicates whether the primary, alternate and
+	 * 2nd alternate phone numbers for each family are valid. If they are valid, the code 
+	 * indicates if the number is a mobile number or a land line or other (VOIP) number.
+	 * Bits 0-1 are used for the primary number, 2-3 for the alternate and 4-5 for the 2nd alternate.
+	 * Individual codes are 0 - Invalid or Empty, 1- Valid mobile, 2 - UNUSED, 3 - Valid land line or other
+	 * @param phonenumber - phone number to check
+	 * @param currCode - current six bit phone code for the family
+	 * @param phoneid - 0-primary phone number, 1-alternate phone number, 2-2nd alternate phone number
+	 * @return six bit phone code for the family
+	 */
+	int createOrUpdatePhoneCode(String phonenumber, int currCode, int phoneid)
+	{
+		//clear the phone code for the corresponding phone id (primary, alternate or 2nd alternate)
+		int clearedCode = currCode & PHONECODE_CLEAR_MASK[phoneid];
+		
+		//lookup the phone number from the SMS service provider
+		Map<String,Object> resultMap = ServerSMSDB.lookupPhoneNumber(phonenumber);
+		
+		//if the number is a valid phone number, determine the type. If mobile, set the code
+		//corresponding to the phone id to 1. Else, set it to 3. If it's not a valid number, 
+		//clear the code for the associated id (set it to 0).
+		if((Integer) resultMap.get("returncode") == 0)
+		{	
+			String type = (String) resultMap.get("type");
+			if(type.equals("mobile"))
+				return clearedCode | PHONECODES[phoneid * 2];
+			else
+				return clearedCode | PHONECODES[(phoneid * 2) +1];		
+		}
+		else
+			return currCode & PHONECODE_CLEAR_MASK[phoneid];
+	}
+	
 	void checkFamilyGiftCardOnlyOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)
 	{
 		int famID = childDB.getChildsFamilyID(year, addedGift.getChildID());
@@ -1676,9 +1732,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				if(phoneChoice == 0)	//home phone
 				{
 					if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
-						twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
+						twilioFormattedPhoneNum = String.format("+1%s", removeNonDigitsFromPhoneNumber(f.getHomePhone()));
 					else if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
-						twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getCellPhone()));
+						twilioFormattedPhoneNum = String.format("+1%s", removeNonDigitsFromPhoneNumber(f.getCellPhone()));
 				}
 			
 				//we've found the family, now check to see if we have a phone number to use
@@ -1687,9 +1743,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 				if(phoneChoice == 1)	//cell phone
 				{
 					if(!f.getCellPhone().isEmpty() && f.getCellPhone().trim().length() == 12)
-						twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getCellPhone()));
+						twilioFormattedPhoneNum = String.format("+1%s", removeNonDigitsFromPhoneNumber(f.getCellPhone()));
 					else if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
-						twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
+						twilioFormattedPhoneNum = String.format("+1%s", removeNonDigitsFromPhoneNumber(f.getHomePhone()));
 				}
 			}
 		}

@@ -4,7 +4,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -216,9 +218,9 @@ public class ServerSMSDB extends ServerSeasonalDB
 			if(phoneChoice == 1)	//primary phone
 			{
 				if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
-					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
+					twilioFormattedPhoneNum = String.format("+1%s", removeNonDigitsFromPhoneNumber(f.getHomePhone()));
 				else if(!cellPhone.isEmpty() && cellPhone.trim().length() == 12)
-					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(cellPhone));
+					twilioFormattedPhoneNum = String.format("+1%s", removeNonDigitsFromPhoneNumber(cellPhone));
 			}
 			
 			//we've found the family, now check to see if we have a phone number to use
@@ -227,9 +229,9 @@ public class ServerSMSDB extends ServerSeasonalDB
 			if(phoneChoice == 2)	//alternate phone
 			{
 				if(!cellPhone.isEmpty() && cellPhone.trim().length() == 12)
-					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(cellPhone));
+					twilioFormattedPhoneNum = String.format("+1%s", removeNonDigitsFromPhoneNumber(cellPhone));
 				else if(!f.getHomePhone().isEmpty() && f.getHomePhone().trim().length() == 12)
-					twilioFormattedPhoneNum = String.format("+1%s", formatPhoneNumber(f.getHomePhone()));
+					twilioFormattedPhoneNum = String.format("+1%s", removeNonDigitsFromPhoneNumber(f.getHomePhone()));
 			}
 		}
 		
@@ -239,9 +241,80 @@ public class ServerSMSDB extends ServerSeasonalDB
 	String getTwilioFormattedPhoneNumber(ONCServerUser su)
 	{	
 		if(!su.getCellPhone().isEmpty() && su.getCellPhone().trim().length() == 12)
-			return String.format("+1%s", formatPhoneNumber(su.getCellPhone()));
+			return String.format("+1%s", removeNonDigitsFromPhoneNumber(su.getCellPhone()));
 		else
 			return null;
+	}
+	
+	static Map<String,Object> lookupPhoneNumber(String phonenumber)
+	{
+		Map<String,Object> resultMap = new HashMap<String,Object>();
+		String number = phonenumber.replaceAll("[\\D]", "").trim();
+		TwilioIF twilioIF;
+		try
+		{
+			twilioIF = TwilioIF.getInstance();
+			Map<String,Object> lookupResultMap = twilioIF.lookup(number);
+			if(lookupResultMap.containsKey("type") && lookupResultMap.containsKey("name"))
+			{
+				resultMap.put("returncode", 0);
+				resultMap.put("name", lookupResultMap.get("name"));
+				resultMap.put("type", lookupResultMap.get("type"));
+			}
+			else
+			{
+				resultMap.put("returncode", -1);
+				resultMap.put("errMssg", "Invalid Phone Number");
+			}
+		} 
+		catch (FileNotFoundException e)
+		{
+			resultMap.put("returncode", -2);
+			resultMap.put("errMssg", "Lookup Service Not Available");
+		}
+		catch (IOException e)
+		{
+			resultMap.put("returncode", -3);
+			resultMap.put("errMssg", "Lookup Service Not Available");
+		}
+
+		return resultMap;
+	}
+	
+	static HtmlResponse getPhoneNumberJSONP(String phonenumber, String callbackFunction)
+	{		
+		//remove all but digits of a phone number
+		String number = phonenumber.replaceAll("[\\D]", "").trim();
+		String response;
+		
+		TwilioIF twilioIF;
+		try
+		{
+			twilioIF = TwilioIF.getInstance();
+			Map<String,Object> lookupResultMap = twilioIF.lookup(number);
+			
+			//create the json to send back to the REST call
+			if(lookupResultMap.containsKey("type") && lookupResultMap.containsKey("name"))
+			{
+				response = String.format("{\"returncode\":0,\"carrier\":\"%s\",\"type\":\"%s\"}",
+							lookupResultMap.get("name"), lookupResultMap.get("type"));
+			}
+			else
+			{
+				response = "{\"returncode\":-1,\"errMssg\":\"Invalid Phone Number\"}";
+			}
+		} 
+		catch (FileNotFoundException e)
+		{
+			response = "{\"returncode\":-2,\"errMssg\":\"Lookup Service Not Available\"}";
+		}
+		catch (IOException e)
+		{
+			response = "{\"returncode\":-3,\"errMssg\":\"Lookup Service Not Available\"}";
+		}
+
+		//wrap the json in the callback function per the JSONP protocol
+		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
 	}
 /*	
 	String getSMSBody(ONCFamily f, SMSRequest request) //int messageID)

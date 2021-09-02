@@ -214,7 +214,7 @@ public class ONCSecureWebServer
 		
 		//set up the SMS handler
 		SMSHandler smsHandler = new SMSHandler();
-		String[] smsContexts = {"/sms-receive", "/sms-update", "/deliveryimage"};
+		String[] smsContexts = {"/sms-receive", "/sms-update", "/deliveryimage", "/lookup"};
 						
 		for(String contextname : smsContexts)
 		{

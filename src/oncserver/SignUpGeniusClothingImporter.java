@@ -97,7 +97,7 @@ public class SignUpGeniusClothingImporter extends SignUpGeniusImporter
 			if(response != null && !response.isEmpty())
 			{
 				//save the imported json
-				saveJsonToFile(response, "SignUpGeniusClothingJsonImport.txt");
+//				saveJsonToFile(response, "SignUpGeniusClothingJsonImport.txt");
 				
 				//get the report that was imported
 				Gson gson = new Gson();

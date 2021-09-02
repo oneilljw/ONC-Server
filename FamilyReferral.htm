@@ -631,16 +631,21 @@
 		}
 		else if(document.getElementById('giftreq').checked === true && numGifts == 0)
 		{
-			//show pop-up informing of error. Can't have gift requests the number of gifts is zero
+			//show pop-up informing of error. Can't have gift requests if the number of gifts is zero
 			document.getElementById('childwarningmssg').textContent = "Error: Not providing gift assistance. Please contact ONC's school contact.";
 			window.location=document.getElementById('childwarninganchor').href;
 		}
 		else
 		{	
-			//We are providing at least one gift per child, make sure corresponding gift fields are not empty
-			if(document.getElementById('giftreq').checked === true && numGifts == 1 && 
-				document.getElementById('childwish0').value !== '' && 
-				 document.getElementById('childwish3').value !== '')
+			//If we aren't providing gifts, we still add the child, but don't check wish entries.
+			//Otherwise, we are providing one to three gifts per child, make sure corresponding gift fields are not empty
+			if(document.getElementById('giftreq').checked === false)
+			{
+				addOrUpdateValidatatedChild();
+			}	
+			else if(document.getElementById('giftreq').checked === true && numGifts == 1 && 
+					 document.getElementById('childwish0').value !== '' && 
+				 	  document.getElementById('childwish3').value !== '')
 			{
 				addOrUpdateValidatatedChild();
 			}
@@ -1209,10 +1214,10 @@
   <a href="#adultdeletedlg" id="adultdeleteanchor" style="visibility: hidden">Delete Adult Verification</a>
   <a href="#giftcarddlg" id="giftcardanchor" style="visibility: hidden">Gift Card Warning</a>
   <a href="#verifdlg" id="verifanchor" style="visibility: hidden">Address Verification</a>
+  <a href="#phonedlg" id="phoneanchor" style="visibility: hidden">Phone Verification</a>
   <a href="#editChild" id="editchildanchor" style="visibility: hidden">Edit Child</a>
   <a href="#editAdult" id="editadultanchor" style="visibility: hidden">Edit Adult</a>
   <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
-  <a href="#cellwarningdlg" id="cellwarninganchor" style="visibility: hidden">Cell Phone Verification</a>
   <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a>
   <div class='header'> 
     <img class='logo-img' src="onclogo">
@@ -1239,14 +1244,15 @@
   <input id='year' type="hidden" name="year">
   <input id='targetid' type="hidden" name="targetid">
   <input id='uuid' type="hidden" name="uuid" value= 'SERVER_GENERATED_UUID'>
+  <input id='phonecode' type="hidden" name="phonecode" value=0>
   <fieldset>
   <legend class="legend-major">Head of Household (HOH) Information</legend>
     <div>
       <input id='hohfn' title="First Name" name="hohfn" type="text" size="20" placeholder="First Name" required>
       <input id='hohln' title="Last Name" name="hohln" type="text" size="20" placeholder="Last Name" required>
-      <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhoneNumber(0)" required>
-	  <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhoneNumber(1)">
-	  <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onchange="verifyPhoneNumber(2)">
+      <input id="homephone" title="Home Phone #" name="homephone" type="text" size="18" placeholder="Primary Phone #" onchange="verifyPhone(0)" required>
+	  <input id= "cellphone" title="Cell Phone #" name="cellphone" type="text" size="18" placeholder="Alternate Phone #" onchange="verifyPhone(1)">
+	  <input id= "altphone" title="Alternate Phone #" name="altphone" type="text" size="18" placeholder="2nd Alt Phone #" onchange="verifyPhone(2)">
 	  <select id='language' title='Primary language' name='language'>
 		<option value="English">English</option>
 		<option value="Spanish">Spanish</option>
@@ -1265,8 +1271,8 @@
 	  </select>   
       <select id="zipcode" title="Zip Code" name="zipcode">	
 	  </select>
-	  <input id='email' title="Email address" name="email" type="email" size="30" onchange='verifyEmail()' placeholder="email address">
 	  <button type="button" id='verifyhohaddress' class='verifybutton' onclick="verifyAddress(this)">Verify</button>
+	  <input id='email' title="Email address" name="email" type="email" size="30" onchange='verifyEmail()' placeholder="email address">
 	</div>
   </fieldset>
   <fieldset id='giftassistfieldset'>
@@ -1388,7 +1394,7 @@
 		</div>
 	</div>
   </div>
-   <!-- Address Verification Dialog -->
+  <!-- Address Verification Dialog -->
   <div id="verifdlg" class="modalDialog">
 	<div class='inner regular-width'>
 		<a href="#close" title="Close" class="close">X</a>	
@@ -1399,6 +1405,20 @@
 		<div>
 		  <div class='column left'><img id='verifimg' class='errorimg' src="erroricon"></div>
 		  <div class='column right' id='verifmssg'></div>	  
+		</div>	
+	</div>
+  </div>
+  <!-- Phone Number Verification Dialog -->
+  <div id="phonedlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<a href="#close" title="Close" class="close">X</a>	
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class='logospan'>Phone # Verification</span>
+		</div>	    	  	
+		<div>
+		  <div class='column left'><img id='phoneimg' class='errorimg' src="erroricon"></div>
+		  <div class='column right' id='phonemssg'></div>	  
 		</div>	
 	</div>
   </div>
@@ -1505,7 +1525,7 @@
     	 	  <p>
     	  		<label for="workphone">Phone #'s: (Work &amp; Cell):</label>
     	  		<input id='workphone' type="text" size="16" placeholder="Work Phone #" oninput='checkForProfileChange()'>
-    	  		<input id='cellphone' type="text" size="16" placeholder="Cell Phone #" oninput='checkForProfileChange()'>
+    	  		<input id='usercellphone' type="text" size="16" placeholder="Cell Phone #" oninput='checkForProfileChange()'>
     	  	  </p>
       	</fieldset>      
 		<fieldset>
@@ -1531,20 +1551,6 @@
       </div> 
 	</div>
   </div>
- <!-- Cell phone Warning Dialog -->
-  <div id="cellwarningdlg" class="modalDialog">
-	<div class='inner regular-width'>
-		<a href="#close" title="Close" class="close">X</a>
-		<div class='dialogtopbar'>
-		  <img class='logo-img' src="onclogo">
-		  <span class="logospan">Invalid Cell Phone</span>
-		</div>	
-		<span id='cellwarningmssg'></span>
-		<div class='buttonbar'>
-      	  <button onclick="window.location=document.getElementById('editprofileanchor').href">I'll fix it</button>
-    	</div>
-	</div>
-  </div> 
 <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
 	<div class='inner extended-width'>

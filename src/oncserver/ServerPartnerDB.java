@@ -198,14 +198,14 @@ public class ServerPartnerDB extends ServerSeasonalDB
 	
 	ONCPartner getPartnerByPhoneNumber(int year, String phoneNum)
 	{
-		String formatedPhoneNum = formatPhoneNumber(phoneNum);
+		String formatedPhoneNum = removeNonDigitsFromPhoneNumber(phoneNum);
 		
 		List<ONCPartner> pAL = partnerDB.get(DBManager.offset(year)).getList();
 		int i;
 		for(i=0; i<pAL.size(); i++)
-			if(formatPhoneNumber(pAL.get(i).getHomePhone()).equals(formatedPhoneNum) || 
-				formatPhoneNumber(pAL.get(i).getContact_phone()).equals(formatedPhoneNum) ||
-				 formatPhoneNumber( pAL.get(i).getContact2_phone()).equals(formatedPhoneNum) )
+			if(removeNonDigitsFromPhoneNumber(pAL.get(i).getHomePhone()).equals(formatedPhoneNum) || 
+				removeNonDigitsFromPhoneNumber(pAL.get(i).getContact_phone()).equals(formatedPhoneNum) ||
+				 removeNonDigitsFromPhoneNumber( pAL.get(i).getContact2_phone()).equals(formatedPhoneNum) )
 				break;
 		
 		if(i < pAL.size())

@@ -52,6 +52,10 @@ var schools = ["Brookfield ES","Bull Run ES","Centre Ridge ES","Centreville ES",
   					"Powell ES", "Pre-K","Rocky Run MS","Stone MS", "Union Mill ES", "Virginia Run ES", 
   					"Westfield HS","Willow Springs ES"];
 
+var phonecodes = [1,3,4,12,16,48];
+var phonecodesetmask = [3,12,48];
+var phonecodeclearmask = [60,51,15];
+
 $( function()
 {
     $( ".schoolname" ).autocomplete(
@@ -264,9 +268,15 @@ function onSubmitFamilyForm(bReferral)
 		      			{
 		      				var urlmode = window.location.href;
 		      				if(urlmode.indexOf('referral') >= 0 || urlmode.indexOf('newfamily') >= 0)
-		      					post('referfamily', createReferralParams(true));
+		      				{
+		      					console.log(document.getElementById('phonecode'));
+//		      					post('referfamily', createReferralParams(true));
+		      				}
 		      				else if(urlmode.indexOf('familyupdate') >= 0)
-		      					post('updatefamily', createReferralParams(false));
+		      				{
+		      					console.log(document.getElementById('phonecode'));
+//		      					post('updatefamily', createReferralParams(false));	
+		      				}
 		      			}
 		      			else
 		      				processAddressError(addresponse, delAddrElement, delUnitElement, 
@@ -517,6 +527,10 @@ function verifyPhoneNumber(elementNum)
 	
 	return numberGood;
 }
+//function isIndividualPhoneCodeValid(code)
+//{
+//	return code == 0 || code==1 || code==3 || code==4 || code==12 || code==16 || code==48;
+//}
 function verifyEmail()
 {
 	var emailElement= document.getElementById('email');
@@ -599,6 +613,78 @@ function verifyAddress(element)
 		window.location=document.getElementById('verifanchor').href;
 	}
 }
+function verifyPhone(phoneid)
+{
+	let element;
+	if(phoneid == 0)
+		element = document.getElementById('homephone');
+	else if(phoneid == 1)
+		element = document.getElementById('cellphone');
+	else if(phoneid == 2)
+		element = document.getElementById('altphone');
+	
+	let number= element.value;
+	
+	if(number == '')
+	{
+		let phoneCodeElement = document.getElementById('phonecode');
+		element.title = 'Enter phone number';
+		element.style.backgroundColor = '#FFFFFF';
+		phoneCodeElement.value = phoneCodeElement.value & phonecodeclearmask[phoneid];
+	}
+	else if((number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-' && isNumericPhoneNumber(number, '-')) ||
+			(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.' && isNumericPhoneNumber(number, '.')) ||
+			(number.length===10 && !isNaN(number)))
+	{
+		//format is good, ask server to check for valid number
+		let phoneparams = "phonenumber=" + encodeURIComponent(element.value) + "&callback=?";
+
+       	$.getJSON('lookup', phoneparams, function(phoneresponse)
+      	{
+       		let phonecode = document.getElementById('phonecode').value;
+       		
+       		if(phoneresponse.hasOwnProperty('error'))
+      		{
+				window.location=document.getElementById('timeoutanchor').href;
+      		}
+       		else if(phoneresponse.returncode == 0)	//valid phone number
+       		{
+       			phonecode = phonecode & phonecodeclearmask[phoneid];
+       			element.title = phoneresponse.carrier + ' ' + phoneresponse.type + ' phone number';
+       			
+   				//determine phone code (0 or 2 are invalid, 1 is a valid mobile, 3 is a valid land line or other phone
+   				//the result is left shifted based on which phoneid was checked (0-2)
+   				if(phoneresponse.type =='mobile')
+   				{
+   					phonecode = phonecode | phonecodes[phoneid * 2];
+   					element.style.backgroundColor = '#65D02F';
+   				}
+   				else
+   				{
+   					phonecode = phonecode | phonecodes[(phoneid * 2) + 1];
+   					element.style.backgroundColor = '#FFE561'
+   				}
+   				
+   				console.log('phoneid= ' + phoneid + ', phonecode= ' + phonecode);
+   				document.getElementById('phonecode').value = phonecode;
+       		}
+       		else
+       		{
+       			let phoneCodeElement = document.getElementById('phonecode');
+       			element.title = 'Invalid phone number';
+       			element.style.backgroundColor = errorColor;
+       			phoneCodeElement.value = phoneCodeElement.value & phonecodeclearmask[phoneid];
+       		}
+      	});
+	}
+	else
+	{
+		let phoneCodeElement = document.getElementById('phonecode');
+		element.title = 'Invalid phone number';
+		element.style.backgroundColor = errorColor;
+		phoneCodeElement.value = phoneCodeElement.value & phonecodeclearmask[phoneid];
+	}
+}
 function createReferralParams(bReferral)
 {	
 	var params = {};
@@ -612,11 +698,11 @@ function createReferralParams(bReferral)
 	//for the delivery address elements
 	var paramname = ['language','hohfn','hohln','housenum','street','unit','city',
 		 'zipcode','delcity','delzipcode', 'delhousenum','delstreet','delunit',
-		 'email','homephone','cellphone', 'altphone'];
+		 'email','homephone','cellphone', 'altphone', 'phonecode'];
 
 	var noDeliveryElementNames = ['language','hohfn','hohln','housenum','street','unit','city',
 		 'zipcode','city','zipcode', 'housenum','street','unit',
-		 'email','homephone','cellphone', 'altphone'];
+		 'email','homephone','cellphone', 'altphone', 'phonecode'];
 	
 	for(cen=0; cen < paramname.length; cen++)
 	{
