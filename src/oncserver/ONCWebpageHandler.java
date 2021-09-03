@@ -173,7 +173,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		} 
 		catch (IOException e) 
 		{
-			return "UPDATE_FAILED";
+			return "UPDATE_FAILED: " + e.getMessage();
 		}
 	}
 	

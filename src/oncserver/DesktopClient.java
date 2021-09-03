@@ -675,7 +675,7 @@ public class DesktopClient extends Thread
             		output.println(response);
             		clientMgr.notifyAllOtherInYearClients(this, response);
                 }
-/*                
+/*            
                 else if(command.startsWith("POST<update_agent>"))
                 {
                 	clientMgr.addLogMessage(command);
