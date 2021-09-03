@@ -269,13 +269,12 @@ function onSubmitFamilyForm(bReferral)
 		      				var urlmode = window.location.href;
 		      				if(urlmode.indexOf('referral') >= 0 || urlmode.indexOf('newfamily') >= 0)
 		      				{
-		      					console.log(document.getElementById('phonecode'));
-//		      					post('referfamily', createReferralParams(true));
+		      					post('referfamily', createReferralParams(true));
 		      				}
 		      				else if(urlmode.indexOf('familyupdate') >= 0)
 		      				{
 		      					console.log(document.getElementById('phonecode'));
-//		      					post('updatefamily', createReferralParams(false));	
+		      					post('updatefamily', createReferralParams(false));	
 		      				}
 		      			}
 		      			else
