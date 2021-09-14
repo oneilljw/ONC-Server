@@ -370,7 +370,6 @@ table.dataTable tbody tr.stripe2.selected
 	margin-top: 5px;
 	width: 20%;
 }
-
 .right
 {
 	float: right;
@@ -390,6 +389,12 @@ table.dataTable tbody tr.stripe2.selected
 	color: blue;
 	font-style: italic;
 	text-align: center;
+}
+.errorimg
+{
+	float: left;
+	display: block;
+	margin: 0px 10px 0px 0px;
 }
 #btnchangepw:disabled { background-color: gray; }
 .edit-background
@@ -413,6 +418,16 @@ table.dataTable tbody tr.stripe2.selected
 {
 	margin-top: 5px;
 	margin-bottom: 0px;
+}
+.edit-background div
+{
+	margin-top: 4px;
+	margin-bottom: 0px;
+}
+.fieldset-auto-width
+{
+	display: inline-block;
+	width: 380px;
 }
 #groupselect { margin-top: 5px;}
 ul.ui-autocomplete.ui-menu

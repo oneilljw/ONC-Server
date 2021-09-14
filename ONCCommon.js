@@ -125,7 +125,7 @@ function showEditProfileDialog()
 	    	setInput('usertitle', user.title);
 	    	setInput('useremail', user.email);
 	    	setInput('workphone', user.workphone);
-	    	setInput('cellphone', user.cellphone);
+	    	setInput('usercellphone', user.cellphone);
     	    			
     	    //clear & populate the profileTable array with groups from user profile, if
     	    //user has Agent, Admin or Sys_Admin permission	
@@ -213,15 +213,19 @@ function checkForProfileChange()
     	   document.getElementById('usertitle').value == userJson.title &&
     	    document.getElementById('useremail').value == userJson.email &&
     	     document.getElementById('workphone').value == userJson.workphone &&
-    	      document.getElementById('cellphone').value == userJson.cellphone;
+    	      document.getElementById('usercellphone').value == userJson.cellphone;
 } 
 function verifyCellPhone()
 {
-	let number = document.getElementById('cellphone').value;
+	let number = document.getElementById('usercellphone').value;
 	
 	if(number.length===12 && number.charAt(3)==='-' && number.charAt(7)==='-' && isNumericPhoneNumber(number, '-'))
 		return true;
 	else if(number.length===12 && number.charAt(3)==='.' && number.charAt(7)==='.' && isNumericPhoneNumber(number, '.'))
+		return true;
+	else if(number.length===12 && number.charAt(0)==='(' && number.charAt(4)===')')
+		return true;
+	else if(number.length===13 && number.charAt(0)==='(' && number.charAt(4)===')' && number.charAt(5)===' ')
 		return true;
 	else if(number.length===10 && !isNaN(number))
 		return true;
@@ -279,7 +283,7 @@ function onUpdateProfile()
 	else
 	{
 		//disable update and the no change button
-		document.getElementById('cancel').disabled = true;
+		document.getElementById('cancel').disabled = false;
 		document.getElementById('update').disabled = true;
 		
 		//show pop-up prompting for cell phone
@@ -304,8 +308,11 @@ function onProfileNotChanged()
 	else
 	{
 		//disable update and the no change button
-		document.getElementById('cancel').disabled = true;
+		document.getElementById('cancel').disabled = false;
 		document.getElementById('update').disabled = true;
+		
+		//change the background of the cell phone field to the error color
+		document.getElementById('usercellphone').style.backgroundColor = errorColor;
 		
 		//show pop-up prompting for cell phone
 		document.getElementById('cellwarningmssg').textContent = "Each user MUST have a valid cellphone #. ONC relies on cell phones " +

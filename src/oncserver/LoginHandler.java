@@ -549,12 +549,15 @@ public class LoginHandler extends ONCWebpageHandler
 		
 		String email = (String) params.get("field1");
 		String phone = (String) params.get("field2");
-	    	
+		
 	    //don't want a reference here, want a new object. A user can be logged in more then once.
 	    //However, never use this object to update a user's info
 		ONCServerUser serverUser = (ONCServerUser) userDB.findUserByEmailAndPhone(email, phone);
 		if(serverUser != null)
 	    {
+			ServerUI.addLogMessage(String.format("Found user id=%d, %s %s via identity lookup",
+					serverUser.getID(), serverUser.getFirstName(), serverUser.getLastName()));
+			
 			if(serverUser.getAccess() == UserAccess.App)
 			{
 				//send a webpage that informs user that we've sent them an email
@@ -574,7 +577,6 @@ public class LoginHandler extends ONCWebpageHandler
 				html = html.replace("ERROR_MESSAGE", "Please contact ONC at schoolcontact@ourneighborschild.org to unlock your account.");
 				response = new HtmlResponse(html, HttpCode.Ok);
 			}
-			
 			else
 			{	
 				//send a authentication code text to the user's cell phone

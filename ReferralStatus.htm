@@ -1076,34 +1076,34 @@
 		<span class='logospan'>Verify/Update ONC Profile</span>
 	  </div>
 	  <div class='edit-background' style='height:230px'>
-	  	 <fieldset id='contact-info-fieldset' style='float:left'>
+	  	 <fieldset class='fieldset-auto-width' style='float:left'>
   			  <legend class="legend-major">Contact Information</legend>
-  			  <p>
+  			  <div>
     	  		<label for="userfirstname">Name:</label>
     	  		<input id='userfirstname' type="text" size="12" placeholder="First Name" oninput='checkForProfileChange()'>
     	  		<input id='userlastname' type="text" size="14" placeholder="Last Name" oninput='checkForProfileChange()'>
-    		  </p>   		
-    		  <p>
+    		  </div>   		
+    		  <div>
     	  		<label for="userorg">Organization:</label>
     	  		<input id='userorg' type="text" size="28" placeholder="Organization" oninput='checkForProfileChange()'>
-    	 	  </p>
-    	 	  <p style='width:440px'>
+    	 	  </div>
+  			  <div> 
     	  		 <label for="usertitle">Title:</label>
     	 		 <input id='usertitle' type="text" size="34" placeholder="Title" oninput='checkForProfileChange()'>
-    	 	  </p>
-    	 	  <p>
+    	 	  </div>
+    	 	  <div>
     	  		<label for="useremail">Email:</label>
     	  		<input id='useremail' type="text" size="34" placeholder="Email address" oninput='checkForProfileChange()'>
-    	      </p>
-    	 	  <p>
+    	      </div>
+    	 	  <div>
     	  		<label for="workphone">Phone #'s: (Work &amp; Cell):</label>
-    	  		<input id='workphone' type="text" size="16" placeholder="Work Phone #" oninput='checkForProfileChange()'>
-    	  		<input id='cellphone' type="text" size="16" placeholder="Cell Phone #" oninput='checkForProfileChange()'>
-    	  	  </p>
+    	  		<input id='workphone' type="text" size="14" placeholder="Work Phone #" oninput='checkForProfileChange()'>
+    	  		<input id='usercellphone' type="text" size="14" placeholder="Cell Phone #" oninput='checkForProfileChange()'>
+    	  	  </div>
       	</fieldset>      
 		<fieldset>
 			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
-  	    	 <table id="profiletable" class='display' style="width:100%">
+  	    	 <table id="profiletable" style="width:100%">
   		 	  <thead>
     			<tr>
     				<th>Id</th>

@@ -708,12 +708,11 @@ public class ServerUserDB extends ServerPermanentDB
 			int index = 0;
 			while(index < userAL.size() && !(userAL.get(index).getEmail().equalsIgnoreCase(email) &&
 					getDigits(userAL.get(index).getCellPhone()).equals(getDigits(phone))))
+			{
 				index++;
-		
-			if(index < userAL.size())
-				return userAL.get(index);
-			else
-				return null;
+			}
+			
+			return index < userAL.size() ? userAL.get(index) : null;
 		}
 		else
 			return null;

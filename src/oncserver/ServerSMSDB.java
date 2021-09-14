@@ -177,10 +177,18 @@ public class ServerSMSDB extends ServerSeasonalDB
 				
 				if(su != null)
 				{
+					ServerUI.addLogMessage(String.format("Processing SMS recovery for user id=%d, %s %s",
+							su.getID(), su.getFirstName(), su.getLastName()));
+					
 					String twilioFormattedPhoneNum = getTwilioFormattedPhoneNumber(su);
 					if(twilioFormattedPhoneNum != null)
+					{
+						ServerUI.addLogMessage(String.format("Processing SMS recovery phone number for user id=%d, %s %s, number: %s",
+								su.getID(), su.getFirstName(), su.getLastName(), twilioFormattedPhoneNum));
+						
 						smsRequestList.add(new ONCSMS(-1, "", EntityType.USER, su.getID(), twilioFormattedPhoneNum,
 						SMSDirection.OUTBOUND_API, request.getMessage(), SMSStatus.REQUESTED));
+					}
 				}
 			}
 		}
@@ -240,7 +248,11 @@ public class ServerSMSDB extends ServerSeasonalDB
 	
 	String getTwilioFormattedPhoneNumber(ONCServerUser su)
 	{	
-		if(!su.getCellPhone().isEmpty() && su.getCellPhone().trim().length() == 12)
+		if(!su.getCellPhone().isEmpty() && su.getCellPhone().trim().length() == 10)
+			return String.format("+1%s", su.getCellPhone());
+		else if(!su.getCellPhone().isEmpty() && su.getCellPhone().trim().length() == 12)
+			return String.format("+1%s", removeNonDigitsFromPhoneNumber(su.getCellPhone()));
+		else if(!su.getCellPhone().isEmpty() && su.getCellPhone().trim().length() == 13)
 			return String.format("+1%s", removeNonDigitsFromPhoneNumber(su.getCellPhone()));
 		else
 			return null;
