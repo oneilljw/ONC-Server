@@ -348,7 +348,7 @@ function onChangePW()
 		document.getElementById('currpw').value = "";
     	document.getElementById('newpw').value = "";
     	document.getElementById('verifypw').value = "";
-		window.location=document.getElementById('closepopup').href;
+    	window.location='#close';
 	}
 }
 function validatePassword()
