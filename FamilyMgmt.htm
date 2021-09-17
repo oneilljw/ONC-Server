@@ -662,7 +662,7 @@
   	  </div>
       <div class='buttonbar'>
     	<button id="cancel" onclick="onProfileNotChanged()">No Change</button>
-        <button id="update" onclick="onUpdateProfile(this)" disabled>Update</button>
+        <button id="update" onclick="onUpdateProfile()" disabled>Update</button>
       </div> 
 	</div>
   </div>
@@ -675,10 +675,11 @@
 		</div>	
 		<span id='cellwarningmssg'></span>
 		<div class='buttonbar'>
-      	  <button onclick="window.location=document.getElementById('editprofileanchor').href">I'll fix it</button>
+      	  <button onclick='addMissingCellPhone()'>Add Cell Phone</button>
+      	  <button id='cellwarningignorebtn' onclick='ignoreCellWarning()'>No Cell Phone</button>
     	</div>
 	</div>
-  </div>  
+  </div> 
 <!-- Change Password Dialog -->
   <div id="chgpwdlg" class="modalDialog">
 	<div class='inner extended-width'>

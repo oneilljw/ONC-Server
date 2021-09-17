@@ -1,6 +1,7 @@
 var userJson = {};
 var profileCBGroups = [];
 var baselineGroupCheckSum = 0;
+var cellphoneWarningStatus = 0;	//0 - No override, 1- No change override, 2 - Update override
 var errorColor = '#FF9999';
 function setInput(elementID, value)
 {
@@ -244,8 +245,9 @@ function isNumericPhoneNumber(phonenumber, separator)
 }
 function onUpdateProfile()
 {
-	if(verifyCellPhone())
+	if(cellphoneWarningStatus == 2 || cellphoneWarningStatus == 0 && verifyCellPhone())
 	{	
+		cellphoneWarningStatus = 0;
 	    var params = "firstname=" + document.getElementById('userfirstname').value
 			+ "&" + "lastname=" + document.getElementById('userlastname').value
 			+ "&" + "org=" + document.getElementById('userorg').value
@@ -258,11 +260,12 @@ function onUpdateProfile()
 		var data = table.data().toArray();
 		for(var index=0; index<data.length; index++)
 	    	params= params.concat("&group",  index, "=", data[index].id);
-	    				
+	    
 		params= params.concat("&", "callback=?");	
 	
 		$.getJSON('updateuser', params, function(responseJson)
 		{
+			
 			document.getElementById('cancel').disabled = false;
 			document.getElementById('update').disabled = true;
 	    	
@@ -283,20 +286,27 @@ function onUpdateProfile()
 	else
 	{
 		//disable update and the no change button
-		document.getElementById('cancel').disabled = false;
-		document.getElementById('update').disabled = true;
+//		document.getElementById('cancel').disabled = false;
+//		document.getElementById('update').disabled = true;
+		//set the update profile status flag to update profile
+		cellphoneWarningStatus = 2;
 		
 		//show pop-up prompting for cell phone
-		document.getElementById('cellwarningmssg').textContent = "Each user MUST have a valid cellphone #. ONC relies on cell phones " +
-		"for account recovery and two-factor authentication purposes.";
+		document.getElementById('cellwarningignorebtn').textContent = 'Update Anyway';
+		document.getElementById('cellwarningmssg').textContent = "Each user is encouraged to provide a cellphone #. ONC uses text messaging " +
+		"to securely verify identity for forgotten passwords and account recovery.";
 		
 		window.location=document.getElementById('cellwarninganchor').href;
 	}
 }
 function onProfileNotChanged()
 {
-	if(verifyCellPhone())
+	//check if cell phone is valid or user has already overridden invalid or missing cell
+	//and doesn't want to change.
+	console.log('cellphoneWarningStatus= ' + cellphoneWarningStatus);
+	if(cellphoneWarningStatus == 1 || cellphoneWarningStatus == 0 && verifyCellPhone())
 	{
+		cellphoneWarningStatus = 0;
 		var params = {}	
 		$.post('profileunchanged', params, function(response)
 		{
@@ -308,18 +318,36 @@ function onProfileNotChanged()
 	else
 	{
 		//disable update and the no change button
-		document.getElementById('cancel').disabled = false;
-		document.getElementById('update').disabled = true;
+//		document.getElementById('cancel').disabled = false;
+//		document.getElementById('update').disabled = true;
 		
-		//change the background of the cell phone field to the error color
-		document.getElementById('usercellphone').style.backgroundColor = errorColor;
+		cellphoneWarningStatus = 1;	//no change was clicked
 		
 		//show pop-up prompting for cell phone
-		document.getElementById('cellwarningmssg').textContent = "Each user MUST have a valid cellphone #. ONC relies on cell phones " +
-		"for account recovery and two-factor authentication purposes.";
+		document.getElementById('cellwarningignorebtn').textContent = 'No Change';
+		document.getElementById('cellwarningmssg').textContent = "Each user is encouraged to provide a cellphone #. ONC uses text messaging " +
+		"to securely verify identity for forgotten passwords and account recovery.";
 		
 		window.location=document.getElementById('cellwarninganchor').href;
 	}
+}
+function addMissingCellPhone()
+{
+	//reset cell phone waring status to initial state, change the background of the cell phone
+	//field to the error color and display the profile update popup
+	cellphoneWarningStatus = 0;
+	
+	document.getElementById('usercellphone').style.backgroundColor = errorColor;
+	window.location=document.getElementById('editprofileanchor').href
+}
+function ignoreCellWarning()
+{
+	console.log(cellphoneWarningStatus);
+	
+	if(cellphoneWarningStatus == 1)	//No change to profile with invalid or missing cell phone
+		onProfileNotChanged();
+	else if(cellphoneWarningStatus == 2) //Update profile with invalid or missing cell phone
+		onUpdateProfile();
 }
 function checkChangePWEnable()
 {
