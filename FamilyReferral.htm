@@ -615,7 +615,7 @@
   		document.getElementById('adultupdate').disabled = true;
 	    window.location=document.getElementById('editadultanchor').href;  
   	}
-	
+/*	
   	function verifyAddedOrUpdatedChild()
   	{
 		let child = getChild();
@@ -675,11 +675,76 @@
 			}
 		}
   	}
-  	
+*/  	
+  	function verifyChildAgeAndGender()
+  	{
+  		let child = getChild();
+		let age = calculateAge(child.sDOB);
+		let numGifts = sessionStorage.getItem('numberGiftsPerChild');
+		
+		if(age === 0 || child.gender === 'Unknown')
+		{
+			//show pop-up asking to verify birthdate and gender
+			document.getElementById('childwarningmssg').textContent = "Is " + child.sDOB + " the correct" +
+			" DoB and " + child.gender + " the correct gender for the child you're updating or adding?";
+			
+			window.location=document.getElementById('childwarninganchor').href;
+		}
+		else
+			verifyWishEntries();
+  	}
+  	function verifyWishEntries()
+  	{
+  		let numGifts = sessionStorage.getItem('numberGiftsPerChild');
+  		if(document.getElementById('giftreq').checked === true && numGifts == 0)
+		{
+			//show pop-up informing of error. Can't have gift requests if the number of gifts is zero
+			document.getElementById('childwarningmssg').textContent = "Error: Not providing gift assistance. Please contact ONC's school contact.";
+			window.location=document.getElementById('childwarninganchor').href;
+		}
+		else
+		{	
+			//If we aren't providing gifts, we still add the child, but don't check wish entries.
+			//Otherwise, we are providing one to three gifts per child, make sure corresponding gift fields are not empty
+			if(document.getElementById('giftreq').checked === false)
+			{
+				addOrUpdateValidatatedChild();
+			}	
+			else if(document.getElementById('giftreq').checked === true && numGifts == 1 && 
+					 document.getElementById('childwish0').value !== '' && 
+				 	  document.getElementById('childwish3').value !== '')
+			{
+				addOrUpdateValidatatedChild();
+			}
+			else if(document.getElementById('giftreq').checked === true && numGifts == 2 && 
+					 document.getElementById('childwish0').value !== '' && 
+				 	  document.getElementById('childwish3').value !== '' &&
+				 	   document.getElementById('childwish1').value !== '')
+			{
+				addOrUpdateValidatatedChild();
+			}
+			else if(document.getElementById('giftreq').checked === true && numGifts > 2 && 
+					 document.getElementById('childwish0').value !== '' && 
+				 	  document.getElementById('childwish3').value !== '' &&
+				 	   document.getElementById('childwish1').value !== '' &&
+				 	    document.getElementById('childwish2').value !== '')
+			{
+				addOrUpdateValidatatedChild();
+			}
+			else
+			{	
+				//show pop-up asking to verify that wish is blank and to use age appropriate gift
+				document.getElementById('wishwarningmssg').textContent = "One or more wish entries is blank. ONC will select" + 
+				" age appropriate gifts if wish choices aren't provided.";
+			
+				window.location=document.getElementById('wishwarninganchor').href;
+			}
+		}
+  	}
   	function addAgeAppropriateGiftForMissingWishes()
   	{
   		let numGifts = sessionStorage.getItem('numberGiftsPerChild');
-  		if(numGift > 0 && document.getElementById('childwish0').value === '')
+  		if(numGifts > 0 && document.getElementById('childwish0').value === '')
   		{
   			document.getElementById('childwish0').value = 'Age Appropriate Gift';
   			document.getElementById('childwish3').value = 'Age Appropriate Gift';
@@ -1154,7 +1219,6 @@
 	{ 
 		width: 40%;
 	}
-	#childwishfieldset { display: block; }
 	.edit-background span { font-size: 14px; }
 	textarea 
   	{
@@ -1205,6 +1269,7 @@
 	{
 		display: none;
 	}
+	#dobyear { width: 64px }
   </style>
 </head>
 <body>
@@ -1433,7 +1498,8 @@
 		</div>	
 		<span id='childwarningmssg'></span>
 		<div class='buttonbar'>
-      	  <button onclick="addOrUpdateValidatatedChild()">Yes</button>
+<!--      <button onclick="addOrUpdateValidatatedChild()">Yes</button> --> 
+ 		  <button onclick="verifyWishEntries()">Yes</button>
       	  <button onclick="window.location=document.getElementById('editchildanchor').href">No</button>
     	</div>
 	</div>
@@ -1629,8 +1695,8 @@
   			  </div>
   			  <p class='childinfop'>
     	  		<label for="childfirstname">Name:</label>
-    	  		<input id='childfirstname' type="text" size="13" placeholder="First Name" oninput='checkForChildChange()'>
-    	  		<input id='childlastname' type="text" size="15" placeholder="Last Name" oninput='checkForChildChange()'>
+    	  		<input id='childfirstname' type="text" size="12" placeholder="First Name" oninput='checkForChildChange()'>
+    	  		<input id='childlastname' type="text" size="14" placeholder="Last Name" oninput='checkForChildChange()'>
     		  </p>   		
     		  <p class='childinfop'>
     	  		<label for="childDOB">DoB:</label>
@@ -1679,7 +1745,7 @@
 	  </div>
       <div class='buttonbar'>
     	<button id="childcancel" onclick="onCancel()">Cancel</button>
-        <button id="childupdate" onclick="verifyAddedOrUpdatedChild()" disabled>Update</button>
+        <button id="childupdate" onclick="verifyChildAgeAndGender()" disabled>Update</button>
         <span id='removechildspan'>
           <button id="childremove" onclick="onRemoveChild(this)" disabled>Remove</button>
          </span>
