@@ -16,7 +16,7 @@ import ourneighborschild.ONCUser;
 public class ServerDNSCodeDB extends ServerPermanentDB
 {
 	private static final String DNSCODE_DB_FILENAME = "DNSCodeDB.csv";
-	private static final int DNSCODE_RECORD_LENGTH = 9;
+	private static final int DNSCODE_RECORD_LENGTH = 10;
 	
 	private static ServerDNSCodeDB instance = null;
 	
@@ -97,7 +97,7 @@ public class ServerDNSCodeDB extends ServerPermanentDB
 		}
 		else
 		{
-			DNSCode badCodeReq = new DNSCode(-1, "BAD", "Invalid DNS Code Request", "Non Numeric DNS Code Request cannnot be processed");
+			DNSCode badCodeReq = new DNSCode(-1, "BAD", "Invalid DNS Code Request", "Non Numeric DNS Code Request cannnot be processed", false);
 			response = gson.toJson(badCodeReq, DNSCode.class);
 		}
 		
@@ -157,7 +157,7 @@ public class ServerDNSCodeDB extends ServerPermanentDB
 	String[] getExportHeader()
 	{
 		return new String[] {"ID", "Acronym", "Title", "Definition", "Date Changed", "Changed By",
-								"SL Position", "SL Message", "SL Changed By"};
+								"SL Position", "SL Message", "SL Changed By", "Show On Website"};
 	}
 
 	@Override
@@ -170,8 +170,9 @@ public class ServerDNSCodeDB extends ServerPermanentDB
 	{
 		StringBuffer buff = new StringBuffer("<dl>");
 		for(DNSCode code : dnsCodeList)
-			buff.append(String.format("<dt>%s - %s</dt><dd>%s</dd>", code.getAcronym(),
-					code.getName(), code.getDefinition()));
+			if(code.showOnWebsite())
+				buff.append(String.format("<dt>%s - %s</dt><dd>%s</dd>", code.getAcronym(),
+						code.getName(), code.getDefinition()));
 		
 		buff.append("</dl>");
 		return buff.toString();
