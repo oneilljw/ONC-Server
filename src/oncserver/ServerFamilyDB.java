@@ -98,6 +98,9 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		//create the ONC number range map. The map key is the school code for each school in ONC's
 		//3 school pyramids. The start and end range values are based on an analysis of number 
 		//of families referred from 2015 - 2018
+		//In 2021, Franklin MS is in both the Chantilly and Oakton Pyramids. The ES in in
+		//ONC zip codes (22033) is Waples Mill, which now has school code T and feeds both Chantilly
+		//and Oakton.
 		//THIS IS A TEMPORARY HACK FOR 2018 - NEED TO HAVE ONC NUM RANGES GENERATED AUTOMATICALLY
 		//WHEN A NEW YEAR IS CREATED
 		oncnumRangeMap = new HashMap<String, ONCNumRange>();
@@ -120,7 +123,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		oncnumRangeMap.put("Q", new ONCNumRange(1281, 1286));
 		oncnumRangeMap.put("R", new ONCNumRange(1287, 1292));
 		oncnumRangeMap.put("S", new ONCNumRange(1293, 1299));
-		oncnumRangeMap.put("Y", new ONCNumRange(1300, 1399));
+		oncnumRangeMap.put("T", new ONCNumRange(1300, 1324));	//Added in 2021 for Franklin MS issue
+		oncnumRangeMap.put("Y", new ONCNumRange(1325, 1399));
 		oncnumRangeMap.put("Z", new ONCNumRange(1400, 1499));
 	
 		familyDB = new ArrayList<FamilyDBYear>();
