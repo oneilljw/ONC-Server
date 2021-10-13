@@ -566,20 +566,25 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 		Gson gson = new Gson();
 		String json;
 		String errMssg;
-		if(chkAddressResult == RC_ADDRESS_IS_SCHOOL)	//if address is school, address is valid
+		if(chkAddressResult == RC_ADDRESS_IS_SCHOOL)	//if address is a pyramid school, address is valid
 		{
-			if(addressMap.get("type").equals("del"))
-			{
-				json = gson.toJson(new AddressValidation(0, "Address is a school in school pyramids "
-						+ "served by ONC"), AddressValidation.class);
-			}
-			else
-			{
-				errMssg = "Address is a school, it must be a residence in Fairfax County. ";
-						//REMOVED DELIVERY ADDRESS DUE TO COVID 19 IN 2020
+			//FOR 2021, HOH ADDRESS MAY BE A SCHOOL IN THE CENTREVILLE, WESTFIED OR CHATILLY 
+			//HS PYRAMIDS. IT NO LONGER HAS TO BE THE DELIVERY ADDRESS
+//			if(addressMap.get("type").equals("del"))
+//			{
+//				json = gson.toJson(new AddressValidation(0, "Address is a school in school pyramids "
+//						+ "served by ONC"), AddressValidation.class);
+//			}
+//			else
+//			{
+//				errMssg = "Address is a school, it must be a residence in Fairfax County. ";
+//						//REMOVED DELIVERY ADDRESS DUE TO COVID 19 IN 2020
 //						+ "Only the delivery address can be a school in ONC served school pyramids.";
-				json = gson.toJson(new AddressValidation(1, errMssg), AddressValidation.class);
-			}
+//				json = gson.toJson(new AddressValidation(1, errMssg), AddressValidation.class);
+//			}
+			
+			json = gson.toJson(new AddressValidation(0, "Address is a school in school pyramids "
+					+ "served by ONC"), AddressValidation.class);
 		}
 		else if(chkAddressResult == RC_ADDRESS_NOT_VALID)	//address is not in the database
 		{	
@@ -596,11 +601,11 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 			errMssg = "Address is not a residence in ONC's serving area";
 			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
 		}
-		else if(chkAddressResult == RC_ADDRESS_NOT_IN_SERVED_PYRAMID)
-		{	
-			errMssg = "Address is not in ONC's served school pyramids.";
-			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
-		}
+//		else if(chkAddressResult == RC_ADDRESS_NOT_IN_SERVED_PYRAMID)
+//		{	
+//			errMssg = "Address is not in ONC's served school pyramids.";
+//			json = gson.toJson(new AddressValidation(3, errMssg), AddressValidation.class);
+//		}
 		else	//address is good to accept
 			json = gson.toJson(new AddressValidation(0, "Address is a residence served by ONC"), AddressValidation.class);	
 
@@ -748,8 +753,10 @@ public class ONCWebHttpHandler extends ONCWebpageHandler
 				return  RC_ADDRESS_MISSING_UNIT;
 			else if(rSC.getSchoolCode().equals("Z"))
 				return  RC_ADDRESS_NOT_IN_SERVED_ZIPCODE;
-			else if(rSC.getSchoolCode().equals("Y"))	
-				return RC_ADDRESS_NOT_IN_SERVED_PYRAMID;
+// FOR THE 2021 SEASON, ONC DECIDED TO FORGO THE PYRAMID CHECK. IF AN ADDRESS IS IN A SERVED
+// ZIPCODE, IS NOT MISSING A UNIT AND IS IN OUR DATABASE, IT WILL BE ACCEPTED
+//			else if(rSC.getSchoolCode().equals("Y"))	
+//				return RC_ADDRESS_NOT_IN_SERVED_PYRAMID;
 			else	//address is good to accept
 				return RC_ADDRESS_IS_VALID;
 		}
