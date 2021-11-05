@@ -1460,19 +1460,28 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		if(fam.getHomePhone().length() > 9)
 		{
 			PhoneInfo homePhoneInfo = getPhoneInfo(fam.getHomePhone());
-			updatedCode = homePhoneInfo.getType().equals("mobile") ? PHONECODES[0] : PHONECODES[1] ;
+			
+			if(homePhoneInfo.isPhoneValid())
+				updatedCode = updatedCode | (homePhoneInfo.getType().equals("mobile") ? PHONECODES[0] : PHONECODES[1]);
+			
 			fpi.setPhoneInfo(0,  homePhoneInfo);
 		}	
 		if(fam.getCellPhone().length() > 9)
 		{
 			PhoneInfo cellPhoneInfo = getPhoneInfo(fam.getCellPhone());
-			updatedCode = cellPhoneInfo.getType().equals("mobile") ? PHONECODES[2] : PHONECODES[3] ;
+			
+			if(cellPhoneInfo.isPhoneValid())
+				updatedCode = updatedCode | (cellPhoneInfo.getType().equals("mobile") ? PHONECODES[2] : PHONECODES[3]);
+			
 			fpi.setPhoneInfo(1,  cellPhoneInfo);
 		}	
 		if(fam.getAlt2Phone().length() > 9)
 		{
 			PhoneInfo alt2PhoneInfo = getPhoneInfo(fam.getAlt2Phone());
-			updatedCode = alt2PhoneInfo.getType().equals("mobile") ? PHONECODES[4] : PHONECODES[5] ;
+			
+			if(alt2PhoneInfo.isPhoneValid())
+				updatedCode = updatedCode | (alt2PhoneInfo.getType().equals("mobile") ? PHONECODES[4] : PHONECODES[5]);
+			
 			fpi.setPhoneInfo(2,  alt2PhoneInfo);
 		}
 		
