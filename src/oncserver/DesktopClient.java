@@ -28,7 +28,7 @@ import com.google.gson.reflect.TypeToken;
 public class DesktopClient extends Thread 
 {
 	private static final int BASE_YEAR = 2012;
-	private static final float MINIMUM_CLIENT_VERSION = 9.06f;
+	private static final float MINIMUM_CLIENT_VERSION = 9.07f;
 	
 	private int id;
 	private String version;
@@ -288,6 +288,12 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = serverFamilyDB.getFamily(year, command.substring(11));
+                	output.println(response);		
+                }
+                else if(command.startsWith("GET<family_phone_info>"))
+                {
+                	clientMgr.addLogMessage(command);               	
+                	String response = serverFamilyDB.checkFamilyPhoneNumbers(year, command.substring(22));
                 	output.println(response);		
                 }
                 else if(command.startsWith("GET<confirmation>"))

@@ -31,6 +31,7 @@ import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.FamilyHistory;
+import ourneighborschild.FamilyPhoneInfo;
 import ourneighborschild.ONCGroup;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCMeal;
@@ -38,6 +39,7 @@ import ourneighborschild.ONCServerUser;
 import ourneighborschild.ONCUser;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.ONCWebsiteFamily;
+import ourneighborschild.PhoneInfo;
 import ourneighborschild.UserPermission;
 
 import com.google.gson.Gson;
@@ -662,24 +664,30 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			int updatedCode = currFam.getPhoneCode();
 			if(!updatedFamily.getHomePhone().equals(currFam.getHomePhone()))
 			{
+				updatedCode = updatedCode & PHONECODE_CLEAR_MASK[0];
 				if(updatedFamily.getHomePhone().length() > 9)
-					updatedCode = createOrUpdatePhoneCode(updatedFamily.getHomePhone(), updatedCode, 0);
-				else
-					updatedCode = updatedCode & PHONECODE_CLEAR_MASK[0];
+				{
+					PhoneInfo homePhoneInfo = getPhoneInfo(updatedFamily.getHomePhone());
+					updatedCode = updatedCode | (homePhoneInfo.getType().equals("mobile") ? PHONECODES[0] : PHONECODES[1]);
+				}	
 			}
 			if(!updatedFamily.getCellPhone().equals(currFam.getCellPhone()))
 			{
+				updatedCode = updatedCode & PHONECODE_CLEAR_MASK[1];
 				if(updatedFamily.getCellPhone().length() > 9)
-					updatedCode = createOrUpdatePhoneCode(updatedFamily.getCellPhone(), updatedCode, 1);
-				else
-					updatedCode = updatedCode & PHONECODE_CLEAR_MASK[1];
-			}
+				{
+					PhoneInfo cellPhoneInfo = getPhoneInfo(updatedFamily.getCellPhone());
+					updatedCode =  updatedCode | (cellPhoneInfo.getType().equals("mobile") ? PHONECODES[2] : PHONECODES[3]);
+				}	
+			}			
 			if(!updatedFamily.getAlt2Phone().equals(currFam.getAlt2Phone()))
 			{
+				updatedCode = updatedCode & PHONECODE_CLEAR_MASK[2];
 				if(updatedFamily.getAlt2Phone().length() > 9)
-					updatedCode = createOrUpdatePhoneCode(updatedFamily.getAlt2Phone(), updatedCode, 2);
-				else
-					updatedCode = updatedCode & PHONECODE_CLEAR_MASK[2];
+				{
+					PhoneInfo alt2PhoneInfo = getPhoneInfo(updatedFamily.getAlt2Phone());
+					updatedCode = updatedCode | (alt2PhoneInfo.getType().equals("mobile") ? PHONECODES[4] : PHONECODES[5]);
+				}	
 			}
 			updatedFamily.setPhoneCode(updatedCode);
 
@@ -823,14 +831,41 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			//set region and school code for family
 			updateRegionAndSchoolCode(addedFam);
 			
-			//create the phone code
+			//get each phones info and add it to a Family Phone Info Object
 			int phoneCode = 0;
+			PhoneInfo[] famPhoneInfo = new PhoneInfo[3];
+			
+			//check home phone
 			if(!addedFam.getHomePhone().isEmpty())
-				phoneCode = createOrUpdatePhoneCode(addedFam.getHomePhone(), phoneCode, 0);
+			{
+				famPhoneInfo[0] = getPhoneInfo(addedFam.getHomePhone());
+				if(famPhoneInfo[0].isPhoneValid())
+					phoneCode = phoneCode | (famPhoneInfo[0].getType().equals("mobile") ? PHONECODES[0] : PHONECODES[1]);
+			}
+			else
+				famPhoneInfo[0] = new PhoneInfo();
+			
+			//check cell phone
 			if(!addedFam.getCellPhone().isEmpty())
-				phoneCode = createOrUpdatePhoneCode(addedFam.getCellPhone(), phoneCode, 1);
+			{
+				famPhoneInfo[1] = getPhoneInfo(addedFam.getCellPhone());
+				if(famPhoneInfo[1].isPhoneValid())
+					phoneCode = phoneCode | (famPhoneInfo[1].getType().equals("mobile") ? PHONECODES[2] : PHONECODES[3]);
+			}
+			else
+				famPhoneInfo[1] = new PhoneInfo();
+			
+			//check alt2 phone
 			if(!addedFam.getAlt2Phone().isEmpty())
-				phoneCode = createOrUpdatePhoneCode(addedFam.getAlt2Phone(), phoneCode, 2);
+			{
+				famPhoneInfo[2] = getPhoneInfo(addedFam.getAlt2Phone());
+				if(famPhoneInfo[2].isPhoneValid())
+					phoneCode = phoneCode | (famPhoneInfo[2].getType().equals("mobile") ? PHONECODES[4] : PHONECODES[5]);
+			}
+			else
+				famPhoneInfo[2] = new PhoneInfo();
+			
+			
 			addedFam.setPhoneCode(phoneCode);
 		
 			//create the ONC number
@@ -1355,11 +1390,8 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	 * @param phoneid - 0-primary phone number, 1-alternate phone number, 2-2nd alternate phone number
 	 * @return six bit phone code for the family
 	 */
-	int createOrUpdatePhoneCode(String phonenumber, int currCode, int phoneid)
+	PhoneInfo getPhoneInfo(String phonenumber)
 	{
-		//clear the phone code for the corresponding phone id (primary, alternate or 2nd alternate)
-		int clearedCode = currCode & PHONECODE_CLEAR_MASK[phoneid];
-		
 		//lookup the phone number from the SMS service provider
 		Map<String,Object> resultMap = ServerSMSDB.lookupPhoneNumber(phonenumber);
 		
@@ -1369,13 +1401,85 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		if((Integer) resultMap.get("returncode") == 0)
 		{	
 			String type = (String) resultMap.get("type");
-			if(type.equals("mobile"))
-				return clearedCode | PHONECODES[phoneid * 2];
-			else
-				return clearedCode | PHONECODES[(phoneid * 2) +1];		
+			String name = (String) resultMap.get("name");
+			int code = type.equals("mobile") ? 1 : 3;
+			
+			return new PhoneInfo(phonenumber, code, type, name);	
 		}
 		else
-			return currCode & PHONECODE_CLEAR_MASK[phoneid];
+			return new PhoneInfo(phonenumber, 0, "", "");	
+	}
+	
+	String checkFamilyPhoneNumbers(int year, String zFamID)
+	{
+		try
+		{
+			int oncID = Integer.parseInt(zFamID);
+			FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
+			List<ONCFamily> fAL = fDBYear.getList();
+			
+			int index = 0;	
+			while(index < fAL.size() && fAL.get(index).getID() != oncID)
+				index++;
+			
+			if(index < fAL.size())
+			{
+				ONCFamily family = fAL.get(index);
+				
+				Gson gson = new Gson();
+				FamilyPhoneInfo fpi = checkFamilyPhoneNumbers(year, family);
+				
+				//check to see if the phone code has changed
+				if(family.getPhoneCode() != fpi.getFamilyPhoneCode())
+				{
+					//family code has changed, update the object, mark the db for saving and notify all
+					//in year clients
+					family.setPhoneCode(fpi.getFamilyPhoneCode());
+					fDBYear.setChanged(true);
+					
+					String message = "UPDATED_FAMILY" + gson.toJson(family, ONCFamily.class);
+					clientMgr.notifyAllInYearClients(year, message);	
+				}
+				return "FAMILY_PHONE_INFO" + gson.toJson(fpi, FamilyPhoneInfo.class);
+			}
+			else
+				return "FAMILY_PHONE_REQUEST_FAILED: Famiy not found";
+		}
+		catch(NumberFormatException nfe)
+		{
+			return "FAMILY_PHONE_REQUEST_FAILED: Family ID Number Format Exception";
+		}
+	}
+	
+	FamilyPhoneInfo checkFamilyPhoneNumbers(int year, ONCFamily fam)
+	{
+		FamilyPhoneInfo fpi = new FamilyPhoneInfo();
+		
+		//check to see if any of the three phone numbers changed, if so, update the phone code
+		int updatedCode = 0;
+		if(fam.getHomePhone().length() > 9)
+		{
+			PhoneInfo homePhoneInfo = getPhoneInfo(fam.getHomePhone());
+			updatedCode = homePhoneInfo.getType().equals("mobile") ? PHONECODES[0] : PHONECODES[1] ;
+			fpi.setPhoneInfo(0,  homePhoneInfo);
+		}	
+		if(fam.getCellPhone().length() > 9)
+		{
+			PhoneInfo cellPhoneInfo = getPhoneInfo(fam.getCellPhone());
+			updatedCode = cellPhoneInfo.getType().equals("mobile") ? PHONECODES[2] : PHONECODES[3] ;
+			fpi.setPhoneInfo(1,  cellPhoneInfo);
+		}	
+		if(fam.getAlt2Phone().length() > 9)
+		{
+			PhoneInfo alt2PhoneInfo = getPhoneInfo(fam.getAlt2Phone());
+			updatedCode = alt2PhoneInfo.getType().equals("mobile") ? PHONECODES[4] : PHONECODES[5] ;
+			fpi.setPhoneInfo(2,  alt2PhoneInfo);
+		}
+		
+		//now that we have looked up info for all three phone numbers, set the family phone code
+		//and return the data
+		fpi.setFamilyPhoneCode(updatedCode);
+		return fpi;
 	}
 	
 	void checkFamilyGiftCardOnlyOnGiftAdded(int year, ONCChildGift priorGift, ONCChildGift addedGift)

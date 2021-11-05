@@ -266,8 +266,17 @@ public class ServerSMSDB extends ServerSeasonalDB
 		try
 		{
 			twilioIF = TwilioIF.getInstance();
+			
 			Map<String,Object> lookupResultMap = twilioIF.lookup(number);
-			if(lookupResultMap.containsKey("type") && lookupResultMap.containsKey("name"))
+			
+			if(lookupResultMap.containsKey("error_code") && lookupResultMap.get("error_code") != null)
+			{
+				resultMap.put("error_code", lookupResultMap.get("error_code"));
+				resultMap.put("returncode", -1);
+				resultMap.put("errMssg", "Invalid Phone Number");
+			}
+			else if(lookupResultMap.containsKey("type") && lookupResultMap.get("type") != null &&
+					 lookupResultMap.containsKey("name") && lookupResultMap.get("name") != null)
 			{
 				resultMap.put("returncode", 0);
 				resultMap.put("name", lookupResultMap.get("name"));
@@ -289,7 +298,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 			resultMap.put("returncode", -3);
 			resultMap.put("errMssg", "Lookup Service Not Available");
 		}
-
+	
 		return resultMap;
 	}
 	
