@@ -28,7 +28,7 @@ import com.google.gson.reflect.TypeToken;
 public class DesktopClient extends Thread 
 {
 	private static final int BASE_YEAR = 2012;
-	private static final float MINIMUM_CLIENT_VERSION = 9.07f;
+	private static final float MINIMUM_CLIENT_VERSION = 9.08f;
 	
 	private int id;
 	private String version;
@@ -67,6 +67,7 @@ public class DesktopClient extends Thread
     private ServerBatteryDB batteryDB;
     private ServerInventoryDB inventoryDB;
     private ServerSMSDB smsDB;
+    private ServerDistributionCenterDB distributionCenterDB;
     private ServerChatManager chatMgr;
     private ONCUser clientUser;
     private Calendar timestamp;
@@ -120,6 +121,7 @@ public class DesktopClient extends Thread
 	        batteryDB = ServerBatteryDB.getInstance();
 	        inventoryDB = ServerInventoryDB.getInstance();
 	        smsDB = ServerSMSDB.getInstance();
+	        distributionCenterDB = ServerDistributionCenterDB.getInstance();
 		  
 	        clientUser = null;
 	        timestamp = Calendar.getInstance();
@@ -439,6 +441,12 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	output.println(smsDB.getSMSMessages(year));
+                }
+                else if(command.startsWith("GET<distribution_centers>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = distributionCenterDB.getDistributionCenters(year);
+                	output.println(response);
                 }
                 else if(command.equals("GET<request_signups>"))
                 {
@@ -859,6 +867,30 @@ public class DesktopClient extends Thread
                 {
                 	clientMgr.addLogMessage(command);
                 	String response = volunteerDB.add(year, command.substring(16), clientUser);
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<update_center>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = distributionCenterDB.update(year, command.substring(19));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<delete_center>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = distributionCenterDB.delete(year, command.substring(19));
+                	output.println(response);
+                	clientMgr.addLogMessage(response);
+                	clientMgr.notifyAllOtherInYearClients(this, response);
+                }
+                else if(command.startsWith("POST<add_center>"))
+                {
+                	clientMgr.addLogMessage(command);
+                	String response = distributionCenterDB.add(year, command.substring(16), clientUser);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);

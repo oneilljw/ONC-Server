@@ -68,7 +68,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 public class ServerFamilyDB extends ServerSeasonalDB
 {
-	private static final int FAMILYDB_HEADER_LENGTH = 41;
+	private static final int FAMILYDB_HEADER_LENGTH = 42;
 	
 //	private static final int FAMILY_STOPLIGHT_RED = 2;
 //	private static final int NUMBER_OF_WISHES_PER_CHILD = 2;	//COVID 19 - Two gifts/child not three
@@ -702,48 +702,33 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			return "UPDATE_FAILED";
 	}
 	
-	String updateListOfFamilies(int year, String giftListJson, ONCUser client)
+	String updateListOfFamilies(int year, String jsonList, ONCUser client)
 	{
 		//Create an update family list 
 		Gson gson = new Gson();
 		Type listOfFamilies = new TypeToken<ArrayList<ONCFamily>>(){}.getType();		
-		List<ONCFamily> updatedFamilyList = gson.fromJson(giftListJson, listOfFamilies);
+		List<ONCFamily> updatedFamilyList = gson.fromJson(jsonList, listOfFamilies);
 		List<String> responseJsonList = new ArrayList<String>();
 
 		//retrieve the family data base for the year
 		FamilyDBYear familyDBYear = familyDB.get(DBManager.offset(year));
-		List<ONCFamily> fAL = familyDBYear.getList();
+		List<ONCFamily> familyList = familyDBYear.getList();
 		
 		for(ONCFamily updatedFamily : updatedFamilyList)
 		{
-			//Find the position for the current family being replaced
+			//find the position for the current family being replaced
 			int index = 0;
-			while(index < fAL.size() && fAL.get(index).getID() != updatedFamily.getID())
+			while(index < familyList.size() && familyList.get(index).getID() != updatedFamily.getID())
 				index++;
 			
-			//replace the current family object with the update. First, check for address change.
-			//if address has changed, update the region. 
-			if(index < fAL.size())
+			//replace the current family object with the update. 
+			if(index < familyList.size())
 			{
 				//update time stamp and changed by info
 				updatedFamily.setDateChanged(System.currentTimeMillis());
 				updatedFamily.setChangedBy(client.getLNFI());
-				
-//				//check to see if either status or DNS code is changing, if so, add a history item
-//				ONCFamily currFam = fAL.get(index);
-//				if(currFam != null && 
-//					(currFam.getFamilyStatus() != updatedFamily.getFamilyStatus() || 
-//					  currFam.getGiftStatus() != updatedFamily.getGiftStatus() ||
-//					   currFam.getDNSCode() != updatedFamily.getDNSCode()))
-//				{
-//					addHistoryItem(year, updatedFamily.getID(), updatedFamily.getFamilyStatus(), 
-//																updatedFamily.getGiftStatus(), null, updatedFamily.getDNSCode(),
-//																"Status Changed", updatedFamily.getChangedBy(), true);
-//						
-//					updatedFamily.setDeliveryID(histItem.getID());
-//				}
 					
-				fAL.set(index, updatedFamily);
+				familyList.set(index, updatedFamily);
 				familyDBYear.setChanged(true);
 
 				responseJsonList.add("UPDATED_FAMILY" + gson.toJson(updatedFamily, ONCFamily.class));
@@ -1733,7 +1718,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 //				"Delivery ID",
 				"Phone Code", "# of Bags", "# of Large Items", 
 				"Stoplight Pos", "Stoplight Mssg", "Stoplight C/B", "Transportation", "Gift Card Only",
-				"Gift Distribution","Del Confirmation"};
+				"Gift Distribution","Del Confirmation","Distribution Center" };
 		
 		FamilyDBYear fDBYear = familyDB.get(DBManager.offset(year));
 		if(fDBYear.isUnsaved())	

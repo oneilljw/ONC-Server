@@ -11,6 +11,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import ourneighborschild.DistributionCenter;
 import ourneighborschild.EntityType;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCSMS;
@@ -29,6 +30,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 	
 	private ServerFamilyDB familyDB;
 	private ServerFamilyHistoryDB familyHistoryDB;
+	private ServerDistributionCenterDB distributionCenterDB;
 	
 	private ServerSMSDB() throws FileNotFoundException, IOException
 	{
@@ -56,6 +58,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		//initialize the FamilyDB and GlobalVariableDB interface
 		familyDB = ServerFamilyDB.getInstance();
 		familyHistoryDB = ServerFamilyHistoryDB.getInstance();
+		distributionCenterDB = ServerDistributionCenterDB.getInstance();
 	}
 	
 	public static ServerSMSDB getInstance() throws FileNotFoundException, IOException
@@ -112,7 +115,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 	{
 		List<ONCSMS> smsRequestList = new ArrayList<ONCSMS>();
 		   
-		if(request.getMessageID() == -1 && request.getPhoneChoice() > 0  && request.getPhoneChoice() < 3 &&
+		if(request.getMessageID() == -1 && request.getPhoneChoice() > 0  && request.getPhoneChoice() < 4 &&
 				 request.getEntityType() == EntityType.FAMILY)
 		{
 			//single sms message
@@ -142,22 +145,20 @@ public class ServerSMSDB extends ServerSeasonalDB
 			}
 		}
 		else if(request.getMessageID() > 0  && request.getMessageID() < 6 &&
-			request.getPhoneChoice() > 0  && request.getPhoneChoice() < 3 &&
+			request.getPhoneChoice() > 0  && request.getPhoneChoice() < 4 &&
 			 request.getEntityType() == EntityType.FAMILY)
 	    {
-			//multiple sms message
-			//get the pickup locations
-			PickUpLocations puLocations = new PickUpLocations();
 			
 			//for each family in the request, create a ONCSMS request 
 			for(Integer famID : request.getEntityIDList() )
 			{
 				ONCFamily f = familyDB.getFamily(request.getYear(), famID);
 				
-				if(f != null)
+				if(f != null && f.getDistributionCenterID() > -1)
 				{
+					DistributionCenter center = distributionCenterDB.getDistributionCenter(request.getYear(), f.getDistributionCenterID());
 					String twilioFormattedPhoneNum = getTwilioFormattedPhoneNumber(f, request.getPhoneChoice());
-					String message = get2021SMSBody(f, request, puLocations.getPickUpLocation(f));
+					String message = get2021SMSBody(f, request, center);
 					
 					if(twilioFormattedPhoneNum != null)
 						smsRequestList.add(new ONCSMS(-1, "", EntityType.FAMILY, famID, twilioFormattedPhoneNum,
@@ -484,7 +485,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());		
 	}
 */	
-	String get2021SMSBody(ONCFamily f, SMSRequest request, PickUpLocation puLocation) //int messageID)
+	String get2021SMSBody(ONCFamily f, SMSRequest request, DistributionCenter center) //int messageID)
 	{
 		//determine which message to send based on message ID
 		if(request.getMessageID() == 1)
@@ -498,47 +499,47 @@ public class ServerSMSDB extends ServerSeasonalDB
 		else if(request.getMessageID() == 2)
 		{	
 			return String.format("Our Neighbor's Child (ONC) received the request you sent to your child's school for holiday GIFT assistance.\n\n"
-				+ "The truck containing your child's gifts will be in the parking lot of %s (%s) on Sunday, December 13 from 1PM to 4PM.\n%s\n\n"
+				+ "The truck containing your child's gifts will be in the parking lot of %s (%s %s %s, %s) on Sunday, December 12 from 1PM to 4PM.\n%s\n\n"
 				+ "You (or someone you send) may receive your gifts if you bring your ONC Family #: %s and the name of the Head of Household who applied for assistance: %s %s.\n\n"
 				+ "Please write this information on a piece of paper and place it visibly in your vehicle's dashboard.\n\n"
 				+ "Only you or the person picking up your gifts should have this information. Vehicle occupants must wear a mask(s) and remain inside the vehicle for additional instructions.\n\n"
-				+ "Please reply YES if you understand these instructions and someone will bring this information to pick up your gifts on Sunday, December 13 between 1PM and 4PM."
-				,puLocation.getName(), puLocation.getAddress(), puLocation.getGoogleMapURL(), f.getONCNum(), f.getFirstName(), f.getLastName() );
+				+ "Please reply YES if you understand these instructions and someone will bring this information to pick up your gifts on Sunday, December 12 between 1PM and 4PM."
+				,center.getName(), center.getStreetNum(), center.getStreet(), center.getSuffix(), center.getCity(), center.getGoogleMapURL(), f.getONCNum(), f.getFirstName(), f.getLastName() );
 		}
 		else if(request.getMessageID() == 3 && f.getLanguage().equals("Spanish"))
 		{
 			return String.format("Esto es un recordatorio de Our Neighbor's Child (ONC) sobre los regalos navideños de su(s) hijo(s).\n\n"
 				+ "Los regalos de sus hijos deben recoger mañana entre la 1:00 de la tarde y las 4:00 de la tarde.\n"
-				+ "Un camión con los regalos de su hijo estará en el estacionamiento de la %s en el %s hasta las 4:00 de la tarde.\n\n"
+				+ "Un camión con los regalos de su hijo estará en el estacionamiento de la %s en el %s %s %s, %s hasta las 4:00 de la tarde.\n\n"
 				+ "Por favor traiga esta información con usted mañana: El número de ONC: %s, y el nombre el jefe o la jefa de la familia: %s %s.\n\n"
 				+ "Los ocupantes del vehículo tienen que usar máscaras, seguir las señales direccionales, y quedarse dentro del vehículo para obtener instrucciones adicionales."
-				,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());
+				,center.getName(), center.getStreetNum(), center.getStreet(), center.getSuffix(), center.getCity(), f.getONCNum(), f.getFirstName(), f.getLastName());
 		}
 		else if(request.getMessageID() == 3 && !f.getLanguage().equals("Spanish"))
 		{
 			return String.format("This is a reminder from Our Neighbor's Child (ONC) about your child(ren)'s holiday gifts.\n\n"
 					+ "Your children's gifts must be picked tomorrow between 1:00pm and  4:00pm.\n"
-					+ "A truck with your child's gifts will be in the %s parking lot at %s until 4:00pm.\n\n"
+					+ "A truck with your child's gifts will be in the %s parking lot at %s %s %s %s until 4:00pm.\n\n"
 					+ "Please bring this information with you tomorrow: ONC # %s, Head of Household Name: %s %s.\n\n"
 					+ "Vehicle occupants must wear masks, follow directional signs and remain inside the vehicle for additional instructions."
-					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());
+					,center.getName(), center.getStreetNum(), center.getStreet(), center.getSuffix(), center.getCity(), f.getONCNum(), f.getFirstName(), f.getLastName());
 		}
 		else if(request.getMessageID() == 4 && f.getLanguage().contentEquals("Spanish"))
 		{
 			return String.format("Esto es un recordatorio de Our Neighbor's Child (ONC) sobre los regalos navideños de su(s) hijo(s).\n\n"
 					+ "¡Importante: deben recoger los regalos de sus hijos antes de las 4:00 de la tarde de hoy.\n\n"
-					+ "El camión con los regalos de su hijo está en el estacionamiento de la %s en %s hasta las 4:00 de la tarde.\n\n"
+					+ "El camión con los regalos de su hijo está en el estacionamiento de la %s en %s %s %s, %s hasta las 4:00 de la tarde.\n\n"
 					+ "Por favor traiga esta información con usted: El número de ONC: %s, y el nombre el jefe o la jefa de la familia: %s %s.\n\n"
 					+ "Los ocupantes del vehículo tienen que usar máscaras, seguir las señales direccionales, y quedarse dentro del vehículo para obtener instrucciones adicionales."
-					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());
+					,center.getName(), center.getStreetNum(), center.getStreet(), center.getSuffix(), center.getCity(), f.getONCNum(), f.getFirstName(), f.getLastName());
 		}
 		else if(request.getMessageID() == 4 && !f.getLanguage().contentEquals("Spanish"))
 			return String.format("This is a reminder from Our Neighbor's Child(ONC) about your child(ren)'s holiday gifts.\n\n"
 					+ "All gifts MUST be picked up by 4PM today.\n"
-					+ "The truck with your child's gifts is in the %s parking lot at %s until 4PM.\n\n"
+					+ "The truck with your child's gifts is in the %s parking lot at %s %s %s, %s until 4PM.\n\n"
 					+ "Please bring this information with you: ONC # %s, Head of Household Name: %s %s.\n\n"
 					+ "Vehicle occupants must wear masks, follow directional signs and remain inside the vehicle for additional instructions."
-					,puLocation.getName(), puLocation.getAddress(), f.getONCNum(), f.getFirstName(), f.getLastName());
+					,center.getName(), center.getStreetNum(), center.getStreet(), center.getSuffix(), center.getCity(), f.getONCNum(), f.getFirstName(), f.getLastName());
 		else
 			return String.format("%s %s, this text is to confirm Our Neighbor's Child(ONC) has delivered your child(ren)'s holiday gifts.\n\n"
 					+ "The attached photo shows the name of the adult who signed for the gifts at your delivery address or pick-up location.\n\n"
@@ -744,7 +745,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+/*	
 	private class PickUpLocations
 	{
 		private List<PickUpLocation> locations;
@@ -800,4 +801,5 @@ public class ServerSMSDB extends ServerSeasonalDB
 		String getAddress() { return address; }
 		String getGoogleMapURL() { return googleMapURL; }
 	}
+*/	
 }

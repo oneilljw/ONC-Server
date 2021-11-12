@@ -55,7 +55,6 @@ public class ServerChildDB extends ServerSeasonalDB
 		return instance;
 	}
 	
-	//Search the database for the family. Return a json if the family is found. 
 	String getChildren(int year)
 	{
 		Gson gson = new Gson();
@@ -451,18 +450,18 @@ public class ServerChildDB extends ServerSeasonalDB
 	
 	private class ChildDBYear extends ServerDBYear
     {
-    		private List<ONCChild> cList;
-    	
-    		ChildDBYear(int year)
-    		{
-    			super();
-    			cList = new ArrayList<ONCChild>();
-    		}
-    	
-    		//getters
-    		List<ONCChild> getList() { return cList; }
-    	
-    		void add(ONCChild addedChild) { cList.add(addedChild); }
+		private List<ONCChild> cList;
+	
+		ChildDBYear(int year)
+		{
+			super();
+			cList = new ArrayList<ONCChild>();
+		}
+	
+		//getters
+		List<ONCChild> getList() { return cList; }
+	
+		void add(ONCChild addedChild) { cList.add(addedChild); }
     }
 
 	@Override
