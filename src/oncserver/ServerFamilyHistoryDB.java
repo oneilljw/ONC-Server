@@ -626,39 +626,43 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 		if(fam != null);
 		{
 			FamilyHistory lastHistoryObj = getLastFamilyHistory(year, fam.getID());
-			FamilyHistory updatedHistoryObj = new FamilyHistory(lastHistoryObj);
-			
+
 			if(!(bDeliveryTimeframe && lastHistoryObj.getFamilyStatus() == FamilyStatus.Confirmed))
 			{
-				//it's not around delivery day or the family wasn't already confirmed, 
-				//so we potentially want to change family status.
+				//if the family wasn't already confirmed, 
 				if(bConfirmingBody && (lastHistoryObj.getFamilyStatus() == FamilyStatus.Contacted ||
 							lastHistoryObj.getFamilyStatus() == FamilyStatus.Verified ||
 							 lastHistoryObj.getFamilyStatus() == FamilyStatus.Waitlist))
 				{
-					updatedHistoryObj.setFamilyStatus(FamilyStatus.Confirmed);
-					FamilyHistoryDBYear fhDBYear = famHistDB.get(DBManager.offset(year));
-					fhDBYear.add(updatedHistoryObj);
-					fhDBYear.setChanged(true);
+					FamilyHistory addHistoryReq = new FamilyHistory(lastHistoryObj);
 					
-					//notify all in-year clients of the status change
+					addHistoryReq.setFamilyStatus(FamilyStatus.Confirmed);
+					addHistoryReq.setDateChanged(System.currentTimeMillis());
+					addHistoryReq.setdNotes("Received SMS response confirming delivery");
+					
+					FamilyHistory addedFamHistory = this.addFamilyHistoryObject(year, addHistoryReq);
+					
+					//notify all in-year clients of the family status change
 					Gson gson = new Gson();
-					String change = "UPDATED_DELIVERY" + gson.toJson(updatedHistoryObj, FamilyHistory.class);
-					clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+					String change = "ADDED_DELIVERY" + gson.toJson(addedFamHistory, FamilyHistory.class);
+					clientMgr.notifyAllInYearClients(year, change);
 				}
 				else if(bDecliningBody && (lastHistoryObj.getFamilyStatus() == FamilyStatus.Confirmed ||
 											lastHistoryObj.getFamilyStatus() == FamilyStatus.Verified ||
 											 lastHistoryObj.getFamilyStatus() == FamilyStatus.Waitlist))
 				{
-					updatedHistoryObj.setFamilyStatus(FamilyStatus.Contacted);
-					FamilyHistoryDBYear fhDBYear = famHistDB.get(DBManager.offset(year));
-					fhDBYear.add(updatedHistoryObj);
-					fhDBYear.setChanged(true);
+					FamilyHistory addHistoryReq = new FamilyHistory(lastHistoryObj);
 					
-					//notify all in-year clients of the status change
+					addHistoryReq.setFamilyStatus(FamilyStatus.Contacted);
+					addHistoryReq.setDateChanged(System.currentTimeMillis());
+					addHistoryReq.setdNotes("Received SMS response failing to confirm delivery");
+					
+					FamilyHistory addedFamHistory = this.addFamilyHistoryObject(year, addHistoryReq);
+					
+					//notify all in-year clients of the family status change
 					Gson gson = new Gson();
-					String change = "UPDATED_DELIVERY" + gson.toJson(fam, FamilyHistory.class);
-					clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+					String change = "ADDED_DELIVERY" + gson.toJson(addedFamHistory, FamilyHistory.class);
+					clientMgr.notifyAllInYearClients(year, change);
 				}
 			}
 		}
@@ -666,37 +670,47 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 	
 	void checkFamilyStatusOnSMSStatusCallback(int year, ONCSMS receivedSMS)
 	{
-		FamilyHistory fam = getLastFamilyHistory(year, receivedSMS.getEntityID());
+		FamilyHistory lastFamHist = getLastFamilyHistory(year, receivedSMS.getEntityID());
 		
 		//we only consider changing family status to Contacted based on outgoing message status if the family 
 		//has not yet confirmed delivery
-		if(fam != null && fam.getFamilyStatus() != FamilyStatus.Confirmed)
+		if(lastFamHist != null && lastFamHist.getFamilyStatus() != FamilyStatus.Confirmed)
 		{	
 			if((receivedSMS.getStatus() == SMSStatus.SENT ||  receivedSMS.getStatus() == SMSStatus.DELIVERED) && 
-				(fam.getFamilyStatus() == FamilyStatus.Waitlist || fam.getFamilyStatus() == FamilyStatus.Verified))
+				(lastFamHist.getFamilyStatus() == FamilyStatus.Waitlist || lastFamHist.getFamilyStatus() == FamilyStatus.Verified))
 			{
-				//sometimes we don't get a DELIVERD status from the super carrier, so we'll accept a SENT status.
-				fam.setFamilyStatus(FamilyStatus.Contacted);
-				famHistDB.get(DBManager.offset(year)).setChanged(true);
+				//sometimes we don't get a DELIVERED status from the super carrier, so we'll accept a SENT status.
+				//Add a new family history object reflecting the change in family status
+				FamilyHistory addFamHistoryRequest = new FamilyHistory(lastFamHist);
+				addFamHistoryRequest.setFamilyStatus(FamilyStatus.Contacted);
+				addFamHistoryRequest.setDateChanged(System.currentTimeMillis());
+				addFamHistoryRequest.setdNotes("Delivery day confirmation SMS " + receivedSMS.getStatus().toString());
+				
+				FamilyHistory addedFamHistory = this.addFamilyHistoryObject(year, addFamHistoryRequest);
 			
-				//notify all in-year clients of the status change
+				//notify all in-year clients of the family status change via a new family history object
 				Gson gson = new Gson();
-    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+    			String change = "ADDED_DELIVERY" + gson.toJson(addedFamHistory, FamilyHistory.class);
+    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 			}
 			else if((receivedSMS.getStatus() == SMSStatus.UNDELIVERED || receivedSMS.getStatus() == SMSStatus.FAILED) && 
-					fam.getFamilyStatus() == FamilyStatus.Contacted )
+					lastFamHist.getFamilyStatus() == FamilyStatus.Contacted )
 			{
 				//message status updated to UNDELIVERED. If we already changed the family status to Contacted, change
 				//it back to either Waitlist or Verified.
-				FamilyStatus newStatus = fam.getDNSCode() == DNSCode.WAITLIST ? FamilyStatus.Waitlist : FamilyStatus.Verified;
-				fam.setFamilyStatus(newStatus);
-				famHistDB.get(DBManager.offset(year)).setChanged(true);
+				FamilyStatus newStatus = lastFamHist.getDNSCode() == DNSCode.WAITLIST ? FamilyStatus.Waitlist : FamilyStatus.Verified;
+				
+				FamilyHistory addFamHistoryRequest = new FamilyHistory(lastFamHist);	//make a copy
+				addFamHistoryRequest.setFamilyStatus(newStatus);	//update the status
+				addFamHistoryRequest.setDateChanged(System.currentTimeMillis());
+				addFamHistoryRequest.setdNotes("Delivery day confirmation SMS " + receivedSMS.getStatus().toString());
+				
+				FamilyHistory addedFamHistory = this.addFamilyHistoryObject(year, addFamHistoryRequest);
 			
-				//notify all in-year clients of the status change
+				//notify all in-year clients of the family status change via a new family history object
 				Gson gson = new Gson();
-    				String change = "UPDATED_FAMILY" + gson.toJson(fam, ONCFamily.class);
-    				clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
+    			String change = "ADDED_DELIVERY" + gson.toJson(addedFamHistory, FamilyHistory.class);
+    			clientMgr.notifyAllInYearClients(year, change);	//null to notify all clients
 			}
 		}
 	}
