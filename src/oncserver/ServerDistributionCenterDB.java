@@ -14,7 +14,7 @@ import ourneighborschild.DistributionCenter;
 
 public class ServerDistributionCenterDB extends ServerSeasonalDB
 {
-	private static final int PICKUP_LOCATION_DB_HEADER_LENGTH = 9;
+	private static final int PICKUP_LOCATION_DB_HEADER_LENGTH = 14;
 	private static ServerDistributionCenterDB instance = null;
 	private static final String FILE_NAME = "DistributionCenterDB.csv";
 
@@ -94,7 +94,7 @@ public class ServerDistributionCenterDB extends ServerSeasonalDB
 		return "ADDED_CENTER" + gson.toJson(addedCenter, DistributionCenter.class);
 	}
 	
-	String update(int year, String updatejson)
+	String update(int year, String updatejson, ONCUser user)
 	{
 		//Create an object for the update
 		Gson gson = new Gson();
@@ -110,6 +110,8 @@ public class ServerDistributionCenterDB extends ServerSeasonalDB
 		//Replace the current object with the update
 		if(index < dcList.size())
 		{
+			updatedCenter.setDateChanged(System.currentTimeMillis());
+			updatedCenter.setChangedBy(user.getLNFI());
 			dcList.set(index, updatedCenter);
 			dcDBYear.setChanged(true);
 			return "UPDATED_CENTER" + gson.toJson(updatedCenter, DistributionCenter.class);
@@ -171,8 +173,8 @@ public class ServerDistributionCenterDB extends ServerSeasonalDB
 		DistributionCenterDBYear dcDBYear = centerDB.get(DBManager.offset(year));
 		if(dcDBYear.isUnsaved())
 		{
-			String[] header = {"ID", "Name", "Acronym", "Street #", "Street",
-		 						"Suffix", "City", "Zipcode","Google Map URL"};
+			String[] header = {"ID", "Name", "Acronym", "Street #", "Street", "Suffix", "City", "Zipcode",
+					"Google Map URL", "Changed By", "Timestamp", "SL Pos", "SL Mssg", "SL Changed By"};
 			
 			String path = String.format("%s/%dDB/%s", System.getProperty("user.dir"), year, FILE_NAME);
 			exportDBToCSV(dcDBYear.getList(), header, path);

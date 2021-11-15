@@ -502,7 +502,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 				+ "The truck containing your child's gifts will be in the parking lot of %s (%s %s %s, %s) on Sunday, December 12 from 1PM to 4PM.\n%s\n\n"
 				+ "You (or someone you send) may receive your gifts if you bring your ONC Family #: %s and the name of the Head of Household who applied for assistance: %s %s.\n\n"
 				+ "Please write this information on a piece of paper and place it visibly in your vehicle's dashboard.\n\n"
-				+ "Only you or the person picking up your gifts should have this information. Vehicle occupants must wear a mask(s) and remain inside the vehicle for additional instructions.\n\n"
+				+ "Only you or the person picking up your gifts should have this information. Vehicle occupants must wear masks and remain inside the vehicle for additional instructions.\n\n"
 				+ "Please reply YES if you understand these instructions and someone will bring this information to pick up your gifts on Sunday, December 12 between 1PM and 4PM."
 				,center.getName(), center.getStreetNum(), center.getStreet(), center.getSuffix(), center.getCity(), center.getGoogleMapURL(), f.getONCNum(), f.getFirstName(), f.getLastName() );
 		}

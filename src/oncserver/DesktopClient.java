@@ -874,7 +874,7 @@ public class DesktopClient extends Thread
                 else if(command.startsWith("POST<update_center>"))
                 {
                 	clientMgr.addLogMessage(command);
-                	String response = distributionCenterDB.update(year, command.substring(19));
+                	String response = distributionCenterDB.update(year, command.substring(19), clientUser);
                 	output.println(response);
                 	clientMgr.addLogMessage(response);
                 	clientMgr.notifyAllOtherInYearClients(this, response);
