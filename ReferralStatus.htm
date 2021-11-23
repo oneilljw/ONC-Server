@@ -130,7 +130,7 @@
 				{ data: "giftStatus", width: '80px', className: 'dt-body-center', visible: false },
 				{ data: "mealStatus", width: '80px', className: 'dt-body-center', visible: false },
 				{ data: "agentID", visible: false },
-				{ data: "groupID", visible: false }
+				{ data: "groupID", visible: false },
 			],
 			language:
 		    {
@@ -235,20 +235,25 @@
 				  className: 'dt-body-center'
 				},
 				{ data: "mealStatus",
-				  width: '80px',
-				  render: function (data, type, row)
-				  {
-				  	if(data === 'Referred')
-						return data + ' &#x2713;';
-					else if(data === 'None')
-						return 'Not Requested';
-					else 
-						return data;
-				  },
-				  className: 'dt-body-center'
+				  visible: false
+//				  width: '80px',
+//				  render: function (data, type, row)
+//				  {
+//				  	if(data === 'Referred')
+//						return data + ' &#x2713;';
+//					else if(data === 'None')
+//						return 'Not Requested';
+//					else 
+//						return data;
+//				  },
+//				  className: 'dt-body-center'
 				},
 				{ data: "agentID", visible: false },
-				{ data: "groupID", visible: false }
+				{ data: "groupID", visible: false },
+				{ data: "pickupLocation",
+					  width: '80px',
+					  className: 'dt-body-center'
+				}
 			],
 			language:
 		    {
@@ -888,6 +893,7 @@
         <th>Meal Status</th>
         <th>Agent ID</th>
         <th>Group ID</th>
+        <th>Distribution Site</th>
         </tr>
       </thead>
       <tbody id='pytbody'>

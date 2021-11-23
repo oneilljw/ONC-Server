@@ -24,6 +24,7 @@ import ourneighborschild.Address;
 import ourneighborschild.AdultGender;
 import ourneighborschild.BritepathFamily;
 import ourneighborschild.DNSCode;
+import ourneighborschild.DistributionCenter;
 import ourneighborschild.FamilyGiftStatus;
 import ourneighborschild.FamilyStatus;
 import ourneighborschild.MealStatus;
@@ -92,6 +93,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 	private static ServerGlobalVariableDB globalDB;
 	private static ServerDNSCodeDB dnsCodeDB;
 	private static ServerRegionDB regionDB;
+	private static ServerDistributionCenterDB centerDB;
 	
 	private static ClientManager clientMgr;
 	
@@ -162,6 +164,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		globalDB = ServerGlobalVariableDB.getInstance();
 		dnsCodeDB = ServerDNSCodeDB.getInstance();
 		regionDB = ServerRegionDB.getInstance();
+		centerDB = ServerDistributionCenterDB.getInstance();
 
 		clientMgr = ClientManager.getInstance();
 	}
@@ -203,10 +206,15 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				FamilyHistory fh = ServerFamilyHistoryDB.getCurrentFamilyHistory(year, f.getID());
 				ONCMeal meal = mealDB.getFamiliesCurrentMeal(year, f.getID());
+				
+				DistributionCenter center = null;
+				if(f.getDistributionCenterID() > -1)
+					center = centerDB.getDistributionCenter(year, f.getDistributionCenterID());
+					
 				boolean bAlreadyReferred = year == DBManager.getCurrentSeason() ? true : alreadyReferredInCurrentSeason(year, f, currentSeasonList);
 				
 				responseList.add(new ONCWebsiteFamily(f, fh, bAlreadyReferred, dnsCodeDB.getDNSCode(fh.getDNSCode()), meal,
-									ServerNoteDB.lastNoteStatus(year, f.getID())));
+									ServerNoteDB.lastNoteStatus(year, f.getID()), center));
 			}
 		}
 		else if(loggedInUser.getPermission().compareTo(UserPermission.Agent) == 0)
@@ -217,15 +225,20 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				FamilyHistory fh = ServerFamilyHistoryDB. getCurrentFamilyHistory(year, f.getID());
 				ONCMeal meal = mealDB.getFamiliesCurrentMeal(year, f.getID());
+				
+				DistributionCenter center = null;
+				if(f.getDistributionCenterID() > -1)
+					center = centerDB.getDistributionCenter(year, f.getDistributionCenterID());
+				
 				boolean bAlreadyReferred = year == DBManager.getCurrentSeason() ? true : alreadyReferredInCurrentSeason(year, f, currentSeasonList);
 				
 				if(f.getAgentID() == loggedInUser.getID())
-					responseList.add(new ONCWebsiteFamily(f,fh,bAlreadyReferred, dnsCodeDB.getDNSCode(fh.getDNSCode()), meal, ServerNoteDB.lastNoteStatus(year, f.getID())));
+					responseList.add(new ONCWebsiteFamily(f,fh,bAlreadyReferred, dnsCodeDB.getDNSCode(fh.getDNSCode()), meal, ServerNoteDB.lastNoteStatus(year, f.getID()), center));
 				else
 					for(ONCGroup agentGroup : agentsGroupList)
 						if(agentGroup.groupSharesInfo() && f.getGroupID() == agentGroup.getID())
 							responseList.add(new ONCWebsiteFamily(f, fh,bAlreadyReferred, dnsCodeDB.getDNSCode(fh.getDNSCode()), meal,
-									ServerNoteDB.lastNoteStatus(year, f.getID())));
+									ServerNoteDB.lastNoteStatus(year, f.getID()), center));
 			}
 		}
 
@@ -253,7 +266,12 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			{
 				FamilyHistory fh = ServerFamilyHistoryDB. getCurrentFamilyHistory(year, f.getID());
 				ONCMeal meal = mealDB.getFamiliesCurrentMeal(year, f.getID());
-				responseList.add(new ONCWebsiteFamilyFull(f, fh, dnsCodeDB.getDNSCode(fh.getDNSCode()), meal));
+				
+				DistributionCenter center = null;
+				if(f.getDistributionCenterID() > -1)
+					center = centerDB.getDistributionCenter(year, f.getDistributionCenterID());
+				
+				responseList.add(new ONCWebsiteFamilyFull(f, fh, dnsCodeDB.getDNSCode(fh.getDNSCode()), meal, center));
 			}
 		}
 		
@@ -1170,10 +1188,14 @@ public class ServerFamilyDB extends ServerSeasonalDB
 			ONCMeal famMeal =  mealDB.getFamiliesCurrentMeal(year, fam.getID());
 			DNSCode famDNSCode = dnsCodeDB.getDNSCode(fh.getDNSCode());
 			
+			DistributionCenter center = null;
+			if(fam.getDistributionCenterID() > -1)
+				center = centerDB.getDistributionCenter(year, fam.getDistributionCenterID());
+			
 			ONCWebsiteFamilyExtended webFam = new ONCWebsiteFamilyExtended(fam, fh,
 													ServerRegionDB.getRegion(fam.getRegion()),
 													ServerGroupDB.getGroup(fam.getGroupID()).getName(),
-													adjustedAgeChildList, adultList, famAgent, famMeal, famDNSCode);
+													adjustedAgeChildList, adultList, famAgent, famMeal, famDNSCode, center);
 			
 			response = gson.toJson(webFam, ONCWebsiteFamilyExtended.class);
 		}

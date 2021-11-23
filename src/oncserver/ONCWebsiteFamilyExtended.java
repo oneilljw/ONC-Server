@@ -7,6 +7,7 @@ import ourneighborschild.ONCMeal;
 import ourneighborschild.ONCWebChild;
 import ourneighborschild.Transportation;
 import ourneighborschild.DNSCode;
+import ourneighborschild.DistributionCenter;
 import ourneighborschild.FamilyHistory;
 import ourneighborschild.GiftDistribution;
 
@@ -43,9 +44,9 @@ import java.util.List;
 		private GiftDistribution distribution;
 		
 		public ONCWebsiteFamilyExtended(ONCFamily f, FamilyHistory fh, String region, String groupname, List<ONCWebChild> childList, 
-										List<ONCAdult> adultList, ONCWebAgent agent, ONCMeal meal, DNSCode dnsCode)
+										List<ONCAdult> adultList, ONCWebAgent agent, ONCMeal meal, DNSCode dnsCode, DistributionCenter center)
 		{
-			super(f, fh, dnsCode, meal);
+			super(f, fh, dnsCode, meal, center);
 			this.BatchNum = f.getBatchNum();
 			this.Language = f.getLanguage();
 			this.HouseNum = f.getHouseNum();
