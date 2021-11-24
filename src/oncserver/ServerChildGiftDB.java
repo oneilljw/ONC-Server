@@ -480,6 +480,34 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 //		else
 //			return null;
 	}
+	
+	static HtmlResponse getCurrentChildGiftJSONP(int year, int childid, int giftnum, String callbackFunction)
+	{
+		List<ONCChildGift> cgAL = childGiftDB.get(DBManager.offset(year)).getList();	//Get the child gift list for the year
+		
+		//Search from the bottom of the data base for speed. New gifts are added to the bottom
+		int index = cgAL.size() -1;	//Set the element to the last child wish in the array
+		while(index >= 0 && (cgAL.get(index).getChildID() != childid ||
+							   cgAL.get(index).getGiftNumber() != giftnum ||
+							    cgAL.get(index).getNextID() != -1))	
+			index--;
+	
+		String response;
+		if(index == -1)
+		{
+			response = "{\"Error\":\"Gift not found\"}";
+			return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+		}
+		else
+		{
+			ONCChildGift gift = cgAL.get(index);
+			Gson gson = new Gson();
+			response = gson.toJson(gift, ONCChildGift.class);
+
+			//wrap the json in the callback function per the JSONP protocol
+			return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+		}
+	}
 /*	
 	List<PriorYearPartnerPerformance> getPriorYearPartnerPerformanceList(int newYear)
 	{

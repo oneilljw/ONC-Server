@@ -132,6 +132,18 @@ public class ServerGiftCatalog extends ServerSeasonalDB
 			return "DELETE_CATALOG_WISH_FAILED" + json;
 	}
 	
+	ONCGift getGift(int year, int giftID)
+	{
+		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));
+		List<ONCGift> catAL = catalogDBYear.getList();
+		
+		int index=0;
+		while(index < catAL.size() && catAL.get(index).getID() != giftID)
+			index++;
+		
+		return index < catAL.size() ? catAL.get(index): null;
+	}
+	
 	int getGiftID(int year, String giftName)
 	{
 		GiftCatalogDBYear catalogDBYear = catalogDB.get(DBManager.offset(year));

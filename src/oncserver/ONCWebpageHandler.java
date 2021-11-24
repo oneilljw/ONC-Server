@@ -57,6 +57,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String GIFT_DELIVERY_HTML = "GiftDelivery.htm";
 	private static final String CONFIRM_DELIVERY_HTML = "ConfirmGiftDelivery.htm";
 	private static final String CODE_AUTHENTICATION_HTML =  "CodeAuthentication.htm";
+	private static final String RECEIVE_GIFTS_HTML = "ReceiveGifts.htm";
 //	private static final String QRSCANNER_HTML = "QRScanner.htm";
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
@@ -66,6 +67,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String TRUST_LOGO_FILE = "comodo_secure_seal_76x26_transp.png";
 	private static final String ERROR_ICON_FILE = "if_Error_381599.png";
 	private static final String CHECKMARK_ICON_FILE = "if_Checkmark_1891021.png";
+	private static final String CORNER_HAT_ICON_FILE = "cornerhat.png";
 	private static final String ONC_ICON_FILE = "ONC.ico";
 	private static final String VANILLA_FONT_FILE = "vanilla.ttf";
 	private static final String ONC_STYLE_SHEET_CSS = "ONCStyleSheet.css";
@@ -83,6 +85,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String STOPLIGHT_RED_FILE = "Button-Blank-Red-icon.png";
 	private static final String DELIVERY_CARD_FILE = "DeliveryCard.pdf";
 	private static final String ERROR_404_FILE = "error-404.png";
+	private static final String BARCODE_JS_FILE = "JsBarcode.all.min.js";
 	
 	protected static final String SESSION_ID_NAME = "SID=";
 	
@@ -138,6 +141,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("giftdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), GIFT_DELIVERY_HTML)));
 			webpageMap.put("confirmdelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), CONFIRM_DELIVERY_HTML)));
 			webpageMap.put("codeauthentication", readFile(String.format("%s/%s",System.getProperty("user.dir"), CODE_AUTHENTICATION_HTML)));
+			webpageMap.put("receivegifts", readFile(String.format("%s/%s",System.getProperty("user.dir"), RECEIVE_GIFTS_HTML)));
 //			webpageMap.put("qrscanner", readFile(String.format("%s/%s",System.getProperty("user.dir"), QRSCANNER_HTML)));
 			
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
@@ -168,6 +172,8 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webfileMap.put("stoplighticon-red", readFileToByteArray(STOPLIGHT_RED_FILE));
 			webfileMap.put("deliverycards", readFileToByteArray(DELIVERY_CARD_FILE));
 			webfileMap.put("error-404", readFileToByteArray(ERROR_404_FILE));
+			webfileMap.put("barcode", readFileToByteArray(BARCODE_JS_FILE));
+			webfileMap.put("cornerhat", readFileToByteArray(CORNER_HAT_ICON_FILE));
 			
 			return "UPDATED_WEBPAGES";
 		} 

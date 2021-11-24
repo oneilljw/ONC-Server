@@ -374,7 +374,18 @@ public class ServerChildDB extends ServerSeasonalDB
 		else
 			return null;
 	}
-*/	
+*/
+	ONCChild getChild(int year, int childid)
+	{
+		List<ONCChild> cAL = childDB.get(DBManager.offset(year)).getList();
+		
+		int index=0;
+		while(index < cAL.size() && cAL.get(index).getID() != childid)
+			index++;
+				
+		return index < cAL.size() ? cAL.get(index) : null;
+	}
+	
 	List<ONCChild> getChildList(int year, int famid)
 	{
 		List<ONCChild> cAL = childDB.get(DBManager.offset(year)).getList();

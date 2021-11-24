@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <title>ONC Gift Receiving</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
+  <link rel="stylesheet" type="text/css" href="oncstylesheet.css"> 
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
+  <script type="text/javascript" src="onccommon.js"></script>
+  <script type="text/javascript" src="barcode.js"></script>
+  <script>   
+	var updateObject = {storageItem:'updateregion', resource:'updateregion'};
+  	
+  	$( document ).ready(function()
+	{
+  		setBannerVisible(false);
+  		createGroupTable();	//create profile dialog group table
+  		
+  		//set the hidden values
+  		var currYear = new Date().getFullYear();
+  		document.getElementById('year').value= currYear.toString();
+  		$(window).keydown(function(event)
+  		{
+  		    if(event.keyCode == 13)
+  		    {
+  		      event.preventDefault();
+  		      return false;
+  		    }
+  		});
+  		
+  		$("#barcode").on('keyup', function (e)
+	  	{
+	  	    if (e.key === 'Enter' || e.keyCode === 13)
+	  	    {
+		  	    let barcode = document.getElementById('barcode');
+		  	    let code = barcode.value;
+		  	        
+		  	    barcode.value = '';	//clear the barcode input
+		  	    barcode.focus();
+	  	      
+		  	    let year = document.getElementById('year').value;
+		  	    let params = "year="+ year + "&childid=" + code.substring(1,6)+ "&giftnum=" + code[6] + "&callback=?";
+		  	    $.post('giftreceived', params, function(data)
+		  	    {
+		  	    	console.log(data);
+		  	    	
+		  	    	JsBarcode("#barcodelbl", code, {
+		  	    	  format: "upce",
+		  	    	  height: 60,
+		  	    	  width: 1.3,
+		  	    	  fontSize: 12,
+		  	    	  background: '#FFFFFF',
+		  	    	  margin: 2,
+		  	    	  marginTop: 10,
+		  	    	  marginRight: 0
+		  	    	});
+		  	    	
+		  	    	document.getElementById('line0').innerText = data.line0;
+		  	    	document.getElementById('line1').innerText = data.line1;
+		  	    	document.getElementById('line2').innerText = data.line2;
+		  	    	document.getElementById('line3').innerText = data.line3;
+		  	    	document.getElementById('errormessage').innerText = data.message;
+		  	    	
+		  	    	document.getElementById('barcodelbldiv').style.display = 'inline-block';
+		  	    	document.getElementById('resultdiv').style.display = 'inline-block';
+		  	    	
+		  	    	document.getElementById('checkmarkicon').style.display = data.bValid ? 'block' : 'none';
+		  	    	document.getElementById('erroricon').style.display = data.bValid ? 'none' : 'block';
+		  	    	
+		  	    }, "json");
+	  	    }
+	  	});
+	});
+  	
+  	function onClear()
+  	{
+  		document.getElementById('barcodelbldiv').style.display = 'none';
+  		document.getElementById('resultdiv').style.display = 'none';
+  		document.getElementById('checkmarkicon').style.display = 'none';
+  		document.getElementById('erroricon').style.display = 'none';
+  		document.getElementById('errormessage').inneText = "";
+  	}
+  	
+  </script>
+<style>
+  #barcodediv { height: 100px; }
+  #barcodelbldiv { background-color: #FFFFFF; display: none; height: 100px; }
+  #resultdiv { display: none; }
+  .inlinediv { display: inline-block; vertical-align: top; }
+  .labelp { margin-top: 4px; margin-right: 12px; margin-bottom: 0px; text-align : center; }
+  #line0 { font-style: italic; }
+  #line1 { font-style: bold; }
+  #checkmarkicon { display: block; }
+  #erroricon { display: none; }
+  .cornerhat
+  {
+	  position: absolute;
+	  z-index: 999;
+	  width: 48px;
+	  height: 36px;
+	  top: 132px;
+	  left: 224px;
+  }
+</style>
+</head>
+<body>
+  <a href="#editProfile" id="editprofileanchor" style="visibility: hidden">Edit Profile</a>
+  <a href="#cellwarningdlg" id="cellwarninganchor" style="visibility: hidden">Cell Phone Verification</a>
+  <a href="#timeoutdlg" id="timeoutanchor" style="visibility: hidden">Timeout</a> 
+  <div class='header'> 
+    <img class='logo-img' src="onclogo">
+    <span class='header-links'>
+	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
+      <a class='breadcrumb-current' href='#'>Receive Gifts</a>
+    </span>   
+    <div class='headerbuttons'>
+      <div class='dropdown'>
+        <button class=dropbtn>Profile</button>
+        <div class='dropdown-content'>
+      	  <a href="#editProfile" onclick='showEditProfileDialog()'>Edit Profile</a>
+      	  <a href="#chgpwdlg">Change Password</a>
+      	</div> 
+      </div>
+      <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
+    </div>
+  </div>
+  <div id="welcome-div">
+    <p id='banner-message'>BANNER_MESSAGE</p>
+  </div>
+  <form id="receivegiftsform"> 
+  <input id='year' type="hidden" name="year">
+  <fieldset>
+  <legend class="legend-major" id='receivegiftlegend'>Receive Gifts By Barcode Scan</legend>
+  	<div>
+      <div id='barcodediv' class='inlinediv'>
+        <label for='barcode'>Barcode:</label>
+        <input id='barcode' title="Barcode" name="barcode" type="text" size="10">
+      </div>
+      <div id='barcodelbldiv' class='inlinediv'>
+	      <div class='inlinediv'>
+	        <img class='cornerhat' src='cornerhat'>
+	        <svg id="barcodelbl"></svg>
+	      </div>
+	      <div class='inlinediv'>
+	        <p id='line0' class= 'labelp'></p>
+	        <p id='line1' class= 'labelp'></p>
+	        <p id='line2' class= 'labelp'></p>
+	        <p id='line3' class= 'labelp'></p>
+	      </div>
+      </div>
+      <div id='resultdiv' class='inlinediv'>
+	  	<img id='checkmarkicon' class='errorimg' src="checkmarkicon">
+	  	<img id='erroricon' class='errorimg' src="erroricon">
+	  </div>
+    </div>
+    <div>
+      <button id='undobtn' type='button' onclick='onUndo'>Undo</button>
+      <button id='clearbtn' type='button' onclick='onClear()'>Clear</button>
+    </div>
+  </fieldset>
+  <span id="errormessage"></span>
+  </form>  
+<!-- Edit Profile Dialog -->
+  <div id="editProfile" class="modalDialog">
+	<div class='inner full-width'>
+	  <div class='dialogtopbar'>
+		<img class='logo-img' src="onclogo">
+		<span class='logospan'>Verify/Update ONC Profile</span>
+	  </div>
+	  <div class='edit-background' style='height:230px'>
+	  	 <fieldset class='fieldset-auto-width' style='float:left'>
+  			  <legend class="legend-major">Contact Information</legend>
+  			  <div>
+    	  		<label for="userfirstname">Name:</label>
+    	  		<input id='userfirstname' type="text" size="12" placeholder="First Name" oninput='checkForProfileChange()'>
+    	  		<input id='userlastname' type="text" size="14" placeholder="Last Name" oninput='checkForProfileChange()'>
+    		  </div>   		
+    		  <div>
+    	  		<label for="userorg">Organization:</label>
+    	  		<input id='userorg' type="text" size="28" placeholder="Organization" oninput='checkForProfileChange()'>
+    	 	  </div>
+  			  <div> 
+    	  		 <label for="usertitle">Title:</label>
+    	 		 <input id='usertitle' type="text" size="34" placeholder="Title" oninput='checkForProfileChange()'>
+    	 	  </div>
+    	 	  <div>
+    	  		<label for="useremail">Email:</label>
+    	  		<input id='useremail' type="text" size="34" placeholder="Email address" oninput='checkForProfileChange()'>
+    	      </div>
+    	 	  <div>
+    	  		<label for="workphone">Phone #'s: (Work &amp; Cell):</label>
+    	  		<input id='workphone' type="text" size="14" placeholder="Work Phone #" oninput='checkForProfileChange()'>
+    	  		<input id='usercellphone' type="text" size="14" placeholder="Cell Phone #" oninput='checkForProfileChange()'>
+    	  	  </div>
+      	</fieldset>      
+		<fieldset>
+			<legend class="legend-major">Your School(s) or Organization(s)</legend>  	 
+  	    	 <table id="profiletable" style="width:100%">
+  		 	  <thead>
+    			<tr>
+    				<th>Id</th>
+        			<th>School or Organization</th>
+    			</tr>
+    		  </thead>
+    		  <tbody>
+    		  </tbody>
+	    	</table>
+	    	<div> 
+  		  		<select id="groupselect" title="School or Organization Name" oninput='onGroupSelected(this)'></select>
+  			</div>
+  		</fieldset>
+  	  </div>
+      <div class='buttonbar'>
+    	<button id="cancel" onclick="onProfileNotChanged()">No Change</button>
+        <button id="update" onclick="onUpdateProfile()" disabled>Update</button>
+      </div> 
+	</div>
+  </div>
+<!-- Cell phone Warning Dialog -->
+  <div id="cellwarningdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class="logospan">Invalid Cell Phone</span>
+		</div>	
+		<span id='cellwarningmssg'></span>
+		<div class='buttonbar'>
+      	  <button onclick='addMissingCellPhone()'>Add Cell Phone</button>
+      	  <button id='cellwarningignorebtn' onclick='ignoreCellWarning()'>No Cell Phone</button>
+    	</div>
+	</div>
+  </div>   
+<!-- Change Password Dialog -->
+  <div id="chgpwdlg" class="modalDialog">
+	<div class='inner extended-width'>
+		<a href="#close" title="Close" class="close">X</a>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo">
+		  <span class='logospan'>Change Password</span>
+		</div>
+		<div class='edit-background'>
+	  	  <fieldset>
+  			<legend class="legend-major">Enter Current and New Passwords</legend>
+  			<div id='pw_mssg'>Enter current and new password:</div>
+  			<table class='password-table'>
+  				<tr>
+  					<td>Current Password:</td>
+  					<td><input type="password" id="currpw" name="field1" width='100%' oninput='checkChangePWEnable()' autofocus></td>
+  				</tr>
+  				<tr>
+  					<td>New Password:</td>
+  					<td><input type="password" id="newpw" name="field2" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  				<tr>
+  					<td>Verify New Password:</td>
+  					<td><input type="password" id="verifypw" name="field3" width='100%' oninput='checkChangePWEnable()'></td>
+  				</tr>
+  			</table>
+		  </fieldset>
+		</div>
+    	<div class='buttonbar'>
+      	  <button onclick="onCancel()">Cancel</button>
+      	  <button id="btnchangepw" onclick="onChangePW()" disabled>Change Password</button>
+    	</div> 
+	</div>
+  </div>
+  <!-- Timeout Dialog -->
+  <div id="timeoutdlg" class="modalDialog">
+	<div class='inner regular-width'>
+		<div class='dialogtopbar'>
+		  <img class='logo-img' src="onclogo"/>
+		  <span id='dialogmssg'>Session Timeout</span>
+		</div>
+		<p id='to_mssg'>Your session expired due to inactivity</p>
+    	<div class='buttonbar'>
+      	  <button id="timeoutsubmit" onclick="onSessionTimeout()">Logout</button>
+    	</div> 
+	</div>
+  </div>  
+</body>
+</html>

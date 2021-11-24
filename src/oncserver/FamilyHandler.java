@@ -19,7 +19,9 @@ import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
+import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCGift;
 import ourneighborschild.FamilyHistory;
 import ourneighborschild.FamilyStatus;
 import ourneighborschild.ONCMeal;
@@ -39,6 +41,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
 	private static final int DNS_CODE_WAITLIST = 1;
 	private static final int DNS_CODE_FOOD_ONLY = 2;
+	private static final int MAX_LABEL_LINE_LENGTH = 26;
 	
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	
@@ -489,7 +492,236 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
+		else if(requestURI.contains("/receivegifts"))
+		{
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+				response = webpageMap.get("receivegifts");
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/giftreceived"))
+		{
+			HtmlResponse htmlResponse;
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				//get the JSON for response to response submission
+				int year = Integer.parseInt((String) params.get("year"));
+				int childid = Integer.parseInt((String) params.get("childid"));
+				int giftnum = Integer.parseInt((String) params.get("giftnum"));
+				WebGift wg = getWebGift(year, childid, giftnum);
+						
+				Gson gson = new Gson();
+				String response = gson.toJson(wg, WebGift.class);
+
+				//wrap the json in the callback function per the JSONP protocol
+				htmlResponse =  new HtmlResponse((String) params.get("callback") + "(" + response +")", HttpCode.Ok);
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
 	}
+	
+	WebGift getWebGift(int year, int childid, int giftnum) throws FileNotFoundException, IOException
+	{
+		ServerFamilyDB familyDB = ServerFamilyDB.getInstance();
+		ServerChildDB childDB = ServerChildDB.getInstance();
+		ServerChildGiftDB childGiftDB = ServerChildGiftDB.getInstance();
+		ServerGiftCatalog giftDB = ServerGiftCatalog.getInstance();
+		
+		ONCChildGift cg = childGiftDB.getCurrentChildGift(year, childid, giftnum);
+		ONCChild c = childDB.getChild(year, childid);
+		
+		
+		if(c != null && cg != null)
+		{
+			String line1, line2 = "", line3 = " ";
+			
+			ONCFamily f = familyDB.getFamily(year, c.getFamID());
+			ONCGift g = giftDB.getGift(year, cg.getCatalogGiftID());
+
+			String line0 = c.getChildAge() + " " + c.getChildGender();
+			
+			if(cg.getDetail().isEmpty())
+			{
+				line1 = g.getName() + "- ";
+				line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+
+				String message = "Gift Successfully Received";
+				return new WebGift(true, line0, line1, line2, "", message);
+			}	
+			else
+			{
+				String gift = g.getName().equals("-") ? cg.getDetail() :  g.getName() + "- " + cg.getDetail();
+		
+				//does it fit on one line?
+				if(gift.length() <= MAX_LABEL_LINE_LENGTH)
+				{
+					line1 = gift.trim();
+				}
+				else	//split into two lines
+				{
+					int index = MAX_LABEL_LINE_LENGTH;
+					while(index > 0 && gift.charAt(index) != ' ')	//find the line break
+						index--;
+		
+					line1 = gift.substring(0, index);
+					line2 = gift.substring(index);
+					if(line2.length() > MAX_LABEL_LINE_LENGTH)
+						line2 = gift.substring(index, index + MAX_LABEL_LINE_LENGTH);
+				}
+
+				//If the gift required two lines make the ONC Year line 4
+				//else make the ONC Year line 3
+				if(!line2.isEmpty())
+				{
+					line3 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+				}
+				else
+				{			
+					line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+				}
+				
+				String message = "Gift Successfully Received";
+				return new WebGift(true, line0, line1, line2, line3, message);
+			}
+		}
+		else
+			return new WebGift(false, "Receiver Error: Unable to find gift in database");
+	}
+/*	
+	String getBarcode(ONCChildGift cg)
+	{
+		String barcode;
+		//generate leading zero padded bar code string for child # & gift #
+		if(cg.getChildID() < 10)
+			barcode = "00000" + Integer.toString(cg.getChildID());
+		else if(cg.getChildID() < 100)
+			barcode = "0000" + Integer.toString(cg.getChildID());
+		else if(cg.getChildID() < 1000)
+			barcode = "000" + Integer.toString(cg.getChildID());
+		else if(cg.getChildID() < 10000)
+			barcode = "00" + Integer.toString(cg.getChildID());
+		else if(cg.getChildID() < 100000)
+			barcode = "0" + Integer.toString(cg.getChildID());
+		else if(cg.getChildID() < 1000000)
+			barcode =  Integer.toString(cg.getChildID());
+		else
+			barcode = Integer.toString(cg.getID());
+		
+		barcode = barcode + Integer.toString(cg.getGiftNumber());
+		
+		return barcode;
+	}
+*/	
+/*	
+	WebGift getWebGift(int year, int childid, int giftnum)
+	{
+		ServerFamilyDB familyDB;
+		ServerChildDB childDB;
+		ServerChildGiftDB childGiftDB;
+		ServerGiftCatalog giftDB;
+		
+		String line0 = "", line1 = "", line2 = "", line3 = "", barcode = "";
+		WebGift wg = new WebGift(false);
+		
+		return wg;
+/*		
+		try 
+		{
+			familyDB = ServerFamilyDB.getInstance();
+			childDB = ServerChildDB.getInstance();
+			childGiftDB = ServerChildGiftDB.getInstance();
+			giftDB = ServerGiftCatalog.getInstance();
+			
+			
+			ONCChildGift cg = childGiftDB.getCurrentChildGift(year, childid, giftnum);
+			ONCChild c = childDB.getChild(year, childid);
+			ONCFamily f = null;
+			ONCGift g = null;
+			
+			if(c != null && c != null)
+			{
+				f = familyDB.getFamily(year, c.getFamID());
+				g = giftDB.getGift(year, cg.getCatalogGiftID());
+
+				
+			
+				line0 = c.getChildAge() + " " + c.getChildGender();
+				
+				if(cg.getDetail().isEmpty())
+				{
+					line1 = g.getName() + "- ";
+					line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+
+					return new WebGift(true, line0, line1, line2, "", "");
+				}	
+				else
+				{
+					String gift = g.getName().equals("-") ? cg.getDetail() :  g.getName() + "- " + cg.getDetail();
+			
+					//does it fit on one line?
+					if(gift.length() <= MAX_LABEL_LINE_LENGTH)
+					{
+						line1 = gift.trim();
+						line2 = "";
+					}
+					else	//split into two lines
+					{
+						int index = MAX_LABEL_LINE_LENGTH;
+						while(index > 0 && gift.charAt(index) != ' ')	//find the line break
+							index--;
+			
+						line1 = gift.substring(0, index);
+						line2 = gift.substring(index);
+						if(line2.length() > MAX_LABEL_LINE_LENGTH)
+							line2 = gift.substring(index, index + MAX_LABEL_LINE_LENGTH);
+					}
+
+					//If the gift required two lines make the ONC Year line 4
+					//else make the ONC Year line 3
+					if(!line2.isEmpty())
+					{
+						line3 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+					}
+					else
+					{			
+						line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+						line3 = "";
+					}
+					
+					wg = new WebGift(true, line0, line1, line2, line3, "");
+				}
+			}
+			else
+				wg = new WebGift(false);
+			
+		} 
+		catch (FileNotFoundException e) 
+		{
+			wg = new WebGift(false);
+		} 
+		catch (IOException e) 
+		{
+			wg = new WebGift(false);
+		}
+		
+		return wg;	
+	}
+*/
+	
+//	HtmlResponse onGiftReceived(String childid, String giftnum, String callbackFunction)
+//	{
+//		String response = String.format("{\"childid\":\"%s\",\"gifnum\":\"%s\"}",childid, giftnum);
+//
+//		//wrap the json in the callback function per the JSONP protocol
+//		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+//	}
 	
 	ResponseCode processFamilyReferral(WebClient wc, Map<String, Object> params)
 	{
@@ -1281,5 +1513,34 @@ public class FamilyHandler extends ONCWebpageHandler
 	{
 		return ServerWishCatalog.getWishHTMLOptions(wn);
 	}
-*/	
+*/
+	
+	class WebGift
+	{
+		@SuppressWarnings("unused")
+		private boolean bValid;
+		@SuppressWarnings("unused")
+		private String line0, line1, line2, line3, message;
+		
+		
+		WebGift(boolean bValid, String line0, String line1, String line2, String line3, String message)
+		{
+			this.bValid = bValid;
+			this.line0 = line0;
+			this.line1 = line1;
+			this.line2 = line2;
+			this.line3 = line3;
+			this.message = message;
+		}
+		
+		WebGift(boolean bValid, String message)
+		{
+			this.bValid = bValid;
+			this.line0 = "";
+			this.line1 = "";
+			this.line2 = "";
+			this.line3 = "";
+			this.message = message;
+		}
+	}
 }

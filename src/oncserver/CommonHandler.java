@@ -28,6 +28,8 @@ public class CommonHandler extends ONCWebpageHandler
 			sendCachedFile(t, "image/png", "giftcardicon", false);
 		else if(requestURI.contains("/checkmarkicon"))
 			sendCachedFile(t, "image/png", "checkmarkicon", false);
+		else if(requestURI.contains("/cornerhat"))
+			sendCachedFile(t, "image/png", "cornerhat", false);
 		else if(requestURI.contains("/clearx"))
 			sendCachedFile(t, "image/gif", "clearx", false);
 		else if(requestURI.contains("/onclogo"))
@@ -112,6 +114,8 @@ public class CommonHandler extends ONCWebpageHandler
 		else if(requestURI.contains("/deliverycards"))
 //			sendFile(t, "application/pdf", "DeliveryCard.pdf");
 			sendFile(t, "application/pdf", String.format("%s/%s", System.getProperty("user.dir"), "DeliveryCard.pdf"));
+		else if(requestURI.contains("/barcode.js"))
+			sendCachedFile(t, "text/javascript", "barcode", false);
 		
 	}
 }
