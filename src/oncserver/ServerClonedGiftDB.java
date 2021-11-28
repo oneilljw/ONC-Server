@@ -447,9 +447,14 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 				//status has caused a family status change or if a partner assignment has changed
 				processClonedGiftAdded(year, currentGift, receivedGift);
 				
-				//notify the in year clients that a new child gift has been added
+				//add the json for the cloned gift to the response list
 				Gson gson = new Gson();
-				String response = "WISH_ADDED" + gson.toJson(receivedGift, ONCChildGift.class);
+				List<String> responseJsonList = new ArrayList<String>();
+				responseJsonList.add("ADDED_CLONED_GIFT" + gson.toJson(receivedGift, ONCChildGift.class));
+				
+				//notify the in year clients that a new clone gift has been added
+				Type responseListType = new TypeToken<ArrayList<String>>(){}.getType();
+				String response =  "ADDED_LIST_CLONED_GIFTS" + gson.toJson(responseJsonList, responseListType);
 				clientMgr.notifyAllInYearClients(year, response);
 				
 				String message = action == 0 ?  "Gift successfully received" : "Gift receive successfully undone";
