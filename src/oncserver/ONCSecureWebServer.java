@@ -189,7 +189,7 @@ public class ONCSecureWebServer
 				 					"/families","/familystatus","/commonfamily.js","/familysearch","/deliveryconfirmed",
 				 					"/getfamily","/references","/newfamily", "/familynotes","/giftdelivery", 
 				 					"/noteresponse", "/dnscode","/donotservecodes","/seasonparameters","/fammgmt",
-				 					"/receivegifts","/giftreceived"};
+				 					"/receivegifts","/giftreceived","/undogiftreceived"};
 		
 		FamilyHandler familyHandler = new FamilyHandler();
 		for(String contextname: familyContexts)

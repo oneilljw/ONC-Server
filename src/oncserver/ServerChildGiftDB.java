@@ -11,6 +11,8 @@ import java.util.List;
 import ourneighborschild.HistoryRequest;
 import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
+import ourneighborschild.ONCFamily;
+import ourneighborschild.ONCGift;
 import ourneighborschild.ONCUser;
 import ourneighborschild.GiftStatus;
 
@@ -20,6 +22,7 @@ import com.google.gson.reflect.TypeToken;
 public class ServerChildGiftDB extends ServerSeasonalDB
 {
 	private static final int CHILD_GIFT_DB_HEADER_LENGTH = 12;
+	private static final int MAX_LABEL_LINE_LENGTH = 26;
 	private static ServerChildGiftDB instance = null;
 
 	private static List<ChildGiftDBYear> childGiftDB;
@@ -27,6 +30,8 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	private ServerFamilyHistoryDB familyHistoryDB;
 	private ServerChildDB childDB; //Reference used to update ChildGiftID's 
 	private ServerPartnerDB serverPartnerDB;
+	private ServerGiftCatalog catalogDB;
+	private ClientManager clientMgr;
 	
 	private ServerChildGiftDB() throws FileNotFoundException, IOException
 	{
@@ -55,6 +60,8 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		familyHistoryDB = ServerFamilyHistoryDB.getInstance();
 		childDB = ServerChildDB.getInstance();
 		serverPartnerDB = ServerPartnerDB.getInstance();
+		catalogDB = ServerGiftCatalog.getInstance();
+		clientMgr = ClientManager.getInstance();
 	}
 	
 	public static ServerChildGiftDB getInstance() throws FileNotFoundException, IOException
@@ -462,28 +469,37 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 	{
 		List<ONCChildGift> cgAL = childGiftDB.get(DBManager.offset(year)).getList();	//Get the child gift list for the year
 		
-		//get the gift id from the Child data base
-//		ONCChild child = childDB.getChild(year, childid);
-//		if(child != null)
-//		{	
-			//Search from the bottom of the data base for speed. New gifts are added to the bottom
-			int index = cgAL.size() -1;	//Set the element to the last child wish in the array
-//			while(index >= 0 && cgAL.get(index).getID() != child.getChildGiftID(giftnum))
-			while(index >= 0 && (cgAL.get(index).getChildID() != childid ||
-								   cgAL.get(index).getGiftNumber() != giftnum ||
-								    cgAL.get(index).getNextID() != -1))	
-				index--;
-		
-			return index == -1 ? null : cgAL.get(index);
-
-//		}
-//		else
-//			return null;
+		int index = cgAL.size() -1;	//Set the element to the last child wish in the array
+		while(index >= 0 && (cgAL.get(index).getChildID() != childid ||
+							   cgAL.get(index).getGiftNumber() != giftnum ||
+							    cgAL.get(index).getNextID() != -1))	
+			index--;
+	
+		return index == -1 ? null : cgAL.get(index);
 	}
 	
-	static HtmlResponse getCurrentChildGiftJSONP(int year, int childid, int giftnum, String callbackFunction)
+	ONCChildGift getPreviousChildGift(int year, ONCChildGift currentChildGift)
 	{
 		List<ONCChildGift> cgAL = childGiftDB.get(DBManager.offset(year)).getList();	//Get the child gift list for the year
+		
+		if(currentChildGift.getPriorID() == -1)
+			return null;
+		else
+		{	
+			int index = cgAL.size() -1;	//Set the element to the last child wish in the array
+			while(index >= 0 && cgAL.get(index).getID() != currentChildGift.getPriorID())	
+				index--;
+	
+			return index == -1 ? null : cgAL.get(index);
+		}
+	}
+	
+	//action 0-receive, 1-undo
+	WebGift receiveChildGiftJSONP(int year, int childid, int giftnum, int action, WebClient wc)
+	{
+		//retrieve the child gift data base for the year
+		ChildGiftDBYear cwDBYear = childGiftDB.get(DBManager.offset(year));
+		List<ONCChildGift> cgAL = cwDBYear.getList();
 		
 		//Search from the bottom of the data base for speed. New gifts are added to the bottom
 		int index = cgAL.size() -1;	//Set the element to the last child wish in the array
@@ -492,22 +508,136 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 							    cgAL.get(index).getNextID() != -1))	
 			index--;
 	
-		String response;
 		if(index == -1)
 		{
-			response = "{\"Error\":\"Gift not found\"}";
-			return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+			return new WebGift(false, "ERROR: Unable to find gift in database");
 		}
 		else
 		{
-			ONCChildGift gift = cgAL.get(index);
-			Gson gson = new Gson();
-			response = gson.toJson(gift, ONCChildGift.class);
-
-			//wrap the json in the callback function per the JSONP protocol
-			return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);
+			ONCChildGift currentGift = cgAL.get(index);
+			ONCChild c = childDB.getChild(year, childid);
+			
+			//make sure the gift hasn't already been received. If it has, return success with
+			//an already received message
+			if(c == null)
+			{
+				return new WebGift(false, "ERROR: Unable to find the child this gift was selected for");
+			}
+			else if(action == 0 && currentGift.getGiftStatus() == GiftStatus.Received)
+			{
+				WebGift wg = getWebGift(year, currentGift, c, "Gift already received");
+				return wg;
+			}
+			else if(action == 1 && currentGift.getGiftStatus() == GiftStatus.Delivered ||
+									 currentGift.getGiftStatus() == GiftStatus.Shopping ||
+									  currentGift.getGiftStatus() == GiftStatus.Missing)
+			{
+				WebGift wg = getWebGift(year, currentGift, c, "Gift already undone");
+				return wg;
+			}
+			else if(action == 0 && currentGift.getGiftStatus() == GiftStatus.Delivered ||
+					 action == 1 & currentGift.getGiftStatus() == GiftStatus.Received)
+			{
+				//receive or undo reception of the gift and create the WebGift to return to the web user.
+				//First, make a copy of the existing gift
+				ONCChildGift receivedGift = new ONCChildGift(currentGift);
+				
+				if(action == 0)
+					receivedGift.setGiftStatus(GiftStatus.Received);
+				else
+				{
+					ONCChildGift previousGift = getPreviousChildGift(year, currentGift);
+					receivedGift.setGiftStatus(previousGift.getGiftStatus());
+				}
+					
+				receivedGift.setChangedBy(wc.getWebUser().getLNFI());
+				receivedGift.setTimestamp(System.currentTimeMillis());					
+				
+				//set the new ID, prior and next ID's for the added child gift
+				int addedGiftID = cwDBYear.getNextID();
+				receivedGift.setID(addedGiftID);
+				receivedGift.setNextID(-1);
+				
+				//update the linked list references
+				currentGift.setNextID(addedGiftID);
+				receivedGift.setPriorID(currentGift.getID());
+				
+				//Add the received gift to the proper year data base
+				cwDBYear.add(receivedGift);
+				cwDBYear.setChanged(true);
+				
+				//process received gift to see if other data bases require update. They do if the gift
+				//status has caused a family status change or if a partner assignment has changed
+				processGiftAdded(year, currentGift, receivedGift, wc.getWebUser());
+				
+				//notify the in year clients that a new child gift has been added
+				Gson gson = new Gson();
+				String response = "WISH_ADDED" + gson.toJson(receivedGift, ONCChildGift.class);
+				clientMgr.notifyAllInYearClients(year, response);
+				
+				String message = action == 0 ?  "Gift successfully received" : "Gift receive successfully undone";
+				return getWebGift(year, currentGift, c, message);
+				
+				//create the WebGift object to return to the web client
+			}
+			else
+				return new WebGift(false, "ERROR: Can't receive gift, it's status is " + currentGift.getGiftStatus().toString());
 		}
 	}
+	
+	WebGift getWebGift(int year, ONCChildGift currentGift, ONCChild c, String message)
+	{
+		//create the WebGift object to return to the web client
+		String line1, line2 = "", line3 = " ";
+		
+		ONCFamily f = familyDB.getFamily(year, c.getFamID());
+		ONCGift g = catalogDB.getGift(year, currentGift.getCatalogGiftID());
+
+		String line0 = c.getChildAge() + " " + c.getChildGender();
+		
+		if(currentGift.getDetail().isEmpty())
+		{
+			line1 = g.getName() + "- ";
+			line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+
+			return new WebGift(true, line0, line1, line2, "", message);
+		}	
+		else
+		{
+			String gift = g.getName().equals("-") ? currentGift.getDetail() :  g.getName() + "- " + currentGift.getDetail();
+	
+			//does it fit on one line?
+			if(gift.length() <= MAX_LABEL_LINE_LENGTH)
+			{
+				line1 = gift.trim();
+			}
+			else	//split into two lines
+			{
+				int chIndex = MAX_LABEL_LINE_LENGTH;
+				while(chIndex > 0 && gift.charAt(chIndex) != ' ')	//find the line break
+					chIndex--;
+	
+				line1 = gift.substring(0, chIndex);
+				line2 = gift.substring(chIndex);
+				if(line2.length() > MAX_LABEL_LINE_LENGTH)
+					line2 = gift.substring(chIndex, chIndex + MAX_LABEL_LINE_LENGTH);
+			}
+
+			//If the gift required two lines make the ONC Year line 4
+			//else make the ONC Year line 3
+			if(!line2.isEmpty())
+			{
+				line3 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+			}
+			else
+			{			
+				line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
+			}
+			
+			return new WebGift(true, line0, line1, line2, line3, message);
+		}
+	}
+	
 /*	
 	List<PriorYearPartnerPerformance> getPriorYearPartnerPerformanceList(int newYear)
 	{

@@ -13,12 +13,24 @@
   <script type="text/javascript" src="onccommon.js"></script>
   <script type="text/javascript" src="barcode.js"></script>
   <script>   
-	var updateObject = {storageItem:'updateregion', resource:'updateregion'};
+	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
+	var nGiftsReceived = 0;
+	var lastCodeReceived = 'xxxxxxxx';
   	
   	$( document ).ready(function()
 	{
-  		setBannerVisible(false);
+  		setBannerVisible(false); //decide whether to display the welcome message
   		createGroupTable();	//create profile dialog group table
+  		
+    	//remove dashboard anchor & change receive gifts anchor class to .breadcrumb-only
+    	if(sessionStorage.getItem('homelinkVisibility') === 'hidden')
+    	{
+    		var dashboardli = document.getElementById('dashboard-anchor');
+    		dashboardli.parentNode.removeChild(dashboardli);
+    		
+    		document.getElementById('linktwo-anchor').classList.add('breadcrumb-only');
+    		document.getElementById('linktwo-anchor').classList.remove('breadcrumb-current');
+    	}
   		
   		//set the hidden values
   		var currYear = new Date().getFullYear();
@@ -36,18 +48,49 @@
 	  	{
 	  	    if (e.key === 'Enter' || e.keyCode === 13)
 	  	    {
-		  	    let barcode = document.getElementById('barcode');
-		  	    let code = barcode.value;
-		  	        
-		  	    barcode.value = '';	//clear the barcode input
-		  	    barcode.focus();
-	  	      
-		  	    let year = document.getElementById('year').value;
-		  	    let params = "year="+ year + "&childid=" + code.substring(1,6)+ "&giftnum=" + code[6] + "&callback=?";
-		  	    $.post('giftreceived', params, function(data)
-		  	    {
-		  	    	console.log(data);
-		  	    	
+		  	   onBarcodeEntered(); 
+	  	    }
+	  	});
+  		
+  		onClear();	//set ready to scan
+	});
+  	
+  	function onBarcodeEntered()
+  	{
+  		let barcode = document.getElementById('barcode');
+  	    let code = barcode.value;
+  	    
+  	    if(code.length != 8)
+  	    {
+  	    	document.getElementById('barcode').disabled = true;
+  	    	document.getElementById('barcodelbldiv').style.display = 'none';
+  	    	document.getElementById('errormessage').innerText = "ERROR: " + code + " isn't 8 digits, click the Clear button to resume scanning";
+  	    	document.getElementById('errormessage').style.color = 'red';
+  	    	document.getElementById('recgiftfs').style.background = 'red';
+  	    }
+//  	    else if(!isValid(code))
+//  	    {
+//  	    	document.getElementById('barcode').disabled = true;
+//  	    	document.getElementById('barcodelbldiv').style.display = 'none';
+//  	    	document.getElementById('errormessage').innerText = 'ERROR: ' + code + ' is invalid, click the Clear button to resume scanning';
+//  	    	document.getElementById('errormessage').style.color = 'red';
+//  	    	document.getElementById('recgiftfs').style.background = 'red';
+//  	    }
+  	    else if(code === lastCodeReceived)
+  	    {
+  	    	document.getElementById('errormessage').innerText = 'Gift just received, ready to scan another barcode';
+  	    	validGiftReceived();
+  	    }	
+  	    else
+  	    {	
+	  	    let year = document.getElementById('year').value;
+	  	    let params = "year="+ year + "&childid=" + code.substring(1,6)+ "&giftnum=" + code[6] + "&callback=?";
+	  	    $.post('giftreceived', params, function(data)
+	  	    {
+	  	    	if(data.bValid)
+	  	    	{
+	  	    		lastCodeReceived = code;
+	  	    		
 		  	    	JsBarcode("#barcodelbl", code, {
 		  	    	  format: "upce",
 		  	    	  height: 60,
@@ -55,55 +98,193 @@
 		  	    	  fontSize: 12,
 		  	    	  background: '#FFFFFF',
 		  	    	  margin: 2,
+		  	    	  marginLeft: 10,
 		  	    	  marginTop: 10,
 		  	    	  marginRight: 0
 		  	    	});
 		  	    	
-		  	    	document.getElementById('line0').innerText = data.line0;
-		  	    	document.getElementById('line1').innerText = data.line1;
-		  	    	document.getElementById('line2').innerText = data.line2;
-		  	    	document.getElementById('line3').innerText = data.line3;
-		  	    	document.getElementById('errormessage').innerText = data.message;
+		  	    	document.getElementById('line0').innerText = data.line[0];
+		  	    	document.getElementById('line1').innerText = data.line[1];
+		  	    	document.getElementById('line2').innerText = data.line[2];
+		  	    	document.getElementById('line3').innerText = data.line[3];
+		  	    	document.getElementById('errormessage').innerText = data.message + ', ready to scan another barcode';
 		  	    	
+		  	    	validGiftReceived();
 		  	    	document.getElementById('barcodelbldiv').style.display = 'inline-block';
-		  	    	document.getElementById('resultdiv').style.display = 'inline-block';
+		  	    	document.getElementById('undobtn').disabled = false;
+	  	    	}
+	  	    	else
+	  	    	{
+	  	    		document.getElementById('barcode').disabled = true;
+	  	    		document.getElementById('undobtn').disabled = true;
+	  	    		document.getElementById('barcodelbldiv').style.display = 'none';
+	  	    		document.getElementById('errormessage').innerText = data.message + ', click the Clear button to resume scanning';
+	  	    		document.getElementById('errormessage').style.color = 'red';
+	  	    		document.getElementById('recgiftfs').style.background = 'red';
+	  	    	}
 		  	    	
-		  	    	document.getElementById('checkmarkicon').style.display = data.bValid ? 'block' : 'none';
-		  	    	document.getElementById('erroricon').style.display = data.bValid ? 'none' : 'block';
-		  	    	
-		  	    }, "json");
-	  	    }
-	  	});
-	});
+			}, "json");	
+  	    }
+
+  	    //prepare for another barcode scan
+  	  	barcode.value = '';	
+	    barcode.focus();   
+  	}
   	
+  	function validGiftReceived()
+  	{
+  		if(nGiftsReceived % 2)
+	    	document.getElementById('recgiftfs').style.background = 'rgb(0, 125, 0)';
+	    else
+	    	document.getElementById('recgiftfs').style.background = 'rgb(0, 225, 0)';
+	    
+  		document.getElementById('errormessage').style.color = 'green';
+	    nGiftsReceived++;
+  	}
+  	
+  	//returns true if the upc-e has 8 digits and the check digit matches
+  	function isValid(upce)
+  	{
+  		if(upce.length == 8 )
+  		{
+  			let upca = convertUPCE2A(upce);	//return upc-a without check digit
+  			
+  			let oddsum = parseInt(upca[0],10) + parseInt(upca[2],10) + parseInt(upca[4],10) + parseInt(upca[6],10) + parseInt(upca[8],10) + parseInt(upca[10],10);
+  			let evensum =  parseInt(upca[1],10) + parseInt(upca[3],10) + parseInt(upca[5],10) + parseInt(upca[7],10) + parseInt(upca[9],10);
+  			
+  			let checksum = oddsum * 3 + evensum;
+  			
+  			if(checksum == 0)
+  				return checksum == upce[7];
+  			else
+  				return (10 - checksum % 10) == upce[7];
+  		}
+  		else
+  			return false;
+  	}
+  	
+  	//return UPC-A without check digit
+  	function convertUPCE2A(upce)
+  	{
+  		let manNumber = new String();
+  		let itemNumber = new String();
+  		
+		switch (upce[6])
+		{
+			case "0":
+				manNumber = manNumber.concat(upce[1], upce[2], upce[6], "00");
+	            itemNumber = itemNumber.concat("00", upce[3], upce[4], upce[5]);
+			break;
+			
+			case "1":
+			manNumber = manNumber.concat(upce[1], upce[2], upce[6], "00");
+	            itemNumber = "00" + upce[3] + upce[4] + upce[5];
+			break;
+			
+			case "2":
+			manNumber = upce[1] + upce[2] + upce[6] + "00";
+	            itemNumber = "00" + upce[3] + upce[4] + upce[5];
+			break;
+			
+			case "3":
+			manNumber = upce[1] + upce[2] + upce[3] + "00";
+	     		itemNumber = "000" + upce[4] + upce[5];	
+			break;
+			
+			case "4":
+	            manNumber = upce[1] + upce[2] + upce[3] + upce[4] + "0";
+	     		itemNumber = "0000" + upce[5];
+			break;
+			
+			default:
+		     	manNumber = manNumber.concat(upce[1], upce[2], upce[3], upce[4], upce[5]);
+	            itemNumber = itemNumber.concat("0000", upce[6]);
+			break;		
+		}
+		
+		let upca = new String();
+		return upca.concat("0", manNumber, itemNumber);
+  	}
+
   	function onClear()
   	{
+  		lastCodeReceived = 'xxxxxxxx';
   		document.getElementById('barcodelbldiv').style.display = 'none';
-  		document.getElementById('resultdiv').style.display = 'none';
-  		document.getElementById('checkmarkicon').style.display = 'none';
-  		document.getElementById('erroricon').style.display = 'none';
-  		document.getElementById('errormessage').inneText = "";
+  		document.getElementById('errormessage').innerText = 'Ready to scan a barcode';
+	    document.getElementById('errormessage').style.color = 'black';
+	    document.getElementById('recgiftfs').style.background = '#E8E8E8';
+	    document.getElementById('undobtn').disabled = true;
+	    document.getElementById('barcode').disabled = false;
+  		document.getElementById('barcode').focus();	//set the cursor so were ready to scan
+  	}
+  	
+  	function onUndo()
+  	{
+  		let year = document.getElementById('year').value;
+  	    let params = "year="+ year + "&childid=" + lastCodeReceived.substring(1,6)+ "&giftnum=" + lastCodeReceived[6] + "&callback=?";
+  	    $.post('undogiftreceived', params, function(data)
+  	    {
+  	    	if(data.bValid)
+  	    	{
+	  	    	JsBarcode("#barcodelbl", lastCodeReceived, {
+	  	    	  format: "upce",
+	  	    	  height: 60,
+	  	    	  width: 1.3,
+	  	    	  fontSize: 12,
+	  	    	  background: '#FFFFFF',
+	  	    	  margin: 2,
+	  	    	  marginLeft: 10,
+	  	    	  marginTop: 10,
+	  	    	  marginRight: 0
+	  	    	});
+	  	    	
+	  	    	document.getElementById('line0').innerText = data.line[0];
+	  	    	document.getElementById('line1').innerText = data.line[1];
+	  	    	document.getElementById('line2').innerText = data.line[2];
+	  	    	document.getElementById('line3').innerText = data.line[3];
+	  	    	document.getElementById('errormessage').innerText = data.message + ', ready to scan another barcode';
+	  	    	
+	  	    	document.getElementById('recgiftfs').style.background = 'yellow';
+	  	  		document.getElementById('errormessage').style.color = 'black';
+	  	    	document.getElementById('barcodelbldiv').style.display = 'inline-block';
+	  	    	document.getElementById('undobtn').disabled = true;
+	  	    	
+	  	    	lastCodeReceived = 'xxxxxxxx';
+	  	    	
+	  	    	//prepare for another barcode scan
+	  	  	  	barcode.value = '';	
+	  		    barcode.focus();   
+  	    	}
+  	    	else
+  	    	{
+  	    		document.getElementById('barcode').disabled = true;
+  	    		document.getElementById('undobtn').disabled = true;
+  	    		document.getElementById('barcodelbldiv').style.display = 'none';
+  	    		document.getElementById('errormessage').innerText = data.message + ', click the Clear button to resume scanning';
+  	    		document.getElementById('errormessage').style.color = 'red';
+  	    		document.getElementById('recgiftfs').style.background = 'red';
+  	    	}
+	  	    	
+		}, "json");
   	}
   	
   </script>
 <style>
   #barcodediv { height: 100px; }
   #barcodelbldiv { background-color: #FFFFFF; display: none; height: 100px; }
-  #resultdiv { display: none; }
   .inlinediv { display: inline-block; vertical-align: top; }
   .labelp { margin-top: 4px; margin-right: 12px; margin-bottom: 0px; text-align : center; }
   #line0 { font-style: italic; }
-  #line1 { font-style: bold; }
-  #checkmarkicon { display: block; }
-  #erroricon { display: none; }
-  .cornerhat
+  #line1 { font-weight: bold; }
+  #barcodeimg { position: relative; }
+  #cornerhat
   {
 	  position: absolute;
 	  z-index: 999;
 	  width: 48px;
 	  height: 36px;
-	  top: 132px;
-	  left: 224px;
+	  top: 0px;
+	  left: 0px;
   }
 </style>
 </head>
@@ -115,7 +296,7 @@
     <img class='logo-img' src="onclogo">
     <span class='header-links'>
 	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
-      <a class='breadcrumb-current' href='#'>Receive Gifts</a>
+      <a id='linktwo-anchor' class='breadcrumb-current' href='#'>Receive Gifts</a>
     </span>   
     <div class='headerbuttons'>
       <div class='dropdown'>
@@ -133,7 +314,7 @@
   </div>
   <form id="receivegiftsform"> 
   <input id='year' type="hidden" name="year">
-  <fieldset>
+  <fieldset id='recgiftfs'>
   <legend class="legend-major" id='receivegiftlegend'>Receive Gifts By Barcode Scan</legend>
   	<div>
       <div id='barcodediv' class='inlinediv'>
@@ -141,8 +322,8 @@
         <input id='barcode' title="Barcode" name="barcode" type="text" size="10">
       </div>
       <div id='barcodelbldiv' class='inlinediv'>
-	      <div class='inlinediv'>
-	        <img class='cornerhat' src='cornerhat'>
+	      <div id='barcodeimg' class='inlinediv'>
+	        <img id='cornerhat' src='cornerhat'>
 	        <svg id="barcodelbl"></svg>
 	      </div>
 	      <div class='inlinediv'>
@@ -152,13 +333,9 @@
 	        <p id='line3' class= 'labelp'></p>
 	      </div>
       </div>
-      <div id='resultdiv' class='inlinediv'>
-	  	<img id='checkmarkicon' class='errorimg' src="checkmarkicon">
-	  	<img id='erroricon' class='errorimg' src="erroricon">
-	  </div>
     </div>
     <div>
-      <button id='undobtn' type='button' onclick='onUndo'>Undo</button>
+      <button id='undobtn' type='button' onclick='onUndo()'>Undo</button>
       <button id='clearbtn' type='button' onclick='onClear()'>Clear</button>
     </div>
   </fieldset>

@@ -410,7 +410,9 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		else if(wc.getWebUser().getPermission() == UserPermission.Admin)
 			return getDashboardWebpage(wc, message);
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
-			return getPartnerTableWebpage(wc, "", message, false);	//send the partner table page, no dialog
+			return getPartnerTableWebpage(wc, "", message, false);	//send partner table, no success dialog
+		else if(wc.getWebUser().getPermission() == UserPermission.Warehouse)
+			return getReceiveGiftsWebpage(wc, "", message);	
 		else	 
 			return getReferralStatusWebpage(wc, message, message, "Sucessful Referral", bShowSuccessDialog); //send the family status page
 	}
@@ -456,6 +458,16 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			response = response.replace("SUCCESS_DIALOG_HEADER", dlgTitle);
 			response = response.replace("SUCCESS_DIALOG_MESSAGE", message);
 		}
+		
+		return response;
+	}
+	
+	String getReceiveGiftsWebpage(WebClient wc, String dlgTitle, String message)
+	{
+		String response = webpageMap.get("receivegifts");
+		String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
+		response = response.replace("BANNER_MESSAGE", loginMssg);
+		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
 		
 		return response;
 	}

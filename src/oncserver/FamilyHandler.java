@@ -19,9 +19,7 @@ import ourneighborschild.MealStatus;
 import ourneighborschild.MealType;
 import ourneighborschild.ONCAdult;
 import ourneighborschild.ONCChild;
-import ourneighborschild.ONCChildGift;
 import ourneighborschild.ONCFamily;
-import ourneighborschild.ONCGift;
 import ourneighborschild.FamilyHistory;
 import ourneighborschild.FamilyStatus;
 import ourneighborschild.ONCMeal;
@@ -41,7 +39,7 @@ public class FamilyHandler extends ONCWebpageHandler
 	private static final String NO_GIFTS_REQUESTED_TEXT = "Gift assistance not requested";
 	private static final int DNS_CODE_WAITLIST = 1;
 	private static final int DNS_CODE_FOOD_ONLY = 2;
-	private static final int MAX_LABEL_LINE_LENGTH = 26;
+	
 	
 	private static final long DAYS_TO_MILLIS = 1000 * 60 * 60 * 24;
 	
@@ -497,7 +495,11 @@ public class FamilyHandler extends ONCWebpageHandler
 			String response;
 			
 			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
 				response = webpageMap.get("receivegifts");
+				response = response.replace("BANNER_MESSAGE", "");
+				response = response.replace("HOME_LINK_VISIBILITY", "visible");
+			}
 			else
 				response = invalidTokenReceived();
 		
@@ -506,13 +508,37 @@ public class FamilyHandler extends ONCWebpageHandler
 		else if(requestURI.contains("/giftreceived"))
 		{
 			HtmlResponse htmlResponse;
-			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			WebClient wc;
+			if((wc = clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
 			{
 				//get the JSON for response to response submission
 				int year = Integer.parseInt((String) params.get("year"));
 				int childid = Integer.parseInt((String) params.get("childid"));
 				int giftnum = Integer.parseInt((String) params.get("giftnum"));
-				WebGift wg = getWebGift(year, childid, giftnum);
+				WebGift wg = getWebGift(year, childid, giftnum, 0, wc);
+						
+				Gson gson = new Gson();
+				String response = gson.toJson(wg, WebGift.class);
+
+				//wrap the json in the callback function per the JSONP protocol
+				htmlResponse =  new HtmlResponse((String) params.get("callback") + "(" + response +")", HttpCode.Ok);
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/undogiftreceived"))
+		{
+			HtmlResponse htmlResponse;
+			WebClient wc;
+			if((wc = clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				//get the JSON for response to response submission
+				int year = Integer.parseInt((String) params.get("year"));
+				int childid = Integer.parseInt((String) params.get("childid"));
+				int giftnum = Integer.parseInt((String) params.get("giftnum"));
+				WebGift wg = getWebGift(year, childid, giftnum, 1, wc);
 						
 				Gson gson = new Gson();
 				String response = gson.toJson(wg, WebGift.class);
@@ -527,72 +553,30 @@ public class FamilyHandler extends ONCWebpageHandler
 		}
 	}
 	
-	WebGift getWebGift(int year, int childid, int giftnum) throws FileNotFoundException, IOException
+	WebGift getWebGift(int year, int childid, int giftnum, int action, WebClient wc)
 	{
-		ServerFamilyDB familyDB = ServerFamilyDB.getInstance();
-		ServerChildDB childDB = ServerChildDB.getInstance();
-		ServerChildGiftDB childGiftDB = ServerChildGiftDB.getInstance();
-		ServerGiftCatalog giftDB = ServerGiftCatalog.getInstance();
-		
-		ONCChildGift cg = childGiftDB.getCurrentChildGift(year, childid, giftnum);
-		ONCChild c = childDB.getChild(year, childid);
-		
-		
-		if(c != null && cg != null)
+		try 
 		{
-			String line1, line2 = "", line3 = " ";
-			
-			ONCFamily f = familyDB.getFamily(year, c.getFamID());
-			ONCGift g = giftDB.getGift(year, cg.getCatalogGiftID());
-
-			String line0 = c.getChildAge() + " " + c.getChildGender();
-			
-			if(cg.getDetail().isEmpty())
+			//try to receive the gift in either the child gift db or cloned gift db
+			if(giftnum < 3)
 			{
-				line1 = g.getName() + "- ";
-				line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
-
-				String message = "Gift Successfully Received";
-				return new WebGift(true, line0, line1, line2, "", message);
-			}	
+				ServerChildGiftDB childGiftDB = ServerChildGiftDB.getInstance();
+				return childGiftDB.receiveChildGiftJSONP(year, childid, giftnum, action, wc);
+			}
 			else
 			{
-				String gift = g.getName().equals("-") ? cg.getDetail() :  g.getName() + "- " + cg.getDetail();
-		
-				//does it fit on one line?
-				if(gift.length() <= MAX_LABEL_LINE_LENGTH)
-				{
-					line1 = gift.trim();
-				}
-				else	//split into two lines
-				{
-					int index = MAX_LABEL_LINE_LENGTH;
-					while(index > 0 && gift.charAt(index) != ' ')	//find the line break
-						index--;
-		
-					line1 = gift.substring(0, index);
-					line2 = gift.substring(index);
-					if(line2.length() > MAX_LABEL_LINE_LENGTH)
-						line2 = gift.substring(index, index + MAX_LABEL_LINE_LENGTH);
-				}
-
-				//If the gift required two lines make the ONC Year line 4
-				//else make the ONC Year line 3
-				if(!line2.isEmpty())
-				{
-					line3 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
-				}
-				else
-				{			
-					line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
-				}
-				
-				String message = "Gift Successfully Received";
-				return new WebGift(true, line0, line1, line2, line3, message);
+				ServerClonedGiftDB clonedGiftDB = ServerClonedGiftDB.getInstance();
+				return clonedGiftDB.receiveClonedGiftJSONP(year, childid, giftnum, action, wc);
 			}
-		}
-		else
-			return new WebGift(false, "Receiver Error: Unable to find gift in database");
+		} 
+		catch (FileNotFoundException e) 
+		{
+			return new WebGift(false, "FILE NOT FOUND ERROR: Unable to access gift database");
+		} 
+		catch (IOException e) 
+		{
+			return new WebGift(false, "I/O ERROR: Unable to access gift database");
+		}	
 	}
 /*	
 	String getBarcode(ONCChildGift cg)
@@ -1514,33 +1498,4 @@ public class FamilyHandler extends ONCWebpageHandler
 		return ServerWishCatalog.getWishHTMLOptions(wn);
 	}
 */
-	
-	class WebGift
-	{
-		@SuppressWarnings("unused")
-		private boolean bValid;
-		@SuppressWarnings("unused")
-		private String line0, line1, line2, line3, message;
-		
-		
-		WebGift(boolean bValid, String line0, String line1, String line2, String line3, String message)
-		{
-			this.bValid = bValid;
-			this.line0 = line0;
-			this.line1 = line1;
-			this.line2 = line2;
-			this.line3 = line3;
-			this.message = message;
-		}
-		
-		WebGift(boolean bValid, String message)
-		{
-			this.bValid = bValid;
-			this.line0 = "";
-			this.line1 = "";
-			this.line2 = "";
-			this.line3 = "";
-			this.message = message;
-		}
-	}
 }
