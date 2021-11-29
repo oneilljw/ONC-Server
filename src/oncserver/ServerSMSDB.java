@@ -522,7 +522,7 @@ public class ServerSMSDB extends ServerSeasonalDB
 		else if(request.getMessageID() == 3 && !f.getLanguage().equals("Spanish"))
 		{
 			return String.format("This is a reminder from Our Neighbor's Child (ONC) about your child(ren)'s holiday gifts.\n\n"
-					+ "Your children's gifts must be picked tomorrow between 1:00pm and  4:00pm.\n"
+					+ "Your children's gifts must be picked up tomorrow between 1:00pm and  4:00pm.\n"
 					+ "A truck with your child's gifts will be in the %s parking lot at %s %s %s %s until 4:00pm.\n\n"
 					+ "Please bring this information with you tomorrow: ONC # %s, Head of Household Name: %s %s.\n\n"
 					+ "Vehicle occupants must wear masks, follow directional signs and remain inside the vehicle for additional instructions."

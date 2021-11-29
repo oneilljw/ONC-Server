@@ -222,7 +222,12 @@
 				  width: '80px',
 				  render: function (data, type, row)
 				  {
-					  return (data === 'Confirmed') ? data + ' &#x2713;' : data;
+					  if(data === 'Contacted')
+						  return 'Text Sent';
+					  else if(data === 'Confirmed')
+						  return data + ' &#x2713;';
+					  else
+						  return data;
 				  },
 				  className: 'dt-body-center'
 				},
