@@ -222,9 +222,7 @@
 				  width: '80px',
 				  render: function (data, type, row)
 				  {
-					  if(data === 'Contacted')
-						  return 'Text Sent';
-					  else if(data === 'Confirmed')
+					 if(data === 'Confirmed')
 						  return data + ' &#x2713;';
 					  else
 						  return data;

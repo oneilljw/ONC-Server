@@ -585,6 +585,52 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 		}
 	}
 	
+	//return a JSON of a list with all current child's gifts
+	String getCurrentChildGiftsJSONP(int year, int childid, int giftnum)
+	{
+		Gson gson = new Gson();
+		Type listOfWebGifts = new TypeToken<ArrayList<WebGift>>(){}.getType();
+		List<WebGift> webGiftList = new ArrayList<WebGift>();
+		
+		//Find all gifts for the child
+		ONCChild c = childDB.getChild(year, childid);
+		if(giftnum < 0 && giftnum >= ServerGlobalVariableDB.getNumGiftsPerChild(year))
+			webGiftList.add(new WebGift(false, "ERROR: Invalid gift number in barcode"));
+		else if(c == null)
+			webGiftList.add(new WebGift(false, "ERROR: Unable to find the child this gift was selected for"));
+		else
+		{
+			int giftcount = 0;
+			for(int gn=0; gn < ServerGlobalVariableDB.getNumGiftsPerChild(year); gn++)
+			{
+				ONCChildGift cg = getCurrentChildGift(year, childid, gn);
+				if(cg != null)
+				{
+					webGiftList.add(getWebGift(year, cg, c, ""));
+					giftcount++;
+				}
+			}
+			
+			//set the message for the first gift
+			if(!webGiftList.isEmpty())
+			{
+				webGiftList.get(0).setMessage(giftcount == 1 ? "Found 1 Gift" : "Found " + giftcount + " gifts");
+			}
+				
+	//		//find all the child's current gifts
+	//		ONCChildGift cg0 = getCurrentChildGift(year, childid, 0);
+	//		ONCChildGift cg1 = getCurrentChildGift(year, childid, 1);
+	//		
+	//		WebGift wg0 = getWebGift(year, cg0, c, "Found gifts");
+	//		WebGift wg1 = getWebGift(year, cg1, c, "Found gifts");
+	//			
+	//		webGiftList.add(wg0);
+	//		webGiftList.add(wg1);
+		}
+		
+		return gson.toJson(webGiftList, listOfWebGifts);
+	}
+	
 	WebGift getWebGift(int year, ONCChildGift currentGift, ONCChild c, String message)
 	{
 		//create the WebGift object to return to the web client
@@ -600,7 +646,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 			line1 = g.getName() + "- ";
 			line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
 
-			return new WebGift(true, line0, line1, line2, "", message);
+			return new WebGift(true, currentGift.getGiftNumber(), line0, line1, line2, "", message);
 		}	
 		else
 		{
@@ -634,7 +680,7 @@ public class ServerChildGiftDB extends ServerSeasonalDB
 				line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
 			}
 			
-			return new WebGift(true, line0, line1, line2, line3, message);
+			return new WebGift(true, currentGift.getGiftNumber(), line0, line1, line2, line3, message);
 		}
 	}
 	

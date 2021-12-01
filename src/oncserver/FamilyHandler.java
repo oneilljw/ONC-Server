@@ -515,7 +515,7 @@ public class FamilyHandler extends ONCWebpageHandler
 				int year = Integer.parseInt((String) params.get("year"));
 				int childid = Integer.parseInt((String) params.get("childid"));
 				int giftnum = Integer.parseInt((String) params.get("giftnum"));
-				WebGift wg = getWebGift(year, childid, giftnum, 0, wc);
+				WebGift wg = receiveWebGift(year, childid, giftnum, 0, wc);
 						
 				Gson gson = new Gson();
 				String response = gson.toJson(wg, WebGift.class);
@@ -538,7 +538,7 @@ public class FamilyHandler extends ONCWebpageHandler
 				int year = Integer.parseInt((String) params.get("year"));
 				int childid = Integer.parseInt((String) params.get("childid"));
 				int giftnum = Integer.parseInt((String) params.get("giftnum"));
-				WebGift wg = getWebGift(year, childid, giftnum, 1, wc);
+				WebGift wg = receiveWebGift(year, childid, giftnum, 1, wc);
 						
 				Gson gson = new Gson();
 				String response = gson.toJson(wg, WebGift.class);
@@ -551,14 +551,72 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
+		else if(requestURI.contains("/lookupgifts"))
+		{
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				response = webpageMap.get("lookupgifts");
+				response = response.replace("BANNER_MESSAGE", "");
+				response = response.replace("HOME_LINK_VISIBILITY", "hidden");
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/giftlookup"))
+		{
+			HtmlResponse htmlResponse;
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				//get the JSON for response to response submission
+				int year = Integer.parseInt((String) params.get("year"));
+				int childid = Integer.parseInt((String) params.get("childid"));
+				int giftnum = Integer.parseInt((String) params.get("giftnum"));
+
+				try 
+				{
+					//try to lookup the gifts in either the child gift db or cloned gift db
+					if(giftnum < ServerGlobalVariableDB.getNumGiftsPerChild(year))
+					{
+						ServerChildGiftDB childGiftDB = ServerChildGiftDB.getInstance();
+						response =  childGiftDB.getCurrentChildGiftsJSONP(year, childid, giftnum);
+					}
+					else
+					{
+						ServerClonedGiftDB clonedGiftDB = ServerClonedGiftDB.getInstance();
+						response =  clonedGiftDB.getCurrentClonedGiftsJSONP(year, childid, giftnum);
+					}
+				} 
+				catch (FileNotFoundException e) 
+				{
+					response = "{\"error\":\"ERROR: Unable to access gift database\"}";
+				} 
+				catch (IOException e) 
+				{
+					response = "{\"error\":\"ERROR: Unable to access gift database\"}";
+				}
+			
+				//wrap the json in the callback function per the JSONP protocol
+				htmlResponse =  new HtmlResponse((String) params.get("callback") + "(" + response +")", HttpCode.Ok);
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
 	}
 	
-	WebGift getWebGift(int year, int childid, int giftnum, int action, WebClient wc)
+	WebGift receiveWebGift(int year, int childid, int giftnum, int action, WebClient wc)
 	{
 		try 
 		{
 			//try to receive the gift in either the child gift db or cloned gift db
-			if(giftnum < 3)
+			if(giftnum < ServerGlobalVariableDB.getNumGiftsPerChild(year))
 			{
 				ServerChildGiftDB childGiftDB = ServerChildGiftDB.getInstance();
 				return childGiftDB.receiveChildGiftJSONP(year, childid, giftnum, action, wc);
@@ -1415,7 +1473,6 @@ public class FamilyHandler extends ONCWebpageHandler
 		
 		return bAddressGood;
 	}
-	
 /*	
 	String verifyAddress(Map<String, Object> params)
 	{

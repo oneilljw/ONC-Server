@@ -465,6 +465,30 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 		}
 	}
 	
+	//return a JSON of a list with all current child's gifts
+	String getCurrentClonedGiftsJSONP(int year, int childid, int giftnum)
+	{
+		Gson gson = new Gson();
+		Type listOfWebGifts = new TypeToken<ArrayList<WebGift>>(){}.getType();
+		List<WebGift> webGiftList = new ArrayList<WebGift>();
+		
+		//Find all gifts for the child
+		ONCChild c = childDB.getChild(year, childid);
+		if(giftnum < 0 && giftnum >= ServerGlobalVariableDB.getNumGiftsPerChild(year))
+			webGiftList.add(new WebGift(false, "ERROR: Invalid gift number in barcode"));
+		else if(c == null)
+			webGiftList.add(new WebGift(false, "ERROR: Unable to find the child this gift was selected for"));
+		else
+		{
+			//find all the child's current gifts
+			for(ONCChildGift childGift : clonedGiftDB.get(DBManager.offset(year)).getList())
+				if(childGift.getGiftNumber() == giftnum && childGift.getPriorID() > -1 && childGift.getNextID() == -1)
+					webGiftList.add(getWebGift(year, childGift, c, ""));
+		}
+		
+		return gson.toJson(webGiftList, listOfWebGifts);
+	}
+	
 	WebGift getWebGift(int year, ONCChildGift currentGift, ONCChild c, String message)
 	{
 		//create the WebGift object to return to the web client
@@ -480,7 +504,7 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 			line1 = g.getName() + "- ";
 			line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
 
-			return new WebGift(true, line0, line1, line2, "", message);
+			return new WebGift(true, currentGift.getGiftNumber(), line0, line1, line2, "", message);
 		}	
 		else
 		{
@@ -514,7 +538,7 @@ public class ServerClonedGiftDB extends ServerSeasonalDB
 				line2 = "ONC " + Integer.toString(year) + " |  Family # " + f.getONCNum();
 			}
 			
-			return new WebGift(true, line0, line1, line2, line3, message);
+			return new WebGift(true, currentGift.getGiftNumber(), line0, line1, line2, line3, message);
 		}
 	}
 
