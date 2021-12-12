@@ -17,9 +17,11 @@ import ourneighborschild.ONCChild;
 import ourneighborschild.ONCChildGift;
 import ourneighborschild.FamilyHistory;
 import ourneighborschild.FamilyStatus;
+import ourneighborschild.GiftDistribution;
 import ourneighborschild.GiftStatus;
 import ourneighborschild.ONCUser;
 import ourneighborschild.SMSStatus;
+import ourneighborschild.School;
 import ourneighborschild.ONCFamily;
 import ourneighborschild.ONCSMS;
 import ourneighborschild.ONCServerUser;
@@ -33,6 +35,7 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 
 	private static List<FamilyHistoryDBYear> famHistDB;
 	private static ServerGlobalVariableDB globalDB;
+	private static ServerRegionDB regionDB;
 	private static ServerFamilyHistoryDB instance = null;
 	private static FamilyHistoryTimestampComparator familyHistoryTimestampComparator;
 	
@@ -63,8 +66,9 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			//initialize reference to client manager
 			clientMgr = ClientManager.getInstance();
 			
-			//reference to global variables
+			//reference to global variables and regions
 			globalDB = ServerGlobalVariableDB.getInstance();
+			regionDB = ServerRegionDB.getInstance();
 			
 			//create a time stamp comparator
 			familyHistoryTimestampComparator = new FamilyHistoryTimestampComparator();
@@ -727,6 +731,78 @@ public class ServerFamilyHistoryDB extends ServerSeasonalDB
 			reqFamHistObj.setdNotes("Gifts Delivered");
 			
 			addFamilyHistoryObject(year, reqFamHistObj, "Delivery Volunteer", true);
+		}
+	}
+	
+	//action 0-receive, 1-undo
+	DeliveryConfirmation confirmGiftDeliveryJSONP(int year, ONCFamily f, int action, WebClient wc)
+	{
+		//get the current family history
+		FamilyHistory fh = getCurrentFamilyHistory(year, f.getID());
+		
+		if(fh == null)
+			return new DeliveryConfirmation(false, "ERROR: Unable to find history in database");
+		else
+		{
+//			System.out.println(String.format("ServFamHist.confirmGift: fh gift status= %s, family gift dist.= %s",
+//					fh.getGiftStatus().toString(), f.getGiftDistribution().toString()));
+			
+			//convert family school code and region code to full text
+			School school = regionDB.getSchoolByCode(f.getSchoolCode());
+			String schoolname = school == null ? "" : school.getName();
+			
+			String region = ServerRegionDB.getRegion(f.getRegion());
+			
+			//make sure the gift hasn't already been delivered. If it has, return success with
+			//an already received message
+			if(action == 0 && fh.getGiftStatus()==FamilyGiftStatus.Delivered)
+				return new DeliveryConfirmation(true, f, schoolname, region, String.format("Delivered: Family# %s Gift Delivery Previously Confirmed", f.getONCNum()));
+			else if(!(f.getGiftDistribution() == GiftDistribution.Delivery || f.getGiftDistribution() == GiftDistribution.Pickup))
+				return new DeliveryConfirmation(false, String.format("Unable to Confirm Delivery: Improper Gift Distribution Selection For Family# %s",
+						f.getONCNum(),fh.getGiftStatus().toString()));
+			else if(f.getGiftDistribution() == GiftDistribution.Pickup && f.getDistributionCenterID() == -1)
+				return new DeliveryConfirmation(false, String.format("Unable to Confirm Delivery: Distribution Center Not Assigned For Family# %s pickup",
+						f.getONCNum(),fh.getGiftStatus().toString()));
+			else if(action == 0 && f.getGiftDistribution() == GiftDistribution.Pickup && fh.getGiftStatus() != FamilyGiftStatus.Packaged)
+				return new DeliveryConfirmation(false, String.format("Unable to Confirm Delivery: Improper Gift Status For Family# %s pickup",
+						f.getONCNum(),fh.getGiftStatus().toString()));
+			else if(action == 0 && f.getGiftDistribution() == GiftDistribution.Delivery && fh.getGiftStatus() != FamilyGiftStatus.Assigned)
+				return new DeliveryConfirmation(false, String.format("Unable to Confirm Delivery: Improper Gift Status For Family# %s delivery",
+						f.getONCNum(),fh.getGiftStatus().toString()));
+			else if(action == 0 && f.getGiftDistribution() == GiftDistribution.Delivery && fh.getGiftStatus() == FamilyGiftStatus.Assigned ||
+					 action == 0 && f.getGiftDistribution() == GiftDistribution.Pickup && fh.getGiftStatus() == FamilyGiftStatus.Packaged && f.getDistributionCenterID() > -1 ||
+					  action == 1 && fh.getGiftStatus() == FamilyGiftStatus.Delivered)
+			{
+				//confirmation or undo reception of the gift and create the DeliveryConfirmation to return to the web user.
+				//First, make a copy of the existing family history 
+				FamilyHistory delConfirmHistoryReq = new FamilyHistory(fh);
+				
+				if(action == 0)
+				{
+					delConfirmHistoryReq.setFamilyGiftStatus(FamilyGiftStatus.Delivered);
+					delConfirmHistoryReq.setdNotes("Delivery confirmed by barcode scan");
+					addFamilyHistoryObject(year, delConfirmHistoryReq, wc.getWebUser().getLNFI(), true);
+					return new DeliveryConfirmation(true, f, schoolname, region,  "Gift delivery confirmed");
+				}
+				else if(action == 1 && f.getGiftDistribution() == GiftDistribution.Pickup)
+				{
+					delConfirmHistoryReq.setFamilyGiftStatus(FamilyGiftStatus.Packaged);
+					delConfirmHistoryReq.setdNotes("Delivery confirmaton undone by scan");
+					addFamilyHistoryObject(year, delConfirmHistoryReq, wc.getWebUser().getLNFI(), true);
+					return new DeliveryConfirmation(true, f, schoolname, region, "Gift delivery confirmation successfully undone");
+				}
+				else if(action == 1 && f.getGiftDistribution() == GiftDistribution.Delivery)
+				{
+					delConfirmHistoryReq.setFamilyGiftStatus(FamilyGiftStatus.Assigned);
+					delConfirmHistoryReq.setdNotes("Delivery confirmaton undone by scan");
+					addFamilyHistoryObject(year, delConfirmHistoryReq, wc.getWebUser().getLNFI(), true);
+					return new DeliveryConfirmation(true, f, schoolname, region, "Gift delivery confirmation successfully undone");
+				}
+				else
+					return new DeliveryConfirmation(true, "ERROR: Can't confirm delivery or undo confirmation");
+			}
+			else
+				return new DeliveryConfirmation(false, "ERROR: Can't confirm delivery, current family gift status is  " + fh.getGiftStatus().toString());
 		}
 	}
 	

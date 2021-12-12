@@ -173,7 +173,7 @@ public class ONCSecureWebServer
 								   "/login.js","/onccommon.js", "/onctable", "/giftcardicon", "/stoplighticon-any",
 								   "/stoplighticon-gray", "/stoplighticon-green", "/stoplighticon-yellow",
 								   "/stoplighticon-red","/deliverycards", "/webcam-easy.js", "/snap.wav", "/barcode.js",
-								   "/cornerhat"};
+								   "/cornerhat", "/mistletoeicon"};
 		
 		CommonHandler commonHandler = new CommonHandler();
 		for(String contextname: commonContexts)
@@ -189,7 +189,8 @@ public class ONCSecureWebServer
 				 					"/families","/familystatus","/commonfamily.js","/familysearch","/deliveryconfirmed",
 				 					"/getfamily","/references","/newfamily", "/familynotes","/giftdelivery", 
 				 					"/noteresponse", "/dnscode","/donotservecodes","/seasonparameters","/fammgmt",
-				 					"/receivegifts","/giftreceived","/undogiftreceived","/lookupgifts","/giftlookup"};
+				 					"/receivegifts","/giftreceived","/undogiftreceived","/lookupgifts","/giftlookup",
+				 					"/barcodedelivery","/deliveryconfirmationrequest", "/undodeliveryconfirmation"};
 		
 		FamilyHandler familyHandler = new FamilyHandler();
 		for(String contextname: familyContexts)

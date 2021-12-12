@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>ONC Gift Lookup</title>
+  <title>ONC Delivery Confirmation</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-html5-1.6.1/r-2.2.3/sc-2.0.1/sl-1.3.1/datatables.min.css"/>
@@ -15,7 +15,7 @@
   <script>   
 	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
 	var nGiftsReceived = 0;
-	var lastCodeReceived = 'xxxxxxxx';
+	var lastCodeDelivered = 'xxxxxxxx';
   	
   	$( document ).ready(function()
 	{
@@ -63,82 +63,61 @@
   	    if(code.length != 8)
   	    {
   	    	document.getElementById('barcode').disabled = true;
-  	    	document.getElementById('barcodelbldiv').style.display = 'none';
+  	    	document.getElementById('deliverycard').style.visibility = 'hidden';
   	    	document.getElementById('errormessage').innerText = "ERROR: " + code + " isn't 8 digits, click the Clear button to resume scanning";
   	    	document.getElementById('errormessage').style.color = 'red';
-  	    	document.getElementById('lookupgiftfs').style.background = 'red';
+  	    	document.getElementById('confirmdeliveryfs').style.background = 'red';
   	    }
+  	    else if(code === lastCodeDelivered)
+  	    {
+  	    	document.getElementById('errormessage').innerText = 'Gifts just delivered, ready to scan another barcode';
+  	    	validGiftReceived();
+  	    }	
   	    else
   	    {	
 	  	    let year = document.getElementById('year').value;
-	  	    let childid = code.substring(0,6);
-	  	    let giftnum = code[6];
-	  	    
-	  	    let params = "year="+ year + "&childid=" + childid + "&giftnum=" + code[6] + "&callback=?";
-	  	    $.post('giftlookup', params, function(data)
+	  	    let params = "year="+ year + "&oncnum=" + code.substring(1,7) + "&callback=?";
+	  	    $.post('deliveryconfirmationrequest', params, function(data)
 	  	    {
-	  	    	console.log(data);
-	  	    	
-	  	    	if(data[0].bValid)
+	  	    	if(data.bValid)
 	  	    	{
-	  	    		lastCodeReceived = code;
+	  	    		lastCodeDelivered = code;
 	  	    		
-		  	    	let baseupcecode = childid + '0';
-		  	    	let upcecode = generateFullUPCE(baseupcecode);
-		  	    	
-		  	    	JsBarcode("#barcodelbl0", upcecode, {
+		  	    	JsBarcode("#barcodelbl", code, {
 		  	    	  format: "upce",
-		  	    	  height: 60,
-		  	    	  width: 1.3,
+		  	    	  height: 50,
+		  	    	  width: 1.2,
 		  	    	  fontSize: 12,
-		  	    	  background: '#FFFFFF',
+		  	    	  background: '#FCEB03',
 		  	    	  margin: 2,
 		  	    	  marginLeft: 10,
-		  	    	  marginTop: 10,
-		  	    	  marginRight: 0
+		  	    	  marginTop: 0,
+		  	    	  marginRight: 20
 		  	    	});
 		  	    	
-		  	    	document.getElementById('line00').innerText = data[0].line[0];
-		  	    	document.getElementById('line01').innerText = data[0].line[1];
-		  	    	document.getElementById('line02').innerText = data[0].line[2];
-		  	    	document.getElementById('line03').innerText = data[0].line[3];
-		  	    	document.getElementById('barcodelbldiv0').style.display = 'inline-block';
-		  	    	document.getElementById('errormessage').innerText = data[0].message + ', ready to scan another barcode';
+		  	    	document.getElementById('oncnum').innerText = data.oncnum;
+		  	    	document.getElementById('hohname').innerText = data.hohFN + ' ' + data.hohLN;
+		  	    	document.getElementById('hohaddrline1').innerText = data.housenum + ' ' + data.street + ' ' + data.unit;
+		  	    	document.getElementById('hohaddrline2').innerText = data.city + ', VA ' + data.zipcode;
+		  	    	document.getElementById('primphone').innerText = data.primphone;
+		  	    	document.getElementById('altphone').innerText = data.altphone;
+		  	    	document.getElementById('language').innerText = data.language;
+		  	    	document.getElementById('delinstructions').innerText = data.delinstructions;
+		  	    	document.getElementById('errormessage').innerText = data.message + ', ready to scan another barcode';
 		  	    	
-		  	    	if(data.length > 1 && data[1].bValid)
-		  	    	{	
-			  	    	baseupcecode = childid + '1';
-			  	    	upcecode = generateFullUPCE(baseupcecode);
-			  	    	
-			  	    	JsBarcode("#barcodelbl1", upcecode, {
-				  	    	  format: "upce",
-				  	    	  height: 60,
-				  	    	  width: 1.3,
-				  	    	  fontSize: 12,
-				  	    	  background: '#FFFFFF',
-				  	    	  margin: 2,
-				  	    	  marginLeft: 10,
-				  	    	  marginTop: 10,
-				  	    	  marginRight: 0
-				  	    	});
-				  	    	
-				  	    	document.getElementById('line10').innerText = data[1].line[0];
-				  	    	document.getElementById('line11').innerText = data[1].line[1];
-				  	    	document.getElementById('line12').innerText = data[1].line[2];
-				  	    	document.getElementById('line13').innerText = data[1].line[3];
-		  	    			document.getElementById('barcodelbldiv1').style.display = 'inline-block';
-		  	    	}
-		  	    	else
-		  	    		document.getElementById('barcodelbldiv1').style.display = 'none';	
+		  	    	validGiftReceived();
+		  	    	
+		  	    	document.getElementById('deliverycard').style.visibility = 'visible';
+		  	    	document.getElementById('undobtn').disabled = false;
 	  	    	}
 	  	    	else
 	  	    	{
 	  	    		document.getElementById('barcode').disabled = true;
-	  	    		document.getElementById('barcodelbldiv0').style.display = 'none';
-	  	    		document.getElementById('barcodelbldiv1').style.display = 'none';
-	  	    		document.getElementById('errormessage').innerText = data[0].message + ', click the Clear button to resume scanning';
+	  	    		document.getElementById('undobtn').disabled = true;
+	  	    		document.getElementById('deliverycard').style.visibility = 'hidden';
+	  	    		document.getElementById('errormessage').innerText = data.message + ', click the Clear button to resume scanning';
 	  	    		document.getElementById('errormessage').style.color = 'red';
-	  	    		document.getElementById('lookupgiftfs').style.background = 'red';
+	  	    		document.getElementById('confirmdeliveryfs').style.background = 'red';
 	  	    	}
 		  	    	
 			}, "json");	
@@ -149,8 +128,40 @@
 	    barcode.focus();   
   	}
   	
-  	//return UPC-E with a check digit
-  	function generateFullUPCE(upce)
+  	function validGiftReceived()
+  	{
+  		if(nGiftsReceived % 2)
+	    	document.getElementById('confirmdeliveryfs').style.background = 'rgb(0, 125, 0)';
+	    else
+	    	document.getElementById('confirmdeliveryfs').style.background = 'rgb(0, 225, 0)';
+	    
+  		document.getElementById('errormessage').style.color = 'green';
+	    nGiftsReceived++;
+  	}
+/*  	
+  	//returns true if the upc-e has 8 digits and the check digit matches
+  	function isValid(upce)
+  	{
+  		if(upce.length == 8 )
+  		{
+  			let upca = convertUPCE2A(upce);	//return upc-a without check digit
+  			
+  			let oddsum = parseInt(upca[0],10) + parseInt(upca[2],10) + parseInt(upca[4],10) + parseInt(upca[6],10) + parseInt(upca[8],10) + parseInt(upca[10],10);
+  			let evensum =  parseInt(upca[1],10) + parseInt(upca[3],10) + parseInt(upca[5],10) + parseInt(upca[7],10) + parseInt(upca[9],10);
+  			
+  			let checksum = oddsum * 3 + evensum;
+  			
+  			if(checksum == 0)
+  				return checksum == upce[7];
+  			else
+  				return (10 - checksum % 10) == upce[7];
+  		}
+  		else
+  			return false;
+  	}
+  	
+  	//return UPC-A without check digit
+  	function convertUPCE2A(upce)
   	{
   		let manNumber = new String();
   		let itemNumber = new String();
@@ -189,68 +200,163 @@
 		}
 		
 		let upca = new String();
-		upca = upca.concat("0", manNumber, itemNumber);
-		
-		return upce + checkDigit(upca);
+		return upca.concat("0", manNumber, itemNumber);
   	}
-  	
-  	function checkDigit(input) 
-  	{
-  	    let array = input.split('').reverse();
-
-  	    let total = 0;
-  	    let i = 1;
-  	    array.forEach(number => 
-  	    {
-  	        number = parseInt(number);
-  	        if (i % 2 === 0)
-  	        	total = total + number;
-  	        else
-  	        	total = total + (number * 3);
-  	        i++;
-  	    });
-
-  	    return (Math.ceil(total / 10) * 10) - total;
-  	}
-
+*/
   	function onClear()
   	{
-  		lastCodeReceived = 'xxxxxxxx';
-  		document.getElementById('barcodelbldiv0').style.display = 'none';
-  		document.getElementById('barcodelbldiv1').style.display = 'none';
+  		lastCodeDelivered = 'xxxxxxxx';
   		document.getElementById('errormessage').innerText = 'Ready to scan a barcode';
 	    document.getElementById('errormessage').style.color = 'black';
-	    document.getElementById('lookupgiftfs').style.background = '#E8E8E8';
+	    document.getElementById('confirmdeliveryfs').style.background = '#E8E8E8';
+	    document.getElementById('deliverycard').style.visibility = 'hidden';
+	    document.getElementById('undobtn').disabled = true;
 	    document.getElementById('barcode').disabled = false;
   		document.getElementById('barcode').focus();	//set the cursor so were ready to scan
   	}
-</script>
+  	
+  	function onUndo()
+  	{
+  		let year = document.getElementById('year').value;
+  		let params = "year="+ year + "&oncnum=" + lastCodeDelivered.substring(1,7) + "&callback=?";
+  	    $.post('undodeliveryconfirmation', params, function(data)
+  	    {
+  	    	if(data.bValid)
+  	    	{
+	  	    	JsBarcode("#barcodelbl", lastCodeDelivered, {
+			  	    	  format: "upce",
+			  	    	  height: 50,
+			  	    	  width: 1.2,
+			  	    	  fontSize: 12,
+			  	    	  background: '#FCEB03',
+			  	    	  margin: 2,
+			  	    	  marginLeft: 10,
+			  	    	  marginTop: 0,
+			  	    	  marginRight: 20
+			  	    	});
+	  	    	
+	  	    	document.getElementById('oncnum').innerText = data.oncnum;
+	  	    	document.getElementById('hohname').innerText = data.hohFN + ' ' + data.hohLN;
+	  	    	document.getElementById('hohaddrline1').innerText = data.housenum + ' ' + data.street + ' ' + data.unit;
+	  	    	document.getElementById('hohaddrline2').innerText = data.city + ', VA ' + data.zipcode;
+	  	    	document.getElementById('primphone').innerText = data.primphone;
+	  	    	document.getElementById('altphone').innerText = data.altphone;
+	  	    	document.getElementById('language').innerText = data.language;
+	  	    	document.getElementById('delinstructions').innerText = data.delinstructions;
+	  	    	document.getElementById('errormessage').innerText = data.message + ', ready to scan another barcode';
+	  	    	
+	  	    	document.getElementById('confirmdeliveryfs').style.background = 'yellow';
+	  	  		document.getElementById('errormessage').style.color = 'black';
+	  	    	document.getElementById('deliverycard').style.visibility = 'visible';
+	  	    	document.getElementById('undobtn').disabled = true;
+	  	    	
+	  	    	lastCodeDelivered = 'xxxxxxxx';
+	  	    	
+	  	    	//prepare for another barcode scan
+	  	  	  	barcode.value = '';	
+	  		    barcode.focus();   
+  	    	}
+  	    	else
+  	    	{
+  	    		document.getElementById('barcode').disabled = true;
+  	    		document.getElementById('undobtn').disabled = true;
+  	    		document.getElementById('deliverycard').style.visibility = 'hidden';
+  	    		document.getElementById('errormessage').innerText = data.message + ', click the Clear button to resume scanning';
+  	    		document.getElementById('errormessage').style.color = 'red';
+  	    		document.getElementById('confirmdeliveryfs').style.background = 'red';
+  	    	}
+	  	    	
+		}, "json");
+  	}
+  	
+  </script>
 <style>
-  #barcodediv { height: 100px; }
-  #barcodelbldiv0 { background-color: #FFFFFF; display: none; height: 100px; }
-  #barcodelbldiv1 { background-color: #FFFFFF; display: none; height: 100px; }
-  .inlinediv { display: inline-block; vertical-align: top; }
-  .labelp { margin-top: 4px; margin-right: 12px; margin-bottom: 0px; text-align : center; }
-  .line0 { font-style: italic; }
-  .line1 { font-weight: bold; }
-  .barcodeimg { position: relative; }
-  #cornerhat0
+ .boldfont { font-weight: bold; }
+ #regionspan 
+ {
+ 	margin-left: 140px;
+ 	font-weight: bold;
+ }
+ #altphonespan 
+ {
+ 	margin-left: 86px;
+ 	font-weight: bold;
+ }
+ .inlinediv { display: inline-block; vertical-align: top; }
+ .infodiv { margin-top: 20px; }
+  #barcodediv { height: 40px; }
+  #barcodelbldiv
   {
-  	  position: absolute;
-  	  z-index: 999;
-  	  width: 48px;
-	  height: 36px;
-	  top: 0px;
-	  left: 0px;
+  	margin-bottom: 10px;
+  	display: block;
+  	height: 68px;
   }
-  #cornerhat1
+  #deliverycard
   {
-  	  position: absolute;
-  	  z-index: 999;
-  	  width: 48px;
-	  height: 36px;
-	  top: 0px;
-	  left: 0px;
+  	width: 700px;
+  	background-color: #FCEB03;
+  	visibility: hidden;
+  }
+  #oncinfo
+  {
+  	padding-top: 10px;
+  	padding-right: 5px;
+  	margin-bottom: 20px;
+  }
+  #oncnum
+  {
+  	font-size: 32px;
+  	font-weight: bold;
+  }
+  #driverinfo
+  { 
+  	float: right;
+  	font-size: 24px;
+  	font-weight: bold;
+  }
+  #icondiv 
+  { 
+  	float: right;
+  	padding-right: 16px; 
+  }
+  #familyinfo p
+  {
+ 	 margin-top: 0px;
+  	 margin-bottom: 0px;
+  }
+  #season
+  {
+  	height: 64px;
+  	line-height: 64px;
+  	text-align: center;
+  	font-weight: bold;
+  }
+  #elemschool { width: 180px; }
+  #seasonicon
+  {
+  	width: 64px;
+  	height: 64px;
+  }
+  #countsdiv
+  {
+  	margin-top: 40px;
+  	margin-left: 48px;
+  }
+  .counts
+  {
+  	margin-left: 68px;
+  	font-weight: bold;
+  }
+  #countsdatadiv
+  {
+  	margin-top: 8px;
+  	margin-left: 10px;
+  }
+  .countsdata
+  {
+  	margin-left: 140px;
+  	font-weight: bold;
+  	font-size: 36px;
   }
 </style>
 </head>
@@ -262,10 +368,9 @@
     <img class='logo-img' src="onclogo">
     <span class='header-links'>
 	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
-      <a id='linktwo-anchor' class='breadcrumb-current' href='#'>Lookup Gifts</a>
+      <a id='linktwo-anchor' class='breadcrumb-current' href='#'>Confirm Delivery</a>
     </span>   
     <div class='headerbuttons'>
-<!--   
       <div class='dropdown'>
         <button class=dropbtn>Profile</button>
         <div class='dropdown-content'>
@@ -273,48 +378,72 @@
       	  <a href="#chgpwdlg">Change Password</a>
       	</div> 
       </div>
--->        
       <button id='logoutbtn' onclick='onLogoutLink()'>Logout</button>
     </div>
   </div>
   <div id="welcome-div">
     <p id='banner-message'>BANNER_MESSAGE</p>
   </div>
-  <form id="lookupgiftsform"> 
+  <form id="confirmdeliveryform"> 
   <input id='year' type="hidden" name="year">
-  <fieldset id='lookupgiftfs'>
-  <legend class="legend-major" id='receivegiftlegend'>Lookup Gifts By Barcode Scan</legend>
-  	<div>
-      <div id='barcodediv' class='inlinediv'>
+  <fieldset id='confirmdeliveryfs'>
+  <legend class="legend-major" id='receivegiftlegend'>Confirm Delivery By Barcode Scan</legend>
+  	<div id='barcodediv'>
         <label for='barcode'>Barcode:</label>
         <input id='barcode' title="Barcode" name="barcode" type="text" size="10">
-      </div>
-      <div id='barcodelbldiv0' class='inlinediv'>
-	      <div class='barcodeimg inlinediv'>
-	        <img id='cornerhat0' src='cornerhat'>
-	        <svg id="barcodelbl0"></svg>
-	      </div>
-	      <div class='inlinediv'>
-	        <p id='line00' class= 'labelp line0'></p>
-	        <p id='line01' class= 'labelp line1'></p>
-	        <p id='line02' class= 'labelp'></p>
-	        <p id='line03' class= 'labelp'></p>
-	      </div>
-      </div>
-      <div id='barcodelbldiv1' class='inlinediv'>
-	     <div class='barcodeimg inlinediv'>
-	        <img id='cornerhat1' src='cornerhat'>
-	        <svg id="barcodelbl1"></svg>
-	      </div>
-	      <div class='inlinediv'>
-	        <p id='line10' class= 'labelp line0'></p>
-	        <p id='line11' class= 'labelp line1'></p>
-	        <p id='line12' class= 'labelp'></p>
-	        <p id='line13' class= 'labelp'></p>
-	      </div>
+    </div>
+  	<div id='deliverycard'>
+  	  <div id='oncinfo'>
+  	  	<span id='oncnum'>104</span>
+  	  	<span id='driverinfo'>Driver #: ________ Name: _______________</span>
+  	  </div>
+  	  <div>
+	    <div id='familyinfo' class='inlinediv'>
+  	  	  <p id='hohname'></p>
+  	  	  <p id='hohaddrline1'></p>
+  	  	  <p id='hohaddrline2'></p>
+  	     </div>
+  	  	<div  id='icondiv' class='inlinediv'>
+  	  	  <div id='season' class='inlinediv'>ONC 2021</div>
+  	  	  <div id='seasoniconspan' class='inlinediv'><img id='seasonicon' src='mistletoeicon'></img></div>
+  	  	</div>
+	  </div>
+	  <div id='contactinfo' class='infodiv'>
+	  	<span class='boldfont'>Elem School:</span>
+	  	<span id='elemschool'>Bull Run</span>
+	  	<span id='regionspan'>Region:</span>
+	  	<span id='region'>H</span>
+	  </div>
+	  <div id='phoneinfo' class='infodiv'>
+	  	<span class='boldfont'>Primary Phone:</span>
+	  	<span id='primphone'></span>
+	  	<span id='altphonespan'>Alternate:</span>
+	  	<span id='altphone'></span>
+	  </div>
+	  <div class='infodiv'>
+	  	<span class='boldfont'>Language:</span>
+	  	<span id='language'class='infodiv'></span>
+	  </div>
+	  <div class='infodiv'>
+	  	<span class='boldfont'>Special Delivery Comments:</span>
+	  	<span id='delinstructions'></span>
+	  </div>
+	  <div id='countsdiv'>
+	  	<span class='counts'>TOY BAGS</span>
+	  	<span class='counts'>BIKE(S)</span>
+	  	<span class='counts'>OTHER LARGE ITEMS</span>
+	  </div>
+	  <div id='countsdatadiv'>
+	  	<span id='bags' class='countsdata'></span>
+	  	<span id='bikes' class='countsdata'>0</span>
+	  	<span id='otheritems' class='countsdata'></span>
+	  </div>
+      <div id='barcodelbldiv'>
+      	<svg id="barcodelbl" class='floatright'></svg>  
       </div>
     </div>
     <div>
+      <button id='undobtn' type='button' onclick='onUndo()'>Undo</button>
       <button id='clearbtn' type='button' onclick='onClear()'>Clear</button>
     </div>
   </fieldset>

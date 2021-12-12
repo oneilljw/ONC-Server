@@ -28,6 +28,8 @@ public class CommonHandler extends ONCWebpageHandler
 			sendCachedFile(t, "image/png", "giftcardicon", false);
 		else if(requestURI.contains("/checkmarkicon"))
 			sendCachedFile(t, "image/png", "checkmarkicon", false);
+		else if(requestURI.contains("/mistletoeicon"))
+			sendCachedFile(t, "image/gif", "mistletoeicon", false);
 		else if(requestURI.contains("/cornerhat"))
 			sendCachedFile(t, "image/png", "cornerhat", false);
 		else if(requestURI.contains("/clearx"))

@@ -59,11 +59,13 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String CODE_AUTHENTICATION_HTML =  "CodeAuthentication.htm";
 	private static final String RECEIVE_GIFTS_HTML = "ReceiveGifts.htm";
 	private static final String LOOKUP_GIFTS_HTML = "LookupGifts.htm";
+	private static final String BARCODE_DELIVERY_HTML = "BarcodeDelivery.htm";
 //	private static final String QRSCANNER_HTML = "QRScanner.htm";
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
 	private static final String CLEAR_X_FILE = "clear_x.gif";
 	private static final String ONC_LOGO_FILE = "onclogosmall.gif";
+	private static final String CHRISTMAS_MISTLETOE_FILE = "Christmas-Mistletoe-icon.gif";
 	private static final String GIFT_CARD_LOGO_FILE = "giftcard.png";
 	private static final String TRUST_LOGO_FILE = "comodo_secure_seal_76x26_transp.png";
 	private static final String ERROR_ICON_FILE = "if_Error_381599.png";
@@ -144,11 +146,13 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("codeauthentication", readFile(String.format("%s/%s",System.getProperty("user.dir"), CODE_AUTHENTICATION_HTML)));
 			webpageMap.put("receivegifts", readFile(String.format("%s/%s",System.getProperty("user.dir"), RECEIVE_GIFTS_HTML)));
 			webpageMap.put("lookupgifts", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOOKUP_GIFTS_HTML)));
+			webpageMap.put("barcodedelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), BARCODE_DELIVERY_HTML)));
 //			webpageMap.put("qrscanner", readFile(String.format("%s/%s",System.getProperty("user.dir"), QRSCANNER_HTML)));
 			
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
 			webfileMap.put("oncsplash", readFileToByteArray(ONC_SPLASH_FILE));
 			webfileMap.put("clearx", readFileToByteArray(CLEAR_X_FILE));
+			webfileMap.put("mistletoeicon", readFileToByteArray(CHRISTMAS_MISTLETOE_FILE));
 			webfileMap.put("giftcardicon", readFileToByteArray(GIFT_CARD_LOGO_FILE));
 			webfileMap.put("onclogo", readFileToByteArray(ONC_LOGO_FILE));
 			webfileMap.put("trustlogo", readFileToByteArray(TRUST_LOGO_FILE));

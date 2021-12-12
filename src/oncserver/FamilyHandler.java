@@ -609,6 +609,69 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
+		else if(requestURI.contains("/barcodedelivery"))
+		{
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				response = webpageMap.get("barcodedelivery");
+				response = response.replace("BANNER_MESSAGE", "");
+				response = response.replace("HOME_LINK_VISIBILITY", "visible");
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
+		else if(requestURI.contains("/deliveryconfirmationrequest"))
+		{
+			HtmlResponse htmlResponse;
+			WebClient wc;
+			
+			if((wc = clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				//get the JSON for response to the request
+				int year = Integer.parseInt((String) params.get("year"));
+				String oncNum = ((String) params.get("oncnum")).replaceFirst("^0+(?!$)", "");
+
+				DeliveryConfirmation dc = processDeliveryConfirmationRequest(year, oncNum, 0, wc);
+						
+				Gson gson = new Gson();
+				String response = gson.toJson(dc, DeliveryConfirmation.class);
+
+				//wrap the json in the callback function per the JSONP protocol
+				htmlResponse =  new HtmlResponse((String) params.get("callback") + "(" + response +")", HttpCode.Ok);
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
+		else if(requestURI.contains("/undodeliveryconfirmation"))
+		{
+			HtmlResponse htmlResponse;
+			WebClient wc;
+			
+			if((wc = clientMgr.findAndValidateClient(t.getRequestHeaders())) != null)
+			{
+				//get the JSON for response to the request
+				int year = Integer.parseInt((String) params.get("year"));
+				String oncNum = ((String) params.get("oncnum")).replaceFirst("^0+(?!$)", "");
+
+				DeliveryConfirmation dc = processDeliveryConfirmationRequest(year, oncNum, 1, wc);
+						
+				Gson gson = new Gson();
+				String response = gson.toJson(dc, DeliveryConfirmation.class);
+
+				//wrap the json in the callback function per the JSONP protocol
+				htmlResponse =  new HtmlResponse((String) params.get("callback") + "(" + response +")", HttpCode.Ok);
+			}
+			else
+				htmlResponse = invalidTokenReceivedToJsonRequest("Error", (String) params.get("callback"));
+			
+			sendHTMLResponse(t, htmlResponse);
+		}
 	}
 	
 	WebGift receiveWebGift(int year, int childid, int giftnum, int action, WebClient wc)
@@ -634,6 +697,30 @@ public class FamilyHandler extends ONCWebpageHandler
 		catch (IOException e) 
 		{
 			return new WebGift(false, "I/O ERROR: Unable to access gift database");
+		}	
+	}
+	
+	DeliveryConfirmation processDeliveryConfirmationRequest(int year, String oncNum, int action, WebClient wc)
+	{
+		try 
+		{
+			ServerFamilyDB familyDB = ServerFamilyDB.getInstance();
+			ServerFamilyHistoryDB familyHistoryDB = ServerFamilyHistoryDB.getInstance();
+			
+			ONCFamily f = familyDB.getFamilyByONCNum(year, oncNum);
+			
+			if(f != null)
+				return familyHistoryDB.confirmGiftDeliveryJSONP(year, f, action, wc);
+			else
+				return new DeliveryConfirmation(false, String.format("ERROR: Unable to find family #s in database", oncNum));
+		} 
+		catch (FileNotFoundException e) 
+		{
+			return new DeliveryConfirmation(false, "FILE NOT FOUND ERROR: Unable to access family or history database");
+		} 
+		catch (IOException e) 
+		{
+			return new DeliveryConfirmation(false, "I/O ERROR: Unable to access family or history database");
 		}	
 	}
 /*	
