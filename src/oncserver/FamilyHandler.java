@@ -490,6 +490,21 @@ public class FamilyHandler extends ONCWebpageHandler
 			
 			sendHTMLResponse(t, htmlResponse);
 		}
+		else if(requestURI.contains("/gifthomepage"))
+		{
+			String response;
+			
+			if(clientMgr.findAndValidateClient(t.getRequestHeaders()) != null)
+			{
+				response = webpageMap.get("gifthomepage");
+				response = response.replace("BANNER_MESSAGE", "");
+				response = response.replace("HOME_LINK_VISIBILITY", "hidden");
+			}
+			else
+				response = invalidTokenReceived();
+		
+			sendHTMLResponse(t, new HtmlResponse(response, HttpCode.Ok));
+		}
 		else if(requestURI.contains("/receivegifts"))
 		{
 			String response;

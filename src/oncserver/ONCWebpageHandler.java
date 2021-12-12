@@ -60,6 +60,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 	private static final String RECEIVE_GIFTS_HTML = "ReceiveGifts.htm";
 	private static final String LOOKUP_GIFTS_HTML = "LookupGifts.htm";
 	private static final String BARCODE_DELIVERY_HTML = "BarcodeDelivery.htm";
+	private static final String GIFT_HOMEPAGE_HTML = "GiftHomepage.htm";
 //	private static final String QRSCANNER_HTML = "QRScanner.htm";
 
 	private static final String ONC_SPLASH_FILE = "oncsplash.gif";
@@ -147,6 +148,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 			webpageMap.put("receivegifts", readFile(String.format("%s/%s",System.getProperty("user.dir"), RECEIVE_GIFTS_HTML)));
 			webpageMap.put("lookupgifts", readFile(String.format("%s/%s",System.getProperty("user.dir"), LOOKUP_GIFTS_HTML)));
 			webpageMap.put("barcodedelivery", readFile(String.format("%s/%s",System.getProperty("user.dir"), BARCODE_DELIVERY_HTML)));
+			webpageMap.put("gifthomepage", readFile(String.format("%s/%s",System.getProperty("user.dir"), GIFT_HOMEPAGE_HTML)));
 //			webpageMap.put("qrscanner", readFile(String.format("%s/%s",System.getProperty("user.dir"), QRSCANNER_HTML)));
 			
 			webfileMap.put("commonfamily", readFileToByteArray(COMMON_FAMILY_JS_FILE));
@@ -418,7 +420,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		else if(wc.getWebUser().getPermission() == UserPermission.General)
 			return getPartnerTableWebpage(wc, "", message, false);	//send partner table, no success dialog
 		else if(wc.getWebUser().getPermission() == UserPermission.Warehouse)
-			return getReceiveGiftsWebpage(wc, "", message);	
+			return getGiftHomepage(wc, "", message);	
 		else	 
 			return getReferralStatusWebpage(wc, message, message, "Sucessful Referral", bShowSuccessDialog); //send the family status page
 	}
@@ -467,10 +469,20 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		
 		return response;
 	}
-	
+/*	
 	String getReceiveGiftsWebpage(WebClient wc, String dlgTitle, String message)
 	{
 		String response = webpageMap.get("receivegifts");
+		String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
+		response = response.replace("BANNER_MESSAGE", loginMssg);
+		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));
+		
+		return response;
+	}
+*/	
+	String getGiftHomepage(WebClient wc, String dlgTitle, String message)
+	{
+		String response = webpageMap.get("gifthomepage");
 		String loginMssg = String.format("Welcome %s! %s", wc.getWebUser().getFirstName(), message);
 		response = response.replace("BANNER_MESSAGE", loginMssg);
 		response = response.replace("HOME_LINK_VISIBILITY", getHomeLinkVisibility(wc));

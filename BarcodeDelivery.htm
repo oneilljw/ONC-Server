@@ -12,8 +12,7 @@
   <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
   <script type="text/javascript" src="onccommon.js"></script>
   <script type="text/javascript" src="barcode.js"></script>
-  <script>   
-	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
+  <script>
 	var nGiftsReceived = 0;
 	var lastCodeDelivered = 'xxxxxxxx';
   	
@@ -26,10 +25,8 @@
     	if(sessionStorage.getItem('homelinkVisibility') === 'hidden')
     	{
     		var dashboardli = document.getElementById('dashboard-anchor');
-    		dashboardli.parentNode.removeChild(dashboardli);
-    		
-    		document.getElementById('linktwo-anchor').classList.add('breadcrumb-only');
-    		document.getElementById('linktwo-anchor').classList.remove('breadcrumb-current');
+    		dashboardli.href='gifthomepage';
+    		dashboardli.innerText='Gift Homepage';
     	}
   		
   		//set the hidden values
@@ -368,7 +365,7 @@
     <img class='logo-img' src="onclogo">
     <span class='header-links'>
 	  <a id='dashboard-anchor' class='breadcrumb-first' href='dashboard'>Dashboard</a>
-      <a id='linktwo-anchor' class='breadcrumb-current' href='#'>Confirm Delivery</a>
+      <a id='linktwo-anchor' class='breadcrumb-current' href='#'>Confirm Deliveries</a>
     </span>   
     <div class='headerbuttons'>
       <div class='dropdown'>

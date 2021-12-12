@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-  <title>ONC Dashboard</title>
+  <title>ONC Gift Homepage</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" href="oncstylesheet.css">
   <script src="staticcharts.js"></script>
@@ -12,156 +12,14 @@
   <script type="text/javascript" src="onccommon.js"></script>
   <script type="text/javascript" src="onctable.js"></script>  
   <script>
-	var charts = [{title: 'Family Status', type: 'family', div: 'famstatus_div', chartdata: {}},
-		  		  {title: 'Gift Status', type: 'gift', div: 'giftstatus_div',  chartdata: {}},
-		 		  {title: 'Meal Status', type: 'meal', div: 'mealstatus_div', chartdata: {}},
-		 		  {title: 'Delivery Status', type: 'delivery', div: 'delstatus_div',  chartdata: {}}];
-	
-	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
-
+    sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
     $( document ).ready(function()
     {
-    	//get filter selects, reset buttons and tables 
-    	filters = document.getElementById('filterspan').getElementsByTagName('select');
-    	resets = document.getElementById('resetspan').getElementsByTagName('button');
-    	
     	//decide whether to display the welcome message
     	setBannerVisible(true);
-    	
-    	//get the list of years from the data base and put it in the year combo box
-   	 	var dbyearsparams = "callback=?";
-   	 	$.getJSON('dbStatus', dbyearsparams, function(data)
-    	{
-   	 		sessionStorage.setItem("dbyears", JSON.stringify(data));
-   	 		
-			var yearCombo = document.querySelector("#curryear");
-    		for (var i = data.length-1; i >= 0; i--)
-    			addComboBoxOption(yearCombo, data[i].id, data[i].id);
-    			
-    		if(sessionStorage.getItem('curryear') == null)
-            {
-            	yearCombo.selectedIndex = 0;
-            	sessionStorage.setItem('curryear', yearCombo.value);
-            	sessionStorage.setItem('currseason', yearCombo.value);
-            }
-            else
-            	yearCombo.value = sessionStorage.getItem('curryear');	
- 
-    		document.getElementById('resetbtn').disabled = yearCombo.selectedIndex == 0;
-    			
-    		google.charts.load('current', {packages: ['corechart', 'bar']});
-            google.charts.setOnLoadCallback(drawStatusCharts);
-            
-            $.getJSON('getstatus', dbyearsparams, function(status)
-            {
-            	if(status.userstatus === 'Update_Profile')
-            	{
-        			showEditProfileDialog();
-        			window.location=document.getElementById('editprofileanchor').href;
-            	}
-            });
-    	});
 
    	 	createGroupTable();	//create profile dialog group table
-   	 	
-	   	//create trigger to resizeEnd event     
-	   	$(window).resize(function()
-	   	{
-	   	    if(this.resizeTO) clearTimeout(this.resizeTO);
-	   	    this.resizeTO = setTimeout(function()
-	   	    {
-	   	         $(this).trigger('resizeEnd');
-	   	    }, 100);
-	   	});
-	
-	   	//redraw graph when window resize is completed  
-	   	$(window).on('resizeEnd', function()
-	   	{
-	   		for(let i=0; i< charts.length; i++)
-				drawChart(charts[i]);
-	   	});
     });
-    
-    function drawStatusCharts() 
-    { 
-    	var params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[0].type + "&callback=?";    	
-    	$.getJSON('metrics', params, function(data)
-        {
-    		if(data.hasOwnProperty('error'))
-				window.location=document.getElementById('timeoutanchor').href;
-    		else
-    		{
-    			charts[0].chartdata = data;
-    			drawChart(charts[0]);
-    			
-    			params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[1].type + "&callback=?";
-    			$.getJSON('metrics', params, function(data)
-    			{
-    				charts[1].chartdata = data;
-    				drawChart(charts[1]);
-    				
-    				params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[2].type + "&callback=?";
-        			$.getJSON('metrics', params, function(data)
-        			{
-        				charts[2].chartdata = data;
-        				drawChart(charts[2]);
-        				
-        				params = "year=" + sessionStorage.getItem('curryear') + "&maptype=" + charts[3].type + "&callback=?";
-            			$.getJSON('metrics', params, function(data)
-            			{
-            				charts[3].chartdata = data;
-            				drawChart(charts[3]);
-            			});
-        			});
-    			});
-    		}
-        });
-    }    			
-
-	function drawChart(chart)
-	{
-		// Create our data table out of JSON data loaded from server.
-		let table = new google.visualization.DataTable(chart.chartdata);
-		let view = new google.visualization.DataView(table);
-		let chartwidth = (document.getElementById('filtersfieldset').offsetWidth/2)*.95;
-		
-		view.setColumns([0, 1,
-			{
-		    	calc: "stringify",
-		        sourceColumn: 1,
-		        type: "string",
-		        role: "annotation"},
-		    ]);
-
-		var options = 
-		{
-		    width: chartwidth,
-		    height: 240,
-		    title: sessionStorage.getItem('curryear') + ' ' + chart.title,
-		    titleTextStyle: 
-		    {
-		    	fontSize: 16, // 12, 18 whatever you want (don't specify px)
-		    	bold: true,    // true or false
-		    },
-		    chartArea: { width: '65%'},
-		    hAxis: { minValue: 0 },
-		    legend: { position: 'none'},
-		};
-		    	
-		var chart = new google.visualization.BarChart(document.getElementById(chart.div));
-		chart.draw(view, options);
-	}
-	
-	function getExternalData()
-	{
-		drawStatusCharts();
-	}
-	
-	function onFamilyDetailClicked()
-	{
-		let params = {'year': sessionStorage.getItem('curryear'), 'type':'full'};
-		post('fammgmt',params,'get');
-	}
   </script>
   <style type="text/css">
 	.header-button-div
@@ -178,15 +36,6 @@
     {
         width: 90%;	
 		margin: 0 auto;	
-    }
-    .graph-div td
-    {
-    	border-color: black;
-    	border-width: 2px;
-    	border-style: ridge;
-    	padding: 10px;
-    	background-color: #E8E8E8;
-    	display: table-cell;
     }
     .headerbtn
 	{
@@ -207,24 +56,15 @@
   <div class='header'>
     <img class='logo-img' src="onclogo">
 	<div class='header-button-div'>
-	  <button class='dropbtn home-link'>Dashboard</button>
-	  <div class='dropdown'>
-        <button class='dropbtn'>Families</button>
-        <div class='dropdown-content'>
-          <a href="familystatus">Referral Status</a>
-      	  <a onclick='onFamilyDetailClicked()'>Family Mgmt</a>
-      	</div>
-      </div>
+	  <button class='dropbtn home-link'>Gift Homepage</button>
       <div class='dropdown'>
-        <button class='dropbtn'>Gifts</button>
+        <button class='dropbtn'>Gift Actions</button>
         <div class='dropdown-content'>
           <a href='receivegifts'>Receive Gifts</a>
           <a href='lookupgifts'>Lookup Gifts</a>
           <a href='barcodedelivery'>Confirm Deliveries</a>
       	</div>
       </div>
-      <button class='headerbtn' onclick="window.location.href='partnertable'">Partners</button>
-      <button class='headerbtn' onclick="window.location.href='regiontable'">Regions</button>
       </div>    
     <div class='headerbuttons'>
       <div class='dropdown'>
@@ -241,30 +81,10 @@
     <p id='banner-message'>BANNER_MESSAGE</p>
   </div>
   <form>
-  	<fieldset id='filtersfieldset'>
-  		<legend>Filters</legend>
-		<span id='filterspan'>
-		  <label for='curryear' class='filterlabel'>Season:</label>
-		  <select id="curryear" title="Select season to display" data-type='externaldata' data-column='-1' data-reset='resetbtn' onchange='executeFilter(this)'></select>
-		</span>
-		<span id='resetspan' class='floatright resetbtn'>
-			<button id="resetbtn" onclick='onResetFilters(this)'>Reset Filters</button>
-		</span>  
+  	<fieldset>
+  	<div>Use the navigation bar to select which gift action you'd like to take</div>
 	</fieldset>		
   </form>    
-  <!--Table and divs that hold the charts-->
-  <div class="graph-div">
-    <table>
-      <tr>
-        <td><div id="famstatus_div"></div></td>
-        <td><div id="giftstatus_div"></div></td>
-      </tr>
-      <tr>
-        <td><div id="mealstatus_div"></div></td>
-        <td><div id="delstatus_div"></div></td>
-      </tr>
-    </table>
-  </div>
 <!-- Edit Profile Dialog -->
   <div id="editProfile" class="modalDialog">
 	<div class='inner full-width'>

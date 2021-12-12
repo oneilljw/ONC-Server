@@ -12,8 +12,7 @@
   <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.20/api/sum().js"></script>
   <script type="text/javascript" src="onccommon.js"></script>
   <script type="text/javascript" src="barcode.js"></script>
-  <script>   
-	sessionStorage.setItem('homelinkVisibility', "HOME_LINK_VISIBILITY");
+  <script>
 	var nGiftsReceived = 0;
 	var lastCodeReceived = 'xxxxxxxx';
   	
@@ -22,14 +21,12 @@
   		setBannerVisible(false); //decide whether to display the welcome message
   		createGroupTable();	//create profile dialog group table
   		
-    	//remove dashboard anchor & change receive gifts anchor class to .breadcrumb-only
+  		//remove dashboard anchor & change receive gifts anchor class to .breadcrumb-only
     	if(sessionStorage.getItem('homelinkVisibility') === 'hidden')
     	{
     		var dashboardli = document.getElementById('dashboard-anchor');
-    		dashboardli.parentNode.removeChild(dashboardli);
-    		
-    		document.getElementById('linktwo-anchor').classList.add('breadcrumb-only');
-    		document.getElementById('linktwo-anchor').classList.remove('breadcrumb-current');
+    		dashboardli.href='gifthomepage';
+    		dashboardli.innerText='Gift Homepage';
     	}
   		
   		//set the hidden values

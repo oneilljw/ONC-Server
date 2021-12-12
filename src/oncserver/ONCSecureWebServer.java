@@ -190,7 +190,8 @@ public class ONCSecureWebServer
 				 					"/getfamily","/references","/newfamily", "/familynotes","/giftdelivery", 
 				 					"/noteresponse", "/dnscode","/donotservecodes","/seasonparameters","/fammgmt",
 				 					"/receivegifts","/giftreceived","/undogiftreceived","/lookupgifts","/giftlookup",
-				 					"/barcodedelivery","/deliveryconfirmationrequest", "/undodeliveryconfirmation"};
+				 					"/barcodedelivery","/deliveryconfirmationrequest", "/undodeliveryconfirmation",
+				 					"/gifthomepage"};
 		
 		FamilyHandler familyHandler = new FamilyHandler();
 		for(String contextname: familyContexts)
