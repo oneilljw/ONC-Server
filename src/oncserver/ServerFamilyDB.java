@@ -634,7 +634,7 @@ public class ServerFamilyDB extends ServerSeasonalDB
 		
 		String response = gson.toJson( new DataTable(metricList), DataTable.class);
 		
-		System.out.println(String.format("ServFamDB.getFamMetrics: response= %s", response));
+//		System.out.println(String.format("ServFamDB.getFamMetrics: response= %s", response));
 
 		//wrap the json in the callback function per the JSONP protocol
 		return new HtmlResponse(callbackFunction +"(" + response +")", HttpCode.Ok);		
