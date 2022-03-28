@@ -255,8 +255,8 @@ table.dataTable tbody tr.stripe1
 table.dataTable tbody tr.stripe2 
 {
 	background-color: #E8E8E8;
-   }
-   table.dataTable tbody tr.stripe1.selected
+}
+table.dataTable tbody tr.stripe1.selected
 {
    	background-color: #b4c2d9;
 }

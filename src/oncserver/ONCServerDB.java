@@ -32,13 +32,7 @@ public abstract class ONCServerDB
 	    {
 	    		CSVWriter writer = new CSVWriter(new FileWriter(path));
 	    		writer.writeNext(header);
-	    	 
-//	    		for(int index=0; index < list.size(); index++)
-//	    		{
-//	    			ONCObject oncObj = (ONCObject)list.get(index);
-//	    			writer.writeNext(oncObj.getExportRow());	//Get ONCObject row
-//	    		}
-	    		
+
 	    		for(ONCObject o : list)
 	    			writer.writeNext(o.getExportRow());	//Get ONCObject row
 	    		

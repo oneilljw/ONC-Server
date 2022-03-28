@@ -28,9 +28,7 @@ public abstract class ServerSeasonalDB extends ONCServerDB
     		
     		if((header = reader.readNext()) != null)	//Does file have records? 
     		{
-//    		System.out.println(String.format("ServSeasonalDB.Importing %s", path));
-    			
-    			//Read the User File
+    			//Read the file File
     			if(header.length == length)	//Does the record have the right # of fields? 
     			{
     				while ((nextLine = reader.readNext()) != null)	// nextLine[] is an array of fields from the record

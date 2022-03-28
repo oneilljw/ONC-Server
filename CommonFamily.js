@@ -76,6 +76,7 @@ function popluateCitySelects()
 }
 function updateNewChildTable(childList)
 {
+	console.log(childList);
 	let table = $('#childtable').DataTable();
 	table.clear();
 	table.rows.add(childList);
