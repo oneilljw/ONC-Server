@@ -110,7 +110,7 @@ public abstract class ONCWebpageHandler implements HttpHandler
 		if(webpageMap.isEmpty() || webfileMap.isEmpty())
 		{
 			//clear them both and load them. It should be impossible for one 
-			//to be empty and one  to have content. As a protection, we clear both.
+			//to be empty and one to have content. As a protection, we clear both.
 			webpageMap.clear();
 			webfileMap.clear();
 			loadWebpages();
